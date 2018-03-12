@@ -11,6 +11,7 @@ import org.warps.pulsar.common.options.LoadOptions;
 import org.warps.pulsar.crawl.component.*;
 import org.warps.pulsar.crawl.parse.ParseResult;
 import org.warps.pulsar.crawl.parse.html.JsoupParser;
+import org.warps.pulsar.net.SeleniumEngine;
 import org.warps.pulsar.persist.WebPage;
 import org.warps.pulsar.persist.gora.db.WebDb;
 
@@ -225,6 +226,7 @@ public class Pulsar implements AutoCloseable {
     @Override
     public void close() {
         if (!closed) {
+            SeleniumEngine.getInstance(immutableConfig).close();
             injectComponent.close();
             webDb.close();
             closed = true;

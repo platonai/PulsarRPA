@@ -218,17 +218,7 @@ public class LoadComponent {
         }
         fetchingUrls.removeAll(pendingUrls);
 
-        if (options.isPersist()) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Persisting {} pages", updatedPages.size());
-            }
-
-            updatedPages.forEach(p -> webDb.put(p.getUrl(), p));
-
-            if (options.isAutoFlush()) {
-                flush();
-            }
-        }
+        updatedPages.forEach(page -> update(page, options));
 
         if (ignoreFailed) {
             CollectionUtils.filter(updatedPages, page -> page.getProtocolStatus().isSuccess());

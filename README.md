@@ -9,18 +9,24 @@ The major architecture of Pulsar comes from Apache Nutch and reused a lot of cod
 
 Pulsar supports selenium so one can do web scraping using selenium's native api or custom parse plugins.
 
-For web scraping, just do the following(in kotlin):
+For Web scraping(in kotlin):
 
     fun main(args: Array<String>) {
         val pulsar = Pulsar()
-        val url = "http://list.mogujie.com/book/jiadian/10059513"
-        val page = pulsar.load("$url --parse --expires=1s --fetch-mode=selenium --browser=chrome")
+        val page = pulsar.load("http://list.mogujie.com/book/jiadian/10059513")
         println(WebPageFormatter(page).withLinks())
 
         val document = pulsar.parse(page)
         val title = document.selectFirst(".goods_item .title")
         println(title)
     }
+
+For batch Web scraping(in kotlin):
+
+    val url = "http://www.sh.chinanews.com/jinrong/index.shtml"
+    val portal = pulsar.load("$url --parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium --browser=chrome")
+    val pages = pulsar.parallelLoadAll(portal.simpleLiveLinks.filter { it.contains("jinrong") }, LoadOptions.parse("--parse"))
+    pages.forEach { println("${it.url} ${it.contentTitle}") }
 
 For web crawling and index using solr, run script:
 

@@ -17,6 +17,8 @@
 package org.warps.pulsar.persist;
 
 import org.apache.avro.util.Utf8;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
@@ -923,6 +925,10 @@ public class WebPage {
         return page.getLiveLinks();
     }
 
+    public Collection<String> getSimpleLiveLinks() {
+        return CollectionUtils.collect(page.getLiveLinks().keySet(), CharSequence::toString);
+    }
+
     /**
      * TODO: Remove redundant url to reduce space
      * */
@@ -945,6 +951,10 @@ public class WebPage {
 
     public Map<CharSequence, CharSequence> getVividLinks() {
         return page.getVividLinks();
+    }
+
+    public Collection<String> getSimpleVividLinks() {
+        return CollectionUtils.collect(page.getVividLinks().keySet(), CharSequence::toString);
     }
 
     public void setVividLinks(Map<CharSequence, CharSequence> links) {

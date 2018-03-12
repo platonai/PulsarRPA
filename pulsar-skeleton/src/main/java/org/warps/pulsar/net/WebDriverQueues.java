@@ -84,6 +84,8 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
         proxyPool = ProxyPool.getInstance(conf);
 
         this.reload(conf);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
     }
 
     @Override
