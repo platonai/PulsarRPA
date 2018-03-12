@@ -189,7 +189,7 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
                 continue;
             }
 
-      /* Update in-links */
+            /* Update in-links */
             focusedPage.getInlinks().put(incomingEdge.getSourceUrl(), incomingEdge.getAnchor());
 
             WebPage incomingPage = incomingEdge.getSourceWebPage();

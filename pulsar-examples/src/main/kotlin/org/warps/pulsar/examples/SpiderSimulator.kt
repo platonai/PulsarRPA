@@ -90,7 +90,6 @@ class SpiderSimulator(
                 .map { WebVertex(it) }
                 .map { WebGraph(it, it) }
                 .reduce { g, g2 ->  g.combine(g2)}
-//                .reduce(graphs[batchId], { it, it2 -> it.combine(it2) }
                 .vertexSet()
                 .map { it.webPage }
                 .map { updateOutGraphMapper(it) }

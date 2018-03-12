@@ -7,7 +7,11 @@ import org.warps.pulsar.persist.WebPageFormatter
 
 fun main(args: Array<String>) {
     val pulsar = Pulsar()
-    val portalUrl = "http://list.mogujie.com/book/jiadian/10059513"
-    val portalPage = pulsar.load("$portalUrl --parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium")
-    println(WebPageFormatter(portalPage).withLinks())
+    val url = "http://list.mogujie.com/book/jiadian/10059513"
+    val page = pulsar.load("$url --parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium --browser=chrome")
+    println(WebPageFormatter(page).withLinks())
+
+    val document = pulsar.parse(page)
+    val title = document.selectFirst(".goods_item .title").text()
+    println(title)
 }
