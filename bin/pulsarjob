@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+function printUsage() {
+  echo "Usage: pulsarjob [options...] <COMMAND> [<args>]"
+  echo "where COMMAND is one of:"
+  echo
+  echo "Crawl commands"
+  echo "  inject              Inject new urls as crawl portal"
+  echo "  generate            Generate a new batch of tasks to fetch"
+  echo "  fetch               Fetch URLs marked during generate"
+  echo "  parse               Parse URLs marked during fetch"
+  echo "  updateoutgraph      Update outgoing vertices in web graph"
+  echo "  updateingraph       Update incoming vertices in web graph"
+  echo "  updateseedsindex    Update secondary index for seed pages"
+  echo "  updatetoppageindex  Update secondary index for top pages"
+  echo "  samplejob           Run a minimal sample job"
+  echo
+  echo "Options: "
+  echo "  -c, --config     Config dir"
+  echo "  -E, --enterprise Use enterprise edition"
+  echo "  -v, --verbose    Issue more message"
+  echo "  -V, --version    Show version number and quit"
+  echo "  -h, --help       The help text"
+  exit 1
+}
+
+MODULE=
+while [ $# -gt 0 ]
+do
+case $1 in
+    -c|--config)
+        shift
+        PULSAR_EXTRA_CONF_DIR=$1
+        shift
+        ;;
+    -E|--enterprise)
+        ENTERPRISE_EDITION=true
+        shift
+        ;;
+    -m|--module)
+        shift
+        MODULE=$1
+        shift
+        ;;
+    -v|--verbose)
+        export VERBOSE_LEVEL=1
+        shift
+        ;;
+    -h|--help)
+        SHOW_HELP=true
+        shift
+        ;;
+    -V|--version)
+        SHOW_VERSION=true
+        shift
+        ;;
+    -*)
+        echo "Unrecognized option : $1"
+        echo "Try 'pulsar --help' for more information."
+        exit 0
+        ;;
+    *)
+        break
+        ;;
+esac
+done
+
+COMMAND=$1
+shift
+
+if [[ $SHOW_HELP ]]; then
+  printUsage;
+  exit 0
+fi
+
+if [[ $SHOW_VERSION ]]; then
+  "$bin"/version
+  echo
+  exit 0
+fi
+
+# if no args specified, show usage
+if [[ $COMMAND == "" ]]; then
+  printUsage
+  exit 0
+fi
+
+bin=`dirname "$0"`
+bin=`cd "$bin">/dev/null; pwd`
+
+ . "$bin"/include/pulsar-config.sh
+
+# To prevent miss operation, too short paths are not allowed
+if [[ ${#PULSAR_EXTRA_CONF_DIR} -gt 5 ]]; then
+  find $PULSAR_EXTRA_CONF_DIR -maxdepth 1 -type f | xargs -I {} cp {} $PULSAR_CONF_DIR
+else
+  echo "<$PULSAR_EXTRA_CONF_DIR> seems not a valid directory, please check it ..."
+  exit 1
+fi
+
+if [ -d "$PULSAR_CONF_DIR" ]; then
+  CLASSPATH="${CLASSPATH}:$PULSAR_CONF_DIR"
+fi
+
+CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/cli.jar"
+
+# choose runnable Java class
+if [ "$COMMAND" = "master" ] ; then
+  MODULE=pulsar-rest
+  CLASS=org.warps.pulsar.rest.embedded.PMaster
+elif [ "$COMMAND" = "inject" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.inject.InjectJob
+elif [ "$COMMAND" = "generate" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.generate.GenerateJob
+elif [ "$COMMAND" = "fetch" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.fetch.FetchJob
+elif [ "$COMMAND" = "parse" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.parse.ParserJob
+elif [ "$COMMAND" = "updateoutgraph" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.update.OutGraphUpdateJob
+elif [ "$COMMAND" = "updateingraph" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.update.InGraphUpdateJob
+elif [ "$COMMAND" = "updateseedsindex" ] ; then
+  if ! ${ENTERPRISE_EDITION}; then
+    echo "This job is available in Enterprise Edition only"
+    exit 0
+  fi
+elif [ "$COMMAND" = "updatetoppageindex" ]; then
+  if ! ${ENTERPRISE_EDITION}; then
+    echo "This job is available in Enterprise Edition only"
+    exit 0
+  fi
+elif [ "$COMMAND" = "samplejob" ] ; then
+  MODULE=pulsar-mapr
+  CLASS=org.warps.pulsar.jobs.samples.SampleJob
+elif [ -n "$MODULE" ]; then
+  CLASS=$COMMAND
+else
+  printUsage
+  exit 0
+fi
+
+# Use more professional version
+if ${ENTERPRISE_EDITION}; then
+  MODULE=pulsar-enterprise
+  if [ "$COMMAND" = "inject" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.inject.InjectJob
+  elif [ "$COMMAND" = "generate" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.generate.GenerateJob
+  elif [ "$COMMAND" = "fetch" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.fetch.FetchJob
+  elif [ "$COMMAND" = "parse" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.parse.ParserJob
+  elif [ "$COMMAND" = "updateoutgraph" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.update.OutGraphUpdateJob
+  elif [ "$COMMAND" = "updateingraph" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.update.InGraphUpdateJob
+  elif [ "$COMMAND" = "updateseedsindex" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.homepage.SeedHomeUpdateJob
+  elif [ "$COMMAND" = "updatetoppageindex" ] ; then
+    CLASS=org.warps.pulsar.enterprise.jobs.homepage.TopPageHomeUpdateJob
+  fi
+fi
+
+if [ $PULSAR_RUNTIME_MODE == "CLUSTER_JOB" ]; then
+ # cluster mode, just pull the job file into hadoop, and exit
+ . "$bin"/run-cluster.sh
+else
+ . "$bin"/run-local.sh
+fi

@@ -1,0 +1,141 @@
+{
+    "name": "TestWebPage",
+    "type": "record",
+    "namespace": "org.warps.pulsar.persist.gora.generated.test",
+    "fields": [
+        {"name": "title", "type": ["null", "string"], "default": null},
+        {
+          "name": "users",
+          "type": {
+            "type": "array",
+            "items": {
+              "name": "User",
+              "type": "record",
+              "namespace": "org.warps.pulsar.persist.gora.generated.test",
+              "fields" : [
+                {"name": "name", "type": "string"},
+                {"name": "age", "type": "int"},
+                {"name": "gender", "type": "string"},
+                {"name": "metadata", "type": { "type" : "map", "values" : "string"}},
+                {"name": "photos", "type" : { "type" : "array", "items" : "string"} }
+              ]
+            }
+          }
+        },
+        {
+          "name": "deviceIds",
+          "type": {
+            "type": "array",
+            "items": {
+              "name": "DeviceId",
+              "type": "record",
+              "namespace": "org.warps.pulsar.persist.gora.generated.test",
+              "fields" : [
+                {"name": "name", "type": "string"},
+                {"name": "id", "type": "long"},
+                {"name": "photos", "type": { "type" : "array", "items" : {"type" : "map", "values":"string"}}}
+              ]
+            }
+          }
+        },
+        {
+          "name": "headers",
+          "type": {"type": "map","values": ["null", "string"]},
+          "default": {}
+        },
+        {
+          "name": "liveLinks",
+          "type": {
+            "type": "map",
+            "values": ["null", {
+              "name": "GHypeLink",
+              "type": "record",
+              "namespace": "org.warps.pulsar.persist.gora.generated",
+              "fields" : [
+                {"name": "url","type": "string","default": ""},
+                {"name": "anchor","type": "string","default": ""},
+                {"name": "order","type": "int","default": 0}
+              ]
+            }]
+          },
+          "default": []
+        },
+        {
+          "name": "vividLinks",
+          "type": {
+            "type": "map",
+            "values": ["null", {
+              "name": "GHypeLink",
+              "type": "record",
+              "namespace": "org.warps.pulsar.persist.gora.generated"
+            }]
+          },
+          "default": []
+        },
+        {
+          "name": "employees",
+          "type": {
+            "type": "map",
+            "values": ["null",{
+                "name": "Employee",
+                "type": "record",
+                "namespace": "org.warps.pulsar.persist.gora.generated.test",
+                "fields" : [
+                  {"name": "name", "type": "string"},
+                  {"name": "id", "type": "long"},
+                  {"name": "photos", "type": { "type" : "array", "items" : {"type" : "map", "values":"string"}}}
+                ]}
+            ]
+          }
+        },
+        {
+          "name": "fieldGroup",
+          "type": [
+            "null",
+            {
+              "name": "pageModel",
+              "type": "record",
+              "namespace": "org.warps.pulsar.persist.gora.generated.test",
+              "fields": [
+                {"name": "id","type": "long","default": 0},
+                {"name": "name", "type": ["null", "string"], "default": null},
+                {"name": "title", "type": ["null", "string"], "default": null},
+                {"name": "author", "type": ["null", "string"], "default": null},
+                {"name": "authors", "type" : { "type" : "array", "items" : "string"}, "default": []},
+                {"name": "directors", "type" : { "type" : "array", "items" : "string"}, "default": []},
+                {"name": "publishTime", "type": ["null", "string"], "default": null},
+                {"name": "content", "type": ["null", "string"], "default": null},
+                {"name": "reviewCount","type": "int","default": 0},
+                {"name": "forwardCount","type": "int","default": 0},
+                {"name": "agreeCount","type": "int","default": 0},
+                {"name": "disagreeCount","type": "int","default": 0},
+                {"name": "sourceLink", "type": ["null", "string"], "default": null},
+                {"name": "sourceTitle", "type": ["null", "string"], "default": null},
+                {
+                  "name": "comments",
+                  "type": {
+                    "type": "array",
+                    "items": {
+                      "name": "PageComment",
+                      "type": "record",
+                      "namespace": "org.warps.pulsar.persist.gora.generated.test",
+                      "fields" : [
+                        {"name": "id","type": "long","default": 0},
+                        {"name": "author", "type": ["null", "string"], "default": null},
+                        {"name": "publishTime", "type": ["null", "string"], "default": null},
+                        {"name": "content", "type": ["null", "string"], "default": null},
+                        {"name": "reviewCount","type": "int","default": 0},
+                        {"name": "forwardCount","type": "int","default": 0},
+                        {"name": "agreeCount","type": "int","default": 0},
+                        {"name": "disagreeCount","type": "int","default": 0}
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "default": null
+        }
+    ]
+}

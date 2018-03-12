@@ -1,0 +1,314 @@
+{
+  "name": "GWebPage",
+  "type": "record",
+  "namespace": "org.warps.pulsar.persist.gora.generated",
+  "fields": [
+    {
+      "name": "createTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "distance",
+      "type": "int",
+      "default": -1
+    },
+    {
+      "name": "fetchCount",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "fetchPriority",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "fetchInterval",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "zoneId",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "options",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "batchId",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "crawlStatus",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "prevFetchTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "fetchTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "fetchRetries",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "reprUrl",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "prevModifiedTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "modifiedTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "protocolStatus",
+      "type": [
+        "null",
+        {
+          "name": "GProtocolStatus",
+          "type": "record",
+          "namespace": "org.warps.pulsar.persist.gora.generated",
+          "fields": [
+            {"name": "majorCode","type": "int","default": 0},
+            {"name": "minorCode","type": "int","default": 0},
+            {"name": "args", "type": {"type": "map","values": ["null","string"]}, "default": {}}
+          ]
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "encoding",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "contentType",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "content",
+      "type": ["null","bytes"],
+      "doc": "The entire raw document content e.g. raw XHTML",
+      "default": null
+    },
+    {
+       "name": "baseUrl",
+       "type": ["null","string"],
+       "default": null
+    },
+    {
+      "name": "referrer",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "anchor",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "anchorOrder",
+      "type": "int",
+      "default": -1
+    },
+    {
+      "name": "parseStatus",
+      "type": [
+        "null",
+        {
+          "name": "GParseStatus",
+          "type": "record",
+          "namespace": "org.warps.pulsar.persist.gora.generated",
+          "fields": [
+            {"name": "majorCode","type": "int","default": 0},
+            {"name": "minorCode","type": "int","default": 0},
+            {"name": "args", "type": {"type": "map","values": ["null","string"]}, "default": {}}
+          ]
+        }
+      ],
+      "default": null
+    },
+    {
+      "name": "pageTitle",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "pageText",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "contentTitle",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "contentText",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "contentTextLen",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "pageCategory",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "contentModifiedTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "prevContentModifiedTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "contentPublishTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "prevContentPublishTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "refContentPublishTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "prevRefContentPublishTime",
+      "type": "long",
+      "default": 0
+    },
+    {
+      "name": "prevSignature",
+      "type": ["null","bytes"],
+      "default": null
+    },
+    {
+      "name": "signature",
+      "type": ["null","bytes"],
+      "default": null
+    },
+    {
+      "name": "contentScore",
+      "type": "float",
+      "default": 0
+    },
+    {
+      "name": "score",
+      "type": "float",
+      "default": 0
+    },
+    {
+      "name": "sortScore",
+      "type": ["null","string"],
+      "default": null
+    },
+    {
+      "name": "pageCounters",
+      "type": {"type": "map","values": ["null","int"]},
+      "default": {}
+    },
+    {
+      "name": "headers",
+      "type": {"type": "map","values": ["null","string"]},
+      "default": {}
+    },
+    {
+      "name": "links",
+      "type" : { "type" : "array", "items" : "string"},
+      "default": []
+    },
+    {
+      "name": "liveLinks",
+      "type": {
+        "type": "map",
+        "values": ["null",
+            {
+              "name": "GHypeLink",
+              "type": "record",
+              "namespace": "org.warps.pulsar.persist.gora.generated",
+              "fields" : [
+                {"name": "url","type": "string","default": ""},
+                {"name": "anchor","type": "string","default": ""},
+                {"name": "order","type": "int","default": 0}
+              ]
+            }
+        ]
+      },
+      "default": []
+    },
+    {
+      "name": "vividLinks",
+      "type": {"type": "map","values": ["null","string"]},
+      "default": {}
+    },
+    {
+      "name": "deadLinks",
+      "type" : { "type" : "array", "items" : "string"},
+      "default": []
+    },
+    {
+      "name": "inlinks",
+      "type": {"type": "map","values": ["null","string"]},
+      "default": {}
+    },
+    {
+      "name": "markers",
+      "type": {"type": "map","values": ["null","string"]},
+      "default": {}
+    },
+    {
+      "name": "metadata",
+      "type": {"type": "map","values": ["null","bytes"]},
+      "default": {}
+    },
+    {
+      "name": "pageModel",
+      "type": {
+        "type": "array",
+        "items": {
+          "name": "GFieldGroup",
+          "type": "record",
+          "namespace": "org.warps.pulsar.persist.gora.generated",
+          "fields" : [
+            {"name": "id", "type": "long", "default": 0},
+            {"name": "parentId", "type": "long", "default": 0},
+            {"name": "name", "type": ["null", "string"], "default": null},
+            {"name": "fields","type": {"type": "map","values": ["null","string"]},"default": {}}
+          ]
+        }
+      },
+      "default": []
+    }
+  ]
+}

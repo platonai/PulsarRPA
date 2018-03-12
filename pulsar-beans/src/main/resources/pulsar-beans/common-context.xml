@@ -1,0 +1,31 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<beans xmlns = "http://www.springframework.org/schema/beans"
+       xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation = "http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
+
+    <bean id="conf" class="org.warps.pulsar.common.config.MutableConfig" />
+
+    <bean id="webDb" class="org.warps.pulsar.persist.gora.db.WebDb" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="pulsarCounters" class="org.warps.pulsar.common.MetricsCounters" />
+
+    <bean id="pulsarMetrics" class="org.warps.pulsar.common.MetricsSystem" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="pulsarFiles" class="org.warps.pulsar.common.PulsarFileSystem">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="fetchStatusTracker" class="org.warps.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+</beans>

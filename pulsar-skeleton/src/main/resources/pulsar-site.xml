@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl" ?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <!-- fetch rules -->
+
+  <property>
+    <name>http.useHttp11</name>
+    <value>true</value>
+  </property>
+
+  <property>
+    <name>http.robots.obey</name>
+    <value>false</value>
+    <description>Whether obey the robots.txt protocol</description>
+  </property>
+
+  <property>
+    <name>http.agent.name</name>
+    <value>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/62.0.3202.75 Chrome/62.0.3202.75 Safari/537.36</value>
+  </property>
+
+  <property>
+    <name>parse.ignore.external.links</name>
+    <value>false</value>
+  </property>
+  <!-- Solr Index -->
+</configuration>

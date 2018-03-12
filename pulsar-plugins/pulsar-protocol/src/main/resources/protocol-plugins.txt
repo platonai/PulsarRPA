@@ -1,0 +1,7 @@
+http org.warps.pulsar.protocol.http.Http
+https org.warps.pulsar.protocol.http.Http
+file org.warps.pulsar.protocol.file.File
+
+# Custom protocols
+selenium org.warps.pulsar.protocol.selenium.SeleniumProtocol custom=true
+crowd org.warps.pulsar.protocol.crowd.ForwardingProtocol custom=true

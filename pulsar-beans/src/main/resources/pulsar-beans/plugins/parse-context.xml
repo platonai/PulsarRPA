@@ -1,0 +1,69 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<beans xmlns = "http://www.springframework.org/schema/beans"
+       xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation = "http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
+
+    <import resource="../common-context.xml"/>
+    <import resource="urlfilter-context.xml"/>
+
+    <bean id="signature" class="org.warps.pulsar.crawl.signature.TextMD5Signature" />
+
+    <bean id="linkFilter" class="org.warps.pulsar.crawl.parse.LinkFilter">
+        <constructor-arg ref="crawlFilters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="htmlParser" class="org.warps.pulsar.parse.html.HtmlParser">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="crawlFilters"/>
+        <constructor-arg ref="parseFilters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="tikaParser" class="org.warps.pulsar.parse.tika.TikaParser">
+        <constructor-arg ref="crawlFilters"/>
+        <constructor-arg ref="parseFilters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="parserFactory" class="org.warps.pulsar.crawl.parse.ParserFactory">
+        <constructor-arg>
+            <list>
+                <ref bean="htmlParser"/>
+                <ref bean="tikaParser"/>
+            </list>
+        </constructor-arg>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="boilerpipeFilter" class="org.warps.pulsar.parse.html.BoilerpipeFilter">
+        <constructor-arg ref="conf"/>
+    </bean>
+    <bean id="selectorFilter" class="org.warps.pulsar.parse.html.GeneralHtmlFilter">
+        <constructor-arg ref="conf"/>
+    </bean>
+    <bean id="jsParseFilter" class="org.warps.pulsar.parse.js.JSParseFilter">
+        <constructor-arg ref="conf"/>
+    </bean>
+    <bean id="parseFilters" class="org.warps.pulsar.crawl.parse.ParseFilters">
+        <constructor-arg>
+            <list>
+                <ref bean="jsParseFilter" />
+                <ref bean="selectorFilter" />
+                <ref bean="boilerpipeFilter" />
+            </list>
+        </constructor-arg>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="pageParser" class="org.warps.pulsar.crawl.parse.PageParser">
+        <constructor-arg ref="crawlFilters"/>
+        <constructor-arg ref="parserFactory"/>
+        <constructor-arg ref="signature"/>
+        <constructor-arg ref="conf"/>
+        <property name="linkFilter" ref="linkFilter"/>
+    </bean>
+
+</beans>

@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl" ?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <property>
+    <name>pulsar.config.id</name>
+    <value>test-parse-conf</value>
+    <description>The name of the current task</description>
+  </property>
+
+  <property>
+    <name>metatags.names</name>
+    <value>*</value>
+  </property>
+
+</configuration>

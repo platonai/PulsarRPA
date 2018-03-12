@@ -1,0 +1,36 @@
+2018-03-09 11:27:20,756 ERROR org.apache.gora.compiler.cli.GoraCompilerCLI: Must supply at least one source file and an output directory.
+2018-03-09 11:27:20,756 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Usage: gora-compiler ( -h | --help ) | (<input> [<input>...] <output> [-license <id>])
+2018-03-09 11:27:20,757 ERROR org.apache.gora.compiler.cli.GoraCompilerCLI: License header options include;
+		  ASLv2   (Apache Software License v2.0) 
+		  AGPLv3  (GNU Affero General Public License) 
+		  CDDLv1  (Common Development and Distribution License v1.0) 
+		  FDLv13  (GNU Free Documentation License v1.3) 
+		  GPLv1   (GNU General Public License v1.0) 
+		  GPLv2   (GNU General Public License v2.0) 
+		  GPLv3   (GNU General Public License v3.0) 
+		  LGPLv21 (GNU Lesser General Public License v2.1) 
+		  LGPLv3  (GNU Lesser General Public License v2.1)
+2018-03-09 11:27:52,364 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:27:52,751 INFO org.apache.gora.compiler.GoraCompiler: Compiled into: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/java
+2018-03-09 11:27:52,751 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Compiler executed SUCCESSFULL.
+2018-03-09 11:33:18,606 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:33:19,132 INFO org.apache.gora.compiler.GoraCompiler: Compiled into: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/java
+2018-03-09 11:33:19,133 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Compiler executed SUCCESSFULL.
+2018-03-09 11:36:20,233 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:37:08,330 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:37:08,730 INFO org.apache.gora.compiler.GoraCompiler: Compiled into: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/java
+2018-03-09 11:37:08,730 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Compiler executed SUCCESSFULL.
+2018-03-09 11:40:54,377 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:40:54,772 INFO org.apache.gora.compiler.GoraCompiler: Compiled into: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/java
+2018-03-09 11:40:54,772 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Compiler executed SUCCESSFULL.
+2018-03-09 11:41:51,282 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:42:11,830 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:42:17,271 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:42:30,421 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/sample.avsc
+2018-03-09 11:46:34,679 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/webpage.avsc
+2018-03-09 11:46:35,071 INFO org.apache.gora.compiler.GoraCompiler: Compiled into: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/java
+2018-03-09 11:46:35,071 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Compiler executed SUCCESSFULL.
+2018-03-09 11:49:27,347 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/webpage.avsc
+2018-03-09 11:49:49,994 INFO org.apache.gora.compiler.GoraCompiler: Compiling: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/resources/avro/webpage.avsc
+2018-03-09 11:49:50,418 INFO org.apache.gora.compiler.GoraCompiler: Compiled into: /home/vincent/workspace/warps-pulsar/pulsar-persist/src/main/java
+2018-03-09 11:49:50,419 INFO org.apache.gora.compiler.cli.GoraCompilerCLI: Compiler executed SUCCESSFULL.

@@ -1,0 +1,53 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<beans xmlns = "http://www.springframework.org/schema/beans"
+       xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation = "http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="conf" class="org.warps.pulsar.common.config.config" />
+
+    <bean id="anchorIndexingFilter" class="org.warps.pulsar.index.AnchorIndexingFilter">
+        <constructor-arg ref="config"/>
+    </bean>
+    <bean id="metadataIndexer" class="org.warps.pulsar.index.MetadataIndexer">
+        <constructor-arg ref="config"/>
+    </bean>
+    <bean id="generalIndexingFilter" class="org.warps.pulsar.index.GeneralIndexingFilter">
+        <constructor-arg ref="config"/>
+    </bean>
+    <bean id="moreIndexingFilter" class="org.warps.pulsar.index.MoreIndexingFilter">
+        <constructor-arg ref="config"/>
+    </bean>
+
+    <bean id="indexFilters" class="org.warps.pulsar.crawl.index.IndexingFilters">
+        <constructor-arg>
+            <list>
+                <ref bean="anchorIndexingFilter" />
+                <ref bean="metadataIndexer" />
+                <ref bean="generalIndexingFilter" />
+                <ref bean="moreIndexingFilter" />
+            </list>
+        </constructor-arg>
+        <constructor-arg ref="config"/>
+    </bean>
+
+    <bean id="indexerMapping" class="org.warps.pulsar.crawl.index.IndexerMapping">
+        <constructor-arg value="indexer-mapping.xml"/>
+        <constructor-arg ref="config"/>
+    </bean>
+    <bean id="solrIndexWriter" class="org.warps.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
+        <constructor-arg ref="indexerMapping"/>
+        <constructor-arg ref="config"/>
+    </bean>
+    <bean id="indexWriters" class="org.warps.pulsar.crawl.index.IndexWriters">
+        <!--<property name="message" value = "Hello World!"/>-->
+        <constructor-arg>
+            <list>
+                <ref bean="solrIndexWriter" />
+            </list>
+        </constructor-arg>
+        <constructor-arg ref="config"/>
+    </bean>
+
+</beans>

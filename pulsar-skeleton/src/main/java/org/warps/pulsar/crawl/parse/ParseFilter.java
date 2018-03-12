@@ -1,0 +1,39 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.warps.pulsar.crawl.parse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.warps.pulsar.common.config.ReloadableParameterized;
+import org.warps.pulsar.crawl.parse.html.ParseContext;
+
+import java.io.IOException;
+
+/**
+ * Extension point for DOM-based parsers. Permits one to add additional metadata
+ * to parses provided by the html or tika plugins. All plugins found which
+ * implement this extension point are run sequentially on the parse.
+ */
+public interface ParseFilter extends ReloadableParameterized {
+    Logger LOG = LoggerFactory.getLogger(ParseFilter.class);
+
+    /**
+     * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
+     */
+    void filter(ParseContext parseContext) throws IOException;
+}
