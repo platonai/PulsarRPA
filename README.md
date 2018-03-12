@@ -76,7 +76,7 @@ Enterprise Edition:
 
 Pulsar Enterprise Edition comes with lots of exciting features:
 
-SQL over Web:
+Web SQL:
 ```
 1. Any source, any format, any volume, ETL the data and turn it into a table by just one simple SQL
 2. Monitor a Web site and turn it into a table by just one simple SQL
