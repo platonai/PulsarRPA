@@ -78,8 +78,8 @@ Pulsar Enterprise Edition comes with lots of exciting features:
 
 SQL over Web:
 ```
-1. Any source, any format, any volume, ETL data and turn it into a table by just one SQL
-2. Monitor and turn a Web site into a table by just one SQL
+1. Any source, any format, any volume, ETL the data and turn it into a table by just one simple SQL
+2. Monitor a Web site and turn it into a table by just one simple SQL
 3. Integrated argorithms for Web extraction, data mining, NLP, Knowldge Graph, maching learning, etc
 4. Do business intelligence on unstructured data
 ```
@@ -93,7 +93,7 @@ Machine learning for Web content mining:
 Advanced DOM processing:
 ```
 1. Tranditional CSS path support
-2. Complex expression in CSS path: element.select(div:expr('_width >= 300 and _height >= 400'))
+2. Advanced expression in CSS path: element.select("div:expr(_width >= 300 and _height >= 400)")
 3. Statistics based element locate
 ```
 
