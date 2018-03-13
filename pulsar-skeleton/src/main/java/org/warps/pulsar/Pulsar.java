@@ -231,6 +231,5 @@ public class Pulsar implements AutoCloseable {
             webDb.close();
             closed = true;
         }
-        // close all closable managed by this object, there is no one currently
     }
 }
