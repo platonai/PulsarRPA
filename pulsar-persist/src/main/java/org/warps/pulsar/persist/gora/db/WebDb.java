@@ -32,6 +32,7 @@ import org.warps.pulsar.persist.gora.generated.GWebPage;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.warps.pulsar.common.PulsarConstants.UNICODE_LAST_CODE_POINT;
 import static org.warps.pulsar.common.UrlUtil.reverseUrlOrNull;
@@ -42,7 +43,7 @@ public class WebDb implements AutoCloseable {
 
     private final ImmutableConfig conf;
     private final DataStore<String, GWebPage> store;
-    private boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public WebDb(ImmutableConfig conf) throws RuntimeException {
         this.conf = conf;
@@ -266,11 +267,12 @@ public class WebDb implements AutoCloseable {
 
     @Override
     public void close() {
-        if (!closed) {
-            store.flush();
-            store.close();
-            closed = true;
+        if (closed.getAndSet(true)) {
+            return;
         }
+
+        store.flush();
+        store.close();
     }
 
     private String[] prepareFields(Set<String> fields) {

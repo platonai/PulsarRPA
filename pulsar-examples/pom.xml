@@ -13,30 +13,31 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>0.3.7</version>
     </parent>
 
     <artifactId>pulsar-examples</artifactId>
+    <name>Pulsar Examples</name>
 
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-beans</artifactId>
         </dependency>
     </dependencies>

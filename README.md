@@ -5,8 +5,6 @@ Pulsar is a production ready web crawler.
 
 Pulsar is highly modularized so it also can be used as a library or embedded within other projects.
 
-The major architecture of Pulsar comes from Apache Nutch and reused a lot of code from Nutch.
-
 Pulsar supports selenium so one can do web scraping using selenium's native api or custom parse plugins.
 
 For Web scraping(in kotlin):
@@ -36,7 +34,7 @@ For more crawl task examples, see bin/samples.
 
 TODO: Scripts may not working if you can see this line. We are working on it ...
 
-The crawling workflow can be illustrated in kotlin as the following:
+The major workflow of Pulsar comes from Apache Nutch, and can be illustrated in kotlin as the following:
 
     val pages = urls
             .map { generate(batchId, it) }
@@ -62,7 +60,7 @@ The crawling workflow can be illustrated in kotlin as the following:
             .map { updateInGraphMapper(it) }
             .map { updateInGraphReducer(it) }
 
-Notice: the Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages. Score filters may differs for different crawl tasks.
+Note: the Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages. Score filters may differs for different crawl tasks.
 
 HBase is the primary choice as the storage, and any storage supported by Apache Gora will be fine.
 
@@ -111,6 +109,6 @@ Enterprise Edition will be open sourced step by step.
 
 Cloud Edition:
 
-Write your own Web SQL to create data products anywhere, anytime, for sale
+Write your own Web SQLs to create data products anywhere, anytime, to share, or for sale
 
 Coming soon ...

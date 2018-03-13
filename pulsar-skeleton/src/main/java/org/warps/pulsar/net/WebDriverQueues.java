@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
@@ -78,7 +79,7 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
     private Duration implicitlyWait;
     private Duration pageLoadTimeout;
     private Duration scriptTimeout;
-    private boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public WebDriverQueues(ImmutableConfig conf) {
         proxyPool = ProxyPool.getInstance(conf);
@@ -318,21 +319,20 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
 
     @Override
     public void close() {
-        if (closed) {
+        if (closed.getAndSet(true)) {
             return;
         }
-        closed = true;
 
         if (isHeadless) {
             freeDrivers.clear();
             Iterator<WebDriver> it = allDrivers.iterator();
             while (it.hasNext()) {
                 WebDriver driver = it.next();
+                it.remove();
+
                 LOG.info("Closing WebDriver " + driver);
                 driver.close();
                 driver.quit();
-
-                it.remove();
             }
         }
     }

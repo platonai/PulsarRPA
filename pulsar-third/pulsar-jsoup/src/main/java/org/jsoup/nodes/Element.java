@@ -8,7 +8,6 @@ import org.jsoup.parser.ParseSettings;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.*;
-import org.warps.pulsar.dom.*;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;

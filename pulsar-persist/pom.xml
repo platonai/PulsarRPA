@@ -13,26 +13,26 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>0.3.7</version>
     </parent>
 
     <artifactId>pulsar-persist</artifactId>
-    <name>Warps Pulsar : Persist</name>
+    <name>Pulsar Persist</name>
 
     <build>
-        
+
     </build>
 
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
 
@@ -70,8 +70,8 @@
 
         <!-- Spark Dependencies -->
         <!--<dependency>-->
-            <!--<groupId>org.apache.spark</groupId>-->
-            <!--<artifactId>spark-core_2.10</artifactId>-->
+        <!--<groupId>org.apache.spark</groupId>-->
+        <!--<artifactId>spark-core_2.10</artifactId>-->
         <!--</dependency>-->
 
         <!-- Storage Dependencies -->

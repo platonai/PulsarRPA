@@ -13,7 +13,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>0.3.7</version>
     </parent>
@@ -21,7 +21,7 @@
     <artifactId>pulsar-third</artifactId>
     <packaging>pom</packaging>
 
-    <name>Warps Pulsar : Third</name>
+    <name>Pulsar Third</name>
     <url>http://pulsar.qiwur.org</url>
     <inceptionYear>2014</inceptionYear>
 
@@ -52,17 +52,17 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.warps.pulsar</groupId>
+                <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-boilerpipe</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.warps.pulsar</groupId>
+                <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-jsoup</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.warps.pulsar</groupId>
+                <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>

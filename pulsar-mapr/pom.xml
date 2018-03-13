@@ -13,13 +13,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>0.3.7</version>
     </parent>
 
     <artifactId>pulsar-mapr</artifactId>
-    <name>Warps Pulsar : MapR</name>
+    <name>Pulsar MapR</name>
 
     <build>
         <plugins>
@@ -27,7 +27,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>org.warps.pulsar.rest.embedded.PMaster</mainClass>
+                    <mainClass>fun.platonic.pulsar.rest.embedded.PMaster</mainClass>
                 </configuration>
             </plugin>
 
@@ -78,27 +78,27 @@
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-protocol</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-filter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-parse</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-scoring</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-index</artifactId>
         </dependency>
 

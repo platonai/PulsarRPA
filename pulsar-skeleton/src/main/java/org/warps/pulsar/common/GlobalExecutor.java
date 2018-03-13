@@ -7,6 +7,7 @@ import org.warps.pulsar.common.config.Params;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.warps.pulsar.common.config.CapabilityTypes.GLOBAL_EXECUTOR_AUTO_CONCURRENCY_FACTOR;
 import static org.warps.pulsar.common.config.CapabilityTypes.GLOBAL_EXECUTOR_CONCURRENCY_HINT;
@@ -20,7 +21,7 @@ public class GlobalExecutor implements AutoCloseable {
     public static final int NCPU = Runtime.getRuntime().availableProcessors();
     private static GlobalExecutor INSTANCE;
     private ExecutorService executor;
-    private boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
     private float autoConcurrencyFactor;
     private int concurrency;
 
@@ -74,10 +75,9 @@ public class GlobalExecutor implements AutoCloseable {
 
     @Override
     public void close() {
-        if (closed) {
+        if (closed.getAndSet(true)) {
             return;
         }
-        closed = true;
 
         if (executor != null && !executor.isShutdown()) {
             executor.shutdownNow();

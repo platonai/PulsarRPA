@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -76,7 +77,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     private AtomicInteger batchTaskCount = new AtomicInteger(0);
     private AtomicInteger batchSuccessCount = new AtomicInteger(0);
 
-    private boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public static SeleniumEngine getInstance(ImmutableConfig conf) {
         SeleniumEngine engine = ObjectCache.get(conf).getBean(SeleniumEngine.class);
@@ -451,10 +452,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
     @Override
     public void close() {
-        if (closed) {
+        if (closed.getAndSet(true)) {
             return;
         }
-        closed = true;
 
         executor.close();
         drivers.close();

@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.warps.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_DIR;
@@ -43,7 +44,7 @@ public class ProxyPool extends AbstractQueue<ProxyEntry> implements AutoCloseabl
     private Path availableDir;
     private Path enabledDir;
     private Path archiveDir;
-    private boolean closed;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public ProxyPool(ImmutableConfig conf) {
         this.conf = conf;
@@ -258,8 +259,9 @@ public class ProxyPool extends AbstractQueue<ProxyEntry> implements AutoCloseabl
 
     @Override
     public void close() {
-        if (closed) return;
-        closed = true;
+        if (closed.getAndSet(true)) {
+            return;
+        }
 
         String now = DateTimeUtil.now("MMdd.HHmm");
 

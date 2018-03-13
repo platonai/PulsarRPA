@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>0.3.7</version>
         <relativePath>..</relativePath>
@@ -27,7 +27,7 @@
 
     <artifactId>pulsar-assembly</artifactId>
 
-    <name>Warps Pulsar : Assembly</name>
+    <name>Pulsar Assembly</name>
     <url>http://pulsar.qiwur.org</url>
 
     <description>Distribution Package</description>
@@ -77,19 +77,19 @@
                         </configuration>
                     </execution>
                     <!--<execution>-->
-                        <!--<id>src</id>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>single</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--&lt;!&ndash;<skipAssembly>${pulsar.skip.assembly}</skipAssembly>&ndash;&gt;-->
-                            <!--<skipAssembly>false</skipAssembly>-->
-                            <!--<descriptors>-->
-                                <!--<descriptor>src/main/assembly/src.xml</descriptor>-->
-                            <!--</descriptors>-->
-                            <!--<tarLongFileMode>gnu</tarLongFileMode>-->
-                        <!--</configuration>-->
+                    <!--<id>src</id>-->
+                    <!--<phase>package</phase>-->
+                    <!--<goals>-->
+                    <!--<goal>single</goal>-->
+                    <!--</goals>-->
+                    <!--<configuration>-->
+                    <!--&lt;!&ndash;<skipAssembly>${pulsar.skip.assembly}</skipAssembly>&ndash;&gt;-->
+                    <!--<skipAssembly>false</skipAssembly>-->
+                    <!--<descriptors>-->
+                    <!--<descriptor>src/main/assembly/src.xml</descriptor>-->
+                    <!--</descriptors>-->
+                    <!--<tarLongFileMode>gnu</tarLongFileMode>-->
+                    <!--</configuration>-->
                     <!--</execution>-->
                 </executions>
             </plugin>
@@ -107,7 +107,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-mapr</artifactId>
         </dependency>
     </dependencies>

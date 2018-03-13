@@ -13,13 +13,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
         <version>0.3.7</version>
     </parent>
 
     <artifactId>pulsar-common</artifactId>
-    <name>Warps Pulsar : Common</name>
+    <name>Pulsar Common</name>
 
     <dependencies>
         <dependency>
@@ -87,7 +87,7 @@
             <artifactId>httpclient</artifactId>
         </dependency>
 
-        <!-- For org.warps.pulsar.common.EncodingDetector -->
+        <!-- For fun.platonic.pulsar.common.EncodingDetector -->
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>

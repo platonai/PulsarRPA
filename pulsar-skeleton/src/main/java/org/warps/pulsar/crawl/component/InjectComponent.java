@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,7 +44,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
     private SeedBuilder seedBuilder;
     private WebDb webDb;
     private WeakPageIndexer seedIndexer;
-    private boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public InjectComponent(SeedBuilder seedBuilder, WebDb webDb, ImmutableConfig conf) {
         this.seedBuilder = seedBuilder;
@@ -213,10 +214,11 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
 
     @Override
     public void close() {
-        if (!closed) {
-            commit();
-            closed = true;
+        if (closed.getAndSet(true)) {
+            return;
         }
+
+        commit();
     }
 
     private WebPage loadOrCreate(String url) {

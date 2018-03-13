@@ -8,18 +8,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.warps.pulsar</groupId>
+        <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
         <version>0.3.7</version>
     </parent>
 
     <artifactId>pulsar-boilerpipe</artifactId>
 
-    <name>Warps Pulsar : Boilerpipe</name>
+    <name>Pulsar Boilerpipe</name>
 
     <dependencies>
         <dependency>
-            <groupId>org.warps.pulsar</groupId>
+            <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
         <dependency>

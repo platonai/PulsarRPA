@@ -18,6 +18,7 @@ import org.warps.pulsar.persist.gora.db.WebDb;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.warps.pulsar.common.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 import static org.warps.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
@@ -29,7 +30,7 @@ public class Pulsar implements AutoCloseable {
     private final InjectComponent injectComponent;
     private final LoadComponent loadComponent;
     private MutableConfig defaultMutableConfig;
-    private boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public Pulsar() {
         this(new ClassPathXmlApplicationContext(
@@ -225,12 +226,12 @@ public class Pulsar implements AutoCloseable {
 
     @Override
     public void close() {
-        if (!closed) {
-            SeleniumEngine.getInstance(immutableConfig).close();
-            injectComponent.close();
-            webDb.close();
-            closed = true;
+        if (closed.getAndSet(true)) {
+            return;
         }
-        // close all closable managed by this object, there is no one currently
+
+        SeleniumEngine.getInstance(immutableConfig).close();
+        injectComponent.close();
+        webDb.close();
     }
 }
