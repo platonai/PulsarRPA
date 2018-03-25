@@ -1,7 +1,6 @@
 package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.DataUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.junit.Test;

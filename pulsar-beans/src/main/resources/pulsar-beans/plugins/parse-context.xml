@@ -8,27 +8,27 @@
     <import resource="../common-context.xml"/>
     <import resource="urlfilter-context.xml"/>
 
-    <bean id="signature" class="org.warps.pulsar.crawl.signature.TextMD5Signature" />
+    <bean id="signature" class="fun.platonic.pulsar.crawl.signature.TextMD5Signature"/>
 
-    <bean id="linkFilter" class="org.warps.pulsar.crawl.parse.LinkFilter">
+    <bean id="linkFilter" class="fun.platonic.pulsar.crawl.parse.LinkFilter">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="htmlParser" class="org.warps.pulsar.parse.html.HtmlParser">
+    <bean id="htmlParser" class="fun.platonic.pulsar.parse.html.HtmlParser">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="tikaParser" class="org.warps.pulsar.parse.tika.TikaParser">
+    <bean id="tikaParser" class="fun.platonic.pulsar.parse.tika.TikaParser">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="parserFactory" class="org.warps.pulsar.crawl.parse.ParserFactory">
+    <bean id="parserFactory" class="fun.platonic.pulsar.crawl.parse.ParserFactory">
         <constructor-arg>
             <list>
                 <ref bean="htmlParser"/>
@@ -38,16 +38,16 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="boilerpipeFilter" class="org.warps.pulsar.parse.html.BoilerpipeFilter">
+    <bean id="boilerpipeFilter" class="fun.platonic.pulsar.parse.html.BoilerpipeFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="selectorFilter" class="org.warps.pulsar.parse.html.GeneralHtmlFilter">
+    <bean id="selectorFilter" class="fun.platonic.pulsar.parse.html.GeneralHtmlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="jsParseFilter" class="org.warps.pulsar.parse.js.JSParseFilter">
+    <bean id="jsParseFilter" class="fun.platonic.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="parseFilters" class="org.warps.pulsar.crawl.parse.ParseFilters">
+    <bean id="parseFilters" class="fun.platonic.pulsar.crawl.parse.ParseFilters">
         <constructor-arg>
             <list>
                 <ref bean="jsParseFilter" />
@@ -58,7 +58,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pageParser" class="org.warps.pulsar.crawl.parse.PageParser">
+    <bean id="pageParser" class="fun.platonic.pulsar.crawl.parse.PageParser">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>

@@ -2,7 +2,6 @@ package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
-import org.jsoup.helper.W3CDom;
 import org.jsoup.integration.ParseTest;
 import org.jsoup.nodes.Element;
 import org.junit.Test;

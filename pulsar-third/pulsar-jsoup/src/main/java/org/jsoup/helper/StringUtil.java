@@ -1,16 +1,10 @@
 package org.jsoup.helper;
 
-import org.apache.commons.lang3.StringUtils;
-
-import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A minimal String utility class. Designed for internal dom use only.

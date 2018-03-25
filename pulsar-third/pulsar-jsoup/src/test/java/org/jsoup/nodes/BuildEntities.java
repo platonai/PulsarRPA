@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.integration.UrlConnectTest;
-import org.jsoup.nodes.Entities;
 
 import java.io.File;
 import java.io.FileWriter;

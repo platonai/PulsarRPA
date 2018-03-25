@@ -7,10 +7,10 @@
 
     <import resource="../common-context.xml"/>
 
-    <bean id="opicScoringFilter" class="org.warps.pulsar.scoring.opic.OPICScoringFilter">
+    <bean id="opicScoringFilter" class="fun.platonic.pulsar.scoring.opic.OPICScoringFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="scoringFilters" class="org.warps.pulsar.crawl.scoring.ScoringFilters">
+    <bean id="scoringFilters" class="fun.platonic.pulsar.crawl.scoring.ScoringFilters">
         <constructor-arg>
             <list>
                 <ref bean="opicScoringFilter" />

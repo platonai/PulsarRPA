@@ -1,14 +1,10 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.Entities;
 import org.junit.Test;
 
 import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 public class EntitiesTest {

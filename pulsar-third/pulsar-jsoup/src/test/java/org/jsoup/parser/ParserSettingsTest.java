@@ -3,7 +3,6 @@ package org.jsoup.parser;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
 import org.jsoup.nodes.Attributes;
-import org.jsoup.parser.ParseSettings;
 import org.junit.Rule;
 import org.junit.Test;
 

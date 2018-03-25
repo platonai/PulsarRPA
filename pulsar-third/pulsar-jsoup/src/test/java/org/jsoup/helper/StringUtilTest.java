@@ -1,7 +1,6 @@
 package org.jsoup.helper;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
 import org.junit.Test;
 
 import java.util.Arrays;

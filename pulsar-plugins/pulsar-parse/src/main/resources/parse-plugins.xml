@@ -85,13 +85,13 @@
 	<!--  alias mappings for parse-xxx names to the actual extension implementation 
 	ids described in each parser's parser.xml file -->
 	<aliases>
-		<alias name="parse-html" class="org.warps.pulsar.parse.html.HtmlParser" />
-		<alias name="parse-tika" class="org.warps.pulsar.parse.tika.TikaParser" />
+        <alias name="parse-html" class="fun.platonic.pulsar.parse.html.HtmlParser"/>
+        <alias name="parse-tika" class="fun.platonic.pulsar.parse.tika.TikaParser"/>
 		<!--<alias name="parse-ext" extension-id="ExtParser" />-->
-		<alias name="parse-js" class="org.warps.pulsar.parse.js.JSParseFilter" />
-		<!--<alias name="feed" extension-id="org.warps.pulsar.parse.feed.FeedParser" />-->
-		<!--<alias name="parse-swf" extension-id="org.warps.pulsar.parse.swf.SWFParser" />-->
-		<!--<alias name="parse-zip" class="org.warps.pulsar.parse.zip.ZipParser" />-->
+        <alias name="parse-js" class="fun.platonic.pulsar.parse.js.JSParseFilter"/>
+        <!--<alias name="feed" extension-id="fun.platonic.pulsar.parse.feed.FeedParser" />-->
+        <!--<alias name="parse-swf" extension-id="fun.platonic.pulsar.parse.swf.SWFParser" />-->
+        <!--<alias name="parse-zip" class="fun.platonic.pulsar.parse.zip.ZipParser" />-->
 	</aliases>
 
 </parse-plugins>

@@ -2,7 +2,6 @@ package org.jsoup.parser;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
-import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 

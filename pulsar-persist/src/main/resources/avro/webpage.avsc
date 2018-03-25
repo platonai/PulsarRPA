@@ -1,7 +1,7 @@
 {
   "name": "GWebPage",
   "type": "record",
-  "namespace": "org.warps.pulsar.persist.gora.generated",
+  "namespace": "fun.platonic.pulsar.persist.gora.generated",
   "fields": [
     {
       "name": "createTime",
@@ -85,7 +85,7 @@
         {
           "name": "GProtocolStatus",
           "type": "record",
-          "namespace": "org.warps.pulsar.persist.gora.generated",
+          "namespace": "fun.platonic.pulsar.persist.gora.generated",
           "fields": [
             {"name": "majorCode","type": "int","default": 0},
             {"name": "minorCode","type": "int","default": 0},
@@ -138,7 +138,7 @@
         {
           "name": "GParseStatus",
           "type": "record",
-          "namespace": "org.warps.pulsar.persist.gora.generated",
+          "namespace": "fun.platonic.pulsar.persist.gora.generated",
           "fields": [
             {"name": "majorCode","type": "int","default": 0},
             {"name": "minorCode","type": "int","default": 0},
@@ -256,7 +256,7 @@
             {
               "name": "GHypeLink",
               "type": "record",
-              "namespace": "org.warps.pulsar.persist.gora.generated",
+              "namespace": "fun.platonic.pulsar.persist.gora.generated",
               "fields" : [
                 {"name": "url","type": "string","default": ""},
                 {"name": "anchor","type": "string","default": ""},
@@ -299,7 +299,7 @@
         "items": {
           "name": "GFieldGroup",
           "type": "record",
-          "namespace": "org.warps.pulsar.persist.gora.generated",
+          "namespace": "fun.platonic.pulsar.persist.gora.generated",
           "fields" : [
             {"name": "id", "type": "long", "default": 0},
             {"name": "parentId", "type": "long", "default": 0},

@@ -6,8 +6,6 @@ import org.jsoup.MultiLocaleRule.MultiLocaleTest;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
 import org.junit.Rule;
 import org.junit.Test;
 

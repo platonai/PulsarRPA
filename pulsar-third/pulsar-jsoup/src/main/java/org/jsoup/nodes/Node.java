@@ -1,7 +1,5 @@
 package org.jsoup.nodes;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.math3.stat.StatUtils;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
@@ -9,8 +7,8 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
-import org.warps.pulsar.dom.Feature;
-import org.warps.pulsar.dom.SparseFeatureVector;
+import fun.platonic.pulsar.dom.Feature;
+import fun.platonic.pulsar.dom.SparseFeatureVector;
 
 import java.io.IOException;
 import java.util.*;

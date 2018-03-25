@@ -12,16 +12,16 @@
     <import resource="plugins/indexing-context.xml"/>
     <import resource="plugins/scoring-context.xml"/>
 
-    <bean id="seedBuilder" class="org.warps.pulsar.crawl.inject.SeedBuilder">
+    <bean id="seedBuilder" class="fun.platonic.pulsar.crawl.inject.SeedBuilder">
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="injectComponent" class="org.warps.pulsar.crawl.component.InjectComponent">
+    <bean id="injectComponent" class="fun.platonic.pulsar.crawl.component.InjectComponent">
         <constructor-arg ref="seedBuilder"/>
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="generateComponent" class="org.warps.pulsar.crawl.component.GenerateComponent">
+    <bean id="generateComponent" class="fun.platonic.pulsar.crawl.component.GenerateComponent">
         <constructor-arg ref="conf"/>
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="pulsarFiles"/>
@@ -32,35 +32,35 @@
         <property name="fetchSchedule" ref="fetchSchedule"/>
         <property name="pulsarMetrics" ref="pulsarMetrics"/>
     </bean>
-    <bean id="fetchComponent" class="org.warps.pulsar.crawl.component.FetchComponent">
+    <bean id="fetchComponent" class="fun.platonic.pulsar.crawl.component.FetchComponent">
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchStatusTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="batchFetchComponent" class="org.warps.pulsar.crawl.component.BatchFetchComponent">
+    <bean id="batchFetchComponent" class="fun.platonic.pulsar.crawl.component.BatchFetchComponent">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchStatusTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="parseComponent" class="org.warps.pulsar.crawl.component.ParseComponent">
+    <bean id="parseComponent" class="fun.platonic.pulsar.crawl.component.ParseComponent">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="indexComponent" class="org.warps.pulsar.crawl.component.IndexComponent">
+    <bean id="indexComponent" class="fun.platonic.pulsar.crawl.component.IndexComponent">
         <property name="indexWriters" ref="indexWriters"/>
         <property name="indexingFilters" ref="indexingFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="updateComponent" class="org.warps.pulsar.crawl.component.UpdateComponent">
+    <bean id="updateComponent" class="fun.platonic.pulsar.crawl.component.UpdateComponent">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="pulsarMetrics"/>
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="loadComponent" class="org.warps.pulsar.crawl.component.LoadComponent">
+    <bean id="loadComponent" class="fun.platonic.pulsar.crawl.component.LoadComponent">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="batchFetchComponent"/>
         <constructor-arg ref="parseComponent"/>

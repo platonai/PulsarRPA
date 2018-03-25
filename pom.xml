@@ -960,7 +960,6 @@
         <hadoop.version>2.5.2</hadoop.version>
         <yarn.version>${hadoop.version}</yarn.version>
         <hbase.version>1.2.3</hbase.version>
-        <spark.version>1.4.1</spark.version>
 
         <!-- Search Engine -->
         <solr.version>6.1.0</solr.version>

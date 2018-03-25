@@ -7,9 +7,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.nodes.XmlDeclaration;
-import org.jsoup.parser.ParseSettings;
-import org.jsoup.parser.Parser;
-import org.jsoup.parser.XmlTreeBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -7,26 +7,26 @@
 
     <import resource="../common-context.xml"/>
 
-    <bean id="prefixUrlFilter" class="org.warps.pulsar.filter.PrefixUrlFilter">
+    <bean id="prefixUrlFilter" class="fun.platonic.pulsar.filter.PrefixUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="suffixUrlFilter" class="org.warps.pulsar.filter.SuffixUrlFilter">
+    <bean id="suffixUrlFilter" class="fun.platonic.pulsar.filter.SuffixUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="regexUrlFilter" class="org.warps.pulsar.filter.RegexUrlFilter">
+    <bean id="regexUrlFilter" class="fun.platonic.pulsar.filter.RegexUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="dateUrlFilter" class="org.warps.pulsar.filter.DateUrlFilter">
+    <bean id="dateUrlFilter" class="fun.platonic.pulsar.filter.DateUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="urlValidator" class="org.warps.pulsar.filter.UrlValidator">
+    <bean id="urlValidator" class="fun.platonic.pulsar.filter.UrlValidator">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="automatonUrlFilter" class="org.warps.pulsar.filter.AutomatonUrlFilter">
+    <bean id="automatonUrlFilter" class="fun.platonic.pulsar.filter.AutomatonUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="urlFilters" class="org.warps.pulsar.crawl.filter.UrlFilters">
+    <bean id="urlFilters" class="fun.platonic.pulsar.crawl.filter.UrlFilters">
         <constructor-arg ref="conf"/>
         <constructor-arg>
             <list>
@@ -40,17 +40,17 @@
         </constructor-arg>
     </bean>
 
-    <bean id="regexUrlNormalizer" class="org.warps.pulsar.normalizer.RegexUrlNormalizer">
+    <bean id="regexUrlNormalizer" class="fun.platonic.pulsar.normalizer.RegexUrlNormalizer">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="basicUrlNormalizer" class="org.warps.pulsar.normalizer.BasicUrlNormalizer">
+    <bean id="basicUrlNormalizer" class="fun.platonic.pulsar.normalizer.BasicUrlNormalizer">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="passUrlNormalizer" class="org.warps.pulsar.normalizer.PassUrlNormalizer">
+    <bean id="passUrlNormalizer" class="fun.platonic.pulsar.normalizer.PassUrlNormalizer">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="urlNormalizers" class="org.warps.pulsar.crawl.filter.UrlNormalizers">
+    <bean id="urlNormalizers" class="fun.platonic.pulsar.crawl.filter.UrlNormalizers">
         <constructor-arg ref="conf"/>
         <constructor-arg value="default"/>
         <constructor-arg>
@@ -62,11 +62,11 @@
         </constructor-arg>
     </bean>
 
-    <bean id="crawlFilter" class="org.warps.pulsar.crawl.filter.CrawlFilter">
+    <bean id="crawlFilter" class="fun.platonic.pulsar.crawl.filter.CrawlFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlFilters" class="org.warps.pulsar.crawl.filter.CrawlFilters">
+    <bean id="crawlFilters" class="fun.platonic.pulsar.crawl.filter.CrawlFilters">
         <constructor-arg>
             <list>
                 <ref bean="crawlFilter" />

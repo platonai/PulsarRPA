@@ -59,7 +59,7 @@ http://gora.apache.org/current/gora-hbase.html
         <family name="pe" maxVersions="1" />
     </table>
 
-    <class table="webpage" keyClass="java.lang.String" name="org.warps.pulsar.persist.gora.generated.GWebPage">
+    <class table="webpage" keyClass="java.lang.String" name="fun.platonic.pulsar.persist.gora.generated.GWebPage">
         <!-- fetch fields                                       -->
         <field name="createTime" family="f" qualifier="crt" />
         <field name="distance" family="f" qualifier="dis" />

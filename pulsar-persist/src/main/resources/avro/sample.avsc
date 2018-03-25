@@ -1,7 +1,7 @@
 {
     "name": "TestWebPage",
     "type": "record",
-    "namespace": "org.warps.pulsar.persist.gora.generated.test",
+    "namespace": "fun.platonic.pulsar.persist.gora.generated.test",
     "fields": [
         {"name": "title", "type": ["null", "string"], "default": null},
         {
@@ -11,7 +11,7 @@
             "items": {
               "name": "User",
               "type": "record",
-              "namespace": "org.warps.pulsar.persist.gora.generated.test",
+              "namespace": "fun.platonic.pulsar.persist.gora.generated.test",
               "fields" : [
                 {"name": "name", "type": "string"},
                 {"name": "age", "type": "int"},
@@ -29,7 +29,7 @@
             "items": {
               "name": "DeviceId",
               "type": "record",
-              "namespace": "org.warps.pulsar.persist.gora.generated.test",
+              "namespace": "fun.platonic.pulsar.persist.gora.generated.test",
               "fields" : [
                 {"name": "name", "type": "string"},
                 {"name": "id", "type": "long"},
@@ -50,7 +50,7 @@
             "values": ["null", {
               "name": "GHypeLink",
               "type": "record",
-              "namespace": "org.warps.pulsar.persist.gora.generated",
+              "namespace": "fun.platonic.pulsar.persist.gora.generated",
               "fields" : [
                 {"name": "url","type": "string","default": ""},
                 {"name": "anchor","type": "string","default": ""},
@@ -67,7 +67,7 @@
             "values": ["null", {
               "name": "GHypeLink",
               "type": "record",
-              "namespace": "org.warps.pulsar.persist.gora.generated"
+              "namespace": "fun.platonic.pulsar.persist.gora.generated"
             }]
           },
           "default": []
@@ -79,7 +79,7 @@
             "values": ["null",{
                 "name": "Employee",
                 "type": "record",
-                "namespace": "org.warps.pulsar.persist.gora.generated.test",
+                "namespace": "fun.platonic.pulsar.persist.gora.generated.test",
                 "fields" : [
                   {"name": "name", "type": "string"},
                   {"name": "id", "type": "long"},
@@ -95,7 +95,7 @@
             {
               "name": "pageModel",
               "type": "record",
-              "namespace": "org.warps.pulsar.persist.gora.generated.test",
+              "namespace": "fun.platonic.pulsar.persist.gora.generated.test",
               "fields": [
                 {"name": "id","type": "long","default": 0},
                 {"name": "name", "type": ["null", "string"], "default": null},
@@ -118,7 +118,7 @@
                     "items": {
                       "name": "PageComment",
                       "type": "record",
-                      "namespace": "org.warps.pulsar.persist.gora.generated.test",
+                      "namespace": "fun.platonic.pulsar.persist.gora.generated.test",
                       "fields" : [
                         {"name": "id","type": "long","default": 0},
                         {"name": "author", "type": ["null", "string"], "default": null},

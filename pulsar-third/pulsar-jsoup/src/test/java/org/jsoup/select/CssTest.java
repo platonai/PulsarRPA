@@ -3,7 +3,6 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.Elements;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

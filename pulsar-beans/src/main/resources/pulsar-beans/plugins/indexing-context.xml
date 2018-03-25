@@ -7,20 +7,20 @@
 
     <import resource="../common-context.xml"/>
 
-    <bean id="anchorIndexingFilter" class="org.warps.pulsar.index.AnchorIndexingFilter">
+    <bean id="anchorIndexingFilter" class="fun.platonic.pulsar.index.AnchorIndexingFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="metadataIndexer" class="org.warps.pulsar.index.MetadataIndexer">
+    <bean id="metadataIndexer" class="fun.platonic.pulsar.index.MetadataIndexer">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="generalIndexingFilter" class="org.warps.pulsar.index.GeneralIndexingFilter">
+    <bean id="generalIndexingFilter" class="fun.platonic.pulsar.index.GeneralIndexingFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="moreIndexingFilter" class="org.warps.pulsar.index.MoreIndexingFilter">
+    <bean id="moreIndexingFilter" class="fun.platonic.pulsar.index.MoreIndexingFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="indexingFilters" class="org.warps.pulsar.crawl.index.IndexingFilters">
+    <bean id="indexingFilters" class="fun.platonic.pulsar.crawl.index.IndexingFilters">
         <constructor-arg>
             <list>
                 <ref bean="anchorIndexingFilter" />
@@ -32,16 +32,16 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="indexerMapping" class="org.warps.pulsar.crawl.index.IndexerMapping">
+    <bean id="indexerMapping" class="fun.platonic.pulsar.crawl.index.IndexerMapping">
         <constructor-arg value="indexer-mapping.xml"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="solrIndexWriter" class="org.warps.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
+    <bean id="solrIndexWriter" class="fun.platonic.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
         <constructor-arg ref="indexerMapping"/>
         <constructor-arg ref="conf"/>
         <property name="webDb" ref="webDb"/>
     </bean>
-    <bean id="indexWriters" class="org.warps.pulsar.crawl.index.IndexWriters">
+    <bean id="indexWriters" class="fun.platonic.pulsar.crawl.index.IndexWriters">
         <constructor-arg>
             <list>
                 <ref bean="solrIndexWriter" />

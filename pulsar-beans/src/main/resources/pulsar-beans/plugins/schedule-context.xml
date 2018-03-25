@@ -7,7 +7,7 @@
 
     <import resource="../common-context.xml"/>
 
-    <bean id="fetchSchedule" class="org.warps.pulsar.crawl.schedule.DefaultFetchSchedule">
+    <bean id="fetchSchedule" class="fun.platonic.pulsar.crawl.schedule.DefaultFetchSchedule">
         <constructor-arg ref="conf"/>
         <property name="pulsarMetrics" ref="pulsarMetrics"/>
     </bean>

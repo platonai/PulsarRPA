@@ -3,8 +3,6 @@ package org.jsoup.select;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Node;
-import org.jsoup.select.NodeFilter;
-import org.jsoup.select.NodeTraversor;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

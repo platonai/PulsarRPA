@@ -1,6 +1,5 @@
 package org.jsoup.nodes;
 
-import com.google.common.collect.Maps;
 import org.jsoup.helper.ChangeNotifyingArrayList;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;

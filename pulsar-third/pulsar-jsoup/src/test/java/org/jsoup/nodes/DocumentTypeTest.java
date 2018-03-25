@@ -1,11 +1,9 @@
 package org.jsoup.nodes;
 
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.DocumentType;
 import org.jsoup.parser.Parser;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 /**

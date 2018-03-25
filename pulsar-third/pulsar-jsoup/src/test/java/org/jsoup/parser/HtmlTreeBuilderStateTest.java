@@ -1,6 +1,5 @@
 package org.jsoup.parser;
 
-import org.jsoup.parser.HtmlTreeBuilderState;
 import org.junit.Test;
 
 import java.util.Arrays;

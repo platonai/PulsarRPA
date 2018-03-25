@@ -1,7 +1,6 @@
 package org.jsoup.internal;
 
 import org.jsoup.Jsoup;
-import org.jsoup.internal.ConstrainableInputStream;
 import org.junit.Ignore;
 import org.junit.Test;
 

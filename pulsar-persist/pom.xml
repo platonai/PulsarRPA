@@ -21,10 +21,6 @@
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
 
-    <build>
-
-    </build>
-
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>
