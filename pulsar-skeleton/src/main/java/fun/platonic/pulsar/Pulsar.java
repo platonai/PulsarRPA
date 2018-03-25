@@ -1,27 +1,26 @@
-package fun.platonic.pulsar;
+package org.warps.pulsar;
 
-import fun.platonic.pulsar.common.UrlUtil;
-import fun.platonic.pulsar.common.config.ImmutableConfig;
-import fun.platonic.pulsar.common.config.MutableConfig;
-import fun.platonic.pulsar.common.options.LoadOptions;
-import fun.platonic.pulsar.crawl.component.InjectComponent;
-import fun.platonic.pulsar.crawl.component.LoadComponent;
-import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
-import fun.platonic.pulsar.net.SeleniumEngine;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
+import org.warps.pulsar.common.UrlUtil;
+import org.warps.pulsar.common.config.ImmutableConfig;
+import org.warps.pulsar.common.config.MutableConfig;
+import org.warps.pulsar.common.options.LoadOptions;
+import org.warps.pulsar.crawl.component.*;
+import org.warps.pulsar.crawl.parse.ParseResult;
+import org.warps.pulsar.crawl.parse.html.JsoupParser;
+import org.warps.pulsar.net.SeleniumEngine;
+import org.warps.pulsar.persist.WebPage;
+import org.warps.pulsar.persist.gora.db.WebDb;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import static fun.platonic.pulsar.common.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static org.warps.pulsar.common.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
+import static org.warps.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
 
 public class Pulsar implements AutoCloseable {
 
@@ -30,7 +29,7 @@ public class Pulsar implements AutoCloseable {
     private final InjectComponent injectComponent;
     private final LoadComponent loadComponent;
     private MutableConfig defaultMutableConfig;
-    private AtomicBoolean closed = new AtomicBoolean(false);
+    private boolean closed = false;
 
     public Pulsar() {
         this(new ClassPathXmlApplicationContext(
@@ -130,7 +129,7 @@ public class Pulsar implements AutoCloseable {
      * <p>
      * If a page does not exists neither in local storage nor at the given remote location, {@link WebPage#NIL} is returned
      *
-     * @param urls The urls to load
+     * @param urls    The urls to load
      * @return Pages for all urls.
      */
     public Collection<WebPage> loadAll(Iterable<String> urls) {
@@ -166,7 +165,7 @@ public class Pulsar implements AutoCloseable {
      * <p>
      * If a page does not exists neither in local storage nor at the given remote location, {@link WebPage#NIL} is returned
      *
-     * @param urls The urls to load
+     * @param urls    The urls to load
      * @return Pages for all urls.
      */
     public Collection<WebPage> parallelLoadAll(Iterable<String> urls) {
@@ -195,7 +194,7 @@ public class Pulsar implements AutoCloseable {
 
     /**
      * Parse the WebPage using Jsoup
-     */
+     * */
     @Nonnull
     public Document parse(WebPage page) {
         JsoupParser parser = new JsoupParser(page, immutableConfig);
@@ -226,12 +225,11 @@ public class Pulsar implements AutoCloseable {
 
     @Override
     public void close() {
-        if (closed.getAndSet(true)) {
-            return;
+        if (!closed) {
+            SeleniumEngine.getInstance(immutableConfig).close();
+            injectComponent.close();
+            webDb.close();
+            closed = true;
         }
-
-        SeleniumEngine.getInstance(immutableConfig).close();
-        injectComponent.close();
-        webDb.close();
     }
 }
