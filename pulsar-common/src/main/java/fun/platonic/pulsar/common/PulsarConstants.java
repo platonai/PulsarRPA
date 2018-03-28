@@ -56,22 +56,22 @@ public interface PulsarConstants {
     String EMPTY_PAGE_URL = "http://example.com/empty";
     String NIL_PAGE_URL = "http://example.com/nil";
 
-    String SEED_HOME_URL = "http://pulsar.warps.org/seeds";
-    String SEED_PAGE_1_URL = "http://pulsar.warps.org/seeds/1";
-    String TOP_PAGE_HOME_URL = "http://pulsar.warps.org/top";
-    String TOP_PAGE_PAGE_1_URL = "http://pulsar.warps.org/top/1";
-    String BACKGROUND_TASK_PAGE_HOME_URL = "http://pulsar.warps.org/tmp/tasks";
-    String BACKGROUND_TASK_PAGE_PAGE_1_URL = "http://pulsar.warps.org/tmp/tasks/1";
+    String SEED_HOME_URL = "http://pulsar.platonic.fun/seeds";
+    String SEED_PAGE_1_URL = "http://pulsar.platonic.fun/seeds/1";
+    String TOP_PAGE_HOME_URL = "http://pulsar.platonic.fun/top";
+    String TOP_PAGE_PAGE_1_URL = "http://pulsar.platonic.fun/top/1";
+    String BACKGROUND_TASK_PAGE_HOME_URL = "http://pulsar.platonic.fun/tmp/tasks";
+    String BACKGROUND_TASK_PAGE_PAGE_1_URL = "http://pulsar.platonic.fun/tmp/tasks/1";
 
-    String URL_TRACKER_HOME_URL = "http://pulsar.warps.org/url/tracker";
-    String URL_TRACKER_PAGE_1_URL = "http://pulsar.warps.org/url/tracker/1";
+    String URL_TRACKER_HOME_URL = "http://pulsar.platonic.fun/url/tracker";
+    String URL_TRACKER_PAGE_1_URL = "http://pulsar.platonic.fun/url/tracker/1";
 
-    String METRICS_HOME_URL = "http://pulsar.warps.org/metrics";
-    String METRICS_PAGE_1_URL = "http://pulsar.warps.org/metrics/1";
+    String METRICS_HOME_URL = "http://pulsar.platonic.fun/metrics";
+    String METRICS_PAGE_1_URL = "http://pulsar.platonic.fun/metrics/1";
 
-    String CRAWL_LOG_HOME_URL = "http://pulsar.warps.org/metrics";
-    String CRAWL_LOG_INDEX_URL = "http://pulsar.warps.org/metrics";
-    String CRAWL_LOG_PAGE_1_URL = "http://pulsar.warps.org/metrics/1";
+    String CRAWL_LOG_HOME_URL = "http://pulsar.platonic.fun/metrics";
+    String CRAWL_LOG_INDEX_URL = "http://pulsar.platonic.fun/metrics";
+    String CRAWL_LOG_PAGE_1_URL = "http://pulsar.platonic.fun/metrics/1";
 
     /**
      * Storage

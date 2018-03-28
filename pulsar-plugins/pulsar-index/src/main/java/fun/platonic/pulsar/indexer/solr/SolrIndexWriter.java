@@ -56,7 +56,7 @@ public class SolrIndexWriter implements IndexWriter {
     public static final Logger LOG = LoggerFactory.getLogger(SolrIndexWriter.class);
     public static final String INDEXER_PARAMS = "index.additional.params";
     public static final String INDEXER_DELETE = "index.delete";
-    public static final String INDEXER_REPORT_PAGE_HOME = "http://pulsar.warps.org/report/indexer";
+    public static final String INDEXER_REPORT_PAGE_HOME = "http://pulsar.platonic.fun/report/indexer";
     private final List<SolrInputDocument> inputDocs = new ArrayList<>();
     private final List<SolrInputDocument> updateDocs = new ArrayList<>();
     private final List<String> deleteIds = new ArrayList<>();

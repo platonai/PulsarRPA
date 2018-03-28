@@ -8,12 +8,12 @@ import fun.platonic.pulsar.crawl.component.InjectComponent;
 import fun.platonic.pulsar.crawl.component.LoadComponent;
 import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
 import fun.platonic.pulsar.net.SeleniumEngine;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.gora.db.WebDb;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
