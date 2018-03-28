@@ -11,7 +11,7 @@ import java.util.Collection;
 
 /**
  * Created by vincent on 17-3-15.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class MetadataWritable implements Writable {
     private MultiMetadata metadata;

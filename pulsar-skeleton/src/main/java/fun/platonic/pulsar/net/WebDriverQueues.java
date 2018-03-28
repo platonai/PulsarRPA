@@ -43,7 +43,7 @@ import static org.openqa.selenium.remote.CapabilityType.TAKES_SCREENSHOT;
 
 /**
  * Created by vincent on 18-1-1.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(WebDriverQueues.class);

@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * Created by vincent on 16-12-21.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  * <p>
  * A pseudograph is a non-simple graph in which both graph loops and multiple edges are permitted.
  */

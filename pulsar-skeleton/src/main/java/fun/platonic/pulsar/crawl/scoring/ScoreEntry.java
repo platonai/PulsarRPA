@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Created by vincent on 17-4-20.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class ScoreEntry implements Comparable<ScoreEntry> {
 

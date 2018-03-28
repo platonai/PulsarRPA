@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-4-12.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class PulsarOptions implements Parameterized {
     public static final Logger LOG = LoggerFactory.getLogger(PulsarOptions.class);

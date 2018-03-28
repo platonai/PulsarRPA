@@ -13,7 +13,7 @@ import static fun.platonic.pulsar.boilerpipe.utils.Scent.BAD_PHRASE_IN_NAME;
 
 /**
  * Created by vincent on 16-10-27.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class ScentUtils {
 

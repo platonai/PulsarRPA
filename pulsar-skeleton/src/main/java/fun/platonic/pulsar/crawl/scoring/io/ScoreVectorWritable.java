@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * Created by vincent on 17-4-20.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class ScoreVectorWritable implements Writable {
     private ScoreVector scoreVector;

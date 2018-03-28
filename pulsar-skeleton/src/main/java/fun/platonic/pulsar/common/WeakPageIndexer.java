@@ -14,7 +14,7 @@ import java.util.Set;
 
 /**
  * Created by vincent on 17-6-18.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  * <p>
  * A WebPage based indexer to pages, the index does not support ACID
  */

@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 /**
  * Created by vincent on 17-8-3.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class FieldCollection extends HashMap<CharSequence, CharSequence> {
     private String name;

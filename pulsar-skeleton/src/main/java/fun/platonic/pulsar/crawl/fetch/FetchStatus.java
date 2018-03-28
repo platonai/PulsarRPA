@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 
 /**
  * Created by vincent on 16-10-15.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class FetchStatus implements Comparable<FetchStatus> {
 

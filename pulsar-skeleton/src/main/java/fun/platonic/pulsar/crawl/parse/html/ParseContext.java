@@ -6,7 +6,7 @@ import fun.platonic.pulsar.persist.WebPage;
 
 /**
  * Created by vincent on 17-7-28.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class ParseContext {
     private final String url;

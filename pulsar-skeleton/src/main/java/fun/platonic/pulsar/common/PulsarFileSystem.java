@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * Created by vincent on 17-3-23.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class PulsarFileSystem {
 

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 /**
  * Created by vincent on 16-9-24.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public interface ReducerContext<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
     ImmutableConfig getConfiguration();

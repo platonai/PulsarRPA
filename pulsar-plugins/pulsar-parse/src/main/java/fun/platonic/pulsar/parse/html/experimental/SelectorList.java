@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Created by vincent on 17-8-2.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class SelectorList {
 

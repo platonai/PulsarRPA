@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * Created by vincent on 17-4-12.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class CommonOptions extends PulsarOptions {
     @Parameter(names = {PulsarParams.ARG_CRAWL_ID}, description = "crawl id, (default : \"storage.crawl.id\")")

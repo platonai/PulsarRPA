@@ -21,7 +21,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**
  * Created by vincent on 17-5-15.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class GoraStorage {
     public static final Logger LOG = LoggerFactory.getLogger(GoraStorage.class);

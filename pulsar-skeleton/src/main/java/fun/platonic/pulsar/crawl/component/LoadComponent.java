@@ -35,7 +35,7 @@ import static org.apache.commons.collections4.CollectionUtils.addIgnoreNull;
 
 /**
  * Created by vincent on 17-7-15.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  * <p>
  * Load pages from storage or fetch from the Internet if it's not fetched or expired
  */

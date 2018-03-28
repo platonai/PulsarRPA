@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 
 /**
  * Created by vincent on 16-10-27.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class Scent {
     public static final int MIN_DATE_TIME_STR_LENGTH = 15;

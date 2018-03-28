@@ -15,7 +15,7 @@ import java.io.IOException;
 
 /**
  * Created by vincent on 16-12-30.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class WebVertexWritable implements Writable {
     private Configuration conf;

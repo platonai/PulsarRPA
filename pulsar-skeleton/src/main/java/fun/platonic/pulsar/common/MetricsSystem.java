@@ -32,7 +32,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_REPORT_DI
 
 /**
  * Created by vincent on 16-10-12.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  * <p>
  * A very simple metrics system
  * <p>

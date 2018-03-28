@@ -19,7 +19,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**
  * Created by vincent on 17-5-21.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class LinkFilter implements ReloadableParameterized {
     public static final Logger LOG = LoggerFactory.getLogger(LinkFilter.class);

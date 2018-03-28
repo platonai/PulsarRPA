@@ -12,7 +12,7 @@ import java.util.Set;
 
 /**
  * Created by vincent on 17-8-9.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class JsoupUtils {
     public static Document sanitize(Document doc, boolean pithy) {

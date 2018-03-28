@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by vincent on 18-1-17.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class PulsarSession extends AbstractTTLConfiguration implements AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(PulsarSession.class);

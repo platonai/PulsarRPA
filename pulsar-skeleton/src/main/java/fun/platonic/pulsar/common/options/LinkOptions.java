@@ -16,7 +16,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_MIN_ANCHOR
 
 /**
  * Created by vincent on 17-3-18.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class LinkOptions extends PulsarOptions {
 

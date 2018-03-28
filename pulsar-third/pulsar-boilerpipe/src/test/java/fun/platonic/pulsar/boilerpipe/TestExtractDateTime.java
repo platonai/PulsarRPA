@@ -16,7 +16,7 @@ import java.time.Instant;
 
 /**
  * Created by vincent on 16-11-9.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class TestExtractDateTime {
 

@@ -4,7 +4,7 @@ import fun.platonic.pulsar.persist.WebPage;
 
 /**
  * Created by vincent on 16-12-29.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class WebVertex {
     public final static WebVertex EMPTY_WEB_VERTEX = new WebVertex();

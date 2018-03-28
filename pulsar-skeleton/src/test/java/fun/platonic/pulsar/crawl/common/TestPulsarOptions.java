@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Created by vincent on 16-7-20.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class TestPulsarOptions {
     public static String args = "-i pt1s -p 2000 -d 1 -css body " +

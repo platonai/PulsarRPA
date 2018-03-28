@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Created by vincent on 16-10-27.
- * Copyright @ 2013-2016 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 public class ManualRules {
 

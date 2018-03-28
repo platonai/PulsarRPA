@@ -15,7 +15,7 @@ import java.util.zip.InflaterInputStream;
 
 /**
  * Created by vincent on 17-3-17.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class ContentWritable implements Writable, Configurable {
 

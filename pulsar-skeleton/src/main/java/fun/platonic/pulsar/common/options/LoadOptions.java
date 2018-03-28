@@ -13,7 +13,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**
  * Created by vincent on 17-7-14.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  * <p>
  * The expires field supports both ISO-8601 standard and hadoop time duration format
  * ISO-8601 standard : PnDTnHnMn.nS

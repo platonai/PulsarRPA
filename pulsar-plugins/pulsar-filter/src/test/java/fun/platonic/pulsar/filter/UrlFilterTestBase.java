@@ -10,7 +10,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Created by vincent on 17-4-12.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 @ContextConfiguration(locations = {"classpath:/test-context/filter-beans.xml"})
 public class UrlFilterTestBase {

@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * Created by vincent on 18-1-17.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public abstract class AbstractTTLConfiguration extends MutableConfig {
 

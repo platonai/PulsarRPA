@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-7-26.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  * <p>
  * Unstable fields are persisted as a metadata, they should be moved to a real database field if it's getting stable,
  * in which case, the database schema should be changed

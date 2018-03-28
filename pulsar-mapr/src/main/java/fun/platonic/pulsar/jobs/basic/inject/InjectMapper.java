@@ -13,7 +13,7 @@ import java.io.IOException;
 
 /**
  * Created by vincent on 17-4-13.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class InjectMapper extends Mapper<LongWritable, Text, String, GWebPage> {
     private SeedBuilder seedBuiler = new SeedBuilder();

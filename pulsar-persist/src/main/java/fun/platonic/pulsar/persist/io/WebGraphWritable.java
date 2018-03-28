@@ -15,7 +15,7 @@ import static fun.platonic.pulsar.persist.io.WebGraphWritable.OptimizeMode.*;
 
 /**
  * Created by vincent on 16-12-30.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class WebGraphWritable implements Writable {
     private Configuration conf;

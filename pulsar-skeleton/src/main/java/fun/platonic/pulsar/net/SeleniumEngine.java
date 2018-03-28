@@ -44,7 +44,7 @@ import static fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes.THREAD_TI
 
 /**
  * Created by vincent on 18-1-1.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(SeleniumEngine.class);

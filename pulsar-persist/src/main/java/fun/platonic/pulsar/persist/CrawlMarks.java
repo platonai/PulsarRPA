@@ -11,7 +11,7 @@ import static fun.platonic.pulsar.persist.WebPage.wrapKey;
 
 /**
  * Created by vincent on 17-7-26.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class CrawlMarks {
 

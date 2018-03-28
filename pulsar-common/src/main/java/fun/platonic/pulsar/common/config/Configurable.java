@@ -2,7 +2,7 @@ package fun.platonic.pulsar.common.config;
 
 /**
  * Created by vincent on 17-4-17.
- * Copyright @ 2013-2017 Warpspeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public interface Configurable {
     /**

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-3-18.
- * Copyright @ 2013-2017 WarpSpeed Information. All rights reserved
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class EntityOptions extends PulsarOptions {
     @Parameter(names = {"-en", "--entity-name"}, description = "The entity name.")
