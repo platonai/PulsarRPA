@@ -1,19 +1,20 @@
 package fun.platonic.pulsar;
 
-import fun.platonic.pulsar.common.FastSmallLRUCache;
+import fun.platonic.pulsar.common.TTLLRUCache;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.AbstractTTLConfiguration;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.options.LoadOptions;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
-import fun.platonic.pulsar.persist.WebPage;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,11 +24,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PulsarSession extends AbstractTTLConfiguration implements AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(PulsarSession.class);
-    public static final Duration SESSION_CACHE_TTL = Duration.ofSeconds(20);
-    public static final int SESSION_CACHE_CAPACITY = 1000;
+    public static final Duration SESSION_PAGE_CACHE_TTL = Duration.ofSeconds(20);
+    public static final int SESSION_PAGE_CACHE_CAPACITY = 1000;
+
+    public static final Duration SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1);
+    public static final int SESSION_DOCUMENT_CACHE_CAPACITY = 10000;
     private static final AtomicInteger objectIdGenerator = new AtomicInteger(0);
     // All sessions share the same cache
-    private static FastSmallLRUCache<String, WebPage> theSessionCache;
+    private static TTLLRUCache<String, WebPage> pageCache;
+    private static TTLLRUCache<String, Document> documentCache;
     private final int id;
     private final Pulsar pulsar;
     private boolean enableCache = true;
@@ -41,10 +46,17 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
         this.setFallbackConfig(immutableConfig);
         this.pulsar = new Pulsar(applicationContext);
 
-        if (theSessionCache == null) {
-            int capacity = getUint("session.cache.size", SESSION_CACHE_CAPACITY);
+        if (pageCache == null) {
+            int capacity = getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY);
             synchronized (PulsarSession.class) {
-                theSessionCache = new FastSmallLRUCache<>(SESSION_CACHE_TTL.getSeconds(), capacity);
+                pageCache = new TTLLRUCache<>(SESSION_PAGE_CACHE_TTL.getSeconds(), capacity);
+            }
+        }
+
+        if (documentCache == null) {
+            int capacity = getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY);
+            synchronized (PulsarSession.class) {
+                documentCache = new TTLLRUCache<>(SESSION_DOCUMENT_CACHE_TTL.getSeconds(), capacity);
             }
         }
     }
@@ -70,12 +82,6 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     @Nonnull
     public WebPage inject(String configuredUrl) {
         return pulsar.inject(configuredUrl);
-    }
-
-    @Nonnull
-    public WebPage getPage(String url) {
-        WebPage page = getCachedOrGet(url);
-        return page == null ? WebPage.NIL : page;
     }
 
     /**
@@ -146,36 +152,48 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     }
 
     /**
-     * Parse the web page into a document
-     *
-     * @param page The page to parse
-     * @return The document
-     */
-    @Nonnull
+     * Parse the Web page using Jsoup.
+     * If the Web page is not changed since last parse, use the last result if available
+     * */
     public Document parse(WebPage page) {
-        return pulsar.parse(page, this);
+        String key = page.getKey() + "\t" + page.getFetchTime();
+
+        Document document = documentCache.get(key);
+        if (document == null) {
+            document = pulsar.parse(page);
+            documentCache.put(key, document);
+
+            Instant prevFetchTime = page.getPrevFetchTime();
+            if (prevFetchTime.plusSeconds(3600).isAfter(Instant.now())) {
+                // It might be still in the cache
+                String oldKey = page.getKey() + "\t" + prevFetchTime;
+                documentCache.tryRemove(oldKey);
+            }
+        }
+
+        return document;
     }
 
     private WebPage getCachedOrGet(String url) {
-        WebPage page = theSessionCache.get(url);
+        WebPage page = pageCache.get(url);
         if (page != null) {
             return page;
         }
 
         page = pulsar.get(url);
-        theSessionCache.put(url, page);
+        pageCache.put(url, page);
 
         return page;
     }
 
     private WebPage getCachedOrLoad(String url, LoadOptions options) {
-        WebPage page = theSessionCache.get(url);
+        WebPage page = pageCache.get(url);
         if (page != null) {
             return page;
         }
 
         page = pulsar.load(url, options);
-        theSessionCache.put(url, page);
+        pageCache.put(url, page);
 
         return page;
     }
@@ -185,7 +203,7 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
         Collection<String> pendingUrls = new ArrayList<>();
 
         for (String url : urls) {
-            WebPage page = theSessionCache.get(url);
+            WebPage page = pageCache.get(url);
             if (page != null) {
                 pages.add(page);
             } else {

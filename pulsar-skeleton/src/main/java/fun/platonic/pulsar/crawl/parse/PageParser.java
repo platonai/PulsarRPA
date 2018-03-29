@@ -280,7 +280,7 @@ public final class PageParser implements ReloadableParameterized {
         }
         page.setSignature(signature.calculate(page));
 
-        // Collect out-links
+        // Collect links
         // TODO : check no-follow html tag directive
         boolean follow = !page.getMetadata().contains(NO_FOLLOW)
                 || page.isSeed()
