@@ -1,11 +1,11 @@
 Pulsar README
 ===================
 
-Pulsar is a production ready web crawler.
+Pulsar is a production ready web crawler, you can crawl large web sites from seeds, using Nutch style.
 
-Pulsar is highly modularized so it also can be used as a library or embedded within other projects.
+Pulsar is highly modularized so it also can be used as a library and be embedded within other projects.
 
-Pulsar supports selenium so one can do web scraping using selenium's native api or custom parse plugins.
+Pulsar supports selenium so you can do web scraping using selenium's native api.
 
 For Web scraping(in kotlin):
 
@@ -26,13 +26,25 @@ For batch Web scraping(in kotlin):
     val pages = pulsar.parallelLoadAll(portal.simpleLiveLinks.filter { it.contains("jinrong") }, LoadOptions.parse("--parse"))
     pages.forEach { println("${it.url} ${it.contentTitle}") }
 
+The examples can be found in fun/platonic/pulsar/examples/WebAccess.kt, and more examples will be added soon.
+
+To build from source, you need guava-hbase1-23.6 which is a fix for guava-23.6 to match hbase-1.3.2
+
+    git clone git@github.com:galaxyeye/guava-hbase1-23.6.git
+    cd guava-hbase1-23.6 && mvn install
+
+And then
+
+    git clone git@github.com:galaxyeye/pulsar.git
+    cd pulsar && mvn package
+
 For web crawling and index using solr, run script:
 
     bin/crawl.sh default false information_tmp http://master:8983/solr/information_tmp/ 1
 
-For more crawl task examples, see bin/samples.
+TODO: Scripts is NOT working if you can see this line. We are working on it ...
 
-TODO: Scripts may not working if you can see this line. We are working on it ...
+For more crawl task examples, see bin/samples.
 
 The major workflow of Pulsar comes from Apache Nutch, and can be illustrated in kotlin as the following:
 
@@ -63,8 +75,6 @@ The major workflow of Pulsar comes from Apache Nutch, and can be illustrated in 
 Note: the Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages. Score filters may differs for different crawl tasks.
 
 HBase is the primary choice as the storage, and any storage supported by Apache Gora will be fine.
-
-Plugins are configured as spring beans.
 
 TODO:
 
@@ -101,9 +111,9 @@ Advanced DOM processing:
 3. Statistics based element locate
 ```
 
-Coming soon ...
-
 Enterprise Edition will be open sourced step by step.
+
+Coming soon ...
 
 ============
 

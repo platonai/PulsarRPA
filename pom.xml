@@ -874,7 +874,32 @@
                 <version>2.0.8</version>
             </dependency>
 
-            <!-- Logging -->
+            <!-- Logging, Tracking, Metrics -->
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${codahale.metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-jvm</artifactId>
+                <version>${codahale.metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-json</artifactId>
+                <version>${codahale.metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-ganglia</artifactId>
+                <version>${codahale.metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-graphite</artifactId>
+                <version>${codahale.metrics.version}</version>
+            </dependency>
             <dependency>
                 <groupId>log4j</groupId>
                 <artifactId>log4j</artifactId>
@@ -993,7 +1018,8 @@
         <guava.version>23.6-hbase1</guava.version>
         <gson.version>2.6.2</gson.version>
 
-        <!-- Performance analyze -->
+        <!-- Logging, metrics analyze -->
+        <codahale.metrics.version>3.1.5</codahale.metrics.version>
         <perf4j.version>0.9.16</perf4j.version>
         <!-- Logging And Testing Dependencies -->
         <log4j.version>1.2.16</log4j.version>

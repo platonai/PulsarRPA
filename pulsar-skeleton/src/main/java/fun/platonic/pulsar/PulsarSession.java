@@ -11,12 +11,16 @@ import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static fun.platonic.pulsar.common.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
 
 /**
  * Created by vincent on 18-1-17.
@@ -29,7 +33,7 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
 
     public static final Duration SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1);
     public static final int SESSION_DOCUMENT_CACHE_CAPACITY = 10000;
-    private static final AtomicInteger objectIdGenerator = new AtomicInteger(0);
+    private static final AtomicInteger objectIdGenerator = new AtomicInteger();
     // All sessions share the same cache
     private static TTLLRUCache<String, WebPage> pageCache;
     private static TTLLRUCache<String, Document> documentCache;
@@ -38,6 +42,15 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     private boolean enableCache = true;
     // Session variables
     private Map<String, Object> variables;
+
+    public PulsarSession() {
+        this(new ClassPathXmlApplicationContext(
+                System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION)));
+    }
+
+    public PulsarSession(String appConfigLocation) {
+        this(new ClassPathXmlApplicationContext(appConfigLocation));
+    }
 
     public PulsarSession(ConfigurableApplicationContext applicationContext) {
         id = objectIdGenerator.incrementAndGet();

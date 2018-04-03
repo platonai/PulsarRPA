@@ -129,30 +129,9 @@ fi
 CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
 
 # Choose runnable
-if [ "$COMMAND" = "master" ] ; then
-  MODULE=pulsar-rest
-  CLASS=fun.platonic.pulsar.rest.embedded.PMaster
-elif [ "$COMMAND" = "shell" ] ; then
+if [ "$COMMAND" = "shell" ] ; then
   MODULE=pulsar-cli
   CLASS=fun.platonic.pulsar.cli.PShell
-elif [ "$COMMAND" = "start" ] ; then
-  export RUN_AS_DAEMON=true
-  $bin/pulsar db -tcp -tcpPassword ${PULSAR_DB_PASSWORD} -web -webAllowOthers
-  exit 0
-elif [ "$COMMAND" = "stop" ] ; then
-  $bin/pulsar db -tcpPassword ${PULSAR_DB_PASSWORD} -tcpShutdown tcp://127.0.1.1:9092
-  exit 0
-elif [ "$COMMAND" = "db" ] ; then
-  if [ "$ENTERPRISE_EDITION" = "true" ]; then
-    MODULE=pulsar-enterprise
-    CLASS=fun.platonic.pulsar.enterprise.ql.H2DbConsole
-  else
-    MODULE=pulsar-ql/pulsar-ql-server
-    CLASS=fun.platonic.pulsar.ql.h2.H2DbConsole
-  fi
-elif [ "$COMMAND" = "sql" ] ; then
-  MODULE=pulsar-third/pulsar-h2
-  CLASS=org.h2.tools.Shell
 elif [ "$COMMAND" = "webdb" ] ; then
   MODULE=pulsar-cli
   CLASS=fun.platonic.pulsar.cli.DbClient
