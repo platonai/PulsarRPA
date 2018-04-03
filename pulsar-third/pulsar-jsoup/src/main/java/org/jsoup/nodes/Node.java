@@ -1,5 +1,7 @@
 package org.jsoup.nodes;
 
+import fun.platonic.pulsar.dom.Feature;
+import fun.platonic.pulsar.dom.Features;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
@@ -7,8 +9,6 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
-import fun.platonic.pulsar.dom.Feature;
-import fun.platonic.pulsar.dom.SparseFeatureVector;
 
 import java.io.IOException;
 import java.util.*;
@@ -24,7 +24,7 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     int siblingIndex;
 
     Attributes attributes = new Attributes();
-    SparseFeatureVector featureVector = new SparseFeatureVector();
+    Features features = new Features();
 
     /**
      * The css selector of this node in the document, calculated in the document's construction,
@@ -182,60 +182,83 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     }
 
     /**
-     * Get all of the element's featureVector.
+     * Get all of the element's features.
      *
      * @return featureVector (which implements iterable, in same order as presented
      *         in original HTML).
      */
-    public SparseFeatureVector features() {
-        return featureVector;
+    public Features features() {
+        return features;
     }
 
-    public Feature getFeature(String featureKey) {
-        return featureVector.getFeature(featureKey);
+    public double getFeature(int key) {
+        return features.get(key);
     }
 
-    public double getFeatureValue(String featureKey) {
-        return featureVector.get(featureKey.toLowerCase());
-    }
-
-    public Node setFeature(String featureKey, double featureValue) {
-        if (featureValue != 0.0) {
-            featureVector.put(featureKey.toLowerCase(), featureValue);
+    public double getFeatureOrElse(int key, double defaultValue) {
+        double value = features.get(key);
+        if (value == Features.Zero && !hasFeature(key)) {
+            return defaultValue;
         }
+        return value;
+    }
 
+    public Feature getFeatureEntry(int key) {
+        return new Feature(key, getFeature(key));
+    }
+
+    public Node setFeature(int key, double value) {
+        features.put(key, value);
         return this;
     }
 
-    public boolean hasFeature(String featureKey) {
-        Validate.notNull(featureKey);
-
-        return featureVector.hasKey(featureKey);
+    public boolean hasFeature(int key) {
+        return features.hasKey(key);
     }
 
-    public Node removeFeature(String featureKey) {
-        Validate.notNull(featureKey);
-        featureVector.remove(featureKey);
+    public Node removeFeature(int key) {
+        Validate.notNull(key);
+        features.remove(key);
         return this;
     }
 
     public Node clearFeatures() {
-        featureVector.clear();
+        Iterator<Feature> it = features().iterator();
+        while (it.hasNext()) {
+            it.next();
+            it.remove();
+        }
         return this;
     }
 
+    /**
+     * Use getFeature()
+     */
+    @Deprecated
     public int sequence() {
         return sequence;
     }
 
+    /**
+     * Use setFeature()
+     */
+    @Deprecated
     public void sequence(int sequence) {
         this.sequence = sequence;
     }
 
+    /**
+     * Use getFeature()
+     */
+    @Deprecated
     public int depth() {
         return depth;
     }
 
+    /**
+     * Use setFeature()
+     * */
+    @Deprecated
     public void depth(int depth) {
         this.depth = depth;
     }

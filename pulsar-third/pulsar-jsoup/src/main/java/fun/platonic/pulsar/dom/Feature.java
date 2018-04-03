@@ -1,23 +1,20 @@
 package fun.platonic.pulsar.dom;
 
-import org.jsoup.helper.Validate;
-
 import java.util.Map;
 
-public class Feature implements Map.Entry<String, Double>, Cloneable, Comparable<Feature> {
+public class Feature implements Map.Entry<Integer, Double>, Cloneable, Comparable<Feature> {
 
-    private String key;
-    private double value;
+    private Integer key;
+    private Double value;
 
     /**
      * Create a new feature from unencoded (raw) name and value.
      *
-     * @param name  feature name
+     * @param key  feature name
      * @param value feature value
      */
-    public Feature(String name, double value) {
-        Validate.notEmpty(name);
-        this.key = name.trim().toLowerCase();
+    public Feature(int key, Double value) {
+        this.key = key;
         this.value = value;
     }
 
@@ -26,18 +23,17 @@ public class Feature implements Map.Entry<String, Double>, Cloneable, Comparable
      *
      * @return the feature name
      */
-    public String getKey() {
+    public Integer getKey() {
         return key;
     }
 
     /**
      * Set the feature name. Gets normalised as per the constructor method.
      *
-     * @param name the new name; must not be null
+     * @param key the new name; must not be null
      */
-    public void setKey(String name) {
-        Validate.notEmpty(name);
-        this.key = name.trim().toLowerCase();
+    public void setKey(int key) {
+        this.key = key;
     }
 
     /**
@@ -75,14 +71,13 @@ public class Feature implements Map.Entry<String, Double>, Cloneable, Comparable
 
         if (key != null ? !key.equals(feature.key) : feature.key != null)
             return false;
-        return value == feature.value;
-
+        return value.equals(feature.value);
     }
 
     @Override
     public int hashCode() {
         int result = key != null ? key.hashCode() : 0;
-        result = 31 * result + new Double(value).hashCode();
+        result = 31 * result + value.hashCode();
         return result;
     }
 
