@@ -1,4 +1,0 @@
-Author : Vincent Zhang, ivincent.zhang@gmail.com
-
-Currently, we invaded Jsoup to add our own features, which is bad.
-We will use a non-invasive method to use Jsoup in the future.

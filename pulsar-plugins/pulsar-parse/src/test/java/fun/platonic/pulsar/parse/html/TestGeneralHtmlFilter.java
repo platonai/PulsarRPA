@@ -20,16 +20,16 @@ package fun.platonic.pulsar.parse.html;
 import fun.platonic.pulsar.crawl.parse.ParseException;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.crawl.parse.html.JsoupUtils;
+import fun.platonic.pulsar.persist.FieldGroup;
+import fun.platonic.pulsar.persist.FieldGroupFormatter;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.gora.generated.GFieldGroup;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import fun.platonic.pulsar.persist.FieldGroup;
-import fun.platonic.pulsar.persist.FieldGroupFormatter;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.generated.GFieldGroup;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -143,7 +143,7 @@ public class TestGeneralHtmlFilter extends HtmlParserTestBase {
 
         WebPage page = getPage(new String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"));
 
-        Document doc = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getBaseUrl(), true);
+        Document doc = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getBaseUrl());
         String content = JsoupUtils.toHtmlPiece(doc, true);
         assertTrue(content.substring(0, 100), content.startsWith("<div id=\"pulsarHtml\">"));
 

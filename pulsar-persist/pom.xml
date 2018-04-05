@@ -27,10 +27,6 @@
             <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
-            <artifactId>pulsar-jsoup</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -78,6 +74,11 @@
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-hbase</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
         </dependency>
 
         <dependency>

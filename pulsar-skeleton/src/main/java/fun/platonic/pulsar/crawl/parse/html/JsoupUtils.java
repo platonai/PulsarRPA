@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,43 +15,60 @@ import java.util.Set;
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class JsoupUtils {
+
     public static Document sanitize(Document doc, boolean pithy) {
         Set<String> unsafeNodes = Sets.newHashSet(
                 "title", "base", "script", "meta", "iframe", "link[ref=icon]", "link[ref=\"shortcut icon\"]");
         Set<String> obsoleteNodeNames = Sets.newHashSet("style", "link", "head");
         Set<Node> obsoleteNodes = new HashSet<>();
 
-        NodeTraversor.traverse((node, depth) -> {
-            String nodeName = node.nodeName();
-            if (unsafeNodes.contains(nodeName)) {
-                obsoleteNodes.add(node);
-            }
-
-            if (pithy) {
-                node.removeAttr("style");
-                if (obsoleteNodeNames.contains(nodeName)) {
+        doc.traverse(new NodeVisitor() {
+            @Override
+            public void head(Node node, int i) {
+                String nodeName = node.nodeName();
+                if (unsafeNodes.contains(nodeName)) {
                     obsoleteNodes.add(node);
                 }
+
+                if (pithy) {
+                    node.removeAttr("style");
+                    if (obsoleteNodeNames.contains(nodeName)) {
+                        obsoleteNodes.add(node);
+                    }
+                }
             }
-        }, doc);
+
+            @Override
+            public void tail(Node node, int i) {
+
+            }
+        });
 
         obsoleteNodes.forEach(Node::remove);
 
-        NodeTraversor.traverse((node, depth) -> {
-            if (node instanceof Element) {
-                return;
+        doc.traverse(new NodeVisitor() {
+            @Override
+            public void head(Node node, int i) {
+                if (!(node instanceof Element)) {
+                    return;
+                }
+
+                Element ele = (Element) node;
+                if (ele.id().isEmpty() && ele.className().isEmpty()) {
+                    return;
+                }
+
+                String selector = ele.cssSelector();
+                ele.attr("warpsselector", selector); // Deprecated
+                ele.addClass("warpsselector"); // Deprecated
+                ele.addClass("has-selector"); // Deprecated
             }
 
-            Element ele = (Element)node;
-            if (ele.id().isEmpty() && ele.className().isEmpty()) {
-                return;
-            }
+            @Override
+            public void tail(Node node, int i) {
 
-            String selector = ele.cssSelector();
-            ele.attr("warpsselector", selector);
-            ele.addClass("warpsselector"); // Deprecated
-            ele.addClass("has-selector");
-        }, doc);
+            }
+        });
 
         for (Element ele : doc.select("html,head,body")) {
             // ele.clearAttrs();

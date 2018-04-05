@@ -44,7 +44,6 @@
             </activation>
             <modules>
                 <module>pulsar-boilerpipe</module>
-                <module>pulsar-jsoup</module>
             </modules>
         </profile>
     </profiles>
@@ -54,11 +53,6 @@
             <dependency>
                 <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-boilerpipe</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>fun.platonic.pulsar</groupId>
-                <artifactId>pulsar-jsoup</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

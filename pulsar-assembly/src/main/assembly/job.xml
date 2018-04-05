@@ -54,18 +54,6 @@
 
         <!-- Module specified -->
         <fileSet>
-            <directory>${project.basedir}/../pulsar-jsoup/target</directory>
-            <outputDirectory/>
-            <includes>
-                <include>pulsar-*.jar</include>
-            </includes>
-            <excludes>
-                <exclude>**/*javadoc.jar</exclude>
-                <exclude>**/*sources.jar</exclude>
-                <exclude>**/*tests.jar</exclude>
-            </excludes>
-        </fileSet>
-        <fileSet>
             <directory>${project.basedir}/../pulsar-common/target</directory>
             <outputDirectory/>
             <includes>
