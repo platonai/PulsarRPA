@@ -219,6 +219,10 @@
             <version>${jetty.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>fun.platonic.pulsar</groupId>
+            <artifactId>pulsar-common</artifactId>
+        </dependency>
 
     </dependencies>
 

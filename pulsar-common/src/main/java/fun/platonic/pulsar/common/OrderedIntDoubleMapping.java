@@ -78,7 +78,6 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         values[offset] = value;
     }
 
-
     public int getNumMappings() {
         return numMappings;
     }

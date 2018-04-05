@@ -24,7 +24,7 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     int siblingIndex;
 
     Attributes attributes = new Attributes();
-    Features features = new Features();
+    Features features;
 
     /**
      * The css selector of this node in the document, calculated in the document's construction,
@@ -181,6 +181,10 @@ public abstract class Node implements Cloneable, Comparable<Node> {
         return this;
     }
 
+    public void setFeatures(Features features) {
+        this.features = features;
+    }
+
     /**
      * Get all of the element's features.
      *
@@ -197,7 +201,7 @@ public abstract class Node implements Cloneable, Comparable<Node> {
 
     public double getFeatureOrElse(int key, double defaultValue) {
         double value = features.get(key);
-        if (value == Features.Zero && !hasFeature(key)) {
+        if (value == 0 && !hasFeature(key)) {
             return defaultValue;
         }
         return value;
@@ -208,26 +212,22 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     }
 
     public Node setFeature(int key, double value) {
-        features.put(key, value);
+        features.set(key, value);
         return this;
     }
 
     public boolean hasFeature(int key) {
-        return features.hasKey(key);
+        return features.get(key) != 0;
     }
 
     public Node removeFeature(int key) {
         Validate.notNull(key);
-        features.remove(key);
+        features.set(key, 0);
         return this;
     }
 
     public Node clearFeatures() {
-        Iterator<Feature> it = features().iterator();
-        while (it.hasNext()) {
-            it.next();
-            it.remove();
-        }
+        features.clear();
         return this;
     }
 
