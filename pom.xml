@@ -429,6 +429,11 @@
 
             <dependency>
                 <groupId>fun.platonic.pulsar</groupId>
+                <artifactId>pulsar-jsoup</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-boilerpipe</artifactId>
                 <version>${project.version}</version>
             </dependency>

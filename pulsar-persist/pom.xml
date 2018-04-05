@@ -27,6 +27,10 @@
             <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>fun.platonic.pulsar</groupId>
+            <artifactId>pulsar-jsoup</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>

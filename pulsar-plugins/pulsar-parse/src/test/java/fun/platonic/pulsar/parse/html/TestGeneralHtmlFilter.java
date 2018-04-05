@@ -143,7 +143,7 @@ public class TestGeneralHtmlFilter extends HtmlParserTestBase {
 
         WebPage page = getPage(new String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"));
 
-        Document doc = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getBaseUrl());
+        Document doc = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getBaseUrl(), true);
         String content = JsoupUtils.toHtmlPiece(doc, true);
         assertTrue(content.substring(0, 100), content.startsWith("<div id=\"pulsarHtml\">"));
 

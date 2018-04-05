@@ -42,6 +42,10 @@
             <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
         </dependency>
+        <dependency>
+            <groupId>fun.platonic.pulsar</groupId>
+            <artifactId>pulsar-jsoup</artifactId>
+        </dependency>
 
         <!-- org.apache.hadoop.classification.InterfaceStability, etc -->
         <dependency>
