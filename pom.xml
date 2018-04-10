@@ -56,6 +56,8 @@
         <module>pulsar-skeleton</module>
         <module>pulsar-mapr</module>
         <module>pulsar-beans</module>
+        <module>pulsar-ql-common</module>
+        <module>pulsar-ql-server</module>
         <module>pulsar-examples</module>
 
     </modules>
@@ -490,6 +492,22 @@
             <dependency>
                 <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-beans</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>fun.platonic.pulsar</groupId>
+                <artifactId>pulsar-ql-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fun.platonic.pulsar</groupId>
+                <artifactId>pulsar-ql-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fun.platonic.pulsar</groupId>
+                <artifactId>pulsar-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

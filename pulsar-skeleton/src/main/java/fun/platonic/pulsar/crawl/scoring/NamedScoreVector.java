@@ -1,5 +1,6 @@
 package fun.platonic.pulsar.crawl.scoring;
 
+import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +40,7 @@ public class NamedScoreVector extends ScoreVector {
 
     public NamedScoreVector() {
         super(SCORE_ENTRIES.length, Stream.of(SCORE_ENTRIES).map(ScoreEntry::clone)
-                .sorted((e, e2) -> e.getPriority() - e2.getPriority())
+                .sorted(Comparator.comparingInt(ScoreEntry::getPriority))
                 .collect(Collectors.toList()));
     }
 

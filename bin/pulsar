@@ -21,14 +21,6 @@ function printUsage() {
   echo "COMMAND is one of:"
   echo
   echo "  master        Start pulsar master"
-  echo "  start         Start db as a daemon"
-  echo "  stop          Stop db safely"
-  echo "  sql           Run sql client"
-  echo "  db            Run db with parameters"
-
-  echo
-  echo "  Tools, samples, and tutorials:"
-  echo "  h2            Run h2database"
   echo "  webdb         Run web db client"
   echo "  fetch         Fetch a web page, print the result"
   echo "  parse         Parse a web page, print the result"

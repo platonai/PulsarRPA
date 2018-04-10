@@ -22,16 +22,6 @@
     <packaging>pom</packaging>
 
     <name>Pulsar Third</name>
-    <url>http://pulsar.qiwur.org</url>
-    <inceptionYear>2014</inceptionYear>
-
-    <organization>
-        <name>Warps</name>
-        <url>http://www.qiwur.org/</url>
-    </organization>
-    <issueManagement>
-        <system>GitHub</system>
-    </issueManagement>
 
     <profiles>
         <profile>
@@ -45,6 +35,7 @@
             <modules>
                 <module>pulsar-boilerpipe</module>
                 <module>pulsar-jsoup</module>
+                <module>pulsar-h2</module>
             </modules>
         </profile>
     </profiles>

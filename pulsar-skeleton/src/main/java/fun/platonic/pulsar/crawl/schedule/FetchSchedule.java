@@ -49,7 +49,6 @@ public interface FetchSchedule extends ReloadableParameterized {
      * implementation set the <code>fetchTime</code> to now, using the default
      * <code>fetchInterval</code>.
      *
-     * @param url  URL of the page.
      * @param page
      */
     void initializeSchedule(WebPage page);
@@ -59,8 +58,7 @@ public interface FetchSchedule extends ReloadableParameterized {
      * successfully fetched page. Implementations may use supplied arguments to
      * support different re-fetching schedules.
      *
-     * @param url              url of the page
-     * @param page
+     * @param page             The Web page
      * @param prevFetchTime    previous value of fetch time, or -1 if not available
      * @param prevModifiedTime previous value of modifiedTime, or -1 if not available
      * @param fetchTime        the latest time, when the page was recently re-fetched. Most
@@ -84,10 +82,9 @@ public interface FetchSchedule extends ReloadableParameterized {
      * This method specifies how to schedule refetching of pages marked as GONE.
      * Default implementation increases fetchInterval by 50%, and if it exceeds
      * the <code>maxInterval</code> it calls
-     * {@link #forceRefetch(String, WebPage, boolean)}.
+     * {@link #forceRefetch(WebPage, boolean)}.
      *
-     * @param url  URL of the page
-     * @param page
+     * @param page The page
      */
     void setPageGoneSchedule(WebPage page, Instant prevFetchTime,
                              Instant prevModifiedTime, Instant fetchTime);
@@ -97,8 +94,7 @@ public interface FetchSchedule extends ReloadableParameterized {
      * to transient errors. The default implementation sets the next fetch time 1
      * day in the future and increases the retry counter.Set
      *
-     * @param url              URL of the page
-     * @param page
+     * @param page             The page
      * @param prevFetchTime    previous fetch time
      * @param prevModifiedTime previous modified time
      * @param fetchTime        current fetch time
@@ -123,24 +119,22 @@ public interface FetchSchedule extends ReloadableParameterized {
      * @param curTime it returns false, and true otherwise. It will also check that
      *                fetchTime is not too remote (more than <code>maxInterval</code),
      *                in which case it lowers the interval and returns true.
-     * @param url     URL of the page
-     * @param row     url's row
+     * @param page    The Web page
      * @param curTime reference time (usually set to the time when the fetchlist
      *                generation process was started).
      * @return true, if the page should be considered for inclusion in the current
      * fetchlist, otherwise false.
      */
-    boolean shouldFetch(WebPage row, Instant curTime);
+    boolean shouldFetch(WebPage page, Instant curTime);
 
     /**
      * This method resets fetchTime, fetchInterval, modifiedTime and page
      * text, so that it forces refetching.
      *
-     * @param url  URL of the page
-     * @param row
+     * @param page The Web page
      * @param asap if true, force refetch as soon as possible - this sets the
      *             fetchTime to now. If false, force refetch whenever the next fetch
      *             time is set.
      */
-    void forceRefetch(WebPage row, boolean asap);
+    void forceRefetch(WebPage page, boolean asap);
 }
