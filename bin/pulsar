@@ -23,7 +23,7 @@ function printUsage() {
   echo "  start         Start pulsar server as a daemon"
   echo "  stop          Stop pulsar server safely"
   echo "  server        Run pulsar server with parameters"
-  echo "  sql           Run h2 sql client"
+#  echo "  sql           Run h2 sql client"
 
   echo
   echo "Options: "

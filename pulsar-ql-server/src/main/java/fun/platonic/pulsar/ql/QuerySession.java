@@ -82,6 +82,7 @@ public class QuerySession extends PulsarSession {
             registerUdfs(CommonFunctionTables.class);
             registerUdfs(PulsarFunctions.class);
             registerUdfs(DomFunctions.class);
+            registerUdfs(DomFunctionTables.class);
             registerUdfs(NewsFunctions.class);
             registerUdfs(NewsFunctionTables.class);
             registerUdfs(MetadataFunctions.class);

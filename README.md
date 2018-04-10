@@ -1,7 +1,26 @@
 Pulsar README
 ===================
+Pulsar is a full featured Web crawler as well as a data mining framework.
 
-Pulsar is a production ready web crawler, you can crawl large web sites from seeds, using Nutch style.
+Pulsar has a Web SQL engine with which all tasks can be done using simple SQLs.
+
+For example, turn a Web page into a table:
+
+    SELECT
+        DOM_TEXT(DOM) AS TITLE,
+        DOM_ABS_HREF(DOM) AS REFERENCE
+    FROM 
+    DOMT_LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
+
+The SQL above downloads Web page from wikipedia, find out the references section and extract all external reference links.
+
+To run the above SQL, download Pulsar, run
+
+    bin/pulsar server
+
+And then you can see a popup browser window (a h2database client page), enter password 'sa', copy the SQL above, all done.
+
+Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
 
 Pulsar is highly modularized so it also can be used as a library and be embedded within other projects.
 
@@ -79,9 +98,10 @@ HBase is the primary choice as the storage, and any storage supported by Apache 
 TODO:
 
 ```
-1. Integrate with srping 5: https://spring.io/
-2. Test scripts and correct errors
-3. A simple learner to learn boilerpipe arguments: https://github.com/kohlschutter/boilerpipe
+1. Add documents
+2. Integrate with srping 5: https://spring.io/
+3. Test scripts and correct errors
+4. A simple learner to learn boilerpipe arguments: https://github.com/kohlschutter/boilerpipe
 ```
 
 ============
@@ -90,7 +110,7 @@ Enterprise Edition:
 
 Pulsar Enterprise Edition comes with lots of exciting features:
 
-Web SQL:
+Advanced Web SQL:
 ```
 1. Any source, any format, any volume, ETL the data and turn it into a table by just one simple SQL
 2. Monitor a Web site and turn it into a table by just one simple SQL

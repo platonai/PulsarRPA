@@ -665,11 +665,6 @@
 
             <!-- Html -->
             <dependency>
-                <groupId>org.jsoup</groupId>
-                <artifactId>jsoup</artifactId>
-                <version>1.11.2</version>
-            </dependency>
-            <dependency>
                 <groupId>org.jodd</groupId>
                 <artifactId>jodd-core</artifactId>
                 <version>3.5.2</version>

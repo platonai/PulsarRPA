@@ -21,6 +21,12 @@
 # UNLIKE THE PULSAR ALL-IN-ONE-CRAWL COMMAND THIS SCRIPT DOES THE LINK INVERSION AND
 # INDEXING FOR EACH BATCH
 
+echo "Crawl tools are not available now"
+echo "Try the following: "
+echo "bin/pulsar server"
+
+[[ 2 > 1 ]] && exit
+
 bin="`dirname "$0"`"
 bin="`cd "$bin"; pwd`"
 
