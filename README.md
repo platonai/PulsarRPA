@@ -8,7 +8,7 @@ For example, turn a Web page into a table:
 
     SELECT
         DOM_TEXT(DOM) AS TITLE,
-        DOM_ABS_HREF(DOM) AS REFERENCE
+        DOM_ABS_HREF(DOM) AS LINK
     FROM 
     DOMT_LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
 
@@ -18,7 +18,8 @@ To run the above SQL, download Pulsar, run
 
     bin/pulsar server
 
-And then you can see a popup browser window (a h2database client page), enter password 'sa', copy the SQL above, all done.
+And then you can see a popup browser window (a h2database client page),
+enter password 'sa', copy the SQL above, hit 'Run', all done.
 
 Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
 
@@ -49,13 +50,13 @@ The examples can be found in fun/platonic/pulsar/examples/WebAccess.kt, and more
 
 To build from source, you need guava-hbase1-23.6 which is a fix for guava-23.6 to match hbase-1.3.2
 
-    git clone git@github.com:galaxyeye/guava-hbase1-23.6.git
+    git clone git@github.com:platonai/guava-hbase1-23.6.git
     cd guava-hbase1-23.6 && mvn install
 
 And then
 
-    git clone git@github.com:galaxyeye/pulsar.git
-    cd pulsar && mvn package
+    git clone git@github.com:platonai/pulsar.git
+    cd pulsar && mvn
 
 For web crawling and index using solr, run script:
 
@@ -110,7 +111,7 @@ Enterprise Edition:
 
 Pulsar Enterprise Edition comes with lots of exciting features:
 
-Advanced Web SQL:
+Full featured Web SQL:
 ```
 1. Any source, any format, any volume, ETL the data and turn it into a table by just one simple SQL
 2. Monitor a Web site and turn it into a table by just one simple SQL
@@ -120,8 +121,8 @@ Advanced Web SQL:
 
 Machine learning for Web content mining:
 ```
-1. Learn and generate SQL for one site
-2. Extract Web pages from many web sites using just one model
+1. Learn and generate SQLs for sites
+2. Extract Web pages from a batch of Web sites using just one model
 ```
 
 Advanced DOM processing:
