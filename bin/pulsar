@@ -20,17 +20,14 @@ function printUsage() {
   echo "Usage: pulsar [options...] <COMMAND> [<args>]"
   echo "COMMAND is one of:"
   echo
-  echo "  master        Start pulsar master"
-  echo "  webdb         Run web db client"
-  echo "  fetch         Fetch a web page, print the result"
-  echo "  parse         Parse a web page, print the result"
-  echo "  extract       Extract a web page, print the result"
-  echo "  index         Index a web page, print the result"
+  echo "  start         Start pulsar server as a daemon"
+  echo "  stop          Stop pulsar server safely"
+  echo "  server        Run pulsar server with parameters"
+  echo "  sql           Run h2 sql client"
 
   echo
   echo "Options: "
   echo "  -c, --config     Config dir"
-  echo "  -E, --enterprise Use enterprise edition"
   echo "  -v, --verbose    Issue more message"
   echo "  -V, --version    Show version number and quit"
   echo "  -h, --help       The help text"
@@ -121,21 +118,19 @@ fi
 CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
 
 # Choose runnable
-if [ "$COMMAND" = "shell" ] ; then
-  MODULE=pulsar-cli
-  CLASS=fun.platonic.pulsar.cli.PShell
-elif [ "$COMMAND" = "webdb" ] ; then
-  MODULE=pulsar-cli
-  CLASS=fun.platonic.pulsar.cli.DbClient
-elif [ "$COMMAND" = "fetch" ] ; then
-  MODULE=pulsar-cli
-  CLASS=fun.platonic.pulsar.cli.Fetcher
-elif [ "$COMMAND" = "parse" ] ; then
-  MODULE=pulsar-cli
-  CLASS=fun.platonic.pulsar.cli.Parser
-elif [ "$COMMAND" = "index" ] ; then
-  MODULE=pulsar-cli
-  CLASS=fun.platonic.pulsar.cli.Indexer
+if [ "$COMMAND" = "start" ] ; then
+  export RUN_AS_DAEMON=true
+  $bin/pulsar server -tcp -web -webAllowOthers
+  exit 0
+elif [ "$COMMAND" = "stop" ] ; then
+  $bin/pulsar server -tcpShutdown tcp://127.0.1.1:9092
+  exit 0
+elif [ "$COMMAND" = "server" ] ; then
+    MODULE=pulsar-ql-server
+    CLASS=fun.platonic.pulsar.ql.h2.H2DbConsole
+elif [ "$COMMAND" = "sql" ] ; then
+  MODULE=pulsar-third/pulsar-h2
+  CLASS=org.h2.tools.Shell
 elif [ -n "$MODULE" ]; then
   CLASS=$COMMAND
 else

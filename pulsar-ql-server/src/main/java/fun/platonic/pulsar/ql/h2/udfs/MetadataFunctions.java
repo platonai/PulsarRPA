@@ -20,5 +20,4 @@ public class MetadataFunctions {
         WebPage page = engine.getSession(new DbSession(h2session)).load(url);
         return new WebPageFormatter(page).toString();
     }
-
 }
