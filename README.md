@@ -21,6 +21,12 @@ To run the above SQL, download Pulsar, run
 And then you can see a popup browser window (a h2database client page),
 enter password 'sa', copy the SQL above, hit 'Run', all done.
 
+All SQL functions can be found under fun/platonic/pulsar/ql/h2/udfs, every UDF have a namespace and a name.
+UDFs are case insensitive, and all underscores in a UDF are ignored.
+For example, DOMT_LOAD_AND_SELECT is the same as DOMT__LOAD__AND_SELECT__
+
+TODO: document all SQL functions
+
 Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
 
 Pulsar is highly modularized so it also can be used as a library and be embedded within other projects.

@@ -46,6 +46,7 @@ import static org.openqa.selenium.remote.CapabilityType.TAKES_SCREENSHOT;
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
+
     public static final Logger LOG = LoggerFactory.getLogger(WebDriverQueues.class);
 
     public static final DesiredCapabilities DEFAULT_CAPABILITIES;
@@ -176,6 +177,7 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
     }
 
     private void allocateWebDriver(ArrayBlockingQueue<WebDriver> queue, ImmutableConfig conf) {
+        // TODO: configurable factor
         if (allDrivers.size() >= 1.5 * NCPU) {
             LOG.warn("Too many WebDrivers ... cpu cores: {}, free/total: {}/{}",
                     NCPU, freeSize(), totalSize());
