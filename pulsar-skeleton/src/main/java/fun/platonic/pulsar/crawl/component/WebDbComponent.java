@@ -29,6 +29,8 @@ import fun.platonic.pulsar.persist.gora.db.DbQuery;
 import fun.platonic.pulsar.persist.gora.db.DbQueryResult;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
 
+import java.util.Iterator;
+
 import static fun.platonic.pulsar.common.PulsarConstants.ALL_BATCHES;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
 
@@ -83,7 +85,7 @@ public class WebDbComponent implements AutoCloseable {
 
         Params.of("startUrl", startUrl, "endUrl", endUrl).withLogger(LOG).debug(true);
 
-        DbIterator iterator = webDb.query(query);
+        Iterator<WebPage> iterator = webDb.query(query);
 
         while (iterator.hasNext()) {
             result.addValue(new WebPageFormatter(iterator.next()).toMap(query.getFields()));
@@ -94,7 +96,7 @@ public class WebDbComponent implements AutoCloseable {
 
     public DbQueryResult query(DbQuery query) {
         DbQueryResult result = new DbQueryResult();
-        DbIterator iterator = webDb.query(query);
+        Iterator<WebPage> iterator = webDb.query(query);
 
         while (iterator.hasNext()) {
             result.addValue(new WebPageFormatter(iterator.next()).toMap(query.getFields()));
