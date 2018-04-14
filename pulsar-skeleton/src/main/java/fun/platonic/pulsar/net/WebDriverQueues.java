@@ -72,7 +72,7 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
     private Class<? extends WebDriver> defaultWebDriverClass;
 
     private final Map<Integer, ArrayBlockingQueue<WebDriver>> freeDrivers = new HashMap<>();
-    private final Set<WebDriver> allDrivers = new HashSet<>();
+    private final Set<WebDriver> allDrivers = Collections.synchronizedSet(new HashSet<>());
     private final ProxyPool proxyPool;
     private final AtomicInteger freeDriverCount = new AtomicInteger(0);
 
