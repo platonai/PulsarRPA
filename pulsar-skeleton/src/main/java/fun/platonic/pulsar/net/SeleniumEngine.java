@@ -11,6 +11,7 @@ import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.crawl.protocol.ForwardingResponse;
 import fun.platonic.pulsar.crawl.protocol.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -157,7 +159,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         Future<Response> future = executor.getExecutor().submit(() -> fetchContentInternal(page));
         ImmutableConfig conf = page.getMutableConfigOrElse(defaultMutableConfig);
         Duration timeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, defaultPageLoadTimeout);
-        return getResponse(future, timeout.plusSeconds(10));
+        return getResponse(page.getUrl(), future, timeout.plusSeconds(10));
     }
 
     public Collection<Response> fetchAll(Iterable<String> urls) {
@@ -182,12 +184,14 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         batchTaskCount.set(0);
         batchSuccessCount.set(0);
 
-        Collection<Future<Response>> futures = CollectionUtils.collect(pages,
-                page -> executor.getExecutor().submit(() -> fetchContentInternal(page, mutableConfig)));
+        Function<WebPage, Future<Response>> submitter =
+                page -> executor.getExecutor().submit(() -> fetchContentInternal(page, mutableConfig));
+        Collection<Pair<String, Future<Response>>> futures = CollectionUtils.collect(pages,
+                page -> Pair.of(page.getUrl(), submitter.apply(page)));
 
         // The function must return in a reasonable time
         Duration threadTimeout = getPageLoadTimeout(mutableConfig).plusSeconds(10);
-        return CollectionUtils.collect(futures, f -> getResponse(f, threadTimeout));
+        return CollectionUtils.collect(futures, f -> getResponse(f.getKey(), f.getValue(), threadTimeout));
     }
 
     private Response fetchContentInternal(WebPage page) {
@@ -204,7 +208,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         WebDriver driver = drivers.poll(priority, mutableConfig);
         if (driver == null) {
             LOG.warn("Failed to get a WebDriver, retry later. Url: " + url);
-            return new ForwardingResponse(url, "", ProtocolStatusCodes.RETRY, new MultiMetadata());
+            return new ForwardingResponse(url, ProtocolStatusCodes.RETRY, new MultiMetadata());
         }
 
         String pageSource = "";
@@ -360,7 +364,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         scriptTimeout = mutableConfig.getDuration(FETCH_SCRIPT_TIMEOUT, scriptTimeout);
         timeouts.setScriptTimeout(scriptTimeout.getSeconds(), TimeUnit.SECONDS);
 
-        // scrolling
+        // Scrolling
         scrollDownCount = mutableConfig.getInt(FETCH_SCROLL_DOWN_COUNT, scrollDownCount);
         if (scrollDownCount > 20) {
             scrollDownCount = 20;
@@ -411,7 +415,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         }
     }
 
-    private Response getResponse(Future<Response> future, Duration timeout) {
+    private Response getResponse(String url, Future<Response> future, Duration timeout) {
         Objects.requireNonNull(future);
 
         int httpCode;
@@ -444,7 +448,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             LOG.warn(e.toString());
         }
 
-        return new ForwardingResponse(WebPage.NIL.getUrl(), "", httpCode, headers);
+        return new ForwardingResponse(url, httpCode, headers);
     }
 
     @Override

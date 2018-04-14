@@ -77,6 +77,14 @@ public class LoadComponent {
         this.taskStatusTracker = fetchComponent.getTaskStatusTracker();
     }
 
+    public BatchFetchComponent getFetchComponent() {
+        return fetchComponent;
+    }
+
+    public ParseComponent getParseComponent() {
+        return parseComponent;
+    }
+
     public static String getFetchReason(int code) {
         return fetchReasonCodes.getOrDefault(code, "unknown");
     }

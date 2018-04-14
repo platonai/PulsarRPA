@@ -58,7 +58,6 @@ import static fun.platonic.pulsar.persist.metadata.Name.RESPONSE_TIME;
 public abstract class AbstractHttpProtocol implements Protocol {
 
     public static final int BUFFER_SIZE = 8 * 1024;
-    private static final byte[] EMPTY_CONTENT = new byte[0];
     private static final int MAX_REY_GUARD = 10;
     /**
      * Prevent multiple threads generate the same log unnecessary
@@ -304,7 +303,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
-        bytes = bytes == null ? EMPTY_CONTENT : bytes;
+        // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         String contentType = response.getHeader("Content-Type");
         Content content = new Content(urlString, urlString, bytes, contentType, response.getHeaders(), mimeTypes);
         MultiMetadata headers = response.getHeaders();

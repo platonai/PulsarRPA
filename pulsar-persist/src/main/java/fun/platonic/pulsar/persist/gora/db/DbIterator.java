@@ -16,17 +16,17 @@
  ******************************************************************************/
 package fun.platonic.pulsar.persist.gora.db;
 
-import com.google.common.collect.UnmodifiableIterator;
+import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.query.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public class DbIterator extends UnmodifiableIterator<WebPage> {
+public class DbIterator implements Iterator<WebPage> {
 
     public static final Logger LOG = LoggerFactory.getLogger(WebDb.class);
 

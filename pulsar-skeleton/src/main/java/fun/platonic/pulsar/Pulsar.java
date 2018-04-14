@@ -4,12 +4,16 @@ import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.options.LoadOptions;
+import fun.platonic.pulsar.crawl.component.BatchFetchComponent;
 import fun.platonic.pulsar.crawl.component.InjectComponent;
 import fun.platonic.pulsar.crawl.component.LoadComponent;
+import fun.platonic.pulsar.crawl.component.ParseComponent;
 import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
 import fun.platonic.pulsar.net.SeleniumEngine;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -18,7 +22,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import static fun.platonic.pulsar.common.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
@@ -70,6 +76,22 @@ public class Pulsar implements AutoCloseable {
         return webDb;
     }
 
+    public InjectComponent getInjectComponent() {
+        return injectComponent;
+    }
+
+    public LoadComponent getLoadComponent() {
+        return loadComponent;
+    }
+
+    public ParseComponent getParseComponent() {
+        return loadComponent.getParseComponent();
+    }
+
+    public BatchFetchComponent getFetchComponent() {
+        return loadComponent.getFetchComponent();
+    }
+
     /**
      * Inject a url
      *
@@ -88,6 +110,14 @@ public class Pulsar implements AutoCloseable {
 
     public WebPage getOrNil(String url) {
         return webDb.getOrNil(url);
+    }
+
+    public Iterator<WebPage> scan(String urlBase) {
+        return webDb.scan(urlBase);
+    }
+
+    public Iterator<WebPage> scan(String urlBase, String[] fields) {
+        return webDb.scan(urlBase, fields);
     }
 
     /**
@@ -208,7 +238,7 @@ public class Pulsar implements AutoCloseable {
         return parser.parse();
     }
 
-    public void update(WebPage page) {
+    public void save(WebPage page) {
         webDb.put(page.getUrl(), page);
     }
 

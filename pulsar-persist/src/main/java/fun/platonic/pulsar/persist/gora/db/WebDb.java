@@ -30,6 +30,7 @@ import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.GoraStorage;
 
 import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -214,7 +215,7 @@ public class WebDb implements AutoCloseable {
      * @param baseUrl The base url
      * @return The iterator to retrieve pages
      */
-    public DbIterator scan(String baseUrl) {
+    public Iterator<WebPage> scan(String baseUrl) {
         Query<String, GWebPage> query = store.newQuery();
         query.setKeyRange(reverseUrlOrNull(baseUrl), reverseUrlOrNull(baseUrl + UNICODE_LAST_CODE_POINT));
 
@@ -228,7 +229,7 @@ public class WebDb implements AutoCloseable {
      * @param baseUrl The base url
      * @return The iterator to retrieve pages
      */
-    public DbIterator scan(String baseUrl, String[] fields) {
+    public Iterator<WebPage> scan(String baseUrl, String[] fields) {
         Query<String, GWebPage> query = store.newQuery();
         query.setKeyRange(reverseUrlOrNull(baseUrl), reverseUrlOrNull(baseUrl + UNICODE_LAST_CODE_POINT));
         query.setFields(fields);
@@ -243,12 +244,13 @@ public class WebDb implements AutoCloseable {
      * @param query The query
      * @return The iterator to retrieve pages
      */
-    public DbIterator query(DbQuery query) {
+    public Iterator<WebPage> query(DbQuery query) {
         Query<String, GWebPage> goraQuery = store.newQuery();
 
         String startKey = reverseUrlOrNull(query.getStartUrl());
         String endKey = reverseUrlOrNull(query.getEndUrl());
 
+        // The placeholder is used to mark the last character, it's required for serialization, especially for json format
         if (endKey != null) {
             endKey = endKey.replaceAll("\\uFFFF", UNICODE_LAST_CODE_POINT.toString());
             endKey = endKey.replaceAll("\\\\uFFFF", UNICODE_LAST_CODE_POINT.toString());

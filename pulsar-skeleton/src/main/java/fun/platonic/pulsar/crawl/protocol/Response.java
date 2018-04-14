@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 
+import javax.annotation.Nullable;
+
 /**
  * A response interface. Makes all protocols model HTTP.
  */
@@ -38,5 +40,6 @@ public interface Response {
     MultiMetadata getHeaders();
 
     /** Returns the full content of the response. */
+    @Nullable
     byte[] getContent();
 }

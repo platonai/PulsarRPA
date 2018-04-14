@@ -30,6 +30,7 @@ import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import fun.platonic.pulsar.persist.metadata.SpellCheckedMultiMetadata;
 
+import javax.annotation.Nullable;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
@@ -299,6 +300,7 @@ public class HttpResponse implements Response {
         return headers;
     }
 
+    @Nullable
     public byte[] getContent() {
         return content;
     }
@@ -315,10 +317,10 @@ public class HttpResponse implements Response {
                 throw new HttpException("bad content length: " + contentLengthString);
             }
         }
-        if (http.getMaxContent() >= 0 && contentLength > http.getMaxContent()) // limit
-            // download
-            // size
+        if (http.getMaxContent() >= 0 && contentLength > http.getMaxContent()) {
+            // limit download size
             contentLength = http.getMaxContent();
+        }
 
         ByteArrayOutputStream out = new ByteArrayOutputStream(Http.BUFFER_SIZE);
         byte[] bytes = new byte[Http.BUFFER_SIZE];

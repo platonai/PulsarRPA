@@ -22,10 +22,12 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Objects;
 
 public final class Content {
+    public static final byte[] EMPTY_CONTENT = new byte[0];
 
     private int version;
     private String url;
@@ -39,10 +41,9 @@ public final class Content {
         metadata = new MultiMetadata();
     }
 
-    public Content(String url, String baseUrl, byte[] content, String contentType, MultiMetadata metadata, ImmutableConfig conf) {
+    public Content(String url, String baseUrl, @Nullable byte[] content, String contentType, MultiMetadata metadata, ImmutableConfig conf) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(baseUrl);
-        Objects.requireNonNull(content);
         Objects.requireNonNull(metadata);
         Objects.requireNonNull(conf);
 
@@ -55,10 +56,9 @@ public final class Content {
         this.contentType = getContentType(contentType, url, content);
     }
 
-    public Content(String url, String baseUrl, byte[] content, String contentType, MultiMetadata metadata, MimeUtil mimeTypes) {
+    public Content(String url, String baseUrl, @Nullable byte[] content, String contentType, MultiMetadata metadata, MimeUtil mimeTypes) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(baseUrl);
-        Objects.requireNonNull(content);
         Objects.requireNonNull(metadata);
         Objects.requireNonNull(mimeTypes);
 
@@ -89,11 +89,12 @@ public final class Content {
     /**
      * The binary content retrieved.
      */
+    @Nullable
     public byte[] getContent() {
         return content;
     }
 
-    public void setContent(byte[] content) {
+    public void setContent(@Nullable byte[] content) {
         this.content = content;
     }
 
@@ -129,6 +130,7 @@ public final class Content {
         if (!(o instanceof Content)) {
             return false;
         }
+
         Content that = (Content) o;
         return this.url.equals(that.url) && this.baseUrl.equals(that.baseUrl)
                 && Arrays.equals(this.getContent(), that.getContent())

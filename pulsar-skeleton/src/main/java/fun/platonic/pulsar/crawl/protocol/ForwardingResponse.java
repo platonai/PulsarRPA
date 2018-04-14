@@ -18,6 +18,7 @@ package fun.platonic.pulsar.crawl.protocol;
 
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -29,6 +30,15 @@ public class ForwardingResponse implements Response {
     private byte[] content;
     private int code;
     private MultiMetadata headers;
+
+    public ForwardingResponse(String url, int code, MultiMetadata headers) {
+        Objects.requireNonNull(url);
+        Objects.requireNonNull(headers);
+
+        this.url = url;
+        this.code = code;
+        this.headers = headers;
+    }
 
     public ForwardingResponse(String url, String content, int code, MultiMetadata headers) {
         Objects.requireNonNull(url);
@@ -72,6 +82,7 @@ public class ForwardingResponse implements Response {
         return headers;
     }
 
+    @Nullable
     @Override
     public byte[] getContent() {
         return content;

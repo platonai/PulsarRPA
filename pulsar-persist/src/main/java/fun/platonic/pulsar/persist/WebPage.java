@@ -660,11 +660,15 @@ public class WebPage {
 
     /**
      * namespace : metadata, seed, www
+     * reserved
      */
     public String getNamespace() {
         return getMetadata().get("namespace");
     }
 
+    /**
+     * reserved
+     * */
     public void setNamespace(String ns) {
         getMetadata().set("namespace", ns);
     }
@@ -775,10 +779,16 @@ public class WebPage {
 
     public void setContent(ByteBuffer value) {
         page.setContent(value);
+        setContentBytes(value.array().length);
     }
 
-    public void setContent(byte[] value) {
-        page.setContent(ByteBuffer.wrap(value));
+    public void setContent(@Nullable byte[] value) {
+        if (value != null) {
+            page.setContent(ByteBuffer.wrap(value));
+            setContentBytes(value.length);
+        } else {
+            page.setContent(null);
+        }
     }
 
     public int getContentBytes() {

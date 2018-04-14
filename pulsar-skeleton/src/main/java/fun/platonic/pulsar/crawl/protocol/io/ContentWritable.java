@@ -4,6 +4,7 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.protocol.Content;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VersionMismatchException;
 import org.apache.hadoop.io.Writable;
@@ -58,8 +59,14 @@ public class ContentWritable implements Writable, Configurable {
         Text.writeString(out, content.getUrl()); // write url
         Text.writeString(out, content.getBaseUrl()); // write base
 
-        out.writeInt(content.getContent().length); // write rawContent
-        out.write(content.getContent());
+        if (content.getContent() != null) {
+            out.writeInt(content.getContent().length);
+            out.write(content.getContent());
+        } else {
+            // TODO: Can we write a byte[0] ?
+            out.writeInt(0);
+            out.write(Content.EMPTY_CONTENT);
+        }
 
         Text.writeString(out, content.getContentType()); // write contentType
 
@@ -90,8 +97,11 @@ public class ContentWritable implements Writable, Configurable {
                     url = Text.readString(in);
                     base = Text.readString(in);
 
-                    rawContent = new byte[in.readInt()];
-                    in.readFully(rawContent);
+                    int length = in.readInt();
+                    if (length > 0) {
+                        rawContent = new byte[in.readInt()];
+                        in.readFully(rawContent);
+                    }
 
                     contentType = Text.readString(in);
                     metadataWritable.readFields(in);
