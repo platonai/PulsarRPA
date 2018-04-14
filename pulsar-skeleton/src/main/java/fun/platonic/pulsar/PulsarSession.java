@@ -14,6 +14,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -84,6 +85,11 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
 
     public Pulsar getPulsar() {
         return pulsar;
+    }
+
+    @Nullable
+    public String normalize(String url) {
+        return pulsar.normalize(url);
     }
 
     /**

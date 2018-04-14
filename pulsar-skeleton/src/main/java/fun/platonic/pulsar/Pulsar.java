@@ -8,6 +8,7 @@ import fun.platonic.pulsar.crawl.component.BatchFetchComponent;
 import fun.platonic.pulsar.crawl.component.InjectComponent;
 import fun.platonic.pulsar.crawl.component.LoadComponent;
 import fun.platonic.pulsar.crawl.component.ParseComponent;
+import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
 import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
 import fun.platonic.pulsar.net.SeleniumEngine;
 import fun.platonic.pulsar.persist.WebPage;
@@ -35,6 +36,7 @@ public class Pulsar implements AutoCloseable {
     private final WebDb webDb;
     private final InjectComponent injectComponent;
     private final LoadComponent loadComponent;
+    private final UrlNormalizers urlNormalizers;
     private MutableConfig defaultMutableConfig;
     private AtomicBoolean closed = new AtomicBoolean(false);
 
@@ -53,6 +55,7 @@ public class Pulsar implements AutoCloseable {
         this.webDb = applicationContext.getBean(WebDb.class);
         this.injectComponent = applicationContext.getBean(InjectComponent.class);
         this.loadComponent = applicationContext.getBean(LoadComponent.class);
+        this.urlNormalizers = applicationContext.getBean(UrlNormalizers.class);
 
         this.defaultMutableConfig = new MutableConfig(immutableConfig.unbox());
     }
@@ -60,11 +63,13 @@ public class Pulsar implements AutoCloseable {
     public Pulsar(
             InjectComponent injectComponent,
             LoadComponent loadComponent,
+            UrlNormalizers urlNormalizers,
             ImmutableConfig immutableConfig) {
         this.webDb = injectComponent.getWebDb();
 
         this.injectComponent = injectComponent;
         this.loadComponent = loadComponent;
+        this.urlNormalizers = urlNormalizers;
         this.immutableConfig = immutableConfig;
     }
 
@@ -90,6 +95,11 @@ public class Pulsar implements AutoCloseable {
 
     public BatchFetchComponent getFetchComponent() {
         return loadComponent.getFetchComponent();
+    }
+
+    @Nullable
+    public String normalize(String url) {
+        return urlNormalizers.normalize(url);
     }
 
     /**

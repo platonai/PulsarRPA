@@ -181,6 +181,7 @@ public interface CapabilityTypes {
     String PARSE_PARSE = "parser.parse";
     String PARSE_REPARSE = "parser.reparse";
     String PARSE_TIMEOUT = "parser.timeout";
+    String PARSE_NORMALISE = "parse.normalise";
     String PARSE_MAX_URL_LENGTH = "parse.max.url.length";
     String PARSE_MIN_ANCHOR_LENGTH = "parse.min.anchor.length";
     String PARSE_MAX_ANCHOR_LENGTH = "parse.max.anchor.length";

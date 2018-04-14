@@ -148,6 +148,16 @@ public final class UrlNormalizers {
      * Normalize
      *
      * @param urlString The URL string to normalize.
+     * @return A normalized String, using the given <code>scope</code>
+     */
+    public String normalize(String urlString) {
+        return normalize(urlString, SCOPE_DEFAULT);
+    }
+
+    /**
+     * Normalize
+     *
+     * @param urlString The URL string to normalize.
      * @param scope     The given scope.
      * @return A normalized String, using the given <code>scope</code>
      */
