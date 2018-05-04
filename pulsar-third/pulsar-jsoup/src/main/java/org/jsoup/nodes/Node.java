@@ -181,54 +181,12 @@ public abstract class Node implements Cloneable, Comparable<Node> {
         return this;
     }
 
-    public void setFeatures(Features features) {
-        this.features = features;
-    }
-
-    /**
-     * Get all of the element's features.
-     *
-     * @return featureVector (which implements iterable, in same order as presented
-     *         in original HTML).
-     */
-    public Features features() {
+    public Features getFeatures() {
         return features;
     }
 
-    public double getFeature(int key) {
-        return features.get(key);
-    }
-
-    public double getFeatureOrElse(int key, double defaultValue) {
-        double value = features.get(key);
-        if (value == 0 && !hasFeature(key)) {
-            return defaultValue;
-        }
-        return value;
-    }
-
-    public Feature getFeatureEntry(int key) {
-        return new Feature(key, getFeature(key));
-    }
-
-    public Node setFeature(int key, double value) {
-        features.set(key, value);
-        return this;
-    }
-
-    public boolean hasFeature(int key) {
-        return features.get(key) != 0;
-    }
-
-    public Node removeFeature(int key) {
-        Validate.notNull(key);
-        features.set(key, 0);
-        return this;
-    }
-
-    public Node clearFeatures() {
-        features.clear();
-        return this;
+    public void setFeatures(Features features) {
+        this.features = features;
     }
 
     /**

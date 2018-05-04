@@ -26,7 +26,7 @@ import org.junit.Test;
 
 import java.net.URL;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -56,7 +56,7 @@ public class TestURLUtil {
     @Before
     public void setup() {
         this.conf = new ImmutableConfig();
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         // tlds = DomainSuffixes.getInstance(resourcePrefix);
     }
 

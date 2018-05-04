@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-public class TestTTLLRUCache {
-    TTLLRUCache<Integer, String> cache = new TTLLRUCache<>(20, 10);
+public class TestConcurrentLRUCache {
+    ConcurrentLRUCache<Integer, String> cache = new ConcurrentLRUCache<>(20, 10);
 
     @Test
     public void testSmallLRUCache() throws InterruptedException {

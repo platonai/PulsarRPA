@@ -75,7 +75,7 @@ public final class QueryEngine implements AutoCloseable {
     public static QueryEngine getInstance() {
         if (INSTANCE == null) {
             // TODO: a better way to initialize QueryEngine
-            System.setProperty(PULSAR_CONFIG_RESOURCE_PREFIX, "ql-conf");
+            System.setProperty(PULSAR_CONFIG_PREFERRED_DIR, "ql-conf");
 
             String configLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION);
             ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext(configLocation);

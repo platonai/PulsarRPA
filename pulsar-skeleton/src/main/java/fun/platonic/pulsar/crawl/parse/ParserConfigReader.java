@@ -34,7 +34,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.*;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * A reader to load the information stored in the
@@ -71,7 +71,7 @@ public class ParserConfigReader {
     public ParserConfig parse(ImmutableConfig conf) {
         ParserConfig parserConfig = new ParserConfig();
 
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         String fileResource = conf.get(PARSE_PLUGINS_FILE, "parse-plugins.xml");
 
         Document document;

@@ -31,7 +31,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * Filters URLs based on a file of URL prefixes. The file is named by (1)
@@ -96,7 +96,7 @@ public class PrefixUrlFilter implements UrlFilter {
     protected Reader getRulesReader(ImmutableConfig conf) throws FileNotFoundException {
         String stringResource = conf.get(URLFILTER_PREFIX_RULES);
         String fileResource = conf.get(URLFILTER_PREFIX_FILE, "prefix-urlfilter.txt");
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         return new ResourceLoader().getReader(stringResource, fileResource, resourcePrefix);
     }
 }

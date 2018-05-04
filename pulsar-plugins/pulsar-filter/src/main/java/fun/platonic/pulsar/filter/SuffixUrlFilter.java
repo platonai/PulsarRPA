@@ -32,7 +32,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * Filters URLs based on a file of URL suffixes. The file is named by
@@ -129,7 +129,7 @@ public class SuffixUrlFilter implements UrlFilter {
         try {
             String stringResource = conf.get(PARAM_URLFILTER_SUFFIX_RULES);
             String fileResource = conf.get(PARAM_URLFILTER_SUFFIX_FILE, "suffix-urlfilter.txt");
-            String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+            String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
             List<String> lines = new ResourceLoader().readAllLines(stringResource, fileResource, resourcePrefix);
 
             parse(lines);

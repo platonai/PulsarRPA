@@ -25,7 +25,7 @@ import fun.platonic.pulsar.filter.common.RegexUrlFilterBase;
 import java.io.IOException;
 import java.io.Reader;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * RegexUrlFilterBase implementation based on the <a
@@ -55,7 +55,7 @@ public class AutomatonUrlFilter extends RegexUrlFilterBase {
     protected Reader getRulesReader(ImmutableConfig conf) throws IOException {
         String stringResource = conf.get(URLFILTER_AUTOMATON_RULES);
         String fileResource = conf.get(URLFILTER_AUTOMATON_FILE, "automaton-urlfilter.txt");
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         return new ResourceLoader().getReader(stringResource, fileResource, resourcePrefix);
     }
 

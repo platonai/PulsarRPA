@@ -41,7 +41,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * Allows users to do regex substitutions on all/any URLs that are encountered,
@@ -101,7 +101,7 @@ public class RegexUrlNormalizer implements UrlNormalizer {
 
         String stringResource = conf.get(URLNORMALIZER_REGEX_RULES);
         String fileResource = conf.get(URLNORMALIZER_REGEX_FILE, "regex-normalize.xml");
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         return new ResourceLoader().getReader(stringResource, fileResource, resourcePrefix);
     }
 
@@ -123,7 +123,7 @@ public class RegexUrlNormalizer implements UrlNormalizer {
             // try to populate
             String fileResource = conf.get(URLNORMALIZER_REGEX_FILE + "." + scope);
             if (fileResource != null) {
-                String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+                String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
                 LOG.debug("resource for scope '" + scope + "': " + fileResource);
                 try (Reader reader = new ResourceLoader().getResourceAsReader(fileResource, resourcePrefix)) {
                     curRules = readConfiguration(reader);

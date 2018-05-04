@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.regex.Pattern;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * Filters URLs based on a file of regular expressions using the
@@ -66,7 +66,7 @@ public class RegexUrlFilter extends RegexUrlFilterBase {
     protected Reader getRulesReader(ImmutableConfig conf) throws IOException {
         String stringResource = conf.get(URLFILTER_REGEX_RULES);
         String fileResource = conf.get(URLFILTER_REGEX_FILE, "regex-urlfilter.txt");
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         return new ResourceLoader().getReader(stringResource, fileResource, resourcePrefix);
     }
 

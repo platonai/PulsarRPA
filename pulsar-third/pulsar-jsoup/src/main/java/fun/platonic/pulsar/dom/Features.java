@@ -10,7 +10,16 @@ import java.util.*;
  * @author Vincent Zhang, galaxyeye@live.cn
  */
 public class Features {
-    private OrderedIntDoubleMapping mapping = new OrderedIntDoubleMapping();
+
+    private OrderedIntDoubleMapping mapping;
+
+    public Features() {
+        mapping = new OrderedIntDoubleMapping();
+    }
+
+    public Features(int[] indices, double[] values, int numMappings) {
+        mapping = new OrderedIntDoubleMapping(indices, values, numMappings);
+    }
 
     public int[] getIndices() {
         return mapping.getIndices();

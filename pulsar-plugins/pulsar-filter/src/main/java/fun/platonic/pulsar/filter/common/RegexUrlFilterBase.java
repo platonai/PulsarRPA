@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * Generic {@link UrlFilter URL filter} based on regular
@@ -57,7 +57,7 @@ public abstract class RegexUrlFilterBase implements UrlFilter {
 
     public RegexUrlFilterBase(ImmutableConfig conf) {
         try {
-            resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+            resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
             rules = readRules(getRulesReader(conf));
         } catch (Exception e) {
             LOG.error(e.getMessage());

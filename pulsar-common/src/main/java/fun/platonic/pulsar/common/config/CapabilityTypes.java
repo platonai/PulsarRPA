@@ -28,7 +28,8 @@ public interface CapabilityTypes {
      */
     String PULSAR_CONFIG_DIR = "pulsar.configuration.dir";
     String PULSAR_CONFIG_ID = "pulsar.config.id";
-    String PULSAR_CONFIG_RESOURCE_PREFIX = "pulsar.config.resource.prefix";
+    String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
+    String PULSAR_CONFIG_RESOURCES = "pulsar.config.resources";
 
     String PULSAR_TMP_DIR = "pulsar.tmp.dir";
     String PULSAR_OUTPUT_DIR = "pulsar.output.dir";

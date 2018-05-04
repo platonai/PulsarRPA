@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 public class PulsarObjectSerializer implements JavaObjectSerializer {
     @Override
     public byte[] serialize(Object obj) throws Exception {
-        if (obj instanceof Value) {
+        if (obj instanceof ValueDom) {
             Value value = (Value) obj;
             byte[] source = value.getBytesNoCopy();
             ByteBuffer buffer = ByteBuffer.allocate(Integer.SIZE + Integer.SIZE + source.length + 1);

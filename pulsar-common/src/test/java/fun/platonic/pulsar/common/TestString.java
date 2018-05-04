@@ -232,6 +232,18 @@ public class TestString {
     }
 
     @Test
+    public void testCsslize() {
+        String s = "-TestStringUtil";
+        assertEquals("-test-string-util", StringUtil.csslize(s));
+
+        s = "TestStringUtil-a";
+        assertEquals("test-string-util-a", StringUtil.csslize(s));
+
+        s = "TestStringUtil-";
+        assertEquals("test-string-util-", StringUtil.csslize(s));
+    }
+
+    @Test
     public void testHumanize() {
         String s = "TestStringUtil";
         assertEquals("test string util", StringUtil.humanize(s));

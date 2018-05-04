@@ -1,6 +1,6 @@
 package fun.platonic.pulsar;
 
-import fun.platonic.pulsar.common.TTLLRUCache;
+import fun.platonic.pulsar.common.ConcurrentLRUCache;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.AbstractTTLConfiguration;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
@@ -36,8 +36,8 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     public static final int SESSION_DOCUMENT_CACHE_CAPACITY = 10000;
     private static final AtomicInteger objectIdGenerator = new AtomicInteger();
     // All sessions share the same cache
-    private static TTLLRUCache<String, WebPage> pageCache;
-    private static TTLLRUCache<String, Document> documentCache;
+    private static ConcurrentLRUCache<String, WebPage> pageCache;
+    private static ConcurrentLRUCache<String, Document> documentCache;
     private final int id;
     private final Pulsar pulsar;
     private boolean enableCache = true;
@@ -63,14 +63,14 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
         if (pageCache == null) {
             int capacity = getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY);
             synchronized (PulsarSession.class) {
-                pageCache = new TTLLRUCache<>(SESSION_PAGE_CACHE_TTL.getSeconds(), capacity);
+                pageCache = new ConcurrentLRUCache<>(SESSION_PAGE_CACHE_TTL.getSeconds(), capacity);
             }
         }
 
         if (documentCache == null) {
             int capacity = getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY);
             synchronized (PulsarSession.class) {
-                documentCache = new TTLLRUCache<>(SESSION_DOCUMENT_CACHE_TTL.getSeconds(), capacity);
+                documentCache = new ConcurrentLRUCache<>(SESSION_DOCUMENT_CACHE_TTL.getSeconds(), capacity);
             }
         }
     }

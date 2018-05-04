@@ -30,7 +30,7 @@ import fun.platonic.pulsar.net.domain.DomainSuffixes;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * <p>
@@ -85,7 +85,7 @@ public class DomainUrlFilter implements UrlFilter {
      */
     public DomainUrlFilter(ImmutableConfig conf) {
         String stringResource = conf.get(PARAM_URLFILTER_DOMAIN_RULES);
-        String resourcePrefix = conf.get(PULSAR_CONFIG_RESOURCE_PREFIX, "");
+        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         String fileResource = conf.get(PARAM_URLFILTER_DOMAIN_FILE, "domain-urlfilter.txt");
         domainSet.addAll(new ResourceLoader().readAllLines(stringResource, fileResource, resourcePrefix));
 

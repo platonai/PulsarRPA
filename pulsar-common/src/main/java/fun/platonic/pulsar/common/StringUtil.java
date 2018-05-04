@@ -431,7 +431,7 @@ public final class StringUtil {
     public static String csslize(String text) {
         text = StringUtils.uncapitalize(text).trim();
         text = StringUtils.join(text.split("(?=\\p{Upper})"), "-").toLowerCase();
-        text = text.replaceAll("[-_]", " ");
+        text = text.replaceAll("[-_]{1,}", "-");
         text = text.replaceAll("\\s+", " ");
 
         return text;

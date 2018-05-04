@@ -29,12 +29,9 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCE_PREFIX;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
  * Created by vincent on 17-1-17.
@@ -58,16 +55,16 @@ public abstract class AbstractConfiguration {
         this(true);
     }
 
-    public AbstractConfiguration(boolean loadDefaultResource) {
-        this(loadDefaultResource, System.getProperty(PULSAR_CONFIG_RESOURCE_PREFIX, ""));
+    public AbstractConfiguration(boolean loadDefaults) {
+        this(loadDefaults, System.getProperty(PULSAR_CONFIG_PREFERRED_DIR, "."));
     }
 
-    public AbstractConfiguration(String resourcePrefix) {
-        this(true, resourcePrefix);
+    public AbstractConfiguration(String preferredDir) {
+        this(true, preferredDir);
     }
 
-    public AbstractConfiguration(boolean loadDefaultResource, String resourcePrefix) {
-        this(loadDefaultResource, resourcePrefix, DEFAULT_RESOURCES);
+    public AbstractConfiguration(boolean loadDefaults, String preferredDir) {
+        this(loadDefaults, preferredDir, DEFAULT_RESOURCES);
     }
 
     /**
@@ -75,21 +72,26 @@ public abstract class AbstractConfiguration {
      *
      * @see Configuration#addDefaultResource
      */
-    public AbstractConfiguration(boolean loadDefaultResource, String resourcePrefix, List<String> passResources) {
-        conf = new Configuration(loadDefaultResource);
+    public AbstractConfiguration(boolean loadDefaults, String preferredDir, List<String> resources) {
+        conf = new Configuration(loadDefaults);
 
-        if (!loadDefaultResource) {
+        if (!loadDefaults) {
             return;
         }
 
-        if (!resourcePrefix.isEmpty()) {
-            conf.setIfUnset(PULSAR_CONFIG_RESOURCE_PREFIX, resourcePrefix);
+        if (!preferredDir.isEmpty()) {
+            conf.setIfUnset(PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
+        }
+
+        String extraResources = System.getProperty(CapabilityTypes.PULSAR_CONFIG_RESOURCES);
+        if (extraResources != null) {
+            resources.addAll(Arrays.asList(extraResources.split(",")));
         }
 
         List<String> realResources = new ArrayList<>();
         String dir = isDistributedFs(conf) ? "cluster" : "local";
-        for (String name : passResources) {
-            String realResource = getRealResource(resourcePrefix, dir, name);
+        for (String name : resources) {
+            String realResource = getRealResource(preferredDir, dir, name);
             if (realResource != null) {
                 realResources.add(realResource);
             } else {

@@ -1,12 +1,13 @@
 package fun.platonic.pulsar.common;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * A very simple yet fast LRU cache with TTL support
  */
-public class TTLLRUCache<KEY, VALUE> {
+public class ConcurrentLRUCache<KEY, VALUE> {
 
     /**
      * A fast yet short life least recently used cache
@@ -17,13 +18,35 @@ public class TTLLRUCache<KEY, VALUE> {
      */
     private long ttl;
 
+    private int threshold;
+
+    public ConcurrentLRUCache(int capacity) {
+        this(0, capacity);
+    }
+
+    /**
+     * Construct a least recently used cache
+     *
+     * @param ttl      Time to live for items
+     * @param capacity The max size of the cache
+     */
+    public ConcurrentLRUCache(Duration ttl, int capacity) {
+        this.ttl = ttl.getSeconds();
+        this.cache = new LinkedHashMap<String, VALUE>(capacity, 0.75F, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, VALUE> eldest) {
+                return size() > capacity;
+            }
+        };
+    }
+
     /**
      * Construct a least recently used cache
      *
      * @param ttl      Time to live for items, in seconds
      * @param capacity The max size of the cache
      */
-    public TTLLRUCache(long ttl, int capacity) {
+    public ConcurrentLRUCache(long ttl, int capacity) {
         this.ttl = ttl;
         this.cache = new LinkedHashMap<String, VALUE>(capacity, 0.75F, true) {
             @Override
@@ -31,6 +54,18 @@ public class TTLLRUCache<KEY, VALUE> {
                 return size() > capacity;
             }
         };
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public int getThreshold() {
+        return threshold;
+    }
+
+    public void setThreshold(int threshold) {
+        this.threshold = threshold;
     }
 
     public VALUE get(KEY key) {
@@ -51,8 +86,7 @@ public class TTLLRUCache<KEY, VALUE> {
             size = cache.size();
         }
 
-        final int threshold = 200;
-        if (size > threshold) {
+        if (threshold > 0 && size > threshold) {
             // TODO: remove all dead items to keep the cache is small and fast
         }
     }
@@ -67,6 +101,10 @@ public class TTLLRUCache<KEY, VALUE> {
     }
 
     private String getTTLKey(KEY key) {
+        if (ttl <= 0) {
+            return key.toString();
+        }
+
         long secondsDivTTL = System.currentTimeMillis() / 1000 / ttl;
         return secondsDivTTL + "\t" + key.toString();
     }
