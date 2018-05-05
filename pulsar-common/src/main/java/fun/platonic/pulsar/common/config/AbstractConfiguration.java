@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
@@ -102,7 +103,7 @@ public abstract class AbstractConfiguration {
         realResources.forEach(conf::addResource);
 
         LOG.info(toString());
-        URL url = conf.getResource("log4j.properties");
+        URL url = getResource("log4j.properties");
         if (url != null) {
             LOG.info("Log4j: " + url);
         }
@@ -125,12 +126,12 @@ public abstract class AbstractConfiguration {
     private String getRealResource(String prefix, String name) {
         String realResource = prefix + "/" + name;
 
-        URL url = conf.getResource(realResource);
+        URL url = getResource(realResource);
         if (url != null) {
             return realResource;
         }
 
-        url = conf.getResource(name);
+        url = getResource(name);
         if (url != null) {
             realResource = name;
             return realResource;
@@ -202,7 +203,7 @@ public abstract class AbstractConfiguration {
      * @throws NumberFormatException when the value is invalid
      */
     public int getInt(String name, int defaultValue) {
-        return conf.getInt(name, defaultValue);
+        return p(name).getInt(defaultValue);
     }
 
     /**
@@ -216,7 +217,7 @@ public abstract class AbstractConfiguration {
      * <code>int</code> values
      */
     public int[] getInts(String name) {
-        return conf.getInts(name);
+        return p(name).getInts();
     }
 
     /**
@@ -232,7 +233,7 @@ public abstract class AbstractConfiguration {
      * @throws NumberFormatException when the value is invalid
      */
     public long getLong(String name, long defaultValue) {
-        return conf.getLong(name, defaultValue);
+        return p(name).getLong(defaultValue);
     }
 
     /**
@@ -248,7 +249,7 @@ public abstract class AbstractConfiguration {
      * @throws NumberFormatException when the value is invalid
      */
     public float getFloat(String name, float defaultValue) {
-        return conf.getFloat(name, defaultValue);
+        return p(name).getFloat(defaultValue);
     }
 
     /**
@@ -264,7 +265,7 @@ public abstract class AbstractConfiguration {
      * @throws NumberFormatException when the value is invalid
      */
     public double getDouble(String name, double defaultValue) {
-        return conf.getDouble(name, defaultValue);
+        return p(name).getDouble(defaultValue);
     }
 
     /**
@@ -278,7 +279,7 @@ public abstract class AbstractConfiguration {
      * or <code>defaultValue</code>.
      */
     public boolean getBoolean(String name, boolean defaultValue) {
-        return conf.getBoolean(name, defaultValue);
+        return p(name).getBoolean(defaultValue);
     }
 
     /**
@@ -290,7 +291,7 @@ public abstract class AbstractConfiguration {
      *                                  provided
      */
     public <T extends Enum<T>> T getEnum(String name, T defaultValue) {
-        return conf.getEnum(name, defaultValue);
+        return p(name).getEnum(defaultValue);
     }
 
     /**
@@ -304,7 +305,7 @@ public abstract class AbstractConfiguration {
      * @return property value as a collection of <code>String</code>s.
      */
     public Collection<String> getStringCollection(String name) {
-        return conf.getStringCollection(name);
+        return p(name).getStringCollection();
     }
 
     /**
@@ -317,7 +318,7 @@ public abstract class AbstractConfiguration {
      * or <code>null</code>.
      */
     public String[] getStrings(String name) {
-        return conf.getStrings(name);
+        return p(name).getStrings();
     }
 
     /**
@@ -331,7 +332,7 @@ public abstract class AbstractConfiguration {
      * or default value.
      */
     public String[] getStrings(String name, String... defaultValue) {
-        return conf.getStrings(name, defaultValue);
+        return p(name).getStrings(defaultValue);
     }
 
     /**
@@ -343,7 +344,7 @@ public abstract class AbstractConfiguration {
      * @return property value as a collection of <code>String</code>s, or empty <code>Collection</code>
      */
     public Collection<String> getTrimmedStringCollection(String name) {
-        return conf.getTrimmedStringCollection(name);
+        return p(name).getTrimmedStringCollection();
     }
 
     /**
@@ -356,7 +357,7 @@ public abstract class AbstractConfiguration {
      * or empty array.
      */
     public String[] getTrimmedStrings(String name) {
-        return conf.getTrimmedStrings(name);
+        return p(name).getTrimmedStrings();
     }
 
     /**
@@ -370,7 +371,7 @@ public abstract class AbstractConfiguration {
      * or default value.
      */
     public String[] getTrimmedStrings(String name, String... defaultValue) {
-        return conf.getTrimmedStrings(name, defaultValue);
+        return p(name).getTrimmedStrings();
     }
 
     /**
@@ -381,7 +382,7 @@ public abstract class AbstractConfiguration {
      * @return a positive integer
      */
     public Integer getUint(String name, int defaultValue) {
-        int value = conf.getInt(name, defaultValue);
+        int value = getInt(name, defaultValue);
         if (value < 0) {
             value = defaultValue;
         }
@@ -396,15 +397,11 @@ public abstract class AbstractConfiguration {
      * @return a positive long integer
      */
     public Long getUlong(String name, long defaultValue) {
-        Long value = conf.getLong(name, defaultValue);
+        Long value = getLong(name, defaultValue);
         if (value < 0) {
             value = defaultValue;
         }
         return value;
-    }
-
-    public void setDuration(String name, Duration duration) {
-        conf.set(name, duration.toString());
     }
 
     /**
@@ -413,35 +410,35 @@ public abstract class AbstractConfiguration {
      * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
      */
     public Duration getDuration(String name) {
-        return SParser.wrap(conf.get(name)).getDuration();
+        return p(name).getDuration();
     }
 
     public Duration getDuration(String name, Duration defaultValue) {
-        return SParser.wrap(conf.get(name)).getDuration(defaultValue);
+        return p(name).getDuration(defaultValue);
     }
 
     public Instant getInstant(String name, Instant defaultValue) {
-        return SParser.wrap(conf.get(name)).getInstant(defaultValue);
+        return p(name).getInstant(defaultValue);
     }
 
     public Path getPath(String name, Path elsePath) {
-        return SParser.wrap(conf.get(name)).getPath(elsePath);
+        return p(name).getPath(elsePath);
     }
 
     public Map<String, String> getKvs(String name) {
-        return SParser.wrap(conf.get(name)).getKvs();
+        return p(name).getKvs();
     }
 
-    public InputStream getConfResourceAsInputStream(String name) {
-        return conf.getConfResourceAsInputStream(name);
+    public InputStream getConfResourceAsInputStream(String resource) {
+        return SParser.wrap(resource).getResourceAsInputStream();
     }
 
-    public Reader getConfResourceAsReader(String name) {
-        return conf.getConfResourceAsReader(name);
+    public Reader getConfResourceAsReader(String resource) {
+        return SParser.wrap(resource).getResourceAsReader();
     }
 
-    public URL getResource(String name) {
-        return conf.getResource(name);
+    public URL getResource(String resource) {
+        return SParser.wrap(resource).getResource();
     }
 
     /**
@@ -455,7 +452,7 @@ public abstract class AbstractConfiguration {
      * or <code>defaultValue</code>.
      */
     public Class<?> getClass(String name, Class<?> defaultValue) {
-        return conf.getClass(name, defaultValue);
+        return p(name).getClass(defaultValue);
     }
 
     /**
@@ -477,12 +474,17 @@ public abstract class AbstractConfiguration {
     public <U> Class<? extends U> getClass(String name,
                                            Class<? extends U> defaultValue,
                                            Class<U> xface) {
-        return conf.getClass(name, defaultValue, xface);
+        return p(name).getClass(defaultValue, xface);
     }
 
     public boolean isProductionEnv() {
-        String env = conf.get("ENV", "production");
+        String env = get("ENV", "production");
         return env.contains("production");
+    }
+
+    @Nonnull
+    private SParser p(String name) {
+        return new SParser(get(name));
     }
 
     @Override

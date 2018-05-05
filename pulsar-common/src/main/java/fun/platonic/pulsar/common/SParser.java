@@ -21,6 +21,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.util.StringUtils;
 
@@ -60,14 +61,13 @@ public class SParser {
     private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{[^\\}\\$\u0020]+\\}");
     private static final int MAX_SUBST = 20;
     private ClassLoader classLoader;
-    private String value;
-
     {
         classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
-            classLoader = SParser.class.getClassLoader();
+            classLoader = Configuration.class.getClassLoader();
         }
     }
+    private String value;
 
     public SParser() {
     }

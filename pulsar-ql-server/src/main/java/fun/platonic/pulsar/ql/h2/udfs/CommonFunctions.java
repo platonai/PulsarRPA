@@ -70,7 +70,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetFetchMode(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_MODE);
+        return session.getConfig().getAndUnset(FETCH_MODE);
     }
 
     /**
@@ -97,7 +97,7 @@ public class CommonFunctions {
     public static String unsetBrowser(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
         unsetFetchMode(h2session);
-        return session.getAndUnset(SELENIUM_BROWSER);
+        return session.getConfig().getAndUnset(SELENIUM_BROWSER);
     }
 
     /**
@@ -114,7 +114,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetParallelFetch(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_PREFER_PARALLEL);
+        return session.getConfig().getAndUnset(FETCH_PREFER_PARALLEL);
     }
 
     /**
@@ -139,7 +139,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetEagerFetchLimit(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_EAGER_FETCH_LIMIT);
+        return session.getConfig().getAndUnset(FETCH_EAGER_FETCH_LIMIT);
     }
 
     /**
@@ -168,7 +168,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetPageExpires(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(STORAGE_DATUM_EXPIRES);
+        return session.getConfig().getAndUnset(STORAGE_DATUM_EXPIRES);
     }
 
     /**
@@ -188,7 +188,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetPageLoadTimeout(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT);
+        return session.getConfig().getAndUnset(FETCH_PAGE_LOAD_TIMEOUT);
     }
 
     /**
@@ -208,7 +208,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetScriptTimeout(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_SCRIPT_TIMEOUT);
+        return session.getConfig().getAndUnset(FETCH_SCRIPT_TIMEOUT);
     }
 
     /**
@@ -226,7 +226,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetScrollDownCount(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_SCROLL_DOWN_COUNT);
+        return session.getConfig().getAndUnset(FETCH_SCROLL_DOWN_COUNT);
     }
 
     /**
@@ -246,7 +246,7 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetScrollDownWait(@H2Context Session h2session) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(FETCH_SCROLL_DOWN_WAIT);
+        return session.getConfig().getAndUnset(FETCH_SCROLL_DOWN_WAIT);
     }
 
     /**
@@ -263,7 +263,7 @@ public class CommonFunctions {
     @UDFunction
     public static String setConfig(@H2Context Session h2session, String name, String value, int ttl) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndSet(name, value, ttl);
+        return session.getConfig().getAndSet(name, value, ttl);
     }
 
     @UDFunction
@@ -284,19 +284,19 @@ public class CommonFunctions {
     @UDFunction
     public static String unsetConf(@H2Context Session h2session, String name) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(name);
+        return session.getConfig().getAndUnset(name);
     }
 
     @UDFunction
     public static String unsetConfig(@H2Context Session h2session, String name) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.getAndUnset(name);
+        return session.getConfig().getAndUnset(name);
     }
 
     @UDFunction
     public static String getConf(@H2Context Session h2session, String name) {
         QuerySession session = engine.getSession(new DbSession(h2session));
-        return session.get(name);
+        return session.getConfig().get(name);
     }
 
     @UDFunction
@@ -324,7 +324,7 @@ public class CommonFunctions {
         rs.addColumn("NAME");
         rs.addColumn("VALUE");
 
-        ImmutableConfig conf = engine.getSession(new DbSession(h2session));
+        ImmutableConfig conf = engine.getSession(new DbSession(h2session)).getConfig();
         for (Map.Entry<String, String> entry : conf.unbox()) {
             rs.addRow(entry.getKey(), entry.getValue());
         }
@@ -478,9 +478,9 @@ public class CommonFunctions {
         Objects.requireNonNull(name);
 
         QuerySession session = engine.getSession(new DbSession(h2session));
-        String old = session.get(name);
+        String old = session.getConfig().get(name);
         if (value != null) {
-            session.set(name, value, ttl);
+            session.getConfig().set(name, value, ttl);
             return old;
         }
 

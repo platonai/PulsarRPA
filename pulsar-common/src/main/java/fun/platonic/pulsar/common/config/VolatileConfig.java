@@ -1,24 +1,36 @@
 package fun.platonic.pulsar.common.config;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by vincent on 18-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public abstract class AbstractTTLConfiguration extends MutableConfig {
+public class VolatileConfig extends MutableConfig {
 
     private ImmutableConfig fallbackConfig;
     private Map<String, Integer> ttls = Collections.synchronizedMap(new HashMap<>());
 
-    public AbstractTTLConfiguration() {
+    public VolatileConfig() {
         super(false);
     }
 
+    public VolatileConfig(ImmutableConfig fallbackConfig) {
+        super(false);
+        this.fallbackConfig = Objects.requireNonNull(fallbackConfig);
+    }
+
+    @Nonnull
     @Override
     public String get(String name, String defaultValue) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(defaultValue);
+
         String value = super.get(name);
         if (value != null) {
             if (!isExpired(name)) {
@@ -32,11 +44,14 @@ public abstract class AbstractTTLConfiguration extends MutableConfig {
             }
         }
 
-        return fallbackConfig != null ? fallbackConfig.get(name, defaultValue) : null;
+        return fallbackConfig != null ? fallbackConfig.get(name, defaultValue) : defaultValue;
     }
 
+    @Nullable
     @Override
     public String get(String name) {
+        Objects.requireNonNull(name);
+
         String value = super.get(name);
         if (value != null) {
             if (!isExpired(name)) {
@@ -54,18 +69,27 @@ public abstract class AbstractTTLConfiguration extends MutableConfig {
     }
 
     public void set(String name, String value, int ttl) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(value);
+
         setTTL(name, ttl);
         super.set(name, value);
     }
 
+    @Nullable
     public String getAndSet(String name, String value, int ttl) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(value);
+
         String old = get(name);
-        this.set(name, value, ttl);
+        if (old != null) {
+            this.set(name, value, ttl);
+        }
         return old;
     }
 
     public int getTTL(String name) {
-        return ttls.getOrDefault(name, -1);
+        return ttls.getOrDefault(name, Integer.MAX_VALUE);
     }
 
     public void setTTL(String name, int ttl) {
@@ -77,7 +101,9 @@ public abstract class AbstractTTLConfiguration extends MutableConfig {
         }
     }
 
-    abstract public boolean isExpired(String key);
+    public boolean isExpired(String key) {
+        return false;
+    }
 
     public ImmutableConfig getFallbackConfig() {
         return fallbackConfig;

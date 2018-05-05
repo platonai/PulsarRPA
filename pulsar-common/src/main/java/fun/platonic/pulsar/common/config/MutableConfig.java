@@ -3,7 +3,11 @@ package fun.platonic.pulsar.common.config;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
+import javax.annotation.Nullable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 
 public class MutableConfig extends ImmutableConfig {
 
@@ -40,6 +44,9 @@ public class MutableConfig extends ImmutableConfig {
      * @param value property value.
      */
     public void set(String name, String value) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(value);
+
         unbox().set(name, value);
     }
 
@@ -50,20 +57,34 @@ public class MutableConfig extends ImmutableConfig {
     }
 
     public void setIfNotEmpty(String name, String value) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(value);
+
         if (StringUtils.isNoneEmpty(name, value)) {
             set(name, value);
         }
     }
 
+    @Nullable
     public String getAndSet(String name, String value) {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(value);
+
         String old = get(name);
-        set(name, value);
+        if (old != null) {
+            this.set(name, value);
+        }
         return old;
     }
 
+    @Nullable
     public String getAndUnset(String name) {
+        Objects.requireNonNull(name);
+
         String old = get(name);
-        unset(name);
+        if (old != null) {
+            unset(name);
+        }
         return old;
     }
 
@@ -147,6 +168,14 @@ public class MutableConfig extends ImmutableConfig {
      */
     public <T extends Enum<T>> void setEnum(String name, T value) {
         set(name, value.toString());
+    }
+
+    public void setInstant(String name, Instant time) {
+        set(name, time.toString());
+    }
+
+    public void setDuration(String name, Duration duration) {
+        set(name, duration.toString());
     }
 
     public void unset(String name) {

@@ -2,7 +2,7 @@ package fun.platonic.pulsar;
 
 import fun.platonic.pulsar.common.ConcurrentLRUCache;
 import fun.platonic.pulsar.common.UrlUtil;
-import fun.platonic.pulsar.common.config.AbstractTTLConfiguration;
+import fun.platonic.pulsar.common.config.VolatileConfig;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.options.LoadOptions;
 import fun.platonic.pulsar.persist.WebPage;
@@ -27,7 +27,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONT
  * Created by vincent on 18-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public class PulsarSession extends AbstractTTLConfiguration implements AutoCloseable {
+public class PulsarSession implements AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(PulsarSession.class);
     public static final Duration SESSION_PAGE_CACHE_TTL = Duration.ofSeconds(20);
     public static final int SESSION_PAGE_CACHE_CAPACITY = 1000;
@@ -38,6 +38,8 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     // All sessions share the same cache
     private static ConcurrentLRUCache<String, WebPage> pageCache;
     private static ConcurrentLRUCache<String, Document> documentCache;
+
+    private VolatileConfig config;
     private final int id;
     private final Pulsar pulsar;
     private boolean enableCache = true;
@@ -54,21 +56,28 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     }
 
     public PulsarSession(ConfigurableApplicationContext applicationContext) {
+        this(applicationContext, applicationContext.getBean(ImmutableConfig.class));
+    }
+
+    public PulsarSession(ConfigurableApplicationContext applicationContext, ImmutableConfig config) {
+        this(applicationContext, new VolatileConfig(config));
+    }
+
+    public PulsarSession(ConfigurableApplicationContext applicationContext, VolatileConfig config) {
         id = objectIdGenerator.incrementAndGet();
 
-        ImmutableConfig immutableConfig = applicationContext.getBean(ImmutableConfig.class);
-        this.setFallbackConfig(immutableConfig);
+        this.config = config;
         this.pulsar = new Pulsar(applicationContext);
 
         if (pageCache == null) {
-            int capacity = getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY);
+            int capacity = config.getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY);
             synchronized (PulsarSession.class) {
                 pageCache = new ConcurrentLRUCache<>(SESSION_PAGE_CACHE_TTL.getSeconds(), capacity);
             }
         }
 
         if (documentCache == null) {
-            int capacity = getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY);
+            int capacity = config.getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY);
             synchronized (PulsarSession.class) {
                 documentCache = new ConcurrentLRUCache<>(SESSION_DOCUMENT_CACHE_TTL.getSeconds(), capacity);
             }
@@ -77,6 +86,10 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
 
     public int getId() {
         return id;
+    }
+
+    public VolatileConfig getConfig() {
+        return config;
     }
 
     public void disableCache() {
@@ -112,7 +125,7 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     @Nonnull
     public WebPage load(String configuredUrl) {
         Pair<String, String> urlAndOptions = UrlUtil.splitUrlArgs(configuredUrl);
-        LoadOptions options = LoadOptions.parse(urlAndOptions.getValue(), this);
+        LoadOptions options = LoadOptions.parse(urlAndOptions.getValue(), config);
 
         return load(urlAndOptions.getKey(), options);
     }
@@ -126,7 +139,7 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
      */
     @Nonnull
     public WebPage load(String url, LoadOptions options) {
-        options.setMutableConfig(this);
+        options.setMutableConfig(config);
 
         if (enableCache) {
             return getCachedOrLoad(url, options);
@@ -143,7 +156,7 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
      * @return The web pages
      */
     public Collection<WebPage> loadAll(Iterable<String> urls, LoadOptions options) {
-        options.setMutableConfig(this);
+        options.setMutableConfig(config);
 
         if (enableCache) {
             return getCachedOrLoadAll(urls, options);
@@ -160,7 +173,7 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
      * @return The web pages
      */
     public Collection<WebPage> parallelLoadAll(Iterable<String> urls, LoadOptions options) {
-        options.setMutableConfig(this);
+        options.setMutableConfig(config);
         options.setPreferParallel(true);
 
         if (enableCache) {
@@ -286,10 +299,4 @@ public class PulsarSession extends AbstractTTLConfiguration implements AutoClose
     public void close() {
         pulsar.close();
     }
-
-    @Override
-    public boolean isExpired(String key) {
-        return false;
-    }
-
 }

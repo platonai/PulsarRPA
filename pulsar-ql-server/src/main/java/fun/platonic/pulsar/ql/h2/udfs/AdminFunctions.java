@@ -54,7 +54,7 @@ public class AdminFunctions {
         checkPrivilege(h2session);
 
         QuerySession session = engine.getSession(new DbSession(h2session));
-        PulsarFileSystem fs = new PulsarFileSystem(session);
+        PulsarFileSystem fs = new PulsarFileSystem(session.getConfig());
 
         WebPage page = session.load(url);
         return fs.save(page, postfix);

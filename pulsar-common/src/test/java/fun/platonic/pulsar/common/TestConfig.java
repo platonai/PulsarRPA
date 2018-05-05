@@ -2,12 +2,15 @@ package fun.platonic.pulsar.common;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
+import fun.platonic.pulsar.common.config.VolatileConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.time.Duration;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -16,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 public class TestConfig {
 
     @Test
-    public void testConfig() throws IOException {
+    public void testConfig() {
         ImmutableConfig conf = new ImmutableConfig(false);
         System.out.println(conf.toString());
 //    assertFalse(conf.toString().contains("pulsar-default.xml"));
@@ -29,7 +32,7 @@ public class TestConfig {
     }
 
     @Test
-    public void testDuration() throws IOException {
+    public void testDuration() {
         MutableConfig conf = new MutableConfig();
         // ISO-8601 format
         conf.set("d1", "p3d");
@@ -62,5 +65,42 @@ public class TestConfig {
 
         conf.set("test.collection", "a,\nb,\nc,\nd");
         assertEquals(4, conf.getTrimmedStringCollection("test.collection").size());
+    }
+
+    @Test
+    public void testStrings() {
+        MutableConfig conf = new MutableConfig(false);
+
+        String n1 = "n1";
+        String v1 = "a,b,c,d";
+        conf.set(n1, v1);
+
+        assertEquals(v1, conf.get(n1));
+        assertEquals(4, conf.getStrings(n1).length);
+    }
+
+    @Test
+    public void testStrings2() {
+        VolatileConfig conf = new VolatileConfig();
+
+        String n1 = "n1";
+        String v1 = "a,b,c,d";
+        conf.set(n1, v1);
+
+        assertEquals(v1, conf.get(n1));
+        assertEquals(4, conf.getStrings(n1).length);
+    }
+
+    @Test
+    public void testFallback() {
+        MutableConfig mutableConfig = new MutableConfig();
+        String n1 = "n1";
+        String v1 = "a,b,c,d";
+        mutableConfig.set(n1, v1);
+
+        VolatileConfig conf = new VolatileConfig(mutableConfig);
+        assertEquals(v1, conf.get(n1));
+        System.out.println(StringUtils.join(conf.getStrings(n1), ", "));
+        assertEquals(4, conf.getStrings(n1).length);
     }
 }

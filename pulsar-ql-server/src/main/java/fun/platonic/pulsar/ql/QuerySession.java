@@ -28,46 +28,15 @@ public class QuerySession extends PulsarSession {
     private QueryEngine engine;
     private final DbSession dbSession;
     private int totalUdfs;
-    private int sqlSequence;
 
     /**
      * Construct a {@link QuerySession}
      */
     public QuerySession(QueryEngine engine, DbSession dbSession, ConfigurableApplicationContext applicationContext) {
-        super(applicationContext);
+        super(applicationContext, new SessionConfig(dbSession, engine.getConf()));
         this.engine = engine;
         this.dbSession = dbSession;
         registerUdfsInPackage("fun.platonic.pulsar.ql.function");
-    }
-
-    public int getSqlSequence() {
-        return sqlSequence;
-    }
-
-    public void setSqlSequence(int sqlSequence) {
-        this.sqlSequence = sqlSequence;
-    }
-
-    @Override
-    public void setTTL(String name, int ttl) {
-        if (ttl > 0) {
-            ttl = 1 + ttl + dbSession.getSqlSequence();
-        }
-
-        super.setTTL(name, ttl);
-    }
-
-    @Override
-    public boolean isExpired(String propertyName) {
-        int sequence = dbSession.getSqlSequence();
-        int ttl = getTTL(propertyName);
-        boolean expired = sequence > ttl;
-        // LOG.debug("Property {}, sequence: {}, ttl: {}", propertyName, sequence, ttl);
-        if (LOG.isDebugEnabled() && expired) {
-            LOG.debug("Property {} is expired at the {}th command", propertyName, sequence);
-        }
-
-        return expired;
     }
 
     /**
