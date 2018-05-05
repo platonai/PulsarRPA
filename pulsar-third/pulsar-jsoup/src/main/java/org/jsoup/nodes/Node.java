@@ -1,7 +1,6 @@
 package org.jsoup.nodes;
 
-import fun.platonic.pulsar.dom.Feature;
-import fun.platonic.pulsar.dom.Features;
+import fun.platonic.pulsar.common.OrderedIntDoubleMapping;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
@@ -24,7 +23,7 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     int siblingIndex;
 
     Attributes attributes = new Attributes();
-    Features features;
+    OrderedIntDoubleMapping features;
 
     /**
      * The css selector of this node in the document, calculated in the document's construction,
@@ -36,7 +35,6 @@ public abstract class Node implements Cloneable, Comparable<Node> {
      * The text of this node, it might be out of sync if document is updated
      * */
     String textCache = null;
-    String strippedTextCache = null;
 
     /**
      * The phrase set of this node, it's calculated using a dict
@@ -181,11 +179,11 @@ public abstract class Node implements Cloneable, Comparable<Node> {
         return this;
     }
 
-    public Features getFeatures() {
+    public OrderedIntDoubleMapping getFeatures() {
         return features;
     }
 
-    public void setFeatures(Features features) {
+    public void setFeatures(OrderedIntDoubleMapping features) {
         this.features = features;
     }
 

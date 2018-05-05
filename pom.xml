@@ -864,6 +864,13 @@
                 <version>${gson.version}</version>
             </dependency>
 
+            <!-- Algebra -->
+            <dependency>
+                <groupId>org.apache.mahout</groupId>
+                <artifactId>mahout-math</artifactId>
+                <version>0.13.0</version>
+            </dependency>
+
             <!-- WebGraph computing -->
             <dependency>
                 <groupId>org.jgrapht</groupId>
