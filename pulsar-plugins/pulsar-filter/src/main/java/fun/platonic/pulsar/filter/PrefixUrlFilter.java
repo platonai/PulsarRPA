@@ -97,6 +97,6 @@ public class PrefixUrlFilter implements UrlFilter {
         String stringResource = conf.get(URLFILTER_PREFIX_RULES);
         String fileResource = conf.get(URLFILTER_PREFIX_FILE, "prefix-urlfilter.txt");
         String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
-        return new ResourceLoader().getReader(stringResource, fileResource, resourcePrefix);
+        return new ResourceLoader().getMultiSourceReader(stringResource, fileResource, resourcePrefix);
     }
 }

@@ -20,38 +20,89 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Utility methods for common filesystem operations.
- * TODO: register class loaders
+ * Load resources
  */
 public class ResourceLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResourceLoader.class);
 
+    /**
+     * The utility methods will try to use the provided class factories to
+     * convert binary name of class to Class object. Used by H2 OSGi Activator
+     * in order to provide a class from another bundle ClassLoader.
+     */
+    public interface ClassFactory {
+
+        /**
+         * Check whether the factory can return the named class.
+         *
+         * @param name the binary name of the class
+         * @return true if this factory can return a valid class for the provided class name
+         */
+        boolean match(String name);
+
+        /**
+         * Load the class.
+         *
+         * @param name the binary name of the class
+         * @return the class object
+         * @throws ClassNotFoundException If the class is not handle by this factory
+         */
+        Class<?> loadClass(String name) throws ClassNotFoundException;
+    }
+
+    private static ArrayList<ClassFactory> userClassFactories = new ArrayList<>();
+
+    /**
+     * Add a class factory in order to manage more than one class loader.
+     *
+     * @param classFactory An object that implements ClassFactory
+     */
+    public static void addClassFactory(ClassFactory classFactory) {
+        userClassFactories.add(classFactory);
+    }
+
+    /**
+     * Remove a class factory
+     *
+     * @param classFactory Already inserted class factory instance
+     */
+    public static void removeClassFactory(ClassFactory classFactory) {
+        userClassFactories.remove(classFactory);
+    }
+
     private ClassLoader classLoader;
 
-    public ResourceLoader() {
+    {
         classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
             classLoader = ResourceLoader.class.getClassLoader();
         }
     }
 
+    public ResourceLoader() {
+    }
+
     public List<String> readAllLines(String stringResource, String fileResource, String resourcePrefix) {
-        try (Reader reader = getReader(stringResource, fileResource, resourcePrefix)) {
-            return new BufferedReader(reader).lines()
-                    .filter(l -> !l.startsWith("#") && StringUtils.isNotBlank(l))
-                    .collect(Collectors.toList());
+        try (Reader reader = getMultiSourceReader(stringResource, fileResource, resourcePrefix)) {
+            if (reader != null) {
+                return new BufferedReader(reader).lines()
+                        .filter(l -> !l.startsWith("#") && StringUtils.isNotBlank(l))
+                        .collect(Collectors.toList());
+            }
         } catch (IOException e) {
             LOG.error(StringUtil.stringifyException(e));
         }
@@ -64,14 +115,108 @@ public class ResourceLoader {
     }
 
     public List<String> readAllLines(String fileResource) {
-        return readAllLines(null, fileResource, "");
+        try (Reader reader = getResourceAsReader(fileResource)) {
+            if (reader != null) {
+                return new BufferedReader(reader).lines()
+                        .filter(l -> !l.startsWith("#") && StringUtils.isNotBlank(l))
+                        .collect(Collectors.toList());
+            }
+        } catch (IOException e) {
+            LOG.error(StringUtil.stringifyException(e));
+        }
+
+        return new ArrayList<>(0);
     }
 
-    public Reader getReader(String stringResource, String fileResource) throws FileNotFoundException {
-        return getReader(stringResource, fileResource, "");
+    /**
+     * Get a {@link Reader} attached to the configuration resource with the
+     * given <code>name</code>.
+     *
+     * @param fileResource configuration resource name.
+     * @return a reader attached to the resource.
+     */
+    @Nullable
+    public InputStream getResourceAsStream(String fileResource) {
+        Objects.requireNonNull(fileResource);
+        try {
+            URL url = getResource(fileResource);
+
+            if (url == null) {
+                // LOG.info(name + " not found");
+                return null;
+            } else {
+                LOG.info("Found resource " + fileResource + " at " + url);
+            }
+
+            return url.openStream();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    public Reader getReader(String stringResource, String fileResource, String resourcePrefix) throws FileNotFoundException {
+    @Nullable
+    public InputStream getResourceAsStream(String fileResource, String... resourcePrefixes) {
+        Objects.requireNonNull(fileResource);
+        final InputStream[] streams = {null};
+        return Stream.of(resourcePrefixes)
+                .filter(StringUtils::isNotBlank)
+                .map(resourcePrefix -> {
+                    if (streams[0] == null) streams[0] = getResourceAsStream(resourcePrefix + "/" + fileResource);
+                    return streams[0];
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(getResourceAsStream(fileResource));
+    }
+
+    /**
+     * Get a {@link Reader} attached to the configuration resource with the
+     * given <code>name</code>.
+     *
+     * @param fileResource configuration resource name.
+     * @return a reader attached to the resource.
+     */
+    @Nullable
+    public Reader getResourceAsReader(String fileResource, String... resourcePrefixes) {
+        Objects.requireNonNull(fileResource);
+        InputStream stream = getResourceAsStream(fileResource, resourcePrefixes);
+        return stream == null ? null : new InputStreamReader(stream);
+    }
+
+    /**
+     * Get the {@link URL} for the named resource.
+     *
+     * @param name resource name.
+     * @return the url for the named resource.
+     */
+    public URL getResource(String name) {
+        URL url = null;
+        // User provided class loader first
+        Iterator<ClassFactory> it = userClassFactories.iterator();
+        while (url == null && it.hasNext()) {
+            url = it.getClass().getResource(name);
+        }
+        return url != null ? url : classLoader.getResource(name);
+    }
+
+    /**
+     * Get the {@link URL} for the named resource.
+     *
+     * @param name resource name.
+     * @param preferredClassLoader preferred class loader, this class loader is used first,
+     *                             fallback to other class loaders if the resource not found by preferred class loader.
+     * @return the url for the named resource.
+     */
+    public <T> URL getResource(String name, Class<T> preferredClassLoader) {
+        URL url = preferredClassLoader.getResource(name);
+        return url != null ? url : this.getResource(name);
+    }
+
+    public Reader getMultiSourceReader(String stringResource, String fileResource) throws FileNotFoundException {
+        return getMultiSourceReader(stringResource, fileResource, "");
+    }
+
+    public Reader getMultiSourceReader(String stringResource, String fileResource, String resourcePrefix) throws FileNotFoundException {
         Reader reader = null;
         if (!StringUtils.isBlank(stringResource)) {
             reader = new StringReader(stringResource);
@@ -85,9 +230,9 @@ public class ResourceLoader {
                 }
 
                 // Read default config dir
-//        if (reader == null) {
-//          reader = getResourceAsReader("conf/" + fileResource);
-//        }
+                //        if (reader == null) {
+                //          reader = getResourceAsReader("conf/" + fileResource);
+                //        }
 
                 // Search in classpath
                 if (reader == null) {
@@ -97,52 +242,5 @@ public class ResourceLoader {
         }
 
         return reader;
-    }
-
-    public Reader getResourceAsReader(String fileResource, String... resourcePrefixes) {
-        final Reader[] reader = {null};
-        return Stream.of(resourcePrefixes)
-                .filter(StringUtils::isNotBlank)
-                .map(resourcePrefix -> {
-                    if (reader[0] == null) reader[0] = getResourceAsReader(resourcePrefix + "/" + fileResource);
-                    return reader[0];
-                })
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(getResourceAsReader(fileResource));
-    }
-
-    /**
-     * Get a {@link Reader} attached to the configuration resource with the
-     * given <code>name</code>.
-     *
-     * @param name configuration resource name.
-     * @return a reader attached to the resource.
-     */
-    public Reader getResourceAsReader(String name) {
-        try {
-            URL url = getResource(name);
-
-            if (url == null) {
-                // LOG.info(name + " not found");
-                return null;
-            } else {
-                LOG.info("Found resource " + name + " at " + url);
-            }
-
-            return new InputStreamReader(url.openStream());
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * Get the {@link URL} for the named resource.
-     *
-     * @param name resource name.
-     * @return the url for the named resource.
-     */
-    public URL getResource(String name) {
-        return classLoader.getResource(name);
     }
 }

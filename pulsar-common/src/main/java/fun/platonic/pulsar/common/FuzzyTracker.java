@@ -8,175 +8,179 @@ import java.util.TreeMap;
 
 public class FuzzyTracker<T extends Comparable<T>> {
 
-	private Map<T, Double> trackees = new TreeMap<T, Double>();
+    private Map<T, Double> trackees = new TreeMap<>();
 
-	public FuzzyTracker() {
-	}
+    public FuzzyTracker() {
+    }
 
-	public int size() {
-		return trackees.size();
-	}
+    public int size() {
+        return trackees.size();
+    }
 
-	public boolean empty() {
-		return trackees.size() == 0;
-	}
+    public boolean isEmpty() {
+        return trackees.size() == 0;
+    }
 
-	public double get(T t) {
-		Double sim = trackees.get(t);
+    public double remove(T t) {
+        Double r = trackees.remove(t);
+        return r == null ? 0.0 : r;
+    }
 
-		if (sim == null)
-			sim = 0.0;
+    public void clear() {
+        trackees.clear();
+    }
 
-		return sim;
-	}
+    public double get(T t) {
+        Double sim = trackees.get(t);
 
-	public void set(T t, FuzzyProbability p) {
-		set(t, p.floor());
-	}
+        if (sim == null)
+            sim = 0.0;
 
-	public void set(T t, double sim) {
-		Double oldValue = trackees.get(t);
+        return sim;
+    }
 
-		if (sim > 1.0) {
-			sim = 1.0;
-		}
+    public void set(T t, FuzzyProbability p) {
+        set(t, p.floor());
+    }
 
-		if (oldValue == null || oldValue < sim) {
-			trackees.put(t, sim);
-		}
-	}
+    public void set(T t, double sim) {
+        Double oldValue = trackees.get(t);
 
-	public double inc(T t, double sim) {
-		Double oldSim = trackees.get(t);
+        if (sim > 1.0) {
+            sim = 1.0;
+        }
 
-		if (oldSim != null) {
-			sim += oldSim;
-		}
+        if (oldValue == null || oldValue < sim) {
+            trackees.put(t, sim);
+        }
+    }
 
-		if (sim > 1) {
-			sim = 1;
-		}
+    public double inc(T t, double sim) {
+        Double oldSim = trackees.get(t);
 
-		trackees.put(t, sim);
+        if (oldSim != null) {
+            sim += oldSim;
+        }
 
-		return sim;
-	}
+        if (sim > 1) {
+            sim = 1;
+        }
 
-	public double dec(T t, double sim) {
-		Double oldSim = trackees.get(t);
+        trackees.put(t, sim);
 
-		if (oldSim != null) {
-			sim = oldSim - sim;
-		}
+        return sim;
+    }
 
-		if (sim < FuzzyProbability.STRICTLY_NOT.ceiling()) {
-			sim = 0.0;
-			trackees.remove(t);
-		} else {
-			trackees.put(t, sim);
-		}
+    public double dec(T t, double sim) {
+        Double oldSim = trackees.get(t);
 
-		return sim;
-	}
+        if (oldSim != null) {
+            sim = oldSim - sim;
+        }
 
-	public double remove(T t) {
-		Double r = trackees.remove(t);
-		return r == null ? 0.0 : r;
-	}
+        if (sim < FuzzyProbability.STRICTLY_NOT.ceiling()) {
+            sim = 0.0;
+            trackees.remove(t);
+        } else {
+            trackees.put(t, sim);
+        }
 
-	// 寻找相似度值最大的项
-	public T primaryKey() {
-		T lastType = null;
-		Double lastSim = 0.0;
+        return sim;
+    }
 
-		for (Entry<T, Double> entry : trackees.entrySet()) {
-			if (lastSim < entry.getValue()) {
-				lastSim = entry.getValue();
-				lastType = entry.getKey();
-			}
-		}
+    // 寻找相似度值最大的项
+    public T primaryKey() {
+        T lastType = null;
+        Double lastSim = 0.0;
 
-		return lastType;
-	}
+        for (Entry<T, Double> entry : trackees.entrySet()) {
+            if (lastSim < entry.getValue()) {
+                lastSim = entry.getValue();
+                lastType = entry.getKey();
+            }
+        }
 
-	public Set<T> keySet() {
-		return trackees.keySet();
-	}
+        return lastType;
+    }
 
-	public Set<T> keySet(FuzzyProbability p) {
-		Set<T> keys = new HashSet<T>();
+    public Set<T> keySet() {
+        return trackees.keySet();
+    }
 
-		for (T key : trackees.keySet()) {
-			if (is(key, p)) {
-				keys.add(key);
-			}
-		}
+    public Set<T> keySet(FuzzyProbability p) {
+        Set<T> keys = new HashSet<T>();
 
-		return keys;
-	}
+        for (T key : trackees.keySet()) {
+            if (is(key, p)) {
+                keys.add(key);
+            }
+        }
 
-	public boolean is(T key, FuzzyProbability p) {
-		Double sim = trackees.get(key);
-		if (sim == null) {
-			return false;
-		}
+        return keys;
+    }
 
-		FuzzyProbability p2 = FuzzyProbability.of(sim);
+    public boolean is(T key, FuzzyProbability p) {
+        Double sim = trackees.get(key);
+        if (sim == null) {
+            return false;
+        }
 
-		return p2.floor() >= p.floor();
-	}
+        FuzzyProbability p2 = FuzzyProbability.of(sim);
 
-	public boolean maybe(T key) {
-		Double p = trackees.get(key);
-		if (p == null) {
-			return false;
-		}
+        return p2.floor() >= p.floor();
+    }
 
-		return FuzzyProbability.maybe(p);
-	}
+    public boolean maybe(T key) {
+        Double p = trackees.get(key);
+        if (p == null) {
+            return false;
+        }
 
-	public boolean veryLikely(T key) {
-		Double p = trackees.get(key);
-		if (p == null) {
-			return false;
-		}
+        return FuzzyProbability.maybe(p);
+    }
 
-		return FuzzyProbability.veryLikely(p);
-	}
+    public boolean veryLikely(T key) {
+        Double p = trackees.get(key);
+        if (p == null) {
+            return false;
+        }
 
-	public boolean mustBe(T key) {
-		Double p = trackees.get(key);
-		if (p == null) {
-			return false;
-		}
+        return FuzzyProbability.veryLikely(p);
+    }
 
-		return FuzzyProbability.mustBe(p);
-	}
+    public boolean mustBe(T key) {
+        Double p = trackees.get(key);
+        if (p == null) {
+            return false;
+        }
 
-	public boolean certainly(T key) {
-		Double p = trackees.get(key);
-		if (p == null) {
-			return false;
-		}
+        return FuzzyProbability.mustBe(p);
+    }
 
-		return FuzzyProbability.certainly(p);
-	}
+    public boolean certainly(T key) {
+        Double p = trackees.get(key);
+        if (p == null) {
+            return false;
+        }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
+        return FuzzyProbability.certainly(p);
+    }
 
-		int i = 0;
-		for (Entry<T, Double> entry : trackees.entrySet()) {
-			if (i++ > 0) {
-				sb.append(",");
-			}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-			sb.append(entry.getKey());
-			sb.append(":");
-			sb.append(String.format("%1.2f", entry.getValue()));
-		}
+        int i = 0;
+        for (Entry<T, Double> entry : trackees.entrySet()) {
+            if (i++ > 0) {
+                sb.append(",");
+            }
 
-		return sb.toString();
-	}
+            sb.append(entry.getKey());
+            sb.append(":");
+            sb.append(String.format("%1.2f", entry.getValue()));
+        }
+
+        return sb.toString();
+    }
 }

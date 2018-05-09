@@ -28,7 +28,6 @@ public class TestConfig {
 //    assertTrue(conf.toString().contains("pulsar-default.xml"));
 
         new BufferedReader(conf.getConfResourceAsReader("log4j.properties")).lines().forEach(System.out::println);
-        // new BufferedReader(conf.getConfResourceAsReader("conf/pulsar-site.xml")).lines().forEach(System.out::println);
     }
 
     @Test

@@ -102,7 +102,7 @@ public class RegexUrlNormalizer implements UrlNormalizer {
         String stringResource = conf.get(URLNORMALIZER_REGEX_RULES);
         String fileResource = conf.get(URLNORMALIZER_REGEX_FILE, "regex-normalize.xml");
         String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
-        return new ResourceLoader().getReader(stringResource, fileResource, resourcePrefix);
+        return new ResourceLoader().getMultiSourceReader(stringResource, fileResource, resourcePrefix);
     }
 
     // used in JUnit test.
