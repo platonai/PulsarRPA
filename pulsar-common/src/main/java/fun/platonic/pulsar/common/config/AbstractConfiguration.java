@@ -74,6 +74,14 @@ public abstract class AbstractConfiguration {
      * @see Configuration#addDefaultResource
      */
     public AbstractConfiguration(boolean loadDefaults, String preferredDir, List<String> resources) {
+        loadConfResources(loadDefaults, preferredDir, resources);
+    }
+
+    public AbstractConfiguration(Configuration conf) {
+        this.conf = new Configuration(conf);
+    }
+
+    private void loadConfResources(boolean loadDefaults, String preferredDir, List<String> resources) {
         conf = new Configuration(loadDefaults);
 
         if (!loadDefaults) {
@@ -138,10 +146,6 @@ public abstract class AbstractConfiguration {
         }
 
         return null;
-    }
-
-    public AbstractConfiguration(Configuration conf) {
-        this.conf = new Configuration(conf);
     }
 
     public static boolean isDistributedFs(Configuration conf) {

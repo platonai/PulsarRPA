@@ -119,13 +119,7 @@ public class DomFunctions {
     @UDFunction
     public static int sequence(ValueDom dom) {
         Objects.requireNonNull(dom);
-        return dom.getElement().sequence();
-    }
-
-    @UDFunction
-    public static int depth(ValueDom dom) {
-        Objects.requireNonNull(dom);
-        return dom.getElement().depth();
+        return dom.getElement().getNodeSequence();
     }
 
     @UDFunction
@@ -316,7 +310,12 @@ public class DomFunctions {
     @Nonnull
     public static String parentName(ValueDom dom) {
         Objects.requireNonNull(dom);
-        return dom.getElement().parent().prettyName();
+        Element parent = dom.getElement().parent();
+        if (parent == null) {
+            return "";
+        } else {
+            return parent.getNodeSequence() + "-" + parent.nodeName();
+        }
     }
 
     @UDFunction

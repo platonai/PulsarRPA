@@ -17,6 +17,7 @@
 
 package fun.platonic.pulsar.common;
 
+import com.google.common.collect.Maps;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -167,6 +168,54 @@ public class TestString {
     }
 
     @Test
+    public void testPricePattern() {
+        String text = "￥799.00 (降价通知)";
+        // text = text.replaceAll("¥|,|'", "");
+        // System.out.println(text);
+
+        Matcher matcher = StringUtil.PRICE_PATTERN.matcher(text);
+
+        int count = 0;
+        while (matcher.find()) {
+            count++;
+            System.out.println("Found Price : " + count + " : " + matcher.start() + " - " + matcher.end() + ", " + matcher.group());
+        }
+
+        assertTrue(matcher.find());
+    }
+
+    @Test
+    public void testParseVersion() {
+        // assertTrue(Math.abs(StringUtil.tryParseDouble("0.2.0") - 0.2) < 0.0000001);
+//    System.out.println(Lists.newArrayList("0.2.0".split("\\.")));
+//    System.out.println("0.2.0".split("\\.").length);
+        assertEquals("0.2.0".split("\\.").length, 3);
+    }
+
+    @Test
+    public void testtrimNonCJKChar() {
+        String text = "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ";
+
+        assertEquals(text.trim(), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ");
+        assertEquals(StringUtil.trimNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘");
+    }
+
+    @Test
+    public void testStripNonChar() {
+        String[] texts = {
+                "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ",
+                "天王表 正品热卖 \uE004主要职责：  OK"
+        };
+
+        for (String text : texts) {
+            System.out.println(StringUtil.stripNonCJKChar(text, StringUtil.DEFAULT_KEEP_CHARS));
+        }
+
+//    assertEquals(text.trim(), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ");
+//    assertEquals(StringUtil.stripNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘");
+    }
+
+    @Test
     public void testIsChinese() {
         String[] texts = {
                 "关注全球华人健康"
@@ -241,6 +290,20 @@ public class TestString {
 
         s = "TestStringUtil-";
         assertEquals("test-string-util-", StringUtil.csslize(s));
+    }
+
+    @Test
+    public void testCsslize2() {
+        Map<String, String> cases = Maps.newHashMap();
+
+        cases.put("nav_top", "nav top");
+        cases.put("mainMenu", "main menu");
+        cases.put("image-detail", "image detail");
+        cases.put("image      detail", "image detail");
+
+        for (Map.Entry<String, String> entry : cases.entrySet()) {
+            assertEquals(entry.getValue(), StringUtil.csslize(entry.getKey()));
+        }
     }
 
     @Test

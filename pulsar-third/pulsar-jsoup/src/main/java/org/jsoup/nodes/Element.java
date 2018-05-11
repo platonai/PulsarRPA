@@ -1026,11 +1026,7 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String text() {
-      if (textCache == null) {
-        textCache = accumulateText();
-      }
-
-      return textCache;
+      return accumulateText();
     }
 
     private String accumulateText() {
@@ -1427,31 +1423,6 @@ public class Element extends Node {
         }
     }
 
-    public String prettyName() {
-        if (this instanceof Document) {
-            String bUri = baseUri;
-            if (bUri == null || bUri.isEmpty()) {
-                bUri = ownerDocument().body().attr("baseUri");
-            }
-            return ":root" + "@" + bUri;
-        }
-
-        String id = id().trim();
-        if (!id.isEmpty()) {
-            id = "#" + id;
-        }
-
-        String cls = "";
-        if (id.isEmpty()) {
-            cls = className().trim();
-            if (!cls.isEmpty()) {
-                cls = "." + cls.replaceAll("\\s+", ".");
-            }
-        }
-
-        return sequence() + "-" + nodeName() + id + cls;
-    }
-
     private void ownText(StringBuilder accum) {
         for (Node child : childNodes) {
             if (child instanceof TextNode) {
@@ -1462,5 +1433,4 @@ public class Element extends Node {
             }
         }
     }
-
 }

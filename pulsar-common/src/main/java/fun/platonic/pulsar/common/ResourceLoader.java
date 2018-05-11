@@ -157,11 +157,13 @@ public class ResourceLoader {
     @Nullable
     public InputStream getResourceAsStream(String fileResource, String... resourcePrefixes) {
         Objects.requireNonNull(fileResource);
-        final InputStream[] streams = {null};
+        InputStream[] streams = {null};
         return Stream.of(resourcePrefixes)
                 .filter(StringUtils::isNotBlank)
                 .map(resourcePrefix -> {
-                    if (streams[0] == null) streams[0] = getResourceAsStream(resourcePrefix + "/" + fileResource);
+                    if (streams[0] == null) {
+                        streams[0] = getResourceAsStream(resourcePrefix + "/" + fileResource);
+                    }
                     return streams[0];
                 })
                 .filter(Objects::nonNull)
@@ -216,7 +218,8 @@ public class ResourceLoader {
         return getMultiSourceReader(stringResource, fileResource, "");
     }
 
-    public Reader getMultiSourceReader(String stringResource, String fileResource, String resourcePrefix) throws FileNotFoundException {
+    public Reader getMultiSourceReader(
+            String stringResource, String fileResource, String resourcePrefix) throws FileNotFoundException {
         Reader reader = null;
         if (!StringUtils.isBlank(stringResource)) {
             reader = new StringReader(stringResource);

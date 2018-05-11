@@ -16,7 +16,7 @@ import java.util.*;
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
 
  @author Jonathan Hedley, jonathan@hedley.net */
-public abstract class Node implements Cloneable, Comparable<Node> {
+public abstract class Node implements Cloneable {
 
     static final String EmptyString = "";
     Node parentNode;
@@ -24,30 +24,6 @@ public abstract class Node implements Cloneable, Comparable<Node> {
 
     Attributes attributes = new Attributes();
     OrderedIntDoubleMapping features;
-
-    /**
-     * The css selector of this node in the document, calculated in the document's construction,
-     * it might be out of sync if document is updated
-     * */
-    // String .cssSelector;
-
-    /**
-     * The text of this node, it might be out of sync if document is updated
-     * */
-    String textCache = null;
-
-    /**
-     * The phrase set of this node, it's calculated using a dict
-     * */
-    SortedSet<String> phrases = new TreeSet<>();
-
-    /**
-     * The keyword and it's appearance of this node, it's calculated using a dict
-     * */
-    SortedMap<String, Integer> keywords = new TreeMap<>();
-
-    int sequence;
-    int depth;
 
     /**
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
@@ -185,38 +161,6 @@ public abstract class Node implements Cloneable, Comparable<Node> {
 
     public void setFeatures(OrderedIntDoubleMapping features) {
         this.features = features;
-    }
-
-    /**
-     * Use getFeature()
-     */
-    @Deprecated
-    public int sequence() {
-        return sequence;
-    }
-
-    /**
-     * Use setFeature()
-     */
-    @Deprecated
-    public void sequence(int sequence) {
-        this.sequence = sequence;
-    }
-
-    /**
-     * Use getFeature()
-     */
-    @Deprecated
-    public int depth() {
-        return depth;
-    }
-
-    /**
-     * Use setFeature()
-     * */
-    @Deprecated
-    public void depth(int depth) {
-        this.depth = depth;
     }
 
     public int siblingSize() {
@@ -697,29 +641,6 @@ public abstract class Node implements Cloneable, Comparable<Node> {
     public <T extends Appendable> T html(T appendable) {
         outerHtml(appendable);
         return appendable;
-    }
-
-    /**
-     * Get the phrases of this node
-     *
-     * @return phrases set of this node
-     * */
-    public SortedSet<String> phrases() {
-        return phrases;
-    }
-
-    /**
-     * Get the keywords of this node
-     *
-     * @return keywords set of this node
-     * */
-    public SortedMap<String, Integer> keywords() {
-        return keywords;
-    }
-
-    @Override
-    public int compareTo(Node o) {
-        return sequence - o.sequence;
     }
 
 	public String toString() {

@@ -220,6 +220,6 @@ public class ValueDom extends Value {
 
     @Override
     public String toString() {
-        return element.prettyName();
+        return element.getNodeSequence() + "-" + element.nodeName();
     }
 }
