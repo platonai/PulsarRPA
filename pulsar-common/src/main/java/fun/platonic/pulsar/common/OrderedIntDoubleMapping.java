@@ -26,7 +26,8 @@ import java.io.Serializable;
  */
 public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
 
-    static final double DEFAULT_VALUE = 0.0;
+    public static final double DEFAULT_VALUE = 0.0;
+    public static final OrderedIntDoubleMapping EMPTY = new OrderedIntDoubleMapping(0);
 
     private int[] indices;
     private double[] values;
@@ -56,6 +57,10 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         this.indices = indices;
         this.values = values;
         this.numMappings = numMappings;
+    }
+
+    public boolean isEmpty() {
+        return this == EMPTY || (indices.length == 0 && values.length == 0 && numMappings == 0);
     }
 
     public int[] getIndices() {

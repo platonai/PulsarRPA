@@ -23,9 +23,10 @@ object WebAccess {
         val portal = pulsar.load("$productPortalUrl $loadOptions")
         val doc = pulsar.parse(portal)
         doc.select(".goods_item a[href~=detail]")
-                .map { it.attr("href").substringBefore("?") }
-                .forEach { portal.vividLinks.put(it, "") }
+                .map { it.attr("abs:href").substringBefore("?") }
+                .forEach { portal.vividLinks[it] = "" }
         println(WebPageFormatter(portal))
+        println(portal.simpleVividLinks)
         val pages = pulsar.parallelLoadAll(portal.simpleVividLinks)
         pages.forEach { println("${it.url} ${it.pageTitle}") }
     }
@@ -38,6 +39,6 @@ object WebAccess {
 }
 
 fun main(args: Array<String>) {
-    // WebAccess.load()
-    WebAccess.loadAllProducts()
+    WebAccess.load()
+    // WebAccess.loadAllProducts()
 }

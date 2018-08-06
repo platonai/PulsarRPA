@@ -11,6 +11,7 @@ import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.crawl.protocol.ForwardingResponse;
 import fun.platonic.pulsar.crawl.protocol.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -52,7 +53,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(SeleniumEngine.class);
 
     // TODO: A better solution to initialize it
-    public static String CLIENT_JS;
+    public static String CLIENT_JS = "";
 
     private ImmutableConfig immutableConfig;
     private MutableConfig defaultMutableConfig;
@@ -134,6 +135,10 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
         scrollDownCount = immutableConfig.getInt(FETCH_SCROLL_DOWN_COUNT, 0);
         scrollDownWait = immutableConfig.getDuration(FETCH_SCROLL_DOWN_COUNT, Duration.ofMillis(500));
+
+        clientJs = immutableConfig.get(FETCH_CLIENT_JS, CLIENT_JS);
+
+        getParams().withLogger(LOG).info();
     }
 
     @Override
@@ -143,7 +148,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                 "defaultPageLoadTimeout", defaultPageLoadTimeout,
                 "scriptTimeout", scriptTimeout,
                 "scrollDownCount", scrollDownCount,
-                "scrollDownWait", scrollDownWait
+                "scrollDownWait", scrollDownWait,
+                "clientJsLength", clientJs.length()
         );
     }
 
@@ -279,7 +285,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                 }
             }
 
-            if (clientJs != null) {
+            if (StringUtils.isNotBlank(clientJs)) {
                 jsExecutor.executeScript(clientJs);
             }
         }

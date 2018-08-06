@@ -375,11 +375,11 @@ public abstract class AbstractConfiguration {
      * or default value.
      */
     public String[] getTrimmedStrings(String name, String... defaultValue) {
-        return p(name).getTrimmedStrings();
+        return p(name).getTrimmedStrings(defaultValue);
     }
 
     /**
-     * Get a unsigned integer, if the configured value is negative or not set, return the default value
+     * Get an unsigned integer, if the configured value is negative or not set, return the default value
      *
      * @param name         The property name
      * @param defaultValue The default value return if the configured value is negative

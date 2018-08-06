@@ -9,6 +9,8 @@ import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -23,7 +25,7 @@ public abstract class Node implements Cloneable {
     int siblingIndex;
 
     Attributes attributes = new Attributes();
-    OrderedIntDoubleMapping features;
+    OrderedIntDoubleMapping features = OrderedIntDoubleMapping.EMPTY;
 
     /**
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
@@ -155,11 +157,12 @@ public abstract class Node implements Cloneable {
         return this;
     }
 
+    @Nonnull
     public OrderedIntDoubleMapping getFeatures() {
         return features;
     }
 
-    public void setFeatures(OrderedIntDoubleMapping features) {
+    public void setFeatures(@Nonnull OrderedIntDoubleMapping features) {
         this.features = features;
     }
 
