@@ -145,15 +145,15 @@ public class BatchFetchComponent extends FetchComponent {
     private Collection<WebPage> protocolParallelFetchAll(Iterable<String> urls, Protocol protocol, LoadOptions options) {
         MutableConfig mutableConfig = options.getMutableConfig();
 
-        Collection<WebPage> pages = CollectionUtils.collect(urls, url -> WebPage.newWebPage(url, mutableConfig));
+        Collection<WebPage> pages = CollectionUtils.collect(urls, url -> createFetchEntry(url, options));
         return protocol.getResponses(pages, mutableConfig).stream()
                 .map(response -> forwardResponse(protocol, response, options))
                 .collect(Collectors.toList());
     }
 
     private Collection<WebPage> manualParallelFetchAll(Iterable<String> urls, LoadOptions options) {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Manual parallel fetch urls");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Manual parallel fetch urls");
         }
 
         Collection<Future<WebPage>> futures = CollectionUtils.collect(urls,

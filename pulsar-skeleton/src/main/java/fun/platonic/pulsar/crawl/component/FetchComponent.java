@@ -154,10 +154,7 @@ public class FetchComponent implements AutoCloseable {
         Objects.requireNonNull(url);
         Objects.requireNonNull(options);
 
-        WebPage page = WebPage.newWebPage(url, options.getMutableConfig());
-        page.setOptions(options.toString());
-
-        return fetchContent(page);
+        return fetchContent(createFetchEntry(url, options));
     }
 
     /**
@@ -296,6 +293,28 @@ public class FetchComponent implements AutoCloseable {
                 LOG.warn("Unknown ProtocolStatus: " + protocolStatus);
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY);
         }
+
+        return page;
+    }
+
+    public WebPage createFetchEntry(String url, LoadOptions options) {
+        Objects.requireNonNull(url);
+        Objects.requireNonNull(options);
+
+        WebPage page = WebPage.newWebPage(url, options.getMutableConfig());
+        page.setFetchMode(options.getFetchMode());
+        page.setOptions(options.toString());
+
+        return page;
+    }
+
+    public WebPage initFetchEntry(WebPage page, LoadOptions options) {
+        Objects.requireNonNull(page);
+        Objects.requireNonNull(options);
+
+        page.setMutableConfig(options.getMutableConfig());
+        page.setFetchMode(options.getFetchMode());
+        page.setOptions(options.toString());
 
         return page;
     }

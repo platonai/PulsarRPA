@@ -403,6 +403,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         } else if (driver instanceof HtmlUnitDriver) {
             page.setLastBrowser(BrowserType.HTMLUNIT);
         } else {
+            LOG.warn("Actual browser is set to be NATIVE by selenium engine");
             page.setLastBrowser(BrowserType.NATIVE);
         }
 

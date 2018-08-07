@@ -207,8 +207,8 @@ public class LoadComponent {
             return knownPages;
         }
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Fetching {} urls with options {}", pendingUrls.size(), options);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Fetching {} urls with options {}", pendingUrls.size(), options);
         }
 
         Collection<WebPage> updatedPages;
@@ -281,12 +281,10 @@ public class LoadComponent {
                 page = WebPage.newWebPage(url);
             }
 
-            page.setMutableConfig(options.getMutableConfig());
-            page.setFetchMode(options.getFetchMode());
-            page.setOptions(options.toString());
+            page = fetchComponent.initFetchEntry(page, options);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Fetching: " + page.getConfiguredUrl());
+                LOG.debug("Fetching: " + page.getConfiguredUrl() + " | FetchMode: " + page.getFetchMode());
             }
 
             fetchingUrls.add(url);
@@ -421,7 +419,7 @@ public class LoadComponent {
         updateComponent.updateFetchSchedule(page);
 
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Fetched: " + page.getConfiguredUrl());
+            LOG.trace("Fetched: " + page.getConfiguredUrl() + " | LAST_BROWSER: " + page.getLastBrowser());
         }
 
         if (options.isPersist()) {
