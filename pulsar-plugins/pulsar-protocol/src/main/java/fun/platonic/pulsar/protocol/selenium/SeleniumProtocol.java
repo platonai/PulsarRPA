@@ -33,7 +33,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         if (engine != null) {
             engine.close();
             engine = null;

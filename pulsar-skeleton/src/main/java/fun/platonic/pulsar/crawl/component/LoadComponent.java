@@ -7,6 +7,7 @@ import fun.platonic.pulsar.common.options.LinkOptions;
 import fun.platonic.pulsar.common.options.LoadOptions;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.slf4j.Logger;
@@ -199,7 +200,7 @@ public class LoadComponent {
                     knownPages.add(page);
                 }
             } else {
-                // Unknown
+                LOG.error("Unknown fetch reason #{}, url: {}, options: {}", reason, url, options);
             }
         }
 

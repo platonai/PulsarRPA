@@ -1,6 +1,7 @@
 package fun.platonic.pulsar.crawl.component;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import fun.platonic.pulsar.common.GlobalExecutor;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
@@ -13,6 +14,7 @@ import fun.platonic.pulsar.crawl.protocol.Response;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.metadata.FetchMode;
+import org.apache.commons.collections4.MapUtils;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -145,9 +147,10 @@ public class BatchFetchComponent extends FetchComponent {
     private Collection<WebPage> protocolParallelFetchAll(Iterable<String> urls, Protocol protocol, LoadOptions options) {
         MutableConfig mutableConfig = options.getMutableConfig();
 
-        Collection<WebPage> pages = CollectionUtils.collect(urls, url -> createFetchEntry(url, options));
-        return protocol.getResponses(pages, mutableConfig).stream()
-                .map(response -> forwardResponse(protocol, response, options))
+        // TODO: avoid searching a page from the map, carry it inside response
+        Map<String, WebPage> pages = Maps.toMap(urls, url -> createFetchEntry(url, options));
+        return protocol.getResponses(pages.values(), mutableConfig).stream()
+                .map(response -> forwardResponse(protocol, response, pages.get(response.getUrl())))
                 .collect(Collectors.toList());
     }
 
@@ -166,9 +169,10 @@ public class BatchFetchComponent extends FetchComponent {
      * Forward previous fetched response to protocol for further process: retry, status processing, etc
      */
     @Nonnull
-    private WebPage forwardResponse(Protocol protocol, Response response, LoadOptions options) {
-        WebPage page = WebPage.newWebPage(response.getUrl(), options.getMutableConfig());
-        page.setOptions(options.toString());
+    private WebPage forwardResponse(Protocol protocol, Response response, WebPage page) {
+        Objects.requireNonNull(protocol);
+        Objects.requireNonNull(response);
+        Objects.requireNonNull(page);
 
         protocol.setResponse(response);
         return processProtocolOutput(page, protocol.getProtocolOutput(page));

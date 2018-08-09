@@ -2,3 +2,6 @@ Author : Vincent Zhang, ivincent.zhang@gmail.com
 
 Currently, we invaded Jsoup to add our own features, which is bad.
 We will use a non-invasive method to use Jsoup in the future.
+
+== 2018.06 ==
+Now we just add only one variable in class Node to keep statistics features of the node

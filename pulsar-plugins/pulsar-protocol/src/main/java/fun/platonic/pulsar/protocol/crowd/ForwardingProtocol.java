@@ -20,6 +20,7 @@ import fun.platonic.pulsar.crawl.protocol.Response;
 import fun.platonic.pulsar.crawl.protocol.http.AbstractHttpProtocol;
 import fun.platonic.pulsar.persist.WebPage;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,10 +33,8 @@ public class ForwardingProtocol extends AbstractHttpProtocol {
     }
 
     @Override
-    public void setResponse(Response response) {
-        if (response != null) {
-            cache.put(response.getUrl(), response);
-        }
+    public void setResponse(@Nonnull Response response) {
+        cache.put(response.getUrl(), response);
     }
 
     @Override

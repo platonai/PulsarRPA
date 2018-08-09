@@ -26,8 +26,7 @@ import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes;
 
 import java.nio.charset.Charset;
-import java.time.Duration;
-import java.time.Instant;
+import java.time.*;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -52,7 +51,8 @@ import static fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes.THREAD_TI
 public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(SeleniumEngine.class);
 
-    // TODO: A better solution to initialize it
+    // The javascript to execute by Web browsers
+    // TODO: A better solution to initialize client javascript
     public static String CLIENT_JS = "";
 
     private ImmutableConfig immutableConfig;
@@ -122,10 +122,13 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
         boolean supportAllCharacterEncodings = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false);
         if (supportAllCharacterEncodings) {
+            // All charsets are supported by the system
+            // The set is big, can use a static cache to hold them if necessary
             supportedEncodings = Charset.availableCharsets().values().stream()
                     .map(Charset::name)
                     .collect(Collectors.joining("|"));
         } else {
+            // A limited support charsets
             supportedEncodings = immutableConfig.get(PARSE_SUPPORTED_CHARSETS, supportedEncodings);
         }
         HTML_CHARSET_PATTERN = Pattern.compile(supportedEncodings.replace("UTF-8\\|?", ""), CASE_INSENSITIVE);
@@ -292,7 +295,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     }
 
     private String handleSuccess(String pageSource, WebPage page, WebDriver driver, MultiMetadata headers) {
-        // The page content's encoding is already converted to UTF-8 by web driver
+        // The page content's encoding is already converted to UTF-8 by Web driver
         headers.put(CONTENT_ENCODING, "UTF-8");
         headers.put(CONTENT_LENGTH, String.valueOf(pageSource.length()));
 
@@ -302,7 +305,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         pageSource = HTML_CHARSET_PATTERN.matcher(pageSource).replaceFirst("UTF-8");
 
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8");
-        headers.put(Q_RESPONSE_TIME, String.valueOf(Instant.now().toEpochMilli()));
+        headers.put(Q_RESPONSE_TIME, OffsetDateTime.now(page.getZoneId()).toString());
         headers.put(Q_WEB_DRIVER, driver.getClass().getName());
         // headers.put(CONTENT_TYPE, "");
 
