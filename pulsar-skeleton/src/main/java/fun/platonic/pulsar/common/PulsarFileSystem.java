@@ -172,6 +172,7 @@ public class PulsarFileSystem {
 
     public String saveAs(byte[] content, Path path) {
         try {
+            Files.deleteIfExists(path);
             Files.write(path, content, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
             return path.toString();
         } catch (IOException e) {

@@ -339,7 +339,6 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
             return StringUtil.toHexString(sig)
         }
 
-
     val signatureAsString: String
         get() {
             var sig = signature

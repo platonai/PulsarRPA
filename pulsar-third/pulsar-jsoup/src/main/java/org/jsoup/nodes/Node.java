@@ -25,8 +25,10 @@ public abstract class Node implements Cloneable {
     int siblingIndex;
 
     Attributes attributes = new Attributes();
+
     OrderedIntDoubleMapping features = OrderedIntDoubleMapping.EMPTY;
-    Map<String, Double> namedFeatures = new HashMap<>();
+    public static Boolean enableNamedFeatures = false;
+    Map<String, Double> namedFeatures = enableNamedFeatures ? new HashMap<>() : Collections.emptyMap();
 
     /**
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
@@ -167,6 +169,7 @@ public abstract class Node implements Cloneable {
         this.features = features;
     }
 
+    // named features is used for quick coding, will move to integer based features if it becomes stable
     @Nonnull
     public Map<String, Double> getNamedFeatures() {
         return namedFeatures;

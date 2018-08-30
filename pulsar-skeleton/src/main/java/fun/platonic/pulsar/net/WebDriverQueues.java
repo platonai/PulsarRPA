@@ -38,6 +38,8 @@ import java.util.logging.Level;
 
 import static fun.platonic.pulsar.common.GlobalExecutor.NCPU;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
+import static fun.platonic.pulsar.net.SeleniumEngine.VIEW_PORT_HEIGHT;
+import static fun.platonic.pulsar.net.SeleniumEngine.VIEW_PORT_WIDTH;
 import static org.openqa.selenium.remote.CapabilityType.SUPPORTS_JAVASCRIPT;
 import static org.openqa.selenium.remote.CapabilityType.TAKES_SCREENSHOT;
 
@@ -59,13 +61,13 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
         DEFAULT_CAPABILITIES.setCapability(TAKES_SCREENSHOT, false);
         DEFAULT_CAPABILITIES.setCapability("downloadImages", false);
         DEFAULT_CAPABILITIES.setCapability("browserLanguage", "zh_CN");
-        DEFAULT_CAPABILITIES.setCapability("resolution", "1920x1080");
+        DEFAULT_CAPABILITIES.setCapability("resolution", VIEW_PORT_WIDTH + "x" + VIEW_PORT_HEIGHT);
 
         // see https://peter.sh/experiments/chromium-command-line-switches/
         DEFAULT_CHROME_CAPABILITIES = new ChromeOptions();
         DEFAULT_CHROME_CAPABILITIES.merge(DEFAULT_CAPABILITIES);
         DEFAULT_CHROME_CAPABILITIES.setHeadless(true);
-        DEFAULT_CHROME_CAPABILITIES.addArguments("--window-size=1920,1080");
+        DEFAULT_CHROME_CAPABILITIES.addArguments("--window-size=" + VIEW_PORT_WIDTH + "," + VIEW_PORT_HEIGHT);
     }
 
     private ImmutableConfig conf;

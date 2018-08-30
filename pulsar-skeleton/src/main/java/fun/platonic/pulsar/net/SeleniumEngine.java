@@ -52,7 +52,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(SeleniumEngine.class);
 
     // The javascript to execute by Web browsers
-    // TODO: A better solution to initialize client javascript
+    // TODO: A better solution to initialize view port and client javascript
+    public static int VIEW_PORT_WIDTH = 1920;
+    public static int VIEW_PORT_HEIGHT = 1080;
     public static String CLIENT_JS = "";
 
     private ImmutableConfig immutableConfig;
