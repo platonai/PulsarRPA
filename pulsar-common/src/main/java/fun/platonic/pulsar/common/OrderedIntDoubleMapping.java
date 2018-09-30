@@ -17,6 +17,10 @@
 
 package fun.platonic.pulsar.common;
 
+import org.apache.commons.math3.linear.OpenMapRealVector;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.SparseRealVector;
+
 import java.io.Serializable;
 
 /**
@@ -85,6 +89,14 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
 
     public int getNumMappings() {
         return numMappings;
+    }
+
+    public SparseRealVector toSparseVector(int dimension) {
+        OpenMapRealVector vector = new OpenMapRealVector(dimension);
+        for (int index : indices) {
+            vector.setEntry(index, get(index));
+        }
+        return vector;
     }
 
     private void growTo(int newCapacity) {

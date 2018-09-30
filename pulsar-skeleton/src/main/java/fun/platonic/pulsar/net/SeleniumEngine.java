@@ -394,7 +394,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             batchSuccessCount.incrementAndGet();
             totalSuccessCount.incrementAndGet();
 
-            // TODO: A metrics system
+            // TODO: A metrics system is required
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Selenium batch task success: {}/{}, total task success: {}/{}",
                         batchSuccessCount, batchTaskCount,
