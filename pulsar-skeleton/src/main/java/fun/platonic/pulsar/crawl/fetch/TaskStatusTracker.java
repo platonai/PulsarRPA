@@ -9,7 +9,6 @@ import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.common.*;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.metadata.FetchMode;
@@ -55,7 +54,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
     /**
      * The Pulsar file manipulation
      */
-    private PulsarFileSystem fileSystem;
+    private PulsarFiles fileSystem;
     /**
      * The Pulsar simple metrics system
      */
@@ -81,7 +80,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     public TaskStatusTracker(WebDb webDb, MetricsSystem metrics, ImmutableConfig conf) {
         this.metrics = metrics;
-        fileSystem = new PulsarFileSystem(conf);
+        fileSystem = new PulsarFiles(conf);
 
         this.webDb = webDb;
         this.seedIndexer = new WeakPageIndexer(SEED_HOME_URL, webDb);

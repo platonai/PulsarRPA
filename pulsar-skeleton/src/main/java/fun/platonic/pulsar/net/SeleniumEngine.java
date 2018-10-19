@@ -2,7 +2,7 @@ package fun.platonic.pulsar.net;
 
 import fun.platonic.pulsar.common.GlobalExecutor;
 import fun.platonic.pulsar.common.ObjectCache;
-import fun.platonic.pulsar.common.PulsarFileSystem;
+import fun.platonic.pulsar.common.PulsarFiles;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
@@ -62,7 +62,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
     private WebDriverQueues drivers;
     private GlobalExecutor executor;
-    private PulsarFileSystem fileSystem;
+    private PulsarFiles fileSystem;
 
     private String supportedEncodings = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1"
             + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257";
@@ -94,7 +94,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public SeleniumEngine(
             GlobalExecutor executor,
             WebDriverQueues drivers,
-            PulsarFileSystem fileSystem,
+            PulsarFiles fileSystem,
             ImmutableConfig immutableConfig) {
         this.executor = executor;
         this.drivers = drivers;
@@ -107,7 +107,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public SeleniumEngine(ImmutableConfig immutableConfig) {
         executor = GlobalExecutor.getInstance(immutableConfig);
         drivers = new WebDriverQueues(immutableConfig);
-        fileSystem = new PulsarFileSystem(immutableConfig);
+        fileSystem = new PulsarFiles(immutableConfig);
 
         reload(immutableConfig);
     }

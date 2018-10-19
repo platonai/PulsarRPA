@@ -18,7 +18,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pulsarFiles" class="fun.platonic.pulsar.common.PulsarFileSystem">
+    <bean id="pulsarFiles" class="fun.platonic.pulsar.common.PulsarFiles">
         <constructor-arg ref="conf"/>
     </bean>
 

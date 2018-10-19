@@ -5,7 +5,7 @@ import fun.platonic.pulsar.ql.QueryEngine;
 import fun.platonic.pulsar.ql.QuerySession;
 import fun.platonic.pulsar.ql.annotation.UDFGroup;
 import fun.platonic.pulsar.ql.annotation.UDFunction;
-import fun.platonic.pulsar.common.PulsarFileSystem;
+import fun.platonic.pulsar.common.PulsarFiles;
 import fun.platonic.pulsar.common.proxy.ProxyPool;
 import fun.platonic.pulsar.persist.WebPage;
 import org.h2.engine.Session;
@@ -54,7 +54,7 @@ public class AdminFunctions {
         checkPrivilege(h2session);
 
         QuerySession session = engine.getSession(new DbSession(h2session));
-        PulsarFileSystem fs = new PulsarFileSystem(session.getConfig());
+        PulsarFiles fs = new PulsarFiles(session.getConfig());
 
         WebPage page = session.load(url);
         return fs.save(page, postfix);

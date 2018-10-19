@@ -18,7 +18,7 @@ package fun.platonic.pulsar.jobs.basic.generate;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import fun.platonic.pulsar.common.PulsarFileSystem;
+import fun.platonic.pulsar.common.PulsarFiles;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.jobs.common.JobUtils;
@@ -76,7 +76,7 @@ public final class GenerateJob extends PulsarJob {
         conf.setBoolean(GENERATE_FILTER, !noFilter);
         conf.setBoolean(GENERATE_NORMALISE, !noNormalizer);
 
-        PulsarFileSystem.writeBatchId(batchId);
+        PulsarFiles.writeBatchId(batchId);
 
         LOG.info(Params.format(
                 "className", this.getClass().getSimpleName(),

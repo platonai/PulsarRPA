@@ -22,9 +22,9 @@ import static java.util.stream.Collectors.joining;
  * Created by vincent on 17-3-23.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public class PulsarFileSystem {
+public class PulsarFiles {
 
-    public static final Logger LOG = LoggerFactory.getLogger(PulsarFileSystem.class);
+    public static final Logger LOG = LoggerFactory.getLogger(PulsarFiles.class);
 
     public static final Path CONFIG_DIR = Paths.get(System.getProperty("java.io.tmpdir"),
             "pulsar-" + System.getenv("USER"), "conf");
@@ -39,7 +39,7 @@ public class PulsarFileSystem {
     private Path reportDir;
     private Path unreachableHostsPath;
 
-    public PulsarFileSystem(ImmutableConfig conf) {
+    public PulsarFiles(ImmutableConfig conf) {
         this.conf = conf;
         this.configDir = conf.getPath(PULSAR_CONFIG_DIR, CONFIG_DIR);
 
