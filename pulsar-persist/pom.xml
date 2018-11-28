@@ -45,6 +45,12 @@
             <artifactId>jgrapht-ext</artifactId>
         </dependency>
 
+        <!-- Perl5Pattern, text process -->
+        <dependency>
+            <groupId>oro</groupId>
+            <artifactId>oro</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.j256.ormlite</groupId>
             <artifactId>ormlite-jdbc</artifactId>

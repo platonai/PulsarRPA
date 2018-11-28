@@ -1,5 +1,6 @@
 package fun.platonic.pulsar.net;
 
+import com.gargoylesoftware.htmlunit.WebClient;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
@@ -10,6 +11,7 @@ import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.jetbrains.annotations.Nullable;
 import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.UnexpectedAlertBehaviour;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -51,6 +53,20 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
 
     public static final Logger LOG = LoggerFactory.getLogger(WebDriverQueues.class);
 
+    class PulsarHtmlUnitDriver extends HtmlUnitDriver {
+        private Boolean throwExceptionOnScriptError;
+
+        public PulsarHtmlUnitDriver(Capabilities capabilities) {
+            throwExceptionOnScriptError = capabilities.is("throwExceptionOnScriptError");
+        }
+
+        @Override
+        protected WebClient modifyWebClient(WebClient client) {
+            client.getOptions().setThrowExceptionOnScriptError(throwExceptionOnScriptError);
+            return client;
+        }
+    }
+
     public static final DesiredCapabilities DEFAULT_CAPABILITIES;
     public static final ChromeOptions DEFAULT_CHROME_CAPABILITIES;
 
@@ -61,6 +77,7 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
         DEFAULT_CAPABILITIES.setCapability(TAKES_SCREENSHOT, false);
         DEFAULT_CAPABILITIES.setCapability("downloadImages", false);
         DEFAULT_CAPABILITIES.setCapability("browserLanguage", "zh_CN");
+        DEFAULT_CAPABILITIES.setCapability("throwExceptionOnScriptError", false);
         DEFAULT_CAPABILITIES.setCapability("resolution", VIEW_PORT_WIDTH + "x" + VIEW_PORT_HEIGHT);
 
         // see https://peter.sh/experiments/chromium-command-line-switches/
@@ -68,6 +85,7 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
         DEFAULT_CHROME_CAPABILITIES.merge(DEFAULT_CAPABILITIES);
         DEFAULT_CHROME_CAPABILITIES.setHeadless(true);
         DEFAULT_CHROME_CAPABILITIES.addArguments("--window-size=" + VIEW_PORT_WIDTH + "," + VIEW_PORT_HEIGHT);
+        DEFAULT_CHROME_CAPABILITIES.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
     }
 
     private ImmutableConfig conf;
@@ -243,7 +261,7 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
             driver = new ChromeDriver(chromeOptions);
         } else if (browser == BrowserType.HTMLUNIT) {
             capabilities.setCapability("browserName", "htmlunit");
-            driver = new HtmlUnitDriver(capabilities);
+            driver = new PulsarHtmlUnitDriver(capabilities);
         } else {
             if (RemoteWebDriver.class.isAssignableFrom(defaultWebDriverClass)) {
                 driver = defaultWebDriverClass.getConstructor(Capabilities.class).newInstance(capabilities);

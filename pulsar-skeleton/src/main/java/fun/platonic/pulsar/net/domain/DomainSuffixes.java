@@ -37,9 +37,6 @@ public class DomainSuffixes {
     private static DomainSuffixes instance;
     private HashMap<String, DomainSuffix> domains = new HashMap<>();
 
-    /**
-     * private ctor
-     */
     private DomainSuffixes() {
     }
 

@@ -36,7 +36,7 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_REPORT_DI
  * <p>
  * A very simple metrics system
  * <p>
- * TODO: Use com.codahale.metrics.MetricRegistry
+ * TODO: Use com.codahale.metrics.MetricRegistry or Spark Metrics System
  */
 public class MetricsSystem implements AutoCloseable {
 

@@ -3,6 +3,7 @@ package fun.platonic.pulsar.persist;
 import fun.platonic.pulsar.common.DateTimeUtil;
 import fun.platonic.pulsar.common.HttpHeaders;
 import fun.platonic.pulsar.common.SParser;
+import org.apache.oro.text.regex.*;
 
 import java.time.Instant;
 import java.util.Map;
@@ -26,6 +27,20 @@ import java.util.stream.Collectors;
  * and LOCATION.
  */
 public class ProtocolHeaders implements HttpHeaders {
+
+    static Perl5Pattern patterns[] = {null, null};
+
+    static {
+        Perl5Compiler compiler = new Perl5Compiler();
+        try {
+            // order here is important
+            patterns[0] = (Perl5Pattern) compiler.compile("\\bfilename=['\"](.+)['\"]");
+            patterns[1] = (Perl5Pattern) compiler.compile("\\bfilename=(\\S+)\\b");
+        } catch (MalformedPatternException e) {
+            // just ignore
+        }
+    }
+
     private Map<CharSequence, CharSequence> headers;
 
     private ProtocolHeaders(Map<CharSequence, CharSequence> headers) {
@@ -80,6 +95,30 @@ public class ProtocolHeaders implements HttpHeaders {
         }
 
         return SParser.wrap(length.trim()).getInt(-1);
+    }
+
+    /**
+     * Get attachement filename if we see non-standard HTTP header "Content-Disposition".
+     * It's a good indication that content provider wants filename therein
+     * be used as the title of this url.
+     * Patterns used to extract filename from possible non-standard
+     * HTTP header "Content-Disposition". Typically it looks like:
+     * Content-Disposition: inline; filename="foo.ppt"
+     * */
+    public String getDispositionFilename() {
+        CharSequence contentDisposition = get(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition == null) {
+            return null;
+        }
+
+        PatternMatcher matcher = new Perl5Matcher();
+        for (Perl5Pattern pattern : patterns) {
+            if (matcher.contains(contentDisposition.toString(), pattern)) {
+                return matcher.getMatch().group(1);
+            }
+        }
+
+        return null;
     }
 
     public void clear() {

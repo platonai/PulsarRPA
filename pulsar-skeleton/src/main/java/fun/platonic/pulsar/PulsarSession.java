@@ -120,7 +120,7 @@ public class PulsarSession implements AutoCloseable {
      * Load a url with default options
      *
      * @param configuredUrl The url followed by config options
-     * @return The web page
+     * @return The Web page
      */
     @Nonnull
     public WebPage load(String configuredUrl) {

@@ -5,7 +5,6 @@ import fun.platonic.pulsar.common.HttpHeaders;
 import fun.platonic.pulsar.common.MimeUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.index.IndexDocument;
-import fun.platonic.pulsar.crawl.index.IndexingException;
 import fun.platonic.pulsar.crawl.index.IndexingFilter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.oro.text.regex.*;
@@ -32,28 +31,8 @@ import static fun.platonic.pulsar.common.HttpHeaders.CONTENT_LENGTH;
  */
 public class MoreIndexingFilter implements IndexingFilter {
 
-    static Perl5Pattern patterns[] = {null, null};
-
-    static {
-        Perl5Compiler compiler = new Perl5Compiler();
-        try {
-            // order here is important
-            patterns[0] = (Perl5Pattern) compiler.compile("\\bfilename=['\"](.+)['\"]");
-            patterns[1] = (Perl5Pattern) compiler.compile("\\bfilename=(\\S+)\\b");
-        } catch (MalformedPatternException e) {
-            // just ignore
-        }
-    }
-
     private ImmutableConfig conf;
     private MimeUtil MIME;
-    // Reset title if we see non-standard HTTP header "Content-Disposition".
-    // It's a good indication that content provider wants filename therein
-    // be used as the title of this url.
-
-    // Patterns used to extract filename from possible non-standard
-    // HTTP header "Content-Disposition". Typically it looks like:
-    // Content-Disposition: inline; filename="foo.ppt"
     private PatternMatcher matcher = new Perl5Matcher();
 
     public MoreIndexingFilter(ImmutableConfig conf) {
@@ -87,11 +66,16 @@ public class MoreIndexingFilter implements IndexingFilter {
     }
 
     @Override
-    public IndexDocument filter(IndexDocument doc, String url, WebPage page) throws IndexingException {
+    public IndexDocument filter(IndexDocument doc, String url, WebPage page) {
         addTime(doc, page, url);
         addLength(doc, page, url);
         addType(doc, page, url);
-        resetTitle(doc, page, url);
+        String filename = page.getHeaders().getDispositionFilename();
+        if (filename != null) {
+            doc.removeField("meta_title");
+            doc.add("meta_title", filename);
+        }
+
         return doc;
     }
 
@@ -193,25 +177,6 @@ public class MoreIndexingFilter implements IndexingFilter {
 
         // leave this for future improvement
         // MimeTypeParameterList parameterList = mimeType.getParameters()
-
-        return doc;
-    }
-
-    private IndexDocument resetTitle(IndexDocument doc, WebPage page, String url) {
-        CharSequence contentDisposition = page.getHeaders().get(HttpHeaders.CONTENT_DISPOSITION);
-        if (contentDisposition == null) {
-            return doc;
-        }
-
-        MatchResult result;
-        for (Perl5Pattern pattern : patterns) {
-            if (matcher.contains(contentDisposition.toString(), pattern)) {
-                result = matcher.getMatch();
-                doc.removeField("meta_title");
-                doc.add("meta_title", result.group(1));
-                break;
-            }
-        }
 
         return doc;
     }

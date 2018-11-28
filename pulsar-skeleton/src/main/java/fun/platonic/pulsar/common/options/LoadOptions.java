@@ -21,6 +21,8 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
  */
 public class LoadOptions extends CommonOptions {
 
+    public static LoadOptions DEFAULT = new LoadOptions();
+
     @Parameter(names = {"-i", "--expires"}, converter = DurationConverter.class, description = "Web page expire time")
     private Duration expires;
 
