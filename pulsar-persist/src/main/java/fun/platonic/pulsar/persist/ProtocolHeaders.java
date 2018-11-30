@@ -5,6 +5,10 @@ import fun.platonic.pulsar.common.HttpHeaders;
 import fun.platonic.pulsar.common.SParser;
 import org.apache.oro.text.regex.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -119,6 +123,19 @@ public class ProtocolHeaders implements HttpHeaders {
         }
 
         return null;
+    }
+
+    public String getDecodedDispositionFilename() {
+        try {
+            return getDecodedDispositionFilename(StandardCharsets.UTF_8);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Unexpected unsupported encoding `UTF-8`");
+        }
+    }
+
+    public String getDecodedDispositionFilename(Charset charset) throws UnsupportedEncodingException {
+        String filename = getDispositionFilename();
+        return URLDecoder.decode(filename, charset.toString());
     }
 
     public void clear() {
