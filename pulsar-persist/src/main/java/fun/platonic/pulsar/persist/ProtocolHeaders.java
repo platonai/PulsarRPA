@@ -135,7 +135,12 @@ public class ProtocolHeaders implements HttpHeaders {
 
     public String getDecodedDispositionFilename(Charset charset) throws UnsupportedEncodingException {
         String filename = getDispositionFilename();
-        return URLDecoder.decode(filename, charset.toString());
+
+        if (filename != null) {
+            return URLDecoder.decode(filename, charset.toString());
+        }
+
+        return null;
     }
 
     public void clear() {

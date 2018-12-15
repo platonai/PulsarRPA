@@ -19,11 +19,9 @@ To run the above SQL, download Pulsar, run
     bin/pulsar server
 
 And then you can see a popup browser window (a h2database client page),
-enter password 'sa', copy the SQL above, hit 'Run', all done.
+enter password 'sa', copy the SQL above, hit 'Run'.
 
 All SQL functions can be found under fun/platonic/pulsar/ql/h2/udfs, every UDF have a namespace and a name.
-UDFs are case insensitive, and all underscores in a UDF are ignored.
-For example, DOMT_LOAD_AND_SELECT is the same as DOMT__LOAD__AND_SELECT__
 
 TODO: document all SQL functions
 
@@ -72,7 +70,7 @@ TODO: Scripts is NOT working if you can see this line. We are working on it ...
 
 For more crawl task examples, see bin/samples.
 
-The major workflow of Pulsar comes from Apache Nutch, and can be illustrated in kotlin as the following:
+Pulsar also supports Nutch style large-scalar crawler in batches, the workflow can be illustrated in kotlin as the following:
 
     val pages = urls
             .map { generate(batchId, it) }
@@ -98,7 +96,8 @@ The major workflow of Pulsar comes from Apache Nutch, and can be illustrated in 
             .map { updateInGraphMapper(it) }
             .map { updateInGraphReducer(it) }
 
-Note: the Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages. Score filters may differs for different crawl tasks.
+Note: the Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages. 
+Score filters may differ for different crawl tasks.
 
 HBase is the primary choice as the storage, and any storage supported by Apache Gora will be fine.
 
@@ -107,9 +106,7 @@ TODO:
 ```
 1. Add documents
 2. Android support: http://selendroid.io/
-3. Integrate with srping 5: https://spring.io/
-4. Test scripts and correct errors
-5. A simple learner to learn boilerpipe arguments: https://github.com/kohlschutter/boilerpipe
+3. Correct errors in startup scripts
 ```
 
 ============
