@@ -115,6 +115,12 @@ Enterprise Edition:
 
 Pulsar Enterprise Edition comes with lots of exciting features:
 
+AI to do Web content mining:
+```
+1. Extract large scale Web pages with above human-level accuracy using advanced AI
+2. Learn and generate SQLs for sites
+```
+
 Full featured Web SQL:
 ```
 1. Any source, any format, any volume, ETL the data and turn it into a table by just one simple SQL
@@ -123,16 +129,10 @@ Full featured Web SQL:
 4. Do business intelligence on unstructured data
 ```
 
-Machine learning for Web content mining:
-```
-1. Learn and generate SQLs for sites
-2. Extract Web pages from a batch of Web sites using just one model
-```
-
 Advanced DOM processing:
 ```
 1. Tranditional CSS path support
-2. Advanced expression in CSS path: element.select("div:expr(_width >= 300 and _height >= 400)")
+2. Advanced expression in CSS path: element.select("div:expr(width >= 300 and height >= 400)")
 3. Statistics based element locate
 ```
 
