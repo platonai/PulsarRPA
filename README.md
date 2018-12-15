@@ -18,8 +18,7 @@ To run the above SQL, download Pulsar, run
 
     bin/pulsar server
 
-And then you can see a popup browser window (a h2database client page),
-enter password 'sa', copy the SQL above, hit 'Run'.
+And then you can see a popup browser window, enter password 'sa', enter the SQL above and then run it.
 
 All SQL functions can be found under fun/platonic/pulsar/ql/h2/udfs, every UDF have a namespace and a name.
 
@@ -62,7 +61,8 @@ And then
     git clone git@github.com:platonai/pulsar.git
     cd pulsar && mvn
 
-For web crawling and index using solr, run script:
+Pulsar supports Nutch style large-scalar crawler in batches, for example,
+to crawl Web pages and index using solr, run script:
 
     bin/crawl.sh default false information_tmp http://master:8983/solr/information_tmp/ 1
 
@@ -70,7 +70,7 @@ TODO: Scripts is NOT working if you can see this line. We are working on it ...
 
 For more crawl task examples, see bin/samples.
 
-Pulsar also supports Nutch style large-scalar crawler in batches, the workflow can be illustrated in kotlin as the following:
+The crawl workflow can be illustrated in kotlin as the following:
 
     val pages = urls
             .map { generate(batchId, it) }
