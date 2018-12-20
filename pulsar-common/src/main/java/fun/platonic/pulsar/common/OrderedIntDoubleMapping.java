@@ -99,6 +99,14 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         return vector;
     }
 
+    public double[] toArray(int dim) {
+        double[] values = new double[dim];
+        for (int i = 0; i < dim; i++) {
+            values[i] = get(i);
+        }
+        return values;
+    }
+
     private void growTo(int newCapacity) {
         if (newCapacity > indices.length) {
             int[] newIndices = new int[newCapacity];
