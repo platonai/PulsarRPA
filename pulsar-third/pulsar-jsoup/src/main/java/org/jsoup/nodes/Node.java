@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
-import fun.platonic.pulsar.common.OrderedIntDoubleMapping;
+import org.apache.commons.math3.linear.OpenMapRealVector;
+import org.apache.commons.math3.linear.RealVector;
 import org.jsoup.SerializationException;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
@@ -10,7 +11,6 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -21,12 +21,14 @@ import java.util.*;
 public abstract class Node implements Cloneable {
 
     static final String EmptyString = "";
+    static final RealVector EMPTY_FEATURE = new OpenMapRealVector();
+
     Node parentNode;
     int siblingIndex;
 
     Attributes attributes = new Attributes();
 
-    OrderedIntDoubleMapping features = OrderedIntDoubleMapping.EMPTY;
+    RealVector features = EMPTY_FEATURE;
     Map<String, Object> variables = new HashMap<>();
     Map<String, List<Object>> tuples = new HashMap<>();
 
@@ -161,11 +163,11 @@ public abstract class Node implements Cloneable {
     }
 
     @Nonnull
-    public OrderedIntDoubleMapping getFeatures() {
+    public RealVector getFeatures() {
         return features;
     }
 
-    public void setFeatures(@Nonnull OrderedIntDoubleMapping features) {
+    public void setFeatures(@Nonnull RealVector features) {
         this.features = features;
     }
 
