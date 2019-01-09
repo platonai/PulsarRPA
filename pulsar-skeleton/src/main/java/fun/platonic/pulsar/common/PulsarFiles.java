@@ -1,21 +1,19 @@
 package fun.platonic.pulsar.common;
 
-import fun.platonic.pulsar.common.config.ImmutableConfig;
+import com.google.common.collect.Lists;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.text.DecimalFormat;
-import java.util.Collection;
+import java.util.*;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -26,54 +24,27 @@ public class PulsarFiles {
 
     public static final Logger LOG = LoggerFactory.getLogger(PulsarFiles.class);
 
-    public static final Path CONFIG_DIR = Paths.get(System.getProperty("java.io.tmpdir"),
-            "pulsar-" + System.getenv("USER"), "conf");
-
-    private final ImmutableConfig conf;
-    private final DecimalFormat df = new DecimalFormat("0.0");
-    private String reportSuffix;
-    private Path configDir;
     private Path tmpDir;
     private Path cacheDir;
     private Path webCacheDir;
-    private Path reportDir;
-    private Path unreachableHostsPath;
 
-    public PulsarFiles(ImmutableConfig conf) {
-        this.conf = conf;
-        this.configDir = conf.getPath(PULSAR_CONFIG_DIR, CONFIG_DIR);
-
+    public PulsarFiles() {
         try {
-            reportSuffix = conf.get(PULSAR_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm"));
-
-            tmpDir = conf.getPath(PULSAR_TMP_DIR, Paths.get(PulsarConstants.PATH_PULSAR_TMP_DIR));
-            if (!Files.exists(tmpDir)) {
-                Files.createDirectories(tmpDir);
-            }
-
+            tmpDir = Paths.get(System.getProperty("java.io.tmpdir"),"pulsar-" + System.getenv("USER"));
             cacheDir = Paths.get(tmpDir.toString(), "cache");
-            if (!Files.exists(cacheDir)) {
-                Files.createDirectory(cacheDir);
-            }
-
             webCacheDir = Paths.get(cacheDir.toString(), "web");
-            if (!Files.exists(webCacheDir)) {
-                Files.createDirectory(webCacheDir);
-            }
 
-            reportDir = conf.getPath(PULSAR_REPORT_DIR, Paths.get(PulsarConstants.PATH_PULSAR_REPORT_DIR));
-            reportDir = Paths.get(reportDir.toAbsolutePath().toString(), DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd"));
-            Files.createDirectories(reportDir);
-
-            unreachableHostsPath = Paths.get(reportDir.toAbsolutePath().toString(), PulsarConstants.FILE_UNREACHABLE_HOSTS);
-            Files.createDirectories(unreachableHostsPath.getParent());
-
-            if (!Files.exists(unreachableHostsPath)) {
-                Files.createFile(unreachableHostsPath);
-            }
+            Files.createDirectories(tmpDir);
+            Files.createDirectory(cacheDir);
+            Files.createDirectory(webCacheDir);
         } catch (IOException e) {
             LOG.error(e.toString());
         }
+    }
+
+    public Path get(String first, String... more) {
+        String[] paths = Lists.asList(first, more).toArray(new String[0]);
+        return Paths.get(tmpDir.toString(), paths);
     }
 
     public static Path writeLastGeneratedRows(long rows) throws IOException {
@@ -111,24 +82,8 @@ public class PulsarFiles {
         return defaultValue;
     }
 
-    public Path getTmpDir() {
-        return tmpDir;
-    }
-
-    public Path getTmpPath(String... paths) {
-        return Paths.get(tmpDir.toString(), paths);
-    }
-
-    public Path getCacheDir() {
-        return cacheDir;
-    }
-
-    public Path getWebCacheDir() {
-        return webCacheDir;
-    }
-
     public Path getUnreachableHostsPath() {
-        return unreachableHostsPath;
+        return Paths.get(tmpDir.toString(), PulsarConstants.FILE_UNREACHABLE_HOSTS);
     }
 
     /**
@@ -136,41 +91,22 @@ public class PulsarFiles {
      */
     public void createSharedFileTask(String url) {
         try {
-            Path path = Paths.get(webCacheDir.toString(), encode(url) + ".task");
+            Path path = Paths.get(webCacheDir.toString(), fromUri(url) + ".task");
             Files.write(path, url.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }
     }
 
-    public String save(WebPage page) {
-        return save(page.getUrl(), page.getContentAsString());
+    public String saveTo(WebPage page, Path path) {
+        return saveTo(page.getContentAsString(), path);
     }
 
-    public String save(WebPage page, String postfix) {
-        return save(page.getUrl(), postfix, page.getContentAsString());
+    public String saveTo(String content, Path path) {
+        return saveTo(content.getBytes(), path);
     }
 
-    public String save(String url, String postfix, byte[] content) {
-        Path path = Paths.get(webCacheDir.toString(), encode(url) + postfix);
-        return saveAs(content, path);
-    }
-
-    public String save(String url, String postfix, String content) {
-        Path path = Paths.get(webCacheDir.toString(), encode(url) + postfix);
-        return saveAs(content, path);
-    }
-
-    public String save(String url, String content) {
-        Path path = Paths.get(webCacheDir.toString(), encode(url) + ".html");
-        return saveAs(content, path);
-    }
-
-    public String saveAs(String content, Path path) {
-        return saveAs(content.getBytes(), path);
-    }
-
-    public String saveAs(byte[] content, Path path) {
+    public String saveTo(byte[] content, Path path) {
         try {
             Files.deleteIfExists(path);
             Files.write(path, content, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -183,7 +119,7 @@ public class PulsarFiles {
     }
 
     public String getCachedWebPage(String url) {
-        Path path = Paths.get(webCacheDir.toString(), encode(url) + ".html");
+        Path path = Paths.get(webCacheDir.toString(), fromUri(url, ".htm"));
         if (Files.notExists(path)) {
             return null;
         }
@@ -197,8 +133,12 @@ public class PulsarFiles {
         return null;
     }
 
-    public String encode(String url) {
+    public String fromUri(String url) {
         return DigestUtils.md5Hex(url);
+    }
+
+    public String fromUri(String url, String suffix) {
+        return DigestUtils.md5Hex(url) + suffix;
     }
 
     public void logUnreachableHosts(Collection<String> unreachableHosts) {
@@ -207,7 +147,7 @@ public class PulsarFiles {
                 .collect(joining("\n"));
 
         try {
-            Files.write(unreachableHostsPath, report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            Files.write(getUnreachableHostsPath(), report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }

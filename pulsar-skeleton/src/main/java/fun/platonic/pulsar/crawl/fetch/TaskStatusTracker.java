@@ -54,7 +54,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
     /**
      * The Pulsar file manipulation
      */
-    private PulsarFiles fileSystem;
+    private PulsarFiles ps;
     /**
      * The Pulsar simple metrics system
      */
@@ -80,7 +80,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     public TaskStatusTracker(WebDb webDb, MetricsSystem metrics, ImmutableConfig conf) {
         this.metrics = metrics;
-        fileSystem = new PulsarFiles(conf);
+        ps = new PulsarFiles();
 
         this.webDb = webDb;
         this.seedIndexer = new WeakPageIndexer(SEED_HOME_URL, webDb);
@@ -101,7 +101,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
     @Override
     public void reload(ImmutableConfig conf) {
         unreachableHosts.clear();
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(fileSystem.getUnreachableHostsPath()));
+        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(ps.getUnreachableHostsPath()));
         maxUrlLength = conf.getInt(PARSE_MAX_URL_LENGTH, 1024);
 
         getParams().withLogger(LOG).info(true);
@@ -112,7 +112,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
         return Params.of(
                 "unreachableHosts", unreachableHosts.size(),
                 "maxUrlLength", maxUrlLength,
-                "unreachableHostsPath", fileSystem.getUnreachableHostsPath(),
+                "unreachableHostsPath", ps.getUnreachableHostsPath(),
                 "timeoutUrls", timeoutUrls.size(),
                 "failedUrls", failedUrls.size(),
                 "deadUrls", deadUrls
@@ -228,7 +228,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     public void reportAndLogUnreachableHosts() {
         REPORT_LOG.info("There are " + unreachableHosts.size() + " unreachable hosts");
-        fileSystem.logUnreachableHosts(this.unreachableHosts);
+        ps.logUnreachableHosts(this.unreachableHosts);
     }
 
     public void reportAndLogAvailableHosts() {

@@ -24,7 +24,6 @@
     <bean id="generateComponent" class="fun.platonic.pulsar.crawl.component.GenerateComponent">
         <constructor-arg ref="conf"/>
         <constructor-arg ref="crawlFilters"/>
-        <constructor-arg ref="pulsarFiles"/>
         <property name="webDb" ref="webDb"/>
         <property name="urlFilters" ref="urlFilters"/>
         <property name="urlNormalizers" ref="urlNormalizers"/>

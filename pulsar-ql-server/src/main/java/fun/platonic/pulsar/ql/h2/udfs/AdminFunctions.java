@@ -13,12 +13,15 @@ import org.h2.ext.pulsar.annotation.H2Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
+
 @SuppressWarnings("unused")
 @UDFGroup(namespace = "ADMIN")
 public class AdminFunctions {
     public static final Logger LOG = LoggerFactory.getLogger(AdminFunctions.class);
 
     private static QueryEngine engine = QueryEngine.getInstance();
+    private static PulsarFiles fs = new PulsarFiles();
 
     @UDFunction(deterministic = true)
     public static String echo(@H2Context Session h2session, String message) {
@@ -46,18 +49,17 @@ public class AdminFunctions {
 
     @UDFunction
     public static String save(@H2Context Session h2session, String url) {
-        return save(h2session, url, ".html");
+        return save(h2session, url, ".htm");
     }
 
     @UDFunction
-    public static String save(@H2Context Session h2session, String url, String postfix) {
+    public static String save(@H2Context Session h2session, String url, String suffix) {
         checkPrivilege(h2session);
 
         QuerySession session = engine.getSession(new DbSession(h2session));
-        PulsarFiles fs = new PulsarFiles(session.getConfig());
-
         WebPage page = session.load(url);
-        return fs.save(page, postfix);
+        Path path = fs.get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
+        return fs.saveTo(page, path);
     }
 
     @UDFunction

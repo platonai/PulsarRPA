@@ -248,7 +248,14 @@ public class Pulsar implements AutoCloseable {
         return parser.parse();
     }
 
+    /**
+     * @deprecated Use {#persist} instead
+     * */
     public void save(WebPage page) {
+        webDb.put(page.getUrl(), page);
+    }
+
+    public void persist(WebPage page) {
         webDb.put(page.getUrl(), page);
     }
 

@@ -18,10 +18,6 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pulsarFiles" class="fun.platonic.pulsar.common.PulsarFiles">
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="fetchStatusTracker" class="fun.platonic.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="pulsarMetrics"/>

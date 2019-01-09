@@ -330,7 +330,7 @@ public class DomFunctions {
 
     private static double getFeature(ValueDom dom, int key) {
         Objects.requireNonNull(dom);
-        return dom.getElement().getFeatures().get(key);
+        return dom.getElement().getFeatures().getEntry(key);
     }
 
     private static ValueArray toValueArray(Elements elements) {

@@ -353,11 +353,11 @@
         </pluginManagement>
 
         <plugins>
+            <!-- kotlin plugin should come before maven-compiler-plugin -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
             </plugin>
-
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
@@ -368,9 +368,14 @@
                 <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
             <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
             </plugin>
+
         </plugins>
     </build>
 

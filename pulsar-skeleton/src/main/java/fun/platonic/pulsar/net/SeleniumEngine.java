@@ -26,6 +26,8 @@ import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes;
 
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.*;
 import java.util.Collection;
 import java.util.Objects;
@@ -62,7 +64,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
     private WebDriverQueues drivers;
     private GlobalExecutor executor;
-    private PulsarFiles fileSystem;
+    private PulsarFiles fs;
 
     private String supportedEncodings = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1"
             + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257";
@@ -94,11 +96,11 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public SeleniumEngine(
             GlobalExecutor executor,
             WebDriverQueues drivers,
-            PulsarFiles fileSystem,
+            PulsarFiles fs,
             ImmutableConfig immutableConfig) {
         this.executor = executor;
         this.drivers = drivers;
-        this.fileSystem = fileSystem;
+        this.fs = fs;
         this.immutableConfig = immutableConfig;
 
         reload(immutableConfig);
@@ -107,7 +109,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public SeleniumEngine(ImmutableConfig immutableConfig) {
         executor = GlobalExecutor.getInstance(immutableConfig);
         drivers = new WebDriverQueues(immutableConfig);
-        fileSystem = new PulsarFiles(immutableConfig);
+        fs = new PulsarFiles();
 
         reload(immutableConfig);
     }
@@ -312,7 +314,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         // headers.put(CONTENT_TYPE, "");
 
         if (LOG.isDebugEnabled()) {
-            fileSystem.save(page.getUrl(), pageSource);
+            Path path = fs.get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
+            return fs.saveTo(pageSource, path);
         }
 
         return pageSource;
@@ -419,7 +422,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             if (LOG.isDebugEnabled()) {
                 try {
                     byte[] bytes = remoteWebDriver.getScreenshotAs(OutputType.BYTES);
-                    fileSystem.save(page.getUrl(), ".png", bytes);
+                    Path path = fs.get("cache",  "web", page.getUrl(), ".png");
+                    fs.saveTo(bytes, path);
                 } catch (Exception e) {
                     LOG.warn("Failed to take screenshot for " + page.getUrl());
                 }

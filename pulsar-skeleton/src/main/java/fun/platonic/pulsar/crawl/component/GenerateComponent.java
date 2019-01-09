@@ -87,10 +87,10 @@ public class GenerateComponent implements ReloadableParameterized {
     private MetricsSystem metricsSystem;
     private MetricsCounters metricsCounters = new MetricsCounters();
 
-    public GenerateComponent(CrawlFilters crawlFilters, PulsarFiles pulsarFiles, ImmutableConfig conf) {
+    public GenerateComponent(CrawlFilters crawlFilters, ImmutableConfig conf) {
         this.conf = conf;
         this.crawlFilters = crawlFilters;
-        this.pulsarFiles = pulsarFiles;
+        this.pulsarFiles = new PulsarFiles();
 
         reload(conf);
     }
@@ -233,14 +233,6 @@ public class GenerateComponent implements ReloadableParameterized {
 
     public void setPulsarMetrics(MetricsSystem metricsSystem) {
         this.metricsSystem = metricsSystem;
-    }
-
-    public PulsarFiles getPulsarFiles() {
-        return pulsarFiles;
-    }
-
-    public void setPulsarFiles(PulsarFiles pulsarFiles) {
-        this.pulsarFiles = pulsarFiles;
     }
 
     /**
