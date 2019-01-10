@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 
+import static fun.platonic.pulsar.common.PulsarConstants.*;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -24,38 +25,21 @@ public class PulsarFiles {
 
     public static final Logger LOG = LoggerFactory.getLogger(PulsarFiles.class);
 
-    private Path tmpDir;
-    private Path cacheDir;
-    private Path webCacheDir;
+    private PulsarPaths paths = PulsarPaths.getInstance();
 
-    public PulsarFiles() {
-        try {
-            tmpDir = Paths.get(System.getProperty("java.io.tmpdir"),"pulsar-" + System.getenv("USER"));
-            cacheDir = Paths.get(tmpDir.toString(), "cache");
-            webCacheDir = Paths.get(cacheDir.toString(), "web");
-
-            Files.createDirectories(tmpDir);
-            Files.createDirectory(cacheDir);
-            Files.createDirectory(webCacheDir);
-        } catch (IOException e) {
-            LOG.error(e.toString());
-        }
-    }
-
-    public Path get(String first, String... more) {
-        String[] paths = Lists.asList(first, more).toArray(new String[0]);
-        return Paths.get(tmpDir.toString(), paths);
+    public PulsarPaths getPaths() {
+        return paths;
     }
 
     public static Path writeLastGeneratedRows(long rows) throws IOException {
-        Path path = Paths.get(PulsarConstants.PATH_LAST_GENERATED_ROWS);
+        Path path = PATH_LAST_GENERATED_ROWS;
         Files.write(path, (rows + "\n").getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         return path;
     }
 
     public static int readLastGeneratedRows() {
         try {
-            String line = Files.readAllLines(Paths.get(PulsarConstants.PATH_LAST_GENERATED_ROWS)).get(0);
+            String line = Files.readAllLines(PATH_LAST_GENERATED_ROWS).get(0);
             return NumberUtils.toInt(line, -1);
         } catch (Throwable ignored) {
         }
@@ -65,7 +49,7 @@ public class PulsarFiles {
 
     public static Path writeBatchId(String batchId) throws IOException {
         if (batchId != null && !batchId.isEmpty()) {
-            Path path = Paths.get(PulsarConstants.PATH_LAST_BATCH_ID);
+            Path path = PATH_LAST_BATCH_ID;
             Files.write(path, (batchId + "\n").getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
             return path;
         }
@@ -75,15 +59,11 @@ public class PulsarFiles {
 
     public static String readBatchIdOrDefault(String defaultValue) {
         try {
-            return Files.readAllLines(Paths.get(PulsarConstants.PATH_LAST_BATCH_ID)).get(0);
+            return Files.readAllLines(PATH_LAST_BATCH_ID).get(0);
         } catch (Throwable ignored) {
         }
 
         return defaultValue;
-    }
-
-    public Path getUnreachableHostsPath() {
-        return Paths.get(tmpDir.toString(), PulsarConstants.FILE_UNREACHABLE_HOSTS);
     }
 
     /**
@@ -91,35 +71,35 @@ public class PulsarFiles {
      */
     public void createSharedFileTask(String url) {
         try {
-            Path path = Paths.get(webCacheDir.toString(), fromUri(url) + ".task");
+            Path path = paths.get(paths.getWebCacheDir(), fromUri(url) + ".task");
             Files.write(path, url.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }
     }
 
-    public String saveTo(WebPage page, Path path) {
+    public Path saveTo(WebPage page, Path path) {
         return saveTo(page.getContentAsString(), path);
     }
 
-    public String saveTo(String content, Path path) {
+    public Path saveTo(String content, Path path) {
         return saveTo(content.getBytes(), path);
     }
 
-    public String saveTo(byte[] content, Path path) {
+    public Path saveTo(byte[] content, Path path) {
         try {
             Files.deleteIfExists(path);
             Files.write(path, content, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            return path.toString();
+            return path;
         } catch (IOException e) {
             LOG.error(e.toString());
         }
 
-        return "/dev/null";
+        return Paths.get("dev", "null");
     }
 
     public String getCachedWebPage(String url) {
-        Path path = Paths.get(webCacheDir.toString(), fromUri(url, ".htm"));
+        Path path = paths.get(paths.getWebCacheDir(), fromUri(url, ".htm"));
         if (Files.notExists(path)) {
             return null;
         }
@@ -147,7 +127,7 @@ public class PulsarFiles {
                 .collect(joining("\n"));
 
         try {
-            Files.write(getUnreachableHostsPath(), report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            Files.write(FILE_UNREACHABLE_HOSTS, report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }

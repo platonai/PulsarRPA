@@ -314,8 +314,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         // headers.put(CONTENT_TYPE, "");
 
         if (LOG.isDebugEnabled()) {
-            Path path = fs.get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
-            return fs.saveTo(pageSource, path);
+            Path path = fs.getPaths().get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
+            fs.saveTo(pageSource, path);
         }
 
         return pageSource;
@@ -422,7 +422,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             if (LOG.isDebugEnabled()) {
                 try {
                     byte[] bytes = remoteWebDriver.getScreenshotAs(OutputType.BYTES);
-                    Path path = fs.get("cache",  "web", page.getUrl(), ".png");
+                    Path path = fs.getPaths().get("cache",  "web", fs.fromUri(page.getUrl(), ".png"));
                     fs.saveTo(bytes, path);
                 } catch (Exception e) {
                     LOG.warn("Failed to take screenshot for " + page.getUrl());

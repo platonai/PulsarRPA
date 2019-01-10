@@ -59,7 +59,7 @@ public class AdminFunctions {
         QuerySession session = engine.getSession(new DbSession(h2session));
         WebPage page = session.load(url);
         Path path = fs.get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
-        return fs.saveTo(page, path);
+        return fs.saveTo(page, path).toString();
     }
 
     @UDFunction

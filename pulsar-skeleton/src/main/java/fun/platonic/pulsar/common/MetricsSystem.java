@@ -27,6 +27,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fun.platonic.pulsar.common.PulsarConstants.PATH_PULSAR_CACHE_DIR;
+import static fun.platonic.pulsar.common.PulsarConstants.PATH_PULSAR_REPORT_DIR;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_JOB_NAME;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_REPORT_DIR;
 
@@ -65,8 +67,9 @@ public class MetricsSystem implements AutoCloseable {
         this.dayOfWeek = String.valueOf(LocalDate.now().getDayOfWeek().getValue());
 
         try {
-            reportDir = conf.getPath(PULSAR_REPORT_DIR, Paths.get(PulsarConstants.PATH_PULSAR_REPORT_DIR));
-            reportDir = Paths.get(reportDir.toAbsolutePath().toString(), DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd"));
+            reportDir = conf.getPath(PULSAR_REPORT_DIR, PATH_PULSAR_REPORT_DIR);
+            // TODO: use PulsarFiles
+            reportDir = Paths.get(reportDir.toString(), DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd"));
             Files.createDirectories(reportDir);
         } catch (IOException e) {
             LOG.error(e.toString());
@@ -126,7 +129,7 @@ public class MetricsSystem implements AutoCloseable {
     public Path cache(WebPage page) {
         Objects.requireNonNull(page);
 
-        Path path = Paths.get(PulsarConstants.PATH_PULSAR_CACHE_DIR, dayOfWeek, DigestUtils.md5Hex(page.getUrl()));
+        Path path = Paths.get(PATH_PULSAR_CACHE_DIR.toString(), dayOfWeek, DigestUtils.md5Hex(page.getUrl()));
 
         try {
             if (!Files.exists(path)) {

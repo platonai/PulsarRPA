@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fun.platonic.pulsar.common.PulsarConstants.FILE_UNREACHABLE_HOSTS;
 import static fun.platonic.pulsar.common.PulsarConstants.SEED_HOME_URL;
 import static fun.platonic.pulsar.common.PulsarConstants.URL_TRACKER_HOME_URL;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH;
@@ -101,7 +102,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
     @Override
     public void reload(ImmutableConfig conf) {
         unreachableHosts.clear();
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(ps.getUnreachableHostsPath()));
+        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(FILE_UNREACHABLE_HOSTS));
         maxUrlLength = conf.getInt(PARSE_MAX_URL_LENGTH, 1024);
 
         getParams().withLogger(LOG).info(true);
@@ -112,7 +113,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
         return Params.of(
                 "unreachableHosts", unreachableHosts.size(),
                 "maxUrlLength", maxUrlLength,
-                "unreachableHostsPath", ps.getUnreachableHostsPath(),
+                "unreachableHostsPath", FILE_UNREACHABLE_HOSTS,
                 "timeoutUrls", timeoutUrls.size(),
                 "failedUrls", failedUrls.size(),
                 "deadUrls", deadUrls

@@ -2,6 +2,7 @@ package fun.platonic.pulsar.ql;
 
 import com.google.common.cache.*;
 import fun.platonic.pulsar.Pulsar;
+import fun.platonic.pulsar.PulsarSession;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.crawl.fetch.TaskStatusTracker;
@@ -124,9 +125,7 @@ public final class QueryEngine implements AutoCloseable {
 
         LOG.info("[Destruction] Destructing QueryEngine ...");
 
-        for (QuerySession pulsarSession : sessions.asMap().values()) {
-            pulsarSession.close();
-        }
+        sessions.asMap().values().forEach(PulsarSession::close);
 
         sessions.cleanUp();
 

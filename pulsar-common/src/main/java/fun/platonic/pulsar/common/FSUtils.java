@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
@@ -46,9 +47,9 @@ public class FSUtils {
         }
     }
 
-    public static List<String> readAllLinesSilent(String path, ImmutableConfig conf) {
+    public static List<String> readAllLinesSilent(Path path, ImmutableConfig conf) {
         try {
-            return readAllLines(path, conf);
+            return readAllLines(path.toString(), conf);
         } catch (IOException e) {
             LOG.warn(e.toString());
         }

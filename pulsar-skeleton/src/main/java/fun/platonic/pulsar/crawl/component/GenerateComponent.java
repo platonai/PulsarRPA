@@ -145,7 +145,7 @@ public class GenerateComponent implements ReloadableParameterized {
                         "urlFilters", urlFilters,
                         "crawlFilters", crawlFilters,
                         "keyRange", keyRange[0] + " - " + keyRange[1],
-                        "unreachableHostsPath", pulsarFiles.getUnreachableHostsPath(),
+                        "unreachableHostsPath", FILE_UNREACHABLE_HOSTS,
                         "unreachableHosts", unreachableHosts.size()
                 ))
                 .merge(scoringFilters.getParams());
@@ -176,7 +176,7 @@ public class GenerateComponent implements ReloadableParameterized {
 
         // TODO : move to a filter
         bannedUrls.addAll(FSUtils.readAllLinesSilent(PATH_BANNED_URLS, conf));
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(pulsarFiles.getUnreachableHostsPath()));
+        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(FILE_UNREACHABLE_HOSTS));
     }
 
     public WebDb getWebDb() {

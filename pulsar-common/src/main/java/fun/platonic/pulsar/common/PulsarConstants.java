@@ -26,6 +26,8 @@ import java.time.Instant;
  */
 public interface PulsarConstants {
 
+    String USER = System.getenv("USER");
+
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
     String JOB_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/job-context.xml";
 
@@ -133,16 +135,16 @@ public interface PulsarConstants {
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
     int DEFAULT_INDEX_SERVER_PORT = 8983;
 
-    String PATH_PULSAR_TMP_DIR = "/tmp/pulsar-" + System.getenv("USER");
-    String PATH_PULSAR_OUTPUT_DIR = PATH_PULSAR_TMP_DIR;
-    String PATH_PULSAR_REPORT_DIR = PATH_PULSAR_OUTPUT_DIR + "/report";
-    String PATH_PULSAR_CACHE_DIR = PATH_PULSAR_OUTPUT_DIR + "/cache";
-    String PATH_LAST_BATCH_ID = PATH_PULSAR_TMP_DIR + "/last-batch-id";
-    String PATH_LAST_GENERATED_ROWS = PATH_PULSAR_TMP_DIR + "/last-generated-rows";
-    String PATH_LOCAL_COMMAND = PATH_PULSAR_TMP_DIR + "/pulsar-commands";
-    String PATH_EMERGENT_SEEDS = PATH_PULSAR_TMP_DIR + "/emergent-seeds";
-    String PATH_BANNED_URLS = PATH_PULSAR_TMP_DIR + "/banned-urls";
-    Path PATH_BANNED_URLS_PATH = Paths.get(PATH_BANNED_URLS);
+    String TMP_DIR = System.getProperty("java.io.tmpdir");
+    Path PATH_PULSAR_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
+    Path PATH_LAST_BATCH_ID = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "last-batch-id");
+    Path PATH_LAST_GENERATED_ROWS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "last-generated-rows");
+    Path PATH_LOCAL_COMMAND = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "pulsar-commands");
+    Path PATH_EMERGENT_SEEDS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "emergent-seeds");
+    Path PATH_BANNED_URLS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "banned-urls");
+    Path FILE_UNREACHABLE_HOSTS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "unreachable-hosts.txt");
 
-    String FILE_UNREACHABLE_HOSTS = "unreachable-hosts.txt";
+    Path PATH_PULSAR_OUTPUT_DIR = PATH_PULSAR_TMP_DIR;
+    Path PATH_PULSAR_REPORT_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "report");
+    Path PATH_PULSAR_CACHE_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "cache");
 }
