@@ -64,38 +64,34 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
-        <!-- Hadoop Dependencies -->
+        <!-- Persistent -->
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
         </dependency>
-
-        <!-- Spark Dependencies -->
-        <!--<dependency>-->
-        <!--<groupId>org.apache.spark</groupId>-->
-        <!--<artifactId>spark-core_2.10</artifactId>-->
-        <!--</dependency>-->
-
-        <!-- Storage Dependencies -->
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-shaded-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-hbase</artifactId>
         </dependency>
 
+        <!-- Kotlin -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit</artifactId>

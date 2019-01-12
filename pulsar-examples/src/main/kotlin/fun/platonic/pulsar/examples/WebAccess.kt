@@ -39,6 +39,6 @@ object WebAccess {
 }
 
 fun main(args: Array<String>) {
-    // WebAccess.load()
-    WebAccess.loadAllProducts()
+    WebAccess.load()
+    // WebAccess.loadAllProducts()
 }

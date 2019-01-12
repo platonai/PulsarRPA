@@ -277,7 +277,6 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
         return if (firstIndexTime == null) defaultValue else firstIndexTime
     }
 
-
     /**
      * namespace : metadata, seed, www
      * reserved
@@ -293,7 +292,6 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
     var encodingClues: String
         get() = metadata.getOrDefault(Name.ENCODING_CLUES, "")
         set(clues) = metadata.set(Name.ENCODING_CLUES, clues)
-
 
     val contentAsBytes: ByteArray
         get() {

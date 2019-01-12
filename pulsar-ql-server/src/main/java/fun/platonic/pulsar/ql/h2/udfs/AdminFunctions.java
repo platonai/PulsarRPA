@@ -42,23 +42,23 @@ public class AdminFunctions {
     public static String closeSession(@H2Context Session h2session) {
         checkPrivilege(h2session);
 
-        LOG.info("About to close h2session {}", h2session);
+        LOG.info("Closing h2session {}", h2session);
         h2session.close();
         return h2session.toString();
     }
 
     @UDFunction
-    public static String save(@H2Context Session h2session, String url) {
-        return save(h2session, url, ".htm");
+    public static String export(@H2Context Session h2session, String url) {
+        return export(h2session, url, ".htm");
     }
 
     @UDFunction
-    public static String save(@H2Context Session h2session, String url, String suffix) {
+    public static String export(@H2Context Session h2session, String url, String suffix) {
         checkPrivilege(h2session);
 
         QuerySession session = engine.getSession(new DbSession(h2session));
         WebPage page = session.load(url);
-        Path path = fs.get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
+        Path path = fs.getPaths().get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
         return fs.saveTo(page, path).toString();
     }
 

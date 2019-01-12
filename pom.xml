@@ -516,7 +516,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- Hadoop Dependencies -->
+            <!-- Avro -->
             <dependency>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro</artifactId>
@@ -528,6 +528,8 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
+            <!-- Hadoop Dependencies -->
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
@@ -536,28 +538,6 @@
                     <exclusion>
                         <groupId>*</groupId>
                         <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-auth</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>*</artifactId>
-                        <groupId>*</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-yarn-common</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>*</artifactId>
-                        <groupId>*</groupId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -573,72 +553,21 @@
                 </exclusions>
             </dependency>
 
-            <!--
-                intruduces  hadoop-common, hadoop-hdfs, hadoop-mapreduce-client-app, hadoop-yarn-api,
-                hadoop-mapreduce-client-core, hadoop-mapreduce-client-jobclient, and hadoop-annotations
-                TODO: use hbase-shaded-client
-            -->
+            <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
             <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-client</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>*</artifactId>
-                        <groupId>*</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>*</artifactId>
-                        <groupId>*</groupId>
-                    </exclusion>
-                </exclusions>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-shaded-client</artifactId>
+                <version>${hbase.version}</version>
             </dependency>
 
-            <!-- Hbase/Gora -->
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-common</artifactId>
-                <version>${hbase.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-client</artifactId>
-                <version>${hbase.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.apache.gora</groupId>
                 <artifactId>gora-core</artifactId>
                 <version>${gora-core.version}</version>
                 <exclusions>
-                    <!-- spark support introduces hadoop-2.2.0, which is conflict with our hadoop-2.5.2 -->
                     <exclusion>
-                        <groupId>org.apache.spark</groupId>
-                        <artifactId>spark-core_2.10</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.ws.rs</groupId>
-                        <artifactId>jsr311-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty-util</artifactId>
-                    </exclusion>
-
-                    <!-- JAX-RS problem -->
-                    <exclusion>
-                        <groupId>org.apache.cxf</groupId>
-                        <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -648,8 +577,8 @@
                 <version>${gora-hbase.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-simple</artifactId>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -661,7 +590,41 @@
                 <version>${solr.version}</version>
             </dependency>
 
-            <!-- TODO: check the version, seems higher version is present -->
+            <!-- Selenium -->
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-java</artifactId>
+                <version>${selenium.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.seleniumhq.selenium</groupId>
+                        <artifactId>selenium-ie-driver</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.seleniumhq.selenium</groupId>
+                        <artifactId>selenium-edge-driver</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.seleniumhq.selenium</groupId>
+                        <artifactId>selenium-firefox-driver</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.seleniumhq.selenium</groupId>
+                        <artifactId>selenium-opera-driver</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.seleniumhq.selenium</groupId>
+                        <artifactId>selenium-safari-driver</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>htmlunit-driver</artifactId>
+                <version>2.29.0</version>
+            </dependency>
+
+            <!-- TODO: check the version, seems higher version exists -->
             <dependency>
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
@@ -777,11 +740,6 @@
             </dependency>
 
             <!-- Storage -->
-            <!--<dependency>-->
-            <!--<groupId>com.h2database</groupId>-->
-            <!--<artifactId>h2</artifactId>-->
-            <!--<version>${h2.version}</version>-->
-            <!--</dependency>-->
             <dependency>
                 <groupId>com.j256.ormlite</groupId>
                 <artifactId>ormlite-jdbc</artifactId>
@@ -840,22 +798,6 @@
                 <artifactId>commons-collections4</artifactId>
                 <version>4.0</version>
             </dependency>
-            <dependency>
-                <groupId>com.beust</groupId>
-                <artifactId>jcommander</artifactId>
-                <version>1.60</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <version>4.3.6</version>
-            </dependency>
-            <!--<dependency>-->
-            <!--<groupId>commons-httpclient</groupId>-->
-            <!--<artifactId>commons-httpclient</artifactId>-->
-            <!--<version>3.1</version>-->
-            <!--</dependency>-->
 
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -869,14 +811,7 @@
                 <version>${gson.version}</version>
             </dependency>
 
-            <!-- Algebra -->
-            <dependency>
-                <groupId>org.apache.mahout</groupId>
-                <artifactId>mahout-math</artifactId>
-                <version>0.13.0</version>
-            </dependency>
-
-            <!-- WebGraph computing -->
+            <!-- WebGraph computing, required by WebGraph -->
             <dependency>
                 <groupId>org.jgrapht</groupId>
                 <artifactId>jgrapht-core</artifactId>
@@ -888,12 +823,14 @@
                 <version>1.0.0</version>
             </dependency>
 
+            <!--
+                Hamcrest is a framework for writing matcher objects allowing ‘match’ rules to be defined declaratively.
+             -->
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-core</artifactId>
                 <version>1.3</version>
             </dependency>
-
             <!--
                 The Jakarta-ORO Java classes are a set of text-processing Java classes
                 that provide Perl5 compatible regular expressions.
@@ -903,6 +840,18 @@
                 <groupId>oro</groupId>
                 <artifactId>oro</artifactId>
                 <version>2.0.8</version>
+            </dependency>
+
+            <!-- Commander line parser -->
+            <dependency>
+                <groupId>com.beust</groupId>
+                <artifactId>jcommander</artifactId>
+                <version>1.60</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.3.6</version>
             </dependency>
 
             <!-- Logging, Tracking, Metrics -->
@@ -951,17 +900,6 @@
                 <artifactId>log4j-over-slf4j</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-
-            <!--<dependency>-->
-            <!--<groupId>org.slf4j</groupId>-->
-            <!--<artifactId>slf4j-simple</artifactId>-->
-            <!--<version>${slf4j.version}</version>-->
-            <!--</dependency>-->
-            <!--<dependency>-->
-            <!--<groupId>org.slf4j</groupId>-->
-            <!--<artifactId>slf4j-jdk14</artifactId>-->
-            <!--<version>${slf4j.version}</version>-->
-            <!--</dependency>-->
 
             <!-- Testing -->
             <dependency>
@@ -1021,6 +959,8 @@
         <!-- Search Engine -->
         <solr.version>6.1.0</solr.version>
 
+        <selenium.version>3.8.1</selenium.version>
+
         <!-- Persistence -->
         <ormlite.version>4.48</ormlite.version>
 
@@ -1046,8 +986,7 @@
 
         <!-- Misc Dependencies -->
         <!--  Google core libraries for Java, include Multimaps, etc -->
-        <!-- Selenium requires guava-23.0 which is not supported by hbase1, guava-23.6-hbase1 is a fix for it -->
-        <guava.version>23.6-hbase1</guava.version>
+        <guava.version>27.0.1-jre</guava.version>
         <gson.version>2.6.2</gson.version>
 
         <!-- Logging, metrics analyze -->

@@ -43,7 +43,7 @@ public class BannedUrlFilter implements UrlFilter {
 
     public BannedUrlFilter() {
         bannedUrls.addAll(FSUtils.readAllLinesSilent(PATH_BANNED_URLS, conf));
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(Paths.get(PATH_PULSAR_TMP_DIR, FILE_UNREACHABLE_HOSTS)));
+        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(FILE_UNREACHABLE_HOSTS));
     }
 
     public BannedUrlFilter(ImmutableConfig conf) {
