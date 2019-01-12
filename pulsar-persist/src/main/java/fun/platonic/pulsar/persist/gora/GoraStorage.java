@@ -7,16 +7,21 @@ import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
+import org.apache.gora.store.impl.FileBackedDataStoreBase;
 import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
-import static fun.platonic.pulsar.common.PulsarConstants.HBASE_STORE_CLASS;
-import static fun.platonic.pulsar.common.PulsarConstants.MEM_STORE_CLASS;
+import static fun.platonic.pulsar.common.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**
@@ -27,6 +32,7 @@ public class GoraStorage {
     public static final Logger LOG = LoggerFactory.getLogger(GoraStorage.class);
 
     private static Map<String, Object> dataStores = new HashMap<>();
+    private static Boolean enabledFileStore = false;
 
     /**
      * Creates a store for the given persistentClass. Currently supports WebPage store
@@ -50,8 +56,17 @@ public class GoraStorage {
 
         Object o = dataStores.get(schema);
         if (o == null) {
-            Class<? extends DataStore<K, V>> dataStoreClass = getDataStoreClass(conf);
-            DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass, keyClass, persistentClass, conf, schema);
+            Class<? extends DataStore<K, V>> dataStoreClass = getDataStoreClass(persistentClass, conf);
+            DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
+                    keyClass, persistentClass, conf, schema);
+
+            if (dataStore instanceof FileBackedDataStoreBase) {
+                String dataFile = getDataFile(persistentClass).toString();
+                FileBackedDataStoreBase fileStore = (FileBackedDataStoreBase) dataStore;
+                fileStore.setInputPath(dataFile);
+                fileStore.setOutputPath(dataFile);
+            }
+
             dataStores.put(schema, dataStore);
 
             Params.of(
@@ -73,23 +88,39 @@ public class GoraStorage {
      */
     @SuppressWarnings("unchecked")
     private static <K, V extends Persistent> Class<? extends DataStore<K, V>>
-    getDataStoreClass(Configuration conf) throws ClassNotFoundException {
-        boolean autoDetect = conf.getBoolean(STORAGE_DETECT_DATA_STORE, true);
+    getDataStoreClass(Class<?> persistentClass, Configuration conf) throws ClassNotFoundException {
         String className;
         boolean isDistributedFs = ImmutableConfig.isDistributedFs(conf);
-        if (autoDetect && !isDistributedFs) {
-            boolean localHBaseRunning = RuntimeUtils.checkIfJavaProcessRunning("HMaster");
-            className = localHBaseRunning ? HBASE_STORE_CLASS : MEM_STORE_CLASS;
-//            try {
-//                HBaseAdmin.checkHBaseAvailable(conf);
-//                className = HBASE_STORE_CLASS;
-//            } catch (Exception e) {
-//                className = MEM_STORE_CLASS;
-//            }
+        if (isDistributedFs) {
+            className = conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS);
+        } else if (RuntimeUtils.checkIfJavaProcessRunning("HMaster")) {
+            className = conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS);
+        } else if (enabledFileStore && tryCreateDataFile(persistentClass)) {
+            className = FILE_STORE_CLASS;
         } else {
-            className = conf.get(STORAGE_DATA_STORE_CLASS, MEM_STORE_CLASS);
+            className = MEM_STORE_CLASS;
         }
 
         return (Class<? extends DataStore<K, V>>) Class.forName(className);
+    }
+
+    private static Boolean tryCreateDataFile(Class<?> persistentClass) {
+        try {
+            Files.createDirectories(DATA_DIRECTORY);
+            Path dataFile = getDataFile(persistentClass);
+            if (!Files.exists(dataFile)) {
+                Files.write(dataFile, "".getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            }
+            return true;
+        } catch (IOException e) {
+            LOG.warn("Failed to create data file " + e.toString());
+        }
+
+        return false;
+    }
+
+    private static Path getDataFile(Class<?> persistentClass) {
+        String dataFile = persistentClass.getSimpleName().toLowerCase() + ".data";
+        return Paths.get(DATA_DIRECTORY.toString(), dataFile);
     }
 }

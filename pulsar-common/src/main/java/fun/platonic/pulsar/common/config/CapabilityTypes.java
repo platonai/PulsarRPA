@@ -67,7 +67,6 @@ public interface CapabilityTypes {
      */
     String STORAGE_SCHEMA_WEBPAGE = "storage.schema.webpage";
     String STORAGE_PREFERRED_SCHEMA_NAME = "preferred.schema.name";
-    String STORAGE_DETECT_DATA_STORE = "storage.detect.data.store";
     String STORAGE_DATA_STORE_CLASS = "storage.data.store.class";
     String STORAGE_DATUM_EXPIRES = "storage.datum.expires";
     /**

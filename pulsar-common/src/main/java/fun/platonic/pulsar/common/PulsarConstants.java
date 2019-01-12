@@ -79,6 +79,7 @@ public interface PulsarConstants {
      * Storage
      * */
     String MEM_STORE_CLASS = "org.apache.gora.memory.store.MemStore";
+    String FILE_STORE_CLASS = "org.apache.gora.avro.store.AvroStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
 
     int FETCH_PRIORITY_MIN = -10 * 1000;
@@ -136,6 +137,10 @@ public interface PulsarConstants {
     int DEFAULT_INDEX_SERVER_PORT = 8983;
 
     String TMP_DIR = System.getProperty("java.io.tmpdir");
+    String HOME_DIR = System.getProperty("user.home");
+
+    Path DATA_DIRECTORY = Paths.get(HOME_DIR, ".pulsar", "data");
+
     Path PATH_PULSAR_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
     Path PATH_LAST_BATCH_ID = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "last-batch-id");
     Path PATH_LAST_GENERATED_ROWS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "last-generated-rows");

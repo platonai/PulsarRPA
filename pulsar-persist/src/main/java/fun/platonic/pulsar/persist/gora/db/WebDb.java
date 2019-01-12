@@ -73,7 +73,6 @@ public class WebDb implements AutoCloseable {
         return store.getSchemaName();
     }
 
-
     /**
      * Returns the WebPage corresponding to the given url.
      *
