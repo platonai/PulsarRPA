@@ -32,7 +32,6 @@ public class GoraStorage {
     public static final Logger LOG = LoggerFactory.getLogger(GoraStorage.class);
 
     private static Map<String, Object> dataStores = new HashMap<>();
-    private static Boolean enabledFileStore = false;
 
     /**
      * Creates a store for the given persistentClass. Currently supports WebPage store
@@ -59,13 +58,6 @@ public class GoraStorage {
             Class<? extends DataStore<K, V>> dataStoreClass = getDataStoreClass(persistentClass, conf);
             DataStore<K, V> dataStore = DataStoreFactory.createDataStore(dataStoreClass,
                     keyClass, persistentClass, conf, schema);
-
-            if (dataStore instanceof FileBackedDataStoreBase) {
-                String dataFile = getDataFile(persistentClass).toString();
-                FileBackedDataStoreBase fileStore = (FileBackedDataStoreBase) dataStore;
-                fileStore.setInputPath(dataFile);
-                fileStore.setOutputPath(dataFile);
-            }
 
             dataStores.put(schema, dataStore);
 
@@ -95,8 +87,6 @@ public class GoraStorage {
             className = conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS);
         } else if (RuntimeUtils.checkIfJavaProcessRunning("HMaster")) {
             className = conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS);
-        } else if (enabledFileStore && tryCreateDataFile(persistentClass)) {
-            className = FILE_STORE_CLASS;
         } else {
             className = MEM_STORE_CLASS;
         }
@@ -104,23 +94,4 @@ public class GoraStorage {
         return (Class<? extends DataStore<K, V>>) Class.forName(className);
     }
 
-    private static Boolean tryCreateDataFile(Class<?> persistentClass) {
-        try {
-            Files.createDirectories(DATA_DIRECTORY);
-            Path dataFile = getDataFile(persistentClass);
-            if (!Files.exists(dataFile)) {
-                Files.write(dataFile, "".getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            }
-            return true;
-        } catch (IOException e) {
-            LOG.warn("Failed to create data file " + e.toString());
-        }
-
-        return false;
-    }
-
-    private static Path getDataFile(Class<?> persistentClass) {
-        String dataFile = persistentClass.getSimpleName().toLowerCase() + ".data";
-        return Paths.get(DATA_DIRECTORY.toString(), dataFile);
-    }
 }

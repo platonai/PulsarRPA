@@ -79,7 +79,6 @@ public interface PulsarConstants {
      * Storage
      * */
     String MEM_STORE_CLASS = "org.apache.gora.memory.store.MemStore";
-    String FILE_STORE_CLASS = "org.apache.gora.avro.store.AvroStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
 
     int FETCH_PRIORITY_MIN = -10 * 1000;
@@ -138,18 +137,18 @@ public interface PulsarConstants {
 
     String TMP_DIR = System.getProperty("java.io.tmpdir");
     String HOME_DIR = System.getProperty("user.home");
+    Path PULSAR_ROOT = Paths.get(TMP_DIR, "pulsar-" + USER);
+    String PULSAR_ROOT_STR = PULSAR_ROOT.toString();
+    Path PULSAR_DATA = Paths.get(HOME_DIR, ".pulsar", "data");
 
-    Path DATA_DIRECTORY = Paths.get(HOME_DIR, ".pulsar", "data");
+    Path PATH_LAST_BATCH_ID = Paths.get(PULSAR_ROOT_STR, "last-batch-id");
+    Path PATH_LAST_GENERATED_ROWS = Paths.get(PULSAR_ROOT_STR, "last-generated-rows");
+    Path PATH_LOCAL_COMMAND = Paths.get(PULSAR_ROOT_STR, "pulsar-commands");
+    Path PATH_EMERGENT_SEEDS = Paths.get(PULSAR_ROOT_STR, "emergent-seeds");
+    Path PATH_BANNED_URLS = Paths.get(PULSAR_ROOT_STR, "banned-urls");
+    Path PATH_FILE_UNREACHABLE_HOSTS = Paths.get(PULSAR_ROOT_STR, "unreachable-hosts.txt");
 
-    Path PATH_PULSAR_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
-    Path PATH_LAST_BATCH_ID = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "last-batch-id");
-    Path PATH_LAST_GENERATED_ROWS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "last-generated-rows");
-    Path PATH_LOCAL_COMMAND = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "pulsar-commands");
-    Path PATH_EMERGENT_SEEDS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "emergent-seeds");
-    Path PATH_BANNED_URLS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "banned-urls");
-    Path FILE_UNREACHABLE_HOSTS = Paths.get(PATH_PULSAR_TMP_DIR.toString(), "unreachable-hosts.txt");
-
-    Path PATH_PULSAR_OUTPUT_DIR = PATH_PULSAR_TMP_DIR;
+    Path PATH_PULSAR_OUTPUT_DIR = PULSAR_ROOT;
     Path PATH_PULSAR_REPORT_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "report");
     Path PATH_PULSAR_CACHE_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "cache");
 }

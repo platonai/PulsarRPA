@@ -73,7 +73,6 @@
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-shaded-client</artifactId>

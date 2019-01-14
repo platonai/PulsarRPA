@@ -46,14 +46,10 @@ public class OrmliteDaoFactory {
     }
 
     private <T, ID> void register(Dao<T, ID> dao) {
-        synchronized (registredDaos) {
-            registredDaos.add(dao);
-        }
+        registredDaos.add(dao);
     }
 
     public List<Dao<?, ?>> getCreatedDaos() {
-        synchronized (registredDaos) {
-            return Collections.unmodifiableList(registredDaos);
-        }
+        return Collections.unmodifiableList(registredDaos);
     }
 }

@@ -11,4 +11,8 @@ import java.lang.annotation.RetentionPolicy;
 public @interface UDFunction {
     boolean nobuffer() default true;
     boolean deterministic() default false;
+    /**
+     * If a function has a shortcut, the namespace can be avoid
+     * */
+    boolean hasShortcut() default false;
 }

@@ -1,6 +1,5 @@
 package fun.platonic.pulsar.common;
 
-import com.google.common.collect.Lists;
 import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -127,7 +126,7 @@ public class PulsarFiles {
                 .collect(joining("\n"));
 
         try {
-            Files.write(FILE_UNREACHABLE_HOSTS, report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            Files.write(PATH_FILE_UNREACHABLE_HOSTS, report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }

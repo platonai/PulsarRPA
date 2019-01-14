@@ -326,13 +326,6 @@
                     <!--</configuration>-->
                 </plugin>
                 <plugin>
-                    <artifactId>maven-eclipse-plugin</artifactId>
-                    <configuration>
-                        <downloadSources>true</downloadSources>
-                        <downloadJavadocs>true</downloadJavadocs>
-                    </configuration>
-                </plugin>
-                <plugin>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${maven-assembly-plugin.version}</version>
                     <configuration>
@@ -340,10 +333,23 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <artifactId>maven-eclipse-plugin</artifactId>
+                    <configuration>
+                        <downloadSources>true</downloadSources>
+                        <downloadJavadocs>true</downloadJavadocs>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>${maven-exec-plugin.version}</version>
                 </plugin>
+                <!-- Not working? -->
+                <!--<plugin>-->
+                    <!--<groupId>org.apache.gora</groupId>-->
+                    <!--<artifactId>gora-maven-plugin</artifactId>-->
+                    <!--<version>${gora.version}</version>-->
+                <!--</plugin>-->
                 <plugin>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-maven-plugin</artifactId>
@@ -590,10 +596,18 @@
                 <version>${hbase.version}</version>
             </dependency>
 
+            <!-- TODO: Support MongoDB -->
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongo-java-driver</artifactId>
+                <version>${mongo.driver.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.gora</groupId>
                 <artifactId>gora-core</artifactId>
-                <version>${gora-core.version}</version>
+                <version>${gora.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>*</groupId>
@@ -604,13 +618,18 @@
             <dependency>
                 <groupId>org.apache.gora</groupId>
                 <artifactId>gora-hbase</artifactId>
-                <version>${gora-hbase.version}</version>
+                <version>${gora.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>*</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.gora</groupId>
+                <artifactId>gora-mongodb</artifactId>
+                <version>${gora.version}</version>
             </dependency>
 
             <!-- Solr -->
@@ -985,8 +1004,7 @@
             Apache Spark 1.4.1
             See more at: http://gora.apache.org/
          -->
-        <gora-core.version>0.8</gora-core.version>
-        <gora-hbase.version>0.8</gora-hbase.version>
+        <gora.version>0.8</gora.version>
 
         <!-- HTML parsing -->
         <xerces.version>2.9.1</xerces.version>
@@ -999,6 +1017,10 @@
         <yarn.version>${hadoop.version}</yarn.version>
         <hbase.version>1.2.3</hbase.version>
         <spark.version>2.3.0</spark.version>
+
+        <!-- mongodb support -->
+        <mongo.driver.version>3.5.0</mongo.driver.version>
+        <mongo.embed.version>2.0.0</mongo.embed.version>
 
         <!-- Search Engine -->
         <solr.version>6.1.0</solr.version>
@@ -1049,6 +1071,10 @@
         <!-- Kotlin -->
         <kotlin.version>1.3.11</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
+        <!-- OSGI -->
+        <osgi.import>*</osgi.import>
+        <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
 
         <!-- Maven Plugin Dependencies -->
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
