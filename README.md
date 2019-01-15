@@ -51,12 +51,7 @@ For batch Web scraping(in kotlin):
 
 The examples can be found in fun/platonic/pulsar/examples/WebAccess.kt, and more examples will be added soon.
 
-To build from source, you need guava-hbase1-23.6 which is a fix for guava-23.6 to match hbase-1.3.2
-
-    git clone git@github.com:platonai/guava-hbase1-23.6.git
-    cd guava-hbase1-23.6 && mvn install
-
-And then
+To build from source:
 
     git clone git@github.com:platonai/pulsar.git
     cd pulsar && mvn

@@ -126,7 +126,7 @@ public class PulsarFiles {
                 .collect(joining("\n"));
 
         try {
-            Files.write(PATH_FILE_UNREACHABLE_HOSTS, report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+            Files.write(PATH_UNREACHABLE_HOSTS, report.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }

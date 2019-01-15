@@ -24,7 +24,7 @@ import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.crawl.index.IndexField;
 import fun.platonic.pulsar.crawl.index.IndexWriter;
 import fun.platonic.pulsar.crawl.index.IndexerMapping;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.solr.client.solrj.SolrClient;

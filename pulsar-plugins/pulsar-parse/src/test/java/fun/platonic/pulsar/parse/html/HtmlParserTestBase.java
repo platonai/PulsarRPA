@@ -17,14 +17,14 @@
 
 package fun.platonic.pulsar.parse.html;
 
-import fun.platonic.pulsar.common.PulsarConstants;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.crawl.parse.ParseException;
+import fun.platonic.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.nio.charset.Charset;
 
@@ -100,10 +100,11 @@ public class HtmlParserTestBase {
                     "\ufeff<!DOCTYPE html>\n<html>\n<head>\n" + encodingTestContent
             }
     };
+
     @Autowired
     protected ImmutableConfig conf;
 
-    protected WebPage getPage(String html, Charset charset) throws ParseException {
+    protected WebPage getPage(String html, Charset charset) {
         WebPage page = WebPage.newWebPage(exampleUrl);
 
         page.setBaseUrl(exampleUrl);

@@ -207,7 +207,7 @@ public interface PulsarConstants {
     Path PATH_LOCAL_COMMAND = Paths.get(PULSAR_ROOT_STR, "pulsar-commands");
     Path PATH_EMERGENT_SEEDS = Paths.get(PULSAR_ROOT_STR, "emergent-seeds");
     Path PATH_BANNED_URLS = Paths.get(PULSAR_ROOT_STR, "banned-urls");
-    Path PATH_FILE_UNREACHABLE_HOSTS = Paths.get(PULSAR_ROOT_STR, "unreachable-hosts.txt");
+    Path PATH_UNREACHABLE_HOSTS = Paths.get(PULSAR_ROOT_STR, "unreachable-hosts.txt");
 
     Path PATH_PULSAR_OUTPUT_DIR = PULSAR_ROOT;
     Path PATH_PULSAR_REPORT_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "report");

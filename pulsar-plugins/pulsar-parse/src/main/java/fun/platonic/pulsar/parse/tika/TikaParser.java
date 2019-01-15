@@ -43,8 +43,8 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import static fun.platonic.pulsar.common.PulsarConstants.CACHING_FORBIDDEN_CONTENT;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CACHING_FORBIDDEN_KEY;
+import static fun.platonic.pulsar.common.config.PulsarConstants.CACHING_FORBIDDEN_CONTENT;
 import static fun.platonic.pulsar.persist.ParseStatus.REFRESH_HREF;
 import static fun.platonic.pulsar.persist.ParseStatus.REFRESH_TIME;
 

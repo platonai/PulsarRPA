@@ -1,0 +1,209 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+  <property>
+    <name>scent.domain</name>
+    <value>default</value>
+    <description>Scent need apriori knowledge to do the web mining,
+    currently, we write apriori knowledge domain by domain,
+    product, house, finance, etc.</description>
+  </property>
+
+  <!-- author info -->
+  <property>
+    <name>scent.project.creator.name</name>
+    <value>Vincent Zhang</value>
+  </property>
+
+  <property>
+    <name>scent.project.creator.email</name>
+    <value>ivincent.zhang@gmail.com</value>
+  </property>
+
+  <!-- servers -->
+  <property>
+    <name>nutch.master</name>
+    <value>qiwur.com</value>
+    <description>deprecated</description>
+  </property>
+  <property>
+    <name>nutch.server.port</name>
+    <value>8182</value>
+    <description>deprecated</description>
+  </property>
+  <property>
+    <name>scent.server.port</name>
+    <value>8282</value>
+  </property>
+  <property>
+    <name>scent.server.wwwroot</name>
+    <value>wwwroot</value>
+  </property>
+
+  <!-- built-in web fetcher -->
+  <property>
+    <name>scent.net.proxy.use.proxy.pool</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>scent.net.proxy.max.pool.size</name>
+    <value>5</value>
+  </property>
+  <property>
+    <name>scent.net.proxy.host</name>
+    <value>localhost</value>
+  </property>
+  <property>
+    <name>scent.net.proxy.port</name>
+    <value>19080</value>
+  </property>
+  <property>
+    <name>scent.net.generate.fetch.list</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>scent.page.length.min</name>
+    <value>2000</value>
+    <description>deprecated</description>
+  </property>
+  <property>
+    <name>scent.page.save</name>
+    <value>true</value>
+  </property>
+
+  <!-- directories -->
+  <property>
+    <name>scent.out.dir</name>
+    <value>/tmp/scent</value>
+  </property>
+
+  <!-- cache -->
+  <property>
+    <name>scent.web.cache.file.expires</name>
+    <value>108000</value>
+    <description>
+      eg :
+      0 = no cache
+      30min = 108000
+    </description>
+  </property>
+
+  <!-- diagnose -->
+  <property>
+    <name>scent.diagnoser.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>scent.stat.segment.variance.log</name>
+    <value>false</value>
+  </property>
+
+  <!-- code statistics analysis -->
+  <property>
+    <name>scent.stat.feature.separators</name>
+    <value>:,：,></value>
+    <description>affect -sep feature</description>
+  </property>
+  <property>
+    <name>scent.stat.segment.item.min</name>
+    <value>3</value>
+  </property>
+  <property>
+    <name>scent.stat.segment.variance.sample.max</name>
+    <value>100</value>
+  </property>
+  <property>
+    <name>scent.stat.segment.variance.log</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>scent.stat.segment.variance.features</name>
+    <value>-txt-blk,-char,-a,-img</value>
+  </property>
+  <property>
+    <name>scent.stat.segment.variance.reference.value</name>
+    <value>3</value>
+  </property>
+
+  <!-- classifier -->
+  <property>
+    <name>scent.extract.refresh.feature</name>
+    <value>false</value>
+    <description>refresh block features for each document,
+    so you can modify</description>
+  </property>
+
+  <!-- extract -->
+  <property>
+    <name>scent.extract.greedy</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>scent.extractor.build.keep.metadata</name>
+    <value>true</value>
+  </property>
+
+  <!-- extractors -->
+  <!-- by pattern -->
+  <property>
+    <name>scent.block.extractors.pattern.Links</name>
+    <value>LinksExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.pattern.DenseLinks</name>
+    <value>LinksExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.pattern.Images</name>
+    <value>ImagesExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.pattern.LinkImages</name>
+    <value>LinkImagesExtractor</value>
+  </property>
+  <!-- by label -->
+  <property>
+    <name>scent.block.extractors.label.Gallery</name>
+    <value>GalleryExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.label.Title</name>
+    <value>TitleExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.label.Categories</name>
+    <value>CategoriesExtractor</value>
+  </property>
+  <property>
+    <name>scent.block.extractors.label.SimilarEntity</name>
+    <value>SimilarEntityExtractor</value>
+  </property>
+
+  <!-- wiki -->
+  <property>
+    <name>scent.wiki.domain</name>
+    <value>localhost</value>
+  </property>
+  <property>
+    <name>scent.wiki.username</name>
+    <value>galaxyeyebot</value>
+  </property>
+  <property>
+    <name>scent.wiki.password</name>
+    <value></value>
+  </property>
+
+  <property>
+    <name>scent.wiki.save</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>scent.wiki.upload</name>
+    <value>false</value>
+  </property>
+
+</configuration>

@@ -32,16 +32,6 @@
             <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
-            <artifactId>pulsar-skeleton</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
-            <artifactId>pulsar-beans</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>

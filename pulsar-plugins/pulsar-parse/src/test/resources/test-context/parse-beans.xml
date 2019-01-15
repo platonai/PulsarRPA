@@ -5,8 +5,11 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <bean id="config" class="fun.platonic.pulsar.common.config.config">
+    <bean id="config" class="fun.platonic.pulsar.common.config.ImmutableConfig">
         <constructor-arg value="test-context" />
+    </bean>
+    <bean id="webDb" class="fun.platonic.pulsar.persist.gora.db.WebDb">
+        <constructor-arg value="config" />
     </bean>
 
     <bean id="metaTagsParser" class="fun.platonic.pulsar.parse.metatags.MetaTagsParser"/>
@@ -33,6 +36,7 @@
     </bean>
 
     <bean id="htmlParser" class="fun.platonic.pulsar.parse.html.HtmlParser">
+        <constructor-arg ref="webDb"/>
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="config"/>
     </bean>

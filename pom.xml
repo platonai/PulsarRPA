@@ -57,6 +57,8 @@
         <module>pulsar-dom</module>
         <module>pulsar-mapr</module>
         <module>pulsar-beans</module>
+        <module>pulsar-ql-common</module>
+        <module>pulsar-ql-server</module>
         <module>pulsar-examples</module>
 
     </modules>
@@ -527,17 +529,22 @@
 
             <dependency>
                 <groupId>fun.platonic.pulsar</groupId>
+                <artifactId>pulsar-h2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fun.platonic.pulsar</groupId>
+                <artifactId>pulsar-dom</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>fun.platonic.pulsar</groupId>
                 <artifactId>pulsar-ql-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>fun.platonic.pulsar</groupId>
-                <artifactId>pulsar-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -836,6 +843,7 @@
                 <artifactId>commons-math3</artifactId>
                 <version>3.3</version>
             </dependency>
+            <!-- Required by org.apache.hadoop.conf.Configuration -->
             <dependency>
                 <groupId>commons-collections</groupId>
                 <artifactId>commons-collections</artifactId>

@@ -102,6 +102,12 @@
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>fun.platonic.pulsar</groupId>
+            <artifactId>pulsar-dom</artifactId>
+            <version>0.3.8</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 

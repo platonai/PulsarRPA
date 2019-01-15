@@ -23,11 +23,11 @@ import fun.platonic.pulsar.common.LocalFSUtils;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.filter.UrlFilter;
 
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_BANNED_URLS;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_UNREACHABLE_HOSTS;
 
 /**
  * Filters URLs based on a file of regular expressions using the
@@ -43,7 +43,7 @@ public class BannedUrlFilter implements UrlFilter {
 
     public BannedUrlFilter() {
         bannedUrls.addAll(FSUtils.readAllLinesSilent(PATH_BANNED_URLS, conf));
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(FILE_UNREACHABLE_HOSTS));
+        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS));
     }
 
     public BannedUrlFilter(ImmutableConfig conf) {

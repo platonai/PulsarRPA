@@ -1,10 +1,13 @@
 package fun.platonic.pulsar;
 
 import fun.platonic.pulsar.common.ConcurrentLRUCache;
+import fun.platonic.pulsar.common.ScentFiles;
+import fun.platonic.pulsar.common.ScentPaths;
 import fun.platonic.pulsar.common.UrlUtil;
-import fun.platonic.pulsar.common.config.VolatileConfig;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.common.config.VolatileConfig;
 import fun.platonic.pulsar.common.options.LoadOptions;
+import fun.platonic.pulsar.dom.nodes.FeaturedDocument;
 import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
@@ -15,13 +18,14 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 
 /**
  * Created by vincent on 18-1-17.
@@ -116,6 +120,11 @@ public class PulsarSession implements AutoCloseable {
         return pulsar.inject(configuredUrl);
     }
 
+    @Nonnull
+    public WebPage getOrNil(String url) {
+        return pulsar.getOrNil(url);
+    }
+
     /**
      * Load a url with default options
      *
@@ -146,6 +155,10 @@ public class PulsarSession implements AutoCloseable {
         } else {
             return pulsar.load(url, options);
         }
+    }
+
+    public Collection<WebPage> loadAll(Iterable<String> urls) {
+        return loadAll(urls, LoadOptions.DEFAULT);
     }
 
     /**
@@ -273,6 +286,30 @@ public class PulsarSession implements AutoCloseable {
     public void setVariable(String name, Object value) {
         Map<String, Object> vars = getVariables();
         vars.put(name, value);
+    }
+
+    public void delete(String url) {
+        pulsar.delete(url);
+    }
+
+    public void flush() {
+        pulsar.getWebDb().flush();
+    }
+
+    public void persist(WebPage page) {
+        pulsar.getWebDb().put(page.getUrl(), page);
+    }
+
+    public Path export(WebPage page, String ident) {
+        return ScentFiles.INSTANCE.save(page, ident);
+    }
+
+    public Path export(FeaturedDocument doc) {
+        return ScentFiles.INSTANCE.save(doc.getPrettyHtml(), "cache/files", ScentPaths.INSTANCE.fromUri(doc.getBaseUri(), ".htm"));
+    }
+
+    public Path exportTo(FeaturedDocument doc, Path path) {
+        return ScentFiles.INSTANCE.saveTo(doc.getPrettyHtml().getBytes(), path, true);
     }
 
     @Override

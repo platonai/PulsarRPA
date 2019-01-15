@@ -17,7 +17,7 @@ import java.util.zip.ZipInputStream
 
 object ScentPaths {
 
-    val tmpDir = Paths.get(System.getProperty("java.io.tmpdir"),"scent-" + System.getenv("USER"))!!
+    val tmpDir = Paths.get(System.getProperty("java.io.tmpdir"),"pulsar-" + System.getenv("USER"))!!
 
     val rootDir = tmpDir
 

@@ -100,7 +100,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
     @Override
     public void reload(ImmutableConfig conf) {
         unreachableHosts.clear();
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_FILE_UNREACHABLE_HOSTS));
+        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS));
         maxUrlLength = conf.getInt(PARSE_MAX_URL_LENGTH, 1024);
 
         getParams().withLogger(LOG).info(true);
@@ -111,7 +111,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
         return Params.of(
                 "unreachableHosts", unreachableHosts.size(),
                 "maxUrlLength", maxUrlLength,
-                "unreachableHostsPath", PATH_FILE_UNREACHABLE_HOSTS,
+                "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
                 "timeoutUrls", timeoutUrls.size(),
                 "failedUrls", failedUrls.size(),
                 "deadUrls", deadUrls
