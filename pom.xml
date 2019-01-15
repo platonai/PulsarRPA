@@ -56,8 +56,6 @@
         <module>pulsar-skeleton</module>
         <module>pulsar-mapr</module>
         <module>pulsar-beans</module>
-        <module>pulsar-ql-common</module>
-        <module>pulsar-ql-server</module>
         <module>pulsar-examples</module>
 
     </modules>

@@ -40,7 +40,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 
-import static fun.platonic.pulsar.common.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
+import static fun.platonic.pulsar.common.config.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.FETCH_MAX_INTERVAL;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.FETCH_MAX_RETRY;
 

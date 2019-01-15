@@ -7,21 +7,15 @@ import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.persistency.Persistent;
 import org.apache.gora.store.DataStore;
 import org.apache.gora.store.DataStoreFactory;
-import org.apache.gora.store.impl.FileBackedDataStoreBase;
 import org.apache.gora.util.GoraException;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**

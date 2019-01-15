@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static fun.platonic.pulsar.common.PulsarConstants.UNICODE_LAST_CODE_POINT;
+import static fun.platonic.pulsar.common.config.PulsarConstants.UNICODE_LAST_CODE_POINT;
 import static fun.platonic.pulsar.common.UrlUtil.reverseUrlOrNull;
 
 public class WebDb implements AutoCloseable {

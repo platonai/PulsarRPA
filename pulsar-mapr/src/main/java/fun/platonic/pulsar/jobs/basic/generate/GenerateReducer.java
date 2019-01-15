@@ -29,7 +29,7 @@ import fun.platonic.pulsar.persist.metadata.Mark;
 
 import java.io.IOException;
 
-import static fun.platonic.pulsar.common.PulsarConstants.ALL_BATCHES;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static fun.platonic.pulsar.common.UrlUtil.reverseUrl;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.BATCH_ID;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.GENERATE_TOP_N;

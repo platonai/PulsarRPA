@@ -16,7 +16,7 @@
  */
 package `fun`.platonic.pulsar.persist
 
-import `fun`.platonic.pulsar.common.PulsarConstants.*
+import `fun`.platonic.pulsar.common.config.PulsarConstants.*
 import `fun`.platonic.pulsar.common.config.MutableConfig
 import `fun`.platonic.pulsar.persist.gora.generated.GParseStatus
 import `fun`.platonic.pulsar.persist.gora.generated.GProtocolStatus

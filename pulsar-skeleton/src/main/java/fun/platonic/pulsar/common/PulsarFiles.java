@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static java.util.stream.Collectors.joining;
 
 /**

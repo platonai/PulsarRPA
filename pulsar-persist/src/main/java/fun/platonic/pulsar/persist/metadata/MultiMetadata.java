@@ -22,7 +22,7 @@ import com.google.common.collect.Multimap;
 import fun.platonic.pulsar.common.DateTimeUtil;
 import fun.platonic.pulsar.common.DublinCore;
 import fun.platonic.pulsar.common.HttpHeaders;
-import fun.platonic.pulsar.common.PulsarConstants;
+import fun.platonic.pulsar.common.config.PulsarConstants;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;

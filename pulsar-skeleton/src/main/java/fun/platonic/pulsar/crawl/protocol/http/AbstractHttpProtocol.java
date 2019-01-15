@@ -108,7 +108,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
      * The PulsarConstants 'User-Agent' request header
      */
     protected String userAgent = NetUtil.getAgentString("Pulsar", null, "PulsarConstants",
-            "http://pulsar.warpseed.org/bot.html", "agent@pulsar.warpseed.org");
+            "http://pulsar.platon.ai/bot.html", "agent@pulsar.platon.ai");
 
     /**
      * The "Accept-Language" request header value.

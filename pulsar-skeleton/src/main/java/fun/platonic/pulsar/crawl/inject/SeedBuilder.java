@@ -16,8 +16,8 @@ import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.Objects;
 
-import static fun.platonic.pulsar.common.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
-import static fun.platonic.pulsar.common.PulsarConstants.YES_STRING;
+import static fun.platonic.pulsar.common.config.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
+import static fun.platonic.pulsar.common.config.PulsarConstants.YES_STRING;
 
 /**
  * Created by vincent on 16-9-24.

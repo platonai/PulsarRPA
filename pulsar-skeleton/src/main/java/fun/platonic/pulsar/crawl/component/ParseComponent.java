@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.PulsarConstants.YES_STRING;
+import static fun.platonic.pulsar.common.config.PulsarConstants.YES_STRING;
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports

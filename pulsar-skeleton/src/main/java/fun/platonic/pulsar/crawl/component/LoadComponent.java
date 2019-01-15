@@ -1,13 +1,12 @@
 package fun.platonic.pulsar.crawl.component;
 
-import fun.platonic.pulsar.common.PulsarConstants;
+import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.common.URLUtil;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.options.LinkOptions;
 import fun.platonic.pulsar.common.options.LoadOptions;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.slf4j.Logger;
@@ -31,7 +30,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static org.apache.commons.collections4.CollectionUtils.addIgnoreNull;
 
 /**

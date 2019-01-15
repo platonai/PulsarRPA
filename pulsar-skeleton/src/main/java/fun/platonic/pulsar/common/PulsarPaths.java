@@ -10,8 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static fun.platonic.pulsar.common.PulsarConstants.PATH_PULSAR_CACHE_DIR;
-import static fun.platonic.pulsar.common.PulsarConstants.PULSAR_ROOT;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_CACHE_DIR;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PULSAR_ROOT;
 
 /**
  * Created by vincent on 17-3-23.

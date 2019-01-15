@@ -38,7 +38,7 @@ import java.net.URL;
 import java.time.Instant;
 import java.util.Objects;
 
-import static fun.platonic.pulsar.common.PulsarConstants.SHORTEST_VALID_URL_LENGTH;
+import static fun.platonic.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL_LENGTH;
 import static fun.platonic.pulsar.persist.ProtocolStatus.ARG_REDIRECT_TO_URL;
 import static fun.platonic.pulsar.persist.metadata.Mark.FETCH;
 import static fun.platonic.pulsar.persist.metadata.Mark.GENERATE;

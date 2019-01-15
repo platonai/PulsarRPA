@@ -30,7 +30,7 @@ import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 
 import java.util.Collections;
 
-import static fun.platonic.pulsar.common.PulsarConstants.DISTANCE_INFINITE;
+import static fun.platonic.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;
 import static fun.platonic.pulsar.common.PulsarParams.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 

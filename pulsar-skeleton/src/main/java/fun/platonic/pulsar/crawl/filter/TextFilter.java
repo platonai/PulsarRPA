@@ -2,8 +2,8 @@ package fun.platonic.pulsar.crawl.filter;
 
 import com.google.gson.annotations.Expose;
 import fun.platonic.pulsar.common.StringUtil;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class TextFilter {
     public static final String SEPERATORS = ",， ";

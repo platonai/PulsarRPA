@@ -28,8 +28,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static fun.platonic.pulsar.common.PulsarConstants.SEED_HOME_URL;
-import static fun.platonic.pulsar.common.PulsarConstants.SEED_PAGE_1_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_HOME_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_PAGE_1_URL;
 import static fun.platonic.pulsar.common.PulsarParams.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
 

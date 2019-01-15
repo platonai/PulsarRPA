@@ -18,7 +18,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH;
 import static java.util.stream.Collectors.joining;
 

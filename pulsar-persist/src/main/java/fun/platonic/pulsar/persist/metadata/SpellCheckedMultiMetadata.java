@@ -17,7 +17,7 @@
 package fun.platonic.pulsar.persist.metadata;
 
 import fun.platonic.pulsar.common.HttpHeaders;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

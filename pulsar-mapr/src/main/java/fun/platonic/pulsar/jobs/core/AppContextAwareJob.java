@@ -25,7 +25,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
 
-import static fun.platonic.pulsar.common.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
 
 public abstract class AppContextAwareJob extends PulsarJob {

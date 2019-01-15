@@ -21,6 +21,7 @@ package fun.platonic.pulsar.common.config;
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
+@SuppressWarnings("unused")
 public interface CapabilityTypes {
 
     /**
@@ -239,4 +240,47 @@ public interface CapabilityTypes {
      * Don't show either original forbidden content or summaries.
      */
     String CACHING_FORBIDDEN_ALL = "all";
+
+    String SCENT_DOMAIN = "scent.domain";
+    String SCENT_TASK_IDENT = "scent.task.ident";
+    String SCENT_FILE_SERVER_HOST = "scent.file.server.host";
+    String SCENT_FILE_SERVER_PORT = "scent.file.server.port";
+
+    String SCENT_DIAGNOSTOR_ENABLED = "scent.diagnostor.enabled";
+
+    // FEATURE
+    String SCENT_OUT_DIR_FEATURE = "scent.out.dir.feature";
+
+    // NLP
+    String SCENT_NLP_WORD_NET_CONCEPT = "scent.nlp.word.net.concept";
+    String SCENT_NLP_SEMANTIC_SIMILARITY_ENABLED = "scent.nlp.semantic.similarity.enabled";
+
+    // SEGMENT
+    String SCENT_CHILDREN_SUMMARY_ITEM_MIN = "scent.children.summary.item.min";
+    String SCENT_CHILDREN_SUMMARY_SAMPLE_MAX = "scent.children.summary.sample.max";
+    String SCENT_CHILDREN_SUMMARY_FEATURES = "scent.children.summary.features";
+    String SCENT_CHILDREN_SUMMARY_THRESHOLD = "scent.children.summary.threshold";
+    String SCENT_CHILDREN_SUMMARY_REPORT = "scent.children.summary.report";
+
+    // CLASSIFY
+    String SCENT_CLASSIFIER_BLOCK_LABELS = "scent.classifier.block.labels";
+    String SCENT_DIAGNOSE_CLASSIFIER_BLOCK_LABELS = "scent.diagnose.classifier.block.labels";
+    String SCENT_CLASSIFIER_BLOCK_INHERITABLE_LABLES = "scent.classifier.block.inheritable.labels";
+    String SCENT_CLASSIFIER_WEIGHT_CODE_STRUCTURE = "scent.classifier.weight.code.structure";
+    String SCENT_CLASSIFIER_WEIGHT_BLOCK_TEXT = "scent.classifier.weight.block.text";
+    String SCENT_CLASSIFIER_WEIGHT_BLOCK_TITLE = "scent.classifier.weight.block.title";
+
+    // EXTRACT
+    String SCENT_EXTRACT_EXTRACT_FOR_LABEL = "scent.extract.extractor.for.label";
+    String SCENT_EXTRACT_REFRESH_FEATURE = "scent.extract.refresh.feature";
+    String SCENT_EXTRACT_GREEDY = "scent.extract.greedy";
+    String SCENT_EXTRACT_KEEP_ELEMENT_METADATA = "scent.extract.keep.element.metadata";
+
+    // BUILD
+    String SCENT_WIKI_DOMAIN = "scent.wiki.domain";
+    String SCENT_WIKI_USERNAME = "scent.wiki.username";
+    String SCENT_WIKI_PASSWORD = "scent.wiki.password";
+
+    // Spark
+    String SPARK_MASTER = "spark.master";
 }

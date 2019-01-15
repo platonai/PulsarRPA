@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.PulsarConstants.ALL_BATCHES;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 
 public class DbQuery {
 

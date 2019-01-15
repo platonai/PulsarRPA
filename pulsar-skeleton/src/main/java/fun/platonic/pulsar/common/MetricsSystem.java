@@ -2,6 +2,7 @@ package fun.platonic.pulsar.common;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
+import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.persist.*;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.metadata.PageCategory;
@@ -27,8 +28,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.PulsarConstants.PATH_PULSAR_CACHE_DIR;
-import static fun.platonic.pulsar.common.PulsarConstants.PATH_PULSAR_REPORT_DIR;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_CACHE_DIR;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_REPORT_DIR;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_JOB_NAME;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_REPORT_DIR;
 

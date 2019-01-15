@@ -24,14 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.WebPageFormatter;
-import fun.platonic.pulsar.persist.gora.db.DbIterator;
 import fun.platonic.pulsar.persist.gora.db.DbQuery;
 import fun.platonic.pulsar.persist.gora.db.DbQueryResult;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
 
 import java.util.Iterator;
 
-import static fun.platonic.pulsar.common.PulsarConstants.ALL_BATCHES;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
 
 /**

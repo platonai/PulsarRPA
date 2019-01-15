@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package fun.platonic.pulsar.common;
+package fun.platonic.pulsar.common.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,6 +24,7 @@ import java.time.Instant;
 /**
  * A collection of constants.
  */
+@SuppressWarnings("unused")
 public interface PulsarConstants {
 
     String USER = System.getenv("USER");
@@ -37,6 +38,8 @@ public interface PulsarConstants {
     String CACHING_FORBIDDEN_CONTENT = "content";
 
     String ALL_BATCHES = "all";
+
+    String ALL_BATCH_ID_STR = "-all";
 
     // see https://en.wikipedia.org/wiki/UTF-8
     Character UNICODE_LAST_CODE_POINT = '\uFFFF';
@@ -110,6 +113,63 @@ public interface PulsarConstants {
     String STAT_PULSAR_STATUS = "Pulsar Status";
     String STAT_INFECTED_ROWS = "injectedRows";
 
+
+    // short constants for status / results fields
+    /**
+     * Status / result message.
+     */
+    String STAT_MESSAGE = "msg";
+    /**
+     * Phase of processing.
+     */
+    String STAT_PHASE = "phase";
+    /**
+     * Progress (float).
+     */
+    String STAT_PROGRESS = "progress";
+    /**
+     * Jobs.
+     */
+    String STAT_JOBS = "jobs";
+    /**
+     * Counters.
+     */
+    String STAT_COUNTERS = "counters";
+
+    String CRAWL_ID_KEY = "storage.crawl.id";
+
+    public final static String NUTCH_CRAWL_ID = "storage.crawl.id";
+
+    String COUNTER_GROUP_STATUS = "Runtime Status";
+
+    /**
+     * Args
+     */
+    String ARG_CRAWL_ID = "crawlId";
+    String ARG_TENANT_ID = "tenantId";
+    String ARG_START_KEY = "startKey";
+    String ARG_END_KEY = "endKey";
+    String ARG_START = "start";
+    String ARG_LIMIT = "limit";
+    String ARG_REGEX = "regex";
+    String ARG_DRY_RUN = "dryRun";
+    String ARG_FIELDS = "fields";
+    String ARG_ATTRIBUTE = "attribute";
+    String ARG_ENTITY_DOMAIN = "domain";
+    String ARG_EXTRACTOR = "extractor";
+    String ARG_BUILDER = "builder";
+    String ARG_FORMAT = "format";
+    String ARG_TASK_NAME = "taskName";
+    String ARG_OUTPUT_DIR = "outputDir";
+
+//  public final static String PAGE_TITLE_SEQUENCE = "scent.page.title.sequence";
+//  public final static String PAGE_MENU_SEQUENCE = "scent.page.menu.sequence";
+//  public final static String PAGE_MENU_DESCEND = "scent.page.menu.descend";
+
+    String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
+    String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
+
+
     /**
      * Generate
      * */
@@ -137,7 +197,8 @@ public interface PulsarConstants {
 
     String TMP_DIR = System.getProperty("java.io.tmpdir");
     String HOME_DIR = System.getProperty("user.home");
-    Path PULSAR_ROOT = Paths.get(TMP_DIR, "pulsar-" + USER);
+    Path PULSAR_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
+    Path PULSAR_ROOT = PULSAR_TMP_DIR;
     String PULSAR_ROOT_STR = PULSAR_ROOT.toString();
     Path PULSAR_DATA = Paths.get(HOME_DIR, ".pulsar", "data");
 

@@ -41,7 +41,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**

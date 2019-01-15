@@ -24,8 +24,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import static fun.platonic.pulsar.common.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
-import static fun.platonic.pulsar.common.PulsarConstants.YES_STRING;
+import static fun.platonic.pulsar.common.config.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
+import static fun.platonic.pulsar.common.config.PulsarConstants.YES_STRING;
 import static fun.platonic.pulsar.persist.metadata.Mark.INACTIVE;
 
 /**

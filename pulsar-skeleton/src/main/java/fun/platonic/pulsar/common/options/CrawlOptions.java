@@ -2,7 +2,7 @@ package fun.platonic.pulsar.common.options;
 
 import com.beust.jcommander.Parameter;
 import fun.platonic.pulsar.common.ObjectCache;
-import fun.platonic.pulsar.common.PulsarConstants;
+import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.options.converters.DurationConverter;

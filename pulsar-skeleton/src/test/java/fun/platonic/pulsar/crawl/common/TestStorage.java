@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static fun.platonic.pulsar.common.PulsarConstants.EXAMPLE_URL;
-import static fun.platonic.pulsar.common.PulsarConstants.URL_TRACKER_HOME_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.EXAMPLE_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
 import static org.junit.Assert.*;
 

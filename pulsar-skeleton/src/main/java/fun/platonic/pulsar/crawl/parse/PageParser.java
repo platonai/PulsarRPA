@@ -42,7 +42,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_TIMEOUT;
 import static fun.platonic.pulsar.persist.metadata.Name.NO_FOLLOW;

@@ -51,7 +51,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import static fun.platonic.pulsar.common.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_ID;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_JOB_NAME;
 

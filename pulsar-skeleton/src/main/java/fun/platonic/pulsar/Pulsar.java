@@ -13,8 +13,6 @@ import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
 import fun.platonic.pulsar.net.SeleniumEngine;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.iterators.UnmodifiableIterator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -25,9 +23,8 @@ import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
-import static fun.platonic.pulsar.common.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
 
 public class Pulsar implements AutoCloseable {

@@ -18,7 +18,7 @@
  */
 
 import `fun`.platonic.pulsar.common.MetricsSystem
-import `fun`.platonic.pulsar.common.PulsarConstants.DISTANCE_INFINITE
+import `fun`.platonic.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE
 import `fun`.platonic.pulsar.common.URLUtil
 import `fun`.platonic.pulsar.common.config.ImmutableConfig
 import `fun`.platonic.pulsar.common.config.Params

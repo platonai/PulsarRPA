@@ -37,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static fun.platonic.pulsar.common.PulsarConstants.SHORTEST_VALID_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static fun.platonic.pulsar.persist.metadata.Name.CASH_KEY;
