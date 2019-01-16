@@ -75,13 +75,6 @@
         </profile>
 
         <profile>
-            <id>third</id>
-            <modules>
-                <module>pulsar-third</module>
-            </modules>
-        </profile>
-
-        <profile>
             <id>plugins</id>
             <activation>
                 <property>
@@ -91,6 +84,19 @@
             </activation>
             <modules>
                 <module>pulsar-plugins</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>third</id>
+            <activation>
+                <property>
+                    <name>active-third</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-third</module>
             </modules>
         </profile>
 

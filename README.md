@@ -44,7 +44,7 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
     Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
     java -jar metabase.jar
 
-# API
+# Web mining API
 Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
 
 Pulsar is highly modularized so it also can be used as a library and be embedded within other projects.
