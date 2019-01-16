@@ -59,49 +59,53 @@ public class WebServer implements Service {
     private static final String DEFAULT_LANGUAGE = "en";
 
     private static final String[] GENERIC = {
-        "Generic JNDI Data Source|javax.naming.InitialContext|" +
-                "java:comp/env/jdbc/Test|sa",
-        "Generic Teradata|com.teradata.jdbc.TeraDriver|" +
-                "jdbc:teradata://whomooz/|",
-        "Generic Snowflake|com.snowflake.client.jdbc.SnowflakeDriver|" +
-                "jdbc:snowflake://accountName.snowflakecomputing.com|",
-        "Generic Redshift|com.amazon.redshift.jdbc42.Driver|" +
-                "jdbc:redshift://endpoint:5439/database|",
-        "Generic Impala|org.cloudera.impala.jdbc41.Driver|" +
-                "jdbc:impala://clustername:21050/default|",
-        "Generic Hive 2|org.apache.hive.jdbc.HiveDriver|" +
-                "jdbc:hive2://clustername:10000/default|",
-        "Generic Hive|org.apache.hadoop.hive.jdbc.HiveDriver|" +
-                "jdbc:hive://clustername:10000/default|",
-        "Generic Azure SQL|com.microsoft.sqlserver.jdbc.SQLServerDriver|" +
-                "jdbc:sqlserver://name.database.windows.net:1433|",
-        "Generic Firebird Server|org.firebirdsql.jdbc.FBDriver|" +
-                "jdbc:firebirdsql:localhost:c:/temp/firebird/test|sysdba",
-        "Generic SQLite|org.sqlite.JDBC|" +
-                "jdbc:sqlite:test|sa",
-        "Generic DB2|com.ibm.db2.jcc.DB2Driver|" +
-                "jdbc:db2://localhost/test|" ,
-        "Generic Oracle|oracle.jdbc.driver.OracleDriver|" +
+        "Generic H2 (Server)|org.h2.Driver|jdbc:h2:tcp://localhost/~/test|sa"
+    };
+
+    private static final String[] GENERIC_OLD = {
+            "Generic JNDI Data Source|javax.naming.InitialContext|" +
+                    "java:comp/env/jdbc/Test|sa",
+            "Generic Teradata|com.teradata.jdbc.TeraDriver|" +
+                    "jdbc:teradata://whomooz/|",
+            "Generic Snowflake|com.snowflake.client.jdbc.SnowflakeDriver|" +
+                    "jdbc:snowflake://accountName.snowflakecomputing.com|",
+            "Generic Redshift|com.amazon.redshift.jdbc42.Driver|" +
+                    "jdbc:redshift://endpoint:5439/database|",
+            "Generic Impala|org.cloudera.impala.jdbc41.Driver|" +
+                    "jdbc:impala://clustername:21050/default|",
+            "Generic Hive 2|org.apache.hive.jdbc.HiveDriver|" +
+                    "jdbc:hive2://clustername:10000/default|",
+            "Generic Hive|org.apache.hadoop.hive.jdbc.HiveDriver|" +
+                    "jdbc:hive://clustername:10000/default|",
+            "Generic Azure SQL|com.microsoft.sqlserver.jdbc.SQLServerDriver|" +
+                    "jdbc:sqlserver://name.database.windows.net:1433|",
+            "Generic Firebird Server|org.firebirdsql.jdbc.FBDriver|" +
+                    "jdbc:firebirdsql:localhost:c:/temp/firebird/test|sysdba",
+            "Generic SQLite|org.sqlite.JDBC|" +
+                    "jdbc:sqlite:test|sa",
+            "Generic DB2|com.ibm.db2.jcc.DB2Driver|" +
+                    "jdbc:db2://localhost/test|" ,
+            "Generic Oracle|oracle.jdbc.driver.OracleDriver|" +
                     "jdbc:oracle:thin:@localhost:1521:XE|sa" ,
-        "Generic MS SQL Server 2000|com.microsoft.jdbc.sqlserver.SQLServerDriver|" +
-                "jdbc:microsoft:sqlserver://localhost:1433;DatabaseName=sqlexpress|sa",
-        "Generic MS SQL Server 2005|com.microsoft.sqlserver.jdbc.SQLServerDriver|" +
-                "jdbc:sqlserver://localhost;DatabaseName=test|sa",
-        "Generic PostgreSQL|org.postgresql.Driver|" +
-                "jdbc:postgresql:test|" ,
-        "Generic MySQL|com.mysql.jdbc.Driver|" +
-                "jdbc:mysql://localhost:3306/test|" ,
-        "Generic HSQLDB|org.hsqldb.jdbcDriver|" +
-                "jdbc:hsqldb:test;hsqldb.default_table_type=cached|sa" ,
-        "Generic Derby (Server)|org.apache.derby.jdbc.ClientDriver|" +
-                "jdbc:derby://localhost:1527/test;create=true|sa",
-        "Generic Derby (Embedded)|org.apache.derby.jdbc.EmbeddedDriver|" +
-                "jdbc:derby:test;create=true|sa",
-        "Generic H2 (Server)|org.h2.Driver|" +
-                "jdbc:h2:tcp://localhost/~/test|sa",
-        // this will be listed on top for new installations
-        "Generic H2 (Embedded)|org.h2.Driver|" +
-                "jdbc:h2:~/test|sa",
+            "Generic MS SQL Server 2000|com.microsoft.jdbc.sqlserver.SQLServerDriver|" +
+                    "jdbc:microsoft:sqlserver://localhost:1433;DatabaseName=sqlexpress|sa",
+            "Generic MS SQL Server 2005|com.microsoft.sqlserver.jdbc.SQLServerDriver|" +
+                    "jdbc:sqlserver://localhost;DatabaseName=test|sa",
+            "Generic PostgreSQL|org.postgresql.Driver|" +
+                    "jdbc:postgresql:test|" ,
+            "Generic MySQL|com.mysql.jdbc.Driver|" +
+                    "jdbc:mysql://localhost:3306/test|" ,
+            "Generic HSQLDB|org.hsqldb.jdbcDriver|" +
+                    "jdbc:hsqldb:test;hsqldb.default_table_type=cached|sa" ,
+            "Generic Derby (Server)|org.apache.derby.jdbc.ClientDriver|" +
+                    "jdbc:derby://localhost:1527/test;create=true|sa",
+            "Generic Derby (Embedded)|org.apache.derby.jdbc.EmbeddedDriver|" +
+                    "jdbc:derby:test;create=true|sa",
+            "Generic H2 (Server)|org.h2.Driver|" +
+                    "jdbc:h2:tcp://localhost/~/test|sa",
+            // this will be listed on top for new installations
+            "Generic H2 (Embedded)|org.h2.Driver|" +
+                    "jdbc:h2:~/test|sa",
     };
 
     private static int ticker;

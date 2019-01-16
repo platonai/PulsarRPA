@@ -6,7 +6,7 @@ Pulsar is a full featured Web crawler as well as a Web mining framework.
 - Web SQL: Do all Web mining jobs using SQL
 - BI Integration: Turn Web sites into tables and charts using just one simple SQL
 - Ajax support: Access the Web automatically, behaviour like a human
-- Web site monitoring: monitor news sites, e-commerce sites Out-of-box
+- Web site monitoring: monitor news sites, e-commerce sites out-of-box
 - Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
 - Various data store: HBase/Spark/MongoDB, etc
 
@@ -34,13 +34,16 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
     cd pulsar && mvn
 ## Run the server
     bin/pulsar
+## Use an interactive Web console
+   Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 ## Execute a single Web SQL
+    -- testing ...
     bin/pulsar sql the-sql-you-want-to-perform
 ## Use an interactive console
+    -- testing ...
     bin/pulsar sql
-## Use an interactive Web console
-    Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 ## Use advanced BI
+    -- testing ...
     Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
     java -jar metabase.jar
 

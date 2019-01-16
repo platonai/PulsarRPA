@@ -74,7 +74,7 @@ Initial Developer: H2 Group
             </tr>
             <tr class="login">
                 <td class="login">${text.a.password}:</td>
-                <td class="login"><input type="password" name="password" value="" style="width:200px;" /></td>
+                <td class="login"><input type="password" name="password" value="" style="width:200px;" />default 'sa'</td>
             </tr>
             <tr class="login">
                 <td class="login"></td>
@@ -89,42 +89,13 @@ Initial Developer: H2 Group
         </table>
         <br />
         <div id="url" style="display: none">
-            <h2>H2 Database URLs</h2>
-            <h3>Embedded</h3>
-            <p>
-            The URL <code>jdbc:h2:~/test</code> means the database is stored in
-            the user home directory in files starting with 'test'.
-            Absolute locations like <code>jdbc:h2:/data/db/test</code> are supported.
-            In embedded mode, the database runs in the same process as the application.
-            Only one process may access a database at any time.
-            Databases are automatically created if they don't exist.
-            <b>Warning</b>: if no path is used (for example jdbc:h2:test),
-            then the database is stored in the current working directory
-            (the directory where the application was started).
-            URLs of the form jdbc:h2:data/test are relative to
-            the current working directory. It is recommended to use locations relative to ~
-            or absolute locations.
-            </p>
-
-            <h4>Remote (client/server)</h4>
+            <h3>Connect to Web SQL Server</h3>
             <p>
             The URL <code>jdbc:h2:tcp://localhost/~/test</code> means connect
             over TCP/IP to the H2 TCP server running on this computer, and open a database
             called test in the user home directory. The server must be started first.
             Any number of clients can connect to the same database.
             The same location rules as for embedded databases apply.
-            </p>
-
-            <h4>In-Memory</h4>
-            <p>
-            The URL <code>jdbc:h2:mem:test</code> means open an in-memory database
-            named 'test'. Data is not persisted, and lost when the last connection to the database
-            is closed. Multiple threads can access the same database, but data is only visible
-            within the same process.
-            </p>
-
-            <p>
-            For more information, see <a target="_blank" href="http://www.h2database.com/html/features.html#database_url">Database URL Overview</a>.
             </p>
         </div>
         <p class="error">${error}</p>

@@ -146,7 +146,7 @@ class TestManual: TestBase() {
      * */
     @Test
     fun extractByBox() {
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>100)"
+        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
 
         val sql = """
 SELECT
@@ -168,7 +168,7 @@ WHERE DOM_CH(DOM) > 100;
      * */
     @Test
     fun extractByBox2() {
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>100)"
+        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>=40)"
 
         val sql = """
 SELECT
@@ -239,7 +239,7 @@ FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
      * */
     @Test
     fun monitorProductColumnForMia() {
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>100)"
+        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
         val titleExpr = "TOP>=287 && TOP<=307 && LEFT==472 && width==560 && height>=27 && height<=54 && char>=34 && char<=41 && char_max>=18 && char_max<=25"
 
         val sql = """
@@ -265,7 +265,7 @@ WHERE DOM_CH(DOM) > 100
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
                 "FROM LOAD_AND_GET_FEATURES('$productDetailUrl') WHERE SEQ > 170 AND SEQ < 400")
 
-        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>100)"
+        val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>30)"
 
         val sql = """
 SELECT
