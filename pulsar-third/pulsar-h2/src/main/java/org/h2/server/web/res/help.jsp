@@ -69,7 +69,8 @@ function set(s) {
     ${text.helpAddAnotherRow}<br />
     ${text.helpQuery}<br />
     ${text.helpUpdate}<br />
-    ${text.helpDeleteRow}
+    ${text.helpDeleteRow}<br />
+    Web SQL
 </a></td><td>
     DROP TABLE IF EXISTS TEST;<br />
     CREATE TABLE TEST(ID INT PRIMARY KEY,<br />
@@ -78,7 +79,8 @@ function set(s) {
     INSERT INTO TEST VALUES(2, 'World');<br />
     SELECT * FROM TEST ORDER BY ID;<br />
     UPDATE TEST SET NAME='Hi' WHERE ID=1;<br />
-    DELETE FROM TEST WHERE ID=2;
+    DELETE FROM TEST WHERE ID=2;<br />
+    SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
 </td></tr>
 <tr><td><a href="javascript:set('HELP ');">
     ${text.a.help}

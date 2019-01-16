@@ -74,7 +74,7 @@ Initial Developer: H2 Group
             </tr>
             <tr class="login">
                 <td class="login">${text.a.password}:</td>
-                <td class="login"><input type="password" name="password" value="" style="width:200px;" />default 'sa'</td>
+                <td class="login"><input type="password" name="password" value="sa" style="width:200px;" />&nbsp;default: 'sa'</td>
             </tr>
             <tr class="login">
                 <td class="login"></td>

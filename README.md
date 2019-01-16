@@ -21,7 +21,7 @@ Turn a Web page into a table:
 
 The SQL above downloads Web page from wikipedia, find out the references section and extract all external reference links.
 
-Check [fun.platonic.pulsar.ql.TestManual](https://github.com/platonai/pulsar/blob/master/pulsar-ql-server/src/test/kotlin/fun/platonic/pulsar/ql/TestManual.kt) to see more example SQLs. All SQL functions can be found under fun.platonic.pulsar.ql.h2.udfs.
+Check [fun.platonic.pulsar.ql.TestManual](https://github.com/platonai/pulsar/blob/master/pulsar-ql-server/src/test/kotlin/fun/platonic/pulsar/ql/TestManual.kt) to see more example SQLs. All SQL functions can be found under [fun.platonic.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
 
 ## BI Integration
 Use the customized, exiting BI [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 
@@ -34,23 +34,23 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
     cd pulsar && mvn
 ## Start the server
     bin/pulsar
-## Use an interactive Web console
-Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 ## Execute a single Web SQL
-    bin/pulsar sql -sql "the-sql-you-want-to-execute"
+    bin/pulsar sql -sql "sql-to-execute"
 For example:
 
     bin/pulsar sql -sql "SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external')"
 ## Use an interactive console
     bin/pulsar sql
+## Use an interactive Web console
+Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
+
 ## Use advanced BI
 Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
 
+    -- testing
     java -jar metabase.jar
 
 # Web mining APIs
-Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
-
 Pulsar is highly modularized so it also can be used as a library and be embedded within other projects.
 
 Pulsar supports selenium so you can do web scraping using selenium's native api.
@@ -77,8 +77,8 @@ For batch Web scraping(in kotlin):
 The examples can be found in fun/platonic/pulsar/examples.
 
 # Large scale Web spider
-Pulsar supports Nutch style large-scalar crawler in batches, for example,
-to crawl Web pages and index using solr, run script:
+Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
+For example, to crawl Web pages and index using solr, run script:
 
     bin/crawl.sh default false information_tmp http://master:8983/solr/information_tmp/ 1
 
