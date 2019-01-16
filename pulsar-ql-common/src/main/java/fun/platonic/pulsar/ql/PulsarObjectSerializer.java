@@ -39,7 +39,7 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
             }
 
             if (LOG.isDebugEnabled() && bufferSizeSummarizer.getN() > 5) {
-                LOG.debug("DOM summery at 80% quantile: " + len);
+                // LOG.debug("DOM summery at 80% quantile: " + len);
             }
 
             DataOutputBuffer buffer = new DataOutputBuffer((int) len);
@@ -63,7 +63,7 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
 
         int type = in.readInt();
 
-        System.out.println("Deserializing " + type);
+        // System.out.println("Deserializing " + type);
 
         if (type == ValueDom.type) {
             ValueDomWritable writable = new ValueDomWritable();

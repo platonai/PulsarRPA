@@ -15,21 +15,9 @@ import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RE
 import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 
 public class H2Shell extends Shell {
-    public H2Shell() {
-        System.setProperty("h2.sessionFactory", fun.platonic.pulsar.ql.h2.H2QueryEngine.class.getName());
 
-        if (System.getProperty(PULSAR_CONFIG_PREFERRED_DIR) == null) {
-            System.setProperty(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf");
-        }
-        if (System.getProperty(PULSAR_CONFIG_RESOURCES) == null) {
-            System.setProperty(PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml");
-        }
-        if (System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION) == null) {
-            System.setProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION);
-        }
-    }
     /**
-     * Run the shell tool with the given command line settings.
+     * Run the shell tool with the default command line settings.
      *
      * @param args the command line settings
      */
@@ -59,8 +47,6 @@ public class H2Shell extends Shell {
 
         List<String> l = Lists.newArrayList("-url", url, "-user", user, "-password", password, "-driver", driver);
         options.addAll(0, l);
-        System.out.println(options.stream().collect(Collectors.joining("\n")));
-
         super.runTool(options.toArray(new String[0]));
     }
 

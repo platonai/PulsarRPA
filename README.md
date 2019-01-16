@@ -37,10 +37,8 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
 ## Use an interactive Web console
 Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 ## Execute a single Web SQL
-    -- testing ...
-    bin/pulsar sql the-sql-you-want-to-perform
+    bin/pulsar sql -sql "the-sql-you-want-to-execute"
 ## Use an interactive console
-    -- testing ...
     bin/pulsar sql
 ## Use advanced BI
 Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
