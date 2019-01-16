@@ -53,7 +53,7 @@ import java.util.Map;
 
 import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_JOB_NAME;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_JOB_NAME;
 
 public abstract class PulsarJob implements PulsarJobBase {
 
@@ -163,7 +163,7 @@ public abstract class PulsarJob implements PulsarJobBase {
         String jobDescription = getJobName() + " - " + conf.get(PULSAR_CONFIG_ID, "");
         LOG.info("\n\n\n\n------------------------- " + jobDescription + " -------------------------");
         LOG.info("Job started at " + DateTimeUtil.format(startTime));
-        conf.set(PULSAR_JOB_NAME, getJobName());
+        conf.set(PARAM_JOB_NAME, getJobName());
 
         status.put("startTime", DateTimeUtil.format(startTime));
     }

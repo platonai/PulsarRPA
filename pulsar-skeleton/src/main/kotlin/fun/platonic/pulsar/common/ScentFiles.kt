@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.common.config.CapabilityTypes.SCENT_TASK_IDENT
+import `fun`.platonic.pulsar.common.config.PulsarConstants.*
 import `fun`.platonic.pulsar.persist.WebPage
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
@@ -15,18 +15,31 @@ import java.nio.file.StandardOpenOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
+/**
+ * Created by vincent on 18-3-23.
+ * Copyright @ 2013-2017 Platon AI. All rights reserved
+ */
 object ScentPaths {
 
-    val tmpDir = Paths.get(System.getProperty("java.io.tmpdir"),"pulsar-" + System.getenv("USER"))!!
-
-    val rootDir = tmpDir
-
-    val defaultTaskIdent = System.getProperty(SCENT_TASK_IDENT, DateTimeUtil.now("MMddHH"))!!
+    val tmpDir = PULSAR_TMP_DIR
+    val rootDir = PULSAR_ROOT
+    val cacheDir = PATH_PULSAR_CACHE_DIR
+    val webCacheDir = get(PATH_PULSAR_CACHE_DIR, "web")
 
     private val rootDirStr get() = rootDir.toString()
 
+    init {
+        if (!Files.exists(tmpDir)) Files.createDirectories(tmpDir)
+        if (!Files.exists(cacheDir)) Files.createDirectories(cacheDir)
+        if (!Files.exists(webCacheDir)) Files.createDirectories(webCacheDir)
+    }
+
+    fun get(baseDirectory: Path, vararg more: String): Path {
+        return Paths.get(baseDirectory.toString(), *more)
+    }
+
     fun get(first: String, vararg more: String): Path {
-        return Paths.get(rootDirStr, first, *more)
+        return Paths.get(rootDirStr, first.removePrefix(rootDirStr), *more)
     }
 
     fun fromUri(uri: String, suffix: String = ""): String {

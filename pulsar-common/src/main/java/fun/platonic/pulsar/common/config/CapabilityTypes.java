@@ -32,15 +32,15 @@ public interface CapabilityTypes {
     String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
     String PULSAR_CONFIG_RESOURCES = "pulsar.config.resources";
 
-    String PULSAR_TMP_DIR = "pulsar.tmp.dir";
-    String PULSAR_OUTPUT_DIR = "pulsar.output.dir";
-    String PULSAR_REPORT_DIR = "pulsar.report.dir";
+    String PARAM_TMP_DIR = "pulsar.tmp.dir";
+    String PARAM_OUTPUT_DIR = "pulsar.output.dir";
+    String PARAM_REPORT_DIR = "pulsar.report.dir";
     String PULSAR_CLUSTER_SLAVES = "pulsar.cluster.slaves";
     String CRAWL_ID = "storage.crawl.id";
     String CRAWL_ROUND = "crawl.round";
     String CRAWL_MAX_DISTANCE = "crawl.max.distance";
     String BATCH_ID = "pulsar.batch.name";
-    String PULSAR_JOB_NAME = "pulsar.job.name";
+    String PARAM_JOB_NAME = "pulsar.job.name";
     String MAPREDUCE_JOB_REDUCES = "mapreduce.job.reduces";
     String MAPPER_LIMIT = "pulsar.mapper.limit";
     String REDUCER_LIMIT = "pulsar.reducer.limit";

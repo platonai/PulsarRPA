@@ -1,5 +1,7 @@
 package `fun`.platonic.pulsar.ql
 
+import `fun`.platonic.pulsar.common.ScentFiles
+import `fun`.platonic.pulsar.common.ScentPaths
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine
 import `fun`.platonic.pulsar.ql.utils.ResultSetFormatter
 import org.h2.store.fs.FileUtils
@@ -98,7 +100,8 @@ abstract class TestBase {
         Db.deleteDb(name)
 
         val content = history.joinToString("\n") { it }
-        val path = Paths.get("/tmp/sql-history.sql")
+        val path = ScentPaths.get("test", "sql-history.sql")
+        Files.createDirectories(path.parent)
         Files.write(path, content.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)
     }
 

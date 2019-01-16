@@ -28,10 +28,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_REPORT_DIR;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_JOB_NAME;
 import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_CACHE_DIR;
 import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_REPORT_DIR;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_JOB_NAME;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_REPORT_DIR;
 
 /**
  * Created by vincent on 16-10-12.
@@ -62,15 +62,15 @@ public class MetricsSystem implements AutoCloseable {
     public MetricsSystem(WebDb webDb, ImmutableConfig conf) {
         this.conf = conf;
         this.hostname = NetUtil.getHostname();
-        this.jobName = conf.get(PULSAR_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm"));
+        this.jobName = conf.get(PARAM_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm"));
         this.urlPrefix = PulsarConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimeUtil.now("yyyy/MM/dd") + "/" + jobName + "/" + hostname;
         this.reportSuffix = jobName;
         this.dayOfWeek = String.valueOf(LocalDate.now().getDayOfWeek().getValue());
 
         try {
-            reportDir = conf.getPath(PULSAR_REPORT_DIR, PATH_PULSAR_REPORT_DIR);
-            // TODO: use PulsarFiles
-            reportDir = Paths.get(reportDir.toString(), DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd"));
+            reportDir = conf.getPath(PARAM_REPORT_DIR, PATH_PULSAR_REPORT_DIR);
+            String ident = DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd");
+            reportDir = ScentPaths.INSTANCE.get(reportDir.toString(), ident);
             Files.createDirectories(reportDir);
         } catch (IOException e) {
             LOG.error(e.toString());
@@ -152,7 +152,7 @@ public class MetricsSystem implements AutoCloseable {
             metricsPage = WebPage.newInternalPage(url, "Pulsar Metrics Page");
             metricsPage.setContent("");
             metricsPage.getMetadata().set("JobName",
-                    conf.get(PULSAR_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm")));
+                    conf.get(PARAM_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm")));
         }
 
         return metricsPage;

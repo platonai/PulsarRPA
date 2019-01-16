@@ -6,9 +6,12 @@ import `fun`.platonic.pulsar.persist.WebPage
 import `fun`.platonic.pulsar.ql.annotation.UDAggregation
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
+import `fun`.platonic.pulsar.ql.h2.udas.GroupCollect
+import `fun`.platonic.pulsar.ql.h2.udas.GroupFetch
 import `fun`.platonic.pulsar.ql.h2.udfs.CommonFunctions
 import `fun`.platonic.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
+import org.h2.api.Aggregate
 import org.h2.engine.SessionInterface
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
@@ -19,6 +22,8 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
 
     init {
         registerUdfsInPackage(dbSession.implementation as org.h2.engine.Session, "fun.platonic.nebula.ql")
+        registerUdaf(dbSession.implementation, GroupCollect::class)
+        registerUdaf(dbSession.implementation, GroupFetch::class)
     }
 
     fun parseToValue(page: WebPage): ValueDom {

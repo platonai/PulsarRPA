@@ -2,6 +2,8 @@ package `fun`.platonic.pulsar.ql.h2.udfs
 
 import `fun`.platonic.pulsar.common.PulsarContext.unmodifiedConfig
 import `fun`.platonic.pulsar.common.PulsarFiles
+import `fun`.platonic.pulsar.common.ScentFiles
+import `fun`.platonic.pulsar.common.ScentPaths
 import `fun`.platonic.pulsar.common.proxy.ProxyPool
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
@@ -13,8 +15,6 @@ import org.slf4j.LoggerFactory
 @UDFGroup(namespace = "ADMIN")
 object AdminFunctions {
     val LOG = LoggerFactory.getLogger(AdminFunctions::class.java)
-
-    val fs = PulsarFiles()
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context h2session: Session, message: String): String {
@@ -48,8 +48,8 @@ object AdminFunctions {
     fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
         checkPrivilege(h2session)
         val page = H2QueryEngine.getSession(h2session).load(url)
-        val path = fs.paths.get("cache", "web", fs.fromUri(page.url, ".htm"))
-        return fs.saveTo(page, path).toString()
+        val path = ScentPaths.get(ScentPaths.webCacheDir.toString(), ScentPaths.fromUri(page.url, ".htm"))
+        return ScentFiles.saveTo(page, path).toString()
     }
 
     @UDFunction

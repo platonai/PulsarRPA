@@ -24,12 +24,6 @@ public class PulsarFiles {
 
     public static final Logger LOG = LoggerFactory.getLogger(PulsarFiles.class);
 
-    private PulsarPaths paths = PulsarPaths.getInstance();
-
-    public PulsarPaths getPaths() {
-        return paths;
-    }
-
     public static Path writeLastGeneratedRows(long rows) throws IOException {
         Path path = PATH_LAST_GENERATED_ROWS;
         Files.write(path, (rows + "\n").getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -70,35 +64,17 @@ public class PulsarFiles {
      */
     public void createSharedFileTask(String url) {
         try {
-            Path path = paths.get(paths.getWebCacheDir(), fromUri(url) + ".task");
+            ScentPaths paths = ScentPaths.INSTANCE;
+            Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(url, ".task"));
             Files.write(path, url.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
         } catch (IOException e) {
             LOG.error(e.toString());
         }
     }
 
-    public Path saveTo(WebPage page, Path path) {
-        return saveTo(page.getContentAsString(), path);
-    }
-
-    public Path saveTo(String content, Path path) {
-        return saveTo(content.getBytes(), path);
-    }
-
-    public Path saveTo(byte[] content, Path path) {
-        try {
-            Files.deleteIfExists(path);
-            Files.write(path, content, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            return path;
-        } catch (IOException e) {
-            LOG.error(e.toString());
-        }
-
-        return Paths.get("dev", "null");
-    }
-
     public String getCachedWebPage(String url) {
-        Path path = paths.get(paths.getWebCacheDir(), fromUri(url, ".htm"));
+        ScentPaths paths = ScentPaths.INSTANCE;
+        Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(url, ".htm"));
         if (Files.notExists(path)) {
             return null;
         }
@@ -110,14 +86,6 @@ public class PulsarFiles {
         }
 
         return null;
-    }
-
-    public String fromUri(String url) {
-        return DigestUtils.md5Hex(url);
-    }
-
-    public String fromUri(String url, String suffix) {
-        return DigestUtils.md5Hex(url) + suffix;
     }
 
     public void logUnreachableHosts(Collection<String> unreachableHosts) {

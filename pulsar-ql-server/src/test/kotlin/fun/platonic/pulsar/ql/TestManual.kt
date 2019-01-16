@@ -51,7 +51,7 @@ class TestManual: TestBase() {
         execute("SELECT DOM_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
         execute("SELECT DOM_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5) WHERE LOCATE('白金版', DOM_TITLE(DOM)) > 0")
 
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl') WHERE WIDTH=248 AND HEIGHT=228 LIMIT 100")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl') WHERE WIDTH=248 AND HEIGHT=228 LIMIT 100")
     }
 
     @Test
@@ -69,22 +69,22 @@ class TestManual: TestBase() {
     @Test
     fun testLoadAndGetLinksWithSqlCondition() {
         execute("""SELECT *
-            FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl')
+            FROM LOAD_AND_GET_FEATURES('$productIndexUrl')
             WHERE WIDTH BETWEEN 240 AND 250 AND HEIGHT BETWEEN 360 AND 370 LIMIT 10""")
 
         execute("""SELECT DOM_ABS_HREF(DOM_SELECT_FIRST(DOM, 'a')) AS HREF
-            FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl')
+            FROM LOAD_AND_GET_FEATURES('$productIndexUrl')
             WHERE WIDTH BETWEEN 240 AND 250 AND HEIGHT BETWEEN 360 AND 370 LIMIT 10""")
 
         execute("""SELECT DOM_ABS_HREF(DOM_SELECT_FIRST(DOM, 'a')) AS HREF
-            FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl')
+            FROM LOAD_AND_GET_FEATURES('$productIndexUrl')
             WHERE SIBLING > 250 LIMIT 10""")
     }
 
     @Test
     fun loadAndGetLinksUsingPreDefinedFunction() {
         val expr = "width > 240 && width < 250 && height > 360 && height < 370"
-        execute("SELECT * FROM DOM_LOAD_AND_GET_LINKS('$productIndexUrl', '*:expr($expr)')")
+        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl', '*:expr($expr)')")
     }
 
     @Test
@@ -96,13 +96,13 @@ class TestManual: TestBase() {
     fun loadOutPagesUsingPreDefinedFunction() {
         val expr = "width > 240 && width < 250 && height > 360 && height < 370"
         execute("CALL SET_PAGE_EXPIRES('1s', 1)")
-        execute("SELECT DOM, DOM_TEXT(DOM) FROM DOM_LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)', 0, 20)")
+        execute("SELECT DOM, DOM_TEXT(DOM) FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)', 0, 20)")
     }
 
     @Test
     fun loadAndGetFeatures() {
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfList', 0, 20)")
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$productDetailUrl', 'DIV,UL,UI,P', 0, 20)")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfList', 0, 20)")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productDetailUrl', 'DIV,UL,UI,P', 0, 20)")
     }
 
     /**
@@ -113,7 +113,7 @@ class TestManual: TestBase() {
         val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         execute("""SELECT
             DOM, DOM_FIRST_HREF(DOM), TOP, LEFT, WIDTH, HEIGHT, CHAR, IMG, A, SIBLING, DOM_TEXT(DOM)
-            FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
+            FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
             ORDER BY SIBLING DESC, CHAR DESC LIMIT 500""")
     }
 
@@ -125,7 +125,7 @@ class TestManual: TestBase() {
         val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         execute("""SELECT
             DOM_PARENT(DOM), DOM, DOM_FIRST_HREF(DOM), TOP, LEFT, WIDTH, HEIGHT, CHAR, IMG, A, SIBLING, DOM_TEXT(DOM)
-            FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
+            FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
             ORDER BY SIBLING DESC, CHAR DESC LIMIT 50""")
     }
 
@@ -137,7 +137,7 @@ class TestManual: TestBase() {
         val expr = "child > 20 && char > 100 && width > 800"
         execute("""SELECT
             DOM, DOM_FIRST_HREF(DOM), TOP, LEFT, WIDTH, HEIGHT, CHAR, IMG, A, CHILD, SIBLING
-            FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
+            FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '*:expr($expr)')
             ORDER BY CHILD DESC, CHAR DESC LIMIT 50""")
     }
 
@@ -157,7 +157,7 @@ SELECT
   DOM_BASE_URI(DOM) AS URI,
   IN_BOX_FIRST_IMG(DOM, '405x405') AS MAIN_IMAGE,
   DOM_IMG(DOM) AS NIMG
-FROM DOM_LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
 WHERE DOM_CH(DOM) > 100;
 """
         execute(sql)
@@ -177,7 +177,7 @@ SELECT
   DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.brand')) AS W,
   DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.brand')) AS H,
   IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM DOM_LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
 WHERE DOM_CH(DOM) > 100
 """
         execute(sql)
@@ -192,19 +192,19 @@ WHERE DOM_CH(DOM) > 100
 
         // Tencent news have a redirect mechanism, we have to fix this
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
-                "FROM DOM_LOAD_AND_GET_FEATURES('$portal') " +
+                "FROM LOAD_AND_GET_FEATURES('$portal') " +
                 "WHERE SIBLING>20 AND DOM_TEXT_LENGTH(DOM) > 10 AND TOP > 300 AND TOP < 3000")
 
         val detail = "http://new.qq.com/omn/20180424/20180424A104ZC.html"
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
-                "FROM DOM_LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
+                "FROM LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
 
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
   DOM_FIRST_TEXT(DOM, '#LeftTool') AS DATE_TIME,
   DOM_FIRST_TEXT(DOM, '.content-article') AS CONTENT
-FROM DOM_LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 100)
+FROM LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 100)
 """
         execute(sql)
     }
@@ -217,19 +217,19 @@ FROM DOM_LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 100)
         val portal = "http://news.cnhubei.com/"
 
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
-                "FROM DOM_LOAD_AND_GET_FEATURES('$portal') " +
+                "FROM LOAD_AND_GET_FEATURES('$portal') " +
                 "WHERE SIBLING>30 AND DOM_TEXT_LENGTH(DOM) > 10 AND TOP > 300 AND TOP < 3000")
 
         val detail = "http://news.cnhubei.com/xw/jj/201804/t4102239.shtml"
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
-                "FROM DOM_LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
+                "FROM LOAD_AND_GET_FEATURES('$detail') WHERE SEQ > 170 AND SEQ < 400")
 
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
   DOM_FIRST_TEXT(DOM, '.jcwsy_mini_content') AS DATE_TIME,
   DOM_FIRST_TEXT(DOM, '.content_box') AS CONTENT
-FROM DOM_LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
+FROM LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
 """
         execute(sql)
     }
@@ -247,7 +247,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, 'div:iN-bOx(560,27),*:IN-BOX(560,56)') AS TITLE,
   DOM_FIRST_TEXT(DOM, '*:expr($titleExpr)') AS TITLE2,
   IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM DOM_LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 20)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 20)
 WHERE DOM_CH(DOM) > 100
 """
         execute(sql)
@@ -259,11 +259,11 @@ WHERE DOM_CH(DOM) > 100
     @Test
     fun monitorProductColumnForMia2() {
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
-                "FROM DOM_LOAD_AND_GET_FEATURES('$productIndexUrl') " +
+                "FROM LOAD_AND_GET_FEATURES('$productIndexUrl') " +
                 "WHERE SIBLING>30 AND DOM_TEXT_LENGTH(DOM) > 10 AND TOP > 300 AND TOP < 3000")
 
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, CHAR, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +
-                "FROM DOM_LOAD_AND_GET_FEATURES('$productDetailUrl') WHERE SEQ > 170 AND SEQ < 400")
+                "FROM LOAD_AND_GET_FEATURES('$productDetailUrl') WHERE SEQ > 170 AND SEQ < 400")
 
         val restrictCss = "*:expr(img>0 && width>200 && height>200 && sibling>100)"
 
@@ -271,7 +271,7 @@ WHERE DOM_CH(DOM) > 100
 SELECT
   DOM_FIRST_TEXT(DOM, 'div:iN-bOx(560,27),*:IN-BOX(560,56)') AS TITLE,
   IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM DOM_LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 20)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 20)
 WHERE DOM_CH(DOM) > 100
 """
         execute(sql)

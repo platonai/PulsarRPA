@@ -1,9 +1,6 @@
 package fun.platonic.pulsar.net;
 
-import fun.platonic.pulsar.common.GlobalExecutor;
-import fun.platonic.pulsar.common.ObjectCache;
-import fun.platonic.pulsar.common.PulsarFiles;
-import fun.platonic.pulsar.common.StringUtil;
+import fun.platonic.pulsar.common.*;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.config.Params;
@@ -314,8 +311,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         // headers.put(CONTENT_TYPE, "");
 
         if (LOG.isDebugEnabled()) {
-            Path path = fs.getPaths().get("cache",  "web", fs.fromUri(page.getUrl(), ".htm"));
-            fs.saveTo(pageSource, path);
+            ScentPaths paths = ScentPaths.INSTANCE;
+            Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(page.getUrl(), ".htm"));
+            ScentFiles.INSTANCE.saveTo(pageSource, path, true);
         }
 
         return pageSource;
@@ -422,8 +420,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             if (LOG.isDebugEnabled()) {
                 try {
                     byte[] bytes = remoteWebDriver.getScreenshotAs(OutputType.BYTES);
-                    Path path = fs.getPaths().get("cache",  "web", fs.fromUri(page.getUrl(), ".png"));
-                    fs.saveTo(bytes, path);
+                    ScentPaths paths = ScentPaths.INSTANCE;
+                    Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(page.getUrl(), ".png"));
+                    ScentFiles.INSTANCE.saveTo(bytes, path, true);
                 } catch (Exception e) {
                     LOG.warn("Failed to take screenshot for " + page.getUrl());
                 }

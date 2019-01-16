@@ -6,8 +6,9 @@ Pulsar is a full featured Web crawler as well as a Web mining framework.
 - Web SQL: Do all Web mining jobs using SQL
 - BI Integration: Turn Web sites into tables and charts using just one simple SQL
 - Ajax support: Access the Web automatically, behaviour like a human
+- Web site monitoring: monitor news sites, e-commerce sites Out-of-box
 - Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
-- Various data store
+- Various data store: HBase/Spark/MongoDB, etc
 
 ## Web SQL
 Turn a Web page into a table:

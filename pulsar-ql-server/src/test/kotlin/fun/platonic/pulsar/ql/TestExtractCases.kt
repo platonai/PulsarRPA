@@ -40,7 +40,7 @@ SELECT DISTINCT
     LENGTH(DOM_TEXT(DOM)) AS anchorLength,
     DOM_TEXT(DOM) AS anchorText
 FROM
-    DOM_LOAD_AND_SELECT('$url', '.result a')
+    LOAD_AND_SELECT('$url', '.result a')
 WHERE
     REGEXP_LIKE(DOM_TEXT(DOM), '^[1-9]{1,2}$')
 """
@@ -53,7 +53,7 @@ WHERE
 SELECT
   DOM_ABSHREF(DOM_SELECTNTH(DOM, 'a', 2)) AS Href
 FROM
-  DOM_LOAD_AND_GET_FEATURES('${productIndexUrl}', 'DIV', 1, 10000)
+  LOAD_AND_GET_FEATURES('$productIndexUrl', 'DIV', 1, 10000)
 WHERE
   WIDTH BETWEEN 210 AND 230
   AND
@@ -74,7 +74,7 @@ INSERT INTO MOGUJIE_ITEM_LINKS
 SELECT
   DOM_ABSHREF(DOM_SELECTNTH(DOM, 'a', 2)) AS Href
 FROM
-  DOM_LOAD_AND_GET_FEATURES('${url}', 'DIV', 1, 10000)
+  LOAD_AND_GET_FEATURES('$url', 'DIV', 1, 10000)
 WHERE
   WIDTH BETWEEN 210 AND 230
   AND
@@ -119,7 +119,7 @@ FROM LOAD_ALL(DOM_ALL_HREFS(DOM_LOAD('$productIndexUrl'), '$expr'))
     @Test
     fun testAccumulateVividLinks() {
         val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=detail]"
-        val rs = stat.executeQuery("SELECT * FROM DOM_LOAD_AND_GET_OUT_LINKS('$productIndexUrl --expires=1s', '$expr')")
+        val rs = stat.executeQuery("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl --expires=1s', '$expr')")
         println(ResultSetFormatter(rs))
         val session = PulsarContext.createSession()
         println(WebPageFormatter(session.getOrNil(productIndexUrl)))
@@ -154,7 +154,7 @@ FROM LOAD_ALL(DOM_ALL_HREFS(DOM_LOAD('$productIndexUrl'), '$expr'))
     fun testLoadOutPagesForMia() {
         val url = urlGroups["mia"]!![0]
         val limit = 100
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30 LIMIT $limit")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30 LIMIT $limit")
 
 //        execute("CALL SET_PAGE_EXPIRES('1s', 10)")
 //        execute("CALL SET_FETCH_MODE('SELENIUM', 10)")
@@ -168,7 +168,7 @@ SELECT
   DOMWIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
   DOMHEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
   DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
 """
         execute(sql)
 
@@ -177,7 +177,7 @@ SELECT
   DOM_BASE_URI(DOM) AS URI,
   DOM_FIRST_TEXT(DOM, '.brand') AS TITLE,
   DOM_OUTER_HTML(DOM_SELECT_FIRST(DOM, '#ScrapingMetaInformation')) AS META_INFO
-FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
 """
         execute(sql2)
     }
@@ -186,7 +186,7 @@ FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
         // val url = urlGroups["meilishuo"]!![0]
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
         val expr = "*:expr(width>=210 && width<=230 && height>=380 && height<=420 && sibling>30 ) a[href~=detail]"
@@ -196,7 +196,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, 'h1:expr(_char>10 && _img == 0)') AS Title,
   DOM_FIRST_TEXT(DOM, '.price') AS Price,
   DOM_FIRST_TEXT(DOM, '#J_ParameterTable') AS Parameters
-FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
 """
         execute(sql)
     }
@@ -204,7 +204,7 @@ FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
     @Test
     fun testLoadOutPagesForMeilishuo() {
         val url = urlGroups["meilishuo"]!![0]
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 100")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 100")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
         val expr = "*:expr(width>=200 && width<=250 && height>=350 && height<=400 && sibling>100 ) a[href~=detail]"
@@ -214,7 +214,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, 'h1:expr(char>10 && img == 0)') AS Title,
   DOM_FIRST_TEXT(DOM, '.price') AS Price,
   DOM_FIRST_TEXT(DOM, '#J_ParameterTable') AS Parameters
-FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
 """
         execute(sql)
     }
@@ -223,7 +223,7 @@ FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
     fun testLoadOutPagesForVipCom() {
         val url = urlGroups["vip"]!![0]
         execute("CALL SET_SCROLL_DOWN_COUNT(3, 1)")
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
 //        val expr = "*:expr(WIDTH>=200 && WIDTH<=250 && HEIGHT>=350 && HEIGHT<=400 && _img>0 ) a[href~=detail]"
@@ -234,7 +234,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, '.pro-title-main') AS Title,
   DOM_FIRST_TEXT(DOM, '.price-sell') AS Price,
   DOM_FIRST_TEXT(DOM, '.g-pro-param') AS Parameters
-FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
+FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
 """
         execute(sql)
     }
@@ -243,7 +243,7 @@ FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
     fun testLoadOutPagesForJd() {
         val url = urlGroups["jd"]!![0]
         execute("CALL SET_SCROLL_DOWN_COUNT(3, 1)")
-        execute("SELECT * FROM DOM_LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
         val restrictCss = "*:expr(IMG>0 && WIDTH>200 && HEIGHT>200 && SIBLING>30)"
@@ -252,13 +252,13 @@ FROM DOM_LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, '.sku-name') AS NAME,
-  DOM_FIRST_PRICE(DOM, '.summary-price') AS PRICE,
+  DOM_FIRST_TEXT(DOM, '.summary-price') AS PRICE,
   DOM_BASE_URI(DOM) AS URI,
   DOM_FIRST_IMG(DOM, '.main-img') AS MAIN_IMAGE,
   DOM_FIRST_IMG(DOM, '460x460') AS MAIN_IMAGE2,
-  DOM_KVS(DOM, '.parameter2') AS PARAMETERS,
+  DOM_FIRST_TEXT(DOM, '.parameter2') AS PARAMETERS,
   DOM_FIRST_TEXT(DOM, '.comment-item') AS COMMENT1
-FROM DOM_LOAD_OUT_PAGES('$url', '$restrictCss', 1, 20)
+FROM LOAD_OUT_PAGES('$url', '$restrictCss', 1, 20)
 WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
 """
         execute(sql)
