@@ -126,9 +126,6 @@ elif [ "$COMMAND" = "server" ] ; then
 elif [ "$COMMAND" = "sql" ] ; then
   MODULE=pulsar-ql-server
   CLASS=fun.platonic.pulsar.ql.start.H2Shell
-elif [ "$COMMAND" = "sql2" ] ; then
-  MODULE=pulsar-third/pulsar-h2
-  CLASS=org.h2.tools.Shell
 elif [ -n "$MODULE" ]; then
   CLASS=$COMMAND
 else
