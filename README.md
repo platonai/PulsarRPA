@@ -35,7 +35,7 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
 ## Run the server
     bin/pulsar
 ## Use an interactive Web console
-   Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
+Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 ## Execute a single Web SQL
     -- testing ...
     bin/pulsar sql the-sql-you-want-to-perform
@@ -43,8 +43,9 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
     -- testing ...
     bin/pulsar sql
 ## Use advanced BI
+Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
+
     -- testing ...
-    Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
     java -jar metabase.jar
 
 # Web mining API

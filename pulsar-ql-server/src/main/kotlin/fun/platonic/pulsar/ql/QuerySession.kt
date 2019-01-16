@@ -21,7 +21,7 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
     private var totalUdfs: Int = 0
 
     init {
-        registerUdfsInPackage(dbSession.implementation as org.h2.engine.Session, "fun.platonic.nebula.ql")
+        registerUdfsInPackage(dbSession.implementation as org.h2.engine.Session)
         registerUdaf(dbSession.implementation, GroupCollect::class)
         registerUdaf(dbSession.implementation, GroupFetch::class)
     }
@@ -34,7 +34,7 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
      * Register user defined functions into database
      * TODO: Hot register UDFs
      */
-    fun registerUdfsInPackage(session: SessionInterface, pack: String) {
+    fun registerUdfsInPackage(session: SessionInterface) {
         ClassPath.from(CommonFunctions.javaClass.classLoader)
                 .getTopLevelClasses(CommonFunctions.javaClass.`package`.name)
                 .map { it.load() }

@@ -48,7 +48,7 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
 
         val querySession = QueryEngine.createQuerySession(DbSession(h2session))
 
-        LOG.info("KQuerySession {} is created for h2session <{}>, connection: <{}>",
+        LOG.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
                 querySession, h2session, ci.url)
 
         return h2session

@@ -40,7 +40,7 @@
         </developer>
 
         <developer>
-            <id>nebula-h2.creator</id>
+            <id>pulsar-h2.creator</id>
             <name>Vincent Zhang</name>
             <email>galaxyeye at live dot cn</email>
         </developer>

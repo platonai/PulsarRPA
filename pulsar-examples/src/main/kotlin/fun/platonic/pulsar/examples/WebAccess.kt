@@ -15,7 +15,7 @@ object WebAccess {
         println(WebPageFormatter(page).withLinks())
 
         val document = pulsar.parse(page)
-        val title = document.selectFirst(".goods_item .title").text()
+        val title = document.first(".goods_item .title")?.text()
         println(title)
     }
 

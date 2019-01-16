@@ -21,12 +21,6 @@
     <artifactId>pulsar-ql-common</artifactId>
     <name>Pulsar QL Common</name>
 
-    <url>http://pulsar.platonic.fun</url>
-    <inceptionYear>2014</inceptionYear>
-
-    <properties>
-    </properties>
-
     <dependencies>
         <!-- Internal -->
         <dependency>
