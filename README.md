@@ -44,7 +44,7 @@ For example:
 ## Use an interactive Web console
 Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 
-## Use advanced BI
+## Use advanced BI tool
 Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
 
     -- testing
