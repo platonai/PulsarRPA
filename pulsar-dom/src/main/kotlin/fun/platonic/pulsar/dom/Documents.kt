@@ -1,6 +1,5 @@
 package `fun`.platonic.pulsar.dom
 
-import `fun`.platonic.pulsar.dom.nodes.FeaturedDocument
 import org.jsoup.Connection
 import org.jsoup.HttpStatusException
 import org.jsoup.UnsupportedMimeTypeException

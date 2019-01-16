@@ -6,9 +6,9 @@
 package fun.platonic.pulsar.ql.types;
 
 import fun.platonic.pulsar.common.config.PulsarConstants;
+import fun.platonic.pulsar.dom.FeaturedDocument;
+import fun.platonic.pulsar.dom.nodes.node.ext.NodeExtKt;
 import fun.platonic.pulsar.ql.PulsarDataTypesHandler;
-import fun.platonic.pulsar.dom.nodes.FeaturedDocument;
-import fun.platonic.pulsar.dom.nodes.NodesKt;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
 import org.h2.util.JdbcUtils;
@@ -32,7 +32,7 @@ import java.util.Objects;
  */
 public class ValueDom extends Value {
 
-    public static final Document NIL_DOC = Document.createShell(PulsarConstants.EXAMPLE_URL + "/nil");
+    public static final Document NIL_DOC = Document.createShell(PulsarConstants.NIL_PAGE_URL);
     public static final ValueDom NIL = new ValueDom(NIL_DOC);
 
     public static int type = PulsarDataTypesHandler.DOM_DATA_TYPE_ID;
@@ -219,6 +219,6 @@ public class ValueDom extends Value {
 
     @Override
     public String toString() {
-        return NodesKt.getUniqueName(element);
+        return NodeExtKt.getUniqueName(element);
     }
 }

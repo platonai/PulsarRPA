@@ -151,9 +151,9 @@ class TestManual: TestBase() {
         val sql = """
 SELECT
   IN_BOX_FIRST_TEXT(DOM, '560x27') AS TITLE,
-  IN_BOX_FIRST_PRICE(DOM, '570x36') AS PRICE1,
+  IN_BOX_FIRST_TEXT(DOM, '570x36') AS PRICE1,
   IN_BOX_FIRST_TEXT(DOM, '560x56') AS TITLE2,
-  IN_BOX_FIRST_PRICE(DOM, '570x85') AS PRICE2,
+  IN_BOX_FIRST_TEXT(DOM, '570x85') AS PRICE2,
   DOM_BASE_URI(DOM) AS URI,
   IN_BOX_FIRST_IMG(DOM, '405x405') AS MAIN_IMAGE,
   DOM_IMG(DOM) AS NIMG
@@ -202,7 +202,7 @@ WHERE DOM_CH(DOM) > 100
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
-  DOM_FIRST_DATE_TIME_LENIENT(DOM, '#LeftTool') AS DATE_TIME,
+  DOM_FIRST_TEXT(DOM, '#LeftTool') AS DATE_TIME,
   DOM_FIRST_TEXT(DOM, '.content-article') AS CONTENT
 FROM DOM_LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 100)
 """
@@ -227,7 +227,7 @@ FROM DOM_LOAD_OUT_PAGES('$portal', '.Q-tpList', 1, 100)
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, 'H1') AS TITLE,
-  DOM_FIRST_DATE_TIME_LENIENT(DOM, '.jcwsy_mini_content') AS DATE_TIME,
+  DOM_FIRST_TEXT(DOM, '.jcwsy_mini_content') AS DATE_TIME,
   DOM_FIRST_TEXT(DOM, '.content_box') AS CONTENT
 FROM DOM_LOAD_OUT_PAGES('$portal', '.news_list_box', 1, 100)
 """

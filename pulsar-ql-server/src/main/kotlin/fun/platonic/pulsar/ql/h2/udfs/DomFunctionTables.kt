@@ -1,11 +1,11 @@
 package `fun`.platonic.pulsar.ql.h2.udfs
 
-import `fun`.platonic.pulsar.dom.FeatureFormatter.FEATURE_NAMES
-import `fun`.platonic.pulsar.dom.FeatureFormatter.isFloating
-import `fun`.platonic.pulsar.dom.SIB
-import `fun`.platonic.pulsar.dom.nodes.first
-import `fun`.platonic.pulsar.dom.nodes.getFeature
-import `fun`.platonic.pulsar.dom.nodes.select2
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter.isFloating
+import `fun`.platonic.pulsar.dom.features.SIB
+import `fun`.platonic.pulsar.dom.nodes.node.ext.first
+import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
+import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine
@@ -185,7 +185,7 @@ object DomFunctionTables {
                 .map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
-            docs.map { it }
+            docs.map { it.document }
         } else {
             docs.map { it.first(targetCss) }
         }

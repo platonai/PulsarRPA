@@ -1,13 +1,13 @@
 package `fun`.platonic.pulsar.dom.select
 
 import `fun`.platonic.pulsar.dom.Documents
-import `fun`.platonic.pulsar.dom.HEIGHT
-import `fun`.platonic.pulsar.dom.WIDTH
-import `fun`.platonic.pulsar.dom.nodes.FeaturedDocument
-import `fun`.platonic.pulsar.dom.nodes.FeaturedDocument.Companion.SELECTOR_IN_BOX_DEVIATION
-import `fun`.platonic.pulsar.dom.nodes.getFeature
-import `fun`.platonic.pulsar.dom.nodes.select2
-import `fun`.platonic.pulsar.dom.nodes.uniqueName
+import `fun`.platonic.pulsar.dom.features.HEIGHT
+import `fun`.platonic.pulsar.dom.features.WIDTH
+import `fun`.platonic.pulsar.dom.FeaturedDocument
+import `fun`.platonic.pulsar.dom.FeaturedDocument.Companion.SELECTOR_IN_BOX_DEVIATION
+import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
+import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
+import `fun`.platonic.pulsar.dom.nodes.node.ext.uniqueName
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals

@@ -1,9 +1,8 @@
-package `fun`.platonic.pulsar.dom.nodes
+package `fun`.platonic.pulsar.dom
 
 import `fun`.platonic.pulsar.common.FuzzyProbability
-import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.common.math.vectors.get
-import `fun`.platonic.pulsar.dom.SEQ
+import `fun`.platonic.pulsar.dom.features.SEQ
 import `fun`.platonic.pulsar.dom.data.BlockPattern.Companion.DenseLinks
 import `fun`.platonic.pulsar.dom.data.BlockPattern.Companion.Dl
 import `fun`.platonic.pulsar.dom.data.BlockPattern.Companion.Table

@@ -1,11 +1,21 @@
-package `fun`.platonic.pulsar.dom
+package `fun`.platonic.pulsar.dom.features
 
-import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.common.math.vectors.get
-import `fun`.platonic.pulsar.dom.nodes.NodeFeature
-import `fun`.platonic.pulsar.dom.nodes.getFeature
+import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Node
+
+data class NodeFeature(val key: Int, val value: Double) {
+    companion object {
+        fun getKey(name: String): Int {
+            return FeatureFormatter.FEATURE_NAMES_TO_KEYS[name.toLowerCase()]?:throw IllegalArgumentException("Unknown feature name $name")
+        }
+
+        fun getValue(name: String, node: Node): Double {
+            return node.getFeature(name)
+        }
+    }
+}
 
 object FeatureFormatter {
 
@@ -62,8 +72,8 @@ object FeatureFormatter {
      * @return string
      */
     fun format(feature: NodeFeature): String {
-        val key = feature.first
-        return key.toString() + ":" + formatValue(key, feature.second)
+        val key = feature.key
+        return key.toString() + ":" + formatValue(key, feature.value)
     }
 
     fun format(features: RealVector, vararg featureKeys: Int, sb: StringBuilder = StringBuilder()): StringBuilder {

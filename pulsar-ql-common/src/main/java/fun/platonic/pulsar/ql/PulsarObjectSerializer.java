@@ -1,8 +1,9 @@
 package fun.platonic.pulsar.ql;
 
+import fun.platonic.pulsar.dom.nodes.NodesKt;
+import fun.platonic.pulsar.dom.nodes.node.ext.NodeExtKt;
 import fun.platonic.pulsar.ql.io.ValueDomWritable;
 import fun.platonic.pulsar.ql.types.ValueDom;
-import fun.platonic.pulsar.dom.nodes.NodesKt;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
@@ -25,7 +26,7 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
             obj = ValueDom.get(ele);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Element {} converted to ValueDom", NodesKt.getUniqueName(ele));
+                LOG.debug("Element {} converted to ValueDom", NodeExtKt.getUniqueName(ele));
             }
         }
 

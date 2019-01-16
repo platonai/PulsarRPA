@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.ql.h2.udfs
 
-import `fun`.platonic.pulsar.dom.nodes.convertBox
+import `fun`.platonic.pulsar.dom.nodes.node.ext.convertBox
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
 import `fun`.platonic.pulsar.ql.types.ValueDom

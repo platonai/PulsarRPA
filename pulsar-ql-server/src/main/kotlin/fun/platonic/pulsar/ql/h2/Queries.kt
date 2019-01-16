@@ -1,14 +1,14 @@
 package `fun`.platonic.pulsar.ql.h2
 
 import `fun`.platonic.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL_LENGTH
-import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.isEmpty
 import `fun`.platonic.pulsar.common.options.LoadOptions
-import `fun`.platonic.pulsar.dom.FeatureFormatter.FEATURE_NAMES
-import `fun`.platonic.pulsar.dom.FeatureFormatter.isFloating
-import `fun`.platonic.pulsar.dom.nodes.first
-import `fun`.platonic.pulsar.dom.nodes.select2
+import `fun`.platonic.pulsar.dom.FeaturedDocument
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter.isFloating
+import `fun`.platonic.pulsar.dom.nodes.node.ext.first
+import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
 import `fun`.platonic.pulsar.persist.WebPage
 import `fun`.platonic.pulsar.persist.WebPageFormatter
 import `fun`.platonic.pulsar.ql.QuerySession
@@ -76,12 +76,12 @@ object Queries {
 
         if (configuredUrls is ValueString) {
             val doc = loadAndParse(session, configuredUrls.getString())
-            collection = transformer(doc, cssQuery, offset, limit)
+            collection = transformer(doc.document, cssQuery, offset, limit)
         } else if (configuredUrls is ValueArray) {
             collection = ArrayList()
             for (configuredUrl in configuredUrls.list) {
                 val doc = loadAndParse(session, configuredUrl.string)
-                collection.addAll(transformer(doc, cssQuery, offset, limit))
+                collection.addAll(transformer(doc.document, cssQuery, offset, limit))
             }
         } else {
             throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
@@ -122,7 +122,7 @@ object Queries {
         return session.loadAll(links, LoadOptions())
     }
 
-    fun loadAndParse(session: QuerySession, configuredUrl: String): Document {
+    fun loadAndParse(session: QuerySession, configuredUrl: String): FeaturedDocument {
         return session.parse(session.load(configuredUrl))
     }
 

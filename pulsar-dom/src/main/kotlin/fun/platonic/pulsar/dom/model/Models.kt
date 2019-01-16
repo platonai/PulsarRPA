@@ -1,7 +1,7 @@
 package `fun`.platonic.pulsar.dom.model
 
-import `fun`.platonic.pulsar.dom.nodes.height
-import `fun`.platonic.pulsar.dom.nodes.width
+import `fun`.platonic.pulsar.dom.nodes.node.ext.height
+import `fun`.platonic.pulsar.dom.nodes.node.ext.width
 import org.apache.commons.lang3.StringUtils
 import org.jsoup.nodes.Element
 import java.util.*

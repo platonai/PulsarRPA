@@ -2,8 +2,8 @@ package `fun`.platonic.pulsar.ql.h2.udfs
 
 import `fun`.platonic.pulsar.common.RegexExtractor
 import `fun`.platonic.pulsar.dom.nodes.A_LABELS
-import `fun`.platonic.pulsar.dom.nodes.select2
-import `fun`.platonic.pulsar.dom.nodes.selectFirst2
+import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
+import `fun`.platonic.pulsar.dom.nodes.node.ext.selectFirst2
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
 import `fun`.platonic.pulsar.ql.h2.Queries

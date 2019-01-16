@@ -7,7 +7,7 @@ import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.VolatileConfig;
 import fun.platonic.pulsar.common.options.LoadOptions;
-import fun.platonic.pulsar.dom.nodes.FeaturedDocument;
+import fun.platonic.pulsar.dom.FeaturedDocument;
 import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jsoup.nodes.Document;
@@ -41,7 +41,7 @@ public class PulsarSession implements AutoCloseable {
     private static final AtomicInteger objectIdGenerator = new AtomicInteger();
     // All sessions share the same cache
     private static ConcurrentLRUCache<String, WebPage> pageCache;
-    private static ConcurrentLRUCache<String, Document> documentCache;
+    private static ConcurrentLRUCache<String, FeaturedDocument> documentCache;
 
     private VolatileConfig config;
     private final int id;
@@ -200,10 +200,10 @@ public class PulsarSession implements AutoCloseable {
      * Parse the Web page using Jsoup.
      * If the Web page is not changed since last parse, use the last result if available
      * */
-    public Document parse(WebPage page) {
+    public FeaturedDocument parse(WebPage page) {
         String key = page.getKey() + "\t" + page.getFetchTime();
 
-        Document document = documentCache.get(key);
+        FeaturedDocument document = documentCache.get(key);
         if (document == null) {
             document = pulsar.parse(page);
             documentCache.put(key, document);

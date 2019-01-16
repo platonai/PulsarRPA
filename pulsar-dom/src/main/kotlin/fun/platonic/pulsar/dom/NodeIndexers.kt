@@ -1,8 +1,8 @@
 package `fun`.platonic.pulsar.dom
 
-import `fun`.platonic.pulsar.dom.nodes.getFeature
+import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
+import `fun`.platonic.pulsar.dom.nodes.node.ext.sequence
 import `fun`.platonic.pulsar.dom.nodes.nodeComparator
-import `fun`.platonic.pulsar.dom.nodes.sequence
 import `fun`.platonic.pulsar.dom.select.AbstractElementVisitor
 import com.google.common.collect.TreeMultimap
 import org.jsoup.nodes.Element

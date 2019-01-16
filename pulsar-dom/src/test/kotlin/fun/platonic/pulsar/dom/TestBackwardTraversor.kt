@@ -1,8 +1,8 @@
 package `fun`.platonic.pulsar.dom
 
 import `fun`.platonic.pulsar.common.ResourceLoader
-import `fun`.platonic.pulsar.dom.nodes.depth
-import `fun`.platonic.pulsar.dom.nodes.uniqueName
+import `fun`.platonic.pulsar.dom.nodes.node.ext.depth
+import `fun`.platonic.pulsar.dom.nodes.node.ext.uniqueName
 import `fun`.platonic.pulsar.dom.select.BackwardNodeTraversor
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node

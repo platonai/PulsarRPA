@@ -1,29 +1,49 @@
 Pulsar README
 ===================
-Pulsar is a full featured Web crawler as well as a data mining framework.
+Pulsar is a full featured Web crawler as well as a Web mining framework.
 
-Pulsar has a Web SQL engine with which all tasks can be done using simple SQLs.
+# Features
+- Web SQL: Do all Web mining jobs using SQL
+- BI Integration: Turn Web sites into tables and charts using just one simple SQL
+- Ajax support: Access the Web automatically, behaviour like a human
+- Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
+- Various data store
 
-For example, turn a Web page into a table:
+## Web SQL
+Turn a Web page into a table:
 
     SELECT
         DOM_TEXT(DOM) AS TITLE,
         DOM_ABS_HREF(DOM) AS LINK
-    FROM 
-    DOMT_LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
+    FROM
+        LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
 
 The SQL above downloads Web page from wikipedia, find out the references section and extract all external reference links.
 
-To run the above SQL, download Pulsar, run
+Check [fun.platonic.pulsar.ql.TestManual](https://github.com/platonai/pulsar/blob/master/pulsar-ql-server/src/test/kotlin/fun/platonic/pulsar/ql/TestManual.kt) to see more example SQLs. All SQL functions can be found under fun.platonic.pulsar.ql.h2.udfs.
 
-    bin/pulsar server
+## BI Integration
+Use the customized, exiting BI [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 
+Web sites into tables and charts immediately.
+Everyone in your company can ask questions and learn from WEB DATA now, for the first time.
 
-And then you can see a popup browser window, enter password 'sa', enter the SQL above and then run it.
+# Build & Run
+## Build from source
+    git clone git@github.com:platonai/pulsar.git
+    cd pulsar && mvn
+## Run the server
+    bin/pulsar
+## Execute a single Web SQL
+    bin/pulsar sql the-sql-you-want-to-perform
+## Use an interactive console
+    bin/pulsar sql
+## Use an interactive Web console
+    Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
+## Use advanced BI
+    Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
+    java -jar metabase.jar
 
-All SQL functions can be found under fun/platonic/pulsar/ql/h2/udfs, every UDF have a namespace and a name.
-
-TODO: document all SQL functions
-
+# API
 Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
 
 Pulsar is highly modularized so it also can be used as a library and be embedded within other projects.
@@ -49,13 +69,9 @@ For batch Web scraping(in kotlin):
     val pages = pulsar.parallelLoadAll(portal.simpleLiveLinks.filter { it.contains("jinrong") }, LoadOptions.parse("--parse"))
     pages.forEach { println("${it.url} ${it.contentTitle}") }
 
-The examples can be found in fun/platonic/pulsar/examples/WebAccess.kt, and more examples will be added soon.
+The examples can be found in fun/platonic/pulsar/examples.
 
-To build from source:
-
-    git clone git@github.com:platonai/pulsar.git
-    cd pulsar && mvn
-
+# Large scale Web spider
 Pulsar supports Nutch style large-scalar crawler in batches, for example,
 to crawl Web pages and index using solr, run script:
 
@@ -91,22 +107,12 @@ The crawl workflow can be illustrated in kotlin as the following:
             .map { updateInGraphMapper(it) }
             .map { updateInGraphReducer(it) }
 
-Note: the Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages. 
+The Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages.
 Score filters may differ for different crawl tasks.
 
 HBase is the primary choice as the storage, and any storage supported by Apache Gora will be fine.
 
-TODO:
-
-```
-1. Add documents
-2. Android support: http://selendroid.io/
-3. Correct errors in startup scripts
-```
-
-============
-
-Enterprise Edition:
+# Enterprise Edition:
 
 Pulsar Enterprise Edition comes with lots of exciting features:
 
@@ -137,7 +143,7 @@ Coming soon ...
 
 ============
 
-Cloud Edition:
+# Cloud Edition:
 
 Write your own Web SQLs to create data products anywhere, anytime, to share, or for sale
 

@@ -1,4 +1,4 @@
-package `fun`.platonic.pulsar.dom
+package `fun`.platonic.pulsar.dom.features
 
 const val FEATURE_VERSION: Int = 10001
 

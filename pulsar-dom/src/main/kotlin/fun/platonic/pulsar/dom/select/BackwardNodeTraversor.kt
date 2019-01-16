@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.dom.select
 
-import `fun`.platonic.pulsar.dom.nodes.depth
+import `fun`.platonic.pulsar.dom.nodes.node.ext.depth
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeVisitor
 

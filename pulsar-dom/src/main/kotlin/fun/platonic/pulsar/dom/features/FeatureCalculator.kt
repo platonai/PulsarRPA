@@ -1,9 +1,11 @@
-package `fun`.platonic.pulsar.dom
+package `fun`.platonic.pulsar.dom.features
 
-import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.common.math.vectors.get
-import `fun`.platonic.pulsar.dom.FeatureFormatter.FEATURE_NAMES
-import `fun`.platonic.pulsar.dom.nodes.*
+import `fun`.platonic.pulsar.common.math.vectors.set
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
+import `fun`.platonic.pulsar.dom.nodes.DOMRect
+import `fun`.platonic.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
+import `fun`.platonic.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.jsoup.nodes.Document
@@ -150,8 +152,8 @@ class FeatureCalculator(document: Document) : NodeVisitor {
 
     private fun accumulateFeatures(node: Node, vararg features: NodeFeature) {
         for (feature in features) {
-            val old = node.getFeature(feature.first)
-            node.setFeature(feature.first, feature.second + old)
+            val old = node.getFeature(feature.key)
+            node.setFeature(feature.key, feature.value + old)
         }
     }
 

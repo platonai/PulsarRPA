@@ -3,8 +3,9 @@ package `fun`.platonic.pulsar.ql.h2.udfs
 import `fun`.platonic.pulsar.common.RegexExtractor
 import `fun`.platonic.pulsar.common.UrlUtil
 import `fun`.platonic.pulsar.common.options.LoadOptions
-import `fun`.platonic.pulsar.dom.*
-import `fun`.platonic.pulsar.dom.nodes.*
+import `fun`.platonic.pulsar.dom.features.*
+import `fun`.platonic.pulsar.dom.nodes.A_LABELS
+import `fun`.platonic.pulsar.dom.nodes.node.ext.*
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine

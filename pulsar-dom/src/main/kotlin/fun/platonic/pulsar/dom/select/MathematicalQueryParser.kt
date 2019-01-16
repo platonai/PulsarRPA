@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.dom.select
 
-import `fun`.platonic.pulsar.dom.nodes.FeaturedDocument
+import `fun`.platonic.pulsar.dom.FeaturedDocument
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.Validate
 import org.apache.commons.lang3.math.NumberUtils

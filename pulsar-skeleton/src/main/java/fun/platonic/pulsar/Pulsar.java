@@ -10,6 +10,7 @@ import fun.platonic.pulsar.crawl.component.LoadComponent;
 import fun.platonic.pulsar.crawl.component.ParseComponent;
 import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
 import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
+import fun.platonic.pulsar.dom.FeaturedDocument;
 import fun.platonic.pulsar.net.SeleniumEngine;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.db.WebDb;
@@ -234,15 +235,15 @@ public class Pulsar implements AutoCloseable {
      * Parse the WebPage using Jsoup
      */
     @Nonnull
-    public Document parse(WebPage page) {
+    public FeaturedDocument parse(WebPage page) {
         JsoupParser parser = new JsoupParser(page, immutableConfig);
-        return parser.parse();
+        return new FeaturedDocument(parser.parse());
     }
 
     @Nonnull
-    public Document parse(WebPage page, MutableConfig mutableConfig) {
+    public FeaturedDocument parse(WebPage page, MutableConfig mutableConfig) {
         JsoupParser parser = new JsoupParser(page, mutableConfig);
-        return parser.parse();
+        return new FeaturedDocument(parser.parse());
     }
 
     /**

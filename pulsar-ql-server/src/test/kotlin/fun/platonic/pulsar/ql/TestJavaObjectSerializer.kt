@@ -1,7 +1,7 @@
 package `fun`.platonic.pulsar.ql
 
 import `fun`.platonic.pulsar.common.math.vectors.get
-import `fun`.platonic.pulsar.dom.nodes.FeaturedDocument
+import `fun`.platonic.pulsar.dom.FeaturedDocument
 import `fun`.platonic.pulsar.ql.Db.config
 import `fun`.platonic.pulsar.ql.Db.deleteDb
 import `fun`.platonic.pulsar.ql.Db.getDBName

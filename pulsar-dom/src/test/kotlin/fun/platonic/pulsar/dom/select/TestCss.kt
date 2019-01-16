@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.dom.select
 
-import `fun`.platonic.pulsar.dom.nodes.select2
+import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Tag

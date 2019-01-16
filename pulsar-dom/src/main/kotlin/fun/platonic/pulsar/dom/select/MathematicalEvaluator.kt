@@ -1,15 +1,18 @@
 package `fun`.platonic.pulsar.dom.select
 
-import `fun`.platonic.pulsar.dom.*
-import `fun`.platonic.pulsar.dom.FeatureFormatter.FEATURE_NAMES
-import `fun`.platonic.pulsar.dom.nodes.getFeature
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
+import `fun`.platonic.pulsar.dom.features.HEIGHT
+import `fun`.platonic.pulsar.dom.features.LEFT
+import `fun`.platonic.pulsar.dom.features.TOP
+import `fun`.platonic.pulsar.dom.features.WIDTH
+import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import com.udojava.evalex.Expression
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Evaluator
 import java.math.BigDecimal
 
-internal abstract class MathematicalEvaluator private constructor() : Evaluator() {
+internal abstract class MathematicalEvaluator : Evaluator() {
 
     class ByBox(
             private val ops: Array<String>,
