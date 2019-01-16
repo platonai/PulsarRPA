@@ -15,7 +15,7 @@
     <parent>
         <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>0.3.8</version>
+        <version>0.5.0</version>
     </parent>
 
     <artifactId>pulsar-skeleton</artifactId>
@@ -44,7 +44,7 @@
         </dependency>
         <dependency>
             <groupId>fun.platonic.pulsar</groupId>
-            <artifactId>pulsar-jsoup</artifactId>
+            <artifactId>pulsar-dom</artifactId>
         </dependency>
 
         <!-- org.apache.hadoop.classification.InterfaceStability, etc -->
@@ -101,12 +101,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
-            <artifactId>pulsar-dom</artifactId>
-            <version>0.3.8</version>
-            <scope>compile</scope>
         </dependency>
 
     </dependencies>

@@ -15,7 +15,7 @@
 
     <groupId>fun.platonic.pulsar</groupId>
     <artifactId>pulsar</artifactId>
-    <version>0.3.8</version>
+    <version>0.5.0</version>
 
     <packaging>pom</packaging>
 
@@ -1022,7 +1022,7 @@
         <!-- HTML parsing -->
         <xerces.version>2.9.1</xerces.version>
         <nekohtml.version>1.9.19</nekohtml.version>
-        <tika.version>1.7</tika.version>
+        <tika.version>[1.19.1,)</tika.version>
         <jdom.version>1.1.2</jdom.version>
 
         <!-- Data Platform Dependencies -->
@@ -1061,6 +1061,7 @@
         <jersey-2.version>2.26-b03</jersey-2.version>
 
         <!-- see https://github.com/jersey/jersey/blob/2.25.x/pom.xml -->
+        <!--<jetty.version>[9.4.11.v20180605,)</jetty.version>-->
         <jetty.version>9.4.4.v20170414</jetty.version>
 
         <!-- Misc Dependencies -->

@@ -43,10 +43,6 @@ case $1 in
         PULSAR_EXTRA_CONF_DIR=$1
         shift
         ;;
-    -E|--enterprise)
-        ENTERPRISE_EDITION=true
-        shift
-        ;;
     -m|--module)
         shift
         MODULE=$1
@@ -97,12 +93,11 @@ fi
 
 # if no args specified, show usage
 if [[ $COMMAND == "" ]]; then
-  printUsage
-  exit 0
+  COMMAND=start
 fi
 
 # Copy specified config files into the main config dir and overwrite the old one
-# To protect from misoperation, short paths are not allowed
+# To protect from mishandling, short paths are not allowed
 if [[ ${#PULSAR_EXTRA_CONF_DIR} -gt 5 ]]; then
   find $PULSAR_EXTRA_CONF_DIR -maxdepth 1 -type f | xargs -I {} cp {} $PULSAR_CONF_DIR
 else
@@ -127,7 +122,7 @@ elif [ "$COMMAND" = "stop" ] ; then
   exit 0
 elif [ "$COMMAND" = "server" ] ; then
     MODULE=pulsar-ql-server
-    CLASS=fun.platonic.pulsar.ql.h2.H2DbConsole
+    CLASS=fun.platonic.pulsar.ql.start.H2DbConsole
 elif [ "$COMMAND" = "sql" ] ; then
   MODULE=pulsar-third/pulsar-h2
   CLASS=org.h2.tools.Shell

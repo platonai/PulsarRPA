@@ -10,7 +10,7 @@
     <parent>
         <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
-        <version>0.3.8</version>
+        <version>0.5.0</version>
     </parent>
 
     <name>Pulsar H2 Database</name>
@@ -70,6 +70,7 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
             <version>3.6.2</version>
+            <!--<version>[7.1.0,)</version>-->
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
