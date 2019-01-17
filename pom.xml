@@ -1085,10 +1085,10 @@
         <!-- Jersey-2 has better test, serialization, document, examples support, used if the program runs outside hadoop -->
         <jersey-2.version>2.26-b03</jersey-2.version>
 
-        <!-- see https://github.com/jersey/jersey/blob/2.25.x/pom.xml -->
-        <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
         <jetty.version>9.4.4.v20170414</jetty.version>
         <jetty-maven-plugin.version>9.4.4.v20170414</jetty-maven-plugin.version>
+        <!-- TODO: according to github's warning, jetty version should be the following to avoid security issues. -->
+        <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
 
         <!-- Misc Dependencies -->
         <!--  Google core libraries for Java, include Multimaps, etc -->
