@@ -99,7 +99,7 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction
     @JvmOverloads
     @JvmStatic
     fun links(dom: ValueDom, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {

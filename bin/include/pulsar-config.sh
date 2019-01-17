@@ -95,14 +95,14 @@ if [ "$PULSAR_PRIME_CONF_DIR" = "" ]; then
 fi
 
 # The extra config dir
-if [ "$PULSAR_EXTRA_CONF_DIR" = "" ]; then
+if [[ "$PULSAR_EXTRA_CONF_DIR" = "" ]]; then
   export PULSAR_EXTRA_CONF_DIR="$PULSAR_HOME/conf/alternatives/information/local"
 fi
 
 # The final config directory, all config files are merged into this directory
-if [ "$PULSAR_CONF_DIR" = "" ]; then
+if [[ "$PULSAR_CONF_DIR" = "" ]]; then
   PULSAR_CONF_DIR="$PULSAR_TMP_DIR/conf"
-  if [ -d "$PULSAR_CONF_DIR" ]; then
+  if [[ -d "$PULSAR_CONF_DIR" ]]; then
     rm -r $PULSAR_CONF_DIR
   fi
 
@@ -112,7 +112,7 @@ if [ "$PULSAR_CONF_DIR" = "" ]; then
 fi
 
 # Log4j configuration directory
-if [ "$LOG4J_CONFIGURATION" = "" ]; then
+if [[ "$LOG4J_CONFIGURATION" = "" ]]; then
   export LOG4J_CONFIGURATION="$PULSAR_CONF_DIR/log4j.properties"
 fi
 
@@ -122,11 +122,11 @@ if [[ -n "$PULSAR_JMX_OPTS" && -z "$PULSAR_REST_JMX_OPTS" ]]; then
 fi
 
 # REST opts
-if [ -z "$PULSAR_REST_OPTS" ]; then
+if [[ -z "$PULSAR_REST_OPTS" ]]; then
   export PULSAR_REST_OPTS="$PULSAR_REST_JMX_OPTS"
 fi
 
-if [ "$PULSAR_NICENESS" = "" ]; then
+if [[ "$PULSAR_NICENESS" = "" ]]; then
     export PULSAR_NICENESS=0
 fi
 
@@ -143,7 +143,7 @@ fi
 export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-4}
 
 # Now having JAVA_HOME defined is required 
-if [ -z "$JAVA_HOME" ]; then
+if [[ -z "$JAVA_HOME" ]]; then
     cat 1>&2 <<EOF
 +======================================================================+
 |      Error: JAVA_HOME is not set and Java could not be found         |

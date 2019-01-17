@@ -360,7 +360,7 @@
                 <plugin>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-maven-plugin</artifactId>
-                    <version>${jetty.version}</version>
+                    <version>${jetty-maven-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -747,6 +747,18 @@
                 <version>2.6.2</version>
             </dependency>
 
+            <!-- Tika for general document parsers -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parsers</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+
             <!-- Spring -->
             <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
             <dependency>
@@ -1073,8 +1085,8 @@
         <jersey-2.version>2.26-b03</jersey-2.version>
 
         <!-- see https://github.com/jersey/jersey/blob/2.25.x/pom.xml -->
-        <!--<jetty.version>[9.4.11.v20180605,)</jetty.version>-->
-        <jetty.version>9.4.4.v20170414</jetty.version>
+        <jetty.version>[9.4.12.v20180830,)</jetty.version>
+        <jetty-maven-plugin.version>9.4.4.v20170414</jetty-maven-plugin.version>
 
         <!-- Misc Dependencies -->
         <!--  Google core libraries for Java, include Multimaps, etc -->

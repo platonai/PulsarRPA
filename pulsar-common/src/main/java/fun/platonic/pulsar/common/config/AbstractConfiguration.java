@@ -111,9 +111,21 @@ public abstract class AbstractConfiguration {
         realResources.forEach(conf::addResource);
 
         LOG.info(toString());
-        URL url = getResource("log4j.properties");
-        if (url != null) {
-            LOG.info("Log4j: " + url);
+
+        checkLog4j();
+    }
+
+    private void checkLog4j() {
+        String log4j = System.getProperty("Log4j.configuration");
+        if (log4j != null) {
+            LOG.info("Log4j(specified): " + log4j);
+        } else {
+            URL url = getResource("log4j.properties");
+            if (url != null) {
+                LOG.info("Log4j(classpath): " + url);
+            } else {
+                LOG.info("Failed to find log4j.properties");
+            }
         }
     }
 

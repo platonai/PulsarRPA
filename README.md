@@ -8,7 +8,7 @@ Pulsar is a full featured Web crawler as well as a Web mining framework.
 - Ajax support: Access the Web automatically, behave like humans
 - Web site monitoring: monitor news sites, e-commerce sites out-of-box
 - Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
-- Various data store: HBase/Spark/MongoDB, etc
+- Various database support: Store data in your favourite database, HBase/Spark/MongoDB, etc
 
 ## Web SQL
 Turn a Web page into a table:
@@ -24,7 +24,7 @@ The SQL above downloads Web page from wikipedia, find out the references section
 Check [fun.platonic.pulsar.ql.TestManual](https://github.com/platonai/pulsar/blob/master/pulsar-ql-server/src/test/kotlin/fun/platonic/pulsar/ql/TestManual.kt) to see more example SQLs. All SQL functions can be found under [fun.platonic.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
 
 ## BI Integration
-Use the customized, exiting BI [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 
+Use the exiting customized BI tool [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 
 Web sites into tables and charts immediately.
 Everyone in your company can ask questions and learn from WEB DATA now, for the first time.
 
