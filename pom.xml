@@ -1046,7 +1046,8 @@
         <!-- HTML parsing -->
         <xerces.version>2.9.1</xerces.version>
         <nekohtml.version>1.9.19</nekohtml.version>
-        <tika.version>[1.19.1,)</tika.version>
+        <!--<tika.version>[1.19.1,)</tika.version>-->
+        <tika.version>1.7</tika.version>
         <jdom.version>1.1.2</jdom.version>
 
         <!-- Data Platform Dependencies -->
@@ -1085,7 +1086,8 @@
         <jersey-2.version>2.26-b03</jersey-2.version>
 
         <!-- see https://github.com/jersey/jersey/blob/2.25.x/pom.xml -->
-        <jetty.version>[9.4.12.v20180830,)</jetty.version>
+        <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
+        <jetty.version>9.4.4.v20170414</jetty.version>
         <jetty-maven-plugin.version>9.4.4.v20170414</jetty-maven-plugin.version>
 
         <!-- Misc Dependencies -->

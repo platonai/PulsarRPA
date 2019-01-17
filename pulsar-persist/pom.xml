@@ -55,6 +55,11 @@
             <groupId>oro</groupId>
             <artifactId>oro</artifactId>
         </dependency>
+        <!-- DOM process -->
+        <dependency>
+            <groupId>org.jdom</groupId>
+            <artifactId>jdom</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.j256.ormlite</groupId>
