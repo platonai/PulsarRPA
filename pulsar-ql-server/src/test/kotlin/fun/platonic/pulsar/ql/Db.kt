@@ -4,10 +4,7 @@ import `fun`.platonic.pulsar.common.ScentPaths
 import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_TMP_DIR
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine
 import org.h2.store.FileLister
-import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
-import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
@@ -75,8 +72,7 @@ object Db {
      * @return the connection
      */
     fun getConnection(name: String): Connection {
-        val name2 = "$name;MODE=sigma"
-        return getConnectionInternal(getURL(name2, true), user, password)
+        return getConnectionInternal(buildURL("$name;MODE=sigma", true), user, password)
     }
 
     /**
@@ -88,7 +84,7 @@ object Db {
      * @return the connection
      */
     fun getConnection(name: String, user: String, password: String): Connection {
-        return getConnectionInternal(getURL(name, false), user, password)
+        return getConnectionInternal(buildURL(name, false), user, password)
     }
 
     /**
@@ -102,7 +98,7 @@ object Db {
         return if (config.cipher == null)
             userPassword
         else
-            filePassword + " " + userPassword
+            "$filePassword $userPassword"
     }
 
     /**
@@ -111,7 +107,7 @@ object Db {
      *
      * @return the directory, possibly including file system prefix
      */
-    fun getBaseDir(): String {
+    fun buildBaseDir(): String {
         var dir = baseDir.toString()
         if (config.reopen) {
             dir = "rec:memFS:$dir"
@@ -131,7 +127,7 @@ object Db {
      * @param admin true if the current user is an admin
      * @return the database URL
      */
-    fun getURL(name_: String, admin: Boolean): String {
+    fun buildURL(name_: String, admin: Boolean): String {
         var name = name_
         var url: String
         if (name.startsWith("jdbc:")) {
@@ -141,19 +137,22 @@ object Db {
             }
             return name
         }
+
         if (admin) {
-            // name = addOption(name, "RETENTION_TIME", "10");
-            // name = addOption(name, "WRITE_DELAY", "10");
+            name = addOption(name, "RETENTION_TIME", "10");
+            name = addOption(name, "WRITE_DELAY", "10");
         }
+
         val idx = name.indexOf(':')
         if (idx == -1 && config.memory) {
             name = "mem:$name"
         } else {
             if (idx < 0 || idx > 10) {
                 // index > 10 if in options
-                name = getBaseDir() + "/" + name
+                name = buildBaseDir() + "/" + name
             }
         }
+
         if (config.networked) {
             val port = config.port
 
@@ -167,54 +166,67 @@ object Db {
         } else {
             url = name
         }
-        if (config.mvStore) {
-            url = addOption(url, "MV_STORE", "true")
+
+        url = if (config.mvStore) {
+            addOption(url, "MV_STORE", "true")
             // url = addOption(url, "MVCC", "true");
         } else {
-            url = addOption(url, "MV_STORE", "false")
+            addOption(url, "MV_STORE", "false")
         }
+
         if (!config.memory) {
             if (config.smallLog && admin) {
                 url = addOption(url, "MAX_LOG_SIZE", "1")
             }
         }
+
         if (config.traceSystemOut) {
             url = addOption(url, "TRACE_LEVEL_SYSTEM_OUT", "2")
         }
+
         if (config.traceLevelFile > 0 && admin) {
             url = addOption(url, "TRACE_LEVEL_FILE", "" + config.traceLevelFile)
             url = addOption(url, "TRACE_MAX_FILE_SIZE", "8")
         }
+
         url = addOption(url, "LOG", "1")
         if (config.throttleDefault > 0) {
             url = addOption(url, "THROTTLE", "" + config.throttleDefault)
         } else if (config.throttle > 0) {
             url = addOption(url, "THROTTLE", "" + config.throttle)
         }
+
         url = addOption(url, "LOCK_TIMEOUT", "" + config.lockTimeout)
         if (config.diskUndo && admin) {
             url = addOption(url, "MAX_MEMORY_UNDO", "3")
         }
+
         if (config.big && admin) {
             // force operations to disk
             url = addOption(url, "MAX_OPERATION_MEMORY", "1")
         }
+
         if (config.mvcc) {
             url = addOption(url, "MVCC", "TRUE")
         }
+
         if (config.multiThreaded) {
             url = addOption(url, "MULTI_THREADED", "TRUE")
         }
+
         if (config.lazy) {
             url = addOption(url, "LAZY_QUERY_EXECUTION", "1")
         }
+
         if (config.diskResult && admin) {
             url = addOption(url, "MAX_MEMORY_ROWS", "100")
             url = addOption(url, "CACHE_SIZE", "0")
         }
+
         if (config.defrag) {
             url = addOption(url, "DEFRAG_ALWAYS", "TRUE")
         }
+
         return "jdbc:h2:$url"
     }
 
@@ -224,7 +236,7 @@ object Db {
      * @param name the database name
      */
     fun deleteDb(name: String) {
-        deleteDb(getBaseDir(), name)
+        deleteDb(buildBaseDir(), name)
     }
 
     /**

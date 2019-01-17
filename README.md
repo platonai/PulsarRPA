@@ -21,7 +21,7 @@ Turn a Web page into a table:
 
 The SQL above downloads Web page from wikipedia, find out the references section and extract all external reference links.
 
-Check [fun.platonic.pulsar.ql.TestManual](https://github.com/platonai/pulsar/blob/master/pulsar-ql-server/src/test/kotlin/fun/platonic/pulsar/ql/TestManual.kt) to see more example SQLs. All SQL functions can be found under [fun.platonic.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
+Check [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) to see more example SQLs. All SQL functions can be found under [fun.platonic.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
 
 ## BI Integration
 Use the exiting customized BI tool [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 
@@ -45,9 +45,9 @@ For example:
 Open [http://localhost:8082](http://localhost:8082) in your browser to play with Web SQL
 
 ## Use advanced BI tool
-Download Metabase Web SQL edition [Metabase](https://github.com/platonai/metabase)
+Download [Metabase](https://github.com/platonai/metabase) Web SQL edition, and run:
 
-    -- testing
+    -- testing ..
     java -jar metabase.jar
 
 # Web mining APIs
@@ -74,45 +74,19 @@ For batch Web scraping(in kotlin):
     val pages = pulsar.parallelLoadAll(portal.simpleLiveLinks.filter { it.contains("jinrong") }, LoadOptions.parse("--parse"))
     pages.forEach { println("${it.url} ${it.contentTitle}") }
 
-The examples can be found in fun/platonic/pulsar/examples.
+More examples can be found in fun/platonic/pulsar/examples.
 
 # Large scale Web spider
 Pulsar is also a production ready Web crawler, you can crawl large web sites from seeds, using Nutch style.
-For example, to crawl Web pages and index using solr, run script:
+For example, to crawl Web pages and index text content using solr, run script:
 
-    bin/crawl.sh default false information_tmp http://master:8983/solr/information_tmp/ 1
+    bin/crawl.sh default false awesome_crawl_task http://master:8983/solr/awesome_crawl_task/ 1
 
 TODO: Scripts is NOT working if you can see this line. We are working on it ...
 
 For more crawl task examples, see bin/samples.
 
-The crawl workflow can be illustrated in kotlin as the following:
-
-    val pages = urls
-            .map { generate(batchId, it) }
-            .filter { it.batchId == batchId }
-            .filter { it.marks.contains(Mark.GENERATE) }
-            .map { fetchComponent.fetchContent(it) }
-            .filter { it.batchId == batchId }
-            .filter { it.marks.contains(Mark.FETCH) }
-            .onEach { parseComponent.parse(it) }
-            .filter { it.batchId == batchId }
-            .filter { it.marks.contains(Mark.PARSE) }
-            .onEach { indexComponent.dryRunIndex(it) }
-            .map { WebVertex(it) }
-            .map { WebGraph(it, it) }
-            .reduce { g, g2 ->  g.combine(g2)}
-            .vertexSet()
-            .map { it.webPage }
-            .map { updateOutGraphMapper(it) }
-            .map { updateOutGraphReducerBuildGraph(it) }
-            .map { updateOutGraphReducer(it) }
-            .filter { it.batchId == batchId }
-            .filter { it.marks.contains(UPDATEOUTG) }
-            .map { updateInGraphMapper(it) }
-            .map { updateInGraphReducer(it) }
-
-The Web graph is updated both inward and outward, score filters can be applied to decide the importance of Web pages.
+The Web graph is updated both inward and outward, custom score filters can be applied to decide the importance of Web pages.
 Score filters may differ for different crawl tasks.
 
 HBase is the primary choice as the storage, and any storage supported by Apache Gora will be fine.
@@ -121,7 +95,7 @@ HBase is the primary choice as the storage, and any storage supported by Apache 
 
 Pulsar Enterprise Edition comes with lots of exciting features:
 
-AI to do Web content mining:
+Advanced AI to do Web content mining:
 ```
 1. Extract large scale Web pages with above human-level accuracy using advanced AI
 2. Learn and generate SQLs for sites
@@ -133,13 +107,6 @@ Full featured Web SQL:
 2. Monitor a Web site and turn it into a table by just one simple SQL
 3. Integrated argorithms for Web extraction, data mining, NLP, Knowldge Graph, maching learning, etc
 4. Do business intelligence on unstructured data
-```
-
-Advanced DOM processing:
-```
-1. Tranditional CSS path support
-2. Advanced expression in CSS path: element.select("div:expr(width >= 300 and height >= 400)")
-3. Statistics based element locate
 ```
 
 Enterprise Edition will be open sourced step by step.
