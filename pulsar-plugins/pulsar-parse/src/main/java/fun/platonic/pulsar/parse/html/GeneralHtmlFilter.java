@@ -20,7 +20,9 @@ import java.util.List;
  * Parse Web page using Jsoup if and only if WebPage.query is specified
  * <p>
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
+ * @deprecated Use Web SQL instead
  */
+@Deprecated
 public class GeneralHtmlFilter implements ParseFilter {
 
     public enum Counter {jsoupFailure, noEntity, brokenEntity, brokenSubEntity}

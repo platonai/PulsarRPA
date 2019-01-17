@@ -40,16 +40,14 @@ public class TestIndexingFilters {
     private String indexingFiltersClassNames = StringUtil.humanize(IndexingFilters.class, "classes", ".");
 
     @Autowired
-    private ImmutableConfig immutableConfig;
-
-    private MutableConfig conf;
+    private ImmutableConfig conf;
 
     @Autowired
     private IndexingFilters filters;
 
     @Before
     public void setup() {
-        conf = new MutableConfig(immutableConfig);
+
     }
 
     /**
@@ -62,7 +60,7 @@ public class TestIndexingFilters {
 
         String class1 = "NonExistingFilter";
         String class2 = "org.apache.pulsar.indexer.basic.BasicIndexingFilter";
-        conf.set(indexingFiltersClassNames, class1 + "," + class2);
+        conf.unbox().set(indexingFiltersClassNames, class1 + "," + class2);
 
         String url = "http://www.example.com/";
         WebPage page = WebPage.newWebPage(url);

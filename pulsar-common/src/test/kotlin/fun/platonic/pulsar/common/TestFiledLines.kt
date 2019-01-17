@@ -1,6 +1,5 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.common.ResourceLoader
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.slf4j.LoggerFactory
@@ -9,7 +8,7 @@ import kotlin.test.assertNotNull
 class TestFiledLines {
     val log = LoggerFactory.getLogger(Test::class.java)
 
-    val resource = "feature/all/product/words/black-list/attr-name.txt"
+    val resource = "log4j.properties"
 
     @Test
     fun testSingleFiledLines() {

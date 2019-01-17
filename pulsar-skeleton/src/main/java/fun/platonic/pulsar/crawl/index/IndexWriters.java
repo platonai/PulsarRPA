@@ -1,6 +1,7 @@
 package fun.platonic.pulsar.crawl.index;
 
 import fun.platonic.pulsar.common.StringUtil;
+import fun.platonic.pulsar.common.config.ImmutableConfig;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 
@@ -16,17 +17,17 @@ public class IndexWriters implements AutoCloseable {
 
     Logger LOG = IndexWriter.LOG;
 
-    private Configuration conf;
+    private ImmutableConfig conf;
     private ArrayList<IndexWriter> indexWriters = new ArrayList<>();
 
     public IndexWriters() {
     }
 
-    public IndexWriters(Configuration conf) {
+    public IndexWriters(ImmutableConfig conf) {
         this(Collections.emptyList(), conf);
     }
 
-    public IndexWriters(List<IndexWriter> indexWriters, Configuration conf) {
+    public IndexWriters(List<IndexWriter> indexWriters, ImmutableConfig conf) {
         this.conf = conf;
         this.indexWriters.addAll(indexWriters);
     }

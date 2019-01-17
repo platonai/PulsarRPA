@@ -27,6 +27,7 @@ import fun.platonic.pulsar.persist.gora.generated.GFieldGroup;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -76,6 +77,7 @@ public class TestGeneralHtmlFilter extends HtmlParserTestBase {
     }
 
     @Test
+    @Ignore("Use Web SQL instead")
     public void testExtractNews() throws ParseException, IOException {
         Path htmlPath = Paths.get(SAMPLES_DIR, "selector/1/pages/html_example_3_news.html");
 
@@ -102,6 +104,7 @@ public class TestGeneralHtmlFilter extends HtmlParserTestBase {
     }
 
     @Test
+    @Ignore("Use Web SQL instead")
     public void testExtractBBS() throws ParseException, IOException {
         Path htmlPath = Paths.get(SAMPLES_DIR, "selector", "2", "pages", "html_example_4_bbs.html");
 

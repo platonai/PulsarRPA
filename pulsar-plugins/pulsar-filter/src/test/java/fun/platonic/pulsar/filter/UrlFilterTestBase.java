@@ -18,12 +18,5 @@ public class UrlFilterTestBase {
     public static final String TEST_DIR = System.getProperty("test.data", ".");
     protected static final Logger LOG = LoggerFactory.getLogger(RegexUrlFilterBaseTest.class);
     @Autowired
-    protected ImmutableConfig immutableConfig;
-
     protected MutableConfig conf;
-
-    @Before
-    void setup() {
-        conf = new MutableConfig(conf.unbox());
-    }
 }

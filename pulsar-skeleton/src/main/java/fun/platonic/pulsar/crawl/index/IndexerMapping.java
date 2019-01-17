@@ -17,6 +17,7 @@
 package fun.platonic.pulsar.crawl.index;
 
 import com.google.common.collect.Lists;
+import fun.platonic.pulsar.common.config.ImmutableConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
@@ -41,15 +42,15 @@ public class IndexerMapping {
 
     public static final String PARAM_INDEXER_MAPPING_FILE = "indexer.mapping.file";
     public static Logger LOG = LoggerFactory.getLogger(IndexerMapping.class);
-    private Configuration conf;
+    private ImmutableConfig conf;
     private String mappingFile;
     private Map<String, MappingField> keyMap = new HashMap<>();
     private String uniqueKey = "id";
-    public IndexerMapping(Configuration conf) {
+    public IndexerMapping(ImmutableConfig conf) {
         this(conf.get(PARAM_INDEXER_MAPPING_FILE, "indexer-mapping.xml"), conf);
     }
 
-    public IndexerMapping(String mappingFile, Configuration conf) {
+    public IndexerMapping(String mappingFile, ImmutableConfig conf) {
         this.conf = conf;
         this.mappingFile = mappingFile;
         parseMapping();

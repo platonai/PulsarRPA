@@ -43,6 +43,9 @@ public class TestSParser {
         parser.set("1s");
         assertEquals(Duration.ofSeconds(1), parser.getDuration());
 
+        parser.set("1h");
+        assertEquals(Duration.ofHours(1), parser.getDuration());
+
         parser.set("1ms");
         assertEquals(Duration.ofMillis(1), parser.getDuration());
 

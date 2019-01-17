@@ -6,6 +6,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.math3.util.Precision
+import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
 import java.math.BigInteger
@@ -120,7 +121,7 @@ class TestAnything {
 
         // println(String.format("%10s%10s%10s%10s", "a", *arrayOf("b", "c", "d")))
 
-        println(arrayOf("").joinToString(";"))
+        // println(arrayOf("").joinToString(";"))
     }
 
     @Test
@@ -159,6 +160,7 @@ class TestAnything {
         }
     }
 
+    @Ignore("Print special chars if required")
     @Test
     fun testSpecialChars() {
         val s = '!'.toInt()
@@ -306,7 +308,9 @@ class TestAnything {
 
     @Test
     fun testUUID() {
-        val uuid = UUID.randomUUID()
-        println(uuid)
+        for (i in 0..100) {
+            val uuid = UUID.randomUUID()
+            assertEquals(36, uuid.toString().length)
+        }
     }
 }

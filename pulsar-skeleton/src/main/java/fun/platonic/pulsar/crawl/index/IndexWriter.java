@@ -1,5 +1,6 @@
 package fun.platonic.pulsar.crawl.index;
 
+import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public interface IndexWriter extends ReloadableParameterized, AutoCloseable {
         return true;
     }
 
-    void open(Configuration conf) throws IOException;
+    void open(ImmutableConfig conf) throws IOException;
 
     void open(String indexerUrl) throws IOException;
 

@@ -17,6 +17,7 @@
 
 package fun.platonic.pulsar.parse.common;
 
+import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.parse.Parser;
 import fun.platonic.pulsar.crawl.parse.ParserConfigReader;
 import fun.platonic.pulsar.crawl.parse.ParserFactory;
@@ -43,13 +44,13 @@ import static org.junit.Assert.assertNotNull;
 public class TestParserFactory {
 
     @Autowired
-    private Configuration conf;
+    private ImmutableConfig config;
     @Autowired
     private ParserFactory parserFactory;
 
     @Before
     public void setUp() throws Exception {
-        conf.set(ParserConfigReader.PARSE_PLUGINS_FILE, "parse-plugins.xml");
+        config.unbox().set(ParserConfigReader.PARSE_PLUGINS_FILE, "parse-plugins.xml");
     }
 
     /** Unit test to check <code>getParsers</code> method */

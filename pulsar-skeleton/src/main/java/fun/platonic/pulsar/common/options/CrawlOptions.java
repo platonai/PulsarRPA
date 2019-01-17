@@ -96,13 +96,8 @@ public class CrawlOptions extends CommonOptions {
             return new CrawlOptions(new String[0], conf);
         }
 
-        ObjectCache objectCache = ObjectCache.get(conf);
-        CrawlOptions options = objectCache.getBean(args, null);
-        if (options == null) {
-            options = new CrawlOptions(args, conf);
-            options.parse();
-            objectCache.put(args, options);
-        }
+        CrawlOptions options = new CrawlOptions(args, conf);
+        options.parse();
 
         return options;
     }

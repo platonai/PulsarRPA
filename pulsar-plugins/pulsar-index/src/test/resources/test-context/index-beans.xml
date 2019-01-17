@@ -5,19 +5,19 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <bean id="conf" class="fun.platonic.pulsar.common.config.config"/>
+    <bean id="conf" class="fun.platonic.pulsar.common.config.ImmutableConfig"/>
 
     <bean id="anchorIndexingFilter" class="fun.platonic.pulsar.index.AnchorIndexingFilter">
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="metadataIndexer" class="fun.platonic.pulsar.index.MetadataIndexer">
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="generalIndexingFilter" class="fun.platonic.pulsar.index.GeneralIndexingFilter">
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="moreIndexingFilter" class="fun.platonic.pulsar.index.MoreIndexingFilter">
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="indexFilters" class="fun.platonic.pulsar.crawl.index.IndexingFilters">
@@ -29,16 +29,16 @@
                 <ref bean="moreIndexingFilter" />
             </list>
         </constructor-arg>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="indexerMapping" class="fun.platonic.pulsar.crawl.index.IndexerMapping">
         <constructor-arg value="indexer-mapping.xml"/>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="solrIndexWriter" class="fun.platonic.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
         <constructor-arg ref="indexerMapping"/>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="indexWriters" class="fun.platonic.pulsar.crawl.index.IndexWriters">
         <!--<property name="message" value = "Hello World!"/>-->
@@ -47,7 +47,7 @@
                 <ref bean="solrIndexWriter" />
             </list>
         </constructor-arg>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
 </beans>

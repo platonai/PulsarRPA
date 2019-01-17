@@ -136,7 +136,7 @@ public class SolrIndexWriter implements IndexWriter {
         return isActive;
     }
 
-    public void open(Configuration conf) {
+    public void open(ImmutableConfig conf) {
         solrClients = SolrUtils.getSolrClients(solrUrls, zkHosts, collection);
         isActive = true;
     }

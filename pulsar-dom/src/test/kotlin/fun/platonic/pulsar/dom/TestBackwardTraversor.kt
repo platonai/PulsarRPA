@@ -17,13 +17,14 @@ class TestBackwardTraversor {
 
     @Test
     fun visitPathCompatible() {
-        val page = ResourceLoader().getResourceAsStream("webpages/00f3a63c4898d201df95d6015244dd63.html")!!
+        val page = ResourceLoader().getResourceAsStream("webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html")!!
         val doc = Documents.parse(page, "UTF-8", "00f3a63c4898d201df95d6015244dd63.html")
 
         val id = "#item_price"
         val path = mutableListOf<String>()
         val backwardPath = mutableListOf<String>()
 
+        // Forward traverse
         NodeTraversor.filter(object: NodeFilter {
             override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
                 return NodeFilter.FilterResult.CONTINUE
@@ -40,6 +41,7 @@ class TestBackwardTraversor {
             }
         }, doc.unbox())
 
+        // Backward traverse
         BackwardNodeTraversor.traverse(NodeVisitor { node, depth ->
             assertEquals(node.depth, depth)
             backwardPath.add(node.uniqueName)

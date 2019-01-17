@@ -17,7 +17,9 @@ import java.util.zip.InflaterInputStream;
 /**
  * Created by vincent on 17-3-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * TODO: ContentWritable is never used
  */
+@Deprecated
 public class ContentWritable implements Writable, Configurable {
 
     public final static int VERSION = -1;
@@ -47,6 +49,20 @@ public class ContentWritable implements Writable, Configurable {
         this.content = new Content();
     }
 
+    @Override
+    public Configuration getConf() {
+        return hadoopConfig;
+    }
+
+    @Override
+    public void setConf(Configuration conf) {
+        this.hadoopConfig = hadoopConfig;
+    }
+
+    public Content get() {
+        return content;
+    }
+
     public static Content read(DataInput in, ImmutableConfig conf) throws IOException {
         ContentWritable contentWritable = new ContentWritable(conf);
         contentWritable.readFields(in);
@@ -71,20 +87,6 @@ public class ContentWritable implements Writable, Configurable {
         Text.writeString(out, content.getContentType()); // write contentType
 
         new MetadataWritable(content.getMetadata()).write(out); // write metadata
-    }
-
-    @Override
-    public Configuration getConf() {
-        return hadoopConfig;
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.hadoopConfig = hadoopConfig;
-    }
-
-    public Content get() {
-        return content;
     }
 
     @Override

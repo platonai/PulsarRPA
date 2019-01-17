@@ -4,6 +4,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.Timestamp;
@@ -175,6 +176,7 @@ public class TestDateTime {
     }
 
     @Test
+    @Ignore("Time costing performance testing")
     public void testSystemClockPerformance() {
         final int ROUND = 10000000;
         long impreciseNow = System.currentTimeMillis();

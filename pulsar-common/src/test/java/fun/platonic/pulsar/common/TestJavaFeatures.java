@@ -1,7 +1,6 @@
 package fun.platonic.pulsar.common;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,7 +14,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static fun.platonic.pulsar.common.TestAnything.E.a;
+import static fun.platonic.pulsar.common.TestJavaFeatures.E.a;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -23,7 +22,7 @@ import static org.junit.Assert.assertTrue;
  * Created by vincent on 17-1-14.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public class TestAnything {
+public class TestJavaFeatures {
 
     @Nonnull
     public static String g() {

@@ -1,9 +1,14 @@
 package `fun`.platonic.pulsar.ql
 
+import `fun`.platonic.pulsar.common.ScentPaths
+import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_TMP_DIR
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine
+import org.h2.store.FileLister
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.*
@@ -22,12 +27,12 @@ object Db {
     /**
      * The base directory.
      */
-    val BASE_TEST_DIR = "/tmp/data"
+    val BASE_TEST_DIR = ScentPaths.get(PULSAR_TMP_DIR, "test", "h2")
 
     /**
      * The temporary directory.
      */
-    val TEMP_DIR = "/tmp/data/temp"
+    val TEMP_DIR = ScentPaths.get(PULSAR_TMP_DIR, "test", "h2", "tmp")
 
     /**
      * The time when the test was started.
@@ -46,8 +51,7 @@ object Db {
      *
      * @return the file password
      */
-    val filePassword: String
-        get() = "filePassword"
+    val filePassword: String = "filePassword"
 
     /**
      * Get the login password. This is usually the user password. If file
@@ -55,37 +59,12 @@ object Db {
      *
      * @return the login password
      */
-    val password: String
-        get() = getPassword("sa")
+    val password: String = getPassword("sa")
 
-    val user: String
-        get() = "sa"
+    val user: String = "sa"
 
-    /**
-     * Get the classpath list used to execute java -cp ...
-     *
-     * @return the classpath list
-     */
-    val classPath: String
-        get() = "bin" + File.pathSeparator + "temp" + File.pathSeparator + "."
-
-    /**
-     * Initialize the test configuration.
-     *
-     * @param conf the configuration
-     * @return itself
-     */
-    fun init(conf: DbConfig = DbConfig()): Db {
-        baseDir = getTestDir("")
-        FileUtils.createDirectories(baseDir)
-        System.setProperty("java.io.tmpdir", TEMP_DIR)
-        this.config = conf
-        return this
-    }
-
-    fun getDBName(): String {
-        val name = "" + System.currentTimeMillis() + "_" + Math.abs(Random().nextInt())
-        return name;
+    fun generateTempDbName(): String {
+        return "" + System.currentTimeMillis() + "_" + Math.abs(Random().nextInt());
     }
 
     /**
@@ -96,7 +75,7 @@ object Db {
      * @return the connection
      */
     fun getConnection(name: String): Connection {
-        val name2 = name + ";MODE=sigma"
+        val name2 = "$name;MODE=sigma"
         return getConnectionInternal(getURL(name2, true), user, password)
     }
 
@@ -133,12 +112,12 @@ object Db {
      * @return the directory, possibly including file system prefix
      */
     fun getBaseDir(): String {
-        var dir = baseDir
+        var dir = baseDir.toString()
         if (config.reopen) {
-            dir = "rec:memFS:" + dir
+            dir = "rec:memFS:$dir"
         }
         if (config.splitFileSystem) {
-            dir = "split:16:" + dir
+            dir = "split:16:$dir"
         }
         // return "split:nioMapped:" + baseDir;
         return dir
@@ -152,8 +131,8 @@ object Db {
      * @param admin true if the current user is an admin
      * @return the database URL
      */
-    fun getURL(name: String, admin: Boolean): String {
-        var name = name
+    fun getURL(name_: String, admin: Boolean): String {
+        var name = name_
         var url: String
         if (name.startsWith("jdbc:")) {
             if (config.mvStore) {
@@ -168,7 +147,7 @@ object Db {
         }
         val idx = name.indexOf(':')
         if (idx == -1 && config.memory) {
-            name = "mem:" + name
+            name = "mem:$name"
         } else {
             if (idx < 0 || idx > 10) {
                 // index > 10 if in options
@@ -184,8 +163,7 @@ object Db {
                 url = "tcp://localhost:$port/$name"
             }
         } else if (config.googleAppEngine) {
-            url = "gae://" + name +
-                    ";FILE_LOCK=NO;AUTO_SERVER=FALSE;DB_CLOSE_ON_EXIT=FALSE"
+            url = "gae://$name;FILE_LOCK=NO;AUTO_SERVER=FALSE;DB_CLOSE_ON_EXIT=FALSE"
         } else {
             url = name
         }
@@ -237,7 +215,7 @@ object Db {
         if (config.defrag) {
             url = addOption(url, "DEFRAG_ALWAYS", "TRUE")
         }
-        return "jdbc:h2:" + url
+        return "jdbc:h2:$url"
     }
 
     /**
@@ -257,11 +235,10 @@ object Db {
      */
     fun deleteDb(dir: String, name: String) {
         DeleteDbFiles.execute(dir, name, true)
-        // ArrayList<String> list;
-        // list = FileLister.getDatabaseFiles(baseDir, name, true);
-        // if (list.size() >  0) {
-        //    System.out.println("Not deleted: " + list);
-        // }
+         val list = FileLister.getDatabaseFiles(baseDir.toString(), name, true);
+         if (list.isNotEmpty()) {
+            System.out.println("Not deleted: $list");
+         }
     }
 
     /**
@@ -270,8 +247,8 @@ object Db {
      * @param name the directory name suffix
      * @return the test directory
      */
-    fun getTestDir(name: String): String {
-        return BASE_TEST_DIR + "/test" + name
+    fun getTestDir(name: String): Path {
+        return ScentPaths.get(BASE_TEST_DIR, name)
     }
 
     private fun addOption(url: String, option: String, value: String): String {
@@ -283,7 +260,7 @@ object Db {
     }
 
     private fun getConnectionInternal(url: String, user: String, password: String): Connection {
-        println("H2 Connection: " + url)
+        println("H2 Connection: $url")
 
         org.h2.Driver.load()
         return DriverManager.getConnection(url, user, password)

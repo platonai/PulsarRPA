@@ -38,10 +38,4 @@ public class TestSelenium {
         WebDriverQueues.DEFAULT_CHROME_CAPABILITIES.setCapability(CapabilityType.PROXY, (Object) null);
         driver = new ChromeDriver(WebDriverQueues.DEFAULT_CHROME_CAPABILITIES);
     }
-
-    @Test
-    public void testCompare() {
-        Response response = engine.fetch("http://www.codeweblog.com/stag/hsql-vs-h2/");
-        System.out.println(new String(response.getContent()).substring(0, 1000));
-    }
 }

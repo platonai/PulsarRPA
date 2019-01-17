@@ -5,7 +5,6 @@ import `fun`.platonic.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
 import `fun`.platonic.pulsar.crawl.fetch.TaskStatusTracker.LAZY_FETCH_URLS_PAGE_BASE
 import `fun`.platonic.pulsar.persist.WebPageFormatter
 import `fun`.platonic.pulsar.persist.metadata.FetchMode
-import `fun`.platonic.pulsar.ql.utils.ResultSetFormatter
 import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
@@ -158,7 +157,7 @@ FROM LOAD_ALL(DOM_ALL_HREFS(DOM_LOAD('$productIndexUrl'), '$expr'))
     }
 
     @Test
-    @Ignore("org.h2.jdbc.JdbcSQLException: General error: \"com.vividsolutions.jts.io.ParseException: Unknown geometry type: 0 (line 1)\";")
+    @Ignore("Ignore via org.h2.jdbc.JdbcSQLException: General error: \"com.vividsolutions.jts.io.ParseException: Unknown geometry type: 0 (line 1)\";")
     fun testGroupFetchWithTempTable() {
         val url = productIndexUrl
         execute("CREATE MEMORY TEMP TABLE IF NOT EXISTS MOGUJIE_ITEM_LINKS(HREF VARCHAR)")

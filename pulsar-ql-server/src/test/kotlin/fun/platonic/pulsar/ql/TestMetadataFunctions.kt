@@ -2,17 +2,20 @@ package `fun`.platonic.pulsar.ql
 
 import `fun`.platonic.pulsar.PulsarSession
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class
-estMetadataFunctions : TestBase() {
+TestMetadataFunctions : TestBase() {
 
     @Test
     fun testMetadata() {
-        execute("SELECT * FROM METAT_PARSE('${urlGroups["mia"]!![2]}')")
+        val url = urlGroups["mia"]!![2]
 
         val pulsar = PulsarSession()
-        val page = pulsar.load("https://www.mia.com/item-1667324.html")
+        val page = pulsar.load(url)
         val doc = pulsar.parse(page)
-        println(doc)
+        assertEquals(page.url, doc.baseUri)
+
+        execute("SELECT * FROM META_PARSE('$url')")
     }
 }

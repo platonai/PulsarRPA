@@ -403,7 +403,7 @@ val Node.name: String
 
                 val cls = className()
                 if (cls.isNotEmpty()) {
-                    return "" + cls.replace("\\s+".toRegex(), "")
+                    return "." + cls.replace("\\s+".toRegex(), ".")
                 }
 
                 nodeName()
@@ -436,7 +436,7 @@ val Node.canonicalName: String
                 if (id.isEmpty()) {
                     cls = className().trim()
                     if (!cls.isEmpty()) {
-                        cls = "" + cls.replace("\\s+".toRegex(), "")
+                        cls = "." + cls.replace("\\s+".toRegex(), ".")
                     }
                 }
 

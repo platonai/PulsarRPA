@@ -41,9 +41,6 @@
     <bean id="boilerpipeFilter" class="fun.platonic.pulsar.parse.html.BoilerpipeFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="selectorFilter" class="fun.platonic.pulsar.parse.html.GeneralHtmlFilter">
-        <constructor-arg ref="conf"/>
-    </bean>
     <bean id="jsParseFilter" class="fun.platonic.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
@@ -51,7 +48,6 @@
         <constructor-arg>
             <list>
                 <ref bean="jsParseFilter" />
-                <ref bean="selectorFilter" />
                 <ref bean="boilerpipeFilter" />
             </list>
         </constructor-arg>

@@ -1,22 +1,23 @@
 package `fun`.platonic.pulsar.ql
 
-import `fun`.platonic.pulsar.common.ScentFiles
 import `fun`.platonic.pulsar.common.ScentPaths
+import `fun`.platonic.pulsar.common.StringUtil
+import `fun`.platonic.pulsar.ql.Db.BASE_TEST_DIR
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine
 import `fun`.platonic.pulsar.ql.utils.ResultSetFormatter
+import com.udojava.evalex.Expression.e
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
 import org.h2.tools.Server
+import org.h2.tools.SimpleResultSet
 import org.junit.After
 import org.junit.Before
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.*
 
 /**
  * The base class for all tests.
@@ -79,7 +80,7 @@ abstract class TestBase {
         )
     }
 
-    lateinit var name: String
+    var name: String = Db.generateTempDbName()
     lateinit var conn: Connection
     lateinit var stat: Statement
     lateinit var engine: H2QueryEngine
@@ -87,48 +88,70 @@ abstract class TestBase {
 
     @Before
     open fun setup() {
-        engine = H2QueryEngine
-        name = "" + System.currentTimeMillis() + "_" + Math.abs(Random().nextInt())
+        try {
+            beforeTest()
 
-        Db.deleteDb(name)
-        conn = Db.getConnection(name)
-        stat = conn.createStatement()
+            Db.config.traceTest = true
+            Db.config.memory = true
+            Db.config.networked = false
+
+            engine = H2QueryEngine
+
+            Db.deleteDb(name)
+            conn = Db.getConnection(name)
+            stat = conn.createStatement()
+        } catch (e: Throwable) {
+            println(StringUtil.stringifyException(e))
+        }
     }
 
     @After
     open fun teardown() {
-        Db.deleteDb(name)
+        try {
+            stat.close()
+            conn.close()
+            Db.deleteDb(name)
 
-        val content = history.joinToString("\n") { it }
-        val path = ScentPaths.get("test", "sql-history.sql")
-        Files.createDirectories(path.parent)
-        Files.write(path, content.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)
+            afterTest()
+        } catch (e: Throwable) {
+            println(StringUtil.stringifyException(e))
+        }
     }
 
     fun execute(sql: String, printResult: Boolean = true) {
-        val regex = "^(SELECT|CALL).+".toRegex()
-        if (sql.filter { it != '\n' }.trimIndent().matches(regex)) {
+        try {
+            val regex = "^(SELECT|CALL).+".toRegex()
+            if (sql.filter { it != '\n' }.trimIndent().matches(regex)) {
+                val rs = stat.executeQuery(sql)
+                if (printResult) {
+                    println(ResultSetFormatter(rs))
+                }
+            } else {
+                val r = stat.execute(sql)
+                if (printResult) {
+                    println(r)
+                }
+            }
+
+            history.add(sql)
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+    }
+
+    fun executeQuery(sql: String, printResult: Boolean = true): ResultSet {
+        try {
             val rs = stat.executeQuery(sql)
             if (printResult) {
                 println(ResultSetFormatter(rs))
             }
-        } else {
-            val r = stat.execute(sql)
-            if (printResult) {
-                println(r)
-            }
+            history.add(sql)
+            return rs
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
 
-        history.add(sql)
-    }
-
-    fun executeQuery(sql: String, printResult: Boolean = true): ResultSet {
-        val rs = stat.executeQuery(sql)
-        if (printResult) {
-            println(ResultSetFormatter(rs))
-        }
-        history.add(sql)
-        return rs
+        return SimpleResultSet()
     }
 
     /**
@@ -138,8 +161,8 @@ abstract class TestBase {
      */
     fun beforeTest() {
         val config = Db.config
-        FileUtils.deleteRecursive(Db.BASE_TEST_DIR, true)
-        DeleteDbFiles.execute(Db.BASE_TEST_DIR, null, true)
+        FileUtils.deleteRecursive(Db.BASE_TEST_DIR.toString(), true)
+        DeleteDbFiles.execute(Db.BASE_TEST_DIR.toString(), null, true)
         FileUtils.deleteRecursive("trace.db", false)
         if (config.networked) {
             val args = if (config.ssl)
@@ -167,6 +190,11 @@ abstract class TestBase {
             server!!.stop()
         }
         FileUtils.deleteRecursive("trace.db", true)
-        FileUtils.deleteRecursive(Db.BASE_TEST_DIR, true)
+        FileUtils.deleteRecursive(Db.BASE_TEST_DIR.toString(), true)
+
+        val content = history.joinToString("\n") { it }
+        val path = ScentPaths.get(BASE_TEST_DIR, "sql-history.sql")
+        Files.createDirectories(path.parent)
+        Files.write(path, content.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND)
     }
 }

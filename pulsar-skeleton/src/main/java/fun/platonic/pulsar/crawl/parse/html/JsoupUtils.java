@@ -38,7 +38,7 @@ public class JsoupUtils {
         obsoleteNodes.forEach(Node::remove);
 
         NodeTraversor.traverse((node, depth) -> {
-            if (node instanceof Element) {
+            if (!(node instanceof Element)) {
                 return;
             }
 
