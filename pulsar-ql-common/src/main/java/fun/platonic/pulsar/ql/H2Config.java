@@ -1,6 +1,5 @@
 package fun.platonic.pulsar.ql;
 
-import org.h2.engine.SysProperties;
 import org.h2.util.JdbcUtils;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,7 +15,8 @@ public class H2Config {
             return;
         }
 
-        SysProperties.serializeJavaObject = false;
+        // TODO: Failed to serialize DOM when serializeJavaObject enabled
+        System.setProperty("h2.serializeJavaObject", "false"); // set SysProperties.serializeJavaObject;
         JdbcUtils.serializer = new PulsarObjectSerializer();
 
         String dataTypeHandler = System.getProperty("h2.customDataTypesHandler");

@@ -8,18 +8,20 @@ import org.h2.tools.DeleteDbFiles
 import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
+import java.time.Instant
 import java.util.*
 
 /**
  * The base class for all tests.
  */
-object Db {
+class Db {
 
     init {
         System.setProperty("h2.sessionFactory", H2QueryEngine::class.java.name)
+        System.setProperty("h2.serializeJavaObject", "false")
     }
 
-    var config: DbConfig = DbConfig()
+    val config = DbConfig()
 
     /**
      * The base directory.
@@ -34,14 +36,12 @@ object Db {
     /**
      * The time when the test was started.
      */
-    var start: Long = 0
+    val startTime: Instant = Instant.now()
 
     /**
      * The base directory to write test databases.
      */
     private var baseDir = getTestDir("")
-
-    private val memory = LinkedList<ByteArray>()
 
     /**
      * Get the file password (only required if file encryption is used).

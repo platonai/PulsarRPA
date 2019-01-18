@@ -120,5 +120,8 @@ class DbConfig {
      */
     var defrag: Boolean = false
 
-    val port = 9092
+    /**
+     * Port for test server
+     * */
+    val port = 19092
 }
