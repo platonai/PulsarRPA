@@ -6,11 +6,13 @@ import com.mongodb.BasicDBObject
 import com.mongodb.MongoClient
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.test.assertNotNull
 
+@Ignore("Should run manually, have embed mongo prerequisite")
 class TestEmbedMongoDB {
     private val log = LoggerFactory.getLogger(TestEmbedMongoDB::class.java)
 
