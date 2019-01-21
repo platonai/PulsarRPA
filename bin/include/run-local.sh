@@ -49,8 +49,11 @@ PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.id.str=$PULSAR_IDENT_STRING)
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.log.dir=$PULSAR_LOG_DIR)
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.log.file=$PULSAR_LOGFILE)
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.root.logger=${PULSAR_ROOT_LOGGER:-INFO,console})
-
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dglobal.executor.concurrency=${GLOBAL_EXECUTOR_CONCURRENCY:-1})
+
+if [[ $DRY_RUN == "1" ]]; then
+    PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.dry.run=1)
+fi
 
 export CLASSPATH
 if [[ $VERBOSE_LEVEL == "1" ]]; then

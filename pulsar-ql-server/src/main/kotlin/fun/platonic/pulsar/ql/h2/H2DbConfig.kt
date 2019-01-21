@@ -1,13 +1,23 @@
 package `fun`.platonic.pulsar.ql.h2
 
+import org.h2.engine.Constants
+
 /**
- *
+ * The main test application. JUnit is not used because loops are easier to
+ * write in regular java applications (most tests are ran multiple times using
+ * different settings).
  */
-object DbConfig {
+class H2DbConfig {
 
-    val baseDir = "/tmp/scent-" + System.getenv("USER");
+    /**
+     * Whether the MVStore storage is used.
+     */
+    var mvStore = Constants.VERSION_MINOR >= 4
 
-    var mvStore: Boolean = true
+    /**
+     * If the test should run with many rows.
+     */
+    var big: Boolean = false
 
     /**
      * If remote database connections should be used.
@@ -18,6 +28,16 @@ object DbConfig {
      * If in-memory databases should be used.
      */
     var memory: Boolean = false
+
+    /**
+     * If the multi version concurrency control mode should be used.
+     */
+    var mvcc = mvStore
+
+    /**
+     * If the multi-threaded mode should be used.
+     */
+    var multiThreaded: Boolean = false
 
     /**
      * If lazy queries should be used.
@@ -93,12 +113,15 @@ object DbConfig {
     /**
      * The THROTTLE value to use by default.
      */
-    var throttleDefault = Integer.parseInt(System.getProperty("throttle", "0"))
+    internal var throttleDefault = Integer.parseInt(System.getProperty("throttle", "0"))
 
     /**
      * If the database should always be defragmented when closing.
      */
     var defrag: Boolean = false
 
-    var port = 91000
+    /**
+     * Port for test server
+     * */
+    val port = 19092
 }

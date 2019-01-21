@@ -2,10 +2,10 @@ package fun.platonic.pulsar.jobs.basic.fetch;
 
 import fun.platonic.pulsar.common.CounterUtils;
 import fun.platonic.pulsar.jobs.common.FetchEntry;
-import org.apache.hadoop.io.IntWritable;
 import fun.platonic.pulsar.jobs.core.GoraMapper;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.apache.hadoop.io.IntWritable;
 
 import java.io.IOException;
 import java.util.Random;

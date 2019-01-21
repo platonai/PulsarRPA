@@ -18,9 +18,9 @@ package fun.platonic.pulsar.parse.tika;
 
 import fun.platonic.pulsar.crawl.parse.ParseException;
 import fun.platonic.pulsar.crawl.protocol.ProtocolException;
+import fun.platonic.pulsar.persist.WebPage;
 import org.junit.Ignore;
 import org.junit.Test;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.IOException;
 

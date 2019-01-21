@@ -6,8 +6,8 @@ import fun.platonic.pulsar.common.*;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
+import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.metadata.FetchMode;
 import fun.platonic.pulsar.persist.metadata.PageCategory;
 import org.apache.commons.collections4.CollectionUtils;
@@ -18,8 +18,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.*;
+import static fun.platonic.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH;
+import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_HOME_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL;
 import static java.util.stream.Collectors.joining;
 
 public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable {
@@ -51,10 +53,6 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
      */
     private WebDb webDb;
     /**
-     * The Pulsar file manipulation
-     */
-    private PulsarFiles ps;
-    /**
      * The Pulsar simple metrics system
      */
     private MetricsSystem metrics;
@@ -79,7 +77,6 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     public TaskStatusTracker(WebDb webDb, MetricsSystem metrics, ImmutableConfig conf) {
         this.metrics = metrics;
-        ps = new PulsarFiles();
 
         this.webDb = webDb;
         this.seedIndexer = new WeakPageIndexer(SEED_HOME_URL, webDb);
@@ -227,7 +224,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     public void reportAndLogUnreachableHosts() {
         REPORT_LOG.info("There are " + unreachableHosts.size() + " unreachable hosts");
-        ps.logUnreachableHosts(this.unreachableHosts);
+        PulsarFiles.INSTANCE.logUnreachableHosts(this.unreachableHosts);
     }
 
     public void reportAndLogAvailableHosts() {

@@ -4,9 +4,7 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.persist.*;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.metadata.PageCategory;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -25,13 +23,15 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_REPORT_DIR;
+import static fun.platonic.pulsar.common.PulsarPaths.PATH_PULSAR_REPORT_DIR;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_JOB_NAME;
-import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_CACHE_DIR;
-import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_PULSAR_REPORT_DIR;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_REPORT_DIR;
 
 /**
  * Created by vincent on 16-10-12.
@@ -70,7 +70,7 @@ public class MetricsSystem implements AutoCloseable {
         try {
             reportDir = conf.getPath(PARAM_REPORT_DIR, PATH_PULSAR_REPORT_DIR);
             String ident = DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd");
-            reportDir = ScentPaths.INSTANCE.get(reportDir.toString(), ident);
+            reportDir = PulsarPaths.INSTANCE.get(reportDir.toString(), ident);
             Files.createDirectories(reportDir);
         } catch (IOException e) {
             LOG.error(e.toString());
@@ -125,25 +125,6 @@ public class MetricsSystem implements AutoCloseable {
             commit();
             reportCount = 0;
         }
-    }
-
-    public Path cache(WebPage page) {
-        Objects.requireNonNull(page);
-
-        Path path = Paths.get(PATH_PULSAR_CACHE_DIR.toString(), dayOfWeek, DigestUtils.md5Hex(page.getUrl()));
-
-        try {
-            if (!Files.exists(path)) {
-                Files.createDirectories(path.getParent());
-            }
-
-            Objects.requireNonNull(page.getContent());
-            Files.write(path, page.getContent().array(), StandardOpenOption.CREATE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return path;
     }
 
     private WebPage getOrCreateMetricsPage(String url) {

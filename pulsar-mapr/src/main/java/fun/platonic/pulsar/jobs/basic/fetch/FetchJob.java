@@ -22,10 +22,10 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.jobs.common.FetchEntry;
 import fun.platonic.pulsar.jobs.common.URLPartitioner;
+import fun.platonic.pulsar.jobs.core.PulsarJob;
 import org.apache.hadoop.io.IntWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.jobs.core.PulsarJob;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,9 +33,7 @@ import java.util.List;
 
 import static fun.platonic.pulsar.common.PulsarParams.ARG_CRAWL_ID;
 import static fun.platonic.pulsar.common.PulsarParams.ARG_RESUME;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.BATCH_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.RESUME;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 /**
  * Fetch job

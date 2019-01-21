@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import static fun.platonic.pulsar.common.config.CapabilityTypes.DRY_RUN;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
 
 /**
@@ -98,7 +99,7 @@ public abstract class AbstractConfiguration {
         }
 
         List<String> realResources = new ArrayList<>();
-        String dir = isDistributedFs(conf) ? "cluster" : "local";
+        String dir = isDistributedFs() ? "cluster" : "local";
         for (String name : resources) {
             String realResource = getRealResource(preferredDir, dir, name);
             if (realResource != null) {
@@ -112,10 +113,10 @@ public abstract class AbstractConfiguration {
 
         LOG.info(toString());
 
-        checkLog4j();
+        checkLog4jProperties();
     }
 
-    private void checkLog4j() {
+    private void checkLog4jProperties() {
         String log4j = System.getProperty("Log4j.configuration");
         if (log4j != null) {
             LOG.info("Log4j(specified): " + log4j);
@@ -124,7 +125,7 @@ public abstract class AbstractConfiguration {
             if (url != null) {
                 LOG.info("Log4j(classpath): " + url);
             } else {
-                LOG.info("Failed to find log4j.properties");
+                System.out.println("Failed to find log4j.properties");
             }
         }
     }
@@ -160,8 +161,12 @@ public abstract class AbstractConfiguration {
         return null;
     }
 
-    public static boolean isDistributedFs(Configuration conf) {
-        String fsName = conf.get("fs.defaultFS");
+    public boolean isDryRun() {
+        return getBoolean(DRY_RUN, false);
+    }
+
+    public boolean isDistributedFs() {
+        String fsName = get("fs.defaultFS");
         return fsName != null && fsName.startsWith("hdfs");
     }
 

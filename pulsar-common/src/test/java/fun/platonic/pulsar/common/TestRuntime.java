@@ -28,7 +28,7 @@ public class TestRuntime {
 
     @Test
     public void testJavaProcess() {
-        boolean running = RuntimeUtils.checkIfJavaProcessRunning("HMaster");
+        boolean running = RuntimeUtils.checkIfProcessRunning("HMaster");
         System.out.println(running);
     }
 }

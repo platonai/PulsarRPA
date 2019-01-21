@@ -15,14 +15,14 @@ public class RuntimeUtils {
 
     protected static final Logger LOG = LoggerFactory.getLogger(RuntimeUtils.class);
 
-    public static boolean checkIfJavaProcessRunning(String imageName) {
+    public static boolean checkIfProcessRunning(String regex) {
         try {
-            Process proc = Runtime.getRuntime().exec("jps");
+            Process proc = Runtime.getRuntime().exec("ps -ef");
             BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-            String line = null;
+            String line;
             while ((line = in.readLine()) != null) {
                 // System.out.println(line);
-                if (line.contains(imageName)) {
+                if (line.matches(regex)) {
                     return true;
                 }
             }

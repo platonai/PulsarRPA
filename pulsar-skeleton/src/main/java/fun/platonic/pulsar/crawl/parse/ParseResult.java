@@ -16,9 +16,9 @@
  ******************************************************************************/
 package fun.platonic.pulsar.crawl.parse;
 
-import org.jsoup.nodes.Document;
 import fun.platonic.pulsar.persist.HypeLink;
 import fun.platonic.pulsar.persist.ParseStatus;
+import org.jsoup.nodes.Document;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

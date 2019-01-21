@@ -20,12 +20,12 @@ import fun.platonic.pulsar.common.DateTimeUtil;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.scoring.ScoringFilters;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.time.Instant;
 import java.util.Collection;

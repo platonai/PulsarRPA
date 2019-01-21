@@ -25,9 +25,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
+import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_MAX_DISTANCE;
 import static fun.platonic.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;
 import static fun.platonic.pulsar.common.config.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_MAX_DISTANCE;
 
 
 /**

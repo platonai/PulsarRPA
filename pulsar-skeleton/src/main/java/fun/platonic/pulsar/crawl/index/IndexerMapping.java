@@ -19,7 +19,6 @@ package fun.platonic.pulsar.crawl.index;
 import com.google.common.collect.Lists;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;

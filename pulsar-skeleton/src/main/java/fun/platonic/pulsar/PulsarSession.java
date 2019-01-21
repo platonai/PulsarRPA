@@ -1,16 +1,16 @@
 package fun.platonic.pulsar;
 
 import fun.platonic.pulsar.common.ConcurrentLRUCache;
-import fun.platonic.pulsar.common.ScentFiles;
-import fun.platonic.pulsar.common.ScentPaths;
+import fun.platonic.pulsar.common.PulsarFiles;
+import fun.platonic.pulsar.common.PulsarPaths;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.VolatileConfig;
+import fun.platonic.pulsar.common.files.ext.PulsarFilesExtKt;
 import fun.platonic.pulsar.common.options.LoadOptions;
 import fun.platonic.pulsar.dom.FeaturedDocument;
 import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -301,15 +301,15 @@ public class PulsarSession implements AutoCloseable {
     }
 
     public Path export(WebPage page, String ident) {
-        return ScentFiles.INSTANCE.save(page, ident);
+        return PulsarFilesExtKt.save(PulsarFiles.INSTANCE, page, ident);
     }
 
     public Path export(FeaturedDocument doc) {
-        return ScentFiles.INSTANCE.save(doc.getPrettyHtml(), "cache/files", ScentPaths.INSTANCE.fromUri(doc.getBaseUri(), ".htm"));
+        return PulsarFiles.INSTANCE.save(doc.getPrettyHtml(), "cache/files", PulsarPaths.INSTANCE.fromUri(doc.getBaseUri(), ".htm"));
     }
 
     public Path exportTo(FeaturedDocument doc, Path path) {
-        return ScentFiles.INSTANCE.saveTo(doc.getPrettyHtml().getBytes(), path, true);
+        return PulsarFiles.INSTANCE.saveTo(doc.getPrettyHtml().getBytes(), path, true);
     }
 
     @Override
@@ -334,6 +334,7 @@ public class PulsarSession implements AutoCloseable {
 
     @Override
     public void close() {
+        LOG.info("Destructing pulsar session " + this);
         pulsar.close();
     }
 }

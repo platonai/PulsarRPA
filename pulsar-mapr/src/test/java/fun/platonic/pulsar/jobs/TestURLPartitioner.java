@@ -18,14 +18,14 @@ package fun.platonic.pulsar.jobs;
 
 import fun.platonic.pulsar.common.URLUtil;
 import fun.platonic.pulsar.common.config.MutableConfig;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
-import org.junit.Before;
-import org.junit.Test;
 import fun.platonic.pulsar.jobs.common.FetchEntry;
 import fun.platonic.pulsar.jobs.common.SelectorEntry;
 import fun.platonic.pulsar.jobs.common.URLPartitioner;
 import fun.platonic.pulsar.persist.WebPage;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.net.MalformedURLException;
 

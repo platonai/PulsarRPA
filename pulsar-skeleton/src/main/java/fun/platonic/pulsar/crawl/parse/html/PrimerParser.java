@@ -24,14 +24,14 @@ import fun.platonic.pulsar.common.NodeWalker;
 import fun.platonic.pulsar.common.URLUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.filter.CrawlFilters;
+import fun.platonic.pulsar.crawl.parse.Parser;
+import fun.platonic.pulsar.persist.HypeLink;
+import fun.platonic.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import fun.platonic.pulsar.crawl.parse.Parser;
-import fun.platonic.pulsar.persist.HypeLink;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 
 object H2QueryEngine : org.h2.engine.SessionFactory {
 
-    val LOG = LoggerFactory.getLogger(H2QueryEngine::class.java)
+    private val log = LoggerFactory.getLogger(H2QueryEngine::class.java)
 
     init {
         H2Config.config()
@@ -48,7 +48,7 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
 
         val querySession = QueryEngine.createQuerySession(DbSession(h2session))
 
-        LOG.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
+        log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
                 querySession, h2session, ci.url)
 
         return h2session

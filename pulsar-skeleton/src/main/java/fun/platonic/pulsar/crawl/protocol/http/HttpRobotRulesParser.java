@@ -19,12 +19,12 @@ package fun.platonic.pulsar.crawl.protocol.http;
 
 import crawlercommons.robots.BaseRobotRules;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.crawl.protocol.Protocol;
 import fun.platonic.pulsar.crawl.protocol.Response;
 import fun.platonic.pulsar.crawl.protocol.RobotRulesParser;
 import fun.platonic.pulsar.persist.WebPage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 

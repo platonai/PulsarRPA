@@ -18,18 +18,16 @@ package fun.platonic.pulsar.jobs.samples;
 
 import fun.platonic.pulsar.common.CommonCounter;
 import fun.platonic.pulsar.common.config.Params;
-import org.apache.hadoop.io.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.jobs.core.GoraMapper;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.BATCH_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.LIMIT;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 public class SampleMapper extends GoraMapper<String, GWebPage, Text, GWebPage> {
 

@@ -19,7 +19,6 @@ package fun.platonic.pulsar.parse.html;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.PulsarConstants;
-import fun.platonic.pulsar.crawl.parse.ParseException;
 import fun.platonic.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

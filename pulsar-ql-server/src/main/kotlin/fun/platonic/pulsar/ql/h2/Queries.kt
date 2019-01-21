@@ -22,7 +22,6 @@ import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet

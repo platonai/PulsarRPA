@@ -1,7 +1,8 @@
 package `fun`.platonic.pulsar.ql
 
-import `fun`.platonic.pulsar.common.ScentPaths
-import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_TMP_DIR
+import `fun`.platonic.pulsar.common.PulsarPaths
+import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR
+import `fun`.platonic.pulsar.ql.h2.H2DbConfig
 import `fun`.platonic.pulsar.ql.h2.H2QueryEngine
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
@@ -14,24 +15,24 @@ import java.util.*
 /**
  * The base class for all tests.
  */
-class Db {
+class H2Db {
 
     init {
         System.setProperty("h2.sessionFactory", H2QueryEngine::class.java.name)
         System.setProperty("h2.serializeJavaObject", "false")
     }
 
-    val config = DbConfig()
+    val config = H2DbConfig()
 
     /**
      * The base directory.
      */
-    val BASE_TEST_DIR = ScentPaths.get(PULSAR_TMP_DIR, "test", "h2")
+    val BASE_TEST_DIR = PulsarPaths.get(PULSAR_DEFAULT_TMP_DIR, "test", "h2")
 
     /**
      * The temporary directory.
      */
-    val TEMP_DIR = ScentPaths.get(PULSAR_TMP_DIR, "test", "h2", "tmp")
+    val TEMP_DIR = PulsarPaths.get(PULSAR_DEFAULT_TMP_DIR, "test", "h2", "tmp")
 
     /**
      * The time when the test was started.
@@ -189,7 +190,7 @@ class Db {
             url = addOption(url, "TRACE_MAX_FILE_SIZE", "8")
         }
 
-        url = addOption(url, "LOG", "1")
+        url = addOption(url, "log", "1")
         if (config.throttleDefault > 0) {
             url = addOption(url, "THROTTLE", "" + config.throttleDefault)
         } else if (config.throttle > 0) {
@@ -260,7 +261,7 @@ class Db {
      * @return the test directory
      */
     fun getTestDir(name: String): Path {
-        return ScentPaths.get(BASE_TEST_DIR, name)
+        return PulsarPaths.get(BASE_TEST_DIR, name)
     }
 
     private fun addOption(url: String, option: String, value: String): String {

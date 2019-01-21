@@ -22,10 +22,10 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.jobs.common.IdentityPageReducer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.jobs.core.PulsarJob;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;

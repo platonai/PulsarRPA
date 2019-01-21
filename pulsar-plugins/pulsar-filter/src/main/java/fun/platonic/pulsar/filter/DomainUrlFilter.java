@@ -21,11 +21,11 @@ import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.URLUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.filter.UrlFilter;
+import fun.platonic.pulsar.net.domain.DomainSuffix;
+import fun.platonic.pulsar.net.domain.DomainSuffixes;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.net.domain.DomainSuffix;
-import fun.platonic.pulsar.net.domain.DomainSuffixes;
 
 import java.util.LinkedHashSet;
 import java.util.Set;

@@ -19,7 +19,6 @@ package fun.platonic.pulsar.jobs.basic.update;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
-import org.apache.gora.filter.MapFieldValueFilter;
 import fun.platonic.pulsar.jobs.core.PulsarJob;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import fun.platonic.pulsar.persist.graph.GraphGroupKey;
@@ -27,6 +26,7 @@ import fun.platonic.pulsar.persist.graph.GraphGroupKey.GraphKeyComparator;
 import fun.platonic.pulsar.persist.graph.GraphGroupKey.UrlOnlyComparator;
 import fun.platonic.pulsar.persist.graph.GraphGroupKey.UrlOnlyPartitioner;
 import fun.platonic.pulsar.persist.io.WebGraphWritable;
+import org.apache.gora.filter.MapFieldValueFilter;
 
 import java.util.ArrayList;
 import java.util.Collections;

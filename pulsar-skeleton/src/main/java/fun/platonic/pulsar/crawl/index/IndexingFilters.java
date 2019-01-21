@@ -2,9 +2,9 @@ package fun.platonic.pulsar.crawl.index;
 
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.util.ArrayList;
 import java.util.Collections;

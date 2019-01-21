@@ -1,8 +1,6 @@
 package `fun`.platonic.pulsar.dom.model
 
-import `fun`.platonic.pulsar.dom.model.Website
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import org.w3c.dom.Document
 import org.w3c.dom.Node
 import java.io.File

@@ -18,15 +18,15 @@ package fun.platonic.pulsar.jobs.core;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
+import fun.platonic.pulsar.persist.WebDb;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 
 public abstract class AppContextAwareJob extends PulsarJob {
 

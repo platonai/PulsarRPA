@@ -32,9 +32,14 @@ public interface CapabilityTypes {
     String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
     String PULSAR_CONFIG_RESOURCES = "pulsar.config.resources";
 
+    String PARAM_HOME_DIR = "pulsar.home.dir";
     String PARAM_TMP_DIR = "pulsar.tmp.dir";
+    String PARAM_DATA_DIR = "pulsar.data.dir";
+
     String PARAM_OUTPUT_DIR = "pulsar.output.dir";
     String PARAM_REPORT_DIR = "pulsar.report.dir";
+    String PARAM_IDENT_STR = "pulsar.id.str";
+
     String PULSAR_CLUSTER_SLAVES = "pulsar.cluster.slaves";
     String CRAWL_ID = "storage.crawl.id";
     String CRAWL_ROUND = "crawl.round";
@@ -44,6 +49,7 @@ public interface CapabilityTypes {
     String MAPREDUCE_JOB_REDUCES = "mapreduce.job.reduces";
     String MAPPER_LIMIT = "pulsar.mapper.limit";
     String REDUCER_LIMIT = "pulsar.reducer.limit";
+    String DRY_RUN = "pulsar.dry.run";
     String REINDEX = "reindex";
     String FORCE = "force";
     String RESUME = "pulsar.job.resume";
@@ -70,6 +76,10 @@ public interface CapabilityTypes {
     String STORAGE_PREFERRED_SCHEMA_NAME = "preferred.schema.name";
     String STORAGE_DATA_STORE_CLASS = "storage.data.store.class";
     String STORAGE_DATUM_EXPIRES = "storage.datum.expires";
+    String STORAGE_EMBED_MONGO = "storage.embed.mongo";
+
+    String GORA_MONGODB_SERVERS = "gora.mongodb.servers";
+    // String GORA_MONGODB_EMBED_SERVERS = "gora.mongodb.embed.servers";
     /**
      * Spring
      */

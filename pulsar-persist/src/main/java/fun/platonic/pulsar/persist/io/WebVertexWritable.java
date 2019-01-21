@@ -1,5 +1,6 @@
 package fun.platonic.pulsar.persist.io;
 
+import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import fun.platonic.pulsar.persist.graph.WebVertex;
 import org.apache.gora.util.IOUtils;
@@ -7,7 +8,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.DataInput;
 import java.io.DataOutput;

@@ -22,12 +22,12 @@ import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.crawl.scoring.NamedScoreVector;
 import fun.platonic.pulsar.crawl.scoring.ScoreVector;
-import org.apache.hadoop.io.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.jobs.core.GoraReducer;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Instant;

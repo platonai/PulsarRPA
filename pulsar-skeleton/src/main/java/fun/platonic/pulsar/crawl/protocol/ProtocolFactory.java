@@ -21,13 +21,13 @@ import fun.platonic.pulsar.common.ObjectCache;
 import fun.platonic.pulsar.common.ResourceLoader;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.metadata.FetchMode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.metadata.FetchMode;
 
 import javax.annotation.Nullable;
 import java.net.URL;

@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package `fun`.platonic.pulsar.persist
+package `fun`.platonic.pulsar.persist.experimental
 
-import `fun`.platonic.pulsar.common.config.PulsarConstants.*
 import `fun`.platonic.pulsar.common.config.MutableConfig
+import `fun`.platonic.pulsar.common.config.PulsarConstants.*
+import `fun`.platonic.pulsar.persist.*
 import `fun`.platonic.pulsar.persist.gora.generated.GParseStatus
 import `fun`.platonic.pulsar.persist.gora.generated.GProtocolStatus
 import `fun`.platonic.pulsar.persist.gora.generated.GWebPage
@@ -499,7 +500,7 @@ class GoraWebPage(override val url: String, val page: GWebPage) : IWebPage {
             Objects.requireNonNull(title)
             Objects.requireNonNull(content)
 
-            val page = GoraWebPage.newWebPage(url)
+            val page = newWebPage(url)
 
             page.modifiedTime = impreciseNow
             page.fetchTime = Instant.parse("3000-01-01T00:00:00Z")

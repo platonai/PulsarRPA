@@ -20,11 +20,11 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.parse.ParseFilter;
 import fun.platonic.pulsar.crawl.parse.html.HTMLMetaTags;
 import fun.platonic.pulsar.crawl.parse.html.ParseContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import fun.platonic.pulsar.persist.Metadata;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.*;
 

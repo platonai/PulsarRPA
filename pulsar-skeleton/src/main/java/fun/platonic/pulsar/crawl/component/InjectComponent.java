@@ -9,13 +9,15 @@ import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.common.options.CommonOptions;
+import fun.platonic.pulsar.crawl.inject.SeedBuilder;
+import fun.platonic.pulsar.persist.WebDb;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.metadata.Mark;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.crawl.inject.SeedBuilder;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
-import fun.platonic.pulsar.persist.metadata.Mark;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import javax.annotation.Nonnull;
 import java.nio.file.Files;
@@ -28,10 +30,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static fun.platonic.pulsar.common.PulsarParams.*;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_HOME_URL;
 import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_PAGE_1_URL;
-import static fun.platonic.pulsar.common.PulsarParams.*;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
 
 /**
  * Created by vincent on 17-5-14.
@@ -58,7 +62,10 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
         InjectOptions opts = new InjectOptions(args);
         opts.parseOrExit();
 
-        MutableConfig conf = new MutableConfig(opts.config);
+        ApplicationContext context = new ClassPathXmlApplicationContext(
+                System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION));
+
+        MutableConfig conf = context.getBean(MutableConfig.class);
         conf.setIfNotEmpty(CRAWL_ID, opts.crawlId);
 
         String seeds = opts.seeds.get(0);
@@ -69,7 +76,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
                 .filter(u -> !u.isEmpty() && !u.startsWith("#"))
                 .sorted().distinct().collect(Collectors.toList());
 
-        try (WebDb webDb = new WebDb(conf)) {
+        try (WebDb webDb = context.getBean(WebDb.class)) {
             InjectComponent injectComponent = new InjectComponent(new SeedBuilder(), webDb, conf);
             injectComponent.injectAll(configuredUrls.toArray(new String[0]));
             injectComponent.commit();

@@ -16,11 +16,11 @@
  */
 package fun.platonic.pulsar.filter;
 
+import fun.platonic.pulsar.crawl.filter.UrlFilters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import fun.platonic.pulsar.crawl.filter.UrlFilters;
 
 import static org.junit.Assert.assertNull;
 

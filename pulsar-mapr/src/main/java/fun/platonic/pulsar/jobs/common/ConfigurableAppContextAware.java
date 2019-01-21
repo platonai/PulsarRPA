@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 
 /**
  * Created by vincent on 17-4-17.

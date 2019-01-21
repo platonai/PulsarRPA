@@ -10,7 +10,6 @@ import org.apache.gora.query.Query
 import org.apache.gora.query.impl.PartitionQueryImpl
 import org.apache.gora.store.DataStoreFactory
 import org.apache.gora.store.impl.DataStoreBase
-import org.apache.gora.util.ByteUtils.toBytes
 import org.apache.hadoop.conf.Configurable
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.*
@@ -21,12 +20,10 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.util.Pair
 import org.jdom.Element
 import org.jdom.input.SAXBuilder
-import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.MalformedURLException
-import java.net.URL
 import java.net.URLClassLoader
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue

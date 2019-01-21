@@ -8,7 +8,7 @@
     <bean id="config" class="fun.platonic.pulsar.common.config.ImmutableConfig">
         <constructor-arg value="test-context" />
     </bean>
-    <bean id="webDb" class="fun.platonic.pulsar.persist.gora.db.WebDb">
+    <bean id="webDb" class="fun.platonic.pulsar.persist.WebDb">
         <constructor-arg value="config" />
     </bean>
 

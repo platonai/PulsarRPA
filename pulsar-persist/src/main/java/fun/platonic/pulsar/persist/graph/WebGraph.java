@@ -1,11 +1,11 @@
 package fun.platonic.pulsar.persist.graph;
 
+import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jgrapht.ext.*;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DirectedWeightedPseudograph;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.StringWriter;
 import java.io.Writer;

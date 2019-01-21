@@ -1,12 +1,12 @@
 package fun.platonic.pulsar.boilerpipe;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
 import fun.platonic.pulsar.boilerpipe.document.TextDocument;
 import fun.platonic.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import fun.platonic.pulsar.boilerpipe.sax.HTMLDownloader;
 import fun.platonic.pulsar.boilerpipe.sax.HTMLParser;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;

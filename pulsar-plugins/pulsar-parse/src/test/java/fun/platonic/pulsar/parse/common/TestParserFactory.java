@@ -21,7 +21,6 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.parse.Parser;
 import fun.platonic.pulsar.crawl.parse.ParserConfigReader;
 import fun.platonic.pulsar.crawl.parse.ParserFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

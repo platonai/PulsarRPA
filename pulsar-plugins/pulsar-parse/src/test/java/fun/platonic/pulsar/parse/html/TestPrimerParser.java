@@ -21,6 +21,7 @@ import com.google.common.collect.Lists;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.crawl.parse.html.PrimerParser;
+import fun.platonic.pulsar.persist.HypeLink;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.cyberneko.html.parsers.DOMFragmentParser;
 import org.junit.Before;
@@ -30,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.w3c.dom.DocumentFragment;
-import fun.platonic.pulsar.persist.HypeLink;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 

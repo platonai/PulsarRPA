@@ -3,10 +3,10 @@ package fun.platonic.pulsar.boilerpipe.filters.heuristics;
 import fun.platonic.pulsar.boilerpipe.document.BlockLabels;
 import fun.platonic.pulsar.boilerpipe.document.TextBlock;
 import fun.platonic.pulsar.boilerpipe.document.TextDocument;
-import fun.platonic.pulsar.common.DateTimeDetector;
 import fun.platonic.pulsar.boilerpipe.filters.TextBlockFilter;
 import fun.platonic.pulsar.boilerpipe.utils.ProcessingException;
 import fun.platonic.pulsar.boilerpipe.utils.Scent;
+import fun.platonic.pulsar.common.DateTimeDetector;
 
 import java.time.Duration;
 import java.time.Instant;

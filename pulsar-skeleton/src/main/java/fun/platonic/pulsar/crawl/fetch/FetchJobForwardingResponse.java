@@ -2,8 +2,8 @@ package fun.platonic.pulsar.crawl.fetch;
 
 import fun.platonic.pulsar.common.HttpHeaders;
 import fun.platonic.pulsar.crawl.protocol.ForwardingResponse;
-import org.apache.commons.lang3.math.NumberUtils;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import static fun.platonic.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEFAULT;
 

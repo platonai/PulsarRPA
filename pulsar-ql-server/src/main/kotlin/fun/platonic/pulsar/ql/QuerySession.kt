@@ -11,7 +11,6 @@ import `fun`.platonic.pulsar.ql.h2.udas.GroupFetch
 import `fun`.platonic.pulsar.ql.h2.udfs.CommonFunctions
 import `fun`.platonic.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
-import org.h2.api.Aggregate
 import org.h2.engine.SessionInterface
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass

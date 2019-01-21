@@ -1,10 +1,14 @@
 package fun.platonic.pulsar.crawl.component;
 
-import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.common.URLUtil;
 import fun.platonic.pulsar.common.UrlUtil;
+import fun.platonic.pulsar.common.config.PulsarConstants;
 import fun.platonic.pulsar.common.options.LinkOptions;
 import fun.platonic.pulsar.common.options.LoadOptions;
+import fun.platonic.pulsar.crawl.fetch.TaskStatusTracker;
+import fun.platonic.pulsar.crawl.parse.ParseResult;
+import fun.platonic.pulsar.persist.*;
+import fun.platonic.pulsar.persist.gora.generated.GHypeLink;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -12,14 +16,6 @@ import org.apache.hadoop.classification.InterfaceStability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import fun.platonic.pulsar.crawl.fetch.TaskStatusTracker;
-import fun.platonic.pulsar.crawl.parse.ParseResult;
-import fun.platonic.pulsar.persist.PageCounters;
-import fun.platonic.pulsar.persist.ProtocolStatus;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.WebPageFormatter;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
-import fun.platonic.pulsar.persist.gora.generated.GHypeLink;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

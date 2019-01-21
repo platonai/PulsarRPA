@@ -16,10 +16,10 @@
  ******************************************************************************/
 package fun.platonic.pulsar.persist.graph;
 
+import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import fun.platonic.pulsar.persist.metadata.Name;
 import org.jgrapht.graph.DefaultWeightedEdge;
-import fun.platonic.pulsar.persist.WebPage;
 
 public class WebEdge extends DefaultWeightedEdge {
 

@@ -18,6 +18,7 @@
 package fun.platonic.pulsar.common;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.crawl.protocol.ProtocolOutput;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
@@ -27,7 +28,6 @@ import org.apache.tika.mime.MimeTypes;
 import org.apache.tika.mime.MimeTypesFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.crawl.protocol.ProtocolOutput;
 
 import java.io.File;
 import java.io.IOException;

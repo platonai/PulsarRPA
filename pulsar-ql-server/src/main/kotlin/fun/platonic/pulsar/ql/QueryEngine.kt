@@ -39,7 +39,11 @@ import java.util.concurrent.atomic.AtomicBoolean
  * </ul>
  */
 object QueryEngine {
-    private val LOG = LoggerFactory.getLogger(QueryEngine::class.java)
+    private val log = LoggerFactory.getLogger(QueryEngine::class.java)
+
+    enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
+
+    var status: Status = Status.NOT_READY
 
     private var backgroundSession: PulsarSession = PulsarContext.createSession()
 
@@ -47,15 +51,15 @@ object QueryEngine {
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
-    private var sessions: LoadingCache<DbSession, QuerySession>
+    private val sessions: LoadingCache<DbSession, QuerySession>
 
-    private var taskStatusTracker: TaskStatusTracker
+    private val taskStatusTracker: TaskStatusTracker
 
-    private var proxyPool: ProxyPool
+    private val proxyPool: ProxyPool
 
-    private var backgroundExecutor: ScheduledExecutorService
+    private val backgroundExecutor: ScheduledExecutorService
 
-    private var backgroundTaskBatchSize: Int = 20
+    private val backgroundTaskBatchSize: Int
 
     private var lazyTaskRound = 0
 
@@ -63,10 +67,13 @@ object QueryEngine {
 
     private var handlePeriodicalFetchTasks: Boolean
 
-    private val closed: AtomicBoolean = AtomicBoolean()
+    private val isClosed: AtomicBoolean = AtomicBoolean()
 
     init {
+        status = Status.INITIALIZING
+
         Runtime.getRuntime().addShutdownHook(Thread(this::close))
+
         SeleniumEngine.CLIENT_JS = BrowserControl(unmodifiedConfig).getJs()
         sessions = CacheBuilder.newBuilder()
                 .maximumSize(200)
@@ -81,6 +88,8 @@ object QueryEngine {
         backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
         backgroundExecutor = Executors.newScheduledThreadPool(5)
         registerBackgroundTasks()
+
+        status = Status.RUNNING
     }
 
     fun createQuerySession(dbSession: DbSession): QuerySession {
@@ -103,11 +112,12 @@ object QueryEngine {
     }
 
     fun close() {
-        if (closed.getAndSet(true)) {
+        if (isClosed.getAndSet(true)) {
             return
         }
+        status = Status.CLOSING
 
-        LOG.info("[Destruction] Destructing QueryEngine ...")
+        log.info("[Destruction] Destructing QueryEngine ...")
 
         backgroundExecutor.shutdownNow()
 
@@ -117,6 +127,8 @@ object QueryEngine {
         taskStatusTracker.close()
 
         proxyPool.close()
+
+        status = Status.CLOSED
     }
 
     private fun registerBackgroundTasks() {
@@ -137,7 +149,7 @@ object QueryEngine {
             target()
         } catch (e: Throwable) {
             // Do not throw anything
-            LOG.error(e.toString())
+            log.error(e.toString())
         }
     }
 
@@ -179,7 +191,7 @@ object QueryEngine {
 
     private fun loadAll(urls: Iterable<String>, batchSize: Int, mode: FetchMode) {
         if (!urls.iterator().hasNext() || batchSize <= 0) {
-            LOG.debug("Not loading lazy tasks")
+            log.debug("Not loading lazy tasks")
             return
         }
 
@@ -197,13 +209,13 @@ object QueryEngine {
 
     private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
         ++lazyTaskRound
-        LOG.debug("Running {}th round for lazy tasks", lazyTaskRound)
+        log.debug("Running {}th round for lazy tasks", lazyTaskRound)
         backgroundSession.parallelLoadAll(urls, loadOptions)
     }
 
     private class SessionCacheLoader(val engine: QueryEngine): CacheLoader<DbSession, QuerySession>() {
         override fun load(dbSession: DbSession): QuerySession {
-            LOG.warn("Create PulsarSession for h2 h2session {} via SessionCacheLoader (not expected ...)", dbSession)
+            log.warn("Create PulsarSession for h2 h2session {} via SessionCacheLoader (not expected ...)", dbSession)
             return createQuerySession(dbSession)
         }
     }
@@ -217,7 +229,7 @@ object QueryEngine {
                     // It's safe to close h2 h2session, @see {org.h2.api.ErrorCode#DATABASE_CALLED_AT_SHUTDOWN}
                     // h2session.close()
                     notification.value.close()
-                    LOG.info("Session {} is closed for reason '{}', remaining {} sessions",
+                    log.info("Session {} is closed for reason '{}', remaining {} sessions",
                             dbSession, cause, sessions.size())
                 }
                 else -> {

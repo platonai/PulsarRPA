@@ -19,20 +19,20 @@ package fun.platonic.pulsar.jobs.basic.generate;
 import fun.platonic.pulsar.common.MetricsCounters;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.Params;
-import fun.platonic.pulsar.jobs.common.SelectorEntry;
-import org.slf4j.Logger;
 import fun.platonic.pulsar.jobs.basic.fetch.FetchMapper;
+import fun.platonic.pulsar.jobs.common.SelectorEntry;
 import fun.platonic.pulsar.jobs.core.GoraReducer;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import fun.platonic.pulsar.persist.metadata.Mark;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static fun.platonic.pulsar.common.UrlUtil.reverseUrl;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.BATCH_ID;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.GENERATE_TOP_N;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 
 /**
  * Reduce class for generate

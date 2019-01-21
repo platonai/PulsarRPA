@@ -1,10 +1,9 @@
 package fun.platonic.pulsar.ql.io;
 
 import fun.platonic.pulsar.common.ConcurrentLRUCache;
-import fun.platonic.pulsar.common.config.PulsarConstants;
-import fun.platonic.pulsar.ql.types.ValueDom;
 import fun.platonic.pulsar.dom.Documents;
 import fun.platonic.pulsar.dom.FeaturedDocument;
+import fun.platonic.pulsar.ql.types.ValueDom;
 import org.apache.hadoop.io.Writable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

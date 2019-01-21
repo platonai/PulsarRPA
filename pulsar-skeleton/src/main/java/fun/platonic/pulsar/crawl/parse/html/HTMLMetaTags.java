@@ -17,10 +17,10 @@
 
 package fun.platonic.pulsar.crawl.parse.html;
 
+import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 
 import java.net.URL;
 import java.util.Properties;

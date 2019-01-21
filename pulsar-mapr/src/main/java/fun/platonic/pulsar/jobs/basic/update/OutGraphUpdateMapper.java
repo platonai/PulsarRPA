@@ -19,8 +19,6 @@ package fun.platonic.pulsar.jobs.basic.update;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.crawl.scoring.ScoringFilters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.jobs.core.GoraMapper;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
@@ -29,6 +27,8 @@ import fun.platonic.pulsar.persist.graph.WebEdge;
 import fun.platonic.pulsar.persist.graph.WebGraph;
 import fun.platonic.pulsar.persist.graph.WebVertex;
 import fun.platonic.pulsar.persist.io.WebGraphWritable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 

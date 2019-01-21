@@ -16,9 +16,9 @@
  */
 package fun.platonic.pulsar.crawl.protocol;
 
+import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 
 import javax.annotation.Nullable;
 

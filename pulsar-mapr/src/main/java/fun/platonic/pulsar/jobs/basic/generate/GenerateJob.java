@@ -23,16 +23,16 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.jobs.common.JobUtils;
 import fun.platonic.pulsar.jobs.common.SelectorEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.jobs.core.PulsarJob;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;
 import static fun.platonic.pulsar.common.PulsarParams.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;
 
 public final class GenerateJob extends PulsarJob {
 
@@ -76,7 +76,7 @@ public final class GenerateJob extends PulsarJob {
         conf.setBoolean(GENERATE_FILTER, !noFilter);
         conf.setBoolean(GENERATE_NORMALISE, !noNormalizer);
 
-        PulsarFiles.writeBatchId(batchId);
+        PulsarFiles.INSTANCE.writeBatchId(batchId);
 
         LOG.info(Params.format(
                 "className", this.getClass().getSimpleName(),

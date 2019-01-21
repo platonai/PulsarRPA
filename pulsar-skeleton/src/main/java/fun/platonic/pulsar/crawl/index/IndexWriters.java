@@ -2,7 +2,6 @@ package fun.platonic.pulsar.crawl.index;
 
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;

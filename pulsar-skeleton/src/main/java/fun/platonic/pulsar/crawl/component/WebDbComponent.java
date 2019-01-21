@@ -19,19 +19,20 @@ package fun.platonic.pulsar.crawl.component;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
-import org.apache.gora.util.GoraException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.WebPageFormatter;
 import fun.platonic.pulsar.persist.gora.db.DbQuery;
 import fun.platonic.pulsar.persist.gora.db.DbQueryResult;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
+import org.apache.gora.util.GoraException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -44,6 +45,7 @@ public class WebDbComponent implements AutoCloseable {
 
     private ImmutableConfig conf;
     private WebDb webDb;
+    private AtomicBoolean isClosed = new AtomicBoolean();
 
     public WebDbComponent(ImmutableConfig conf) throws GoraException, ClassNotFoundException {
         this(new WebDb(conf), conf);
@@ -106,6 +108,10 @@ public class WebDbComponent implements AutoCloseable {
 
     @Override
     public void close() {
+        if (isClosed.getAndSet(true)) {
+            return;
+        }
+
         webDb.close();
     }
 }

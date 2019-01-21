@@ -19,11 +19,11 @@ package fun.platonic.pulsar.crawl.filter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.persist.HypeLink;
+import fun.platonic.pulsar.persist.metadata.PageCategory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
-import fun.platonic.pulsar.persist.HypeLink;
-import fun.platonic.pulsar.persist.metadata.PageCategory;
 
 import javax.annotation.Nonnull;
 import java.util.*;

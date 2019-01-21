@@ -1,15 +1,12 @@
 package `fun`.platonic.pulsar.ql
 
-import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.dom.FeaturedDocument
-import `fun`.platonic.pulsar.ql.h2.Db.deleteDb
 import `fun`.platonic.pulsar.ql.h2.domValue
 import `fun`.platonic.pulsar.ql.types.ValueDom
 import org.h2.engine.SysProperties
 import org.jsoup.Jsoup
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.sql.Types
 import kotlin.test.assertEquals

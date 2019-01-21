@@ -6,11 +6,11 @@ import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.common.options.CrawlOptions;
 import fun.platonic.pulsar.crawl.scoring.ScoringFilters;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.metadata.Mark;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.metadata.Mark;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;

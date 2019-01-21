@@ -22,9 +22,9 @@ import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.crawl.index.IndexingException;
 import fun.platonic.pulsar.crawl.index.IndexingFilter;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.util.Map;
 

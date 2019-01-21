@@ -1,6 +1,5 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.common.SingleFiledLines
 import com.google.common.collect.Multiset
 import com.google.common.collect.TreeMultiset
 import java.util.*

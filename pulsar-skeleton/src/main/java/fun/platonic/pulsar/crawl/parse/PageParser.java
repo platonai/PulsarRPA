@@ -25,8 +25,6 @@ import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.crawl.filter.CrawlFilters;
 import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.crawl.signature.Signature;
 import fun.platonic.pulsar.crawl.signature.TextMD5Signature;
 import fun.platonic.pulsar.persist.HypeLink;
@@ -34,6 +32,8 @@ import fun.platonic.pulsar.persist.ParseStatus;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.Mark;
 import fun.platonic.pulsar.persist.metadata.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
@@ -42,9 +42,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_TIMEOUT;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 import static fun.platonic.pulsar.persist.metadata.Name.NO_FOLLOW;
 import static fun.platonic.pulsar.persist.metadata.Name.REDIRECT_DISCOVERED;
 import static fun.platonic.pulsar.persist.metadata.ParseStatusCodes.FAILED;

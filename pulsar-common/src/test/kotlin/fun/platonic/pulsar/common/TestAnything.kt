@@ -1,6 +1,5 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.common.SingleFiledLines
 import com.google.common.collect.TreeMultimap
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution

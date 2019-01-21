@@ -1,9 +1,9 @@
 package fun.platonic.pulsar.crawl.scoring.io;
 
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 import fun.platonic.pulsar.crawl.scoring.NamedScoreVector;
 import fun.platonic.pulsar.crawl.scoring.ScoreVector;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;

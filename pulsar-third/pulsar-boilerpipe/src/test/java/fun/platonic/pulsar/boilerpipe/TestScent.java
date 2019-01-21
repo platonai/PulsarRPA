@@ -1,13 +1,13 @@
 package fun.platonic.pulsar.boilerpipe;
 
 import com.google.common.collect.Lists;
-import fun.platonic.pulsar.common.DateTimeDetector;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
 import fun.platonic.pulsar.boilerpipe.document.TextBlock;
 import fun.platonic.pulsar.boilerpipe.document.TextDocument;
 import fun.platonic.pulsar.boilerpipe.utils.Scent;
 import fun.platonic.pulsar.boilerpipe.utils.ScentUtils;
+import fun.platonic.pulsar.common.DateTimeDetector;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by vincent on 16-11-9.

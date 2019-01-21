@@ -2,8 +2,7 @@ package `fun`.platonic.pulsar.ql.h2.udfs
 
 import `fun`.platonic.pulsar.common.PulsarContext.unmodifiedConfig
 import `fun`.platonic.pulsar.common.PulsarFiles
-import `fun`.platonic.pulsar.common.ScentFiles
-import `fun`.platonic.pulsar.common.ScentPaths
+import `fun`.platonic.pulsar.common.PulsarPaths
 import `fun`.platonic.pulsar.common.proxy.ProxyPool
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
 import `fun`.platonic.pulsar.ql.annotation.UDFunction
@@ -48,8 +47,8 @@ object AdminFunctions {
     fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
         checkPrivilege(h2session)
         val page = H2QueryEngine.getSession(h2session).load(url)
-        val path = ScentPaths.get(ScentPaths.webCacheDir.toString(), ScentPaths.fromUri(page.url, ".htm"))
-        return ScentFiles.saveTo(page, path).toString()
+        val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), PulsarPaths.fromUri(page.url, ".htm"))
+        return PulsarFiles.saveTo(page, path).toString()
     }
 
     @UDFunction

@@ -17,10 +17,10 @@
 
 package fun.platonic.pulsar.common;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.net.domain.DomainSuffix;
 import fun.platonic.pulsar.net.domain.DomainSuffixes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.net.*;

@@ -1,8 +1,8 @@
 package fun.platonic.pulsar.crawl.parse.html;
 
-import org.w3c.dom.DocumentFragment;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.persist.WebPage;
+import org.w3c.dom.DocumentFragment;
 
 /**
  * Created by vincent on 17-7-28.

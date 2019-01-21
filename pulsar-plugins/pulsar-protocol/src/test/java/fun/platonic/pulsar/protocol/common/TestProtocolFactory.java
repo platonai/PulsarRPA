@@ -19,10 +19,10 @@ package fun.platonic.pulsar.protocol.common;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.protocol.ProtocolFactory;
-import org.junit.Before;
-import org.junit.Test;
 import fun.platonic.pulsar.protocol.crowd.ForwardingProtocol;
 import fun.platonic.pulsar.protocol.selenium.SeleniumProtocol;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

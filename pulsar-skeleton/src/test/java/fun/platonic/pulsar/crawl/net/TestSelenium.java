@@ -1,7 +1,6 @@
 package fun.platonic.pulsar.crawl.net;
 
 import fun.platonic.pulsar.common.config.MutableConfig;
-import fun.platonic.pulsar.crawl.protocol.Response;
 import fun.platonic.pulsar.net.SeleniumEngine;
 import fun.platonic.pulsar.net.WebDriverQueues;
 import org.junit.Before;

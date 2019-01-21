@@ -177,7 +177,7 @@ SELECT
   DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.brand')) AS W,
   DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.brand')) AS H,
   IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 100)
 WHERE DOM_CH(DOM) > 100
 """
         execute(sql)
@@ -247,7 +247,7 @@ SELECT
   DOM_FIRST_TEXT(DOM, 'div:iN-bOx(560,27),*:IN-BOX(560,56)') AS TITLE,
   DOM_FIRST_TEXT(DOM, '*:expr($titleExpr)') AS TITLE2,
   IN_BOX_FIRST_TEXT(DOM, '560x27,560x56') AS TITLE3
-FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 20)
+FROM LOAD_OUT_PAGES('$productIndexUrl', '$restrictCss', 1, 10)
 WHERE DOM_CH(DOM) > 100
 """
         execute(sql)

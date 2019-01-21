@@ -25,7 +25,6 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.proxy.ProxyPool;
-import org.apache.commons.lang3.math.NumberUtils;
 import fun.platonic.pulsar.crawl.protocol.Content;
 import fun.platonic.pulsar.crawl.protocol.Protocol;
 import fun.platonic.pulsar.crawl.protocol.ProtocolOutput;
@@ -34,6 +33,7 @@ import fun.platonic.pulsar.persist.ProtocolStatus;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.FetchMode;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -48,12 +48,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static fun.platonic.pulsar.common.HttpHeaders.Q_RESPONSE_TIME;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.FETCH_MODE;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.HTTP_FETCH_MAX_RETRY;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.HTTP_TIMEOUT;
-import static org.apache.http.HttpStatus.*;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 import static fun.platonic.pulsar.persist.ProtocolStatus.*;
 import static fun.platonic.pulsar.persist.metadata.Name.RESPONSE_TIME;
+import static org.apache.http.HttpStatus.*;
 
 public abstract class AbstractHttpProtocol implements Protocol {
 

@@ -20,19 +20,19 @@ import fun.platonic.pulsar.common.config.CapabilityTypes;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.config.Params;
+import fun.platonic.pulsar.jobs.core.PulsarJob;
+import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.jobs.core.PulsarJob;
-import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static fun.platonic.pulsar.common.PulsarParams.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 
 public class SampleJob extends PulsarJob {
 

@@ -6,9 +6,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.nio.file.Paths;
 
+import static fun.platonic.pulsar.filter.DomainUrlFilter.PARAM_URLFILTER_DOMAIN_FILE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static fun.platonic.pulsar.filter.DomainUrlFilter.PARAM_URLFILTER_DOMAIN_FILE;
 
 /**
  * Created by vincent on 17-2-23.

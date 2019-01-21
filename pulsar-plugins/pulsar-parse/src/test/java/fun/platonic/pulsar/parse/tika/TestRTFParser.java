@@ -22,12 +22,12 @@ import fun.platonic.pulsar.crawl.parse.PageParser;
 import fun.platonic.pulsar.crawl.parse.ParseException;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.crawl.protocol.ProtocolException;
+import fun.platonic.pulsar.persist.WebPage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.DataInputStream;
 import java.io.File;

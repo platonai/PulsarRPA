@@ -82,6 +82,8 @@ public interface PulsarConstants {
      * Storage
      * */
     String MEM_STORE_CLASS = "org.apache.gora.memory.store.MemStore";
+    String TOY_STORE_CLASS = "fun.platonic.pulsar.persist.gora.ToyFileStore";
+    String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
 
     int FETCH_PRIORITY_MIN = -10 * 1000;
@@ -195,21 +197,11 @@ public interface PulsarConstants {
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
     int DEFAULT_INDEX_SERVER_PORT = 8983;
 
+    String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
+
     String TMP_DIR = System.getProperty("java.io.tmpdir");
     String HOME_DIR = System.getProperty("user.home");
-    Path PULSAR_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
-    Path PULSAR_ROOT = PULSAR_TMP_DIR;
-    String PULSAR_ROOT_STR = PULSAR_ROOT.toString();
-    Path PULSAR_DATA = Paths.get(HOME_DIR, ".pulsar", "data");
 
-    Path PATH_LAST_BATCH_ID = Paths.get(PULSAR_ROOT_STR, "last-batch-id");
-    Path PATH_LAST_GENERATED_ROWS = Paths.get(PULSAR_ROOT_STR, "last-generated-rows");
-    Path PATH_LOCAL_COMMAND = Paths.get(PULSAR_ROOT_STR, "pulsar-commands");
-    Path PATH_EMERGENT_SEEDS = Paths.get(PULSAR_ROOT_STR, "emergent-seeds");
-    Path PATH_BANNED_URLS = Paths.get(PULSAR_ROOT_STR, "banned-urls");
-    Path PATH_UNREACHABLE_HOSTS = Paths.get(PULSAR_ROOT_STR, "unreachable-hosts.txt");
-
-    Path PATH_PULSAR_OUTPUT_DIR = PULSAR_ROOT;
-    Path PATH_PULSAR_REPORT_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "report");
-    Path PATH_PULSAR_CACHE_DIR = Paths.get(PATH_PULSAR_OUTPUT_DIR.toString(), "cache");
+    Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
+    Path PULSAR_DEFAULT_DATA_DIR = Paths.get(HOME_DIR, ".pulsar");
 }

@@ -20,13 +20,13 @@ import fun.platonic.pulsar.common.ResourceLoader;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.filter.UrlNormalizer;
+import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
 import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilderFactory;

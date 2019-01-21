@@ -104,12 +104,20 @@ public class WebPage {
         this.url = urlReversed ? UrlUtil.unreverseUrl(url) : url;
         this.reversedUrl = urlReversed ? url : UrlUtil.reverseUrlOrEmpty(url);
         this.page = page;
+
+        if (page.getBaseUrl() == null) {
+            setBaseUrl(url);
+        }
     }
 
     private WebPage(String url, String reversedUrl, GWebPage page) {
         this.url = Objects.requireNonNull(url);
         this.reversedUrl = Objects.requireNonNull(reversedUrl);
         this.page = Objects.requireNonNull(page);
+
+        if (page.getBaseUrl() == null) {
+            setBaseUrl(url);
+        }
     }
 
     @Nonnull
@@ -130,6 +138,7 @@ public class WebPage {
 
         WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
 
+        page.setBaseUrl(url);
         page.setMutableConfig(mutableConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(impreciseNow);
@@ -157,6 +166,7 @@ public class WebPage {
 
         WebPage page = WebPage.newWebPage(url);
 
+        page.setBaseUrl(url);
         page.setModifiedTime(impreciseNow);
         page.setFetchTime(Instant.parse("3000-01-01T00:00:00Z"));
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());

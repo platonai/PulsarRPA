@@ -16,13 +16,13 @@
  ******************************************************************************/
 package fun.platonic.pulsar.jobs.common;
 
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.util.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 
 import java.io.DataInput;
 import java.io.DataOutput;

@@ -20,12 +20,12 @@ package fun.platonic.pulsar.crawl.schedule;
 import fun.platonic.pulsar.common.MetricsSystem;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
+import fun.platonic.pulsar.persist.CrawlStatus;
+import fun.platonic.pulsar.persist.WebDb;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.metadata.Mark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.CrawlStatus;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
-import fun.platonic.pulsar.persist.metadata.Mark;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -56,10 +56,6 @@ public abstract class AbstractFetchSchedule implements FetchSchedule {
         this.conf = conf;
         defaultInterval = conf.getDuration(FETCH_DEFAULT_INTERVAL, Duration.ofDays(30));
         maxInterval = conf.getDuration(FETCH_MAX_INTERVAL, Duration.ofDays(90));
-
-        if (metricsSystem == null) {
-            metricsSystem = new MetricsSystem(new WebDb(conf), conf);
-        }
     }
 
     @Override

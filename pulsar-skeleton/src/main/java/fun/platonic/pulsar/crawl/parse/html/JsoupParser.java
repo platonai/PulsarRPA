@@ -3,6 +3,7 @@ package fun.platonic.pulsar.crawl.parse.html;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.options.CollectionOptions;
 import fun.platonic.pulsar.common.options.EntityOptions;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,7 +11,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;

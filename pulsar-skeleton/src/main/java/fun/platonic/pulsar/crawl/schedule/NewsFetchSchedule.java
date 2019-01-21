@@ -17,8 +17,8 @@
 
 package fun.platonic.pulsar.crawl.schedule;
 
-import org.slf4j.Logger;
 import fun.platonic.pulsar.persist.WebPage;
+import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;

@@ -2,12 +2,12 @@ package fun.platonic.pulsar.jobs.basic.inject;
 
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.crawl.inject.SeedBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import fun.platonic.pulsar.jobs.core.Mapper;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
 

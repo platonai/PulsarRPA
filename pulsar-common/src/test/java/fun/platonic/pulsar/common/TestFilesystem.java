@@ -12,7 +12,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.PULSAR_TMP_DIR;
+import static fun.platonic.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestFilesystem {
     private String readableTime = new SimpleDateFormat("MMdd.HHmmss").format(System.currentTimeMillis());
-    private Path commandFile = Paths.get(PULSAR_TMP_DIR.toString(), "command", "test." + readableTime + ".sh");
+    private Path commandFile = Paths.get(PULSAR_DEFAULT_TMP_DIR.toString(), "command", "test." + readableTime + ".sh");
 
     @Test
     public void testCreateFiles() throws IOException {

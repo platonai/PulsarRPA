@@ -4,7 +4,6 @@ import `fun`.platonic.pulsar.common.FuzzyProbability
 import `fun`.platonic.pulsar.dom.data.BlockLabel
 import `fun`.platonic.pulsar.dom.data.BlockLabelTracker
 import `fun`.platonic.pulsar.dom.data.BlockPattern
-import `fun`.platonic.pulsar.dom.nodes.*
 import `fun`.platonic.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.codec.digest.DigestUtils
 import org.jsoup.nodes.Element

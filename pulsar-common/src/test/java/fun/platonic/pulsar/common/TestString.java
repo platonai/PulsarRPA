@@ -17,11 +17,9 @@
 
 package fun.platonic.pulsar.common;
 
-import com.google.common.collect.Maps;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -94,6 +92,9 @@ public class TestString {
         text = "http://aitxt.com/book/12313413874";
         regex = ".*";
         assertTrue(text.matches(regex));
+
+        regex = "aitxt";
+        assertFalse(text.matches(regex));
 
         text = "abcde";
         regex = "[a-zA-Z](?!\\d+).+";

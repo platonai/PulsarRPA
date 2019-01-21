@@ -7,6 +7,7 @@ import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.common.proxy.ProxyEntry;
 import fun.platonic.pulsar.common.proxy.ProxyPool;
+import fun.platonic.pulsar.persist.metadata.BrowserType;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.metadata.BrowserType;
 
 import javax.net.ssl.SSLContext;
 import java.lang.reflect.InvocationTargetException;

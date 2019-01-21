@@ -1,11 +1,11 @@
 package fun.platonic.pulsar.common;
 
 import com.google.common.collect.Lists;
+import fun.platonic.pulsar.persist.HypeLink;
+import fun.platonic.pulsar.persist.WebDb;
+import fun.platonic.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.HypeLink;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -162,7 +162,7 @@ public class WeakPageIndexer {
             webDb.put(url, indexPage);
             webDb.flush();
 
-            LOG.debug("Created weak index: " + url);
+            // LOG.debug("Created weak index: " + url);
         }
 
         return indexPage;

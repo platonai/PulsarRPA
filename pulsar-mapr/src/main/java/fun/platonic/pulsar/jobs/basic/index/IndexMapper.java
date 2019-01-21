@@ -5,18 +5,16 @@ import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.crawl.index.IndexWriters;
 import fun.platonic.pulsar.crawl.index.IndexingFilters;
-import org.slf4j.Logger;
 import fun.platonic.pulsar.jobs.core.GoraMapper;
 import fun.platonic.pulsar.persist.CrawlMarks;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import fun.platonic.pulsar.persist.metadata.Mark;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.FORCE;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PARSE_REPARSE;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.RESUME;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 
 public class IndexMapper extends GoraMapper<String, GWebPage, String, GWebPage> {
 

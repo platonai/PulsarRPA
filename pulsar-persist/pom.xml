@@ -31,6 +31,10 @@
             <groupId>fun.platonic.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
+        <dependency>
+            <groupId>fun.platonic.pulsar</groupId>
+            <artifactId>pulsar-h2</artifactId>
+        </dependency>
 
         <!-- Required by org.apache.hadoop.conf.Configuration -->
         <dependency>
@@ -90,6 +94,19 @@
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-hbase</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.gora</groupId>
+            <artifactId>gora-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <version>${mongo.embed.version}</version>
         </dependency>
 
         <!-- Kotlin -->

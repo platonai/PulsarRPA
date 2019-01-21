@@ -16,6 +16,7 @@
  ******************************************************************************/
 package fun.platonic.pulsar.persist.gora.db;
 
+import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.query.Result;
@@ -33,6 +34,9 @@ public class DbIterator implements Iterator<WebPage> {
     private Result<String, GWebPage> result;
     private WebPage nextPage;
     private Predicate<WebPage> filter;
+
+    public DbIterator() {
+    }
 
     public DbIterator(Result<String, GWebPage> result) {
         Objects.requireNonNull(result);

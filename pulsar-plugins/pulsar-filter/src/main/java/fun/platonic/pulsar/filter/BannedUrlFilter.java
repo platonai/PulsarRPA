@@ -26,8 +26,8 @@ import fun.platonic.pulsar.crawl.filter.UrlFilter;
 import java.util.HashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_BANNED_URLS;
-import static fun.platonic.pulsar.common.config.PulsarConstants.PATH_UNREACHABLE_HOSTS;
+import static fun.platonic.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
+import static fun.platonic.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 
 /**
  * Filters URLs based on a file of regular expressions using the

@@ -24,10 +24,10 @@ import fun.platonic.pulsar.crawl.schedule.FetchSchedule;
 import fun.platonic.pulsar.crawl.scoring.ScoreVector;
 import fun.platonic.pulsar.crawl.scoring.ScoringFilters;
 import fun.platonic.pulsar.jobs.common.SelectorEntry;
-import org.slf4j.Logger;
 import fun.platonic.pulsar.jobs.core.GoraMapper;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 

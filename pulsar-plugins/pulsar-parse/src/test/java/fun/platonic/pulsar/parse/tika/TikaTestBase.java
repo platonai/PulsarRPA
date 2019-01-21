@@ -2,10 +2,10 @@ package fun.platonic.pulsar.parse.tika;
 
 import fun.platonic.pulsar.common.MimeUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.persist.WebPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.IOException;
 import java.nio.file.Files;

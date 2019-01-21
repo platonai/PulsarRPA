@@ -19,17 +19,16 @@ package fun.platonic.pulsar.indexer.solr;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
-import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.crawl.index.IndexingException;
 import fun.platonic.pulsar.crawl.index.IndexingFilters;
+import fun.platonic.pulsar.persist.WebPage;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import fun.platonic.pulsar.persist.WebPage;
 
 import static org.junit.Assert.assertNull;
 

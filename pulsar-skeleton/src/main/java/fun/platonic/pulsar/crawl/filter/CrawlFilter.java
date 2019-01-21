@@ -21,13 +21,13 @@ import com.google.gson.GsonBuilder;
 import fun.platonic.pulsar.common.StringUtil;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.metadata.PageCategory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.slf4j.Logger;
 import org.w3c.dom.Node;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.metadata.PageCategory;
 
 import java.io.IOException;
 import java.util.regex.Pattern;

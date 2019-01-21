@@ -7,12 +7,6 @@ import org.h2.tools.Shell;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_RESOURCES;
-import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 
 public class H2Shell extends Shell {
 

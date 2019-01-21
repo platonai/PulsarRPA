@@ -19,12 +19,12 @@ package fun.platonic.pulsar.crawl.scoring;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.graph.WebEdge;
 import fun.platonic.pulsar.persist.graph.WebGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;

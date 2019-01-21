@@ -12,10 +12,9 @@ import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
 import fun.platonic.pulsar.crawl.parse.html.JsoupParser;
 import fun.platonic.pulsar.dom.FeaturedDocument;
 import fun.platonic.pulsar.net.SeleniumEngine;
+import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jsoup.nodes.Document;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -25,8 +24,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
 
 public class Pulsar implements AutoCloseable {
 
@@ -36,7 +35,7 @@ public class Pulsar implements AutoCloseable {
     private final LoadComponent loadComponent;
     private final UrlNormalizers urlNormalizers;
     private MutableConfig defaultMutableConfig;
-    private AtomicBoolean closed = new AtomicBoolean(false);
+    private AtomicBoolean isClosed = new AtomicBoolean(false);
 
     public Pulsar() {
         this(new ClassPathXmlApplicationContext(
@@ -271,7 +270,7 @@ public class Pulsar implements AutoCloseable {
 
     @Override
     public void close() {
-        if (closed.getAndSet(true)) {
+        if (isClosed.getAndSet(true)) {
             return;
         }
 

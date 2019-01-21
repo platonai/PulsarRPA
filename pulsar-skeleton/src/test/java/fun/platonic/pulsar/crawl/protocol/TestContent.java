@@ -18,6 +18,7 @@
 package fun.platonic.pulsar.crawl.protocol;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.crawl.common.WritableTestUtils;
 import fun.platonic.pulsar.crawl.protocol.io.ContentWritable;
 import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import fun.platonic.pulsar.persist.metadata.SpellCheckedMultiMetadata;
@@ -25,7 +26,6 @@ import org.apache.tika.mime.MimeTypes;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import fun.platonic.pulsar.crawl.common.WritableTestUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

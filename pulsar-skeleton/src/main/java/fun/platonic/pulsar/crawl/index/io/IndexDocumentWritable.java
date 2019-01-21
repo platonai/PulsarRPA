@@ -1,11 +1,11 @@
 package fun.platonic.pulsar.crawl.index.io;
 
+import fun.platonic.pulsar.crawl.index.IndexDocument;
+import fun.platonic.pulsar.crawl.index.IndexField;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VersionMismatchException;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableUtils;
-import fun.platonic.pulsar.crawl.index.IndexDocument;
-import fun.platonic.pulsar.crawl.index.IndexField;
 
 import java.io.DataInput;
 import java.io.DataOutput;

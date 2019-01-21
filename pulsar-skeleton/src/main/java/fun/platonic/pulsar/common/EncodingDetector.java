@@ -19,10 +19,10 @@ package fun.platonic.pulsar.common;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;

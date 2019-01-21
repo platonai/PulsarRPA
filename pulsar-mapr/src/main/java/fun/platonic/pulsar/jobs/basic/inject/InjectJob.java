@@ -21,13 +21,13 @@ import com.beust.jcommander.Parameter;
 import fun.platonic.pulsar.common.DateTimeUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
+import fun.platonic.pulsar.jobs.core.PulsarJob;
+import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.mapreduce.GoraOutputFormat;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.jobs.core.PulsarJob;
-import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 
 import java.io.File;
 import java.nio.file.Files;

@@ -18,15 +18,15 @@
 package fun.platonic.pulsar.crawl.component;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import fun.platonic.pulsar.crawl.filter.CrawlFilters;
 import fun.platonic.pulsar.crawl.parse.PageParser;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.Name;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.util.Collections;

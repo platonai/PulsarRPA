@@ -7,6 +7,10 @@ import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
 import fun.platonic.pulsar.crawl.protocol.ForwardingResponse;
 import fun.platonic.pulsar.crawl.protocol.Response;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.metadata.BrowserType;
+import fun.platonic.pulsar.persist.metadata.MultiMetadata;
+import fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,15 +21,11 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.metadata.BrowserType;
-import fun.platonic.pulsar.persist.metadata.MultiMetadata;
-import fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes;
 
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.*;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 
 import static fun.platonic.pulsar.common.HttpHeaders.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static fun.platonic.pulsar.persist.metadata.ProtocolStatusCodes.THREAD_TIMEOUT;
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
 /**
  * Created by vincent on 18-1-1.
@@ -61,7 +61,6 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
     private WebDriverQueues drivers;
     private GlobalExecutor executor;
-    private PulsarFiles fs;
 
     private String supportedEncodings = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1"
             + "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257";
@@ -93,11 +92,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public SeleniumEngine(
             GlobalExecutor executor,
             WebDriverQueues drivers,
-            PulsarFiles fs,
             ImmutableConfig immutableConfig) {
         this.executor = executor;
         this.drivers = drivers;
-        this.fs = fs;
         this.immutableConfig = immutableConfig;
 
         reload(immutableConfig);
@@ -106,7 +103,6 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public SeleniumEngine(ImmutableConfig immutableConfig) {
         executor = GlobalExecutor.getInstance(immutableConfig);
         drivers = new WebDriverQueues(immutableConfig);
-        fs = new PulsarFiles();
 
         reload(immutableConfig);
     }
@@ -311,9 +307,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         // headers.put(CONTENT_TYPE, "");
 
         if (LOG.isDebugEnabled()) {
-            ScentPaths paths = ScentPaths.INSTANCE;
+            PulsarPaths paths = PulsarPaths.INSTANCE;
             Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(page.getUrl(), ".htm"));
-            ScentFiles.INSTANCE.saveTo(pageSource, path, true);
+            PulsarFiles.INSTANCE.saveTo(pageSource, path, true);
         }
 
         return pageSource;
@@ -420,9 +416,9 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             if (LOG.isDebugEnabled()) {
                 try {
                     byte[] bytes = remoteWebDriver.getScreenshotAs(OutputType.BYTES);
-                    ScentPaths paths = ScentPaths.INSTANCE;
+                    PulsarPaths paths = PulsarPaths.INSTANCE;
                     Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(page.getUrl(), ".png"));
-                    ScentFiles.INSTANCE.saveTo(bytes, path, true);
+                    PulsarFiles.INSTANCE.saveTo(bytes, path, true);
                 } catch (Exception e) {
                     LOG.warn("Failed to take screenshot for " + page.getUrl());
                 }

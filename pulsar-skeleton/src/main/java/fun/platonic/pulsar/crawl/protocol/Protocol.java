@@ -20,9 +20,9 @@ package fun.platonic.pulsar.crawl.protocol;
 import crawlercommons.robots.BaseRobotRules;
 import fun.platonic.pulsar.common.config.Configurable;
 import fun.platonic.pulsar.common.config.MutableConfig;
+import fun.platonic.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
 
 import java.util.Collection;
 import java.util.Collections;

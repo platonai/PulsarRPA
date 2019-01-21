@@ -7,7 +7,7 @@ import org.h2.engine.Constants
  * write in regular java applications (most tests are ran multiple times using
  * different settings).
  */
-class DbConfig {
+class H2DbConfig {
 
     /**
      * Whether the MVStore storage is used.

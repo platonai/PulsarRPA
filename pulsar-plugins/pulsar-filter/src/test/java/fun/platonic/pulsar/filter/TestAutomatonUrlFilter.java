@@ -1,7 +1,7 @@
 package fun.platonic.pulsar.filter;
 
-import org.junit.Test;
 import fun.platonic.pulsar.crawl.filter.UrlFilter;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.Reader;

@@ -13,7 +13,7 @@ class SessionConfig(private val dbSession: DbSession, fallbackConfig: ImmutableC
         val sequence = dbSession.sqlSequence
         val ttl = super.getTTL(propertyName)
         val expired = sequence > ttl
-        // LOG.debug("Property {}, sequence: {}, ttl: {}", propertyName, sequence, ttl);
+        // log.debug("Property {}, sequence: {}, ttl: {}", propertyName, sequence, ttl);
         if (LOG.isDebugEnabled && expired) {
             LOG.debug("Property {} is expired at the {}th command", propertyName, sequence)
         }

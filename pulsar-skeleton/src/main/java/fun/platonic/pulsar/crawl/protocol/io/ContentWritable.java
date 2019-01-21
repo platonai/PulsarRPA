@@ -2,14 +2,13 @@ package fun.platonic.pulsar.crawl.protocol.io;
 
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.protocol.Content;
+import fun.platonic.pulsar.persist.io.MetadataWritable;
+import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.VersionMismatchException;
 import org.apache.hadoop.io.Writable;
-import fun.platonic.pulsar.persist.io.MetadataWritable;
-import fun.platonic.pulsar.persist.metadata.MultiMetadata;
 
 import java.io.*;
 import java.util.zip.InflaterInputStream;

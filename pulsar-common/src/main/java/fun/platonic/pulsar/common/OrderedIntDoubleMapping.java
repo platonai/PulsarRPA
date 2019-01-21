@@ -18,7 +18,6 @@
 package fun.platonic.pulsar.common;
 
 import org.apache.commons.math3.linear.OpenMapRealVector;
-import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SparseRealVector;
 
 import java.io.Serializable;

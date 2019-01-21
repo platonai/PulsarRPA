@@ -1,7 +1,7 @@
 package `fun`.platonic.pulsar.ql.h2
 
-import `fun`.platonic.pulsar.ql.types.ValueDom
 import `fun`.platonic.pulsar.dom.FeaturedDocument
+import `fun`.platonic.pulsar.ql.types.ValueDom
 import org.jsoup.nodes.Element
 
 fun domValue(document: FeaturedDocument): ValueDom {

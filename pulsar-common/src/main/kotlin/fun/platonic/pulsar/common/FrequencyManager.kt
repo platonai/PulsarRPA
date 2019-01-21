@@ -1,8 +1,7 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_TMP_DIR
+import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -115,7 +114,7 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
     }
 
     fun save() {
-        saveTo(PULSAR_TMP_DIR)
+        saveTo(PULSAR_DEFAULT_TMP_DIR)
     }
 
     fun load() {

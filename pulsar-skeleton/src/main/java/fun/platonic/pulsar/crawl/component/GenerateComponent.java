@@ -21,19 +21,19 @@ import fun.platonic.pulsar.common.*;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.common.config.ReloadableParameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import fun.platonic.pulsar.crawl.filter.CrawlFilter;
 import fun.platonic.pulsar.crawl.filter.CrawlFilters;
 import fun.platonic.pulsar.crawl.filter.UrlFilters;
 import fun.platonic.pulsar.crawl.filter.UrlNormalizers;
 import fun.platonic.pulsar.crawl.schedule.FetchSchedule;
 import fun.platonic.pulsar.crawl.scoring.ScoringFilters;
+import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.metadata.FetchMode;
 import fun.platonic.pulsar.persist.metadata.Mark;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -41,8 +41,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.*;
+import static fun.platonic.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
+import static fun.platonic.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
+import static fun.platonic.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -83,14 +86,12 @@ public class GenerateComponent implements ReloadableParameterized {
     private ScoringFilters scoringFilters;
     private CrawlFilters crawlFilters;
     private FetchSchedule fetchSchedule;
-    private PulsarFiles pulsarFiles;
     private MetricsSystem metricsSystem;
     private MetricsCounters metricsCounters = new MetricsCounters();
 
     public GenerateComponent(CrawlFilters crawlFilters, ImmutableConfig conf) {
         this.conf = conf;
         this.crawlFilters = crawlFilters;
-        this.pulsarFiles = new PulsarFiles();
 
         reload(conf);
     }

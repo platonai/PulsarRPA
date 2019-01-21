@@ -35,7 +35,7 @@ function printUsage() {
 }
 
 MODULE=
-while [ $# -gt 0 ]
+while [[ $# -gt 0 ]]
 do
 case $1 in
     -c|--config)
@@ -58,6 +58,10 @@ case $1 in
         ;;
     -V|--version)
         SHOW_VERSION=true
+        shift
+        ;;
+    --dry-run)
+        export DRY_RUN=1
         shift
         ;;
     -*)
@@ -106,7 +110,7 @@ else
 fi
 
 # Put the config dir path at the front of CLASSPATH
-if [ -d "$PULSAR_CONF_DIR" ]; then
+if [[ -d "$PULSAR_CONF_DIR" ]]; then
   CLASSPATH="${CLASSPATH}:$PULSAR_CONF_DIR"
 fi
 
@@ -126,6 +130,9 @@ elif [[ "$COMMAND" = "server" ]] ; then
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-ql-server
   CLASS=fun.platonic.pulsar.ql.start.H2Shell
+elif [[ "$COMMAND" = "mongo" ]] ; then
+  MODULE=pulsar-persist
+  CLASS=fun.platonic.pulsar.persist.storage.JvmEmbedMongoStarter
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else
@@ -133,7 +140,7 @@ else
   exit 0
 fi
 
-if [ "$PULSAR_RUNTIME_MODE" == "PACKED" ]; then
+if [[ "$PULSAR_RUNTIME_MODE" == "PACKED" ]]; then
  # cluster mode, just pull the job file into hadoop, and exit
  . "$bin"/include/run-cluster.sh
 else

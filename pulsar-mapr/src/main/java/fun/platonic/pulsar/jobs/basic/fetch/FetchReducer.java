@@ -27,13 +27,13 @@ import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.crawl.protocol.ProtocolFactory;
 import fun.platonic.pulsar.jobs.common.FetchEntry;
-import org.apache.hadoop.io.IntWritable;
 import fun.platonic.pulsar.jobs.core.GoraReducer;
 import fun.platonic.pulsar.persist.CrawlMarks;
+import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import fun.platonic.pulsar.persist.metadata.Mark;
+import org.apache.hadoop.io.IntWritable;
 
 import java.io.IOException;
 import java.util.LinkedList;

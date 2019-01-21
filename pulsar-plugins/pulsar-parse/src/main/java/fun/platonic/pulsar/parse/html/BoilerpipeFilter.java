@@ -16,19 +16,19 @@
  */
 package fun.platonic.pulsar.parse.html;
 
+import fun.platonic.pulsar.boilerpipe.document.TextDocument;
+import fun.platonic.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
+import fun.platonic.pulsar.boilerpipe.sax.SAXInput;
+import fun.platonic.pulsar.boilerpipe.utils.ProcessingException;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.parse.ParseFilter;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.crawl.parse.html.ParseContext;
 import fun.platonic.pulsar.crawl.parse.html.PrimerParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import fun.platonic.pulsar.boilerpipe.document.TextDocument;
-import fun.platonic.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
-import fun.platonic.pulsar.boilerpipe.sax.SAXInput;
-import fun.platonic.pulsar.boilerpipe.utils.ProcessingException;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.PageCategory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.xml.sax.InputSource;
 
 import javax.annotation.Nonnull;

@@ -19,13 +19,13 @@ package fun.platonic.pulsar.jobs.common;
 
 import fun.platonic.pulsar.common.URLUtil;
 import fun.platonic.pulsar.common.UrlUtil;
+import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 
 import java.net.InetAddress;
 import java.net.URL;

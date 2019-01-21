@@ -24,6 +24,7 @@ import fun.platonic.pulsar.crawl.parse.PageParser;
 import fun.platonic.pulsar.crawl.parse.ParseResult;
 import fun.platonic.pulsar.crawl.parse.html.HTMLMetaTags;
 import fun.platonic.pulsar.crawl.parse.html.ParseContext;
+import fun.platonic.pulsar.persist.WebPage;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.cyberneko.html.parsers.DOMFragmentParser;
 import org.junit.Before;
@@ -37,7 +38,6 @@ import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import fun.platonic.pulsar.persist.WebPage;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 

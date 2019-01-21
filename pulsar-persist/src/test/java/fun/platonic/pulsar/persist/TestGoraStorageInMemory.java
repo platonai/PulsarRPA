@@ -17,6 +17,9 @@
 package fun.platonic.pulsar.persist;
 
 import fun.platonic.pulsar.common.config.MutableConfig;
+import fun.platonic.pulsar.persist.gora.GoraStorage;
+import fun.platonic.pulsar.persist.gora.generated.GWebPage;
+import fun.platonic.pulsar.persist.metadata.Mark;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.query.Result;
 import org.apache.gora.store.DataStore;
@@ -26,9 +29,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import fun.platonic.pulsar.persist.gora.GoraStorage;
-import fun.platonic.pulsar.persist.gora.generated.GWebPage;
-import fun.platonic.pulsar.persist.metadata.Mark;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,10 +38,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static fun.platonic.pulsar.common.PulsarPaths.PULSAR_DEFAULT_TEST_DIR;
 import static fun.platonic.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.TOY_STORE_CLASS;
+import static fun.platonic.pulsar.persist.metadata.Name.CASH_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static fun.platonic.pulsar.persist.metadata.Name.CASH_KEY;
 
 /**
  * Tests basic Gora functionality by writing and reading webpages.
@@ -54,7 +56,7 @@ public class TestGoraStorageInMemory {
 
     protected MutableConfig conf;
     protected FileSystem fs;
-    protected Path testdir = new Path("/tmp/pulsar/test/working");
+    protected Path testdir = new Path(PULSAR_DEFAULT_TEST_DIR.toString() + "/working");
     protected DataStore<String, GWebPage> datastore;
     protected boolean persistentDataStore = false;
 
@@ -147,8 +149,8 @@ public class TestGoraStorageInMemory {
     @Before
     public void setUp() throws Exception {
         conf = new MutableConfig();
-        conf.set("storage.data.store.class", "org.apache.gora.memory.store.MemStore");
-        // conf.set("storage.data.store.class", "org.apache.gora.sql.store.SqlStore");
+        // conf.set("storage.data.store.class", MEM_STORE_CLASS);
+        conf.set("storage.data.store.class", TOY_STORE_CLASS);
         fs = FileSystem.get(conf.unbox());
         datastore = GoraStorage.createDataStore(conf.unbox(), String.class, GWebPage.class);
     }

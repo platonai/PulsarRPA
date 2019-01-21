@@ -15,8 +15,7 @@ import org.apache.hadoop.hbase.filter.FilterList
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter
 import java.util.*
 
-class HBaseFilterUtil<K, T : PersistentBase>
-constructor(conf: Configuration) {
+class HBaseFilterUtil<K, T : PersistentBase>(conf: Configuration) {
     private val LOG = LogFactory.getLog(HBaseFilterUtil::class.java)
 
     private val factories = LinkedHashMap<String, FilterFactory<K, T>>()

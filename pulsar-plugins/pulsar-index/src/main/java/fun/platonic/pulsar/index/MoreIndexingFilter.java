@@ -6,9 +6,10 @@ import fun.platonic.pulsar.common.MimeUtil;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.crawl.index.IndexDocument;
 import fun.platonic.pulsar.crawl.index.IndexingFilter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.oro.text.regex.*;
 import fun.platonic.pulsar.persist.WebPage;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.oro.text.regex.PatternMatcher;
+import org.apache.oro.text.regex.Perl5Matcher;
 
 import java.time.Instant;
 

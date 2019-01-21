@@ -24,6 +24,10 @@ import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.jobs.common.JobUtils;
+import fun.platonic.pulsar.persist.WebDb;
+import fun.platonic.pulsar.persist.WebPage;
+import fun.platonic.pulsar.persist.gora.GoraStorage;
+import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 import fun.platonic.pulsar.persist.metadata.Mark;
 import org.apache.gora.filter.Filter;
 import org.apache.gora.filter.FilterOp;
@@ -39,10 +43,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fun.platonic.pulsar.persist.WebPage;
-import fun.platonic.pulsar.persist.gora.GoraStorage;
-import fun.platonic.pulsar.persist.gora.db.WebDb;
-import fun.platonic.pulsar.persist.gora.generated.GWebPage;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -51,9 +51,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.*;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_ID;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_JOB_NAME;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_ID;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 
 public abstract class PulsarJob implements PulsarJobBase {
 
