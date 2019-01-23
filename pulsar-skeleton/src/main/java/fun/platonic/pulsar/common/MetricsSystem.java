@@ -266,7 +266,7 @@ public class MetricsSystem implements AutoCloseable {
     }
 
     public void writeReport(String report, String fileSuffix, boolean printPath) {
-        Path reportFile = Paths.get(reportDir.toAbsolutePath().toString(), fileSuffix);
+        Path reportFile = Paths.get(reportDir.toString(), fileSuffix);
         writeReport(reportFile, report, printPath);
     }
 

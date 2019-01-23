@@ -1,14 +1,78 @@
 package `fun`.platonic.pulsar.dom.features
 
 import `fun`.platonic.pulsar.common.math.vectors.get
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNamesToKeys
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.floatFeatureNames
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.floatFeatureNamesToKeys
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Node
+import java.util.concurrent.atomic.AtomicInteger
 
-data class NodeFeature(val key: Int, val value: Double) {
+data class FeatureEntry(val key: Int, val value: Double)
+
+data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = true, val isFloat: Boolean = false) {
+
+    var value: Double = 0.0
+
+    val toEntry = FeatureEntry(key, value)
+
     companion object {
+
+        private val keyGen = AtomicInteger(0)
+        /**
+         * The key should return by incKey
+         * */
+        val currentKey = keyGen.get()
+        /**
+         * The key must start with 0, it might be an array index later
+         * */
+        val incKey: Int get() = keyGen.getAndIncrement()
+
+        /*
+         * affect _sep
+         * can be modified in configuration
+         * */
+        val SEPARATORS = arrayOf(":", "：")
+
+        val registeredFeatures = mutableSetOf<NodeFeature>()
+
+        val primaryFeatures get() = registeredFeatures.filter { it.isPrimary }
+        val floatFeatures get() = registeredFeatures.filter { it.isFloat }
+
+        val featureKeys get() = registeredFeatures.map { it.key }
+        val primaryFeatureKeys get() = primaryFeatures.map { it.key }
+        val floatFeatureKeys get() = floatFeatures.map { it.key }
+
+        val featureNames get() = registeredFeatures.map { it.name }
+        val primaryFeatureNames get() = primaryFeatures.map { it.name }
+        val floatFeatureNames get() = floatFeatures.map { it.name }
+
+        val featureNamesToKeys get() = registeredFeatures.associateBy({ it.name }, { it.key })
+        val featureKeysToNames get() = registeredFeatures.associateBy({ it.key }, { it.name })
+
+        val primaryFeatureNamesToKeys get() = primaryFeatures.associateBy({ it.name }, { it.key })
+        val primaryFeatureKeysToNames get() = primaryFeatures.associateBy({ it.key }, { it.name })
+
+        val floatFeatureNamesToKeys get() = floatFeatures.associateBy({ it.name }, { it.key })
+        val floatFeatureKeysToNames get() = floatFeatures.associateBy({ it.key }, { it.name })
+
+        fun clear() {
+            registeredFeatures.clear()
+        }
+
+        fun register(feature: NodeFeature) {
+            registeredFeatures.add(feature)
+        }
+
+        fun register(features: Iterable<NodeFeature>) {
+            registeredFeatures.addAll(features)
+        }
+
         fun getKey(name: String): Int {
-            return FeatureFormatter.FEATURE_NAMES_TO_KEYS[name.toLowerCase()]?:throw IllegalArgumentException("Unknown feature name $name")
+            return featureNamesToKeys[name.toLowerCase()]?:
+                throw IllegalArgumentException("Unknown feature name $name")
         }
 
         fun getValue(name: String, node: Node): Double {
@@ -19,39 +83,8 @@ data class NodeFeature(val key: Int, val value: Double) {
 
 object FeatureFormatter {
 
-    val SIMPLE_FEATURE_NAMES = F.values().map { it.name.toLowerCase() }.toTypedArray()
-
-    // must strictly keep the order consistent with enum class F
-    val FEATURE_NAMES = arrayOf(
-            nTOP, nLEFT, nWIDTH, nHEIGHT,
-            nCH, nTN, nIMG, nA, nSIB, nC, nDEP, nSEQ
-    )
-
-    val FEATURE_NAMES_TO_KEYS = FEATURE_NAMES.indices.associateBy { FEATURE_NAMES[it] }
-
-    val FEATURE_KEYS_TO_NAMES = FEATURE_NAMES_TO_KEYS.entries.associateBy({ it.value }, { it.key })
-
-    val PRIMARY_FEATURE_NAMES = arrayOf(
-            nTOP, nLEFT, nWIDTH, nHEIGHT,
-            nCH,
-            nTN, nIMG, nA,
-            nSIB, nC, nDEP, nSEQ
-    )
-
-    val PRIMARY_FEATURE_KEYS = PRIMARY_FEATURE_NAMES.indices.associateBy { PRIMARY_FEATURE_NAMES[it]}
-
-    val FLOAT_FEATURE_NAMES = arrayOf<String>()
-
-    val FLOAT_FEATURE_KEYS = FEATURE_NAMES_TO_KEYS.filter { it.key in FLOAT_FEATURE_NAMES }
-
-    /*
-     * affect _sep
-     * can be modified in configuration
-     * */
-    val SEPARATORS = arrayOf(":", "：")
-
     fun getKey(name: String): Int {
-        return FEATURE_NAMES_TO_KEYS[name.toLowerCase()]?:throw IllegalArgumentException("Unknown feature name $name")
+        return featureNamesToKeys[name.toLowerCase()]?:throw IllegalArgumentException("Unknown feature name $name")
     }
 
     fun getValue(name: String, node: Node): Double {
@@ -59,11 +92,11 @@ object FeatureFormatter {
     }
 
     fun isFloating(name: String): Boolean {
-        return FLOAT_FEATURE_NAMES.contains(name)
+        return floatFeatureNames.contains(name)
     }
 
     fun isFloating(key: Int): Boolean {
-        return FLOAT_FEATURE_KEYS.containsValue(key)
+        return floatFeatureNamesToKeys.containsValue(key)
     }
 
     /**
@@ -71,24 +104,24 @@ object FeatureFormatter {
      *
      * @return string
      */
-    fun format(feature: NodeFeature): String {
+    fun format(feature: FeatureEntry): String {
         val key = feature.key
         return key.toString() + ":" + formatValue(key, feature.value)
     }
 
     fun format(features: RealVector, vararg featureKeys: Int, sb: StringBuilder = StringBuilder()): StringBuilder {
         if (featureKeys.isEmpty()) {
-            for (i in FEATURE_NAMES.indices) {
+            for (i in featureNames.indices) {
                 val value = features[i]
                 if (value != 0.0) {
-                    sb.append(FEATURE_NAMES[i]).append(":").append(formatValue(i, value)).append(' ')
+                    sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
                 }
             }
         } else {
             for (i in featureKeys) {
                 val value = features.getEntry(i)
                 if (value != 0.0) {
-                    sb.append(FEATURE_NAMES[i]).append(":").append(formatValue(i, value)).append(' ')
+                    sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
                 }
             }
         }

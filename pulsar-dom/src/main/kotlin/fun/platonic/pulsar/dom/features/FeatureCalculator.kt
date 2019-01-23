@@ -2,7 +2,7 @@ package `fun`.platonic.pulsar.dom.features
 
 import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.set
-import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
 import `fun`.platonic.pulsar.dom.nodes.DOMRect
 import `fun`.platonic.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
 import `fun`.platonic.pulsar.dom.nodes.node.ext.*
@@ -22,13 +22,15 @@ class FeatureCalculator(document: Document) : NodeVisitor {
 
     companion object {
         init {
-            require(FEATURE_NAMES.size == F.N.ordinal)
+            NodeFeature.clear()
+            NodeFeature.register(F.values().map { it.toFeature() })
+            require(featureNames.size == N)
         }
     }
 
     // hit when the node is first seen
     override fun head(node: Node, depth: Int) {
-        node.features = ArrayRealVector(FEATURE_NAMES.size)
+        node.features = ArrayRealVector(featureNames.size)
 
         node.features[DEP] = depth.toDouble()
         node.features[SEQ] = sequence.toDouble()
@@ -59,7 +61,7 @@ class FeatureCalculator(document: Document) : NodeVisitor {
 
             if (ch > 0) {
                 accumulateFeatures(node,
-                        NodeFeature(CH, ch)
+                        FeatureEntry(CH, ch)
                 )
             }
         }
@@ -96,8 +98,8 @@ class FeatureCalculator(document: Document) : NodeVisitor {
             }
 
             accumulateFeatures(node,
-                    NodeFeature(A, a),
-                    NodeFeature(IMG, img)
+                    FeatureEntry(A, a),
+                    FeatureEntry(IMG, img)
             )
         }
     }
@@ -115,7 +117,7 @@ class FeatureCalculator(document: Document) : NodeVisitor {
             val otn = if (node.features[CH] == 0.0) 0.0 else 1.0
             val votn = if (otn > 0 && node.features[WIDTH] > 0 && node.features[HEIGHT] > 0) 1.0 else 0.0
             accumulateFeatures(parent,
-                    NodeFeature(TN, otn),
+                    FeatureEntry(TN, otn),
                     node.getFeatureEntry(CH)
             )
 
@@ -132,7 +134,7 @@ class FeatureCalculator(document: Document) : NodeVisitor {
                     node.getFeatureEntry(TN),
                     node.getFeatureEntry(A),
                     node.getFeatureEntry(IMG),
-                    NodeFeature(C, 1.0)
+                    FeatureEntry(C, 1.0)
             )
 
             // count of element siblings
@@ -150,7 +152,7 @@ class FeatureCalculator(document: Document) : NodeVisitor {
         }
     }
 
-    private fun accumulateFeatures(node: Node, vararg features: NodeFeature) {
+    private fun accumulateFeatures(node: Node, vararg features: FeatureEntry) {
         for (feature in features) {
             val old = node.getFeature(feature.key)
             node.setFeature(feature.key, feature.value + old)

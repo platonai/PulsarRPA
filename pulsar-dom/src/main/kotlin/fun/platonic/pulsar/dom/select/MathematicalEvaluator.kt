@@ -1,8 +1,8 @@
 package `fun`.platonic.pulsar.dom.select
 
-import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
 import `fun`.platonic.pulsar.dom.features.HEIGHT
 import `fun`.platonic.pulsar.dom.features.LEFT
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
 import `fun`.platonic.pulsar.dom.features.TOP
 import `fun`.platonic.pulsar.dom.features.WIDTH
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
@@ -80,7 +80,7 @@ internal abstract class MathematicalEvaluator : Evaluator() {
         private val expression = Expression(expr)
 
         override fun matches(root: Element, element: Element): Boolean {
-            for (name in FEATURE_NAMES) {
+            for (name in featureNames) {
                 // the prefix "_" is compatible with Web SQL, may remove in later versions
                 val value = BigDecimal(element.getFeature(name))
                 if (expr.contains("_$name")) {

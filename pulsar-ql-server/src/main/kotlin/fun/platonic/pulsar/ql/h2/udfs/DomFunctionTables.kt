@@ -1,7 +1,7 @@
 package `fun`.platonic.pulsar.ql.h2.udfs
 
-import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
 import `fun`.platonic.pulsar.dom.features.FeatureFormatter.isFloating
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
 import `fun`.platonic.pulsar.dom.features.SIB
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
@@ -315,7 +315,7 @@ object DomFunctionTables {
         rs.autoClose = false
 
         rs.addColumn("DOM", DataType.convertTypeToSQLType(ValueDom.type), 0, 0)
-        for (name in FEATURE_NAMES) {
+        for (name in featureNames) {
             if (isFloating(name)) {
                 val type = DataType.convertTypeToSQLType(Value.DOUBLE)
                 rs.addColumn(name.toUpperCase(), type, 0, 0)

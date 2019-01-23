@@ -5,8 +5,9 @@ import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.isEmpty
 import `fun`.platonic.pulsar.common.options.LoadOptions
 import `fun`.platonic.pulsar.dom.FeaturedDocument
-import `fun`.platonic.pulsar.dom.features.FeatureFormatter.FEATURE_NAMES
 import `fun`.platonic.pulsar.dom.features.FeatureFormatter.isFloating
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import `fun`.platonic.pulsar.dom.nodes.node.ext.first
 import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
 import `fun`.platonic.pulsar.persist.WebPage
@@ -247,7 +248,7 @@ object Queries {
      * Every float feature has 2 fraction digits
      */
     fun getFeatureRow(ele: Element): Array<Any?> {
-        val columnCount = 1 + FEATURE_NAMES.size + 1
+        val columnCount = 1 + registeredFeatures.size + 1
         val values = arrayOfNulls<Any>(columnCount)
         values[0] = ValueDom.get(ele)
         val features = if (!ele.features.isEmpty) ele.features else return values
@@ -256,7 +257,7 @@ object Queries {
         val base = 10f
         val fractionDigits = 2
         val factor = base.pow(fractionDigits)
-        for (j in 1..FEATURE_NAMES.size) {
+        for (j in 1..registeredFeatures.size) {
             val key = j - 1
             val v = features[key]
 

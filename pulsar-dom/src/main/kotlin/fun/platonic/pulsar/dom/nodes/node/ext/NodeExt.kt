@@ -189,8 +189,8 @@ fun Node.getFeature(name: String): Double {
     return features[FeatureFormatter.getKey(name)]
 }
 
-fun Node.getFeatureEntry(key: Int): NodeFeature {
-    return NodeFeature(key, getFeature(key))
+fun Node.getFeatureEntry(key: Int): FeatureEntry {
+    return FeatureEntry(key, getFeature(key))
 }
 
 fun Node.setFeature(key: Int, value: Double) {
