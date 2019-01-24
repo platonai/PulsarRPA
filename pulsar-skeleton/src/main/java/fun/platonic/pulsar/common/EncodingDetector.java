@@ -332,7 +332,7 @@ public class EncodingDetector {
         value = resolveEncodingAlias(value);
         if (value != null) {
             clues.add(new EncodingClue(value, source, confidence));
-            // LOG.trace("addClue " + value + ", " + source + ", " + confidence);
+            // log.trace("addClue " + value + ", " + source + ", " + confidence);
         }
     }
 

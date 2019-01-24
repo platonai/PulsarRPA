@@ -1,6 +1,5 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.PulsarSession
 import `fun`.platonic.pulsar.common.config.CapabilityTypes.*
 import `fun`.platonic.pulsar.common.config.ImmutableConfig
 import `fun`.platonic.pulsar.common.config.MutableConfig

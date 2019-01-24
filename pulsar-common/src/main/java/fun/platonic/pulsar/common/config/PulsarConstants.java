@@ -109,75 +109,12 @@ public interface PulsarConstants {
     float SCORE_DETAIL_PAGE = 10000.0f;
     float SCORE_PAGES_FROM_SEED = 10000.0f;
 
-    /**
-     * Status / result message.
-     * */
-    String STAT_PULSAR_STATUS = "Pulsar Status";
-    String STAT_INFECTED_ROWS = "injectedRows";
-
-
-    // short constants for status / results fields
-    /**
-     * Status / result message.
-     */
-    String STAT_MESSAGE = "msg";
-    /**
-     * Phase of processing.
-     */
-    String STAT_PHASE = "phase";
-    /**
-     * Progress (float).
-     */
-    String STAT_PROGRESS = "progress";
-    /**
-     * Jobs.
-     */
-    String STAT_JOBS = "jobs";
-    /**
-     * Counters.
-     */
-    String STAT_COUNTERS = "counters";
-
-    String CRAWL_ID_KEY = "storage.crawl.id";
-
-    public final static String NUTCH_CRAWL_ID = "storage.crawl.id";
-
-    String COUNTER_GROUP_STATUS = "Runtime Status";
-
-    /**
-     * Args
-     */
-    String ARG_CRAWL_ID = "crawlId";
-    String ARG_TENANT_ID = "tenantId";
-    String ARG_START_KEY = "startKey";
-    String ARG_END_KEY = "endKey";
-    String ARG_START = "start";
-    String ARG_LIMIT = "limit";
-    String ARG_REGEX = "regex";
-    String ARG_DRY_RUN = "dryRun";
-    String ARG_FIELDS = "fields";
-    String ARG_ATTRIBUTE = "attribute";
-    String ARG_ENTITY_DOMAIN = "domain";
-    String ARG_EXTRACTOR = "extractor";
-    String ARG_BUILDER = "builder";
-    String ARG_FORMAT = "format";
-    String ARG_TASK_NAME = "taskName";
-    String ARG_OUTPUT_DIR = "outputDir";
-
 //  public final static String PAGE_TITLE_SEQUENCE = "scent.page.title.sequence";
 //  public final static String PAGE_MENU_SEQUENCE = "scent.page.menu.sequence";
 //  public final static String PAGE_MENU_DESCEND = "scent.page.menu.descend";
 
     String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
     String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
-
-
-    /**
-     * Generate
-     * */
-    String GENERATE_COUNT_VALUE_DOMAIN = "domain";
-    String GENERATE_COUNT_VALUE_HOST = "host";
-    String GENERATE_COUNT_VALUE_IP = "ip";
 
     int MAX_LIVE_LINK_PER_PAGE = 1000;
     int MAX_LINK_PER_PAGE = 4000;

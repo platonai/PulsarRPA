@@ -127,7 +127,7 @@ public class PulsarOptions implements Parameterized {
         jc.setAllowParameterOverwriting(true);
 //      jc.setAllowAbbreviatedOptions(false);
         jc.setExpandAtSign(expandAtSign);
-        // LOG.debug(StringUtils.join(argv, " "));
+        // log.debug(StringUtils.join(argv, " "));
         jc.parse(argv);
     }
 

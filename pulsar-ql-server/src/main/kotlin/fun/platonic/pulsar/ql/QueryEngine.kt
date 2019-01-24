@@ -1,9 +1,9 @@
 package `fun`.platonic.pulsar.ql
 
-import `fun`.platonic.pulsar.PulsarSession
 import `fun`.platonic.pulsar.common.PulsarContext
 import `fun`.platonic.pulsar.common.PulsarContext.applicationContext
 import `fun`.platonic.pulsar.common.PulsarContext.unmodifiedConfig
+import `fun`.platonic.pulsar.common.PulsarSession
 import `fun`.platonic.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import `fun`.platonic.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import `fun`.platonic.pulsar.common.options.LoadOptions

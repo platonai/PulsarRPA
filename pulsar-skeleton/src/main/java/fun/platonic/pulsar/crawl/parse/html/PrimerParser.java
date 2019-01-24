@@ -407,7 +407,7 @@ public class PrimerParser {
 
     private void getLinksStep2(URL base, ArrayList<HypeLink> hypeLinks, Node root, CrawlFilters crawlFilters) {
         NodeWalker walker = new NodeWalker(root);
-        // LOG.debug("Get hypeLinks for " + DomUtil.getPrettyName(root));
+        // log.debug("Get hypeLinks for " + DomUtil.getPrettyName(root));
 
         while (walker.hasNext()) {
             Node currentNode = walker.nextNode();

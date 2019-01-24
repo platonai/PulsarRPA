@@ -2,7 +2,7 @@ package `fun`.platonic.pulsar.dom
 
 import `fun`.platonic.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
 import `fun`.platonic.pulsar.common.math.vectors.isEmpty
-import `fun`.platonic.pulsar.dom.features.FeatureCalculator
+import `fun`.platonic.pulsar.dom.features.NodeFeatureCalculator
 import `fun`.platonic.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
+import org.jsoup.select.NodeVisitor
 
 open class FeaturedDocument(val document: Document) {
     companion object {
@@ -18,6 +19,8 @@ open class FeaturedDocument(val document: Document) {
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 
         var SELECTOR_IN_BOX_DEVIATION = 25
+
+        var nodeFeatureCalculator: NodeVisitor? = NodeFeatureCalculator()
 
         fun createShell(baseUri: String): FeaturedDocument {
             val document = Document.createShell(baseUri)
@@ -39,8 +42,8 @@ open class FeaturedDocument(val document: Document) {
     constructor(other: FeaturedDocument): this(other.unbox().clone())
 
     init {
-        if (document.features.isEmpty) {
-            NodeTraversor.traverse(FeatureCalculator(document), document)
+        if (nodeFeatureCalculator != null && document.features.isEmpty) {
+            NodeTraversor.traverse(nodeFeatureCalculator, document)
         }
     }
 

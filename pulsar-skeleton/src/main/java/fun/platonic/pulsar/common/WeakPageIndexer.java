@@ -162,7 +162,7 @@ public class WeakPageIndexer {
             webDb.put(url, indexPage);
             webDb.flush();
 
-            // LOG.debug("Created weak index: " + url);
+            // log.debug("Created weak index: " + url);
         }
 
         return indexPage;

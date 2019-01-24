@@ -6,6 +6,7 @@ import java.util.Map;
 
 /**
  * Created by vincent on 16-9-24.
+ * Command params
  */
 public class PulsarParams extends Params {
 
@@ -138,31 +139,6 @@ public class PulsarParams extends Params {
      * Solr Collection.
      */
     public static final String ARG_COLLECTION = "-collection";
-    /**
-     * Index document fields
-     */
-    public static final String DOC_FIELD_PUBLISH_TIME = "publish_time";
-    public static final String DOC_FIELD_MODIFIED_TIME = "modified_time";
-    public static final String DOC_FIELD_ARTICLE_TILE = "article_title";
-    public static final String DOC_FIELD_PAGE_TITLE = "page_title";
-    public static final String DOC_FIELD_CONTENT_TILE = "article_title";
-    public static final String DOC_FIELD_PAGE_CATEGORY = "page_category";
-    public static final String DOC_FIELD_LINKS_COUNT = "links_count";
-    public static final String DOC_FIELD_HTML_CONTENT = "html_content";
-    public static final String DOC_FIELD_TEXT_CONTENT = "text_content";
-    public static final String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
-    public static final String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
-    /**
-     * Temporary variable holders
-     */
-    public static final String VAR_LINKS_COUNT = "links_count";
-    public static final String VAR_DROPPED_LINKS_COUNT = "dropped_links_count";
-    public static final String VAR_PAGE_EXISTENCE = "page_existence";
-    public static final String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
-    public static final String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
-
-    public PulsarParams() {
-    }
 
     public PulsarParams(String key, Object value, Object... others) {
         super(key, value, others);

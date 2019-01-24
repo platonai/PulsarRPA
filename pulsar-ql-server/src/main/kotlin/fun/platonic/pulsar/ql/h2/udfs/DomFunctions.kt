@@ -116,7 +116,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun feature(dom: ValueDom, featureName: String): Double {
-        return FeatureFormatter.getValue(featureName, dom.element)
+        return NodeFeature.getValue(featureName, dom.element)
     }
 
     @UDFunction

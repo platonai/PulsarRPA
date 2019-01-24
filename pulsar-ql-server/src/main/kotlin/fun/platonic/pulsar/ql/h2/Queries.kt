@@ -5,8 +5,7 @@ import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.isEmpty
 import `fun`.platonic.pulsar.common.options.LoadOptions
 import `fun`.platonic.pulsar.dom.FeaturedDocument
-import `fun`.platonic.pulsar.dom.features.FeatureFormatter.isFloating
-import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.isFloating
 import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import `fun`.platonic.pulsar.dom.nodes.node.ext.first
 import `fun`.platonic.pulsar.dom.nodes.node.ext.select2

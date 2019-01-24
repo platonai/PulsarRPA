@@ -495,7 +495,7 @@ public class LoadComponent {
             if (persist2) {
                 outPages.forEach(it -> webDb.put(it.getUrl(), it));
             }
-            // LOG.debug(page.getPageCounters().asStringMap().toString());
+            // log.debug(page.getPageCounters().asStringMap().toString());
 
             Function<WebPage, Map<String, Object>> converter =
                     p -> new WebPageFormatter(p)

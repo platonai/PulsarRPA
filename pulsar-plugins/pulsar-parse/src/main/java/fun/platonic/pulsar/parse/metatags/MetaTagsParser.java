@@ -99,7 +99,7 @@ public class MetaTagsParser implements ParseFilter {
     private void addIndexedMetatags(Metadata metadata, String metatag, String value) {
         String lcMetatag = metatag.toLowerCase(Locale.ROOT);
         if (metatagset.contains("*") || metatagset.contains(lcMetatag)) {
-            // LOG.trace("Found meta tag: " + lcMetatag + "\t" + value);
+            // log.trace("Found meta tag: " + lcMetatag + "\t" + value);
             metadata.set(PARSE_META_PREFIX + lcMetatag, value);
         }
     }

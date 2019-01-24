@@ -121,8 +121,8 @@ public class JSParseFilter implements ParseFilter, Parser {
                     script.append(nn.item(i).getNodeValue());
                 }
                 // This logging makes the output very messy.
-                // if (LOG.isInfoEnabled()) {
-                // LOG.info("script: language=" + lang + ", text: " +
+                // if (log.isInfoEnabled()) {
+                // log.info("script: language=" + lang + ", text: " +
                 // script.toString());
                 // }
                 hypeLinks.addAll(getJSLinks(script.toString(), "", base));

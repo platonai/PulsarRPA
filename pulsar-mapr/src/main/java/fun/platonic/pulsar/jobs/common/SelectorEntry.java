@@ -55,8 +55,8 @@ public class SelectorEntry implements WritableComparable<SelectorEntry> {
         scoreVectorWritable.readFields(in);
         score = scoreVectorWritable.get();
 
-//    LOG.info(url);
-//    LOG.info("readFields : " + score.toString());
+//    log.info(url);
+//    log.info("readFields : " + score.toString());
     }
 
     @Override

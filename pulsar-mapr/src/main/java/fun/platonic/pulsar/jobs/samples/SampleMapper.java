@@ -63,7 +63,7 @@ public class SampleMapper extends GoraMapper<String, GWebPage, Text, GWebPage> {
         }
 
         WebPage page = WebPage.box(reversedUrl, row, true);
-//    LOG.debug("Map : " + page.url());
+//    log.debug("Map : " + page.url());
 
 //    if (!page.hasMark(Mark.FETCH)) {
 //      metricsCounters.increase(Counter.notFetched);

@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static fun.platonic.pulsar.common.config.CapabilityTypes.STAT_PULSAR_STATUS;
+
 /**
  * TODO: Use org.apache.hadoop.metrics2
  */
@@ -221,8 +223,8 @@ public class MetricsCounters {
             int value = globalCounters.get(i).getAndSet(0);
 
             if (!name.isEmpty() && value != 0) {
-                // LOG.debug("global : " + name + " : " + value);
-                context.getCounter(PulsarConstants.STAT_PULSAR_STATUS, name).increment(value);
+                // log.debug("global : " + name + " : " + value);
+                context.getCounter(STAT_PULSAR_STATUS, name).increment(value);
             }
         });
     }
@@ -235,7 +237,7 @@ public class MetricsCounters {
         globalCounters.get(index).incrementAndGet();
         nativeCounters.get(index).incrementAndGet();
 
-//    LOG.info("#" + index + " : " + nativeCounters.get(index).get());
+        // log.info("#" + index + " : " + nativeCounters.get(index).get());
     }
 
     protected void increase(int index, int value) {

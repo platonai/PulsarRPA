@@ -150,7 +150,7 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
                     focus.setWebPage(edge.getSourceWebPage());
                 }
 
-                // LOG.info("Metadata " + url + "\t<-\t" + edge.getMetadata());
+                // log.info("Metadata " + url + "\t<-\t" + edge.getMetadata());
                 graph.addEdgeLenient(edge.getSource(), focus, subGraph.getEdgeWeight(edge));
             });
         }

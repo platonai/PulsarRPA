@@ -27,15 +27,10 @@ import java.awt.Rectangle
 /**
  * Get the document owns the node
  * */
-val Node.ownerDocument: Document
-    get() {
-        return computeVariableIfAbsent<Document>(V_OWNER_DOCUMENT, ownerDocument())
-    }
+val Node.ownerDocument: Document get() = ownerDocument()
 
 val Node.ownerBody: Element
-    get() {
-        return computeVariableIfAbsent<Element>(V_OWNER_BODY, ownerDocument.body())
-    }
+    get() = computeVariableIfAbsent<Element>(V_OWNER_BODY, ownerDocument.body())
 
 val Node.viewPort: Dimension
     get() {
@@ -186,7 +181,7 @@ fun Node.getFeature(key: Int): Double {
 }
 
 fun Node.getFeature(name: String): Double {
-    return features[FeatureFormatter.getKey(name)]
+    return features[NodeFeature.getKey(name)]
 }
 
 fun Node.getFeatureEntry(key: Int): FeatureEntry {

@@ -85,7 +85,7 @@ public class IndexWriters implements AutoCloseable {
     public void close() {
         for (IndexWriter indexWriter : indexWriters) {
             try {
-                // LOG.info("[Destruction] Closing IndexWriter " + indexWriter.getName() + ", ...");
+                // log.info("[Destruction] Closing IndexWriter " + indexWriter.getName() + ", ...");
                 indexWriter.close();
             } catch (Throwable e) {
                 LOG.error("Failed to close IndexWriter " + indexWriter.getName());

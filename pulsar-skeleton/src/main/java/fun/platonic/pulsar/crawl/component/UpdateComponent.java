@@ -115,7 +115,7 @@ public class UpdateComponent implements ReloadableParameterized {
         fetchRetryMax = conf.getInt(FETCH_MAX_RETRY, 3);
         maxFetchInterval = conf.getDuration(FETCH_MAX_INTERVAL, Duration.ofDays(365));
 
-        // LOG.info(getParams().format());
+        // log.info(getParams().format());
     }
 
     public WebDb getWebDb() {
@@ -220,7 +220,7 @@ public class UpdateComponent implements ReloadableParameterized {
         WebPage shallowestPage = null;
 
         for (WebPage incomingPage : incomingPages) {
-            // LOG.debug(incomingPage.url() + " -> " + page.url());
+            // log.debug(incomingPage.url() + " -> " + page.url());
             if (incomingPage.getDistance() + 1 < smallestDepth) {
                 smallestDepth = incomingPage.getDistance() + 1;
                 shallowestPage = incomingPage;

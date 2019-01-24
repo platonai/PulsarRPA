@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.ql
 
-import `fun`.platonic.pulsar.PulsarSession
+import `fun`.platonic.pulsar.common.PulsarSession
 import org.junit.Test
 import kotlin.test.assertEquals
 

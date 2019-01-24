@@ -203,7 +203,7 @@ public class CrawlFilter extends Configured {
 //        passed = url != null;
 //      }
 //    } catch (MalformedURLException|UrlFilterException e) {
-//      LOG.error(e.toString());
+//      log.error(e.toString());
 //      passed = false;
 //    }
 

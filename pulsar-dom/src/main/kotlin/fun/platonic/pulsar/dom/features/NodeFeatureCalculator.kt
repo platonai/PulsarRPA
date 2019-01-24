@@ -2,7 +2,7 @@ package `fun`.platonic.pulsar.dom.features
 
 import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.set
-import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import `fun`.platonic.pulsar.dom.nodes.DOMRect
 import `fun`.platonic.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
 import `fun`.platonic.pulsar.dom.nodes.node.ext.*
@@ -14,23 +14,20 @@ import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeVisitor
 
-class FeatureCalculator(document: Document) : NodeVisitor {
+class NodeFeatureCalculator : NodeVisitor {
     var sequence: Int = 0
         private set
 
-    private val body = document.body()
-
     companion object {
         init {
-            NodeFeature.clear()
             NodeFeature.register(F.values().map { it.toFeature() })
-            require(featureNames.size == N)
+            require(registeredFeatures.size == N)
         }
     }
 
     // hit when the node is first seen
     override fun head(node: Node, depth: Int) {
-        node.features = ArrayRealVector(featureNames.size)
+        node.features = ArrayRealVector(registeredFeatures.size)
 
         node.features[DEP] = depth.toDouble()
         node.features[SEQ] = sequence.toDouble()
@@ -145,8 +142,8 @@ class FeatureCalculator(document: Document) : NodeVisitor {
             }
         } // if
 
-        if (node == body) {
-            val rect = calculateBodyRect()
+        if (node.nodeName().equals("body", ignoreCase = true)) {
+            val rect = calculateBodyRect(node)
             node.width = rect.width.toInt()
             node.height = rect.height.toInt()
         }
@@ -171,11 +168,12 @@ class FeatureCalculator(document: Document) : NodeVisitor {
         return parseDOMRect(vi)
     }
 
-    private fun calculateBodyRect(): DOMRect {
+    private fun calculateBodyRect(body: Node): DOMRect {
         val minW = 900.0
         val widths = DescriptiveStatistics()
         widths.addValue(minW)
         var height = body.height
+
         body.forEachElement {
             if (it.width > minW) {
                 widths.addValue(it.width.toDouble())
@@ -184,6 +182,7 @@ class FeatureCalculator(document: Document) : NodeVisitor {
                 height = it.y2
             }
         }
+
         return DOMRect(0.0, 0.0, widths.getPercentile(90.0), 20 + height.toDouble())
     }
 

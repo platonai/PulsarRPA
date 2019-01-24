@@ -82,7 +82,7 @@ public class ContentAnalysisScoringFilter implements ScoringFilter {
 
         float score = f1 * ra + f2 * (rc / 1000) - f3 * days;
 
-        // LOG.info(Params.of("score", score, "re", re, "ra", ra, "rc", rc, "days", days).formatAsLine());
+        // log.info(Params.of("score", score, "re", re, "ra", ra, "rc", rc, "days", days).formatAsLine());
 
         return score;
     }

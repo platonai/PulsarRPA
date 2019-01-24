@@ -1,7 +1,7 @@
 package `fun`.platonic.pulsar.ql
 
-import `fun`.platonic.pulsar.PulsarSession
 import `fun`.platonic.pulsar.common.PulsarContext.applicationContext
+import `fun`.platonic.pulsar.common.PulsarSession
 import `fun`.platonic.pulsar.persist.WebPage
 import `fun`.platonic.pulsar.ql.annotation.UDAggregation
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup
@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
 open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSession(applicationContext, config) {
-    val LOG = LoggerFactory.getLogger(QuerySession::class.java)
+    val log = LoggerFactory.getLogger(QuerySession::class.java)
     private var totalUdfs: Int = 0
 
     init {
-        registerUdfsInPackage(dbSession.implementation as org.h2.engine.Session)
+        registerDefaultUdfs(dbSession.implementation as org.h2.engine.Session)
         registerUdaf(dbSession.implementation, GroupCollect::class)
         registerUdaf(dbSession.implementation, GroupFetch::class)
     }
@@ -33,7 +33,7 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
      * Register user defined functions into database
      * TODO: Hot register UDFs
      */
-    fun registerUdfsInPackage(session: SessionInterface) {
+    fun registerDefaultUdfs(session: SessionInterface) {
         ClassPath.from(CommonFunctions.javaClass.classLoader)
                 .getTopLevelClasses(CommonFunctions.javaClass.`package`.name)
                 .map { it.load() }
@@ -41,8 +41,16 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
                 .forEach { registerUdfs(session, it.kotlin) }
 
         if (totalUdfs > 0) {
-            LOG.info("Added total {} new UDFs", totalUdfs)
+            log.info("Added total {} new UDFs", totalUdfs)
         }
+    }
+
+    fun registerUdfsInPackage(session: SessionInterface, classLoader: ClassLoader, packageName: String) {
+        ClassPath.from(classLoader)
+                .getTopLevelClasses(packageName)
+                .map { it.load() }
+                .filter { it.annotations.any { it is UDFGroup } }
+                .forEach { registerUdfs(session, it.kotlin) }
     }
 
     /**
@@ -93,8 +101,8 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
         command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate()
 
-        if (LOG.isTraceEnabled) {
-            LOG.trace(sql)
+        if (log.isTraceEnabled) {
+            log.trace(sql)
         }
     }
 
@@ -119,8 +127,8 @@ open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSess
         command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate()
 
-        if (LOG.isTraceEnabled) {
-            LOG.trace(sql)
+        if (log.isTraceEnabled) {
+            log.trace(sql)
         }
     }
 }

@@ -41,7 +41,27 @@ public interface CapabilityTypes {
     String PARAM_IDENT_STR = "pulsar.id.str";
 
     String PULSAR_CLUSTER_SLAVES = "pulsar.cluster.slaves";
-    String CRAWL_ID = "storage.crawl.id";
+    String DRY_RUN = "pulsar.dry.run";
+
+    /**
+     * Args
+     */
+    String CRAWL_ID = "crawlId";
+    String TENANT_ID = "tenantId";
+    String START_KEY = "startKey";
+    String END_KEY = "endKey";
+    String START = "start";
+    String LIMIT = "limit";
+    String REGEX = "regex";
+    String FIELDS = "fields";
+    String ATTRIBUTE = "attribute";
+    String ENTITY_DOMAIN = "domain";
+    String EXTRACTOR = "extractor";
+    String BUILDER = "builder";
+    String FORMAT = "format";
+    String TASK_NAME = "taskName";
+    String OUTPUT_DIR = "outputDir";
+
     String CRAWL_ROUND = "crawl.round";
     String CRAWL_MAX_DISTANCE = "crawl.max.distance";
     String BATCH_ID = "pulsar.batch.name";
@@ -49,14 +69,55 @@ public interface CapabilityTypes {
     String MAPREDUCE_JOB_REDUCES = "mapreduce.job.reduces";
     String MAPPER_LIMIT = "pulsar.mapper.limit";
     String REDUCER_LIMIT = "pulsar.reducer.limit";
-    String DRY_RUN = "pulsar.dry.run";
     String REINDEX = "reindex";
     String FORCE = "force";
     String RESUME = "pulsar.job.resume";
-    String LIMIT = "limit";
     String RECENT_DAYS_WINDOWN = "recent.days.window";
     String REPORTER_REPORT_INTERVAL = "reporter.report.interval";
     String METATAG_NAMES = "metatags.names";
+
+    /**
+     * Status / result message.
+     * */
+    String STAT_PULSAR_STATUS = "Pulsar Status";
+    String STAT_INFECTED_ROWS = "injectedRows";
+
+
+    // short constants for status / results fields
+    /**
+     * Status / result message.
+     */
+    String STAT_MESSAGE = "msg";
+    /**
+     * Phase of processing.
+     */
+    String STAT_PHASE = "phase";
+    /**
+     * Progress (float).
+     */
+    String STAT_PROGRESS = "progress";
+    /**
+     * Jobs.
+     */
+    String STAT_JOBS = "jobs";
+    /**
+     * Counters.
+     */
+    String STAT_COUNTERS = "counters";
+
+    String CRAWL_ID_KEY = "storage.crawl.id";
+
+    String STORAGE_CRAWL_ID = "storage.crawl.id";
+
+    String COUNTER_GROUP_STATUS = "Runtime Status";
+
+    /**
+     * Generate
+     * */
+    String GENERATE_COUNT_VALUE_DOMAIN = "domain";
+    String GENERATE_COUNT_VALUE_HOST = "host";
+    String GENERATE_COUNT_VALUE_IP = "ip";
+
     /**
      * Thread pool/ExecuteService
      */
@@ -227,6 +288,29 @@ public interface CapabilityTypes {
     String INDEXER_ZK = "indexer.zookeeper.hosts";
     String INDEXER_COLLECTION = "indexer.collection";
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
+    /**
+     * Index document fields
+     */
+    String DOC_FIELD_PUBLISH_TIME = "publish_time";
+    String DOC_FIELD_MODIFIED_TIME = "modified_time";
+    String DOC_FIELD_ARTICLE_TILE = "article_title";
+    String DOC_FIELD_PAGE_TITLE = "page_title";
+    String DOC_FIELD_CONTENT_TILE = "article_title";
+    String DOC_FIELD_PAGE_CATEGORY = "page_category";
+    String DOC_FIELD_LINKS_COUNT = "links_count";
+    String DOC_FIELD_HTML_CONTENT = "html_content";
+    String DOC_FIELD_TEXT_CONTENT = "text_content";
+    String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
+    String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
+    /**
+     * Temporary variable holders
+     */
+    String VAR_LINKS_COUNT = "links_count";
+    String VAR_DROPPED_LINKS_COUNT = "dropped_links_count";
+    String VAR_PAGE_EXISTENCE = "page_existence";
+    String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
+    String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
+
     /**
      * Stat
      */

@@ -167,9 +167,9 @@ public class HttpBasicAuthentication implements HttpAuthentication,
     public void setConf(Configuration conf) {
         this.conf = conf;
         // if (conf.getBoolean("http.auth.verbose", false)) {
-        // LOG.setLevel(Level.FINE);
+        // log.setLevel(Level.FINE);
         // } else {
-        // LOG.setLevel(Level.WARNING);
+        // log.setLevel(Level.WARNING);
         // }
     }
 

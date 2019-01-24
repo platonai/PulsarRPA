@@ -277,7 +277,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
                     ++tryCount;
                     response = null;
                     lastThrowable = e;
-                    // LOG.warn(StringUtil.stringifyException(e));
+                    // log.warn(StringUtil.stringifyException(e));
                     LOG.warn(e.toString());
                 }
             }

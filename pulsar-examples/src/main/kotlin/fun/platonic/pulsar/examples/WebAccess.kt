@@ -1,6 +1,6 @@
 package `fun`.platonic.pulsar.examples
 
-import `fun`.platonic.pulsar.Pulsar
+import `fun`.platonic.pulsar.common.Pulsar
 import `fun`.platonic.pulsar.common.options.LoadOptions
 import `fun`.platonic.pulsar.persist.WebPageFormatter
 

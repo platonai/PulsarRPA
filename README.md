@@ -31,7 +31,7 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
 # Build & Run
 ## Build from source
     git clone git@github.com:platonai/pulsar.git
-    cd pulsar && mvn
+    cd pulsar && mvn -Pthird -Pplugin
 ## Install dependencies
     bin/tools/install-depends.sh
 ## Install mongodb

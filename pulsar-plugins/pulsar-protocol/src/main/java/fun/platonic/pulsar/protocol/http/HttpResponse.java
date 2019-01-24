@@ -364,7 +364,7 @@ public class HttpResponse implements Response {
             readLine(in, line, false);
 
             String chunkLenStr;
-            // if (LOG.isTraceEnabled()) { LOG.trace("chunk-header: '" + line + "'");
+            // if (log.isTraceEnabled()) { log.trace("chunk-header: '" + line + "'");
             // }
 
             int pos = line.indexOf(";");
@@ -408,7 +408,7 @@ public class HttpResponse implements Response {
 
                 // DANGER!!! Will printed GZIPed stuff right to your
                 // terminal!
-                // if (LOG.isTraceEnabled()) { LOG.trace("read: " + new String(bytes, 0,
+                // if (log.isTraceEnabled()) { log.trace("read: " + new String(bytes, 0,
                 // len)); }
 
                 out.write(bytes, 0, len);
