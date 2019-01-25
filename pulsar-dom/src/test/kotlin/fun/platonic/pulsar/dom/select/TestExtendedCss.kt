@@ -3,8 +3,8 @@ package `fun`.platonic.pulsar.dom.select
 import `fun`.platonic.pulsar.dom.Documents
 import `fun`.platonic.pulsar.dom.FeaturedDocument
 import `fun`.platonic.pulsar.dom.FeaturedDocument.Companion.SELECTOR_IN_BOX_DEVIATION
-import `fun`.platonic.pulsar.dom.features.HEIGHT
-import `fun`.platonic.pulsar.dom.features.WIDTH
+import `fun`.platonic.pulsar.dom.features.defined.HEIGHT
+import `fun`.platonic.pulsar.dom.features.defined.WIDTH
 import `fun`.platonic.pulsar.dom.nodes.node.ext.canonicalName
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import `fun`.platonic.pulsar.dom.nodes.node.ext.select2

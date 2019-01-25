@@ -5,7 +5,7 @@ import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.dom.data.BlockPattern.Companion.DenseLinks
 import `fun`.platonic.pulsar.dom.data.BlockPattern.Companion.Dl
 import `fun`.platonic.pulsar.dom.data.BlockPattern.Companion.Table
-import `fun`.platonic.pulsar.dom.features.SEQ
+import `fun`.platonic.pulsar.dom.features.defined.SEQ
 import `fun`.platonic.pulsar.dom.model.PageEntity
 import org.apache.commons.math3.stat.descriptive.SynchronizedSummaryStatistics
 import org.slf4j.LoggerFactory

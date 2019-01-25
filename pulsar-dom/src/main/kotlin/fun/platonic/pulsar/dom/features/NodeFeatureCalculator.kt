@@ -3,12 +3,12 @@ package `fun`.platonic.pulsar.dom.features
 import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
+import `fun`.platonic.pulsar.dom.features.defined.*
 import `fun`.platonic.pulsar.dom.nodes.DOMRect
 import `fun`.platonic.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
 import `fun`.platonic.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode

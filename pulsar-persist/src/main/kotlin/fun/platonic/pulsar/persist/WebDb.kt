@@ -33,7 +33,7 @@ class WebDb(
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
     @JvmOverloads
-    operator fun get(url: String, fields: Array<String>? = null): WebPage? {
+    fun get(url: String, fields: Array<String>? = null): WebPage? {
         Objects.requireNonNull(url)
         val key = UrlUtil.reverseUrlOrEmpty(url)
 

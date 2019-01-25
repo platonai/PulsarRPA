@@ -2,7 +2,7 @@ package `fun`.platonic.pulsar.dom.data
 
 import `fun`.platonic.pulsar.common.FuzzyProbability
 import `fun`.platonic.pulsar.common.FuzzyTracker
-import `fun`.platonic.pulsar.dom.features.*
+import `fun`.platonic.pulsar.dom.features.defined.*
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import com.google.common.collect.Lists
 import org.apache.commons.lang3.StringUtils

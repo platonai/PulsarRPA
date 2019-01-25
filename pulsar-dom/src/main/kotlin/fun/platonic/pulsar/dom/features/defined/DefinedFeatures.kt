@@ -1,5 +1,6 @@
-package `fun`.platonic.pulsar.dom.features
+package `fun`.platonic.pulsar.dom.features.defined
 
+import `fun`.platonic.pulsar.dom.features.NodeFeature
 import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.incKey
 
 const val FEATURE_VERSION: Int = 10001

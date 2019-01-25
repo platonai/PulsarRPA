@@ -2,7 +2,7 @@ package `fun`.platonic.pulsar.ql.h2.udfs
 
 import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
 import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.isFloating
-import `fun`.platonic.pulsar.dom.features.SIB
+import `fun`.platonic.pulsar.dom.features.defined.SIB
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature
 import `fun`.platonic.pulsar.dom.nodes.node.ext.select2
 import `fun`.platonic.pulsar.ql.annotation.UDFGroup

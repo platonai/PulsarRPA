@@ -6,6 +6,7 @@ import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.dom.data.BrowserControl
 import `fun`.platonic.pulsar.dom.features.*
+import `fun`.platonic.pulsar.dom.features.defined.*
 import `fun`.platonic.pulsar.dom.model.createImage
 import `fun`.platonic.pulsar.dom.model.createLink
 import `fun`.platonic.pulsar.dom.nodes.*
