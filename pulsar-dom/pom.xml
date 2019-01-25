@@ -15,7 +15,7 @@
     <parent>
         <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>0.5.1</version>
+        <version>0.5.2</version>
     </parent>
 
     <artifactId>pulsar-dom</artifactId>
