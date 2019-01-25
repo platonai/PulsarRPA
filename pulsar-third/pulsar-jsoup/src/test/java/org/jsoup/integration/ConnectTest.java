@@ -341,6 +341,7 @@ public class ConnectTest {
     }
 
 
+    @Ignore("Target url not available")
     @Test
     public void multiCookieSet() throws IOException {
         Connection con = Jsoup.connect("http://direct.infohound.net/cli/302-cookie.pl");

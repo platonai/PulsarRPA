@@ -21,7 +21,7 @@
     <parent>
         <groupId>fun.platonic.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>0.5.0</version>
+        <version>0.5.1</version>
         <relativePath>..</relativePath>
     </parent>
 

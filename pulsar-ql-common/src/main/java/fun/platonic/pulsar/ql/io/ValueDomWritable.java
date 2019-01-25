@@ -1,6 +1,5 @@
 package fun.platonic.pulsar.ql.io;
 
-import fun.platonic.pulsar.common.ConcurrentLRUCache;
 import fun.platonic.pulsar.dom.Documents;
 import fun.platonic.pulsar.dom.FeaturedDocument;
 import fun.platonic.pulsar.ql.types.ValueDom;
@@ -11,30 +10,19 @@ import org.jsoup.nodes.Element;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.time.Duration;
 
 public class ValueDomWritable implements Writable {
 
     public static int CACHE_SIZE = 1000;
-    private static ConcurrentLRUCache<String, FeaturedDocument> cachedDocuments;
     private static FeaturedDocument NIL_DOC = FeaturedDocument.Companion.getNIL();
     private static int NIL_DOC_LENGTH = FeaturedDocument.Companion.getNIL_DOC_LENGTH();
 
     private ValueDom dom;
 
-    public ValueDomWritable() {
-        createDocumentCache();
-    }
+    public ValueDomWritable() {}
 
     public ValueDomWritable(ValueDom dom) {
         this.dom = dom;
-        createDocumentCache();
-    }
-
-    private static synchronized void createDocumentCache() {
-        if (cachedDocuments == null) {
-            cachedDocuments = new ConcurrentLRUCache<>(Duration.ofMinutes(2), CACHE_SIZE);
-        }
     }
 
     public ValueDom get() {
@@ -45,7 +33,6 @@ public class ValueDomWritable implements Writable {
     public void write(DataOutput out) throws IOException {
         Element ele = dom.getElement();
         Document doc = ele.ownerDocument();
-        String baseUri = doc.baseUri();
 
         out.writeBytes(doc.baseUri());
         out.write('\n'); // make a line
@@ -53,13 +40,7 @@ public class ValueDomWritable implements Writable {
         out.writeBytes(ele.cssSelector());
         out.write('\n'); // make a line
 
-        String html = "";
-        FeaturedDocument cachedDocument = cachedDocuments.get(baseUri);
-        if (cachedDocument == null) {
-            html = doc.outerHtml();
-            cachedDocuments.put(baseUri, new FeaturedDocument(doc));
-        }
-
+        String html = doc.outerHtml();
         out.writeInt(html.length());
         out.write(html.getBytes());
     }
@@ -72,21 +53,14 @@ public class ValueDomWritable implements Writable {
         String baseUri = in.readLine();
         String selector = in.readLine();
 
-        FeaturedDocument doc = cachedDocuments.get(baseUri);
+        // System.out.println(selector);
+
+        FeaturedDocument doc;
 
         int htmlLen = in.readInt();
-        if (doc == null) {
-            byte[] html = new byte[htmlLen];
-            in.readFully(html);
-            if (html.length < NIL_DOC_LENGTH) {
-                doc = NIL_DOC;
-            } else {
-                doc = Documents.INSTANCE.parse(new String(html), baseUri);
-                cachedDocuments.put(baseUri, doc);
-            }
-        } else {
-            in.skipBytes(htmlLen);
-        }
+        byte[] html = new byte[htmlLen];
+        in.readFully(html);
+        doc = Documents.INSTANCE.parse(new String(html), baseUri);
 
         Element ele;
         if (selector.equals("#root")) {
@@ -95,7 +69,7 @@ public class ValueDomWritable implements Writable {
             ele = doc.first(selector);
         }
         if (ele == null) {
-            ele = NIL_DOC.unbox();
+            ele = NIL_DOC.getBody();
         }
 
         dom = ValueDom.get(ele);

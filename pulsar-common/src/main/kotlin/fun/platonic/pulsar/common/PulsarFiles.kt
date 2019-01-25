@@ -40,7 +40,7 @@ object PulsarPaths {
     val cacheDir = PATH_PULSAR_CACHE_DIR
     val webCacheDir = get(cacheDir, "web")
 
-    private val homeDirStr get() = homeDir.toString()
+    private val rootDirStr get() = homeDir.toString()
 
     init {
         if (!Files.exists(tmpDir)) Files.createDirectories(tmpDir)
@@ -53,7 +53,7 @@ object PulsarPaths {
     }
 
     fun get(first: String, vararg more: String): Path {
-        return Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
+        return Paths.get(rootDirStr, first.removePrefix(rootDirStr), *more)
     }
 
     fun fromUri(uri: String, suffix: String = ""): String {

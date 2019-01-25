@@ -51,8 +51,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_JOB_NAME;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_ID;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 
 public abstract class PulsarJob implements PulsarJobBase {

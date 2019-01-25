@@ -17,7 +17,6 @@ class H2Db {
 
     init {
         System.setProperty("h2.sessionFactory", H2QueryEngine::class.java.name)
-        System.setProperty("h2.serializeJavaObject", "false")
     }
 
     val config = H2DbConfig()

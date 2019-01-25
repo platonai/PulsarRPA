@@ -7,6 +7,7 @@ import org.h2.engine.SysProperties
 import org.jsoup.Jsoup
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import java.sql.Types
 import kotlin.test.assertEquals
@@ -51,27 +52,17 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue(obj is ValueDom)
         val dom = obj as ValueDom
 
-        println(dom.outHtml)
+        // println(dom.outHtml)
 
-        val bytes2 = serializer.serialize(dom)
-        val obj2 = serializer.deserialize(bytes2)
-        assertTrue(obj2 is ValueDom)
-        val dom2 = obj2 as ValueDom
-        assertTrue { dom.equals(dom2) }
+        val deserializeBytes = serializer.serialize(dom)
+        val deserializeObject = serializer.deserialize(deserializeBytes)
+        assertTrue(deserializeObject is ValueDom)
+        val dom2 = deserializeObject
+        assertTrue { dom == dom2 }
 
-        // The document is loaded from cache, so the two dom object contains the same Document object
-        assertFalse { obj === obj2 }
+        assertTrue { obj !== deserializeObject }
         assertTrue { dom.element.baseUri() == dom2.element.baseUri() }
-        assertTrue { dom.element.ownerDocument() == dom2.element.ownerDocument() }
-
-        // Assert DOM features are correct
-//        assertTrue { dom.element.features.dimension > 0 }
-//        assertTrue { dom.element.features[0] == dom2.element.features[1] }
-
-        // TODO: the serialization is OK, but the Document instantiation seems not symmetrical
-//        assertEquals(dom, dom2)
-//        assertEquals(dom.string, dom2.string)
-        // assertEquals(dom.toString(), dom2.element.attr("str"))
+        assertTrue { dom.element.ownerDocument() != dom2.element.ownerDocument() }
     }
 
     @Test
@@ -95,6 +86,7 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue((rs.getObject(1) as ValueDom).element.toString().contains("Hello World"))
     }
 
+    @Ignore("SerializeJavaObject should be disabled in client side according to java doc")
     @Test
     fun testNetworkSerialization2() {
         assertTrue(stat is org.h2.jdbc.JdbcStatement)

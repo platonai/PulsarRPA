@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import static fun.platonic.pulsar.common.PulsarParams.VAR_LINKS_COUNT;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 import static fun.platonic.pulsar.common.config.PulsarConstants.CACHING_FORBIDDEN_CONTENT;
 import static fun.platonic.pulsar.persist.ParseStatus.REFRESH_HREF;

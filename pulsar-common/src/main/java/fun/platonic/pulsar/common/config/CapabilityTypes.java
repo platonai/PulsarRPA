@@ -289,29 +289,6 @@ public interface CapabilityTypes {
     String INDEXER_COLLECTION = "indexer.collection";
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
     /**
-     * Index document fields
-     */
-    String DOC_FIELD_PUBLISH_TIME = "publish_time";
-    String DOC_FIELD_MODIFIED_TIME = "modified_time";
-    String DOC_FIELD_ARTICLE_TILE = "article_title";
-    String DOC_FIELD_PAGE_TITLE = "page_title";
-    String DOC_FIELD_CONTENT_TILE = "article_title";
-    String DOC_FIELD_PAGE_CATEGORY = "page_category";
-    String DOC_FIELD_LINKS_COUNT = "links_count";
-    String DOC_FIELD_HTML_CONTENT = "html_content";
-    String DOC_FIELD_TEXT_CONTENT = "text_content";
-    String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
-    String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
-    /**
-     * Temporary variable holders
-     */
-    String VAR_LINKS_COUNT = "links_count";
-    String VAR_DROPPED_LINKS_COUNT = "dropped_links_count";
-    String VAR_PAGE_EXISTENCE = "page_existence";
-    String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
-    String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
-
-    /**
      * Stat
      */
     String STAT_INDEX_HOME_URL = "stat.index.home.url";

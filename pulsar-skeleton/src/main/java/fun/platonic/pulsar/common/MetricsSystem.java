@@ -70,7 +70,7 @@ public class MetricsSystem implements AutoCloseable {
         try {
             reportDir = conf.getPath(PARAM_REPORT_DIR, PATH_PULSAR_REPORT_DIR);
             String ident = DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd");
-            reportDir = Paths.get(reportDir.toString(), ident);
+            reportDir = PulsarPaths.INSTANCE.get(reportDir.toString(), ident);
             Files.createDirectories(reportDir);
         } catch (IOException e) {
             LOG.error(e.toString());

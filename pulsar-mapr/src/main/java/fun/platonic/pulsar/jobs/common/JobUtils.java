@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import static fun.platonic.pulsar.common.config.PulsarConstants.STAT_PULSAR_STATUS;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.STAT_PULSAR_STATUS;
 
 public class JobUtils {
 

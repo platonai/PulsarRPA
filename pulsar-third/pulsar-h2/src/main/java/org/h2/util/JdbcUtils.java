@@ -423,5 +423,4 @@ public class JdbcUtils {
             throw DbException.get(ErrorCode.DESERIALIZATION_FAILED_1, e, e.toString());
         }
     }
-
 }

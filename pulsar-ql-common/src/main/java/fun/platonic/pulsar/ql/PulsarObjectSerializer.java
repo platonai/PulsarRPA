@@ -32,22 +32,9 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
         if (obj instanceof ValueDom) {
             ValueDom dom = (ValueDom) obj;
 
-            double len;
-            synchronized (bufferSizeSummarizer) {
-                len = bufferSizeSummarizer.getN() > 5 ? bufferSizeSummarizer.getPercentile(80) : 2048;
-            }
-
-            if (LOG.isDebugEnabled() && bufferSizeSummarizer.getN() > 5) {
-                // LOG.debug("DOM summery at 80% quantile: " + len);
-            }
-
-            DataOutputBuffer buffer = new DataOutputBuffer((int) len);
+            DataOutputBuffer buffer = new DataOutputBuffer(1024);
             buffer.writeInt(ValueDom.type);
             new ValueDomWritable(dom).write(buffer);
-
-            synchronized (bufferSizeSummarizer) {
-                bufferSizeSummarizer.addValue(buffer.size());
-            }
 
             return buffer.getData();
         } else {
@@ -61,8 +48,6 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
         in.reset(bytes, bytes.length);
 
         int type = in.readInt();
-
-        // System.out.println("Deserializing " + type);
 
         if (type == ValueDom.type) {
             ValueDomWritable writable = new ValueDomWritable();
