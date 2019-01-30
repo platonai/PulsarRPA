@@ -33,9 +33,7 @@ import java.util.stream.Stream;
 import static fun.platonic.pulsar.common.PulsarParams.*;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
-import static fun.platonic.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION;
-import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_HOME_URL;
-import static fun.platonic.pulsar.common.config.PulsarConstants.SEED_PAGE_1_URL;
+import static fun.platonic.pulsar.common.config.PulsarConstants.*;
 
 /**
  * Created by vincent on 17-5-14.

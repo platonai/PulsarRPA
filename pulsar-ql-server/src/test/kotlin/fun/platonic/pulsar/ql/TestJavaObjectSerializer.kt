@@ -1,6 +1,7 @@
 package `fun`.platonic.pulsar.ql
 
 import `fun`.platonic.pulsar.dom.FeaturedDocument
+import `fun`.platonic.pulsar.dom.nodes.node.ext.uniqueName
 import `fun`.platonic.pulsar.ql.h2.domValue
 import `fun`.platonic.pulsar.ql.types.ValueDom
 import org.h2.engine.SysProperties
@@ -11,7 +12,6 @@ import org.junit.Ignore
 import org.junit.Test
 import java.sql.Types
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TestJavaObjectSerializer : TestBase() {
@@ -20,12 +20,12 @@ class TestJavaObjectSerializer : TestBase() {
 
     @Before
     override fun setup() {
-        super.setup()
-
         db.config.traceTest = false
         db.config.memory = true
         db.config.networked = true
         SysProperties.serializeJavaObject = true
+
+        super.setup()
 
         // val doc = Jsoup.connect("http://www.baidu.com/").get()
         val doc = FeaturedDocument.createShell("http://example.com/")
@@ -36,7 +36,7 @@ class TestJavaObjectSerializer : TestBase() {
     @After
     override fun teardown() {
         super.teardown()
-        SysProperties.serializeJavaObject = false
+        // SysProperties.serializeJavaObject = false
     }
 
     @Test
@@ -86,7 +86,6 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue((rs.getObject(1) as ValueDom).element.toString().contains("Hello World"))
     }
 
-    @Ignore("SerializeJavaObject should be disabled in client side according to java doc")
     @Test
     fun testNetworkSerialization2() {
         assertTrue(stat is org.h2.jdbc.JdbcStatement)
@@ -100,6 +99,7 @@ class TestJavaObjectSerializer : TestBase() {
 
         assertTrue(rs.next())
         assertTrue(rs.getObject(1) is ValueDom)
-        // assertTrue((rs.getObject(1) as ValueDom).element.toString().contains("nutch"))
+        val dom = rs.getObject(1) as ValueDom
+        assertTrue { dom.element.uniqueName.contains("nfItem") }
     }
 }

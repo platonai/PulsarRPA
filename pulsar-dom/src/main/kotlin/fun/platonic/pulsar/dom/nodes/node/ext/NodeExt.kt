@@ -5,7 +5,9 @@ import `fun`.platonic.pulsar.common.StringUtil
 import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.dom.data.BrowserControl
-import `fun`.platonic.pulsar.dom.features.*
+import `fun`.platonic.pulsar.dom.features.FeatureEntry
+import `fun`.platonic.pulsar.dom.features.FeatureFormatter
+import `fun`.platonic.pulsar.dom.features.NodeFeature
 import `fun`.platonic.pulsar.dom.features.defined.*
 import `fun`.platonic.pulsar.dom.model.createImage
 import `fun`.platonic.pulsar.dom.model.createLink
@@ -153,6 +155,7 @@ val Node.captionOrSelector: String
 val Node.textOrNull: String?
     get() = when {
         this.hasAttr("src") -> this.attr("abs:src")
+        this.hasAttr("href") -> this.attr("abs:href")
         this is TextNode -> this.text().trim()
         this is Element -> this.text().trim()
         else -> null

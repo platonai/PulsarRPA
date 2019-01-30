@@ -275,6 +275,7 @@ public class UrlUtil {
      * are the upper key bound
      */
     public static String decodeKeyUpperBound(String endKey) {
+        // Character lastChar = Character.MAX_VALUE;
         endKey = endKey.replaceAll("\\\\uFFFF", "\uFFFF");
         endKey = endKey.replaceAll("\\uFFFF", "\uFFFF");
 

@@ -7,6 +7,7 @@ import `fun`.platonic.pulsar.ql.QuerySession
 import org.h2.engine.ConnectionInfo
 import org.h2.engine.Mode
 import org.h2.engine.Session
+import org.h2.engine.SysProperties
 import org.h2.message.TraceSystem
 import org.h2.util.JdbcUtils
 import org.h2.util.Utils

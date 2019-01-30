@@ -1,8 +1,8 @@
 package `fun`.platonic.pulsar.dom.select
 
+import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
 import `fun`.platonic.pulsar.dom.features.defined.HEIGHT
 import `fun`.platonic.pulsar.dom.features.defined.LEFT
-import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.featureNames
 import `fun`.platonic.pulsar.dom.features.defined.TOP
 import `fun`.platonic.pulsar.dom.features.defined.WIDTH
 import `fun`.platonic.pulsar.dom.nodes.node.ext.getFeature

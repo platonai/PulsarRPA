@@ -14,8 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS;
+import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
 import static fun.platonic.pulsar.common.config.PulsarConstants.HBASE_STORE_CLASS;
 
 /**
@@ -52,7 +51,7 @@ public class GoraStorage {
             Class<V> persistentClass,
             Class<? extends DataStore<K, V>> dataStoreClass
     ) throws GoraException {
-        String crawlId = conf.get(CRAWL_ID, "");
+        String crawlId = conf.get(STORAGE_CRAWL_ID, "");
         String schemaPrefix = "";
         if (!crawlId.isEmpty()) {
             schemaPrefix = crawlId + "_";
@@ -60,8 +59,8 @@ public class GoraStorage {
 
         String schema;
         if (GWebPage.class.equals(persistentClass)) {
-            schema = conf.get("storage.schema.webpage", "webpage");
-            conf.set("preferred.schema.name", schemaPrefix + "webpage");
+            schema = conf.get(STORAGE_SCHEMA_WEBPAGE, "webpage");
+            conf.set(STORAGE_PREFERRED_SCHEMA_NAME, schemaPrefix + "webpage");
         } else {
             throw new UnsupportedOperationException("Unable to create storage for class " + persistentClass);
         }

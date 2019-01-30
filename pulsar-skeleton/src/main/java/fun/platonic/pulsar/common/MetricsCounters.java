@@ -17,7 +17,6 @@
 package fun.platonic.pulsar.common;
 
 import com.beust.jcommander.internal.Sets;
-import fun.platonic.pulsar.common.config.PulsarConstants;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;

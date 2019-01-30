@@ -29,11 +29,11 @@ Web sites into tables and charts immediately.
 Everyone in your company can ask questions and learn from WEB DATA now, for the first time.
 
 # Build & Run
+## Install dependencies
+    bin/tools/install-depends.sh
 ## Build from source
     git clone git@github.com:platonai/pulsar.git
     cd pulsar && mvn -Pthird -Pplugins
-## Install dependencies
-    bin/tools/install-depends.sh
 ## Install mongodb
 You can skip this step, in such case, all data will lose after pulsar shutdown.
 Ubuntu/Debian:

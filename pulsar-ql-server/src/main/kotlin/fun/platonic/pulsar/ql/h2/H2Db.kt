@@ -1,7 +1,6 @@
 package `fun`.platonic.pulsar.ql.h2
 
 import `fun`.platonic.pulsar.common.PulsarPaths
-import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
 import java.nio.file.Path
@@ -13,10 +12,10 @@ import java.util.*
 /**
  * The base class for all tests.
  */
-class H2Db {
+class H2Db(sessionFactory: String = H2QueryEngine::class.java.name) {
 
     init {
-        System.setProperty("h2.sessionFactory", H2QueryEngine::class.java.name)
+        System.setProperty("h2.sessionFactory", sessionFactory)
     }
 
     val config = H2DbConfig()
@@ -24,12 +23,12 @@ class H2Db {
     /**
      * The base directory.
      */
-    val BASE_TEST_DIR = PulsarPaths.get(PULSAR_DEFAULT_TMP_DIR, "test", "h2")
+    val baseTestDir = PulsarPaths.get(PulsarPaths.testDir, "test", "h2")
 
     /**
      * The temporary directory.
      */
-    val TEMP_DIR = PulsarPaths.get(PULSAR_DEFAULT_TMP_DIR, "test", "h2", "tmp")
+    val tmpDir = PulsarPaths.get(PulsarPaths.tmpDir, "h2")
 
     /**
      * The time when the test was started.
@@ -258,7 +257,7 @@ class H2Db {
      * @return the test directory
      */
     fun getTestDir(name: String): Path {
-        return PulsarPaths.get(BASE_TEST_DIR, name)
+        return PulsarPaths.get(baseTestDir, name)
     }
 
     private fun addOption(url: String, option: String, value: String): String {

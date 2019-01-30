@@ -16,8 +16,6 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
 
     public static final Logger LOG = LoggerFactory.getLogger(PulsarObjectSerializer.class);
 
-    private static final DescriptiveStatistics bufferSizeSummarizer = new DescriptiveStatistics();
-
     @Override
     public byte[] serialize(Object obj) throws Exception {
         if (obj instanceof org.jsoup.nodes.Element) {

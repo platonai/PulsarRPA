@@ -1,10 +1,6 @@
 package fun.platonic.pulsar.persist;
 
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
 import fun.platonic.pulsar.common.DateTimeUtil;
 import fun.platonic.pulsar.common.UrlUtil;
 import fun.platonic.pulsar.common.config.MutableConfig;
@@ -14,20 +10,17 @@ import org.apache.avro.util.Utf8;
 import org.apache.gora.persistency.impl.DirtyCollectionWrapper;
 import org.apache.gora.persistency.impl.DirtyListWrapper;
 import org.apache.gora.store.DataStore;
-import org.h2tools.jaqu.Db;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static fun.platonic.pulsar.common.config.CapabilityTypes.CRAWL_ID;
-import static fun.platonic.pulsar.common.config.CapabilityTypes.GORA_MONGODB_SERVERS;
 import static fun.platonic.pulsar.common.config.PulsarConstants.EXAMPLE_URL;
 import static org.junit.Assert.*;
 

@@ -52,7 +52,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import static fun.platonic.pulsar.common.config.CapabilityTypes.*;
-import static fun.platonic.pulsar.common.config.PulsarConstants.*;
+import static fun.platonic.pulsar.common.config.PulsarConstants.ALL_BATCHES;
+import static fun.platonic.pulsar.common.config.PulsarConstants.YES_STRING;
 
 public abstract class PulsarJob implements PulsarJobBase {
 

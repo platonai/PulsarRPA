@@ -104,7 +104,7 @@ abstract class TestBase {
     }
 
     val db = H2Db()
-    val baseDir = db.BASE_TEST_DIR
+    val baseDir = db.baseTestDir
     var name: String = db.generateTempDbName()
     lateinit var conn: Connection
     lateinit var stat: Statement
@@ -113,9 +113,6 @@ abstract class TestBase {
     @Before
     open fun setup() {
         try {
-//            db.config.networked = true
-//            SysProperties.serializeJavaObject = true
-
             initializeDatabase()
 
             val numTests = this::class.members.count {

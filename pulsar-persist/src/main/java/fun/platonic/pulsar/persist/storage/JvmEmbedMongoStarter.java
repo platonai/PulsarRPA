@@ -4,7 +4,6 @@ import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.persist.EmbedMongoStarter;
 
 import java.io.IOException;
-import java.util.Scanner;
 
 import static fun.platonic.pulsar.common.config.CapabilityTypes.GORA_MONGODB_SERVERS;
 import static fun.platonic.pulsar.common.config.PulsarConstants.DEFAULT_EMBED_MONGO_SERVER;

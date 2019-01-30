@@ -19,10 +19,7 @@ package fun.platonic.pulsar.common;
 /**
  * A collection of HTTP header names.
  *
- * @see <a href="http://rfc-ref.org/RFC-TEXTS/2616/">Hypertext Transfer Protocol
- *      -- HTTP/1.1 (RFC 2616)</a>
- * @author Chris Mattmann
- * @author J&eacute;r&ocirc;me Charron
+ * TODO: use guava HttpHeaders
  */
 public interface HttpHeaders {
     String TRANSFER_ENCODING = "Transfer-Encoding";

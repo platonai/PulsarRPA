@@ -2,7 +2,7 @@ package `fun`.platonic.pulsar.persist
 
 import `fun`.platonic.pulsar.common.RuntimeUtils
 import `fun`.platonic.pulsar.common.StringUtil
-import `fun`.platonic.pulsar.common.config.CapabilityTypes.*
+import `fun`.platonic.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import `fun`.platonic.pulsar.common.config.ImmutableConfig
 import `fun`.platonic.pulsar.common.config.PulsarConstants.*
 import `fun`.platonic.pulsar.persist.gora.GoraStorage

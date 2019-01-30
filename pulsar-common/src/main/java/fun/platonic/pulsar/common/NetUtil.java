@@ -1,23 +1,23 @@
 package fun.platonic.pulsar.common;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_MASTER_HOST;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PULSAR_MASTER_PORT;
 
 public class NetUtil {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(NetUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
     public static int ProxyConnectionTimeout = 5 * 1000;
+
+    public static final Pattern ipPortPattern = // Pattern for matching ip[:port]
+            Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
     public static boolean testNetwork(String ip, int port) {
         return testTcpNetwork(ip, port);
@@ -33,8 +33,7 @@ public class NetUtil {
             // logger.info("available proxy server {} : {}", ip, port);
             reachable = true;
             con.disconnect();
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
 
         return reachable;
     }
@@ -43,8 +42,7 @@ public class NetUtil {
         try {
             URL url = new URL("http", host, port, "/");
             return testHttpNetwork(url);
-        } catch (MalformedURLException ignored) {
-        }
+        } catch (MalformedURLException ignored) {}
 
         return false;
     }
@@ -55,47 +53,13 @@ public class NetUtil {
 
         try {
             con.connect(new InetSocketAddress(ip, port), ProxyConnectionTimeout);
-            // logger.info("available proxy server : " + ip + ":" + port);
             reachable = true;
             con.close();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
             // logger.warn("can not connect to " + ip + ":" + port);
         }
 
         return reachable;
-    }
-
-    /**
-     * TODO : use package fun.platonic.pulsar.crawl.net.domain
-     */
-    public static String getTopLevelDomain(String baseUri) {
-        if (baseUri == null || baseUri.startsWith("/") || baseUri.startsWith("file://")) {
-            return null;
-        }
-
-        int pos = -1;
-        String domain = null;
-
-        if (StringUtils.startsWith(baseUri, "http")) {
-            final int fromIndex = "https://".length();
-            pos = baseUri.indexOf('/', fromIndex);
-
-            if (pos != -1)
-                baseUri = baseUri.substring(0, pos);
-        }
-
-        pos = baseUri.indexOf(".") + 1;
-
-        if (pos != 0) {
-            domain = baseUri.substring(pos);
-        }
-
-        // for example : http://dangdang.com
-        if (domain != null && !domain.contains(".")) {
-            domain = baseUri.replaceAll("(http://|https://)", "");
-        }
-
-        return domain;
     }
 
     public static String getAgentString(String agentName) {
@@ -106,7 +70,7 @@ public class NetUtil {
                                         String agentDesc, String agentURL, String agentEmail) {
 
         if ((agentName == null) || (agentName.trim().length() == 0)) {
-            LOG.error("No User-Agent string set (http.agent.name)!");
+            log.error("No User-Agent string set (http.agent.name)!");
         }
 
         StringBuilder buf = new StringBuilder();
@@ -141,10 +105,33 @@ public class NetUtil {
         return buf.toString();
     }
 
+    /**
+     * Return hostname without throwing exception.
+     * @return hostname
+     */
     public static String getHostname() {
+        try {return "" + InetAddress.getLocalHost();}
+        catch(UnknownHostException uhe) {return "" + uhe;}
+    }
+
+    /**
+     * Attempt to obtain the host name of the given string which contains
+     * an IP address and an optional port.
+     *
+     * @param ipPort string of form ip[:port]
+     * @return Host name or null if the name can not be determined
+     */
+    public static String getHostNameOfIP(String ipPort) {
+        if (null == ipPort || !ipPortPattern.matcher(ipPort).matches()) {
+            return null;
+        }
+
         try {
-            return Files.readAllLines(Paths.get("/etc/hostname")).get(0);
-        } catch (IOException e) {
+            int colonIdx = ipPort.indexOf(':');
+            String ip = (-1 == colonIdx) ? ipPort
+                    : ipPort.substring(0, ipPort.indexOf(':'));
+            return InetAddress.getByName(ip).getHostName();
+        } catch (UnknownHostException e) {
             return null;
         }
     }
@@ -154,8 +141,7 @@ public class NetUtil {
      */
     public static boolean isMaster(Configuration conf) {
         String masterHostname = conf.get(PULSAR_MASTER_HOST, "localhost");
-        return masterHostname.equals("localhost") || masterHostname.equals(NetUtil.getHostname());
-
+        return masterHostname.equals("localhost") || masterHostname.equals(getHostname());
     }
 
     public static URL getUrl(Configuration conf, String path) throws MalformedURLException {
@@ -165,10 +151,9 @@ public class NetUtil {
         return new URL("http", host, port, path);
     }
 
-    public static String getBaseUrl(Configuration conf) {
+    public static String getMasterUrl(Configuration conf) {
         String host = conf.get(PULSAR_MASTER_HOST);
         int port = conf.getInt(PULSAR_MASTER_PORT, 8182);
-
         return "http://" + host + ":" + port;
     }
 

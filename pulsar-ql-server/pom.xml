@@ -26,18 +26,6 @@
 
     <build>
         <plugins>
-            <!--<plugin>-->
-                <!--<groupId>org.codehaus.mojo</groupId>-->
-                <!--<artifactId>exec-maven-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<mainClass>fun.platonic.pulsar.ql.start.H2Shell</mainClass>-->
-                    <!--<arguments>-->
-                        <!--<argument>-sql</argument>-->
-                        <!--<argument>SELECT 1+1</argument>-->
-                    <!--</arguments>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
-
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>

@@ -21,7 +21,6 @@ import fun.platonic.pulsar.common.MetricsSystem;
 import fun.platonic.pulsar.common.config.ImmutableConfig;
 import fun.platonic.pulsar.common.config.Params;
 import fun.platonic.pulsar.persist.CrawlStatus;
-import fun.platonic.pulsar.persist.WebDb;
 import fun.platonic.pulsar.persist.WebPage;
 import fun.platonic.pulsar.persist.metadata.Mark;
 import org.slf4j.Logger;

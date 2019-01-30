@@ -105,10 +105,6 @@ public interface CapabilityTypes {
      */
     String STAT_COUNTERS = "counters";
 
-    String CRAWL_ID_KEY = "storage.crawl.id";
-
-    String STORAGE_CRAWL_ID = "storage.crawl.id";
-
     String COUNTER_GROUP_STATUS = "Runtime Status";
 
     /**
@@ -133,6 +129,7 @@ public interface CapabilityTypes {
     /**
      * Storage
      */
+    String STORAGE_CRAWL_ID = "storage.crawl.id";
     String STORAGE_SCHEMA_WEBPAGE = "storage.schema.webpage";
     String STORAGE_PREFERRED_SCHEMA_NAME = "preferred.schema.name";
     String STORAGE_DATA_STORE_CLASS = "storage.data.store.class";

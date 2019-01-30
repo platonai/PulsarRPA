@@ -34,7 +34,7 @@ public class ResultSetFormatter {
             }
             return getResultAsTable();
         } catch (SQLException e) {
-            return "(Exception)";
+            return "(Exception)" + e.getMessage();
         }
     }
 

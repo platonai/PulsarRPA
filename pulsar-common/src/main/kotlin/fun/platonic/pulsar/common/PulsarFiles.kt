@@ -1,9 +1,5 @@
 package `fun`.platonic.pulsar.common
 
-import `fun`.platonic.pulsar.common.config.CapabilityTypes.*
-import `fun`.platonic.pulsar.common.config.PulsarConstants.*
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -11,72 +7,13 @@ import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-/**
- * Created by vincent on 18-3-23.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
- */
-object PulsarPaths {
-    val homeDir = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(PULSAR_DEFAULT_TMP_DIR)
-    val tmpDir = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(PULSAR_DEFAULT_TMP_DIR)
-    val dataDir = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(PULSAR_DEFAULT_DATA_DIR)
-
-    @JvmField val PULSAR_DEFAULT_TEST_DIR = get(tmpDir, "test")
-    @JvmField val PATH_LAST_BATCH_ID = get(tmpDir, "last-batch-id")
-    @JvmField val PATH_LAST_GENERATED_ROWS = get(tmpDir, "last-generated-rows")
-    @JvmField val PATH_LOCAL_COMMAND = get(tmpDir, "pulsar-commands")
-    @JvmField val PATH_EMERGENT_SEEDS = get(tmpDir, "emergent-seeds")
-    @JvmField val PATH_BANNED_URLS = get(tmpDir, "banned-urls")
-    @JvmField val PATH_UNREACHABLE_HOSTS = get(tmpDir, "unreachable-hosts.txt")
-
-    @JvmField val PATH_PULSAR_OUTPUT_DIR = dataDir
-    @JvmField val PATH_PULSAR_REPORT_DIR = get(dataDir, "report")
-    @JvmField val PATH_PULSAR_CACHE_DIR = get(dataDir, "cache")
-
-    val cacheDir = PATH_PULSAR_CACHE_DIR
-    val webCacheDir = get(cacheDir, "web")
-
-    private val rootDirStr get() = homeDir.toString()
-
-    init {
-        if (!Files.exists(tmpDir)) Files.createDirectories(tmpDir)
-        if (!Files.exists(cacheDir)) Files.createDirectories(cacheDir)
-        if (!Files.exists(webCacheDir)) Files.createDirectories(webCacheDir)
-    }
-
-    fun get(baseDirectory: Path, vararg more: String): Path {
-        return Paths.get(baseDirectory.toString(), *more)
-    }
-
-    fun get(first: String, vararg more: String): Path {
-        return Paths.get(rootDirStr, first.removePrefix(rootDirStr), *more)
-    }
-
-    fun fromUri(uri: String, suffix: String = ""): String {
-        val md5 = DigestUtils.md5Hex(uri)
-        return if (suffix.isNotEmpty()) md5 + suffix else md5
-    }
-
-    fun relative(absolutePath: String): String {
-        return StringUtils.substringAfter(absolutePath, homeDir.toString())
-    }
-}
-
 object PulsarFiles {
 
     val log = LoggerFactory.getLogger(PulsarFiles::class.java)!!
-
-    fun save(content: String, ident: String, filename: String): Path {
-        val path = PulsarPaths.get(ident, filename)
-        Files.deleteIfExists(path)
-        Files.createDirectories(path.parent)
-        Files.write(path, content.toByteArray(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
-        return path
-    }
 
     fun saveTo(any: Any, path: Path, deleteIfExists: Boolean = false): Path {
         return saveTo(any.toString().toByteArray(), path, deleteIfExists)
@@ -95,11 +32,6 @@ object PulsarFiles {
         Files.write(path, content, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
 
         return path
-    }
-
-    @JvmOverloads
-    fun saveTo(content: ByteArray, relativePath: String, deleteIfExists: Boolean = false): Path {
-        return saveTo(content, PulsarPaths.get(relativePath), deleteIfExists)
     }
 
     fun appendlog(message: String, path: Path) {
@@ -161,7 +93,6 @@ object PulsarFiles {
 
         return entries
     }
-
 
     @Throws(IOException::class)
     fun writeLastGeneratedRows(rows: Long): Path {

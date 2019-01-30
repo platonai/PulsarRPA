@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static fun.platonic.pulsar.common.PulsarPaths.PATH_PULSAR_REPORT_DIR;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_JOB_NAME;
 import static fun.platonic.pulsar.common.config.CapabilityTypes.PARAM_REPORT_DIR;
 
@@ -68,9 +67,9 @@ public class MetricsSystem implements AutoCloseable {
         this.dayOfWeek = String.valueOf(LocalDate.now().getDayOfWeek().getValue());
 
         try {
-            reportDir = conf.getPath(PARAM_REPORT_DIR, PATH_PULSAR_REPORT_DIR);
+            reportDir = conf.getPath(PARAM_REPORT_DIR, PulsarPaths.INSTANCE.getReportDir());
             String ident = DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd");
-            reportDir = PulsarPaths.INSTANCE.get(reportDir.toString(), ident);
+            reportDir = PulsarPaths.INSTANCE.get(reportDir, ident);
             Files.createDirectories(reportDir);
         } catch (IOException e) {
             LOG.error(e.toString());

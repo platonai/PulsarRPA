@@ -16,6 +16,7 @@
  ******************************************************************************/
 package fun.platonic.pulsar.persist;
 
+import fun.platonic.pulsar.common.PulsarPaths;
 import fun.platonic.pulsar.common.config.MutableConfig;
 import fun.platonic.pulsar.persist.gora.GoraStorage;
 import fun.platonic.pulsar.persist.gora.generated.GWebPage;
@@ -38,7 +39,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static fun.platonic.pulsar.common.PulsarPaths.PULSAR_DEFAULT_TEST_DIR;
 import static fun.platonic.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL;
 import static fun.platonic.pulsar.common.config.PulsarConstants.TOY_STORE_CLASS;
 import static fun.platonic.pulsar.persist.metadata.Name.CASH_KEY;
@@ -56,7 +56,7 @@ public class TestGoraStorageInMemory {
 
     protected MutableConfig conf;
     protected FileSystem fs;
-    protected Path testdir = new Path(PULSAR_DEFAULT_TEST_DIR.toString() + "/working");
+    protected Path testdir = new Path(PulsarPaths.INSTANCE.getTestDir().toString() + "/working");
     protected DataStore<String, GWebPage> datastore;
     protected boolean persistentDataStore = false;
 
