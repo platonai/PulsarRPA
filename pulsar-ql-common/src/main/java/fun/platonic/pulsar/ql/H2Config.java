@@ -16,7 +16,9 @@ public class H2Config {
             return;
         }
 
-        SysProperties.serializeJavaObject = true;
+        // From java doc:
+        // "On the client side, this setting is required to be disabled"
+        SysProperties.serializeJavaObject = false;
         JdbcUtils.serializer = new PulsarObjectSerializer();
 
         String dataTypeHandler = System.getProperty("h2.customDataTypesHandler");

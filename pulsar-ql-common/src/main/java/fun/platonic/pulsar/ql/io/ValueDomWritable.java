@@ -3,6 +3,7 @@ package fun.platonic.pulsar.ql.io;
 import com.google.common.cache.*;
 import fun.platonic.pulsar.dom.Documents;
 import fun.platonic.pulsar.dom.FeaturedDocument;
+import fun.platonic.pulsar.dom.nodes.node.ext.NodeExtKt;
 import fun.platonic.pulsar.ql.types.ValueDom;
 import org.apache.hadoop.io.Writable;
 import org.jsoup.nodes.Document;
@@ -26,8 +27,9 @@ public class ValueDomWritable implements Writable {
     private static int CACHE_EXPIRES = 10;
     private static String CACHED_HINT = "(cached)";
 
-    // TODO: check if this is client side or server side, ensure client side expires after server side
     // server side
+    // TODO: check if this is client side or server side, ensure client side expires after server side
+    // TODO: need an instance per session
     private static LoadingCache<String, String> pageCache = CacheBuilder.newBuilder()
             .maximumSize(CACHE_SIZE)
             .expireAfterAccess(CACHE_EXPIRES, TimeUnit.MINUTES)
@@ -75,18 +77,17 @@ public class ValueDomWritable implements Writable {
                 // not cached, cache it
                 html = doc.outerHtml();
                 pageCache.put(baseUri, html);
-                System.out.println("cache html: " + html.length());
             }
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
 
+        if (html.length() > 8) {
+            System.out.println("Write length: " + html.length());
+        }
+
         out.writeInt(html.length());
         out.write(html.getBytes());
-
-        if (html.length() > 8) {
-            System.out.println("written: " + html.length());
-        }
     }
 
     /**
@@ -97,6 +98,9 @@ public class ValueDomWritable implements Writable {
         String baseUri = in.readLine();
         String selector = in.readLine();
         int htmlLen = in.readInt();
+        if (htmlLen > 8) {
+            System.out.println("Reading length: " + htmlLen);
+        }
 
         String html = "";
         FeaturedDocument doc;
@@ -110,8 +114,7 @@ public class ValueDomWritable implements Writable {
             in.readFully(bytes);
             html = new String(bytes);
 
-            System.out.println("Cache it");
-
+            System.out.println("Caching");
             doc = Documents.INSTANCE.parse(html, baseUri);
             documentCache.put(baseUri, doc);
         }
@@ -128,11 +131,7 @@ public class ValueDomWritable implements Writable {
         }
 
         if (ele == null) {
-            ele = NIL_DOC.getBody().clone();
-        }
-
-        if (doc == NIL_DOC) {
-            ele = ele.clone();
+            ele = NIL_DOC.getBody();
         }
 
         dom = ValueDom.get(ele);

@@ -14,13 +14,13 @@ import org.jsoup.select.NodeVisitor
 
 open class FeaturedDocument(val document: Document) {
     companion object {
-        val NIL: FeaturedDocument = FeaturedDocument.createShell(NIL_PAGE_URL)
+        var SELECTOR_IN_BOX_DEVIATION = 25
+        var nodeFeatureCalculator: NodeVisitor? = NodeFeatureCalculator()
+
+        // feature calculator is required so it should be lazy
+        val NIL: FeaturedDocument by lazy { FeaturedDocument.createShell(NIL_PAGE_URL) }
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
-
-        var SELECTOR_IN_BOX_DEVIATION = 25
-
-        var nodeFeatureCalculator: NodeVisitor? = NodeFeatureCalculator()
 
         fun createShell(baseUri: String): FeaturedDocument {
             val document = Document.createShell(baseUri)

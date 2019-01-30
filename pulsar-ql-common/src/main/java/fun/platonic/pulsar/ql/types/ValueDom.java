@@ -219,6 +219,7 @@ public class ValueDom extends Value {
 
     @Override
     public String toString() {
-        return NodeExtKt.getUniqueName(element);
+        return "(dom)";
+        // return NodeExtKt.getUniqueName(element);
     }
 }
