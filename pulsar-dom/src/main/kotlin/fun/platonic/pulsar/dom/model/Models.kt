@@ -125,6 +125,7 @@ fun createImage(ele: Element, keepMetadata: Boolean = true, lazy: Boolean = fals
             image.attributes["data-original"] = src
         }
         image.attributes["src"] = imageDot
+        image.attributes["style"] = "min-width:10px; min-height:10px"
     } else {
         image.attributes["src"] = lazySrc ?: ""
     }

@@ -207,7 +207,7 @@ object DomFunctionTables {
             configuredUrl: String,
             cssQuery: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD,H1,H2,H3",
             offset: Int = 1,
-            limit: Int = Int.MAX_VALUE): ResultSet {
+            limit: Int = 100): ResultSet {
         val session = H2QueryEngine.getSession(h2session)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
@@ -229,7 +229,7 @@ object DomFunctionTables {
                  dom: ValueDom,
                  cssSelector: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
                  offset: Int = 1,
-                 limit: Int = Integer.MAX_VALUE): ResultSet {
+                 limit: Int = 100): ResultSet {
         val rs = createFeatureResultSet()
 
         if (dom.isNil) {
