@@ -19,6 +19,7 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
 
     init {
         H2Config.config()
+        SysProperties.serializeJavaObject = true
         JdbcUtils.addClassFactory(ClassFactory())
     }
 
@@ -39,8 +40,6 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
      */
     @Synchronized
     override fun createSession(ci: ConnectionInfo): Session {
-        SysProperties.serializeJavaObject = true
-
         val h2session = org.h2.engine.Engine.getInstance().createSession(ci)
         h2session.database.mode = Mode.getInstance(Mode.SIGMA)
 

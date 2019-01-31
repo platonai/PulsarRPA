@@ -19,7 +19,7 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.util.concurrent.atomic.AtomicBoolean
 
-class Pulsar : AutoCloseable {
+class Pulsar: AutoCloseable {
 
     val immutableConfig: ImmutableConfig
     val webDb: WebDb
@@ -33,7 +33,7 @@ class Pulsar : AutoCloseable {
 
     val fetchComponent: BatchFetchComponent get() = loadComponent.fetchComponent
 
-    constructor(appConfigLocation: String) : this(ClassPathXmlApplicationContext(appConfigLocation)) {}
+    constructor(appConfigLocation: String) : this(ClassPathXmlApplicationContext(appConfigLocation))
 
     @JvmOverloads
     constructor(applicationContext: ConfigurableApplicationContext = ClassPathXmlApplicationContext(

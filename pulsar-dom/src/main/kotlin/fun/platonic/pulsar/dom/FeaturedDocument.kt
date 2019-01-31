@@ -1,5 +1,8 @@
 package `fun`.platonic.pulsar.dom
 
+import `fun`.platonic.pulsar.common.ResourceLoader
+import `fun`.platonic.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
+import `fun`.platonic.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import `fun`.platonic.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
 import `fun`.platonic.pulsar.common.math.vectors.isEmpty
 import `fun`.platonic.pulsar.dom.features.NodeFeatureCalculator
@@ -15,10 +18,9 @@ import org.jsoup.select.NodeVisitor
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
-        var nodeFeatureCalculator: NodeVisitor? = NodeFeatureCalculator()
+        val nodeFeatureCalculator: NodeVisitor by lazy { loadFeatureCalculator() }
 
-        // feature calculator is required so it should be lazy
-        val NIL: FeaturedDocument by lazy { FeaturedDocument.createShell(NIL_PAGE_URL) }
+        val NIL: FeaturedDocument = FeaturedDocument.createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 
@@ -31,7 +33,14 @@ open class FeaturedDocument(val document: Document) {
          * An element is Nil, if it's owner document is nil
          * */
         fun isNil(node: Node): Boolean {
-            return node.baseUri() == NIL.baseUri
+            return node == NIL || node.baseUri() == NIL.baseUri
+        }
+
+        private fun loadFeatureCalculator(): NodeVisitor {
+            val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
+            val className = System.getProperty(NODE_FEATURE_CALCULATOR, defaultClassName)
+            val clazz = ResourceLoader.loadUserClass<NodeVisitor>(className)
+            return clazz.newInstance()
         }
     }
 
@@ -42,7 +51,7 @@ open class FeaturedDocument(val document: Document) {
     constructor(other: FeaturedDocument): this(other.unbox().clone())
 
     init {
-        if (nodeFeatureCalculator != null && document.features.isEmpty) {
+        if (document.features.isEmpty) {
             NodeTraversor.traverse(nodeFeatureCalculator, document)
         }
     }

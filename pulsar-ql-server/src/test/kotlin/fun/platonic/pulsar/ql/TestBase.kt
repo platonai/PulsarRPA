@@ -7,6 +7,7 @@ import `fun`.platonic.pulsar.common.StringUtil
 import `fun`.platonic.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_DATA_DIR
 import `fun`.platonic.pulsar.ql.h2.H2Db
 import `fun`.platonic.pulsar.ql.utils.ResultSetFormatter
+import org.h2.engine.SysProperties
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
 import org.h2.tools.Server
@@ -140,6 +141,11 @@ abstract class TestBase {
 
     fun execute(sql: String, printResult: Boolean = true) {
         try {
+            // TODO: different values are required in client and server side
+            // this variable is shared between client and server in embed WebApp mode, but different values are required
+            val lastSerializeJavaObject = SysProperties.serializeJavaObject
+            SysProperties.serializeJavaObject = false
+
             val regex = "^(SELECT|CALL).+".toRegex()
             if (sql.filter { it != '\n' }.trimIndent().matches(regex)) {
                 val rs = stat.executeQuery(sql)
@@ -152,6 +158,7 @@ abstract class TestBase {
                     println(r)
                 }
             }
+            SysProperties.serializeJavaObject = lastSerializeJavaObject
 
             history.add("${sql.trim { it.isWhitespace() }};")
         } catch (e: Throwable) {

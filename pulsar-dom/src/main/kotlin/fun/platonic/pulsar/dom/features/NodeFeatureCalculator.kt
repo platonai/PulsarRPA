@@ -1,5 +1,6 @@
 package `fun`.platonic.pulsar.dom.features
 
+import `fun`.platonic.pulsar.common.ResourceLoader
 import `fun`.platonic.pulsar.common.math.vectors.get
 import `fun`.platonic.pulsar.common.math.vectors.set
 import `fun`.platonic.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
@@ -20,6 +21,8 @@ class NodeFeatureCalculator : NodeVisitor {
 
     companion object {
         init {
+            ResourceLoader.addClassFactory(ClassFactory())
+
             NodeFeature.register(F.values().map { it.toFeature() })
             require(registeredFeatures.size == N)
         }
@@ -191,5 +194,16 @@ class NodeFeatureCalculator : NodeVisitor {
         val d = ele.getFeature(denominator)
 
         return if (d == 0.0) divideByZeroValue else n / d
+    }
+}
+
+class ClassFactory : ResourceLoader.ClassFactory {
+    override fun match(name: String): Boolean {
+        return name.startsWith(this.javaClass.`package`.name)
+    }
+
+    @Throws(ClassNotFoundException::class)
+    override fun loadClass(name: String): Class<*> {
+        return this.javaClass.classLoader.loadClass(name)
     }
 }

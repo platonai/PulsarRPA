@@ -309,6 +309,8 @@ public interface CapabilityTypes {
      */
     String CACHING_FORBIDDEN_ALL = "all";
 
+    String NODE_FEATURE_CALCULATOR = "pulsar.node.feature.calculator";
+
     String SCENT_DOMAIN = "scent.domain";
     String SCENT_TASK_IDENT = "scent.task.ident";
     String SCENT_FILE_SERVER_HOST = "scent.file.server.host";

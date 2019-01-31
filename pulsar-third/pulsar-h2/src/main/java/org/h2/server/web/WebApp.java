@@ -1341,8 +1341,8 @@ public class WebApp {
                 stat.setMaxRows(maxrows);
                 session.executingStatement = stat;
 
-                // TODO: this variable is shared between client and server in embed WebApp mode, but different values are required
-                // System.out.println("SysProperties.serializeJavaObject: " + SysProperties.serializeJavaObject);
+                // TODO: different values are required in client and server side
+                // this variable is shared between client and server in embed WebApp mode, but different values are required
                 boolean lastSerializeJavaObject = SysProperties.serializeJavaObject;
                 SysProperties.serializeJavaObject = false;
 

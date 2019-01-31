@@ -25,10 +25,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,7 +61,7 @@ public class ResourceLoader {
         Class<?> loadClass(String name) throws ClassNotFoundException;
     }
 
-    private static ArrayList<ClassFactory> userClassFactories = new ArrayList<>();
+    private static List<ClassFactory> userClassFactories = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Add a class factory in order to manage more than one class loader.
@@ -84,8 +81,11 @@ public class ResourceLoader {
         userClassFactories.remove(classFactory);
     }
 
-    private ClassLoader classLoader;
+    private static List<ClassFactory> getUserClassFactories() {
+        return userClassFactories;
+    }
 
+    private ClassLoader classLoader;
     {
         classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
@@ -94,6 +94,48 @@ public class ResourceLoader {
     }
 
     public ResourceLoader() {
+    }
+
+    /**
+     * Load a class, but check if it is allowed to load this class first. To
+     * perform access rights checking, the system property h2.allowedClasses
+     * needs to be set to a list of class file name prefixes.
+     *
+     * @param className the name of the class
+     * @return the class object
+     */
+    @SuppressWarnings("unchecked")
+    public static <Z> Class<Z> loadUserClass(String className) throws ClassNotFoundException {
+        // Use provided class factory first.
+        for (ClassFactory classFactory : getUserClassFactories()) {
+            if (classFactory.match(className)) {
+                try {
+                    Class<?> userClass = classFactory.loadClass(className);
+                    if (userClass != null) {
+                        return (Class<Z>) userClass;
+                    }
+                } catch (ClassNotFoundException e) {
+                    // ignore, try other class loaders
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
+        }
+
+        // Use local ClassLoader
+        try {
+            return (Class<Z>) Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            try {
+                return (Class<Z>) Class.forName(
+                        className, true,
+                        Thread.currentThread().getContextClassLoader());
+            } catch (Exception e2) {
+                throw e2;
+            }
+        } catch (Error e) {
+            throw e;
+        }
     }
 
     public List<String> readAllLines(String stringResource, String fileResource, String resourcePrefix) {
@@ -196,7 +238,7 @@ public class ResourceLoader {
         // User provided class loader first
         Iterator<ClassFactory> it = userClassFactories.iterator();
         while (url == null && it.hasNext()) {
-            url = it.getClass().getResource(name);
+            url = it.next().getClass().getResource(name);
         }
         return url != null ? url : classLoader.getResource(name);
     }

@@ -82,10 +82,6 @@ public class ValueDomWritable implements Writable {
             e.printStackTrace();
         }
 
-        if (html.length() > 8) {
-            System.out.println("Write length: " + html.length());
-        }
-
         out.writeInt(html.length());
         out.write(html.getBytes());
     }
@@ -98,11 +94,8 @@ public class ValueDomWritable implements Writable {
         String baseUri = in.readLine();
         String selector = in.readLine();
         int htmlLen = in.readInt();
-        if (htmlLen > 8) {
-            System.out.println("Reading length: " + htmlLen);
-        }
 
-        String html = "";
+        String html;
         FeaturedDocument doc;
         if (htmlLen == CACHED_HINT.length()) {
             // cached
@@ -114,7 +107,6 @@ public class ValueDomWritable implements Writable {
             in.readFully(bytes);
             html = new String(bytes);
 
-            System.out.println("Caching");
             doc = Documents.INSTANCE.parse(html, baseUri);
             documentCache.put(baseUri, doc);
         }

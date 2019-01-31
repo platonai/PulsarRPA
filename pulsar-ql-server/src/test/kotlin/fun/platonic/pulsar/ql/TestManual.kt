@@ -183,6 +183,29 @@ WHERE DOM_CH(DOM) > 100
         execute(sql)
     }
 
+    @Test
+    fun testSqlVariables() {
+        val sql = """
+SET @LINK='https://www.mia.com/formulas.html';
+SET @OUT_LINK_STRICT_CSS='*:expr(img>0 && width>200 && height>200 && sibling>30)';
+
+-- Show page features to see where are the useful links
+-- SELECT * FROM DOMT_LOAD_AND_GET_FEATURES(@LINK, @OUT_LINK_STRICT_CSS) LIMIT 100;
+
+SELECT
+  DOM_FIRST_TEXT(DOM, '.brand') AS TITLE,
+  DOM_FIRST_TEXT(DOM, '.pbox_price') AS PRICE,
+  DOM_BASE_URI(DOM) AS URI,
+  IN_BOX_FIRST_IMG(DOM, '405x405') AS MAIN_IMAGE,
+  DOM_FIRST_TEXT(DOM, '#wrap_con') AS PARAMETERS_TEXT,
+  DOM_CH(DOM) AS NCHAR,
+  DOM_IMG(DOM) AS NIMG
+FROM LOAD_OUT_PAGES(@LINK, @OUT_LINK_STRICT_CSS, 1, 100)
+WHERE DOM_CH(DOM) > 100;
+        """.trimIndent()
+        execute(sql)
+    }
+
     /**
      * A simple Web page monitor, monitoring news
      * */

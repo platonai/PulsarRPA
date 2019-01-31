@@ -128,6 +128,8 @@ public interface PulsarConstants {
      * */
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
+    String DEFAULT_NODE_FEATURE_CALCULATOR = "fun.platonic.pulsar.dom.features.NodeFeatureCalculator";
+
     String DEFAULT_PULSAR_MASTER_HOST = "0.0.0.0";
     int DEFAULT_PULSAR_MASTER_PORT = 8182;
 
@@ -136,6 +138,9 @@ public interface PulsarConstants {
 
     String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
 
+    /**
+     * Directories
+     * */
     String TMP_DIR = System.getProperty("java.io.tmpdir");
     String HOME_DIR = System.getProperty("user.home");
 
