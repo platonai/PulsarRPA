@@ -21,7 +21,7 @@ Turn a Web page into a table:
 
 The SQL above downloads a Web page from wikipedia, find out the references section and extract all external reference links.
 
-Check [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) to see more example SQLs. All SQL functions can be found under [fun.platonic.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
+Check [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
 
 ## BI Integration
 Use the exiting customized BI tool [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 

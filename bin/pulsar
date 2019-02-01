@@ -126,10 +126,10 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-ql-server
-  CLASS=fun.platonic.pulsar.ql.start.H2DbConsole
+  CLASS=ai.platon.pulsar.ql.start.H2DbConsole
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-ql-server
-  CLASS=fun.platonic.pulsar.ql.start.H2Shell
+  CLASS=ai.platon.pulsar.ql.start.H2Shell
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else

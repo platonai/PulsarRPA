@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>fun.platonic.pulsar</groupId>
+        <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
         <version>0.5.2</version>
     </parent>
@@ -215,7 +215,7 @@
         </dependency>
 
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
 

@@ -5,22 +5,22 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <bean id="conf" class="fun.platonic.pulsar.common.config.ImmutableConfig"/>
+    <bean id="conf" class="ai.platon.pulsar.common.config.ImmutableConfig"/>
 
-    <bean id="anchorIndexingFilter" class="fun.platonic.pulsar.index.AnchorIndexingFilter">
+    <bean id="anchorIndexingFilter" class="ai.platon.pulsar.index.AnchorIndexingFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="metadataIndexer" class="fun.platonic.pulsar.index.MetadataIndexer">
+    <bean id="metadataIndexer" class="ai.platon.pulsar.index.MetadataIndexer">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="generalIndexingFilter" class="fun.platonic.pulsar.index.GeneralIndexingFilter">
+    <bean id="generalIndexingFilter" class="ai.platon.pulsar.index.GeneralIndexingFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="moreIndexingFilter" class="fun.platonic.pulsar.index.MoreIndexingFilter">
+    <bean id="moreIndexingFilter" class="ai.platon.pulsar.index.MoreIndexingFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="indexFilters" class="fun.platonic.pulsar.crawl.index.IndexingFilters">
+    <bean id="indexFilters" class="ai.platon.pulsar.crawl.index.IndexingFilters">
         <constructor-arg>
             <list>
                 <ref bean="anchorIndexingFilter" />
@@ -32,15 +32,15 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="indexerMapping" class="fun.platonic.pulsar.crawl.index.IndexerMapping">
+    <bean id="indexerMapping" class="ai.platon.pulsar.crawl.index.IndexerMapping">
         <constructor-arg value="indexer-mapping.xml"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="solrIndexWriter" class="fun.platonic.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
+    <bean id="solrIndexWriter" class="ai.platon.pulsar.indexer.solr.SolrIndexWriter" destroy-method="close">
         <constructor-arg ref="indexerMapping"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="indexWriters" class="fun.platonic.pulsar.crawl.index.IndexWriters">
+    <bean id="indexWriters" class="ai.platon.pulsar.crawl.index.IndexWriters">
         <!--<property name="message" value = "Hello World!"/>-->
         <constructor-arg>
             <list>

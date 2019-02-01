@@ -5,30 +5,30 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <bean id="conf" class="fun.platonic.pulsar.common.config.MutableConfig">
+    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig">
         <constructor-arg value="test-conf"/>
     </bean>
 
-    <bean id="prefixUrlFilter" class="fun.platonic.pulsar.filter.PrefixUrlFilter">
+    <bean id="prefixUrlFilter" class="ai.platon.pulsar.filter.PrefixUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="suffixUrlFilter" class="fun.platonic.pulsar.filter.SuffixUrlFilter">
+    <bean id="suffixUrlFilter" class="ai.platon.pulsar.filter.SuffixUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="regexUrlFilter" class="fun.platonic.pulsar.filter.RegexUrlFilter">
+    <bean id="regexUrlFilter" class="ai.platon.pulsar.filter.RegexUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="dateUrlFilter" class="fun.platonic.pulsar.filter.DateUrlFilter">
+    <bean id="dateUrlFilter" class="ai.platon.pulsar.filter.DateUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="urlValidator" class="fun.platonic.pulsar.filter.UrlValidator">
+    <bean id="urlValidator" class="ai.platon.pulsar.filter.UrlValidator">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="automatonUrlFilter" class="fun.platonic.pulsar.filter.AutomatonUrlFilter">
+    <bean id="automatonUrlFilter" class="ai.platon.pulsar.filter.AutomatonUrlFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="urlFilters" class="fun.platonic.pulsar.crawl.filter.UrlFilters">
+    <bean id="urlFilters" class="ai.platon.pulsar.crawl.filter.UrlFilters">
         <constructor-arg ref="conf"/>
         <constructor-arg>
             <list>
@@ -42,17 +42,17 @@
         </constructor-arg>
     </bean>
 
-    <bean id="basicUrlNormalizer" class="fun.platonic.pulsar.normalizer.BasicUrlNormalizer">
+    <bean id="basicUrlNormalizer" class="ai.platon.pulsar.normalizer.BasicUrlNormalizer">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="regexUrlNormalizer" class="fun.platonic.pulsar.normalizer.RegexUrlNormalizer">
+    <bean id="regexUrlNormalizer" class="ai.platon.pulsar.normalizer.RegexUrlNormalizer">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="passUrlNormalizer" class="fun.platonic.pulsar.normalizer.PassUrlNormalizer">
+    <bean id="passUrlNormalizer" class="ai.platon.pulsar.normalizer.PassUrlNormalizer">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="urlNormalizers" class="fun.platonic.pulsar.crawl.filter.UrlNormalizers">
+    <bean id="urlNormalizers" class="ai.platon.pulsar.crawl.filter.UrlNormalizers">
         <constructor-arg ref="conf"/>
         <constructor-arg value="default"/>
         <constructor-arg>
@@ -64,11 +64,11 @@
         </constructor-arg>
     </bean>
 
-    <bean id="crawlFilter" class="fun.platonic.pulsar.crawl.filter.CrawlFilter">
+    <bean id="crawlFilter" class="ai.platon.pulsar.crawl.filter.CrawlFilter">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="crawlFilters" class="fun.platonic.pulsar.crawl.filter.CrawlFilters">
+    <bean id="crawlFilters" class="ai.platon.pulsar.crawl.filter.CrawlFilters">
         <constructor-arg>
             <list>
                 <ref bean="crawlFilter" />

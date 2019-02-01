@@ -396,7 +396,7 @@ public class FunctionAlias extends SchemaObjectBase {
             Class<?>[] paramClasses = method.getParameterTypes();
             // if alias: DOM_ABSHREF
             // signature: dom_absHref(ValueDom)
-            // parameter 0: fun.platonic.pulsar.ql.ValueDom
+            // parameter 0: ai.platon.pulsar.ql.ValueDom
 
             Object[] params = new Object[paramClasses.length];
             int p = 0;
@@ -463,7 +463,7 @@ public class FunctionAlias extends SchemaObjectBase {
                         }
                     }
                 } else {
-                    // paramClass: fun.platonic.pulsar.ql.ValueDom
+                    // paramClass: ai.platon.pulsar.ql.ValueDom
                     // o.getClass: org.h2.value.ValueJavaObject / org.h2.value.ValueJavaObject$NotSerialized
                     if (!paramClass.isAssignableFrom(o.getClass()) && !paramClass.isPrimitive()) {
                         o = DataType.convertTo(session.createConnection(false), v, paramClass);

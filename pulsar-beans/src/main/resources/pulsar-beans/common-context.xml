@@ -5,25 +5,25 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <bean id="conf" class="fun.platonic.pulsar.common.config.MutableConfig"/>
+    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
-    <bean id="storageService" class="fun.platonic.pulsar.persist.AutoDetectedStorageService" destroy-method="close">
+    <bean id="storageService" class="ai.platon.pulsar.persist.AutoDetectedStorageService" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDb" class="fun.platonic.pulsar.persist.WebDb" destroy-method="close">
+    <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
         <constructor-arg ref="storageService" />
     </bean>
 
-    <bean id="pulsarCounters" class="fun.platonic.pulsar.common.MetricsCounters"/>
+    <bean id="pulsarCounters" class="ai.platon.pulsar.common.MetricsCounters"/>
 
-    <bean id="pulsarMetrics" class="fun.platonic.pulsar.common.MetricsSystem" destroy-method="close">
+    <bean id="pulsarMetrics" class="ai.platon.pulsar.common.MetricsSystem" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchStatusTracker" class="fun.platonic.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
+    <bean id="fetchStatusTracker" class="ai.platon.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="pulsarMetrics"/>
         <constructor-arg ref="conf"/>
