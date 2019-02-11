@@ -46,7 +46,6 @@ public interface CapabilityTypes {
     /**
      * Args
      */
-    String CRAWL_ID = "crawlId";
     String TENANT_ID = "tenantId";
     String START_KEY = "startKey";
     String END_KEY = "endKey";
@@ -81,7 +80,6 @@ public interface CapabilityTypes {
      * */
     String STAT_PULSAR_STATUS = "Pulsar Status";
     String STAT_INFECTED_ROWS = "injectedRows";
-
 
     // short constants for status / results fields
     /**

@@ -819,7 +819,7 @@
             <dependency>
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
-                <version>2.6</version>
+                <version>${commons-lang.version}</version>
             </dependency>
             <dependency>
                 <groupId>xml-apis</groupId>
@@ -829,7 +829,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.4</version>
+                <version>${commons-io.version}</version>
             </dependency>
 
             <dependency>
@@ -1077,6 +1077,8 @@
         <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
 
         <!-- Misc Dependencies -->
+        <commons-lang.version>2.6</commons-lang.version>
+        <commons-io.version>2.4</commons-io.version>
         <!--  Google core libraries for Java, include Multimaps, etc -->
         <guava.version>27.0.1-jre</guava.version>
         <gson.version>2.6.2</gson.version>

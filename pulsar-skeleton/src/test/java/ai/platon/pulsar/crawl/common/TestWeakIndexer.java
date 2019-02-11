@@ -5,10 +5,10 @@ import ai.platon.pulsar.common.MetricsSystem;
 import ai.platon.pulsar.common.UrlUtil;
 import ai.platon.pulsar.common.WeakPageIndexer;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
 import org.apache.gora.store.DataStore;
 import org.junit.After;
 import org.junit.Before;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,7 +52,7 @@ public class TestWeakIndexer {
 
     public TestWeakIndexer() {
         conf = new MutableConfig();
-        conf.set(CRAWL_ID, "test");
+        conf.set(STORAGE_CRAWL_ID, "test");
 
         webDb = new WebDb(conf);
         metricsSystem = new MetricsSystem(webDb, conf);

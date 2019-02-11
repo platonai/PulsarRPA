@@ -78,7 +78,7 @@ public class ProxyEntry implements Comparable<ProxyEntry> {
                 "192.144.22.123:89083 adasdfadf",
         };
 
-        Set<ProxyEntry> mergedProxyEntries = new TreeSet<ProxyEntry>();
+        Set<ProxyEntry> mergedProxyEntries = new TreeSet<>();
         for (String line : lines) {
             mergedProxyEntries.add(ProxyEntry.parse(line));
         }

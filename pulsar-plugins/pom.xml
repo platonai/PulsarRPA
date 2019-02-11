@@ -29,6 +29,7 @@
         <module>pulsar-protocol</module>
         <module>pulsar-scoring</module>
         <module>pulsar-index</module>
+        <module>pulsar-schedule</module>
     </modules>
 
     <dependencyManagement>
@@ -72,6 +73,11 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-index</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-schedule</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

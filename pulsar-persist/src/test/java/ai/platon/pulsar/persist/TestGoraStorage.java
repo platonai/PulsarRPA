@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 import static ai.platon.pulsar.common.config.PulsarConstants.EXAMPLE_URL;
 import static org.junit.Assert.*;
 
@@ -49,7 +49,7 @@ public class TestGoraStorage {
     @BeforeClass
     public static void setupClass() {
         conf = new MutableConfig();
-        conf.set(CRAWL_ID, "test");
+        conf.set(STORAGE_CRAWL_ID, "test");
         webDb = new WebDb(conf);
         store = webDb.getStore();
         // conf.set("storage.data.store.class", TOY_STORE_CLASS);

@@ -235,6 +235,7 @@ public class ProxyPool extends AbstractQueue<ProxyEntry> implements AutoCloseabl
 
             lines.stream()
                     .map(ProxyEntry::parse)
+                    .filter(Objects::nonNull)
                     .forEach(proxyEntry -> {
                         proxyEntries.add(proxyEntry);
                         freeProxies.add(proxyEntry);

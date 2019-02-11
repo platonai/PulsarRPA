@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 
 /**
@@ -82,7 +82,7 @@ public class WebDbComponent implements AutoCloseable {
 
     public DbQueryResult scan(String startUrl, String endUrl) {
         DbQueryResult result = new DbQueryResult();
-        DbQuery query = new DbQuery(conf.get(CRAWL_ID), ALL_BATCHES, startUrl, endUrl);
+        DbQuery query = new DbQuery(conf.get(STORAGE_CRAWL_ID), ALL_BATCHES, startUrl, endUrl);
 
         Params.of("startUrl", startUrl, "endUrl", endUrl).withLogger(LOG).debug(true);
 

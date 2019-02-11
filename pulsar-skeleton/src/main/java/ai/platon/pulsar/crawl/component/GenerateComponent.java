@@ -159,7 +159,7 @@ public class GenerateComponent implements ReloadableParameterized {
 
     @Override
     public void reload(ImmutableConfig conf) {
-        crawlId = conf.get(CRAWL_ID);
+        crawlId = conf.get(STORAGE_CRAWL_ID);
         batchId = conf.get(BATCH_ID, ALL_BATCHES);
         fetchMode = conf.getEnum(FETCH_MODE, FetchMode.NATIVE);
         groupMode = conf.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST);

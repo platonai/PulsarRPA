@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static ai.platon.pulsar.common.PulsarParams.*;
-import static ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
-import static ai.platon.pulsar.common.config.CapabilityTypes.CRAWL_ID;
+import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
 
 /**
@@ -64,7 +63,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
                 System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION));
 
         MutableConfig conf = context.getBean(MutableConfig.class);
-        conf.setIfNotEmpty(CRAWL_ID, opts.crawlId);
+        conf.setIfNotEmpty(STORAGE_CRAWL_ID, opts.crawlId);
 
         String seeds = opts.seeds.get(0);
         if (seeds.startsWith("@")) {

@@ -3,16 +3,13 @@
 echo "Do not run this script directly, run the following commands separately"
 
 # crawl under distribution mode, a smaller seed collection
-bin/crawl.sh conf/alternatives/information/cluster @conf/alternatives/information/seeds/test_10.txt information_pulsarjob_`cat VERSION`_`date +%m`01 information_tmp 3 > logs/crawl-information-`date +%Y%m`.out 2>&1 &
+bin/crawl conf/alternatives/information/cluster @conf/alternatives/information/seeds/test_10.txt information_pulsarjob_`cat VERSION`_`date +%m`01 information_tmp 3 > logs/crawl-information-`date +%Y%m`.out 2>&1 &
 # crawl under distribution mode, a bigger seeds collection
-bin/crawl.sh conf/alternatives/information/cluster @conf/alternatives/information/seeds/all.txt information_pulsarjob_`cat VERSION`_`date +%m`01 information_tmp 1000 > logs/crawl-information-`date +%Y%m`.out 2>&1 &
+bin/crawl conf/alternatives/information/cluster @conf/alternatives/information/seeds/all.txt information_pulsarjob_`cat VERSION`_`date +%m`01 information_tmp 1000 > logs/crawl-information-`date +%Y%m`.out 2>&1 &
 # crawl under local mode. Config dir, seed file, crawl id, indexer url and depth are given
-bin/crawl.sh conf/alternatives/information/local @conf/alternatives/information/local/seeds/sxrb.txt information_tmp http://master:8983/solr/information_tmp/ 4
+bin/crawl conf/alternatives/information/local @conf/alternatives/information/local/seeds/sxrb.txt information_tmp http://master:8983/solr/information_tmp/ 4
 # crawl under local mode. Use default config dir, no injection, crawl id, indexer url and limit are given
-bin/crawl.sh default false information_tmp http://master:8983/solr/information_tmp/ 1
-
-# start pulsarjob master
-bin/pulsarjob master
+bin/crawl default false information_tmp http://master:8983/solr/information_tmp/ 1
 
 # inject a seed
 bin/pulsarjob inject http://www.sxrb.com/sxxww/
@@ -27,7 +24,7 @@ bin/pulsarjob updateoutgraph
 # update incoming graph
 bin/pulsarjob updateingraph
 
-# run a sample job, the sample job is a most mininal job, so it can be used to check whether the environment is OK
+# run a sample job, the sample job is a minimal job, so it can be used to check whether the environment is OK
 bin/pulsarjob samplejob
 # truncate the webpage table for default crawl if the crawlId starts with tmp_ or ends with _tmp
 bin/pulsarjob webdb -crawlId information_tmp -truncate
