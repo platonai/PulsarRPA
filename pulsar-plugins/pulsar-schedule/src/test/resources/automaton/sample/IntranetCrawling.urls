@@ -1,0 +1,8 @@
+-file://home/jc/pulsar/index.html
+-ftp://ftp.apache.org/pulsar.html
+-mailto:jerome.charron@gmail.com
+-news://any.news.server/comp.lang.java
+-whois:/pulsar.org
++http://MY.DOMAIN.NAME/
++http://MY.DOMAIN.NAME/pulsar
++http://www.MY.DOMAIN.NAME/
