@@ -86,6 +86,19 @@
         </profile>
 
         <profile>
+            <id>rest</id>
+            <activation>
+                <property>
+                    <name>active-rest-api</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-rest</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>third</id>
             <activation>
                 <property>
