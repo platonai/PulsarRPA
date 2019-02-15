@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # change to your own privileged user name to the remote machine
+
 USER=$USER
 HOST=procanopus
 
