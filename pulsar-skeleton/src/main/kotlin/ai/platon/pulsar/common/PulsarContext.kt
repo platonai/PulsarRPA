@@ -1,7 +1,10 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.persist.AutoDetectedStorageService
@@ -15,7 +18,7 @@ import kotlin.reflect.KClass
 object PulsarContext {
     val log = LoggerFactory.getLogger(PulsarContext::class.java)
     val applicationContext: ClassPathXmlApplicationContext
-    val unmodifiedConfig: ai.platon.pulsar.common.config.ImmutableConfig
+    val unmodifiedConfig: ImmutableConfig
     val storageService: AutoDetectedStorageService
     val startTime = Instant.now()
     // val log4jProperties: Properties
@@ -42,7 +45,7 @@ object PulsarContext {
         // shut down application context before progress exit
         applicationContext.registerShutdownHook()
         // the primary configuration, keep unchanged with the configuration files
-        unmodifiedConfig = applicationContext.getBean(ai.platon.pulsar.common.config.MutableConfig::class.java)
+        unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
         // gora properties
         goraProperties = GoraStorage.properties
         // storage service must be initialized in advance to ensure prerequisites
@@ -56,7 +59,7 @@ object PulsarContext {
     }
 
     fun createSession(): PulsarSession {
-        return PulsarSession(applicationContext, ai.platon.pulsar.common.config.VolatileConfig(unmodifiedConfig))
+        return PulsarSession(applicationContext, VolatileConfig(unmodifiedConfig))
     }
 
     fun getBean(name: String): Any? {

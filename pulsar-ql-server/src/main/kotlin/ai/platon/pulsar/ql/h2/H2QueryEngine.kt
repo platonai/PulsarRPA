@@ -18,7 +18,7 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
     private val log = LoggerFactory.getLogger(H2QueryEngine::class.java)
 
     init {
-        ai.platon.pulsar.ql.H2Config.config()
+        H2Config.config()
         SysProperties.serializeJavaObject = true
         JdbcUtils.addClassFactory(ClassFactory())
     }
@@ -48,7 +48,7 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val querySession = ai.platon.pulsar.ql.QueryEngine.createQuerySession(ai.platon.pulsar.ql.DbSession(h2session))
+        val querySession = QueryEngine.createQuerySession(DbSession(h2session))
 
         log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
                 querySession, h2session, ci.url)
@@ -56,12 +56,12 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
         return h2session
     }
 
-    fun getSession(dbSession: ai.platon.pulsar.ql.DbSession): ai.platon.pulsar.ql.QuerySession {
-        return ai.platon.pulsar.ql.QueryEngine.getSession(dbSession)
+    fun getSession(dbSession: DbSession): QuerySession {
+        return QueryEngine.getSession(dbSession)
     }
 
-    fun getSession(h2session: Session): ai.platon.pulsar.ql.QuerySession {
-        return ai.platon.pulsar.ql.QueryEngine.getSession(ai.platon.pulsar.ql.DbSession(h2session))
+    fun getSession(h2session: Session): QuerySession {
+        return QueryEngine.getSession(DbSession(h2session))
     }
 
     override fun closeSession(sessionId: Int) {}

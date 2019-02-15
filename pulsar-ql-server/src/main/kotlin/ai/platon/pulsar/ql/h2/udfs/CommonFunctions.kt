@@ -8,6 +8,7 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2QueryEngine
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.commons.lang3.StringUtils
@@ -31,7 +32,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun getProxyPoolStatus(): String {
-        val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarContext.unmodifiedConfig)
+        val proxyPool = ProxyPool.getInstance(PulsarContext.unmodifiedConfig)
         return proxyPool.toString()
     }
 

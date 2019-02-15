@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.dom.nodes.node.ext.depth
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
 import ai.platon.pulsar.dom.select.BackwardNodeTraversor
@@ -16,8 +17,8 @@ class TestBackwardTraversor {
 
     @Test
     fun visitPathCompatible() {
-        val page = ai.platon.pulsar.common.ResourceLoader().getResourceAsStream("webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html")!!
-        val doc = ai.platon.pulsar.dom.Documents.parse(page, "UTF-8", "00f3a63c4898d201df95d6015244dd63.html")
+        val page = ResourceLoader().getResourceAsStream("webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html")!!
+        val doc = Documents.parse(page, "UTF-8", "00f3a63c4898d201df95d6015244dd63.html")
 
         val id = "#item_price"
         val path = mutableListOf<String>()

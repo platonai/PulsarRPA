@@ -15,8 +15,8 @@ import org.h2.engine.SessionInterface
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
-open class QuerySession(dbSession: ai.platon.pulsar.ql.DbSession, config: ai.platon.pulsar.ql.SessionConfig): PulsarSession(applicationContext, config) {
-    val log = LoggerFactory.getLogger(ai.platon.pulsar.ql.QuerySession::class.java)
+open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSession(applicationContext, config) {
+    val log = LoggerFactory.getLogger(QuerySession::class.java)
     private var totalUdfs: Int = 0
 
     init {

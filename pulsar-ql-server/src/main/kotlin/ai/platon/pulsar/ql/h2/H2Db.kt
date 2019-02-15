@@ -12,13 +12,13 @@ import java.util.*
 /**
  * The base class for all tests.
  */
-class H2Db(sessionFactory: String = ai.platon.pulsar.ql.h2.H2QueryEngine::class.java.name) {
+class H2Db(sessionFactory: String = H2QueryEngine::class.java.name) {
 
     init {
         System.setProperty("h2.sessionFactory", sessionFactory)
     }
 
-    val config = ai.platon.pulsar.ql.h2.H2DbConfig()
+    val config = H2DbConfig()
 
     /**
      * The base directory.

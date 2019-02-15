@@ -11,10 +11,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 open class DocumentFragment(
         val element: Element = Element("div"),
-        var fragments: ai.platon.pulsar.dom.DocumentFragments = ai.platon.pulsar.dom.DocumentFragments.Companion.EMPTY
+        var fragments: DocumentFragments = DocumentFragments.EMPTY
 ) {
-    var parent: ai.platon.pulsar.dom.DocumentFragment? = null
-    val children = LinkedList<ai.platon.pulsar.dom.DocumentFragment>()
+    var parent: DocumentFragment? = null
+    val children = LinkedList<DocumentFragment>()
 
     var defaultPassmark = ai.platon.pulsar.common.FuzzyProbability.MAYBE
     private val requirePatterns = AtomicBoolean(true)
@@ -73,7 +73,7 @@ open class DocumentFragment(
     /**
      * append the specified segment to the children list, make it's parent be this segment
      */
-    fun appendChild(child: ai.platon.pulsar.dom.DocumentFragment) {
+    fun appendChild(child: DocumentFragment) {
         this.children.add(child)
         child.parent = this
     }
@@ -89,7 +89,7 @@ open class DocumentFragment(
     /**
      * remove the specified segment from the children, make it's parent be null,
      */
-    fun removeChild(child: ai.platon.pulsar.dom.DocumentFragment) {
+    fun removeChild(child: DocumentFragment) {
         child.parent = null
         this.children.remove(child)
     }
@@ -166,7 +166,7 @@ open class DocumentFragment(
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is ai.platon.pulsar.dom.DocumentFragment && element.equals(other.element)
+        return other is DocumentFragment && element == other.element
     }
 
     companion object {

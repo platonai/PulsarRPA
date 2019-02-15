@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
@@ -37,12 +38,12 @@ open class FeaturedDocument(val document: Document) {
         private fun loadFeatureCalculator(): NodeVisitor {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
             val className = System.getProperty(NODE_FEATURE_CALCULATOR, defaultClassName)
-            val clazz = ai.platon.pulsar.common.ResourceLoader.loadUserClass<NodeVisitor>(className)
+            val clazz = ResourceLoader.loadUserClass<NodeVisitor>(className)
             return clazz.newInstance()
         }
     }
 
-    val fragments by lazy { ai.platon.pulsar.dom.DocumentFragments(this) }
+    val fragments by lazy { DocumentFragments(this) }
 
     constructor(baseUri: String): this(Document(baseUri))
 

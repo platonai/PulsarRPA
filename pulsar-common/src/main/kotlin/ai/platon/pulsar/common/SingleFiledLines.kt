@@ -53,7 +53,7 @@ class SingleFiledLines(
             return
         }
 
-        ai.platon.pulsar.common.ResourceLoader().readAllLines(file)
+        ResourceLoader().readAllLines(file)
                 .map { preprocessor.process(it) }
                 .filter { it.isNotBlank() }
                 .toCollection(lines)

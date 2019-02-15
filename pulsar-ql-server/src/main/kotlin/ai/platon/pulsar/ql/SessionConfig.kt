@@ -1,6 +1,9 @@
 package ai.platon.pulsar.ql
 
-class SessionConfig(private val dbSession: ai.platon.pulsar.ql.DbSession, fallbackConfig: ai.platon.pulsar.common.config.ImmutableConfig): ai.platon.pulsar.common.config.VolatileConfig(fallbackConfig) {
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
+
+class SessionConfig(private val dbSession: DbSession, fallbackConfig: ImmutableConfig): VolatileConfig(fallbackConfig) {
 
     override fun setTTL(name: String, ttl: Int) {
         super.setTTL(name, 1 + ttl + dbSession.sqlSequence)

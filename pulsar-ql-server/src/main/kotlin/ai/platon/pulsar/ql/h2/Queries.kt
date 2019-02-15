@@ -38,7 +38,7 @@ object Queries {
      * @return A collection of [WebPage]s
      */
     @InterfaceStability.Evolving
-    fun loadAll(session: ai.platon.pulsar.ql.QuerySession, configuredUrls: Value): Collection<WebPage> {
+    fun loadAll(session: QuerySession, configuredUrls: Value): Collection<WebPage> {
         val pages = ArrayList<WebPage>()
 
         if (configuredUrls is ValueString) {
@@ -67,7 +67,7 @@ object Queries {
      * @return A collection of {@link WebPage}s
      */
     @InterfaceStability.Evolving
-    fun <O> loadAll(session: ai.platon.pulsar.ql.QuerySession,
+    fun <O> loadAll(session: QuerySession,
                     configuredUrls: Value, cssQuery: String, offset: Int, limit: Int,
                     transformer: (Element, String, Int, Int) -> Collection<O>) : Collection<O> {
         val collection: Collection<O>
@@ -89,17 +89,17 @@ object Queries {
     }
 
     fun loadOutPages(
-            session: ai.platon.pulsar.ql.QuerySession, configuredPortal: Value, restrictCss: String): Collection<WebPage> {
+            session: QuerySession, configuredPortal: Value, restrictCss: String): Collection<WebPage> {
         return loadOutPages(session, configuredPortal, restrictCss, 0, Int.MAX_VALUE, true, false)
     }
 
     fun loadOutPages(
-            session: ai.platon.pulsar.ql.QuerySession, configuredPortal: Value, restrictCss: String, offset: Int, limit: Int): Collection<WebPage> {
+            session: QuerySession, configuredPortal: Value, restrictCss: String, offset: Int, limit: Int): Collection<WebPage> {
         return loadOutPages(session, configuredPortal, restrictCss, offset, limit, true, false)
     }
 
     fun loadOutPages(
-            session: ai.platon.pulsar.ql.QuerySession,
+            session: QuerySession,
             configuredPortal: Value, restrictCss: String,
             offset: Int, limit: Int,
             normalize: Boolean, ignoreQuery: Boolean): Collection<WebPage> {
@@ -120,7 +120,7 @@ object Queries {
         return session.loadAll(links, ai.platon.pulsar.common.options.LoadOptions())
     }
 
-    fun loadAndParse(session: ai.platon.pulsar.ql.QuerySession, configuredUrl: String): FeaturedDocument {
+    fun loadAndParse(session: QuerySession, configuredUrl: String): FeaturedDocument {
         return session.parse(session.load(configuredUrl))
     }
 

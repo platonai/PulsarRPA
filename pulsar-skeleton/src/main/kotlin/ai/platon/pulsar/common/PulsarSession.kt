@@ -2,7 +2,9 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.PulsarPaths.webCacheDir
 import ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
@@ -20,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Created by vincent on 18-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-open class PulsarSession(applicationContext: ConfigurableApplicationContext, val config: ai.platon.pulsar.common.config.VolatileConfig) : AutoCloseable {
+open class PulsarSession(applicationContext: ConfigurableApplicationContext, val config: VolatileConfig) : AutoCloseable {
     val id: Int = objectIdGenerator.incrementAndGet()
     val pulsar: Pulsar = Pulsar(applicationContext)
     private var enableCache = true
@@ -32,8 +34,8 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
     @JvmOverloads
     constructor(
             applicationContext: ConfigurableApplicationContext = getApplicationContext(),
-            config: ai.platon.pulsar.common.config.ImmutableConfig = getUnmodifiedConfig(applicationContext)
-    ): this(applicationContext, ai.platon.pulsar.common.config.VolatileConfig(config))
+            config: ImmutableConfig = getUnmodifiedConfig(applicationContext)
+    ): this(applicationContext, VolatileConfig(config))
 
     init {
         if (!lateValueInitialized.getAndSet(true)) {
@@ -279,8 +281,8 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
                     System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION))
         }
 
-        fun getUnmodifiedConfig(applicationContext: ApplicationContext): ai.platon.pulsar.common.config.ImmutableConfig {
-            return applicationContext.getBean(ai.platon.pulsar.common.config.ImmutableConfig::class.java)
+        fun getUnmodifiedConfig(applicationContext: ApplicationContext): ImmutableConfig {
+            return applicationContext.getBean(ImmutableConfig::class.java)
         }
     }
 }

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
@@ -19,12 +21,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class Pulsar: AutoCloseable {
 
-    val immutableConfig: ai.platon.pulsar.common.config.ImmutableConfig
+    val immutableConfig: ImmutableConfig
     val webDb: WebDb
     val injectComponent: InjectComponent
     val loadComponent: LoadComponent
     private val urlNormalizers: UrlNormalizers
-    private val defaultMutableConfig: ai.platon.pulsar.common.config.MutableConfig
+    private val defaultMutableConfig: MutableConfig
     private val isClosed = AtomicBoolean(false)
 
     val parseComponent: ParseComponent get() = loadComponent.parseComponent
@@ -36,21 +38,21 @@ class Pulsar: AutoCloseable {
     @JvmOverloads
     constructor(applicationContext: ConfigurableApplicationContext = ClassPathXmlApplicationContext(
             System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION))) {
-        this.immutableConfig = applicationContext.getBean<ai.platon.pulsar.common.config.MutableConfig>(ai.platon.pulsar.common.config.MutableConfig::class.java)
+        this.immutableConfig = applicationContext.getBean<MutableConfig>(MutableConfig::class.java)
 
         this.webDb = applicationContext.getBean<WebDb>(WebDb::class.java)
         this.injectComponent = applicationContext.getBean<InjectComponent>(InjectComponent::class.java)
         this.loadComponent = applicationContext.getBean<LoadComponent>(LoadComponent::class.java)
         this.urlNormalizers = applicationContext.getBean<UrlNormalizers>(UrlNormalizers::class.java)
 
-        this.defaultMutableConfig = ai.platon.pulsar.common.config.MutableConfig(immutableConfig.unbox())
+        this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
     }
 
     constructor(
             injectComponent: InjectComponent,
             loadComponent: LoadComponent,
             urlNormalizers: UrlNormalizers,
-            immutableConfig: ai.platon.pulsar.common.config.ImmutableConfig) {
+            immutableConfig: ImmutableConfig) {
         this.webDb = injectComponent.webDb
 
         this.injectComponent = injectComponent
@@ -58,7 +60,7 @@ class Pulsar: AutoCloseable {
         this.urlNormalizers = urlNormalizers
         this.immutableConfig = immutableConfig
 
-        this.defaultMutableConfig = ai.platon.pulsar.common.config.MutableConfig(immutableConfig.unbox())
+        this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
     }
 
     fun normalize(url: String): String? {
@@ -174,7 +176,7 @@ class Pulsar: AutoCloseable {
         return FeaturedDocument(parser.parse())
     }
 
-    fun parse(page: WebPage, mutableConfig: ai.platon.pulsar.common.config.MutableConfig): FeaturedDocument {
+    fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument {
         val parser = JsoupParser(page, mutableConfig)
         return FeaturedDocument(parser.parse())
     }

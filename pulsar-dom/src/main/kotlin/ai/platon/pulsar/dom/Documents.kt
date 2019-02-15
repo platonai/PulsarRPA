@@ -22,8 +22,8 @@ object Documents {
      * before the HTML declares a `<base href>` tag.
      * @return sane HTML
      */
-    fun parse(html: String, baseUri: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(Parser.parse(html, baseUri))
+    fun parse(html: String, baseUri: String): FeaturedDocument {
+        return FeaturedDocument(Parser.parse(html, baseUri))
     }
 
     /**
@@ -36,8 +36,8 @@ object Documents {
      * @param parser alternate [parser][Parser.xmlParser] to use.
      * @return sane HTML
      */
-    fun parse(html: String, baseUri: String, parser: Parser): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(parser.parseInput(html, baseUri))
+    fun parse(html: String, baseUri: String, parser: Parser): FeaturedDocument {
+        return FeaturedDocument(parser.parseInput(html, baseUri))
     }
 
     /**
@@ -48,8 +48,8 @@ object Documents {
      * @return sane HTML
      * @see .parse
      */
-    fun parse(html: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(Parser.parse(html, ""))
+    fun parse(html: String): FeaturedDocument {
+        return FeaturedDocument(Parser.parse(html, ""))
     }
 
     /**
@@ -78,8 +78,8 @@ object Documents {
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(file: File, charsetName: String, baseUri: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(DataUtil.load(file, charsetName, baseUri))
+    fun parse(file: File, charsetName: String, baseUri: String): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(file, charsetName, baseUri))
     }
 
     /**
@@ -92,12 +92,12 @@ object Documents {
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      * @see .parse
      */
-    fun parse(file: File, charsetName: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath))
+    fun parse(file: File, charsetName: String): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath))
     }
 
-    fun parse(file: File, charsetName: String, ignoreScript: Boolean): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath, ignoreScript))
+    fun parse(file: File, charsetName: String, ignoreScript: Boolean): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath, ignoreScript))
     }
 
     /**
@@ -110,12 +110,12 @@ object Documents {
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(istream: InputStream, charsetName: String, baseUri: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(DataUtil.load(istream, charsetName, baseUri))
+    fun parse(istream: InputStream, charsetName: String, baseUri: String): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri))
     }
 
-    fun parse(istream: InputStream, charsetName: String, baseUri: String, ignoreScript: Boolean): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, ignoreScript))
+    fun parse(istream: InputStream, charsetName: String, baseUri: String, ignoreScript: Boolean): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, ignoreScript))
     }
 
     /**
@@ -130,8 +130,8 @@ object Documents {
      * @return sane HTML
      * @throws IOException if the file could not be found, or read, or if the charsetName is invalid.
      */
-    fun parse(istream: InputStream, charsetName: String, baseUri: String, parser: Parser): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, parser))
+    fun parse(istream: InputStream, charsetName: String, baseUri: String, parser: Parser): FeaturedDocument {
+        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, parser))
     }
 
     /**
@@ -142,8 +142,8 @@ object Documents {
      * @return sane HTML document
      * @see FeaturedDocument.body
      */
-    fun parseBodyFragment(bodyHtml: String, baseUri: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(Parser.parseBodyFragment(bodyHtml, baseUri))
+    fun parseBodyFragment(bodyHtml: String, baseUri: String): FeaturedDocument {
+        return FeaturedDocument(Parser.parseBodyFragment(bodyHtml, baseUri))
     }
 
     /**
@@ -153,8 +153,8 @@ object Documents {
      * @return sane HTML document
      * @see FeaturedDocument.body
      */
-    fun parseBodyFragment(bodyHtml: String): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.FeaturedDocument(Parser.parseBodyFragment(bodyHtml, ""))
+    fun parseBodyFragment(bodyHtml: String): FeaturedDocument {
+        return FeaturedDocument(Parser.parseBodyFragment(bodyHtml, ""))
     }
 
     /**
@@ -173,13 +173,13 @@ object Documents {
      * @throws IOException if a connection or read error occurs
      * @see .connect
      */
-    fun parse(url: URL, timeoutMillis: Long): ai.platon.pulsar.dom.FeaturedDocument {
+    fun parse(url: URL, timeoutMillis: Long): FeaturedDocument {
         val con = HttpConnection.connect(url)
         con.timeout(timeoutMillis.toInt())
-        return ai.platon.pulsar.dom.FeaturedDocument(con.get())
+        return FeaturedDocument(con.get())
     }
 
-    fun parse(url: URL, timeout: Duration): ai.platon.pulsar.dom.FeaturedDocument {
-        return ai.platon.pulsar.dom.Documents.parse(url, timeout.toMillis())
+    fun parse(url: URL, timeout: Duration): FeaturedDocument {
+        return Documents.parse(url, timeout.toMillis())
     }
 }

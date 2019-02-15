@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.features
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
@@ -20,7 +21,7 @@ class NodeFeatureCalculator : NodeVisitor {
 
     companion object {
         init {
-            ai.platon.pulsar.common.ResourceLoader.addClassFactory(ClassFactory())
+            ResourceLoader.addClassFactory(ClassFactory())
 
             NodeFeature.register(F.values().map { it.toFeature() })
             require(registeredFeatures.size == N)

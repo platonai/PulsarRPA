@@ -14,7 +14,7 @@ object MetadataFunctions {
     @UDFunction
     @JvmStatic
     operator fun get(@H2Context h2session: Session, url: String): String {
-        val page = H2QueryEngine.getSession(ai.platon.pulsar.ql.DbSession(h2session)).load(url)
+        val page = H2QueryEngine.getSession(DbSession(h2session)).load(url)
         return WebPageFormatter(page).toString()
     }
 }

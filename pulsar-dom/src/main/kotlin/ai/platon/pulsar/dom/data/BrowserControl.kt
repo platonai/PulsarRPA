@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.data
 
+import ai.platon.pulsar.common.ResourceLoader
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
@@ -34,7 +35,7 @@ class BrowserControl(private val conf: ai.platon.pulsar.common.config.ImmutableC
                 "js/node_visitor.js",
                 "js/humanize.js"
         ).forEach { resource ->
-            val reader = ai.platon.pulsar.common.ResourceLoader().getResourceAsStream(resource)
+            val reader = ResourceLoader().getResourceAsStream(resource)
             try {
                 val s = IOUtils.readLines(reader).joinToString("\n")
                 sb.append(s).append(";\n")

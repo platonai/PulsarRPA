@@ -13,14 +13,14 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.HashMap
 
 class DocumentFragments(
-        val document: ai.platon.pulsar.dom.FeaturedDocument = ai.platon.pulsar.dom.FeaturedDocument.Companion.NIL,
-        val fragments: TreeMap<Int, ai.platon.pulsar.dom.DocumentFragment> = TreeMap(),
+        val document: FeaturedDocument = FeaturedDocument.NIL,
+        val fragments: TreeMap<Int, DocumentFragment> = TreeMap(),
         val pageEntity: PageEntity = PageEntity()
-) : MutableMap<Int, ai.platon.pulsar.dom.DocumentFragment> {
+) : MutableMap<Int, DocumentFragment> {
 
     companion object {
-        val log = LoggerFactory.getLogger(ai.platon.pulsar.dom.DocumentFragments::class.java)
-        val EMPTY = ai.platon.pulsar.dom.DocumentFragments()
+        val log = LoggerFactory.getLogger(DocumentFragments::class.java)
+        val EMPTY = DocumentFragments()
 
         var blockLikelihoodThreshold = 0.95
         var defaultProbability = ai.platon.pulsar.common.FuzzyProbability.MAYBE
@@ -38,11 +38,11 @@ class DocumentFragments(
         return fragments.containsKey(key)
     }
 
-    override fun containsValue(value: ai.platon.pulsar.dom.DocumentFragment): Boolean {
+    override fun containsValue(value: DocumentFragment): Boolean {
         return fragments.containsValue(value)
     }
 
-    override operator fun get(key: Int): ai.platon.pulsar.dom.DocumentFragment? {
+    override operator fun get(key: Int): DocumentFragment? {
         return fragments[key]
     }
 
@@ -50,25 +50,25 @@ class DocumentFragments(
         return fragments.isEmpty()
     }
 
-    override val entries: MutableSet<MutableMap.MutableEntry<Int, ai.platon.pulsar.dom.DocumentFragment>>
+    override val entries: MutableSet<MutableMap.MutableEntry<Int, DocumentFragment>>
         get() = fragments.entries
 
     override val keys: MutableSet<Int>
         get() = fragments.keys
 
-    override val values: MutableCollection<ai.platon.pulsar.dom.DocumentFragment>
+    override val values: MutableCollection<DocumentFragment>
         get() = fragments.values
 
-    override fun put(key: Int, value: ai.platon.pulsar.dom.DocumentFragment): ai.platon.pulsar.dom.DocumentFragment? {
+    override fun put(key: Int, value: DocumentFragment): DocumentFragment? {
         return fragments.put(key, accept(value))
     }
 
-    override fun putAll(from: Map<out Int, ai.platon.pulsar.dom.DocumentFragment>) {
+    override fun putAll(from: Map<out Int, DocumentFragment>) {
         from.values.forEach { accept(it) }
         fragments.putAll(from)
     }
 
-    override fun remove(key: Int): ai.platon.pulsar.dom.DocumentFragment? {
+    override fun remove(key: Int): DocumentFragment? {
         val old = fragments.remove(key)
         return old
     }
@@ -77,11 +77,11 @@ class DocumentFragments(
         fragments.clear()
     }
 
-    private fun accept(fragment: ai.platon.pulsar.dom.DocumentFragment): ai.platon.pulsar.dom.DocumentFragment {
+    private fun accept(fragment: DocumentFragment): DocumentFragment {
         fragment.fragments = this
         summaries.computeIfAbsent(SEQ) { DoubleSummaryStatistics() }
                 .accept(fragment.element.features[SEQ])
-        ai.platon.pulsar.dom.DocumentFragments.Companion.globalSummaries.computeIfAbsent(SEQ) { SynchronizedSummaryStatistics() }
+        DocumentFragments.Companion.globalSummaries.computeIfAbsent(SEQ) { SynchronizedSummaryStatistics() }
                 .addValue(fragment.element.features[SEQ])
         return fragment
     }
