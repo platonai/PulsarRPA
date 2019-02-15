@@ -14,10 +14,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-parent</artifactId>
-        <version>1.0.1</version>
-        <relativePath>./pulsar-parent/pom.xml</relativePath>
+        <groupId>ai.platon</groupId>
+        <artifactId>platon</artifactId>
+        <version>1</version>
+        <relativePath>./platon/pom.xml</relativePath>
     </parent>
 
     <artifactId>pulsar</artifactId>
@@ -27,7 +27,7 @@
     <name>Pulsar</name>
 
     <modules>
-        <module>pulsar-parent</module>
+        <module>platon</module>
         <module>pulsar-common</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>

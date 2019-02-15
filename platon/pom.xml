@@ -19,9 +19,9 @@
         <version>18</version>
     </parent>
 
-    <groupId>ai.platon.pulsar</groupId>
-    <artifactId>pulsar-parent</artifactId>
-    <version>1.0.1</version>
+    <groupId>ai.platon</groupId>
+    <artifactId>platon</artifactId>
+    <version>1</version>
 
     <packaging>pom</packaging>
 
