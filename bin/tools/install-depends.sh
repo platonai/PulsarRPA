@@ -20,16 +20,29 @@ install_chrome_driver() {
     # echo "If you are using Chrome from Dev or Canary channel, please download ChromeDriver 2.46, it might work"
     echo "see http://chromedriver.chromium.org/downloads"
 
-    CHROME_DRIVER_VERSION=2.46
-    if [[ "$CHROME_VERSION" == "71" ]]; then
-      CHROME_DRIVER_VERSION=71.0.3578.137
+    CHROME_DRIVER_VERSION=
+    if [[ "$CHROME_VERSION" == "68" ]]; then
+        CHROME_DRIVER_VERSION=2.42
+    elif [[ "$CHROME_VERSION" == "69" ]]; then
+        CHROME_DRIVER_VERSION=2.44
+    elif [[ "$CHROME_VERSION" == "70" ]]; then
+        CHROME_DRIVER_VERSION=2.45
+    elif [[ "$CHROME_VERSION" == "71" ]]; then
+        CHROME_DRIVER_VERSION=2.46
     elif [[ "$CHROME_VERSION" == "72" ]]; then
-      CHROME_DRIVER_VERSION=72.0.3626.7
+        CHROME_DRIVER_VERSION=2.46
     elif [[ "$CHROME_VERSION" == "73" ]]; then
-      CHROME_DRIVER_VERSION=73.0.3683.20
+        CHROME_DRIVER_VERSION=73.0.3683.20
     fi
 
-    if [[ "$CHROME_VERSION" != "$REAL_CHROME_DRIVER_VERSION" ]]; then
+    if [[ "$CHROME_DRIVER_VERSION" == "" ]]; then
+        echo "$CHROME_VERSION is not supported, please upgrade to the latest chrome"
+        exit 0
+    fi
+
+    REAL_CHROME_DRIVER_VERSION="$(chromedriver -version | head -n1 | cut -d' ' -f2)"
+    if [[ "$CHROME_DRIVER_VERSION" != "$REAL_CHROME_DRIVER_VERSION" ]]; then
+        rm chromedriver*
         wget https://npm.taobao.org/mirrors/chromedriver/"$CHROME_DRIVER_VERSION"/chromedriver_linux64.zip
         unzip chromedriver*.zip
         sudo cp chromedriver /usr/local/bin/
@@ -47,9 +60,6 @@ if [[ "$CHROME_VERSION" == "" ]]; then
     install_chrome
 fi
 
-REAL_CHROME_DRIVER_VERSION="$(chromedriver -version | head -n1 | cut -d' ' -f2)"
-if [[ "$REAL_CHROME_DRIVER_VERSION" == "" ]]; then
-    install_chrome_driver
-fi
+install_chrome_driver
 
 cd -

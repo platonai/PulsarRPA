@@ -193,10 +193,6 @@
     </build>
 
     <repositories>
-        <!--<repository>-->
-        <!--<id>osc</id>-->
-        <!--<url>http://maven.oschina.net/content/groups/public/</url>-->
-        <!--</repository>-->
         <repository>
             <id>central</id>
             <name>Maven Central</name>
@@ -207,11 +203,6 @@
             <name>Maven Central 2</name>
             <url>http://repo2.maven.org/maven2</url>
         </repository>
-        <!--<repository>-->
-        <!--<id>in-project-repo</id>-->
-        <!--<name>In Project Maven Repository</name>-->
-        <!--<url>file://${basedir}/../repo</url>-->
-        <!--</repository>-->
     </repositories>
 
     <dependencyManagement>

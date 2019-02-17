@@ -32,16 +32,10 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0, defaultCellT
         return rows.count(predicate)
     }
 
-    class Column(
-            var name: String = "",
-            var description: String = "",
-            var cellType: KClass<out Any> = Any::class,
-            val attributes: MutableMap<String, Any> = mutableMapOf()
-    )
-
     class Metadata(numColumns: Int, val defaultCellType: KClass<out Any> = Any::class) {
         val columns = IntRange(1, numColumns)
                 .map { Column("C$it", cellType = defaultCellType) }.toTypedArray()
+        val attributes: MutableMap<String, Any> = mutableMapOf()
         operator fun get(j: Int): Column {
             return columns[j]
         }
@@ -53,13 +47,28 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0, defaultCellT
         }
     }
 
+    class Column(
+            var name: String = "",
+            var description: String = "",
+            var cellType: KClass<out Any> = Any::class,
+            val attributes: MutableMap<String, Any> = mutableMapOf()
+    )
+
+    class Cell(val value: Any? = null) {
+        val attributes: MutableMap<String, Any> = mutableMapOf()
+        override fun toString(): String {
+            return value?.toString()?:""
+        }
+    }
+
     class Row(var key: String = "", numColumns: Int) {
-        val data: Array<Any?> = arrayOfNulls(numColumns)
+        val cells: Array<Cell?> = arrayOfNulls(numColumns)
+        val attributes: MutableMap<String, Any> = mutableMapOf()
         operator fun get(j: Int): Any? {
-            return data[j]
+            return cells[j]?.value
         }
         operator fun set(i: Int, value: Any?) {
-            data[i] = value
+            cells[i] = Cell(value)
         }
     }
 }

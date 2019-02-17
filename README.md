@@ -58,7 +58,7 @@ Download [Metabase](https://github.com/platonai/metabase) Web SQL edition, and r
 Crawl the open Web from seeds, and index text content using solr, run script:
 
     -- coming soon ..
-    bin/crawl.sh default false awesome_crawl_task http://master:8983/solr/awesome_crawl_task/ 1
+    bin/crawl.sh default false awesome_crawl_task http://localhost:8983/solr/awesome_crawl_task/ 1
 
 # Enterprise Edition:
 
