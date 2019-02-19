@@ -41,11 +41,11 @@ val Node.viewPort: Dimension
 // basic info
 val Node.uri: String get() = baseUri()
 
-val Node.sequence: Int get() = getFeature(SEQ).toInt()
-
 var Node.depth: Int
     get() = getFeature(DEP).toInt()
     set(value) = setFeature(DEP, value.toDouble())
+
+val Node.sequence: Int get() = getFeature(SEQ).toInt()
 
 /*********************************************************************
  * Geometric information

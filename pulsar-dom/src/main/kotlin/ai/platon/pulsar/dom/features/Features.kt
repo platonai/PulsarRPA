@@ -1,11 +1,19 @@
 package ai.platon.pulsar.dom.features
 
+import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.math.vectors.get
+import ai.platon.pulsar.common.toHexString
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
+import ai.platon.pulsar.dom.nodes.node.ext.name
 import org.apache.commons.math3.linear.RealVector
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
+import java.awt.Color
+import java.awt.Rectangle
 import java.util.concurrent.atomic.AtomicInteger
 
 data class FeatureEntry(val key: Int, val value: Double)
@@ -154,7 +162,17 @@ object FeatureFormatter {
     fun format(variables: Map<String, Any>, names: Collection<String>, sb: StringBuilder = StringBuilder()): StringBuilder {
         variables.forEach { (name, value) ->
             if (names.isEmpty() || name in names) {
-                val s = if (value is Double) formatValue(value) else value.toString()
+                var s = when (value) {
+                    is Double -> formatValue(value)
+                    is Color -> value.toHexString()
+                    is Rectangle -> value.str
+                    is Element -> value.name
+                    is FeaturedDocument -> value.baseUri
+                    else -> value.toString()
+                }
+                if (s.length > 20) {
+                    s = s.take(20) + ".."
+                }
                 sb.append(name).append(':').append(s).append(' ')
             }
         }

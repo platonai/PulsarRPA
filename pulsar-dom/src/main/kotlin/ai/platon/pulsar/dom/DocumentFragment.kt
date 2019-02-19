@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom
 
+import ai.platon.pulsar.common.FuzzyProbability
 import ai.platon.pulsar.dom.data.BlockLabel
 import ai.platon.pulsar.dom.data.BlockLabelTracker
 import ai.platon.pulsar.dom.data.BlockPattern
@@ -16,7 +17,7 @@ open class DocumentFragment(
     var parent: DocumentFragment? = null
     val children = LinkedList<DocumentFragment>()
 
-    var defaultPassmark = ai.platon.pulsar.common.FuzzyProbability.MAYBE
+    var defaultPassmark = FuzzyProbability.MAYBE
     private val requirePatterns = AtomicBoolean(true)
     var primaryLabel: String = ""
     var labels = HashSet<String>()
@@ -87,7 +88,7 @@ open class DocumentFragment(
     }
 
     /**
-     * remove the specified segment from the children, make it's parent be null,
+     * remove the specified segment from the children, make it's parent be null
      */
     fun removeChild(child: DocumentFragment) {
         child.parent = null
@@ -130,7 +131,7 @@ open class DocumentFragment(
     }
 
     // 打出及格分，使用自定义及格线
-    fun markPass(label: BlockLabel, passmark: ai.platon.pulsar.common.FuzzyProbability = defaultPassmark): Double {
+    fun markPass(label: BlockLabel, passmark: FuzzyProbability = defaultPassmark): Double {
         // 如果已经及格，则直接返回当前分数
         return if (matches(label, passmark)) {
             clues.get(label)
@@ -149,16 +150,16 @@ open class DocumentFragment(
         return grade(label, score / 10.0)
     }
 
-    fun matches(label: BlockLabel, p: ai.platon.pulsar.common.FuzzyProbability = ai.platon.pulsar.common.FuzzyProbability.VERY_LIKELY): Boolean {
+    fun matches(label: BlockLabel, p: FuzzyProbability = FuzzyProbability.VERY_LIKELY): Boolean {
         return clues.`is`(label, p)
     }
 
-    fun matches(pattern: BlockPattern, p: ai.platon.pulsar.common.FuzzyProbability = ai.platon.pulsar.common.FuzzyProbability.VERY_LIKELY): Boolean {
+    fun matches(pattern: BlockPattern, p: FuzzyProbability = FuzzyProbability.VERY_LIKELY): Boolean {
         return clues.`is`(pattern, p)
     }
 
     override fun toString(): String {
-        return element.toString()
+        return element.name
     }
 
     override fun hashCode(): Int {
@@ -167,9 +168,5 @@ open class DocumentFragment(
 
     override fun equals(other: Any?): Boolean {
         return other is DocumentFragment && element == other.element
-    }
-
-    companion object {
-        const val FRAG = "_FRAG"
     }
 }

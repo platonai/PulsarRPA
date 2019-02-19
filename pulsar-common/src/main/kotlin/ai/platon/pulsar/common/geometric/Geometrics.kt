@@ -71,6 +71,9 @@ fun Rectangle.component4(): Int {
 val Rectangle.str
     get() = "[$x $y $width $height]"
 
+val Rectangle.str2
+    get() = "{x:$x y:$y w:$width h:$height}"
+
 /**
  * The align type to define linearity
  * */

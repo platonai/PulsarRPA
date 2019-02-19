@@ -1,11 +1,10 @@
 package ai.platon.pulsar.common
 
-import kotlin.reflect.KClass
-
-class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0, defaultCellType: KClass<out Any> = Any::class) {
-    val metadata = Metadata(numColumns, defaultCellType)
+class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
+    val metadata = Metadata(numColumns)
     val map = mutableMapOf<String, Row>()
 
+    val attributes = mutableMapOf<String, Any>()
     val columns = metadata.columns
     val rows = map.values
 
@@ -24,18 +23,17 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0, defaultCellT
         return map.computeIfAbsent(key) { Row(key, numColumns) }
     }
 
-    fun computeIfAbsent(key: String, mapping: (String) -> Row): Row {
-        return map.computeIfAbsent(key) { mapping(key) }
+    fun computeIfAbsent(key: String, init: (Row) -> Unit): Row {
+        return map.computeIfAbsent(key) { Row(key, numColumns, init) }
     }
 
     fun count(predicate: (Row) -> Boolean): Int {
         return rows.count(predicate)
     }
 
-    class Metadata(numColumns: Int, val defaultCellType: KClass<out Any> = Any::class) {
+    class Metadata(numColumns: Int) {
         val columns = IntRange(1, numColumns)
-                .map { Column("C$it", cellType = defaultCellType) }.toTypedArray()
-        val attributes: MutableMap<String, Any> = mutableMapOf()
+                .map { Column("C$it") }.toTypedArray()
         operator fun get(j: Int): Column {
             return columns[j]
         }
@@ -50,7 +48,6 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0, defaultCellT
     class Column(
             var name: String = "",
             var description: String = "",
-            var cellType: KClass<out Any> = Any::class,
             val attributes: MutableMap<String, Any> = mutableMapOf()
     )
 
@@ -62,13 +59,19 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0, defaultCellT
     }
 
     class Row(var key: String = "", numColumns: Int) {
+        constructor(key: String, numColumns: Int, init: (Row) -> Unit): this(key, numColumns) {
+            init(this)
+        }
+
         val cells: Array<Cell?> = arrayOfNulls(numColumns)
         val attributes: MutableMap<String, Any> = mutableMapOf()
+        val values get() = cells.map { it?.value }
         operator fun get(j: Int): Any? {
             return cells[j]?.value
         }
-        operator fun set(i: Int, value: Any?) {
-            cells[i] = Cell(value)
+        operator fun set(j: Int, value: Any?) {
+            require(j < cells.size)
+            cells[j] = Cell(value)
         }
     }
 }
