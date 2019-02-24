@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
@@ -26,6 +27,8 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
     val id: Int = objectIdGenerator.incrementAndGet()
     val pulsar: Pulsar = Pulsar(applicationContext)
     private var enableCache = true
+    private var pageCache: ConcurrentLRUCache<String, WebPage>
+    private var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
     // Session variables
     private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
 
@@ -38,15 +41,11 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
     ): this(applicationContext, VolatileConfig(config))
 
     init {
-        if (!lateValueInitialized.getAndSet(true)) {
-            synchronized(PulsarSession::class.java) {
-                var capacity = config.getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY)
-                pageCache = ai.platon.pulsar.common.ConcurrentLRUCache(SESSION_PAGE_CACHE_TTL.seconds, capacity)
+        var capacity = config.getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY)
+        pageCache = ConcurrentLRUCache(SESSION_PAGE_CACHE_TTL.seconds, capacity)
 
-                capacity = config.getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY)
-                documentCache = ai.platon.pulsar.common.ConcurrentLRUCache(SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
-            }
-        }
+        capacity = config.getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY)
+        documentCache = ConcurrentLRUCache(SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
     }
 
     fun disableCache() {
@@ -78,8 +77,8 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
      * @return The Web page
      */
     fun load(configuredUrl: String): WebPage {
-        val urlAndOptions = ai.platon.pulsar.common.UrlUtil.splitUrlArgs(configuredUrl)
-        val options = ai.platon.pulsar.common.options.LoadOptions.parse(urlAndOptions.value, config)
+        val urlAndOptions = UrlUtil.splitUrlArgs(configuredUrl)
+        val options = LoadOptions.parse(urlAndOptions.value, config)
 
         return load(urlAndOptions.key, options)
     }
@@ -91,7 +90,7 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
      * @param options The load options
      * @return The web page
      */
-    fun load(url: String, options: ai.platon.pulsar.common.options.LoadOptions): WebPage {
+    fun load(url: String, options: LoadOptions): WebPage {
         options.mutableConfig = config
 
         return if (enableCache) {
@@ -109,7 +108,7 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
      * @return The web pages
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: ai.platon.pulsar.common.options.LoadOptions = ai.platon.pulsar.common.options.LoadOptions.DEFAULT): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.DEFAULT): Collection<WebPage> {
         options.mutableConfig = config
 
         return if (enableCache) {
@@ -126,7 +125,7 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
      * @param options The load options
      * @return The web pages
      */
-    fun parallelLoadAll(urls: Iterable<String>, options: ai.platon.pulsar.common.options.LoadOptions): Collection<WebPage> {
+    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         options.mutableConfig = config
         options.isPreferParallel = true
 
@@ -172,7 +171,7 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
         return page
     }
 
-    private fun getCachedOrLoad(url: String, options: ai.platon.pulsar.common.options.LoadOptions): WebPage {
+    private fun getCachedOrLoad(url: String, options: LoadOptions): WebPage {
         var page: WebPage? = pageCache.get(url)
         if (page != null) {
             return page
@@ -184,7 +183,7 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
         return page
     }
 
-    private fun getCachedOrLoadAll(urls: Iterable<String>, options: ai.platon.pulsar.common.options.LoadOptions): Collection<WebPage> {
+    private fun getCachedOrLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val pages = ArrayList<WebPage>()
         val pendingUrls = ArrayList<String>()
 
@@ -271,10 +270,9 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
         val SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1)
         val SESSION_DOCUMENT_CACHE_CAPACITY = 10000
         private val objectIdGenerator = AtomicInteger()
-        // All sessions share the same cache
-        private val lateValueInitialized = AtomicBoolean()
-        private lateinit var pageCache: ai.platon.pulsar.common.ConcurrentLRUCache<String, WebPage>
-        private lateinit var documentCache: ai.platon.pulsar.common.ConcurrentLRUCache<String, FeaturedDocument>
+        // NOTE: can not share objects between threads
+//        private lateinit var pageCache: ConcurrentLRUCache<String, WebPage>
+//        private lateinit var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
 
         fun getApplicationContext(): ClassPathXmlApplicationContext {
             return ClassPathXmlApplicationContext(

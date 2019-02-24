@@ -74,7 +74,7 @@ class Pulsar: AutoCloseable {
      * @return The web page created
      */
     fun inject(configuredUrl: String): WebPage {
-        return injectComponent.inject(ai.platon.pulsar.common.UrlUtil.splitUrlArgs(configuredUrl))
+        return injectComponent.inject(UrlUtil.splitUrlArgs(configuredUrl))
     }
 
     operator fun get(url: String): WebPage? {
@@ -100,9 +100,9 @@ class Pulsar: AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(configuredUrl: String): WebPage {
-        val urlAndOptions = ai.platon.pulsar.common.UrlUtil.splitUrlArgs(configuredUrl)
+        val urlAndOptions = UrlUtil.splitUrlArgs(configuredUrl)
 
-        val options = ai.platon.pulsar.common.options.LoadOptions.parse(urlAndOptions.value, defaultMutableConfig)
+        val options = LoadOptions.parse(urlAndOptions.value, defaultMutableConfig)
         options.mutableConfig = defaultMutableConfig
 
         return loadComponent.load(urlAndOptions.key, options)
@@ -115,7 +115,7 @@ class Pulsar: AutoCloseable {
      * @param options The options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    fun load(url: String, options: ai.platon.pulsar.common.options.LoadOptions): WebPage {
+    fun load(url: String, options: LoadOptions): WebPage {
         if (options.mutableConfig == null) {
             options.mutableConfig = defaultMutableConfig
         }
@@ -138,7 +138,7 @@ class Pulsar: AutoCloseable {
      * @return Pages for all urls.
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: ai.platon.pulsar.common.options.LoadOptions = ai.platon.pulsar.common.options.LoadOptions()): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions()): Collection<WebPage> {
         if (options.mutableConfig == null) {
             options.mutableConfig = defaultMutableConfig
         }
@@ -161,7 +161,7 @@ class Pulsar: AutoCloseable {
      * @return Pages for all urls.
      */
     @JvmOverloads
-    fun parallelLoadAll(urls: Iterable<String>, options: ai.platon.pulsar.common.options.LoadOptions = ai.platon.pulsar.common.options.LoadOptions()): Collection<WebPage> {
+    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions()): Collection<WebPage> {
         if (options.mutableConfig == null) {
             options.mutableConfig = defaultMutableConfig
         }

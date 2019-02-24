@@ -17,12 +17,15 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
         return counters.computeIfAbsent(name) { Frequency(it) }
     }
 
+    fun computeIfAbsent(name: String, vararg elements: T): Frequency<T> {
+        return counters.computeIfAbsent(name) { Frequency(it) }.also { it.addAll(elements) }
+    }
+
     fun count(name: String, term: T): Int {
         val counter = counters[name]
         return if (counter != null) {
             counter.count(term)
         } else 0
-
     }
 
     override val size: Int get() = counters.size

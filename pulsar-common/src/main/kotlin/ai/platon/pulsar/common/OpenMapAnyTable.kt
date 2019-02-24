@@ -10,6 +10,8 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
 
     val keys = map.keys
     val numRows: Int get() = map.size
+    val isEmpty: Boolean get() = numRows == 0
+    val isNotEmpty: Boolean get() = !isEmpty
 
     operator fun get(key: String): Row? {
         return map[key]

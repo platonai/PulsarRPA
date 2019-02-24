@@ -245,12 +245,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
         return sb.toString()
     }
 
-    /**
-     * Return a string representation of this frequency distribution.
-     *
-     * @return a string representation.
-     */
-    override fun toString(): String {
+    fun report(): String {
         val sb = StringBuilder()
 
         var maxLength = entrySet().map { it.element.toString().length }.max()?:return ""
@@ -265,6 +260,15 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
         sb.append("totalFrequency: $totalFrequency\tmode: $mode")
 
         return sb.toString()
+    }
+
+    /**
+     * Return a string representation of this frequency distribution.
+     *
+     * @return a string representation.
+     */
+    override fun toString(): String {
+        return entrySet().joinToString { "${it.element}:${it.count}" }
     }
 
     override fun hashCode(): Int {
