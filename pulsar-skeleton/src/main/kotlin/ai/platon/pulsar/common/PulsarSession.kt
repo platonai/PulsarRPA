@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class PulsarSession(applicationContext: ConfigurableApplicationContext, val config: VolatileConfig) : AutoCloseable {
+    val log = LoggerFactory.getLogger(PulsarSession::class.java)
     val id: Int = objectIdGenerator.incrementAndGet()
     val pulsar: Pulsar = Pulsar(applicationContext)
     private var enableCache = true
@@ -159,6 +160,11 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
         return document
     }
 
+    fun clearCache() {
+        documentCache.clear()
+        pageCache.clear()
+    }
+
     private fun getCachedOrGet(url: String): WebPage? {
         var page: WebPage? = pageCache.get(url)
         if (page != null) {
@@ -258,21 +264,18 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
     }
 
     override fun close() {
-        log.info("Destructing pulsar session " + this)
+        log.info("Closing pulsar session $this")
         pulsar.close()
+        clearCache()
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(PulsarSession::class.java)
         val SESSION_PAGE_CACHE_TTL = Duration.ofSeconds(20)
-        val SESSION_PAGE_CACHE_CAPACITY = 1000
+        val SESSION_PAGE_CACHE_CAPACITY = 100
 
         val SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1)
-        val SESSION_DOCUMENT_CACHE_CAPACITY = 10000
+        val SESSION_DOCUMENT_CACHE_CAPACITY = 100
         private val objectIdGenerator = AtomicInteger()
-        // NOTE: can not share objects between threads
-//        private lateinit var pageCache: ConcurrentLRUCache<String, WebPage>
-//        private lateinit var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
 
         fun getApplicationContext(): ClassPathXmlApplicationContext {
             return ClassPathXmlApplicationContext(

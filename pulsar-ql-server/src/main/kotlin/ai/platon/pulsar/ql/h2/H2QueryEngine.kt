@@ -56,15 +56,20 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
         return h2session
     }
 
+    @Synchronized
     fun getSession(dbSession: DbSession): QuerySession {
         return QueryEngine.getSession(dbSession)
     }
 
+    @Synchronized
     fun getSession(h2session: Session): QuerySession {
         return QueryEngine.getSession(DbSession(h2session))
     }
 
-    override fun closeSession(sessionId: Int) {}
+    @Synchronized
+    override fun closeSession(sessionId: Int) {
+
+    }
 }
 
 class ClassFactory : Utils.ClassFactory {

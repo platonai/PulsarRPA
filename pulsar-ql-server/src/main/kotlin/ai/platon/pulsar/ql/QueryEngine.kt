@@ -8,6 +8,7 @@ import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.cache.*
@@ -41,7 +42,7 @@ object QueryEngine {
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
 
-    var status: QueryEngine.Status = QueryEngine.Status.NOT_READY
+    var status: Status = Status.NOT_READY
 
     private var backgroundSession: PulsarSession = PulsarContext.createSession()
 
@@ -68,32 +69,34 @@ object QueryEngine {
     private val isClosed: AtomicBoolean = AtomicBoolean()
 
     init {
-        QueryEngine.status = QueryEngine.Status.INITIALIZING
+        status = Status.INITIALIZING
 
         Runtime.getRuntime().addShutdownHook(Thread(this::close))
 
         SeleniumEngine.CLIENT_JS = BrowserControl(unmodifiedConfig).getJs()
-        QueryEngine.sessions = CacheBuilder.newBuilder()
+        sessions = CacheBuilder.newBuilder()
                 .maximumSize(200)
                 .expireAfterAccess(30, TimeUnit.MINUTES)
-                .removalListener(QueryEngine.SessionRemovalListener())
-                .build(QueryEngine.SessionCacheLoader(this))
-        QueryEngine.proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(unmodifiedConfig)
-        QueryEngine.handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, true)
-        QueryEngine.taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
+                .removalListener(SessionRemovalListener())
+                .build(SessionCacheLoader(this))
+        proxyPool = ProxyPool.getInstance(unmodifiedConfig)
+        handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, true)
+        taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
 
-        QueryEngine.backgroundSession.disableCache()
-        QueryEngine.backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
-        QueryEngine.backgroundExecutor = Executors.newScheduledThreadPool(5)
-        QueryEngine.registerBackgroundTasks()
+        backgroundSession.disableCache()
+        backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
+        backgroundExecutor = Executors.newScheduledThreadPool(5)
+        registerBackgroundTasks()
 
-        QueryEngine.status = QueryEngine.Status.RUNNING
+        status = Status.RUNNING
     }
 
     fun createQuerySession(dbSession: DbSession): QuerySession {
         val querySession = QuerySession(dbSession, SessionConfig(dbSession, unmodifiedConfig))
 
-        QueryEngine.sessions.put(dbSession, querySession)
+        synchronized(sessions) {
+            sessions.put(dbSession, querySession)
+        }
 
         return querySession
     }
@@ -103,7 +106,9 @@ object QueryEngine {
      */
     fun getSession(dbSession: DbSession): QuerySession {
         try {
-            return QueryEngine.sessions.get(dbSession)
+            synchronized(sessions) {
+                return sessions.get(dbSession)
+            }
         } catch (e: ExecutionException) {
             throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, e)
         }
@@ -114,33 +119,33 @@ object QueryEngine {
             return
         }
 
-        QueryEngine.status = QueryEngine.Status.CLOSING
+        status = Status.CLOSING
 
-        QueryEngine.log.info("[Destruction] Destructing QueryEngine ...")
+        log.info("[Destruction] Destructing QueryEngine ...")
 
-        QueryEngine.backgroundExecutor.shutdownNow()
+        backgroundExecutor.shutdownNow()
 
-        QueryEngine.sessions.asMap().values.forEach { it.close() }
-        QueryEngine.sessions.cleanUp()
+        sessions.asMap().values.forEach { it.close() }
+        sessions.cleanUp()
 
-        QueryEngine.taskStatusTracker.close()
+        taskStatusTracker.close()
 
-        QueryEngine.proxyPool.close()
+        proxyPool.close()
 
-        QueryEngine.status = QueryEngine.Status.CLOSED
+        status = Status.CLOSED
     }
 
     private fun registerBackgroundTasks() {
-        val r = { QueryEngine.runSilently { QueryEngine.loadLazyTasks() } }
-        QueryEngine.backgroundExecutor.scheduleAtFixedRate(r, 10, 30, TimeUnit.SECONDS)
+        val r = { runSilently { loadLazyTasks() } }
+        backgroundExecutor.scheduleAtFixedRate(r, 10, 30, TimeUnit.SECONDS)
 
-        if (QueryEngine.handlePeriodicalFetchTasks) {
-            val r2 = { QueryEngine.runSilently { QueryEngine.fetchSeeds() } }
-            QueryEngine.backgroundExecutor.scheduleAtFixedRate(r2, 30, 120, TimeUnit.SECONDS)
+        if (handlePeriodicalFetchTasks) {
+            val r2 = { runSilently { fetchSeeds() } }
+            backgroundExecutor.scheduleAtFixedRate(r2, 30, 120, TimeUnit.SECONDS)
         }
 
-        val r3 = { QueryEngine.runSilently { QueryEngine.maintainProxyPool() } }
-        QueryEngine.backgroundExecutor.scheduleAtFixedRate(r3, 120, 120, TimeUnit.SECONDS)
+        val r3 = { runSilently { maintainProxyPool() } }
+        backgroundExecutor.scheduleAtFixedRate(r3, 120, 120, TimeUnit.SECONDS)
     }
 
     private fun runSilently(target: () -> Unit) {
@@ -148,7 +153,7 @@ object QueryEngine {
             target()
         } catch (e: Throwable) {
             // Do not throw anything
-            QueryEngine.log.error(e.toString())
+            log.error(e.toString())
         }
     }
 
@@ -156,14 +161,14 @@ object QueryEngine {
      * Get background tasks and run them
      */
     private fun loadLazyTasks() {
-        if (QueryEngine.loading.get()) {
+        if (loading.get()) {
             return
         }
 
         for (mode in FetchMode.values()) {
-            val urls = QueryEngine.taskStatusTracker.takeLazyTasks(mode, QueryEngine.backgroundTaskBatchSize)
+            val urls = taskStatusTracker.takeLazyTasks(mode, backgroundTaskBatchSize)
             if (!urls.isEmpty()) {
-                QueryEngine.loadAll(urls.map { it.toString() }, QueryEngine.backgroundTaskBatchSize, mode)
+                loadAll(urls.map { it.toString() }, backgroundTaskBatchSize, mode)
             }
         }
     }
@@ -172,50 +177,50 @@ object QueryEngine {
      * Get periodical tasks and run them
      */
     private fun fetchSeeds() {
-        if (QueryEngine.loading.get()) {
+        if (loading.get()) {
             return
         }
 
         for (mode in FetchMode.values()) {
-            val urls = QueryEngine.taskStatusTracker.getSeeds(mode, 1000)
+            val urls = taskStatusTracker.getSeeds(mode, 1000)
             if (!urls.isEmpty()) {
-                QueryEngine.loadAll(urls, QueryEngine.backgroundTaskBatchSize, mode)
+                loadAll(urls, backgroundTaskBatchSize, mode)
             }
         }
     }
 
     private fun maintainProxyPool() {
-        QueryEngine.proxyPool.recover(100)
+        proxyPool.recover(100)
     }
 
     private fun loadAll(urls: Iterable<String>, batchSize: Int, mode: FetchMode) {
         if (!urls.iterator().hasNext() || batchSize <= 0) {
-            QueryEngine.log.debug("Not loading lazy tasks")
+            log.debug("Not loading lazy tasks")
             return
         }
 
-        QueryEngine.loading.set(true)
+        loading.set(true)
 
         val loadOptions = ai.platon.pulsar.common.options.LoadOptions()
         loadOptions.fetchMode = mode
         loadOptions.isBackground = true
 
         val partitions: List<List<String>> = Lists.partition(IteratorUtils.toList(urls.iterator()), batchSize)
-        partitions.forEach { QueryEngine.loadAll(it, loadOptions) }
+        partitions.forEach { loadAll(it, loadOptions) }
 
-        QueryEngine.loading.set(false)
+        loading.set(false)
     }
 
     private fun loadAll(urls: Collection<String>, loadOptions: ai.platon.pulsar.common.options.LoadOptions) {
-        ++QueryEngine.lazyTaskRound
-        QueryEngine.log.debug("Running {}th round for lazy tasks", QueryEngine.lazyTaskRound)
-        QueryEngine.backgroundSession.parallelLoadAll(urls, loadOptions)
+        ++lazyTaskRound
+        log.debug("Running {}th round for lazy tasks", lazyTaskRound)
+        backgroundSession.parallelLoadAll(urls, loadOptions)
     }
 
     private class SessionCacheLoader(val engine: QueryEngine): CacheLoader<DbSession, QuerySession>() {
         override fun load(dbSession: DbSession): QuerySession {
-            QueryEngine.log.warn("Create PulsarSession for h2 h2session {} via SessionCacheLoader (not expected ...)", dbSession)
-            return QueryEngine.createQuerySession(dbSession)
+            log.warn("Create PulsarSession for h2 h2session {} via SessionCacheLoader (not expected ...)", dbSession)
+            return createQuerySession(dbSession)
         }
     }
 
@@ -228,8 +233,8 @@ object QueryEngine {
                     // It's safe to close h2 h2session, @see {org.h2.api.ErrorCode#DATABASE_CALLED_AT_SHUTDOWN}
                     // h2session.close()
                     notification.value.close()
-                    QueryEngine.log.info("Session {} is closed for reason '{}', remaining {} sessions",
-                            dbSession, cause, QueryEngine.sessions.size())
+                    log.info("Session {} is closed for reason '{}', remaining {} sessions",
+                            dbSession, cause, sessions.size())
                 }
                 else -> {
                 }

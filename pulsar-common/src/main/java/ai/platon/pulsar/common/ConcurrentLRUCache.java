@@ -100,6 +100,12 @@ public class ConcurrentLRUCache<KEY, VALUE> {
         return v;
     }
 
+    public void clear() {
+        synchronized (cache) {
+            cache.clear();
+        }
+    }
+
     private String getTTLKey(KEY key) {
         if (ttl <= 0) {
             return key.toString();
