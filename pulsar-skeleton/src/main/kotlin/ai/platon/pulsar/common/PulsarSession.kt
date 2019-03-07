@@ -304,7 +304,8 @@ open class PulsarSession(
         log.info("Closing session $this ...")
 
         closableObjects.forEach { it.use { it.close() } }
-        pulsar.close()
+        pulsar.use { it.close() }
+
         clearCache()
     }
 

@@ -1,8 +1,8 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.PulsarContext
-import ai.platon.pulsar.common.PulsarContext.applicationContext
-import ai.platon.pulsar.common.PulsarContext.unmodifiedConfig
+import ai.platon.pulsar.common.PulsarEnv.applicationContext
+import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.PulsarSession
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.net.SeleniumEngine
@@ -44,7 +44,7 @@ object QueryEngine: AutoCloseable {
 
     var status: Status = Status.NOT_READY
 
-    private var backgroundSession: PulsarSession = PulsarContext.createSession()
+    private var backgroundSession = PulsarContext.createSession()
 
     /**
      * The sessions container
@@ -127,15 +127,15 @@ object QueryEngine: AutoCloseable {
 
         log.info("[Destruction] Destructing QueryEngine ...")
 
-        backgroundSession.close()
+        backgroundSession.use { it.close() }
         backgroundThread.join()
 
-        sessions.values.forEach { it.close() }
+        sessions.values.forEach { it.use { it.close() } }
         sessions.clear()
 
-        taskStatusTracker.close()
+        taskStatusTracker.use { it.close() }
 
-        proxyPool.close()
+        proxyPool.use { it.close() }
 
         status = Status.CLOSED
     }

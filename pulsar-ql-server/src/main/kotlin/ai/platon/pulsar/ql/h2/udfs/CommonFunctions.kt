@@ -1,16 +1,16 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.PulsarContext
-import ai.platon.pulsar.common.PulsarContext.unmodifiedConfig
+import ai.platon.pulsar.common.PulsarEnv
+import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.annotation.UDFGroup
+import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.apache.commons.lang3.StringUtils
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
@@ -32,7 +32,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun getProxyPoolStatus(): String {
-        val proxyPool = ProxyPool.getInstance(PulsarContext.unmodifiedConfig)
+        val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
         return proxyPool.toString()
     }
 
@@ -327,7 +327,7 @@ object CommonFunctions {
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
 
-        for ((key, value) in PulsarContext.unmodifiedConfig.unbox()) {
+        for ((key, value) in PulsarEnv.unmodifiedConfig.unbox()) {
             rs.addRow(key, value)
         }
 
@@ -388,7 +388,7 @@ object CommonFunctions {
     fun addProxy(ipPort: String): Boolean {
         val proxyEntry = ai.platon.pulsar.common.proxy.ProxyEntry.parse(ipPort)
         if (proxyEntry != null && proxyEntry.testNetwork()) {
-            val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarContext.unmodifiedConfig)
+            val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
             return proxyPool.offer(proxyEntry)
         }
 
@@ -399,7 +399,7 @@ object CommonFunctions {
     @JvmStatic
     fun addProxy(ip: String, port: Int): Boolean {
         if (ai.platon.pulsar.common.NetUtil.testNetwork(ip, port)) {
-            val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarContext.unmodifiedConfig)
+            val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
             return proxyPool.offer(ai.platon.pulsar.common.proxy.ProxyEntry(ip, port))
         }
 
