@@ -25,8 +25,11 @@ class Pulsar: AutoCloseable {
     val webDb: WebDb
     val injectComponent: InjectComponent
     val loadComponent: LoadComponent
+
     private val urlNormalizers: UrlNormalizers
     private val defaultMutableConfig: MutableConfig
+    private val seleniumEngine: SeleniumEngine
+    private val closeables = mutableListOf<AutoCloseable>()
     private val isClosed = AtomicBoolean(false)
 
     val parseComponent: ParseComponent get() = loadComponent.parseComponent
@@ -44,8 +47,10 @@ class Pulsar: AutoCloseable {
         this.injectComponent = applicationContext.getBean<InjectComponent>(InjectComponent::class.java)
         this.loadComponent = applicationContext.getBean<LoadComponent>(LoadComponent::class.java)
         this.urlNormalizers = applicationContext.getBean<UrlNormalizers>(UrlNormalizers::class.java)
-
+        this.seleniumEngine = SeleniumEngine.getInstance(immutableConfig)
         this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
+
+        closeables.add(this.seleniumEngine)
     }
 
     constructor(
@@ -60,6 +65,7 @@ class Pulsar: AutoCloseable {
         this.urlNormalizers = urlNormalizers
         this.immutableConfig = immutableConfig
 
+        this.seleniumEngine = SeleniumEngine.getInstance(immutableConfig)
         this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
     }
 
@@ -202,8 +208,6 @@ class Pulsar: AutoCloseable {
             return
         }
 
-        SeleniumEngine.getInstance(immutableConfig).close()
-        injectComponent.close()
-        webDb.close()
+        closeables.forEach { it.use { it.close() } }
     }
 }

@@ -271,8 +271,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             } else {
                 // Scroll down to bottom times to ensure ajax content can be loaded
                 for (int i = 0; i < scrollDownCount; ++i) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Scrolling down #" + (i + 1));
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Scrolling down #" + (i + 1));
                     }
 
                     jsExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight);");

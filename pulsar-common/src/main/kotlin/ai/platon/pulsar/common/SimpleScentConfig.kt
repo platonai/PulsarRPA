@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.MutableConfig
 import org.apache.hadoop.conf.Configuration
 
 /**
@@ -8,7 +9,7 @@ import org.apache.hadoop.conf.Configuration
  *
  * A simple scent configuration loader used where ScentContext is not available
  */
-object SimpleScentConfig: ai.platon.pulsar.common.config.MutableConfig() {
+object SimpleScentConfig: MutableConfig() {
     const val DEFAULT_RESOURCE = "scent-default.xml"
     const val SPECIFIED_RESOURCE = "scent-site.xml"
 

@@ -10,7 +10,7 @@ import java.sql.SQLException;
 public class H2DbConsole {
 
     public static void main(String[] args) throws SQLException {
-        System.setProperty("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2QueryEngine.class.getName());
+        System.setProperty("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2SessionFactory.class.getName());
 
         new Console().runTool(args);
     }

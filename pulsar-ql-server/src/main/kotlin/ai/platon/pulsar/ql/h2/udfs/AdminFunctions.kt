@@ -3,9 +3,10 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.PulsarContext.unmodifiedConfig
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.ql.QueryEngine
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2QueryEngine
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
 import org.slf4j.LoggerFactory
@@ -32,11 +33,16 @@ object AdminFunctions {
 
     @UDFunction
     @JvmStatic
+    fun sessionCount(@H2Context h2session: Session): Int {
+        checkPrivilege(h2session)
+        return QueryEngine.sessionCount()
+    }
+
+    @UDFunction
+    @JvmStatic
     fun closeSession(@H2Context h2session: Session): String {
         checkPrivilege(h2session)
-
-        LOG.info("About to close h2session {}", h2session)
-        h2session.close()
+        H2SessionFactory.closeSession(h2session.id)
         return h2session.toString()
     }
 
@@ -45,7 +51,7 @@ object AdminFunctions {
     @JvmOverloads
     fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
         checkPrivilege(h2session)
-        val page = H2QueryEngine.getSession(h2session).load(url)
+        val page = H2SessionFactory.getSession(h2session.id).load(url)
         val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), PulsarPaths.fromUri(page.url, ".htm"))
         return PulsarFiles.saveTo(page, path).toString()
     }

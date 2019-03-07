@@ -12,16 +12,17 @@ import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
 import org.h2.engine.SessionInterface
-import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 
-open class QuerySession(dbSession: DbSession, config: SessionConfig): PulsarSession(applicationContext, config) {
+open class QuerySession(val dbSession: DbSession, config: SessionConfig): PulsarSession(applicationContext, config, dbSession.id) {
     private var totalUdfs: Int = 0
 
     init {
-        registerDefaultUdfs(dbSession.implementation as org.h2.engine.Session)
-        registerUdaf(dbSession.implementation, GroupCollect::class)
-        registerUdaf(dbSession.implementation, GroupFetch::class)
+        if (dbSession.implementation is org.h2.engine.Session) {
+            registerDefaultUdfs(dbSession.implementation)
+            registerUdaf(dbSession.implementation, GroupCollect::class)
+            registerUdaf(dbSession.implementation, GroupFetch::class)
+        }
     }
 
     fun parseToValue(page: WebPage): ValueDom {

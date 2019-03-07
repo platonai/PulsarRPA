@@ -12,7 +12,7 @@ import java.util.*
 /**
  * The base class for all tests.
  */
-class H2Db(sessionFactory: String = H2QueryEngine::class.java.name) {
+class H2Db(sessionFactory: String = H2SessionFactory::class.java.name) {
 
     init {
         System.setProperty("h2.sessionFactory", sessionFactory)

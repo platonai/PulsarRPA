@@ -7,6 +7,7 @@ package ai.platon.pulsar.ql.types;
 
 import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.dom.FeaturedDocument;
+import ai.platon.pulsar.dom.nodes.node.ext.NodeExtKt;
 import ai.platon.pulsar.ql.PulsarDataTypesHandler;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
@@ -218,7 +219,9 @@ public class ValueDom extends Value {
 
     @Override
     public String toString() {
+        if (element != null && isNotNil()) {
+            return NodeExtKt.getName(element);
+        }
         return "(dom)";
-        // return NodeExtKt.getUniqueName(element);
     }
 }

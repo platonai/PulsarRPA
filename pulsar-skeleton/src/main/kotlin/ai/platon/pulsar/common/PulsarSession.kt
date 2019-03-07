@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import org.checkerframework.checker.units.qual.K
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
@@ -18,20 +19,37 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.reflect.KClass
+import kotlin.reflect.jvm.jvmName
 
 /**
  * Created by vincent on 18-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-open class PulsarSession(applicationContext: ConfigurableApplicationContext, val config: VolatileConfig) : AutoCloseable {
+open class PulsarSession(
+        /**
+         * The spring application context
+         * */
+        applicationContext: ConfigurableApplicationContext,
+        /**
+         * The volatile config
+         * */
+        val config: VolatileConfig,
+        /**
+         * The session id. Session id is expected to be set by the container
+         * */
+        val id: Int = 9000000 + idGen.incrementAndGet()
+) : AutoCloseable {
     val log = LoggerFactory.getLogger(PulsarSession::class.java)
-    val id: Int = objectIdGenerator.incrementAndGet()
     val pulsar: Pulsar = Pulsar(applicationContext)
+    val beanFactory = BeanFactory(config)
     private var enableCache = true
     private var pageCache: ConcurrentLRUCache<String, WebPage>
     private var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
     // Session variables
     private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
+    private val closableObjects = mutableSetOf<AutoCloseable>()
+    private val closed = AtomicBoolean()
 
     constructor(appConfigLocation: String) : this(ClassPathXmlApplicationContext(appConfigLocation))
 
@@ -47,6 +65,13 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
 
         capacity = config.getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY)
         documentCache = ConcurrentLRUCache(SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
+    }
+
+    /**
+     * Close objects when sessions closes
+     * */
+    fun registerClosable(closable: AutoCloseable) {
+        closableObjects.add(closable)
     }
 
     fun disableCache() {
@@ -225,6 +250,14 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
         variables[name] = value
     }
 
+    fun putBean(obj: Any) {
+        beanFactory.putBean(obj)
+    }
+
+    inline fun <reified T> getBean(): T? {
+        return beanFactory.getBean()
+    }
+
     fun delete(url: String) {
         pulsar.delete(url)
     }
@@ -264,7 +297,13 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
     }
 
     override fun close() {
-        log.info("Closing pulsar session $this")
+        if (closed.getAndSet(true)) {
+            return
+        }
+
+        log.info("Closing session $this ...")
+
+        closableObjects.forEach { it.use { it.close() } }
         pulsar.close()
         clearCache()
     }
@@ -275,7 +314,7 @@ open class PulsarSession(applicationContext: ConfigurableApplicationContext, val
 
         val SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1)
         val SESSION_DOCUMENT_CACHE_CAPACITY = 100
-        private val objectIdGenerator = AtomicInteger()
+        private val idGen = AtomicInteger()
 
         fun getApplicationContext(): ClassPathXmlApplicationContext {
             return ClassPathXmlApplicationContext(

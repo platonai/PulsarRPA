@@ -1,12 +1,14 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.jvmName
 
-open class BeanFactory(val conf: ai.platon.pulsar.common.config.ImmutableConfig) {
+open class BeanFactory(val conf: ImmutableConfig) {
 
-    val objectCache = ai.platon.pulsar.common.ObjectCache.get(conf)
-    val domain = conf.get(ai.platon.pulsar.common.config.CapabilityTypes.SCENT_DOMAIN, "default")
+    val objectCache = ObjectCache.get(conf)
+    val domain = conf.get(CapabilityTypes.SCENT_DOMAIN, "default")
 
     fun cacheId(clazz: KClass<*>, vararg modifiers: String): String {
         return modifiers.joinToString(", ", clazz.jvmName + " - ")

@@ -13,9 +13,9 @@ import org.h2.util.JdbcUtils
 import org.h2.util.Utils
 import org.slf4j.LoggerFactory
 
-object H2QueryEngine : org.h2.engine.SessionFactory {
+object H2SessionFactory : org.h2.engine.SessionFactory {
 
-    private val log = LoggerFactory.getLogger(H2QueryEngine::class.java)
+    private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)
 
     init {
         H2Config.config()
@@ -28,8 +28,8 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
      * */
     @Suppress("unused")
     @JvmStatic
-    fun getInstance(): H2QueryEngine {
-        return H2QueryEngine
+    fun getInstance(): H2SessionFactory {
+        return H2SessionFactory
     }
 
     /**
@@ -48,7 +48,8 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val querySession = QueryEngine.createQuerySession(DbSession(h2session))
+        val querySession = QueryEngine.createQuerySession(DbSession(h2session.id, h2session))
+        require(querySession.id == h2session.id)
 
         log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
                 querySession, h2session, ci.url)
@@ -57,18 +58,13 @@ object H2QueryEngine : org.h2.engine.SessionFactory {
     }
 
     @Synchronized
-    fun getSession(dbSession: DbSession): QuerySession {
-        return QueryEngine.getSession(dbSession)
-    }
-
-    @Synchronized
-    fun getSession(h2session: Session): QuerySession {
-        return QueryEngine.getSession(DbSession(h2session))
+    fun getSession(sessionId: Int): QuerySession {
+        return QueryEngine.getSession(sessionId)
     }
 
     @Synchronized
     override fun closeSession(sessionId: Int) {
-
+        QueryEngine.closeSession(sessionId)
     }
 }
 

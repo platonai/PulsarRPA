@@ -1,10 +1,10 @@
 package ai.platon.pulsar.ql
 
 /**
- * DbSession is a wrapper for underlying database session, and is the bridge between database session and pulsar query
+ * DbSession is a wrapper for underlying database session, it is a bridge between database session and pulsar query
  * session
  */
-class DbSession(val implementation: Any) {
+class DbSession(val id: Int, val implementation: Any) {
     var sqlSequence: Int = 0
         get() {
             if (org.h2.engine.Session::class.java.isAssignableFrom(implementation.javaClass)) {
@@ -14,15 +14,12 @@ class DbSession(val implementation: Any) {
 
             return field
         }
-    var id: Int = 0
-        private set
     var name: String = ""
         private set
 
     init {
         if (org.h2.engine.Session::class.java.isAssignableFrom(implementation.javaClass)) {
             val session = implementation as org.h2.engine.Session
-            id = session.id
             name = session.toString()
         }
     }

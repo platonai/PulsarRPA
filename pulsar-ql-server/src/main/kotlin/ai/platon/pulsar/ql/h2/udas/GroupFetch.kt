@@ -2,7 +2,7 @@ package ai.platon.pulsar.ql.h2.udas
 
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
-import ai.platon.pulsar.ql.h2.H2QueryEngine
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.api.Aggregate
 import org.h2.api.AggregateFunction
 import org.h2.engine.Session
@@ -47,7 +47,7 @@ class GroupFetch : Aggregate {
     }
 
     override fun getResult(): Any {
-        val session = H2QueryEngine.getSession(h2session)
+        val session = H2SessionFactory.getSession(h2session.id)
         val options = ai.platon.pulsar.common.options.LoadOptions()
         session.parallelLoadAll(urls, options)
         val values = urls.map { url -> DataType.convertToValue(h2session, url, Value.STRING) }.toTypedArray()

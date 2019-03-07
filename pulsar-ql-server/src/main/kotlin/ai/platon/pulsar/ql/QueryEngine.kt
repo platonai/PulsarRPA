@@ -8,16 +8,16 @@ import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.persist.metadata.FetchMode
-import com.google.common.cache.*
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.IteratorUtils
 import org.h2.api.ErrorCode
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ExecutionException
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * <li>TODO: machine learning</li>
  * </ul>
  */
-object QueryEngine {
+object QueryEngine: AutoCloseable {
     private val log = LoggerFactory.getLogger(QueryEngine::class.java)
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
@@ -50,17 +50,19 @@ object QueryEngine {
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
-    private val sessions: LoadingCache<DbSession, QuerySession>
+    private val sessions: MutableMap<DbSession, QuerySession> = mutableMapOf()
 
     private val taskStatusTracker: TaskStatusTracker
 
-    private val proxyPool: ai.platon.pulsar.common.proxy.ProxyPool
-
-    private val backgroundExecutor: ScheduledExecutorService
+    private val proxyPool: ProxyPool
 
     private val backgroundTaskBatchSize: Int
 
+    private val backgroundThread: Thread
+
     private var lazyTaskRound = 0
+
+    private val lazyLoadTasks = Collections.synchronizedList(LinkedList<String>())
 
     private val loading = AtomicBoolean()
 
@@ -74,47 +76,49 @@ object QueryEngine {
         Runtime.getRuntime().addShutdownHook(Thread(this::close))
 
         SeleniumEngine.CLIENT_JS = BrowserControl(unmodifiedConfig).getJs()
-        sessions = CacheBuilder.newBuilder()
-                .maximumSize(200)
-                .expireAfterAccess(30, TimeUnit.MINUTES)
-                .removalListener(SessionRemovalListener())
-                .build(SessionCacheLoader(this))
         proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, true)
         taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
 
         backgroundSession.disableCache()
         backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
-        backgroundExecutor = Executors.newScheduledThreadPool(5)
-        registerBackgroundTasks()
+
+        backgroundThread = Thread { runBackgroundTasks() }
+        backgroundThread.isDaemon = true
+        backgroundThread.start()
 
         status = Status.RUNNING
     }
 
+    @Synchronized
     fun createQuerySession(dbSession: DbSession): QuerySession {
         val querySession = QuerySession(dbSession, SessionConfig(dbSession, unmodifiedConfig))
-
-        synchronized(sessions) {
-            sessions.put(dbSession, querySession)
-        }
-
+        sessions[dbSession] = querySession
         return querySession
     }
 
-    /**
-     * Get a query session from h2 session
-     */
-    fun getSession(dbSession: DbSession): QuerySession {
-        try {
-            synchronized(sessions) {
-                return sessions.get(dbSession)
-            }
-        } catch (e: ExecutionException) {
-            throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, e)
+    @Synchronized
+    fun sessionCount(): Int {
+        return sessions.size
+    }
+
+    @Synchronized
+    fun getSession(sessionId: Int): QuerySession {
+        return sessions.entries.firstOrNull { it.key.id == sessionId }?.value
+                ?:throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, "Failed to find session in cache")
+    }
+
+    @Synchronized
+    fun closeSession(sessionId: Int) {
+        val removal = sessions.filter { it.key.id == sessionId }
+        removal.forEach {
+            sessions.remove(it.key)
+            it.value.use { it.close() }
         }
     }
 
-    fun close() {
+    @Synchronized
+    override fun close() {
         if (isClosed.getAndSet(true)) {
             return
         }
@@ -123,10 +127,11 @@ object QueryEngine {
 
         log.info("[Destruction] Destructing QueryEngine ...")
 
-        backgroundExecutor.shutdownNow()
+        backgroundSession.close()
+        backgroundThread.join()
 
-        sessions.asMap().values.forEach { it.close() }
-        sessions.cleanUp()
+        sessions.values.forEach { it.close() }
+        sessions.clear()
 
         taskStatusTracker.close()
 
@@ -135,25 +140,13 @@ object QueryEngine {
         status = Status.CLOSED
     }
 
-    private fun registerBackgroundTasks() {
-        val r = { runSilently { loadLazyTasks() } }
-        backgroundExecutor.scheduleAtFixedRate(r, 10, 30, TimeUnit.SECONDS)
+    private fun runBackgroundTasks() {
+        while (!isClosed.get()) {
+            Thread.sleep(10000)
 
-        if (handlePeriodicalFetchTasks) {
-            val r2 = { runSilently { fetchSeeds() } }
-            backgroundExecutor.scheduleAtFixedRate(r2, 30, 120, TimeUnit.SECONDS)
-        }
-
-        val r3 = { runSilently { maintainProxyPool() } }
-        backgroundExecutor.scheduleAtFixedRate(r3, 120, 120, TimeUnit.SECONDS)
-    }
-
-    private fun runSilently(target: () -> Unit) {
-        try {
-            target()
-        } catch (e: Throwable) {
-            // Do not throw anything
-            log.error(e.toString())
+            loadLazyTasks()
+            fetchSeeds()
+            maintainProxyPool()
         }
     }
 
@@ -166,9 +159,9 @@ object QueryEngine {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = taskStatusTracker.takeLazyTasks(mode, backgroundTaskBatchSize)
+            val urls = taskStatusTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
             if (!urls.isEmpty()) {
-                loadAll(urls.map { it.toString() }, backgroundTaskBatchSize, mode)
+                loadAll(urls, backgroundTaskBatchSize, mode)
             }
         }
     }
@@ -201,7 +194,7 @@ object QueryEngine {
 
         loading.set(true)
 
-        val loadOptions = ai.platon.pulsar.common.options.LoadOptions()
+        val loadOptions = LoadOptions()
         loadOptions.fetchMode = mode
         loadOptions.isBackground = true
 
@@ -211,34 +204,9 @@ object QueryEngine {
         loading.set(false)
     }
 
-    private fun loadAll(urls: Collection<String>, loadOptions: ai.platon.pulsar.common.options.LoadOptions) {
+    private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
         ++lazyTaskRound
         log.debug("Running {}th round for lazy tasks", lazyTaskRound)
         backgroundSession.parallelLoadAll(urls, loadOptions)
-    }
-
-    private class SessionCacheLoader(val engine: QueryEngine): CacheLoader<DbSession, QuerySession>() {
-        override fun load(dbSession: DbSession): QuerySession {
-            log.warn("Create PulsarSession for h2 h2session {} via SessionCacheLoader (not expected ...)", dbSession)
-            return createQuerySession(dbSession)
-        }
-    }
-
-    private class SessionRemovalListener : RemovalListener<DbSession, QuerySession> {
-        override fun onRemoval(notification: RemovalNotification<DbSession, QuerySession>) {
-            val cause = notification.cause
-            val dbSession = notification.key
-            when (cause) {
-                RemovalCause.EXPIRED, RemovalCause.SIZE -> {
-                    // It's safe to close h2 h2session, @see {org.h2.api.ErrorCode#DATABASE_CALLED_AT_SHUTDOWN}
-                    // h2session.close()
-                    notification.value.close()
-                    log.info("Session {} is closed for reason '{}', remaining {} sessions",
-                            dbSession, cause, sessions.size())
-                }
-                else -> {
-                }
-            }
-        }
     }
 }

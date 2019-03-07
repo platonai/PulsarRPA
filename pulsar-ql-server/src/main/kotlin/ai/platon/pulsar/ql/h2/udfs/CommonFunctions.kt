@@ -2,15 +2,15 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.PulsarContext
 import ai.platon.pulsar.common.PulsarContext.unmodifiedConfig
-import ai.platon.pulsar.ql.DbSession
-import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2QueryEngine
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
+import ai.platon.pulsar.ql.QuerySession
 import org.apache.commons.lang3.StringUtils
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
@@ -511,8 +511,8 @@ object CommonFunctions {
         return null
     }
 
-    private fun getSession(h2session: Session): ai.platon.pulsar.ql.QuerySession {
-        return H2QueryEngine.getSession(ai.platon.pulsar.ql.DbSession(h2session))
+    private fun getSession(h2session: Session): QuerySession {
+        return H2SessionFactory.getSession(h2session.id)
     }
 
     private fun getDuration(duration: String): Duration? {
@@ -522,6 +522,6 @@ object CommonFunctions {
             d += "s"
         }
 
-        return ai.platon.pulsar.common.SParser.wrap(d).duration
+        return SParser.wrap(d).duration
     }
 }

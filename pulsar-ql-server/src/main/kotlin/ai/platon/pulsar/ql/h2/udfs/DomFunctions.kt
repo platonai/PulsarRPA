@@ -1,12 +1,14 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.UrlUtil
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2QueryEngine
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
@@ -32,7 +34,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        val session = H2QueryEngine.getSession(h2session)
+        val session = H2SessionFactory.getSession(h2session.id)
         val page = session.load(configuredUrl)
         return session.parseToValue(page)
     }
@@ -45,10 +47,10 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        val session = H2QueryEngine.getSession(h2session)
+        val session = H2SessionFactory.getSession(h2session.id)
 
-        val urlAndArgs = ai.platon.pulsar.common.UrlUtil.splitUrlArgs(configuredUrl)
-        val loadOptions = ai.platon.pulsar.common.options.LoadOptions.parse(urlAndArgs.value)
+        val urlAndArgs = UrlUtil.splitUrlArgs(configuredUrl)
+        val loadOptions = LoadOptions.parse(urlAndArgs.value)
         loadOptions.expires = Duration.ZERO
 
         val page = session.load(urlAndArgs.key, loadOptions)
@@ -63,13 +65,13 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun parse(@H2Context h2session: Session, url: String): ValueDom {
-        val session = H2QueryEngine.getSession(h2session)
+        val session = H2SessionFactory.getSession(h2session.id)
         val page = session.load(url)
         if (!page.isInternal && page.protocolStatus.isSuccess) {
             return session.parseToValue(page)
         }
 
-        return ValueDom.NIL;
+        return ValueDom.NIL
     }
 
     /**
