@@ -1,5 +1,8 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
+import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.geometric.str
+import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
 import ai.platon.pulsar.dom.data.BrowserControl
@@ -449,6 +452,10 @@ val Node.canonicalName: String
 
 val Node.uniqueName: String get() = "$sequence-$canonicalName"
 
+val Node.namedRect: String get() = "$name-${rectangle.str}"
+
+val Node.namedRect2: String get() = "$name-${rectangle.str2}"
+
 /**
  * Returns a best element to represent this node: if the node itself is an element, return itself
  * otherwise, returns it's parent
@@ -782,7 +789,7 @@ private fun Node.calculateViewPort(): Dimension {
     val parts = ownerBody.attr("view-port").split("x".toRegex())
     if (parts.size != 2) return viewPort
 
-    val w = ai.platon.pulsar.common.SParser(parts[0]).getInt(viewPort.width)
-    val h = ai.platon.pulsar.common.SParser(parts[1]).getInt(viewPort.height)
+    val w = SParser(parts[0]).getInt(viewPort.width)
+    val h = SParser(parts[1]).getInt(viewPort.height)
     return Dimension(w, h)
 }

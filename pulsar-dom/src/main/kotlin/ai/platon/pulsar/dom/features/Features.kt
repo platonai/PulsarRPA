@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.toHexString
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
+import ai.platon.pulsar.dom.nodes.V_OWNER_BODY
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.nodes.node.ext.name
 import org.apache.commons.math3.linear.RealVector
@@ -124,6 +125,7 @@ data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = 
 }
 
 object FeatureFormatter {
+    val commonVariables = arrayOf(V_OWNER_BODY)
 
     /**
      * Get the string representation of this feature
@@ -160,7 +162,7 @@ object FeatureFormatter {
     }
 
     fun format(variables: Map<String, Any>, names: Collection<String>, sb: StringBuilder = StringBuilder()): StringBuilder {
-        variables.forEach { (name, value) ->
+        variables.filter { it.key !in commonVariables }.forEach { (name, value) ->
             if (names.isEmpty() || name in names) {
                 var s = when (value) {
                     is Double -> formatValue(value)

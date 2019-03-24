@@ -1,5 +1,7 @@
 package ai.platon.pulsar.dom
 
+import ai.platon.pulsar.common.PulsarFiles
+import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
@@ -13,6 +15,7 @@ import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
+import java.nio.file.Path
 
 open class FeaturedDocument(val document: Document) {
     companion object {
@@ -163,6 +166,16 @@ open class FeaturedDocument(val document: Document) {
         val removal = mutableSetOf<Node>()
         NodeTraversor.traverse({ node, _ ->  if (node.nodeName() == "style") removal.add(node) }, document)
         removal.forEach { it.remove() }
+    }
+
+    fun export(): Path {
+        val filename = PulsarPaths.fromUri(baseUri, ".html")
+        val path = PulsarPaths.get("analysis", filename)
+        return exportTo(path)
+    }
+
+    fun exportTo(path: Path): Path {
+        return PulsarFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
     }
 
     override fun equals(other: Any?): Boolean {

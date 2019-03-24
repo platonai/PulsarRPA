@@ -15,10 +15,6 @@ fun PulsarFiles.save(page: WebPage, ident: String = ""): Path {
         postfix = "other"
     }
     val path = PulsarPaths.get(fileCacheDir, ident, postfix, filename)
-    return PulsarFiles.saveTo(page, path)
-}
-
-fun PulsarFiles.saveTo(page: WebPage, path: Path): Path {
     if (!Files.exists(path)) {
         PulsarFiles.saveTo(page.content?.array()
                 ?: "(empty)".toByteArray(), path)
