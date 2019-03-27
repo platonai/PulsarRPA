@@ -80,7 +80,6 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-nolf", "--no-link-filter"}, description = "No filters applied to parse links")
     private boolean noLinkFilter = false;
 
-
     private MutableConfig mutableConfig;
 
     public LoadOptions() {
@@ -90,7 +89,7 @@ public class LoadOptions extends CommonOptions {
         super(args);
     }
 
-    private LoadOptions(String args) {
+    public LoadOptions(String args) {
         super(args.trim().replaceAll("=", " "));
     }
 
@@ -112,7 +111,7 @@ public class LoadOptions extends CommonOptions {
             return mutableConfig.getDuration(CapabilityTypes.STORAGE_DATUM_EXPIRES, Duration.ofDays(3650));
         }
 
-        return expires;
+        return expires == null ? Duration.ofDays(3650): expires;
     }
 
     public void setExpires(Duration expires) {
