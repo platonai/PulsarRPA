@@ -1,0 +1,68 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd" default-lazy-init="true">
+
+    <context:component-scan base-package="ai.platon.pulsar.rest.resources" />
+
+    <import resource="classpath:/pulsar-beans/components-context.xml" />
+
+    <bean id="jobConfigurations" class="ai.platon.pulsar.rest.service.JobConfigurations" />
+
+    <bean id="h2DatabaseType" class="com.j256.ormlite.db.H2DatabaseType" />
+
+    <bean id="connectionSource" class="com.j256.ormlite.jdbc.JdbcConnectionSource">
+        <constructor-arg value="jdbc:h2:~/.pulsar/pulsar" />
+        <constructor-arg ref="h2DatabaseType" />
+    </bean>
+
+    <bean id="ormliteDaoFactory" class="ai.platon.pulsar.persist.rdb.model.dao.OrmliteDaoFactory">
+        <constructor-arg ref="connectionSource"/>
+    </bean>
+
+    <bean id="ormliteTableCreator" class="ai.platon.pulsar.persist.rdb.model.dao.OrmliteTableCreator">
+        <constructor-arg ref="connectionSource"/>
+        <constructor-arg ref="ormliteDaoFactory"/>
+    </bean>
+
+    <bean id="serverInstanceService" class="ai.platon.pulsar.rest.service.ServerInstanceService">
+        <constructor-arg ref="ormliteDaoFactory"/>
+        <constructor-arg value="true"/>
+    </bean>
+
+    <bean id="browserInstanceService" class="ai.platon.pulsar.rest.service.BrowserInstanceService">
+        <constructor-arg ref="ormliteDaoFactory"/>
+        <constructor-arg value="true"/>
+    </bean>
+
+    <bean id="masterApplication" class="ai.platon.pulsar.rest.MasterApplication">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <!--<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />-->
+
+    <!-- =============== MyBATIS beans configuration ================== -->
+    <!--<bean id="podcastDao" class="org.mybatis.spring.mapper.MapperFactoryBean">-->
+        <!--<property name="sqlSessionFactory" ref="sqlSessionFactory"/>-->
+        <!--<property name="mapperInterface" value="org.codingpedia.demo.rest.dao.PodcastDao" />-->
+    <!--</bean>-->
+
+    <!--<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">-->
+        <!--<property name="dataSource" ref="dataSource" />-->
+        <!--<property name="configLocation" value="classpath:config/mybatisV3.xml"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="podcastRestService" class="org.codingpedia.demo.rest.service.PodcastRestService" >-->
+        <!--<property name="podcastDao" ref="podcastDao"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">-->
+        <!--<property name="jndiName" value="java:comp/env/jdbc/restDemoDB" />-->
+        <!--<property name="resourceRef" value="true" />-->
+    <!--</bean>-->
+
+</beans>

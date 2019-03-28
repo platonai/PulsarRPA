@@ -1,0 +1,7 @@
+-^http://([a-z0-9]*\.)*tmall.com/(.+)prop(.+)
+-^http://([a-z0-9]*\.)*tmall.com/(.+)brand(.+)
++^http://([a-z0-9]*\.)*tmall.com/(.+)sort=s(.+)(50072330|50099663)(.+)
++^http://([a-z0-9]*\.)*tmall.com/(.+)(50072330|50099663)(.+)sort=s(.+)
+-^http://([a-z0-9]*\.)*tmall.com/(.+)sort=(.+)
++^http://([a-z0-9]*\.)*tmall.com/(.+)(50072330|50099663)
+-.

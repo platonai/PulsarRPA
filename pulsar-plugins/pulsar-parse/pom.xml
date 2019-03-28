@@ -13,9 +13,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>fun.platonic.pulsar</groupId>
+        <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-plugins</artifactId>
-        <version>0.5.1</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>pulsar-parse</artifactId>
@@ -23,19 +23,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-boilerpipe</artifactId>
         </dependency>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-persist</artifactId>
         </dependency>
 

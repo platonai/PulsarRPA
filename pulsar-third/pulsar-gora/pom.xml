@@ -8,9 +8,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>fun.platonic.pulsar</groupId>
+        <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
-        <version>0.5.1</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>pulsar-gora</artifactId>
@@ -31,7 +31,7 @@
             <artifactId>avro</artifactId>
         </dependency>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
 

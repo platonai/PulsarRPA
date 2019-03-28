@@ -13,7 +13,7 @@
   <!-- persist -->
   <property>
     <name>storage.crawl.id</name>
-    <value>information_tmp</value>
+    <value>information_tmp_test_jobs</value>
     <description>Crawl pages for opinion mining</description>
   </property>
 

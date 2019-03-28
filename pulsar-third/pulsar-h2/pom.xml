@@ -8,9 +8,9 @@
 
     <!-- TODO: should remove the dependency -->
     <parent>
-        <groupId>fun.platonic.pulsar</groupId>
+        <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
-        <version>0.5.1</version>
+        <version>1.0.1</version>
     </parent>
 
     <name>Pulsar H2 Database</name>

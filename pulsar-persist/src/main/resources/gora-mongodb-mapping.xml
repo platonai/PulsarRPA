@@ -17,7 +17,7 @@
 -->
 <gora-otd>
 
-    <class document="webpage" keyClass="java.lang.String" name="fun.platonic.pulsar.persist.gora.generated.GWebPage">
+    <class document="webpage" keyClass="java.lang.String" name="ai.platon.pulsar.persist.gora.generated.GWebPage">
         <!-- fetch fields                                       -->
         <field name="createTime" docfield="createTime" type="int64" />
         <field name="distance" docfield="distance" type="int32" />

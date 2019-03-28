@@ -23,7 +23,7 @@ function printUsage() {
   echo "  start         Start pulsar server as a daemon"
   echo "  stop          Stop pulsar server safely"
   echo "  server        Run pulsar server with parameters"
-#  echo "  sql           Run h2 sql client"
+  echo "  sql           Run h2 sql client"
 
   echo
   echo "Options: "
@@ -83,20 +83,20 @@ bin=`cd "$bin">/dev/null; pwd`
 
  . "$bin"/include/pulsar-config.sh
 
-bin=$PULSAR_HOME/bin
+bin="$PULSAR_HOME"/bin
 
-if [[ $SHOW_HELP ]]; then
+if [[ "$SHOW_HELP" ]]; then
   printUsage;
   exit 0
 fi
 
-if [[ $SHOW_VERSION ]]; then
+if [[ "$SHOW_VERSION" ]]; then
   "$bin"/version
   exit 0
 fi
 
 # if no args specified, show usage
-if [[ $COMMAND == "" ]]; then
+if [[ "$COMMAND" == "" ]]; then
   COMMAND=server
 fi
 
@@ -126,10 +126,10 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-ql-server
-  CLASS=fun.platonic.pulsar.ql.start.H2DbConsole
+  CLASS=ai.platon.pulsar.ql.start.H2DbConsole
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-ql-server
-  CLASS=fun.platonic.pulsar.ql.start.H2Shell
+  CLASS=ai.platon.pulsar.ql.start.H2Shell
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else

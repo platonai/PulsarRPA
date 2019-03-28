@@ -13,23 +13,23 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>fun.platonic.pulsar</groupId>
+        <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>0.5.1</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>pulsar-dom</artifactId>
 
     <name>Pulsar DOM</name>
-    <url>http://pulsar.platonic.fun</url>
+    <url>http://pulsar.platon.ai</url>
 
     <dependencies>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
         <dependency>
-            <groupId>fun.platonic.pulsar</groupId>
+            <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-common</artifactId>
         </dependency>
 
@@ -50,6 +50,10 @@
         <dependency>
             <groupId>org.perf4j</groupId>
             <artifactId>perf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
 

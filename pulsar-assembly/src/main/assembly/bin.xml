@@ -65,7 +65,7 @@
     <dependencySets>
         <dependencySet>
             <includes>
-                <include>fun.platonic.pulsar:*:jar</include>
+                <include>ai.platon.pulsar:*:jar</include>
             </includes>
         </dependencySet>
         <dependencySet>
@@ -75,7 +75,7 @@
             <scope>runtime</scope>
             <useProjectArtifact>false</useProjectArtifact>
             <excludes>
-                <exclude>fun.platonic.pulsar:*:jar</exclude>
+                <exclude>ai.platon.pulsar:*:jar</exclude>
                 <exclude>org.apache.hadoop:*:jar</exclude>
                 <exclude>org.apache.spark:*:jar</exclude>
                 <exclude>org.apache.zookeeper:*:jar</exclude>

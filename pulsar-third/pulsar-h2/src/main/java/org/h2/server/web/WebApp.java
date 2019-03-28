@@ -1340,8 +1340,15 @@ public class WebApp {
                 int maxrows = getMaxrows();
                 stat.setMaxRows(maxrows);
                 session.executingStatement = stat;
+
+                // TODO: different values are required in client and server side
+                // this variable is shared between client and server in embed WebApp mode, but different values are required
+                boolean lastSerializeJavaObject = SysProperties.serializeJavaObject;
+                SysProperties.serializeJavaObject = false;
+
                 boolean isResultSet = stat.execute(sql);
                 session.addCommand(sql);
+
                 if (generatedKeys) {
                     rs = null;
                     rs = stat.getGeneratedKeys();
@@ -1355,6 +1362,8 @@ public class WebApp {
                     }
                     rs = stat.getResultSet();
                 }
+
+                SysProperties.serializeJavaObject = lastSerializeJavaObject;
             }
             time = System.currentTimeMillis() - time;
             buff.append(getResultSet(sql, rs, metadata, list, edit, time, allowEdit));
