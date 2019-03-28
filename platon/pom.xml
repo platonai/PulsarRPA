@@ -27,7 +27,7 @@
 
     <name>Pulsar Parent</name>
     <description/>
-    <url>http://platon.ai</url>
+    <url>http://platonic.fun</url>
     <inceptionYear>2014</inceptionYear>
 
     <licenses>
@@ -39,7 +39,7 @@
 
     <organization>
         <name>The Plato Data Engine</name>
-        <url>http://platon.ai/</url>
+        <url>http://platonic.fun/</url>
     </organization>
 
     <developers>
@@ -52,7 +52,7 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>http://www.github.com/galaxyeye</url>
+        <url>http://www.github.com/platonai</url>
     </issueManagement>
 
     <build>

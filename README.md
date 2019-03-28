@@ -7,7 +7,7 @@ data collection, extraction, analysis, storage and BI, etc.
 中文文档：[README.zh](README.zh.md).
 
 # Features
-- Web SQL: Do all Web mining jobs using SQL
+- X-SQL: Do all data jobs using SQL
 - BI Integration: Turn Web sites into tables and charts using just one simple SQL
 - Ajax support: Access the Web automatically, behave like humans
 - Web site monitoring: monitor news sites, e-commerce sites out-of-box
@@ -35,12 +35,12 @@ The SQL above downloads a Web page from wikipedia, find out the references secti
 
 The SQL above visit an index page in mia.com, download detail pages and then extract data.
 
-You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [demo project](http://bi.platonic.fun/question/new).
+You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/question/new).
 
 Check [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
 
 ## BI Integration
-Use the customized [Metabase](https://github.com/platonai/metabase) to write Web SQLs and turn 
+Use the customized [Metabase](https://github.com/platonai/metabase) to write X-SQLs and turn 
 Web sites into tables and charts immediately.
 Everyone in your company can ask questions and learn from WEB DATA now, for the first time.
 
@@ -58,16 +58,15 @@ Ubuntu/Debian:
 ## Start the pulsar server
     bin/pulsar
 ## Use Web console
-Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with Web SQL.
-## Execute a single Web SQL
+Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
+## Execute a single X-SQL
     bin/pulsar sql -sql "SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external')"
 ## Use GUI-free console
     bin/pulsar sql
 
 ## Use advanced BI tool
-Download [Metabase](https://github.com/platonai/metabase) Web SQL edition, and run:
+Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, and run:
 
-    -- coming soon ..
     java -jar metabase.jar
 
 # Large scale Web spider
