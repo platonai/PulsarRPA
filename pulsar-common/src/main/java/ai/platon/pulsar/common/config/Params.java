@@ -394,7 +394,11 @@ public class Params {
                 sb.append(pairDelimeter);
             }
 
-            if (cmdLineStyle && arg.getKey().startsWith("-") && "true".equals(arg.getValue().toString())) {
+            if (arg.getValue() == null) {
+                sb.append(arg.getKey());
+                sb.append(kvDelimiter);
+                sb.append("null");
+            } else if (cmdLineStyle && arg.getKey().startsWith("-") && "true".equals(arg.getValue().toString())) {
                 sb.append(arg.getKey());
             } else if (cmdLineStyle && arg.getKey().startsWith("-") && "false".equals(arg.getValue().toString())) {
                 // nothing

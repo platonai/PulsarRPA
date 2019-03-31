@@ -83,6 +83,7 @@ public class LoadOptions extends CommonOptions {
     private MutableConfig mutableConfig;
 
     public LoadOptions() {
+        parse();
     }
 
     public LoadOptions(String[] args) {
