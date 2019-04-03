@@ -8,7 +8,7 @@ import kotlin.reflect.jvm.jvmName
 open class BeanFactory(val conf: ImmutableConfig) {
 
     val objectCache = ObjectCache.get(conf)
-    val domain = conf.get(CapabilityTypes.SCENT_DOMAIN, "default")
+    val domain = conf.get(CapabilityTypes.PULSAR_DOMAIN, "default")
 
     fun cacheId(clazz: KClass<*>, vararg modifiers: String): String {
         return modifiers.joinToString(", ", clazz.jvmName + " - ")

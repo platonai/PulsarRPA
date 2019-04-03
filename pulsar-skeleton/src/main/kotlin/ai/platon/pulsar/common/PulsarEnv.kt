@@ -51,7 +51,7 @@ object PulsarEnv {
         storageService = applicationContext.getBean(AutoDetectedStorageService::class.java)
         // set javascript for selenium engine to execute after every page is loaded
         if (SeleniumEngine.CLIENT_JS.isNullOrBlank()) {
-            SeleniumEngine.CLIENT_JS = BrowserControl(unmodifiedConfig).getJs()
+            SeleniumEngine.CLIENT_JS = BrowserControl().getJs()
         }
     }
 

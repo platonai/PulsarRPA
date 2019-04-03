@@ -197,12 +197,21 @@ public interface CapabilityTypes {
     String FETCH_MAX_RETRY = "db.fetch.retry.max";
     String FETCH_STORE_CONTENT = "fetch.store.content";
     String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
+
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_DOM_WAIT_FOR_TIMEOUT = "fetch.dom.wait.for.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
     String FETCH_SCROLL_DOWN_WAIT = "fetch.scroll.down.wait";
     String FETCH_CLIENT_JS = "fetch.client.js";
+    String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.client.js.computed.styles";
+    /**
+     * Selenium
+     */
+    String SELENIUM_BROWSER = "selenium.browser";
+    String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
+    String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
+    String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
 
     /**
      * Proxy
@@ -212,13 +221,6 @@ public interface CapabilityTypes {
     String PROXY_POOL_SIZE = "proxy.pool.size";
     String PROXY_POOL_POLLING_WAIT = "proxy.pool.polling.wait";
 
-    /**
-     * Selenium
-     */
-    String SELENIUM_BROWSER = "selenium.browser";
-    String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
-    String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
-    String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
     /**
      * Network
      */
@@ -262,6 +264,8 @@ public interface CapabilityTypes {
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
+
+
     /**
      * DbUpdater parameters
      */
@@ -309,7 +313,7 @@ public interface CapabilityTypes {
 
     String NODE_FEATURE_CALCULATOR = "pulsar.node.feature.calculator";
 
-    String SCENT_DOMAIN = "scent.domain";
+    String PULSAR_DOMAIN = "scent.domain";
     String SCENT_TASK_IDENT = "scent.task.ident";
     String SCENT_FILE_SERVER_HOST = "scent.file.server.host";
     String SCENT_FILE_SERVER_PORT = "scent.file.server.port";

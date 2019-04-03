@@ -75,7 +75,6 @@ object QueryEngine: AutoCloseable {
 
         Runtime.getRuntime().addShutdownHook(Thread(this::close))
 
-        SeleniumEngine.CLIENT_JS = BrowserControl(unmodifiedConfig).getJs()
         proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, true)
         taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)

@@ -1,34 +1,45 @@
 package ai.platon.pulsar.dom.data
 
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.config.ImmutableConfig
+import com.google.gson.GsonBuilder
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.io.IOException
 import java.util.*
 
-class BrowserControl(private val conf: ai.platon.pulsar.common.config.ImmutableConfig) {
+class BrowserControl {
     companion object {
         val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
         val viewPort: Dimension = Dimension(1920, 1080)
-
-        private var loaded = false
-        private lateinit var js: String
+        private var js: String = ""
     }
+
+    val parameters = mutableMapOf<String, Any>()
 
     init {
-        if (!loaded) {
-            js = loadJs()
-            loaded = true
-        }
+        mapOf(
+                "viewPortWidth" to viewPort.width,
+                "viewPortHeight" to viewPort.height
+        ).also { parameters.putAll(it) }
     }
 
-    fun getJs(): String {
+    fun getJs(reload: Boolean = false): String {
+        if (reload || js.isEmpty()) {
+            js = loadJs()
+        }
+
         return js
     }
 
     private fun loadJs(): String {
         val sb = StringBuilder()
+
+        // Json does not recognize MutableMap, but knows Map
+        val configs = GsonBuilder().create().toJson(parameters.toMap())
+        sb.appendln(";\nlet PULSAR_CONFIGS = $configs;")
+
         Arrays.asList(
                 "js/__utils__.js",
                 "js/node_traversor.js",
@@ -50,11 +61,6 @@ class BrowserControl(private val conf: ai.platon.pulsar.common.config.ImmutableC
                 .append("__utils__.visualizeHumanize();\n")
                 .append(";\n")
 
-        // init view port for js
-        val js = sb.toString()
-                .replace("{VIEW_PORT_WIDTH}", viewPort.width.toString())
-                .replace("{VIEW_PORT_HEIGHT}", viewPort.height.toString())
-
-        return js
+        return sb.toString()
     }
 }

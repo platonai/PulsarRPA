@@ -270,13 +270,13 @@ open class PulsarSession(
         pulsar.webDb.put(page.url, page)
     }
 
-    fun export(page: WebPage, ident: String): Path {
+    fun export(page: WebPage, ident: String = ""): Path {
         val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(page.url, ".htm"))
-        return PulsarFiles.saveTo(page, path)
+        return PulsarFiles.saveTo(page.contentAsString, path)
     }
 
-    fun export(doc: FeaturedDocument): Path {
-        val path = PulsarPaths.get(webCacheDir, "export", PulsarPaths.fromUri(doc.baseUri, ".htm"))
+    fun export(doc: FeaturedDocument, ident: String = ""): Path {
+        val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(doc.baseUri, ".htm"))
         return PulsarFiles.saveTo(doc.prettyHtml, path)
     }
 

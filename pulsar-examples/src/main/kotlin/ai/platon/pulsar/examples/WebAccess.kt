@@ -1,7 +1,10 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.PulsarContext
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.persist.WebPageFormatter
+import com.google.gson.GsonBuilder
 
 object WebAccess {
     private val productPortalUrl = "http://list.mogujie.com/book/jiadian/10059513"
@@ -11,11 +14,14 @@ object WebAccess {
 
     fun load() {
         val page = i.load("$productPortalUrl $loadOptions")
-        println(WebPageFormatter(page).withLinks())
+        // println(WebPageFormatter(page).withLinks())
+        // println(WebPageFormatter(page))
 
         val document = i.parse(page)
-        val title = document.first(".goods_item .title")?.text()
-        println(title)
+//        val title = document.first(".goods_item .title")?.text()
+//        println(title)
+
+        i.export(page)
     }
 
     fun loadAllProducts() {
@@ -55,5 +61,6 @@ object WebAccess {
 }
 
 fun main() {
-    WebAccess.scan()
+    WebAccess.load()
+    // BrowserControl(ImmutableConfig()).getJs()
 }

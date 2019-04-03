@@ -203,7 +203,6 @@ __utils__.getReadableNodeName = function(node) {
  * @return {String} The clean string
  * */
 __utils__.getCleanTextContent = function(textContent) {
-
     // all control characters
     // @see http://www.asciima.com/
     textContent = textContent.replace(/[\x00-\x1f]/g, " ");
@@ -336,6 +335,39 @@ __utils__.getClientRect = function(node) {
     } else {
         return null
     }
+};
+
+/**
+ * The computed style.
+ *
+ * @param node {Node|Element|Text}
+ * @param propertyNames {Array}
+ * @return {String|Boolean}
+ * */
+__utils__.getComputedStyle = function(node, propertyNames) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+        let style = window.getComputedStyle(node, null);
+        return propertyNames.map(propertyName => style.getPropertyValue(propertyName)).join("; ")
+    } else {
+        return null
+    }
+};
+
+/**
+ * Add to attribute
+ *
+ * @param node {Node|Element|Text}
+ * @param attributeName {String}
+ * @param key {String}
+ * @param value {Object}
+ * */
+__utils__.addTuple = function(node, attributeName, key, value) {
+    let attributeValue = node.getAttribute(attributeName) || "";
+    if (attributeValue.length > 0) {
+        attributeValue += " "
+    }
+    attributeValue += key + ":" + value.toString();
+    node.setAttribute(attributeName, attributeValue);
 };
 
 /**
