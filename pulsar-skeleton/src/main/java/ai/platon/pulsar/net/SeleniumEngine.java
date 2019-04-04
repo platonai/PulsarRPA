@@ -278,6 +278,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                         LOG.trace("Scrolling down #" + (i + 1));
                     }
 
+                    // TODO: some websites do not allow scroll to below the bottom
                     String scrollJs = ";window.scrollBy(0, 300);";
                     jsExecutor.executeScript(scrollJs);
 

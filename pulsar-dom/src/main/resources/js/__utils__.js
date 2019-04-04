@@ -347,10 +347,75 @@ __utils__.getClientRect = function(node) {
 __utils__.getComputedStyle = function(node, propertyNames) {
     if (node.nodeType === Node.ELEMENT_NODE) {
         let style = window.getComputedStyle(node, null);
-        return propertyNames.map(propertyName => style.getPropertyValue(propertyName)).join("; ")
+        // TODO: simplify the notation
+        return propertyNames.map(propertyName => __utils__.getPropertyValue(style, propertyName)).join("; ")
     } else {
         return null
     }
+};
+
+/**
+ * Get a simplified property value of computed style.
+ *
+ * @param style {CSSStyleDeclaration}
+ * @param propertyName {String}
+ * @return {String}
+ * */
+__utils__.getPropertyValue = function(style, propertyName) {
+    let value = style.getPropertyValue(propertyName);
+
+    if (!value || value === '') {
+        return ''
+    }
+
+    if (propertyName === 'font-size') {
+        value = value.substring(0, value.lastIndexOf('px'))
+    } else if (propertyName === 'color' || propertyName === 'background-color') {
+        value = __utils__.shortHex(__utils__.rgb2hex(value));
+        // skip prefix '#'
+        value = value.substring(1)
+    }
+
+    return value
+};
+
+/**
+ * Color rgb(a) format to hex
+ *
+ * rgb(255, 255, 0) -> #
+ *
+ * @param rgb {String}
+ * @return {String}
+ * */
+__utils__.rgb2hex = function(rgb) {
+    rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+    return (rgb && rgb.length === 4) ? "#" +
+        ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
+        ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
+        ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
+};
+
+/**
+ * CSS Hex to Shorthand Hex conversion
+ * @param hex {String}
+ * @return {String}
+ * */
+__utils__.shortHex = function(hex) {
+    if ((hex.charAt(1) === hex.charAt(2))
+        && (hex.charAt(3) === hex.charAt(4))
+        && (hex.charAt(5) === hex.charAt(6))) {
+        hex = "#" + hex.charAt(1) + hex.charAt(3) + hex.charAt(5);
+    }
+
+    // the most simple case: all chars are the same
+    if (hex.length === 4) {
+        let c = hex.charAt(1);
+        if (hex.charAt(2) === c && hex.charAt(3) === c) {
+            return '#' + c
+        }
+    }
+
+    return hex
 };
 
 /**

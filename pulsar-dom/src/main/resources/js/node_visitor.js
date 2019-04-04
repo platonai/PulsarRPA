@@ -103,6 +103,15 @@ WarpsNodeVisitor.prototype.calcSelfIndicator = function(node, depth) {
         return
     }
 
+    // check if it's visible
+    // https://makandracards.com/makandra/1339-check-whether-an-element-is-visible-or-hidden-with-javascript
+    let visible = node.offsetWidth > 0 && node.offsetHeight > 0;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+        if (!visible) {
+            node.setAttribute(ATTR_HIDDEN, '1');
+        }
+    }
+
     if (node.nodeType === Node.TEXT_NODE) {
         this.calcCharacterWidth(node, depth);
 
@@ -144,13 +153,6 @@ WarpsNodeVisitor.prototype.calcSelfIndicator = function(node, depth) {
                     }
                 }
             }
-        }
-
-        // check if it's visible
-        // https://makandracards.com/makandra/1339-check-whether-an-element-is-visible-or-hidden-with-javascript
-        let visible = node.offsetWidth > 0 && node.offsetHeight > 0;
-        if (!visible) {
-            node.setAttribute(ATTR_HIDDEN, '1');
         }
 
         if (this.debug > 0) {

@@ -2,8 +2,10 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.PulsarContext
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.dom.nodes.node.ext.formatFeatures
+import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.gson.GsonBuilder
 
@@ -32,6 +34,18 @@ object WebAccess {
     }
 
     fun loadAllProducts() {
+        initClientJs()
+
+        i.load("$productPortalUrl $loadOptions")
+                .let { i.parse(it) }
+                .select(".goods_item a[href~=detail]") { it.attr("abs:href") }
+                .take(2)
+                .map { i.load(it) }
+                .map { i.parse(it) }
+                .map { i.export(it) }
+    }
+
+    fun loadAllProducts2() {
         val portal = i.load("$productPortalUrl $loadOptions")
         val doc = i.parse(portal)
         doc.select(".goods_item a[href~=detail]")
@@ -39,15 +53,15 @@ object WebAccess {
                 .forEach { portal.vividLinks[it] = "" }
         println(WebPageFormatter(portal))
         println(portal.simpleVividLinks)
-        val links = portal.simpleLiveLinks.filter { it.contains("item") }
-        val pages = i.parallelLoadAll(links, ai.platon.pulsar.common.options.LoadOptions.parse("--parse"))
+        val links = portal.simpleLiveLinks.filter { it.contains("detail") }
+        val pages = i.parallelLoadAll(links, LoadOptions.parse("--parse"))
         pages.forEach { println("${it.url} ${it.pageTitle}") }
     }
 
     fun loadAllNews() {
         val portal = i.load("$newsPortalUrl $loadOptions")
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = i.parallelLoadAll(links, ai.platon.pulsar.common.options.LoadOptions.parse("--parse"))
+        val pages = i.parallelLoadAll(links, LoadOptions.parse("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 
@@ -65,9 +79,16 @@ object WebAccess {
                 .map { i.parse(it) }
                 .forEach { println("${it.baseUri} ${it.title}") }
     }
+
+    private fun initClientJs() {
+        val browserControl = BrowserControl()
+        mapOf(
+                "propertyNames" to listOf("font-size", "color", "background-color")
+        ).also { browserControl.parameters.putAll(it) }
+        SeleniumEngine.CLIENT_JS = browserControl.getJs(true)
+    }
 }
 
 fun main() {
-    WebAccess.load()
-    // BrowserControl(ImmutableConfig()).getJs()
+    WebAccess.loadAllProducts()
 }
