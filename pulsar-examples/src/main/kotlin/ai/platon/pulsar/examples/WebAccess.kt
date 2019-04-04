@@ -3,13 +3,15 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.common.PulsarContext
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.dom.data.BrowserControl
+import ai.platon.pulsar.dom.nodes.node.ext.formatFeatures
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.gson.GsonBuilder
 
 object WebAccess {
-    private val productPortalUrl = "http://list.mogujie.com/book/jiadian/10059513"
+    private val productPortalUrl = "https://list.mogujie.com/book/magic/51894"
     private val newsPortalUrl = "http://www.sh.chinanews.com/jinrong/index.shtml"
-    private val loadOptions = "--parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium --browser=chrome"
+    // private val loadOptions = "--parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium --browser=chrome"
+    private val loadOptions = "--expires=1s"
     private val i = PulsarContext.createSession()
 
     fun load() {
@@ -20,6 +22,11 @@ object WebAccess {
         val document = i.parse(page)
 //        val title = document.first(".goods_item .title")?.text()
 //        println(title)
+        val ele = document.first(".goods_item")
+        if (ele != null) {
+            println(ele.attributes())
+            println(ele.formatFeatures())
+        }
 
         i.export(page)
     }

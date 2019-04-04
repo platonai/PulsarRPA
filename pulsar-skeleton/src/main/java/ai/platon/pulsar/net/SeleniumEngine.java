@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -255,6 +256,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         if (JavascriptExecutor.class.isAssignableFrom(driver.getClass())) {
             JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
 
+            // is the document ready?
+
             if (driver instanceof HtmlUnitDriver) {
                 // Wait for page load complete, htmlunit need to wait and then extract injected javascript
                 FluentWait<WebDriver> fWait = new FluentWait<>(driver)
@@ -275,12 +278,16 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                         LOG.trace("Scrolling down #" + (i + 1));
                     }
 
-                    jsExecutor.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+                    String scrollJs = ";window.scrollBy(0, 300);";
+                    jsExecutor.executeScript(scrollJs);
 
-                    try {
-                        TimeUnit.SECONDS.sleep(scrollDownWait.getSeconds());
-                    } catch (InterruptedException e) {
-                        LOG.warn("Sleep interruption. " + e);
+                    long millis = scrollDownWait.toMillis();
+                    if (millis > 0) {
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(millis);
+                        } catch (InterruptedException e) {
+                            LOG.warn("Sleep interruption. " + e);
+                        }
                     }
                 }
             }

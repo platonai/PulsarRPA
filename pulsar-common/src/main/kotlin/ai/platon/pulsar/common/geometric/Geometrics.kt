@@ -27,11 +27,11 @@ data class GeoIntPoint(var x: Int, var y: Int): Comparable<GeoIntPoint> {
     }
 }
 
-fun Point.component1(): Int {
+operator fun Point.component1(): Int {
     return x
 }
 
-fun Point.component2(): Int {
+operator fun Point.component2(): Int {
     return y
 }
 
@@ -52,19 +52,19 @@ val Rectangle.y2: Int
         return y + height
     }
 
-fun Rectangle.component1(): Int {
+operator fun Rectangle.component1(): Int {
     return x
 }
 
-fun Rectangle.component2(): Int {
+operator fun Rectangle.component2(): Int {
     return y
 }
 
-fun Rectangle.component3(): Int {
+operator fun Rectangle.component3(): Int {
     return width
 }
 
-fun Rectangle.component4(): Int {
+operator fun Rectangle.component4(): Int {
     return height
 }
 

@@ -42,9 +42,9 @@ class BrowserControl {
 
         Arrays.asList(
                 "js/__utils__.js",
+                "js/humanize.js",
                 "js/node_traversor.js",
-                "js/node_visitor.js",
-                "js/humanize.js"
+                "js/node_visitor.js"
         ).forEach { resource ->
             val reader = ResourceLoader().getResourceAsStream(resource)
             try {
@@ -56,7 +56,6 @@ class BrowserControl {
         }
 
         sb.append(";\n")
-                .append("__utils__.scrollToBottom();\n")
                 .append("__utils__.scrollToTop();\n")
                 .append("__utils__.visualizeHumanize();\n")
                 .append(";\n")

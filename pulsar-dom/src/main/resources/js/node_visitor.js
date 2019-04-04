@@ -71,12 +71,7 @@ WarpsNodeVisitor.prototype.generateMetadata = function() {
     ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
     ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
 
-    let config = PULSAR_CONFIGS || {};
-    if (config.test) {
-        ele.setAttribute("test", config.test)
-    }
-
-    // TODO: insert a piece of javascript code
+    // TODO: insert a piece of javascript code install of add a hidden element
 
     document.body.firstElementChild.appendChild(ele)
 };
