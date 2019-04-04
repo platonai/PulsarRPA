@@ -17,6 +17,7 @@
 package ai.platon.pulsar.normalizer;
 
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.filter.UrlNormalizer;
 import org.apache.hadoop.conf.Configured;
@@ -82,7 +83,7 @@ public class BasicUrlNormalizer extends Configured implements UrlNormalizer {
 
     @Override
     public String normalize(String urlString, String scope) {
-        URL url = URLUtil.getURLOrNull(urlString);
+        URL url = Urls.getURLOrNull(urlString);
         if (url == null) {
             return null;
         }

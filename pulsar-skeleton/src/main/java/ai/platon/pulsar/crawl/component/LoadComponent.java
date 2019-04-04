@@ -265,7 +265,7 @@ public class LoadComponent {
 
         int reason = getFetchReason(page, options.getExpires(), options.isRetry());
         if (LOG.isTraceEnabled()) {
-            LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), originalUrl, options);
+            LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
         }
 
         if (reason == FETCH_REASON_TEMP_MOVED) {

@@ -36,16 +36,18 @@ object WebAccess {
     fun loadAllProducts() {
         initClientJs()
 
-        i.load("$productPortalUrl $loadOptions")
+        i.load("$productPortalUrl --expires 1s")
                 .let { i.parse(it) }
                 .select(".goods_item a[href~=detail]") { it.attr("abs:href") }
-                .asSequence().distinct()
+                .asSequence()
+                .sortedBy { it.length }
                 .take(40)
 //                .onEach { println(it) }
                 .map { i.load("$it -persist -shortenKey") }
                 .map { i.parse(it) }
-                .onEach { println(it.title) }
+//                .onEach { println(it.title) }
                 .map { i.export(it) }
+                .toList()
     }
 
     fun loadAllProducts2() {
@@ -81,6 +83,10 @@ object WebAccess {
                 .map { i.load(it) }
                 .map { i.parse(it) }
                 .forEach { println("${it.baseUri} ${it.title}") }
+    }
+
+    fun truncate() {
+        i.pulsar.webDb.truncate()
     }
 
     private fun initClientJs() {

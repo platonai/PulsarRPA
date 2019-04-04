@@ -31,10 +31,10 @@ object Urls {
      * TODO: move to general normalize module
      * */
     @JvmStatic
-    fun normalizeUrl(url: String, keepQuery: Boolean = false): String {
+    fun normalizeUrl(url: String, ignoreQuery: Boolean = false): String {
         var u = getURLOrNull(url)?.toString()?:return ""
         u = u.substringBefore("#")
-        if (!keepQuery) {
+        if (ignoreQuery) {
             u = getUrlWithoutParameters(u)
         }
         return u
@@ -118,7 +118,7 @@ object Urls {
     }
 
     @JvmStatic
-    fun urlAndKey(originalUrl: String, ignoreQuery: Boolean = false): Pair<String, String> {
+    fun normalizedUrlAndKey(originalUrl: String, ignoreQuery: Boolean = false): Pair<String, String> {
         val url = if (ignoreQuery) normalizeUrl(originalUrl) else originalUrl
         val key = Urls.reverseUrlOrEmpty(url)
         return url to key

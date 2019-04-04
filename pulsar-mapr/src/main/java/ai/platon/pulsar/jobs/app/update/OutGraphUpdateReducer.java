@@ -275,7 +275,7 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
    */
   private WebPage loadOrCreateWebPage(String url) {
     // TODO: Is datastore.get a distributed operation? And is there a local cache?
-    // TODO: whether to ignore url query
+    // TODO: distinct url and baseUrl, the url passed by OutGraphUpdateMapper might be the original baseUrl
     WebPage loadedPage = webDb.get(url);
     WebPage page;
 

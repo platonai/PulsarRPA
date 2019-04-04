@@ -10,7 +10,6 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
-import java.util.*
 
 class WebDb(
         val conf: ImmutableConfig,
@@ -28,13 +27,13 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param baseUrl the original address of the page
+     * @param originalUrl the original url of the page, it comes from user input, web page parsing, etc
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
     @JvmOverloads
-    fun get(baseUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
-        val (url, key) = Urls.urlAndKey(baseUrl, ignoreQuery)
+    fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
+        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
         if (log.isTraceEnabled) {
             log.trace("Getting $key")
@@ -55,12 +54,12 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param baseUrl the original address of the page
+     * @param originalUrl the original address of the page
      * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
      */
     @JvmOverloads
-    fun getOrNil(baseUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
-        val (url, key) = Urls.urlAndKey(baseUrl, ignoreQuery)
+    fun getOrNil(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
+        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
         val page = get(url, ignoreQuery, null)
         return page ?: WebPage.NIL
@@ -104,8 +103,8 @@ class WebDb(
     }
 
     @JvmOverloads
-    fun delete(baseUrl: String, ignoreQuery: Boolean = false): Boolean {
-        val (url, key) = Urls.urlAndKey(baseUrl, ignoreQuery)
+    fun delete(originalUrl: String, ignoreQuery: Boolean = false): Boolean {
+        val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
         return if (key.isNotEmpty()) {
             store.delete(key)
@@ -134,9 +133,9 @@ class WebDb(
     }
 
     /**
-     * Scan all pages who's url starts with {@param baseUrl}
+     * Scan all pages who's url starts with {@param originalUrl}
      *
-     * @param baseUrl The base url
+     * @param originalUrl The base url
      * @return The iterator to retrieve pages
      */
     fun scan(urlBase: String): Iterator<WebPage> {
@@ -148,14 +147,14 @@ class WebDb(
     }
 
     /**
-     * Scan all pages who's url starts with {@param baseUrl}
+     * Scan all pages who's url starts with {@param originalUrl}
      *
-     * @param baseUrl The base url
+     * @param originalUrl The base url
      * @return The iterator to retrieve pages
      */
-    fun scan(baseUrl: String, fields: Array<String>): Iterator<WebPage> {
+    fun scan(originalUrl: String, fields: Array<String>): Iterator<WebPage> {
         val query = store.newQuery()
-        query.setKeyRange(reverseUrlOrNull(baseUrl), reverseUrlOrNull(baseUrl + UNICODE_LAST_CODE_POINT))
+        query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 
         val result = store.execute(query)

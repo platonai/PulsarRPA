@@ -262,6 +262,12 @@ public abstract class AbstractHttpProtocol implements Protocol {
         try {
             Instant startTime = Instant.now();
 
+            // page.baseUrl is the last working address, and page.url is the permanent internal address
+            String finalAddress = page.getBaseUrl();
+            if (finalAddress == null) {
+                finalAddress = page.getUrl();
+            }
+
             Response response = null;
             Throwable lastThrowable = null;
             int tryCount = 0;
@@ -272,7 +278,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
                         LOG.info("Fetching {} , retries: {}/{}", page.getUrl(), tryCount, maxTry);
                     }
 
-                    response = getResponse(page.getUrl(), page, false);
+                    response = getResponse(finalAddress, page, false);
                 } catch (Throwable e) {
                     ++tryCount;
                     response = null;
@@ -290,20 +296,20 @@ public abstract class AbstractHttpProtocol implements Protocol {
                 storeResponseTime(startTime, page, response);
             }
 
-            return getProtocolOutput(page.getUrl(), response);
+            return getProtocolOutput(page.getUrl(), finalAddress, response);
         } catch (Throwable e) {
             return new ProtocolOutput(null, new MultiMetadata(), ProtocolStatus.failed(e));
         }
     }
 
-    private ProtocolOutput getProtocolOutput(String urlString, Response response) throws MalformedURLException {
-        URL url = new URL(urlString);
+    private ProtocolOutput getProtocolOutput(String url, String baseUrl, Response response) throws MalformedURLException {
+        URL u = new URL(url);
 
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         String contentType = response.getHeader("Content-Type");
-        Content content = new Content(urlString, urlString, bytes, contentType, response.getHeaders(), mimeTypes);
+        Content content = new Content(url, baseUrl, bytes, contentType, response.getHeaders(), mimeTypes);
         MultiMetadata headers = response.getHeaders();
         ProtocolStatus status;
 
@@ -321,7 +327,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
                 location = "";
             }
 
-            url = new URL(url, location);
+            u = new URL(u, location);
             int code;
             switch (httpCode) {
                 case SC_MULTIPLE_CHOICES: // multiple choices, preferred value in Location
@@ -342,28 +348,28 @@ public abstract class AbstractHttpProtocol implements Protocol {
             // handle redirection in the higher layer.
 
             // page.getMetadata().set(ARG_REDIRECT_TO_URL, url.toString());
-            status = ProtocolStatus.failed(code, ARG_HTTP_CODE, httpCode, ARG_URL, url, ARG_REDIRECT_TO_URL, url);
+            status = ProtocolStatus.failed(code, ARG_HTTP_CODE, httpCode, ARG_URL, u, ARG_REDIRECT_TO_URL, u);
         } else if (httpCode == SC_BAD_REQUEST) {
-            LOG.warn("400 Bad request: " + url);
-            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            LOG.warn("400 Bad request: " + u);
+            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == SC_UNAUTHORIZED) {
             // requires authorization, but no valid auth provided.
-            status = ProtocolStatus.failed(ACCESS_DENIED, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(ACCESS_DENIED, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == SC_NOT_FOUND) {
             // GONE
-            status = ProtocolStatus.failed(NOTFOUND, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(NOTFOUND, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == SC_REQUEST_TIMEOUT) {
             // TIMEOUT
-            status = ProtocolStatus.failed(REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == SC_GONE) {
             // permanently GONE
-            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == THREAD_TIMEOUT) {
-            status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == WEB_DRIVER_TIMEOUT) {
-            status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else {
-            status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode, ARG_URL, url);
+            status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         }
 
         return new ProtocolOutput(content, headers, status);

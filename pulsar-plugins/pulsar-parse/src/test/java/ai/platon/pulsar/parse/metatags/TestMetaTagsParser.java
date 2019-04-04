@@ -18,6 +18,7 @@
 package ai.platon.pulsar.parse.metatags;
 
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.WebPage;
@@ -192,7 +193,7 @@ public class TestMetaTagsParser {
                 pageParser.parse(page);
             } else {
                 DocumentFragment node = getDOMDocument(bytes);
-                URL baseUrl = URLUtil.getURLOrNull(urlString);
+                URL baseUrl = Urls.getURLOrNull(urlString);
                 HTMLMetaTags metaTags = new HTMLMetaTags(node, baseUrl);
 
                 ParseResult parseResult = new ParseResult();

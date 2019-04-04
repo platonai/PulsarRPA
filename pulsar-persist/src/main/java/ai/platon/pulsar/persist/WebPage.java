@@ -116,6 +116,7 @@ public class WebPage {
         this.reversedUrl = Objects.requireNonNull(reversedUrl);
         this.page = Objects.requireNonNull(page);
 
+        // BaseUrl is the last working address, it might redirect to url, or it might have random parameters
         if (page.getBaseUrl() == null) {
             setBaseUrl(url);
         }
@@ -129,7 +130,7 @@ public class WebPage {
     @Nonnull
     public static WebPage newWebPage(String originalUrl, boolean ignoreQuery) {
         Objects.requireNonNull(originalUrl);
-        String url = ignoreQuery ? Urls.getUrlWithoutParameters(originalUrl) : originalUrl;
+        String url = ignoreQuery ? Urls.normalizeUrl(originalUrl, ignoreQuery) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
@@ -137,7 +138,7 @@ public class WebPage {
     public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, MutableConfig mutableConfig) {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(mutableConfig);
-        String url = ignoreQuery ? Urls.getUrlWithoutParameters(originalUrl) : originalUrl;
+        String url = ignoreQuery ? Urls.normalizeUrl(originalUrl, ignoreQuery) : originalUrl;
         return newWebPageInternal(url, mutableConfig);
     }
 
@@ -487,20 +488,22 @@ public class WebPage {
     }
 
     /**
-     * BaseUrl comes from Content#getBaseUrl which comes from ProtocolOutput,
-     * always keep the original string parsed from other page
+     * The url is the permanent internal address, it might not still available to access the target.
      *
-     * Maybe be different from url, it's generally normalized, or the request can be redirected.
-     * */
+     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
+     *
+     * BaseUrl may be different from url, it's generally normalized.
+     */
     public String getBaseUrl() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
     }
 
     /**
-     * BaseUrl comes from Content#getBaseUrl which comes from ProtocolOutput,
-     * always keep the original string parsed from other page
+     * The url is the permanent internal address, it might not still available to access the target.
      *
-     * Maybe be different from url, it's generally normalized, or the request can be redirected.
+     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
+     *
+     * BaseUrl may be different from url, it's generally normalized.
      */
     public void setBaseUrl(String value) {
         page.setBaseUrl(value);

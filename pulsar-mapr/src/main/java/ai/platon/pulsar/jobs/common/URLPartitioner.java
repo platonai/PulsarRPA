@@ -73,7 +73,7 @@ public class URLPartitioner implements Configurable {
             return 0;
         }
 
-        URL url = URLUtil.getURLOrNull(urlString);
+        URL url = Urls.getURLOrNull(urlString);
         if (url == null) {
             return new Random().nextInt(numReduceTasks);
         }

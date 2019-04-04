@@ -41,6 +41,13 @@ public final class Content {
         metadata = new MultiMetadata();
     }
 
+    /**
+     * The url is the permanent internal address, it might not still available to access the target.
+     *
+     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
+     *
+     * BaseUrl may be different from url, it's generally normalized.
+     */
     public Content(String url, String baseUrl, @Nullable byte[] content, String contentType, MultiMetadata metadata, ImmutableConfig conf) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(baseUrl);
@@ -55,6 +62,7 @@ public final class Content {
         this.mimeTypes = new MimeUtil(conf);
         this.contentType = getContentType(contentType, url, content);
     }
+
 
     public Content(String url, String baseUrl, @Nullable byte[] content, String contentType, MultiMetadata metadata, MimeUtil mimeTypes) {
         Objects.requireNonNull(url);

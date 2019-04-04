@@ -168,7 +168,7 @@ public class FetchThread extends Thread implements Comparable<FetchThread> {
       fetchResult = taskScheduler.pollFetchResut();
 
       if (fetchResult != null) {
-        URL url = URLUtil.getURLOrNull(fetchResult.getQueueId());
+        URL url = Urls.getURLOrNull(fetchResult.getQueueId());
         fetchTask = taskScheduler.getTasksMonitor().findPendingTask(fetchResult.getPriority(), url, fetchResult.getItemId());
 
         if (fetchTask == null) {

@@ -224,7 +224,12 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
         beforeVisit(priority, page, driver, mutableConfig);
         try {
-            visit(url, driver);
+            // page.baseUrl is the last working address, and page.url is the permanent internal address
+            String finalAddress = page.getBaseUrl();
+            if (finalAddress == null) {
+                finalAddress = page.getUrl();
+            }
+            visit(finalAddress, driver);
             pageSource = driver.getPageSource();
             pageSource = handleSuccess(pageSource, page, driver, headers);
         } catch (org.openqa.selenium.TimeoutException e) {

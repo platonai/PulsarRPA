@@ -18,6 +18,7 @@
 package ai.platon.pulsar.crawl.common;
 
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.net.domain.DomainSuffixes;
 import org.junit.Assert;
@@ -248,17 +249,17 @@ public class TestURLUtil {
         // test PULSAR-436
         URL u436 = new URL("http://a/b/c/d;p?q#f");
         assertEquals("http://a/b/c/d;p?q#f", u436.toString());
-        URL abs = URLUtil.resolveURL(u436, "?y");
+        URL abs = Urls.resolveURL(u436, "?y");
         assertEquals("http://a/b/c/d;p?y", abs.toString());
         // test PULSAR-566
         URL u566 = new URL("http://www.fleurie.org/entreprise.asp");
-        abs = URLUtil.resolveURL(u566, "?id_entrep=111");
+        abs = Urls.resolveURL(u566, "?id_entrep=111");
         assertEquals("http://www.fleurie.org/entreprise.asp?id_entrep=111",
                 abs.toString());
         URL base = new URL(baseString);
         assertEquals("base url parsing", baseString, base.toString());
         for (int i = 0; i < targets.length; i++) {
-            URL u = URLUtil.resolveURL(base, targets[i][0]);
+            URL u = Urls.resolveURL(base, targets[i][0]);
             assertEquals(targets[i][1], targets[i][1], u.toString());
         }
     }

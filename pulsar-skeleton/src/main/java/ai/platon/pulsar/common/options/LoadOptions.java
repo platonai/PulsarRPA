@@ -22,7 +22,7 @@ public class LoadOptions extends CommonOptions {
 
     public static LoadOptions DEFAULT = new LoadOptions();
 
-    @Parameter(names = {"-i", "--expires"}, converter = DurationConverter.class, description = "Web page expire time")
+    @Parameter(names = {"-i", "--expires"}, converter = DurationConverter.class, description = "Page datum expire time")
     private Duration expires;
 
     @Parameter(names = {"-pst", "-persist", "--persist"}, description = "Persist page(s) once fetched")
@@ -31,10 +31,10 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-shortenKey", "--shorten-key"}, description = "Page key is generated from baseUrl with parameters removed")
     private boolean shortenKey = false;
 
-    @Parameter(names = {"-retry", "--retry"}, description = "Retry fetch the page if it's failed last time")
+    @Parameter(names = {"-retry", "--retry"}, description = "Retry fetching the page if it's failed last time")
     private boolean retry = false;
 
-    @Parameter(names = {"-autoFlush", "--auto-flush"}, description = "Auto flush db when page(s)")
+    @Parameter(names = {"-autoFlush", "--auto-flush"}, description = "Auto flush db whenever a fetch task finished")
     private boolean autoFlush = true;
 
     @Parameter(names = {"-preferParallel", "--prefer-parallel"}, description = "Parallel fetch urls whenever applicable")
@@ -46,7 +46,7 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-fetchMode", "--fetch-mode"}, description = "The fetch mode")
     private String fetchMode;
 
-    @Parameter(names = {"-browser", "--browser"}, description = "The browser")
+    @Parameter(names = {"-browser", "--browser"}, description = "The browser to use")
     private String browser;
 
     @Parameter(names = {"-ignoreFailed", "--ignore-failed"}, description = "Ignore all failed pages in batch loading")
@@ -58,15 +58,15 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-nord", "-noRedirect", "--no-redirect"}, description = "Do not redirect")
     private boolean noRedirect = false;
 
-    @Parameter(names = {"-hardRedirect", "--hard-redirect"}, description = "Return the entire WebPage " +
-            "instead of the temp WebPage with the target's content when redirect")
+    @Parameter(names = {"-hardRedirect", "--hard-redirect"}, description = "Return the entire page record " +
+            "instead of the temp page with the target's content when redirect")
     private Boolean hardRedirect = true;
-
-    @Parameter(names = {"-q", "-query", "--query"}, description = "Extract query for model")
-    private String query;
 
     @Parameter(names = {"-ps", "-parse", "--parse"}, description = "Parse the page")
     private boolean parse = false;
+
+    @Parameter(names = {"-q", "-query", "--query"}, description = "Extract query to extract data from")
+    private String query;
 
     @Parameter(names = {"-m", "-withModel", "--with-model"}, description = "Also load page model")
     private boolean withModel = false;
@@ -328,19 +328,19 @@ public class LoadOptions extends CommonOptions {
                 "-m", isWithModel(),
                 "-lk", isWithLinks(),
                 "-tt", isWithText(),
-                "--retry", isRetry(),
+                "-retry", isRetry(),
                 "-rpl", isReparseLinks(),
                 "-nord", isNoRedirect(),
                 "-nolf", isNoLinkFilter(),
                 "-prst", isPersist(),
                 "-shortenKey", isShortenKey(),
-                "--expires", getExpires(),
-                "--auto-flush", isAutoFlush(),
-                "--fetch-mode", getFetchMode(),
-                "--browser", getBrowser(),
-                "--prefer-parallel", isPreferParallel(),
-                "--background", isBackground(),
-                "--hard-redirect", isHardRedirect()
+                "-expires", getExpires(),
+                "-autoFlush", isAutoFlush(),
+                "-fetchMode", getFetchMode(),
+                "-browser", getBrowser(),
+                "-preferParallel", isPreferParallel(),
+                "-background", isBackground(),
+                "-hardRedirect", isHardRedirect()
         );
     }
 
