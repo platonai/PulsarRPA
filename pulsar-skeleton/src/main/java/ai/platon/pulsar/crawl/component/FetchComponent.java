@@ -139,7 +139,7 @@ public class FetchComponent implements AutoCloseable {
     @Nonnull
     public WebPage fetch(String url) {
         Objects.requireNonNull(url);
-        return fetchContent(WebPage.newWebPage(url));
+        return fetchContent(WebPage.newWebPage(url, false));
     }
 
     /**
@@ -297,11 +297,11 @@ public class FetchComponent implements AutoCloseable {
         return page;
     }
 
-    public WebPage createFetchEntry(String url, LoadOptions options) {
-        Objects.requireNonNull(url);
+    public WebPage createFetchEntry(String originalUrl, LoadOptions options) {
+        Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(options);
 
-        WebPage page = WebPage.newWebPage(url, options.getMutableConfig());
+        WebPage page = WebPage.newWebPage(originalUrl, options.isShortenKey(), options.getMutableConfig());
         page.setFetchMode(options.getFetchMode());
         page.setOptions(options.toString());
 

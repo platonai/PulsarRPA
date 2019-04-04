@@ -1,7 +1,7 @@
 package ai.platon.pulsar.jobs.fetch.indexer;
 
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
@@ -181,7 +181,7 @@ public class JITIndexer implements ReloadableParameterized, AutoCloseable {
       }
 
       String url = fetchTask.getUrl();
-      String reverseUrl = UrlUtil.reverseUrl(url);
+      String reverseUrl = Urls.reverseUrl(url);
       WebPage page = fetchTask.getPage();
 
       IndexDocument doc = indexDocumentBuilder.build(reverseUrl, page);

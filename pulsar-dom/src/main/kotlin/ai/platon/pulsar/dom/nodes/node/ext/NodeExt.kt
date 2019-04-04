@@ -515,6 +515,10 @@ fun Node.forEach(includeRoot: Boolean = false, action: (Node) -> Unit) {
     NodeTraversor.traverse({ node, _-> if (includeRoot || node != this) { action(node) } }, this)
 }
 
+fun Node.forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) {
+    NodeTraversor.traverse({ node, _-> if (predicate(node)) { action(node) } }, this)
+}
+
 fun Node.forEachElement(includeRoot: Boolean = false, action: (Element) -> Unit) {
     NodeTraversor.traverse({ node, _->
         if ((includeRoot || node != this) && node is Element) { action(node) }

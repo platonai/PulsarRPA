@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.crawl.fetch;
 
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.persist.graph.GraphGroupKey;
 import org.apache.hadoop.io.RawComparator;
 import org.junit.Test;
@@ -33,8 +33,8 @@ public class TestUrlWithScore {
     @Test
     public void testSerialization() throws IOException {
         // create a key and test basic functionality
-        GraphGroupKey keyOut = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/"), 1f);
-        assertEquals(UrlUtil.reverseUrl("http://example.org/"), keyOut.getReversedUrl());
+        GraphGroupKey keyOut = new GraphGroupKey(Urls.reverseUrl("http://example.org/"), 1f);
+        assertEquals(Urls.reverseUrl("http://example.org/"), keyOut.getReversedUrl());
         assertEquals(1f, keyOut.getScore().get(), 0.001);
 
         // write to out
@@ -58,11 +58,11 @@ public class TestUrlWithScore {
     public void testPartitioner() throws IOException {
         GraphGroupKey.UrlOnlyPartitioner part = new GraphGroupKey.UrlOnlyPartitioner();
 
-        GraphGroupKey k1 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/1"), 1f);
-        GraphGroupKey k2 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/1"), 2f);
-        GraphGroupKey k3 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 1f);
-        GraphGroupKey k4 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 2f);
-        GraphGroupKey k5 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 3f);
+        GraphGroupKey k1 = new GraphGroupKey(Urls.reverseUrl("http://example.org/1"), 1f);
+        GraphGroupKey k2 = new GraphGroupKey(Urls.reverseUrl("http://example.org/1"), 2f);
+        GraphGroupKey k3 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 1f);
+        GraphGroupKey k4 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 2f);
+        GraphGroupKey k5 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 3f);
 
         int numReduces = 7;
 
@@ -81,11 +81,11 @@ public class TestUrlWithScore {
     public void testUrlOnlySorting() throws IOException {
         GraphGroupKey.UrlOnlyComparator comp = new GraphGroupKey.UrlOnlyComparator();
 
-        GraphGroupKey k1 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/1"), 1f);
-        GraphGroupKey k2 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/1"), 2f);
-        GraphGroupKey k3 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 1f);
-        GraphGroupKey k4 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 2f);
-        GraphGroupKey k5 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 3f);
+        GraphGroupKey k1 = new GraphGroupKey(Urls.reverseUrl("http://example.org/1"), 1f);
+        GraphGroupKey k2 = new GraphGroupKey(Urls.reverseUrl("http://example.org/1"), 2f);
+        GraphGroupKey k3 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 1f);
+        GraphGroupKey k4 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 2f);
+        GraphGroupKey k5 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 3f);
 
         // k1 should be equal to k2
         assertEquals(0, compareBothRegularAndRaw(comp, k1, k2));
@@ -106,11 +106,11 @@ public class TestUrlWithScore {
     public void testUrlScoreSorting() throws IOException {
         GraphGroupKey.GraphKeyComparator comp = new GraphGroupKey.GraphKeyComparator();
 
-        GraphGroupKey k1 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/1"), 1f);
-        GraphGroupKey k2 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/1"), 2f);
-        GraphGroupKey k3 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 1f);
-        GraphGroupKey k4 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 2f);
-        GraphGroupKey k5 = new GraphGroupKey(UrlUtil.reverseUrl("http://example.org/2"), 3f);
+        GraphGroupKey k1 = new GraphGroupKey(Urls.reverseUrl("http://example.org/1"), 1f);
+        GraphGroupKey k2 = new GraphGroupKey(Urls.reverseUrl("http://example.org/1"), 2f);
+        GraphGroupKey k3 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 1f);
+        GraphGroupKey k4 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 2f);
+        GraphGroupKey k5 = new GraphGroupKey(Urls.reverseUrl("http://example.org/2"), 3f);
 
         // k1 is after k2, because score is lower
         assertEquals(1, comp.compare(k1, k2));

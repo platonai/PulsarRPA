@@ -140,7 +140,7 @@ public class FetchThread extends Thread implements Comparable<FetchThread> {
 
     String availableHosts = servedHosts.stream()
         .map(PoolId::toUrl)
-        .map(UrlUtil::reverseHost).sorted().map(UrlUtil::unreverseHost)
+        .map(Urls::reverseHost).sorted().map(Urls::unreverseHost)
         .map(host -> String.format("%1$40s", host))
         .collect(Collectors.joining("\n"));
 

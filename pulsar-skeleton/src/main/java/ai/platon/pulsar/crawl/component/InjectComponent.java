@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.component;
 
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.WeakPageIndexer;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
@@ -102,16 +102,21 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
     }
 
     @Nonnull
-    public WebPage inject(@Nonnull String url, String args) {
+    public WebPage inject(kotlin.Pair<String, String> urlArgs) {
+        return inject(urlArgs.getFirst(), urlArgs.getSecond());
+    }
+
+    @Nonnull
+    public WebPage inject(String url, String args) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(args);
 
-        WebPage page = webDb.getOrNil(url);
+        WebPage page = webDb.getOrNil(url, false);
 
         if (page.isNil()) {
             page = seedBuilder.create(url, args);
             if (page.isSeed()) {
-                webDb.put(url, page);
+                webDb.put(page);
                 seedIndexer.index(page.getUrl());
             }
             return page;
@@ -127,7 +132,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
         boolean success = seedBuilder.makeSeed(page);
 
         if (success) {
-            webDb.put(page.getUrl(), page);
+            webDb.put(page);
             seedIndexer.index(page.getUrl());
             return true;
         }
@@ -137,7 +142,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
 
     public List<WebPage> injectAll(String... configuredUrls) {
         return Stream.of(configuredUrls)
-                .map(UrlUtil::splitUrlArgs)
+                .map(Urls::splitUrlArgs)
                 .map(this::inject)
                 .collect(Collectors.toList());
     }
@@ -156,7 +161,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
     }
 
     @Nonnull
-    public WebPage unInject(@Nonnull String url) {
+    public WebPage unInject(String url) {
         Objects.requireNonNull(url);
 
         WebPage page = webDb.getOrNil(url);
@@ -168,7 +173,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
     }
 
     @Nonnull
-    public WebPage unInject(@Nonnull WebPage page) {
+    public WebPage unInject(WebPage page) {
         Objects.requireNonNull(page);
         if (!page.isSeed()) {
             return page;
@@ -177,7 +182,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
         page.unmarkSeed();
         page.getMarks().remove(Mark.INJECT);
         seedIndexer.remove(page.getUrl());
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
 
         return page;
     }

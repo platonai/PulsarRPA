@@ -325,7 +325,7 @@ public class SolrIndexWriter implements IndexWriter {
                 .map(doc -> doc.get("url").getValue().toString())
                 .map(HypeLink::new)
                 .forEach(l -> page.getVividLinks().put(l.getUrl(), ""));
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
         webDb.flush();
     }
 

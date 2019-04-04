@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.PulsarConstants
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
@@ -11,9 +13,9 @@ import java.nio.file.Paths
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 object PulsarPaths {
-    val homeDir = ai.platon.pulsar.common.SParser(System.getProperty(ai.platon.pulsar.common.config.CapabilityTypes.PARAM_HOME_DIR)).getPath(ai.platon.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
-    val tmpDir = ai.platon.pulsar.common.SParser(System.getProperty(ai.platon.pulsar.common.config.CapabilityTypes.PARAM_TMP_DIR)).getPath(ai.platon.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
-    val dataDir = ai.platon.pulsar.common.SParser(System.getProperty(ai.platon.pulsar.common.config.CapabilityTypes.PARAM_DATA_DIR)).getPath(ai.platon.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_DATA_DIR)
+    val homeDir = SParser(System.getProperty(CapabilityTypes.PARAM_HOME_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
+    val tmpDir = SParser(System.getProperty(CapabilityTypes.PARAM_TMP_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
+    val dataDir = SParser(System.getProperty(CapabilityTypes.PARAM_DATA_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_DATA_DIR)
 
     val cacheDir = get(tmpDir, "cache")
     val webCacheDir = get(cacheDir, "web")

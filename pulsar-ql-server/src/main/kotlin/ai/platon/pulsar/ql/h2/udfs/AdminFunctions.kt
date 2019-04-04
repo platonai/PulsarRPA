@@ -3,6 +3,7 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.ql.QueryEngine
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -59,7 +60,7 @@ object AdminFunctions {
     @UDFunction
     @JvmStatic
     fun testProxy(ipPort: String): String {
-        val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(unmodifiedConfig)
+        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         return proxyPool.toString()
     }
 

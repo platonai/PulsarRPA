@@ -1,6 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.config.CapabilityTypes.GORA_MONGODB_SERVERS
+import ai.platon.pulsar.common.config.MutableConfig
 import com.mongodb.BasicDBObject
 import com.mongodb.MongoClient
 import org.junit.After
@@ -15,7 +16,7 @@ import kotlin.test.assertNotNull
 class TestEmbedMongoDB {
     private val log = LoggerFactory.getLogger(TestEmbedMongoDB::class.java)
 
-    val conf = ai.platon.pulsar.common.config.MutableConfig()
+    val conf = MutableConfig()
     val mongoDriver = EmbedMongoDB("127.0.0.1:27017")
 
     @Before

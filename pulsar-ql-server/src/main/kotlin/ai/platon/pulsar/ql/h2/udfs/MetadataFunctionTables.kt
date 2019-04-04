@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.UrlUtil
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -24,22 +24,22 @@ object MetadataFunctionTables {
     @UDFunction
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ResultSet {
-        val urlAndArgs = UrlUtil.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.value)
+        val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
+        val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.expires = Duration.ZERO
 
-        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.key, loadOptions)
+        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
         return Queries.toResultSet(page)
     }
 
     @UDFunction
     @JvmStatic
     fun parse(@H2Context h2session: Session, configuredUrl: String): ResultSet {
-        val urlAndArgs = UrlUtil.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.value)
+        val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
+        val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.isParse = true
 
-        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.key, loadOptions)
+        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
         return Queries.toResultSet(page)
     }
 }

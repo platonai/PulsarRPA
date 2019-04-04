@@ -371,7 +371,7 @@ __utils__.getPropertyValue = function(style, propertyName) {
     if (propertyName === 'font-size') {
         value = value.substring(0, value.lastIndexOf('px'))
     } else if (propertyName === 'color' || propertyName === 'background-color') {
-        value = __utils__.shortHex(__utils__.rgb2hex(value));
+        value = __utils__.shortenHex(__utils__.rgb2hex(value));
         // skip prefix '#'
         value = value.substring(1)
     }
@@ -400,7 +400,7 @@ __utils__.rgb2hex = function(rgb) {
  * @param hex {String}
  * @return {String}
  * */
-__utils__.shortHex = function(hex) {
+__utils__.shortenHex = function(hex) {
     if ((hex.charAt(1) === hex.charAt(2))
         && (hex.charAt(3) === hex.charAt(4))
         && (hex.charAt(5) === hex.charAt(6))) {

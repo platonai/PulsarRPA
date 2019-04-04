@@ -1,6 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.config.CapabilityTypes.GORA_MONGODB_SERVERS
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_EMBED_MONGO_SERVER
 import com.mongodb.BasicDBObject
 import com.mongodb.MongoClient
@@ -86,7 +87,7 @@ class EmbedMongoStarter {
 }
 
 fun main(args: Array<String>) {
-    val conf = ai.platon.pulsar.common.config.MutableConfig()
+    val conf = MutableConfig()
     val server = conf.get(GORA_MONGODB_SERVERS, DEFAULT_EMBED_MONGO_SERVER)
     EmbedMongoStarter().start(server)
 

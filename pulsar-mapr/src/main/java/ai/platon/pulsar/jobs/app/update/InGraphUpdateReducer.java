@@ -19,7 +19,7 @@ package ai.platon.pulsar.jobs.app.update;
 import ai.platon.pulsar.common.CounterUtils;
 import ai.platon.pulsar.common.MetricsSystem;
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.component.UpdateComponent;
 import ai.platon.pulsar.crawl.filter.CrawlFilter;
@@ -82,7 +82,7 @@ class InGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroupKey, Web
     metricsCounters.increase(rRows);
 
     String reversedUrl = key.getReversedUrl();
-    String url = UrlUtil.unreverseUrl(reversedUrl);
+    String url = Urls.unreverseUrl(reversedUrl);
 
     WebGraph graph = buildGraph(url, subGraphs);
     WebPage page = graph.getFocus().getWebPage();
@@ -135,6 +135,7 @@ class InGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroupKey, Web
     }
 
     if (!focus.hasWebPage()) {
+      // TODO: whether to ignore url query
       WebPage page = webDb.get(url);
 
       // Page is always in the db, because it's the page who introduces this page

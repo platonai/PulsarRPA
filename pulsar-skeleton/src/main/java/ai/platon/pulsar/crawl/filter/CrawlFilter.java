@@ -17,13 +17,12 @@
 package ai.platon.pulsar.crawl.filter;
 
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.PageCategory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ai.platon.pulsar.crawl.filter.BlockFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -163,16 +162,16 @@ public class CrawlFilter extends Configured {
                 startKey = startKey.replaceAll("\\u0001", "\u0001");
                 startKey = startKey.replaceAll("\\\\u0001", "\u0001");
 
-                reversedStartKey = UrlUtil.reverseUrl(startKey);
+                reversedStartKey = Urls.reverseUrl(startKey);
             }
 
             if (endKey != null) {
                 endKey = endKey.replaceAll("\\uFFFF", "\uFFFF");
                 endKey = endKey.replaceAll("\\\\uFFFF", "\uFFFF");
 
-                reversedEndKey = UrlUtil.reverseUrl(endKey);
+                reversedEndKey = Urls.reverseUrl(endKey);
             }
-        } catch (RuntimeException | IOException e) {
+        } catch (RuntimeException e) {
             LOG.error(StringUtil.stringifyException(e));
         }
     }

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.select2
 import ai.platon.pulsar.dom.nodes.node.ext.selectFirst2
@@ -166,7 +167,7 @@ object DomSelectFunctions {
     @UDFunction
     @JvmStatic
     fun allRe1(dom: ValueDom, cssQuery: String, regex: String): ValueArray {
-        val extractor = ai.platon.pulsar.common.RegexExtractor()
+        val extractor = RegexExtractor()
         return Queries.select(dom, cssQuery) { extractor.re1(it.text(), regex) }
     }
 
@@ -199,7 +200,7 @@ object DomSelectFunctions {
     @UDFunction
     @JvmStatic
     fun allRe2(dom: ValueDom, cssQuery: String, regex: String): ValueArray {
-        val extractor = ai.platon.pulsar.common.RegexExtractor()
+        val extractor = RegexExtractor()
         return Queries.select(dom, cssQuery) { extractor.re2(it.text(), regex).toString() }
     }
 
@@ -207,7 +208,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstRe2(dom: ValueDom, cssQuery: String, regex: String): ValueArray {
         val text = text(selectFirst(dom, cssQuery))
-        val result = ai.platon.pulsar.common.RegexExtractor().re2(text, regex)
+        val result = RegexExtractor().re2(text, regex)
         val array = arrayOf(ValueString.get(result.key), ValueString.get(result.value))
         return ValueArray.get(array)
     }
@@ -216,7 +217,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstRe2(dom: ValueDom, cssQuery: String, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
         val text = text(selectFirst(dom, cssQuery))
-        val result = ai.platon.pulsar.common.RegexExtractor().re2(text, regex, keyGroup, valueGroup)
+        val result = RegexExtractor().re2(text, regex, keyGroup, valueGroup)
         val array = arrayOf(ValueString.get(result.key), ValueString.get(result.value))
         return ValueArray.get(array)
     }
@@ -224,7 +225,7 @@ object DomSelectFunctions {
     @UDFunction
     @JvmStatic
     fun allRe2(dom: ValueDom, cssQuery: String, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
-        val extractor = ai.platon.pulsar.common.RegexExtractor()
+        val extractor = RegexExtractor()
         return Queries.select(dom, cssQuery) { extractor.re2(it.text(), regex, keyGroup, valueGroup).toString() }
     }
 

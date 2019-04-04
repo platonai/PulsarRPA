@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static ai.platon.pulsar.common.UrlUtil.unreverseUrl;
+import static ai.platon.pulsar.common.Urls.unreverseUrl;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 
 /**

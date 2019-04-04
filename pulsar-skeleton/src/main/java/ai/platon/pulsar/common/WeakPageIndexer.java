@@ -72,7 +72,7 @@ public class WeakPageIndexer {
             }
         }
 
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
         webDb.flush();
 
         return urls;
@@ -128,7 +128,7 @@ public class WeakPageIndexer {
         }
 
         // webDb.put(indexPage.getUrl(), indexPage, true);
-        webDb.put(indexPage.getUrl(), indexPage);
+        webDb.put(indexPage);
         webDb.flush();
     }
 
@@ -139,7 +139,7 @@ public class WeakPageIndexer {
             LOG.debug("Creating weak index home: " + homeUrl);
         }
 
-        webDb.put(homeUrl, home);
+        webDb.put(home);
         webDb.flush();
 
         return home;
@@ -156,10 +156,10 @@ public class WeakPageIndexer {
         if (indexPage.isNil()) {
             WebPage home = getHome();
             home.getVividLinks().put(url, "");
-            webDb.put(homeUrl, home);
+            webDb.put(home);
 
             indexPage = WebPage.newInternalPage(url, pageTitle);
-            webDb.put(url, indexPage);
+            webDb.put(indexPage);
             webDb.flush();
 
             // log.debug("Created weak index: " + url);

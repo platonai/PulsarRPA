@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.ql.h2.H2Db
@@ -41,7 +42,7 @@ abstract class TestBase {
         fun tearDownClass() {
             history.add(0, "-- Time: $startTime")
             val sqls = history.joinToString("\n") { it }
-            val ident = ai.platon.pulsar.common.DateTimeUtil.now("MMdd.HH")
+            val ident = DateTimeUtil.now("MMdd.HH")
             val path = PulsarPaths.get(PULSAR_DEFAULT_TMP_DIR, "history", "sql-history-$ident.sql")
             Files.createDirectories(path.parent)
             PulsarFiles.saveTo(sqls, path, deleteIfExists = true)

@@ -18,7 +18,7 @@
 package ai.platon.pulsar.jobs.common;
 
 import ai.platon.pulsar.common.URLUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -125,7 +125,7 @@ public class URLPartitioner implements Configurable {
         @Override
         public int getPartition(IntWritable intWritable, FetchEntryWritable fetchEntry, int numReduces) {
             String key = fetchEntry.getReservedUrl();
-            String url = UrlUtil.unreverseUrl(key);
+            String url = Urls.unreverseUrl(key);
             return partitioner.getPartition(url, numReduces);
         }
 

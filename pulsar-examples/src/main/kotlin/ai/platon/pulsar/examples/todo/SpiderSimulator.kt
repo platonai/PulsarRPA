@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.IndexComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
@@ -226,7 +227,7 @@ class SpiderSimulator(
             return vertex.webPage
         }
 
-        val page = WebPage.newWebPage(url)
+        val page = WebPage.newWebPage(url, false)
 
         fetchSchedule.initializeSchedule(page)
         scoringFilters.initialScore(page)
@@ -289,7 +290,7 @@ fun main(args: Array<String>) {
         when (args[i]) {
             "-depth" -> maxDepth = Integer.parseInt(args[++i])
             "-round" -> maxRound = Integer.parseInt(args[++i])
-            else -> url = ai.platon.pulsar.common.URLUtil.toASCII(args[i])
+            else -> url = URLUtil.toASCII(args[i])
         }
         i++
     }

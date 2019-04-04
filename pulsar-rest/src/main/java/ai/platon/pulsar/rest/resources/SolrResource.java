@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.resources;
 
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import org.apache.http.client.HttpClient;
@@ -66,7 +66,7 @@ public class SolrResource {
   @GET
   @Path("/get")
   public String get(@QueryParam("key") String key) throws IOException, SolrServerException {
-    SolrDocument doc = solrClient.getById(UrlUtil.reverseUrlOrEmpty(key));
+    SolrDocument doc = solrClient.getById(Urls.reverseUrlOrEmpty(key));
     return format(doc);
   }
 

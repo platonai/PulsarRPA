@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
-import org.checkerframework.checker.units.qual.K
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
@@ -19,8 +18,6 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.reflect.KClass
-import kotlin.reflect.jvm.jvmName
 
 /**
  * Created by vincent on 18-1-17.
@@ -103,10 +100,10 @@ open class PulsarSession(
      * @return The Web page
      */
     fun load(configuredUrl: String): WebPage {
-        val urlAndOptions = UrlUtil.splitUrlArgs(configuredUrl)
-        val options = LoadOptions.parse(urlAndOptions.value, config)
+        val urlAndOptions = Urls.splitUrlArgs(configuredUrl)
+        val options = LoadOptions.parse(urlAndOptions.second, config)
 
-        return load(urlAndOptions.key, options)
+        return load(urlAndOptions.first, options)
     }
 
     /**
@@ -267,7 +264,7 @@ open class PulsarSession(
     }
 
     fun persist(page: WebPage) {
-        pulsar.webDb.put(page.url, page)
+        pulsar.webDb.put(page)
     }
 
     fun export(page: WebPage, ident: String = ""): Path {

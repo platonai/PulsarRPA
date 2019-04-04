@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common;
 
 import ai.platon.pulsar.common.URLUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.persist.metadata.PageCategory;
@@ -165,10 +165,10 @@ public class TestAnything {
     public void testUrlUtil() {
         // String configuredUrl = "http://list.mogujie.com/book/jiadian/1005951 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE";
         String configuredUrl = "http://list.mogujie.com/book/jiadian/1005951";
-        Pair<String, String> pair = UrlUtil.splitUrlArgs(configuredUrl);
+        kotlin.Pair<String, String> pair = Urls.splitUrlArgs(configuredUrl);
         System.out.println(pair);
 
-        LoadOptions options = LoadOptions.parse(pair.getValue());
+        LoadOptions options = LoadOptions.parse(pair.getSecond());
         System.out.println(options);
     }
 }

@@ -18,7 +18,7 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GParseStatus;
@@ -101,10 +101,11 @@ public class WebPage {
     private WebPage(String url, GWebPage page, boolean urlReversed) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(page);
-        this.url = urlReversed ? UrlUtil.unreverseUrl(url) : url;
-        this.reversedUrl = urlReversed ? url : UrlUtil.reverseUrlOrEmpty(url);
+        this.url = urlReversed ? Urls.unreverseUrl(url) : url;
+        this.reversedUrl = urlReversed ? url : Urls.reverseUrlOrEmpty(url);
         this.page = page;
 
+        // the url of a page might be normalized, but the baseUrl always keeps be the original
         if (page.getBaseUrl() == null) {
             setBaseUrl(url);
         }
@@ -121,15 +122,22 @@ public class WebPage {
     }
 
     @Nonnull
-    public static WebPage newWebPage(String url) {
-        Objects.requireNonNull(url);
+    public static WebPage newWebPage(String originalUrl) {
+        return newWebPage(originalUrl, false);
+    }
+
+    @Nonnull
+    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery) {
+        Objects.requireNonNull(originalUrl);
+        String url = ignoreQuery ? Urls.getUrlWithoutParameters(originalUrl) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
     @Nonnull
-    public static WebPage newWebPage(String url, MutableConfig mutableConfig) {
-        Objects.requireNonNull(url);
+    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, MutableConfig mutableConfig) {
+        Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(mutableConfig);
+        String url = ignoreQuery ? Urls.getUrlWithoutParameters(originalUrl) : originalUrl;
         return newWebPageInternal(url, mutableConfig);
     }
 
@@ -159,12 +167,12 @@ public class WebPage {
     }
 
     @Nonnull
-    public static WebPage newInternalPage(@Nonnull String url, @Nonnull String title, @Nonnull String content) {
+    public static WebPage newInternalPage(String url, String title, String content) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(title);
         Objects.requireNonNull(content);
 
-        WebPage page = WebPage.newWebPage(url);
+        WebPage page = WebPage.newWebPage(url, false);
 
         page.setBaseUrl(url);
         page.setModifiedTime(impreciseNow);
@@ -187,7 +195,7 @@ public class WebPage {
      * Initialize a WebPage with the underlying GWebPage instance.
      */
     @Nonnull
-    public static WebPage box(@Nonnull String url, @Nonnull String reversedUrl, @Nonnull GWebPage page) {
+    public static WebPage box(String url, String reversedUrl, GWebPage page) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(reversedUrl);
         Objects.requireNonNull(page);
@@ -199,7 +207,7 @@ public class WebPage {
      * Initialize a WebPage with the underlying GWebPage instance.
      */
     @Nonnull
-    public static WebPage box(@Nonnull String url, @Nonnull GWebPage page) {
+    public static WebPage box(String url, GWebPage page) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(page);
 
@@ -210,7 +218,7 @@ public class WebPage {
      * Initialize a WebPage with the underlying GWebPage instance.
      */
     @Nonnull
-    public static WebPage box(@Nonnull String url, @Nonnull GWebPage page, boolean urlReversed) {
+    public static WebPage box(String url, GWebPage page, boolean urlReversed) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(page);
 
@@ -478,13 +486,21 @@ public class WebPage {
         page.setCrawlStatus(value);
     }
 
+    /**
+     * BaseUrl comes from Content#getBaseUrl which comes from ProtocolOutput,
+     * always keep the original string parsed from other page
+     *
+     * Maybe be different from url, it's generally normalized, or the request can be redirected.
+     * */
     public String getBaseUrl() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
     }
 
     /**
-     * BaseUrl comes from Content#getBaseUrl which comes from ProtocolOutput
-     * Maybe be different from url if the request redirected.
+     * BaseUrl comes from Content#getBaseUrl which comes from ProtocolOutput,
+     * always keep the original string parsed from other page
+     *
+     * Maybe be different from url, it's generally normalized, or the request can be redirected.
      */
     public void setBaseUrl(String value) {
         page.setBaseUrl(value);

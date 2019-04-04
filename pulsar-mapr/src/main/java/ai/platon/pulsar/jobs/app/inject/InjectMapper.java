@@ -1,6 +1,6 @@
 package ai.platon.pulsar.jobs.app.inject;
 
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.component.InjectComponent;
 import ai.platon.pulsar.jobs.core.AppContextAwareMapper;
@@ -37,7 +37,7 @@ public class InjectMapper extends AppContextAwareMapper<LongWritable, Text, Stri
       return;
     }
 
-    injectComponent.inject(UrlUtil.splitUrlArgs(configuredUrl));
+    injectComponent.inject(Urls.splitUrlArgs(configuredUrl));
     metricsCounters.increase(mPersist);
   }
 }

@@ -19,7 +19,7 @@ package ai.platon.pulsar.jobs.app.update;
 import ai.platon.pulsar.common.CounterUtils;
 import ai.platon.pulsar.common.MetricsSystem;
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.component.UpdateComponent;
 import ai.platon.pulsar.crawl.filter.CrawlFilter;
@@ -130,7 +130,7 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
     metricsCounters.increase(rRows);
 
     String reversedUrl = key.getReversedUrl();
-    String url = UrlUtil.unreverseUrl(reversedUrl);
+    String url = Urls.unreverseUrl(reversedUrl);
 
     WebGraph graph = buildGraph(url, subGraphs);
     WebPage page = graph.getFocus().getWebPage();
@@ -274,7 +274,8 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
    * 3. the page have not be fetched yet
    */
   private WebPage loadOrCreateWebPage(String url) {
-    // TODO : Is datastore.get a distributed operation? And is there a local cache?
+    // TODO: Is datastore.get a distributed operation? And is there a local cache?
+    // TODO: whether to ignore url query
     WebPage loadedPage = webDb.get(url);
     WebPage page;
 

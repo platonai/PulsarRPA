@@ -1,6 +1,8 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.UrlUtil.reverseUrlOrNull
+import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.Urls.reverseUrlOrNull
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
@@ -11,7 +13,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class WebDb(
-        val conf: ai.platon.pulsar.common.config.ImmutableConfig,
+        val conf: ImmutableConfig,
         val storeService: AutoDetectedStorageService
 ): AutoCloseable {
 
@@ -21,30 +23,30 @@ class WebDb(
     val schemaName: String get() = store.schemaName
 
     // required by Jvm language
-    constructor(conf: ai.platon.pulsar.common.config.ImmutableConfig): this(conf, AutoDetectedStorageService(conf))
+    constructor(conf: ImmutableConfig): this(conf, AutoDetectedStorageService(conf))
 
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param url    the url of the WebPage
+     * @param baseUrl the original address of the page
      * @param fields the fields required in the WebPage. Pass null, to retrieve all fields
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
     @JvmOverloads
-    fun get(url: String, fields: Array<String>? = null): WebPage? {
-        Objects.requireNonNull(url)
-        val key = ai.platon.pulsar.common.UrlUtil.reverseUrlOrEmpty(url)
+    fun get(baseUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
+        val (url, key) = Urls.urlAndKey(baseUrl, ignoreQuery)
 
         if (log.isTraceEnabled) {
             log.trace("Getting $key")
         }
-        val goraWebPage = store.get(key, fields)
-        if (goraWebPage != null) {
+
+        val datum = store.get(key, fields)
+        if (datum != null) {
             if (log.isTraceEnabled) {
                 log.trace("Got $key")
             }
 
-            return WebPage.box(url, key, goraWebPage)
+            return WebPage.box(url, key, datum)
         }
 
         return null
@@ -53,22 +55,20 @@ class WebDb(
     /**
      * Returns the WebPage corresponding to the given url.
      *
-     * @param url the url of the WebPage
+     * @param baseUrl the original address of the page
      * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
      */
     @JvmOverloads
-    fun getOrNil(url: String, fields: Array<String>? = null): WebPage {
-        val page = get(url, null)
+    fun getOrNil(baseUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
+        val (url, key) = Urls.urlAndKey(baseUrl, ignoreQuery)
+
+        val page = get(url, ignoreQuery, null)
         return page ?: WebPage.NIL
     }
 
     @JvmOverloads
-    fun put(url: String, page: WebPage, replaceIfExists: Boolean = false): Boolean {
-        if (url != page.url) {
-            log.warn("Url and page.getUrl() does not match. {} <-> {}", url, page.url)
-        }
-
-        return put(page, replaceIfExists)
+    fun put(page: WebPage, replaceIfExists: Boolean = false): Boolean {
+        return putInteranl(page, replaceIfExists)
     }
 
     /**
@@ -76,9 +76,7 @@ class WebDb(
      * There are comments in gora-hbase-0.6.1, HBaseStore.java, line 259:
      * "HBase sometimes does not delete arbitrarily"
      */
-    private fun put(page: WebPage, replaceIfExists: Boolean): Boolean {
-        Objects.requireNonNull(page)
-
+    private fun putInteranl(page: WebPage, replaceIfExists: Boolean): Boolean {
         // Never update NIL page
         if (page.isNil) {
             return false
@@ -102,13 +100,16 @@ class WebDb(
     }
 
     fun putAll(pages: Iterable<WebPage>) {
-        pages.forEach { page -> put(page.url, page) }
+        pages.forEach { put(it, false) }
     }
 
-    fun delete(url: String): Boolean {
-        val reversedUrl = reverseUrlOrNull(url)
-        return if (reversedUrl != null) {
-            store.delete(reversedUrl)
+    @JvmOverloads
+    fun delete(baseUrl: String, ignoreQuery: Boolean = false): Boolean {
+        val (url, key) = Urls.urlAndKey(baseUrl, ignoreQuery)
+
+        return if (key.isNotEmpty()) {
+            store.delete(key)
+            return true
         } else false
     }
 
@@ -138,9 +139,9 @@ class WebDb(
      * @param baseUrl The base url
      * @return The iterator to retrieve pages
      */
-    fun scan(baseUrl: String): Iterator<WebPage> {
+    fun scan(urlBase: String): Iterator<WebPage> {
         val query = store.newQuery()
-        query.setKeyRange(reverseUrlOrNull(baseUrl), reverseUrlOrNull(baseUrl + UNICODE_LAST_CODE_POINT))
+        query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
         val result = store.execute(query)
         return DbIterator(result)

@@ -35,8 +35,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 import static ai.platon.pulsar.common.CommonCounter.*;
-import static ai.platon.pulsar.common.PulsarParams.*;
-import static ai.platon.pulsar.common.UrlUtil.reverseUrl;
+import static ai.platon.pulsar.common.Urls.reverseUrl;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static java.time.temporal.ChronoUnit.DAYS;

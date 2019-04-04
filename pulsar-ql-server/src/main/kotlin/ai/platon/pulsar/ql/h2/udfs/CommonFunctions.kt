@@ -2,8 +2,11 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.PulsarEnv
 import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
+import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -386,9 +389,9 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun addProxy(ipPort: String): Boolean {
-        val proxyEntry = ai.platon.pulsar.common.proxy.ProxyEntry.parse(ipPort)
+        val proxyEntry = ProxyEntry.parse(ipPort)
         if (proxyEntry != null && proxyEntry.testNetwork()) {
-            val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
+            val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
             return proxyPool.offer(proxyEntry)
         }
 
@@ -399,7 +402,7 @@ object CommonFunctions {
     @JvmStatic
     fun addProxy(ip: String, port: Int): Boolean {
         if (ai.platon.pulsar.common.NetUtil.testNetwork(ip, port)) {
-            val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
+            val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
             return proxyPool.offer(ai.platon.pulsar.common.proxy.ProxyEntry(ip, port))
         }
 
@@ -425,9 +428,9 @@ object CommonFunctions {
     fun addProxiesUnchecked(ipPorts: ValueArray): Int {
         var count = 0
 
-        val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(unmodifiedConfig)
+        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         for (value in ipPorts.list) {
-            val proxyEntry = ai.platon.pulsar.common.proxy.ProxyEntry.parse(value.string)
+            val proxyEntry = ProxyEntry.parse(value.string)
             if (proxyEntry != null) {
                 proxyPool.offer(proxyEntry)
                 ++count
@@ -440,7 +443,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun recoverProxyPool(n: Int): Int {
-        val proxyPool = ai.platon.pulsar.common.proxy.ProxyPool.getInstance(unmodifiedConfig)
+        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         return proxyPool.recover(n)
     }
 
@@ -453,25 +456,25 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun getDomain(url: String): String {
-        return ai.platon.pulsar.common.URLUtil.getDomainName(url, "")
+        return URLUtil.getDomainName(url, "")
     }
 
     @UDFunction
     @JvmStatic
     fun re1(text: String, regex: String): String {
-        return ai.platon.pulsar.common.RegexExtractor().re1(text, regex)
+        return RegexExtractor().re1(text, regex)
     }
 
     @UDFunction
     @JvmStatic
     fun re1(text: String, regex: String, group: Int): String {
-        return ai.platon.pulsar.common.RegexExtractor().re1(text, regex, group)
+        return RegexExtractor().re1(text, regex, group)
     }
 
     @UDFunction
     @JvmStatic
     fun re2(text: String, regex: String): ValueArray {
-        val result = ai.platon.pulsar.common.RegexExtractor().re2(text, regex)
+        val result = RegexExtractor().re2(text, regex)
         val array = arrayOf(ValueString.get(result.key), ValueString.get(result.value))
         return ValueArray.get(array)
     }
@@ -479,7 +482,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun re2(text: String, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
-        val result = ai.platon.pulsar.common.RegexExtractor().re2(text, regex, keyGroup, valueGroup)
+        val result = RegexExtractor().re2(text, regex, keyGroup, valueGroup)
         val array = arrayOf(ValueString.get(result.key), ValueString.get(result.value))
         return ValueArray.get(array)
     }

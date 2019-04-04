@@ -185,7 +185,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
     private void lazyFetch(WebPage page, FetchMode mode) {
         page.setFetchMode(mode);
 
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
     }
 
     public void report() {

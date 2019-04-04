@@ -155,11 +155,11 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     }
 
     public Response fetch(String url) {
-        return fetchContent(WebPage.newWebPage(url, defaultMutableConfig));
+        return fetchContent(WebPage.newWebPage(url, false, defaultMutableConfig));
     }
 
     public Response fetch(String url, MutableConfig mutableConfig) {
-        return fetchContent(WebPage.newWebPage(url, mutableConfig));
+        return fetchContent(WebPage.newWebPage(url, false, mutableConfig));
     }
 
     public Response fetchContent(WebPage page) {

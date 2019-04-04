@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom
 
+import ai.platon.pulsar.common.FuzzyProbability
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.dom.data.BlockPattern.Companion.DenseLinks
 import ai.platon.pulsar.dom.data.BlockPattern.Companion.Dl
@@ -23,7 +24,7 @@ class DocumentFragments(
         val EMPTY = DocumentFragments()
 
         var blockLikelihoodThreshold = 0.95
-        var defaultProbability = ai.platon.pulsar.common.FuzzyProbability.MAYBE
+        var defaultProbability = FuzzyProbability.MAYBE
         var analogueTags = mutableListOf("div", "ul", "ol", "dl", "nav", "table")
         var patternsWithoutChildren = mutableListOf(DenseLinks, Table, Dl)
 

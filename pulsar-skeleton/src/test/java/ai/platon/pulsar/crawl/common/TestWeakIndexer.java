@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.common;
 
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.MetricsSystem;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.WeakPageIndexer;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
@@ -73,7 +73,7 @@ public class TestWeakIndexer {
         webDb.flush();
         webDb.close();
 
-        LOG.debug("In shell: \nget '{}', '{}'", store.getSchemaName(), UrlUtil.reverseUrlOrEmpty(exampleUrl));
+        LOG.debug("In shell: \nget '{}', '{}'", store.getSchemaName(), Urls.reverseUrlOrEmpty(exampleUrl));
     }
 
     @Ignore("TODO: Test failed")

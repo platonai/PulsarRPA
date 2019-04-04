@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.parse;
 
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.crawl.filter.CrawlFilters;
 import org.junit.Before;
@@ -42,7 +42,7 @@ public class TestCrawlFilter {
         assertFalse(keyRange.get("com.jumei.lancome:http/search.html").equals("com.jumei.lancome:http/search.html\\uFFFF"));
 
         for (String detailUrl : detailUrls) {
-            assertTrue(crawlFilters.testKeyRangeSatisfied(UrlUtil.reverseUrl(detailUrl)));
+            assertTrue(crawlFilters.testKeyRangeSatisfied(Urls.reverseUrl(detailUrl)));
         }
     }
 
@@ -54,7 +54,7 @@ public class TestCrawlFilter {
         assertTrue('\uFFFF' - 'a' == 65438);
 
         for (String detailUrl : detailUrls) {
-            detailUrl = UrlUtil.reverseUrl(detailUrl);
+            detailUrl = Urls.reverseUrl(detailUrl);
 
             assertTrue("com.jumei.lancome:http/search.html".compareTo(detailUrl) < 0);
             assertTrue("com.jumei.mall:http/\uFFFF".compareTo(detailUrl) > 0);
@@ -63,7 +63,7 @@ public class TestCrawlFilter {
         }
 
         for (String detailUrl : detailUrls) {
-            detailUrl = UrlUtil.reverseUrl(detailUrl);
+            detailUrl = Urls.reverseUrl(detailUrl);
             assertTrue(keyRange[0].compareTo(detailUrl) < 0);
             assertTrue(keyRange[1].compareTo(detailUrl) > 0);
         }

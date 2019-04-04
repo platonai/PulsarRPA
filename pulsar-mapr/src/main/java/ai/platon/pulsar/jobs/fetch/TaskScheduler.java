@@ -582,7 +582,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
 
         metricsSystem.debugFetchHistory(page, crawlStatus);
 
-        String reversedUrl = UrlUtil.reverseUrl(url);
+        String reversedUrl = Urls.reverseUrl(url);
 
         if (parse && crawlStatus.isFetched()) {
             ParseResult parseResult = pageParser.parse(page);

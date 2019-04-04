@@ -18,7 +18,7 @@ package ai.platon.pulsar.jobs.app.update;
 
 import ai.platon.pulsar.common.MetricsCounters;
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper;
 import ai.platon.pulsar.persist.WebPage;
@@ -118,7 +118,7 @@ class InGraphUpdateMapper extends AppContextAwareGoraMapper<String, GWebPage, Gr
       WebGraph subGraph = WebGraph.of(edge, graph);
 
       // int score = graph.getEdgeWeight(edge) - edge.getTargetWebPage().getFetchPriority();
-      graphGroupKey.reset(UrlUtil.reverseUrl(edge.getSourceUrl()), graph.getEdgeWeight(edge));
+      graphGroupKey.reset(Urls.reverseUrl(edge.getSourceUrl()), graph.getEdgeWeight(edge));
       webGraphWritable.reset(subGraph);
 
       // noinspection unchecked

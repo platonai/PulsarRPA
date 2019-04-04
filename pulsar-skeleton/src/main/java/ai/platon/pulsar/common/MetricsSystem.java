@@ -83,7 +83,7 @@ public class MetricsSystem implements AutoCloseable {
 
     public void commit() {
         // TODO : save only if dirty
-        metricsPages.forEach((key, value) -> webDb.put(key, value));
+        metricsPages.forEach((url, value) -> webDb.put(value));
         webDb.flush();
     }
 
@@ -183,7 +183,7 @@ public class MetricsSystem implements AutoCloseable {
 
     public void reportGeneratedHosts(Set<String> hostNames) {
         String report = "# Total " + hostNames.size() + " hosts generated : \n"
-                + hostNames.stream().map(UrlUtil::reverseHost).sorted().map(UrlUtil::unreverseHost)
+                + hostNames.stream().map(Urls::reverseHost).sorted().map(Urls::unreverseHost)
                 .map(host -> String.format("%40s", host))
                 .collect(Collectors.joining("\n"));
 

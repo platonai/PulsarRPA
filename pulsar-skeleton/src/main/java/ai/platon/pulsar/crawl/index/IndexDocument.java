@@ -17,7 +17,7 @@
 package ai.platon.pulsar.crawl.index;
 
 import ai.platon.pulsar.common.DateTimeUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
@@ -49,7 +49,7 @@ public class IndexDocument {
 
     public IndexDocument(CharSequence key) {
         this.key = key;
-        this.url = UrlUtil.unreverseUrl(key.toString());
+        this.url = Urls.unreverseUrl(key.toString());
     }
 
     public String getKey() {

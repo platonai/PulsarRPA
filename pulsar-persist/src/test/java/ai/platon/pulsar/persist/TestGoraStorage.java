@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimeUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
@@ -62,7 +62,7 @@ public class TestGoraStorage {
         webDb.flush();
         webDb.close();
 
-        LOG.debug("In shell: \nget '{}', '{}'", store.getSchemaName(), UrlUtil.reverseUrlOrEmpty(exampleUrl));
+        LOG.debug("In shell: \nget '{}', '{}'", store.getSchemaName(), Urls.reverseUrlOrEmpty(exampleUrl));
     }
 
     @Before
@@ -80,7 +80,7 @@ public class TestGoraStorage {
         assertEquals(url, page.getUrl());
 
         // webDb.put(page.getUrl(), page, true);
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
         webDb.flush();
 
         page = webDb.getOrNil(url);
@@ -92,13 +92,13 @@ public class TestGoraStorage {
         assertTrue(page.isInternal());
 
         page.addLinks(exampleUrls);
-        webDb.put(url, page);
+        webDb.put(page);
         webDb.flush();
         WebPage page3 = webDb.getOrNil(url);
         assertEquals(exampleUrls.size(), page3.getLinks().size());
 
         page.addLinks(exampleUrls);
-        webDb.put(url, page);
+        webDb.put(page);
         webDb.flush();
         WebPage page4 = webDb.getOrNil(url);
         assertEquals(exampleUrls.size(), page4.getLinks().size());
@@ -115,7 +115,7 @@ public class TestGoraStorage {
     public void testModifyNestedSimpleArray() {
         createExamplePage();
 
-        String key = UrlUtil.reverseUrlOrEmpty(exampleUrl);
+        String key = Urls.reverseUrlOrEmpty(exampleUrl);
         GWebPage page = store.get(key);
         assertNotNull(page);
 
@@ -161,7 +161,7 @@ public class TestGoraStorage {
     public void testClearNestedSimpleArray() {
         createExamplePage();
 
-        String key = UrlUtil.reverseUrlOrEmpty(exampleUrl);
+        String key = Urls.reverseUrlOrEmpty(exampleUrl);
         GWebPage page = store.get(key);
         assertNotNull(page);
 
@@ -195,7 +195,7 @@ public class TestGoraStorage {
     public void testUpdateNestedComplexArray() {
         createExamplePage();
 
-        String key = UrlUtil.reverseUrlOrEmpty(exampleUrl);
+        String key = Urls.reverseUrlOrEmpty(exampleUrl);
         GWebPage page = store.get(key);
         assertNotNull(page);
 
@@ -223,7 +223,7 @@ public class TestGoraStorage {
 
         page.getLinks().add(EXAMPLE_URL);
         page.getLinks().add(EXAMPLE_URL + "/1");
-        webDb.put(page.getUrl(), page, true);
+        webDb.put(page, true);
         webDb.flush();
 
         page = webDb.getOrNil(exampleUrl);
@@ -238,7 +238,7 @@ public class TestGoraStorage {
         WebPage page = webDb.getOrNil(exampleUrl);
         page.getInlinks().clear();
         assertTrue(page.getInlinks().isEmpty());
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
         webDb.flush();
 
         page = webDb.getOrNil(exampleUrl);
@@ -264,7 +264,7 @@ public class TestGoraStorage {
 
             page.getInlinks().put(url, url2);
         }
-        webDb.put(exampleUrl, page);
+        webDb.put(page);
         webDb.flush();
     }
 }

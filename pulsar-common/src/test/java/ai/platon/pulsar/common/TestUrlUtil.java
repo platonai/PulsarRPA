@@ -40,19 +40,19 @@ public class TestUrlUtil {
     String reversedUrlString7 = ":file/var/www/index.html";
 
     private static void assertReverse(String url, String expectedReversedUrl) throws Exception {
-        String reversed = UrlUtil.reverseUrl(url);
+        String reversed = Urls.reverseUrl(url);
         assertEquals(expectedReversedUrl, reversed);
     }
 
     private static void assertUnreverse(String reversedUrl, String expectedUrl) {
-        String unreversed = UrlUtil.unreverseUrl(reversedUrl);
+        String unreversed = Urls.unreverseUrl(reversedUrl);
         assertEquals(expectedUrl, unreversed);
     }
 
     @Test
     public void testReverseUrl() throws Exception {
-        System.out.println(UrlUtil.reverseUrl("http://sz.sxrb.com/sxxww/dspd/szpd/wsjk"));
-        System.out.println(UrlUtil.reverseUrl("http://sz.sxrb.com/sxxww/"));
+        System.out.println(Urls.reverseUrl("http://sz.sxrb.com/sxxww/dspd/szpd/wsjk"));
+        System.out.println(Urls.reverseUrl("http://sz.sxrb.com/sxxww/"));
 
         assertReverse(urlString1, reversedUrlString1);
         assertReverse(urlString2, reversedUrlString2);
@@ -66,7 +66,7 @@ public class TestUrlUtil {
 
     @Test
     public void testUnreverseUrl() throws Exception {
-        System.out.println(UrlUtil.unreverseUrl("com.sxrb.www:http/sxxww/zthj/xmtdt/6619357.shtml"));
+        System.out.println(Urls.unreverseUrl("com.sxrb.www:http/sxxww/zthj/xmtdt/6619357.shtml"));
 
         assertUnreverse(reversedUrlString1, urlString1);
         assertUnreverse(reversedUrlString2, urlString2);

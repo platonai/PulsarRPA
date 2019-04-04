@@ -46,10 +46,10 @@ class BlackWhiteList(
      * @param blackRegexFile
      */
     init {
-        words[ai.platon.pulsar.common.BlackWhiteList.ListType.BlackWords] = ai.platon.pulsar.common.SingleFiledLines(blackWordsFile)
-        words[ai.platon.pulsar.common.BlackWhiteList.ListType.WhiteWords] = ai.platon.pulsar.common.SingleFiledLines(whiteWordsFile)
-        words[ai.platon.pulsar.common.BlackWhiteList.ListType.BlackRegex] = ai.platon.pulsar.common.SingleFiledLines(blackRegexFile, ai.platon.pulsar.common.SingleFiledLines.RegexPreprocessor())
-        words[ai.platon.pulsar.common.BlackWhiteList.ListType.WhiteRegex] = ai.platon.pulsar.common.SingleFiledLines(whiteRegexFile, ai.platon.pulsar.common.SingleFiledLines.RegexPreprocessor())
+        words[ai.platon.pulsar.common.BlackWhiteList.ListType.BlackWords] = SingleFiledLines(blackWordsFile)
+        words[ai.platon.pulsar.common.BlackWhiteList.ListType.WhiteWords] = SingleFiledLines(whiteWordsFile)
+        words[ai.platon.pulsar.common.BlackWhiteList.ListType.BlackRegex] = SingleFiledLines(blackRegexFile, ai.platon.pulsar.common.SingleFiledLines.RegexPreprocessor())
+        words[ai.platon.pulsar.common.BlackWhiteList.ListType.WhiteRegex] = SingleFiledLines(whiteRegexFile, ai.platon.pulsar.common.SingleFiledLines.RegexPreprocessor())
 
         load()
     }

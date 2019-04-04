@@ -2,7 +2,7 @@ package ai.platon.pulsar.jobs.fetch;
 
 import ai.platon.pulsar.common.MetricsSystem;
 import ai.platon.pulsar.common.URLUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
@@ -514,7 +514,7 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   private void reportServedThreads() {
     StringBuilder report = new StringBuilder();
     poolServedThreads.keySet().stream()
-        .map(UrlUtil::reverseHost).sorted().map(UrlUtil::unreverseHost)
+        .map(Urls::reverseHost).sorted().map(Urls::unreverseHost)
         .forEach(poolId -> {
       String threads = "#" + StringUtils.join(poolServedThreads.get(poolId), ", #");
       String line = String.format("%1$40s -> %2$s\n", poolId, threads);

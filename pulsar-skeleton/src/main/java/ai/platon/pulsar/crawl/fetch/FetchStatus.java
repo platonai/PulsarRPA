@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch;
 
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 
 import javax.annotation.Nonnull;
 
@@ -33,8 +33,8 @@ public class FetchStatus implements Comparable<FetchStatus> {
             return -1;
         }
 
-        String reverseHost = UrlUtil.reverseHost(hostName);
-        String reverseHost2 = UrlUtil.reverseHost(fetchStatus.hostName);
+        String reverseHost = Urls.reverseHost(hostName);
+        String reverseHost2 = Urls.reverseHost(fetchStatus.hostName);
 
         return reverseHost.compareTo(reverseHost2);
     }

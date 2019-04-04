@@ -28,6 +28,9 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-pst", "--persist"}, description = "Persist page(s) once fetched")
     private boolean persist = true;
 
+    @Parameter(names = {"-sk", "--shorten-key"}, description = "Remove url query as the page key")
+    private boolean shortenKey = false;
+
     @Parameter(names = {"-retry", "--retry"}, description = "Retry fetch the page if it's failed last time")
     private boolean retry = false;
 
@@ -157,6 +160,14 @@ public class LoadOptions extends CommonOptions {
 
     public void setParse(boolean parse) {
         this.parse = parse;
+    }
+
+    public boolean isShortenKey() {
+        return shortenKey;
+    }
+
+    public void setShortenKey(boolean shortenKey) {
+        this.shortenKey = shortenKey;
     }
 
     public boolean isReparseLinks() {
@@ -322,6 +333,7 @@ public class LoadOptions extends CommonOptions {
                 "-nord", isNoRedirect(),
                 "-nolf", isNoLinkFilter(),
                 "-prst", isPersist(),
+                "-shorten-key", isShortenKey(),
                 "--expires", getExpires(),
                 "--auto-flush", isAutoFlush(),
                 "--fetch-mode", getFetchMode(),

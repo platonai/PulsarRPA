@@ -17,7 +17,7 @@
 package ai.platon.pulsar.indexer.solr;
 
 import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.UrlUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.index.IndexDocument;
@@ -66,7 +66,7 @@ public class TestIndexingFilters {
         page.setPageText("text");
         page.setPageTitle("title");
 
-        String key = UrlUtil.reverseUrlOrEmpty(url);
+        String key = Urls.reverseUrlOrEmpty(url);
         filters.filter(new IndexDocument(key), url, page);
     }
 
@@ -75,9 +75,6 @@ public class TestIndexingFilters {
      */
     @Test
     public void testIndexDocumentNullIndexingFilter() throws IndexingException {
-//    conf.addResource("pulsar-default.xml");
-//    conf.addResource("crawl-tests.xml");
-
         String url = "http://www.example.com/";
         WebPage page = WebPage.newWebPage(url);
         page.setPageText("text");

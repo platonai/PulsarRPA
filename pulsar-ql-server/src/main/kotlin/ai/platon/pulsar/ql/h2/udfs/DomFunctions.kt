@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.UrlUtil
+import ai.platon.pulsar.common.RegexExtractor
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
@@ -49,11 +50,11 @@ object DomFunctions {
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
         val session = H2SessionFactory.getSession(h2session.id)
 
-        val urlAndArgs = UrlUtil.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.value)
+        val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
+        val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.expires = Duration.ZERO
 
-        val page = session.load(urlAndArgs.key, loadOptions)
+        val page = session.load(urlAndArgs.first, loadOptions)
         return session.parseToValue(page)
     }
 
@@ -299,7 +300,7 @@ object DomFunctions {
     @JvmStatic
     fun re2(dom: ValueDom, regex: String): ValueArray {
         val text = text(dom)
-        val result = ai.platon.pulsar.common.RegexExtractor().re2(text, regex)
+        val result = RegexExtractor().re2(text, regex)
         val array = arrayOf(ValueString.get(result.key), ValueString.get(result.value))
         return ValueArray.get(array)
     }
@@ -308,7 +309,7 @@ object DomFunctions {
     @JvmStatic
     fun re2(dom: ValueDom, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
         val text = text(dom)
-        val result = ai.platon.pulsar.common.RegexExtractor().re2(text, regex, keyGroup, valueGroup)
+        val result = RegexExtractor().re2(text, regex, keyGroup, valueGroup)
         val array = arrayOf(ValueString.get(result.key), ValueString.get(result.value))
         return ValueArray.get(array)
     }

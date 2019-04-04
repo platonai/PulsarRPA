@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.experimental
 
+import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.config.PulsarConstants.EXAMPLE_URL
 import ai.platon.pulsar.persist.Variables
 import ai.platon.pulsar.persist.metadata.Mark
@@ -137,7 +138,7 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
 
     fun putFetchTimeHistory(fetchTime: Instant) {
         var fetchTimeHistory = metadata.get(Name.FETCH_TIME_HISTORY)
-        fetchTimeHistory = ai.platon.pulsar.common.DateTimeUtil.constructTimeHistory(fetchTimeHistory, fetchTime, 10)
+        fetchTimeHistory = DateTimeUtil.constructTimeHistory(fetchTimeHistory, fetchTime, 10)
         metadata.set(Name.FETCH_TIME_HISTORY, fetchTimeHistory)
     }
 
@@ -250,12 +251,12 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
 
     fun getIndexTimeHistory(defaultValue: String): String {
         val s = metadata.get(Name.INDEX_TIME_HISTORY)
-        return s ?: defaultValue
+        return s?:defaultValue
     }
 
     fun putIndexTimeHistory(indexTime: Instant) {
         var indexTimeHistory = metadata.get(Name.INDEX_TIME_HISTORY)
-        indexTimeHistory = ai.platon.pulsar.common.DateTimeUtil.constructTimeHistory(indexTimeHistory, indexTime, 10)
+        indexTimeHistory = DateTimeUtil.constructTimeHistory(indexTimeHistory, indexTime, 10)
         metadata.set(Name.INDEX_TIME_HISTORY, indexTimeHistory)
     }
 
@@ -265,7 +266,7 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
         val indexTimeHistory = getIndexTimeHistory("")
         if (!indexTimeHistory.isEmpty()) {
             val times = indexTimeHistory.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            val time = ai.platon.pulsar.common.DateTimeUtil.parseInstant(times[0], Instant.EPOCH)
+            val time = DateTimeUtil.parseInstant(times[0], Instant.EPOCH)
             if (time.isAfter(Instant.EPOCH)) {
                 firstIndexTime = time
             }

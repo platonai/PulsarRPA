@@ -224,7 +224,7 @@ public class PagesResource {
     if (!page.isNil()) {
       page.getDeadLinks().clear();
 
-      webDb.put(page.getUrl(), page);
+      webDb.put(page);
       webDb.flush();
 
       page = webDb.getOrNil(url);

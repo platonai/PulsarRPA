@@ -80,15 +80,15 @@ class Pulsar: AutoCloseable {
      * @return The web page created
      */
     fun inject(configuredUrl: String): WebPage {
-        return injectComponent.inject(UrlUtil.splitUrlArgs(configuredUrl))
+        return injectComponent.inject(Urls.splitUrlArgs(configuredUrl))
     }
 
     operator fun get(url: String): WebPage? {
-        return webDb.get(url)
+        return webDb.get(url, false)
     }
 
     fun getOrNil(url: String): WebPage {
-        return webDb.getOrNil(url)
+        return webDb.getOrNil(url, false)
     }
 
     fun scan(urlBase: String): Iterator<WebPage> {
@@ -106,12 +106,12 @@ class Pulsar: AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(configuredUrl: String): WebPage {
-        val urlAndOptions = UrlUtil.splitUrlArgs(configuredUrl)
+        val urlAndOptions = Urls.splitUrlArgs(configuredUrl)
 
-        val options = LoadOptions.parse(urlAndOptions.value, defaultMutableConfig)
+        val options = LoadOptions.parse(urlAndOptions.second, defaultMutableConfig)
         options.mutableConfig = defaultMutableConfig
 
-        return loadComponent.load(urlAndOptions.key, options)
+        return loadComponent.load(urlAndOptions.first, options)
     }
 
     /**
@@ -188,7 +188,7 @@ class Pulsar: AutoCloseable {
     }
 
     fun persist(page: WebPage) {
-        webDb.put(page.url, page)
+        webDb.put(page, false)
     }
 
     fun delete(url: String) {

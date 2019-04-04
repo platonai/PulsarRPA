@@ -47,7 +47,7 @@ public class WebDbComponent implements AutoCloseable {
     private WebDb webDb;
     private AtomicBoolean isClosed = new AtomicBoolean();
 
-    public WebDbComponent(ImmutableConfig conf) throws GoraException, ClassNotFoundException {
+    public WebDbComponent(ImmutableConfig conf) {
         this(new WebDb(conf), conf);
     }
 
@@ -57,11 +57,11 @@ public class WebDbComponent implements AutoCloseable {
     }
 
     public void put(String url, WebPage page) {
-        webDb.put(url, page);
+        webDb.put(page);
     }
 
     public void put(WebPage page) {
-        webDb.put(page.getUrl(), page);
+        webDb.put(page);
     }
 
     public void flush() {

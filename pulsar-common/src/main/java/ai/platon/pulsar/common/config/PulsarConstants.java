@@ -42,6 +42,7 @@ public interface PulsarConstants {
     String ALL_BATCH_ID_STR = "-all";
 
     // see https://en.wikipedia.org/wiki/UTF-8
+    Character UNICODE_FIRST_CODE_POINT = '\u0001';
     Character UNICODE_LAST_CODE_POINT = '\uFFFF';
 
     int DISTANCE_INFINITE = 10000;
