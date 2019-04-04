@@ -249,7 +249,7 @@ public class LoadComponent {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(options);
 
-        URL u = URLUtil.getURLOrNull(originalUrl);
+        URL u = Urls.getURLOrNull(originalUrl);
         if (u == null) {
             LOG.warn("Malformed url {}", originalUrl);
             return WebPage.NIL;
@@ -312,7 +312,7 @@ public class LoadComponent {
 
         }
 
-        if (!URLUtil.isValidUrl(url)) {
+        if (!Urls.isValidUrl(url)) {
             return null;
         }
 

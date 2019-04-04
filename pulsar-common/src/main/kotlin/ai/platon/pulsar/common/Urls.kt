@@ -5,8 +5,93 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.net.URL
 
-
 object Urls {
+
+    @JvmStatic
+    fun getURLOrNull(url: String): URL? {
+        if (url.isEmpty()) {
+            return null
+        }
+
+        try {
+            return URL(url)
+        } catch (ignored: Exception) {
+        }
+
+        return null
+    }
+
+    @JvmStatic
+    fun isValidUrl(url: String): Boolean {
+        return getURLOrNull(url) != null
+    }
+
+    /**
+     * Simple normalization
+     * TODO: move to general normalize module
+     * */
+    @JvmStatic
+    fun normalizeUrl(url: String, keepQuery: Boolean = false): String {
+        var u = getURLOrNull(url)?.toString()?:return ""
+        u = u.substringBefore("#")
+        if (!keepQuery) {
+            u = getUrlWithoutParameters(u)
+        }
+        return u
+    }
+
+    /**
+     * Resolve relative URL-s and fix a java.net.URL error in handling of URLs
+     * with pure query targets.
+     *
+     * @param base   base url
+     * @param target target url (may be relative)
+     * @return resolved absolute url.
+     * @throws MalformedURLException
+     */
+    @Throws(MalformedURLException::class)
+    @JvmStatic
+    fun resolveURL(base: URL, targetUrl: String): URL {
+        val target = targetUrl.trim()
+
+        // handle the case that there is a target that is a pure query,
+        // for example
+        // http://careers3.accenture.com/Careers/ASPX/Search.aspx?co=0&sk=0
+        // It has urls in the page of the form href="?co=0&sk=0&pg=1", and by
+        // default
+        // URL constructs the base+target combo as
+        // http://careers3.accenture.com/Careers/ASPX/?co=0&sk=0&pg=1, incorrectly
+        // dropping the Search.aspx target
+        //
+        // Browsers handle these just fine, they must have an exception similar to
+        // this
+        return if (target.startsWith("?")) {
+            fixPureQueryTargets(base, target)
+        } else URL(base, target)
+    }
+
+    /**
+     * Handle the case in RFC3986 section 5.4.1 example 7, and similar.
+     */
+    private fun fixPureQueryTargets(base: URL, targetUrl: String): URL {
+        var target = targetUrl.trim()
+        if (!target.startsWith("?")) {
+            return URL(base, target)
+        }
+
+        val basePath = base.path
+        var baseRightMost = ""
+        val baseRightMostIdx = basePath.lastIndexOf("/")
+        if (baseRightMostIdx != -1) {
+            baseRightMost = basePath.substring(baseRightMostIdx + 1)
+        }
+
+        if (target.startsWith("?")) {
+            target = baseRightMost + target
+        }
+
+        return URL(base, target)
+    }
 
     @JvmStatic
     fun splitUrlArgs(configuredUrl: String): Pair<String, String> {
@@ -34,7 +119,7 @@ object Urls {
 
     @JvmStatic
     fun urlAndKey(originalUrl: String, ignoreQuery: Boolean = false): Pair<String, String> {
-        val url = if (ignoreQuery) Urls.getUrlWithoutParameters(originalUrl) else originalUrl
+        val url = if (ignoreQuery) normalizeUrl(originalUrl) else originalUrl
         val key = Urls.reverseUrlOrEmpty(url)
         return url to key
     }

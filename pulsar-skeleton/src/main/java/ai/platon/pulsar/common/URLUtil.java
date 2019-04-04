@@ -32,81 +32,14 @@ public class URLUtil {
     public static final Logger LOG = LoggerFactory.getLogger(URLUtil.class);
     private static Pattern IP_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}(\\d{1,3})");
 
-    /**
-     * Resolve relative URL-s and fix a java.net.URL error in handling of URLs
-     * with pure query targets.
-     *
-     * @param base   base url
-     * @param target target url (may be relative)
-     * @return resolved absolute url.
-     * @throws MalformedURLException
-     */
-    public static URL resolveURL(URL base, String target) throws MalformedURLException {
-        target = target.trim();
-
-        // handle the case that there is a target that is a pure query,
-        // for example
-        // http://careers3.accenture.com/Careers/ASPX/Search.aspx?co=0&sk=0
-        // It has urls in the page of the form href="?co=0&sk=0&pg=1", and by
-        // default
-        // URL constructs the base+target combo as
-        // http://careers3.accenture.com/Careers/ASPX/?co=0&sk=0&pg=1, incorrectly
-        // dropping the Search.aspx target
-        //
-        // Browsers handle these just fine, they must have an exception similar to
-        // this
-        if (target.startsWith("?")) {
-            return fixPureQueryTargets(base, target);
-        }
-
-        return new URL(base, target);
-    }
-
-    /**
-     * Handle the case in RFC3986 section 5.4.1 example 7, and similar.
-     */
-    static URL fixPureQueryTargets(URL base, String target) throws MalformedURLException {
-        if (!target.startsWith("?"))
-            return new URL(base, target);
-
-        String basePath = base.getPath();
-        String baseRightMost = "";
-        int baseRightMostIdx = basePath.lastIndexOf("/");
-        if (baseRightMostIdx != -1) {
-            baseRightMost = basePath.substring(baseRightMostIdx + 1);
-        }
-
-        if (target.startsWith("?"))
-            target = baseRightMost + target;
-
-        return new URL(base, target);
-    }
-
-    public static URL getURLOrNull(String url) {
-        if (url == null || url.isEmpty()) {
-            return null;
-        }
-
-        try {
-            return new URL(url);
-        } catch (final Exception ignored) {
-        }
-
-        return null;
-    }
-
-    public static boolean isValidUrl(String url) {
-        return getURLOrNull(url) != null;
-    }
-
     @Nonnull
     public static String getHost(CharSequence url, GroupMode groupMode) {
-        return getHost(getURLOrNull(url.toString()), groupMode);
+        return getHost(Urls.getURLOrNull(url.toString()), groupMode);
     }
 
     @Nonnull
     public static String getHost(String url, GroupMode groupMode) {
-        return getHost(getURLOrNull(url), groupMode);
+        return getHost(Urls.getURLOrNull(url), groupMode);
     }
 
     @Nonnull
@@ -293,8 +226,7 @@ public class URLUtil {
      *
      * @throws MalformedURLException
      */
-    public static String[] getHostBatches(String url)
-            throws MalformedURLException {
+    public static String[] getHostBatches(String url) throws MalformedURLException {
         return getHostBatches(new URL(url));
     }
 

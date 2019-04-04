@@ -25,62 +25,62 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-i", "--expires"}, converter = DurationConverter.class, description = "Web page expire time")
     private Duration expires;
 
-    @Parameter(names = {"-pst", "--persist"}, description = "Persist page(s) once fetched")
+    @Parameter(names = {"-pst", "-persist", "--persist"}, description = "Persist page(s) once fetched")
     private boolean persist = true;
 
-    @Parameter(names = {"-sk", "--shorten-key"}, description = "Remove url query as the page key")
+    @Parameter(names = {"-shortenKey", "--shorten-key"}, description = "Page key is generated from baseUrl with parameters removed")
     private boolean shortenKey = false;
 
     @Parameter(names = {"-retry", "--retry"}, description = "Retry fetch the page if it's failed last time")
     private boolean retry = false;
 
-    @Parameter(names = {"--auto-flush"}, description = "Auto flush db when page(s)")
+    @Parameter(names = {"-autoFlush", "--auto-flush"}, description = "Auto flush db when page(s)")
     private boolean autoFlush = true;
 
-    @Parameter(names = {"--prefer-parallel"}, description = "Parallel fetch urls whenever applicable")
+    @Parameter(names = {"-preferParallel", "--prefer-parallel"}, description = "Parallel fetch urls whenever applicable")
     private Boolean preferParallel;
 
 //    @Parameter(names = {"--no-normalize"}, description = "Do not normalize urls")
 //    private Boolean noNormalize;
 
-    @Parameter(names = {"--fetch-mode"}, description = "The fetch mode")
+    @Parameter(names = {"-fetchMode", "--fetch-mode"}, description = "The fetch mode")
     private String fetchMode;
 
-    @Parameter(names = {"--browser"}, description = "The browser")
+    @Parameter(names = {"-browser", "--browser"}, description = "The browser")
     private String browser;
 
-    @Parameter(names = {"--ignore-failed"}, description = "Ignore all failed pages in batch loading")
+    @Parameter(names = {"-ignoreFailed", "--ignore-failed"}, description = "Ignore all failed pages in batch loading")
     private Boolean ignoreFailed;
 
-    @Parameter(names = {"--background"}, description = "Fetch the page in background")
+    @Parameter(names = {"-background", "--background"}, description = "Fetch the page in background")
     private Boolean background;
 
-    @Parameter(names = {"-nord", "--no-redirect"}, description = "Do not redirect")
+    @Parameter(names = {"-nord", "-noRedirect", "--no-redirect"}, description = "Do not redirect")
     private boolean noRedirect = false;
 
-    @Parameter(names = {"--hard-redirect"}, description = "Return the entire WebPage " +
+    @Parameter(names = {"-hardRedirect", "--hard-redirect"}, description = "Return the entire WebPage " +
             "instead of the temp WebPage with the target's content when redirect")
     private Boolean hardRedirect = true;
 
-    @Parameter(names = {"-q", "--query"}, description = "Extract query for model")
+    @Parameter(names = {"-q", "-query", "--query"}, description = "Extract query for model")
     private String query;
 
-    @Parameter(names = {"-ps", "--parse"}, description = "Parse the page")
+    @Parameter(names = {"-ps", "-parse", "--parse"}, description = "Parse the page")
     private boolean parse = false;
 
-    @Parameter(names = {"-m", "--with-model"}, description = "Also load page model")
+    @Parameter(names = {"-m", "-withModel", "--with-model"}, description = "Also load page model")
     private boolean withModel = false;
 
-    @Parameter(names = {"-lk", "--with-links"}, description = "Contains links when loading page model")
+    @Parameter(names = {"-lk", "-withLinks", "--with-links"}, description = "Contains links when loading page model")
     private boolean withLinks = false;
 
-    @Parameter(names = {"-tt", "--with-text"}, description = "Contains text when loading page model")
+    @Parameter(names = {"-tt", "-withText", "--with-text"}, description = "Contains text when loading page model")
     private boolean withText = false;
 
-    @Parameter(names = {"-rpl", "--reparse-links"}, description = "Re-parse all links if the page is parsed")
+    @Parameter(names = {"-rpl", "-reparseLinks", "--reparse-links"}, description = "Re-parse all links if the page is parsed")
     private boolean reparseLinks = false;
 
-    @Parameter(names = {"-nolf", "--no-link-filter"}, description = "No filters applied to parse links")
+    @Parameter(names = {"-nolf", "-noLinkFilter", "--no-link-filter"}, description = "No filters applied to parse links")
     private boolean noLinkFilter = false;
 
     private MutableConfig mutableConfig;
@@ -333,7 +333,7 @@ public class LoadOptions extends CommonOptions {
                 "-nord", isNoRedirect(),
                 "-nolf", isNoLinkFilter(),
                 "-prst", isPersist(),
-                "-shorten-key", isShortenKey(),
+                "-shortenKey", isShortenKey(),
                 "--expires", getExpires(),
                 "--auto-flush", isAutoFlush(),
                 "--fetch-mode", getFetchMode(),

@@ -18,6 +18,7 @@
 package ai.platon.pulsar.crawl.component;
 
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.persist.CrawlStatus;
@@ -181,7 +182,7 @@ public class FetchComponent implements AutoCloseable {
 
         String url = page.getUrl();
 
-        URL u = URLUtil.getURLOrNull(url);
+        URL u = Urls.getURLOrNull(url);
         if (u == null) {
             return WebPage.NIL;
         }

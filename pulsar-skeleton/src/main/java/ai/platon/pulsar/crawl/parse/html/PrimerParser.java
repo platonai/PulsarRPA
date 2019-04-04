@@ -17,10 +17,7 @@
 
 package ai.platon.pulsar.crawl.parse.html;
 
-import ai.platon.pulsar.common.DomUtil;
-import ai.platon.pulsar.common.EncodingDetector;
-import ai.platon.pulsar.common.NodeWalker;
-import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.HypeLink;
 import ai.platon.pulsar.persist.WebPage;
@@ -455,7 +452,7 @@ public class PrimerParser {
 
                         if (target != null && !noFollow && !post)
                             try {
-                                URL url = URLUtil.resolveURL(base, target);
+                                URL url = Urls.resolveURL(base, target);
                                 hypeLinks.add(new HypeLink(url.toString(), linkText.toString().trim()));
                             } catch (MalformedURLException ignored) {
                             }

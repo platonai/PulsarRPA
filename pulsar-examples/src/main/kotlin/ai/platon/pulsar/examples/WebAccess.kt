@@ -39,9 +39,12 @@ object WebAccess {
         i.load("$productPortalUrl $loadOptions")
                 .let { i.parse(it) }
                 .select(".goods_item a[href~=detail]") { it.attr("abs:href") }
-                .take(2)
-                .map { i.load(it) }
+                .asSequence().distinct()
+                .take(40)
+//                .onEach { println(it) }
+                .map { i.load("$it -persist -shortenKey") }
                 .map { i.parse(it) }
+                .onEach { println(it.title) }
                 .map { i.export(it) }
     }
 

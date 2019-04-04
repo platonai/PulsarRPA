@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.persist.WebPage;
 
 import javax.annotation.Nonnull;
@@ -33,7 +34,7 @@ public class FetchTask implements Comparable<FetchTask> {
      * address pair or protocol+domain pair.
      */
     public static FetchTask create(int jobId, int priority, String url, WebPage page, URLUtil.GroupMode groupMode) {
-        final URL u = URLUtil.getURLOrNull(url);
+        final URL u = Urls.getURLOrNull(url);
 
         if (u == null) {
             return null;
