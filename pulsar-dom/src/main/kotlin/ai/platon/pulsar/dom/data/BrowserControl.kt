@@ -1,7 +1,6 @@
 package ai.platon.pulsar.dom.data
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.config.ImmutableConfig
 import com.google.gson.GsonBuilder
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
@@ -9,20 +8,22 @@ import java.awt.Dimension
 import java.io.IOException
 import java.util.*
 
-class BrowserControl {
+class BrowserControl(parameters: Map<String, Any> = mapOf()) {
     companion object {
         val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
-        val viewPort: Dimension = Dimension(1920, 1080)
-        private var js: String = ""
+        val viewPort = Dimension(1920, 1080)
     }
 
-    val parameters = mutableMapOf<String, Any>()
+    private val jsParameters = mutableMapOf<String, Any>()
+    private var js: String = ""
 
     init {
         mapOf(
                 "viewPortWidth" to viewPort.width,
                 "viewPortHeight" to viewPort.height
-        ).also { parameters.putAll(it) }
+        ).also { jsParameters.putAll(it) }
+
+        jsParameters.putAll(parameters)
     }
 
     fun getJs(reload: Boolean = false): String {
@@ -36,8 +37,8 @@ class BrowserControl {
     private fun loadJs(): String {
         val sb = StringBuilder()
 
-        // Json does not recognize MutableMap, but knows Map
-        val configs = GsonBuilder().create().toJson(parameters.toMap())
+        // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
+        val configs = GsonBuilder().create().toJson(jsParameters.toMap())
         sb.appendln(";\nlet PULSAR_CONFIGS = $configs;")
 
         Arrays.asList(

@@ -21,7 +21,6 @@ const val A_CAPTION = "s-caption"
 /**
  * Variable names
  * */
-const val V_ANNOTATED_DOCUMENT_EXPORT_PATH = "ANNOTATED_DOCUMENT_EXPORT_PATH"
 const val V_OWNER_BODY = "V_OWNER_BODY"
 const val V_VIEW_PORT = "VIEW_PORT"
 

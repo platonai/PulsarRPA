@@ -28,17 +28,9 @@ import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
 
-/**
- * Get the document owns the node
- * */
-val Node.ownerDocument: Document get() = ownerDocument()
-
-val Node.ownerBody: Element
-    get() = computeVariableIfAbsent<Element>(V_OWNER_BODY, ownerDocument.body())
-
 val Node.viewPort: Dimension
     get() {
-        return ownerDocument.computeVariableIfAbsent(V_VIEW_PORT, ownerDocument.calculateViewPort())
+        return computeDocVariableIfAbsent(V_VIEW_PORT, ownerDocument.calculateViewPort())
     }
 
 // basic info
@@ -212,7 +204,8 @@ fun Node.clearFeatures(): Node {
 }
 
 /**
- * Temporary variables
+ * Temporary node variables
+ * TODO: we may need a fast variable holder which uses int as the key
  * */
 inline fun <reified T> Node.getVariable(name: String): T? {
     val v = variables[name]
@@ -243,6 +236,33 @@ fun Node.hasVariable(name: String): Boolean {
 
 fun Node.removeVariable(name: String): Any? {
     return variables.remove(name)
+}
+
+/**
+ * Temporary document variables
+ * */
+inline fun <reified T> Node.getDocVariable(name: String): T? {
+    return ownerDocument.getVariable(name)
+}
+
+inline fun <reified T> Node.getDocVariable(name: String, defaultValue: T): T {
+    return ownerDocument.getVariable(name, defaultValue)
+}
+
+inline fun <reified T> Node.computeDocVariableIfAbsent(name: String, defaultValue: T): T {
+    return ownerDocument.computeVariableIfAbsent(name, defaultValue)
+}
+
+fun Node.setDocVariable(name: String, value: Any) {
+    ownerDocument.setVariable(name, value)
+}
+
+fun Node.hasDocVariable(name: String): Boolean {
+    return ownerDocument.hasVariable(name)
+}
+
+fun Node.removeDocVariable(name: String): Any? {
+    return ownerDocument.removeVariable(name)
 }
 
 /**

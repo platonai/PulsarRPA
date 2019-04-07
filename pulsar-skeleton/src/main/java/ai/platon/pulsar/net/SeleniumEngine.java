@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
+import ai.platon.pulsar.dom.data.BrowserControl;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.BrowserType;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
@@ -52,10 +53,8 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(SeleniumEngine.class);
 
     // The javascript to execute by Web browsers
-    // TODO: A better solution to initialize view port and client javascript
-    public static int VIEW_PORT_WIDTH = 1920;
-    public static int VIEW_PORT_HEIGHT = 1080;
-    public static String CLIENT_JS = "";
+    // TODO: may use a non-static member
+    public static BrowserControl browserControl = new BrowserControl();
 
     private ImmutableConfig immutableConfig;
     private MutableConfig defaultMutableConfig;
@@ -137,7 +136,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         scrollDownCount = immutableConfig.getInt(FETCH_SCROLL_DOWN_COUNT, 0);
         scrollDownWait = immutableConfig.getDuration(FETCH_SCROLL_DOWN_COUNT, Duration.ofMillis(500));
 
-        clientJs = immutableConfig.get(FETCH_CLIENT_JS, CLIENT_JS);
+        clientJs = browserControl.getJs(true);
 
         getParams().withLogger(LOG).info();
     }
@@ -394,9 +393,6 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         if (scrollDownWait.compareTo(pageLoadTimeout) > 0) {
             scrollDownWait = pageLoadTimeout;
         }
-
-        // custom js
-        clientJs = mutableConfig.get(FETCH_CLIENT_JS, CLIENT_JS);
     }
 
     private void afterVisit(int status, WebPage page, WebDriver driver) {

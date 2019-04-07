@@ -49,10 +49,6 @@ object PulsarEnv {
         goraProperties = GoraStorage.properties
         // storage service must be initialized in advance to ensure prerequisites
         storageService = applicationContext.getBean(AutoDetectedStorageService::class.java)
-        // set javascript for selenium engine to execute after every page is loaded
-        if (SeleniumEngine.CLIENT_JS.isNullOrBlank()) {
-            SeleniumEngine.CLIENT_JS = BrowserControl().getJs()
-        }
     }
 
     fun ensureEnv() {

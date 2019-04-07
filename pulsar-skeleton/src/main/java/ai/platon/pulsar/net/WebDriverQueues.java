@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
 import ai.platon.pulsar.common.proxy.ProxyEntry;
 import ai.platon.pulsar.common.proxy.ProxyPool;
+import ai.platon.pulsar.dom.data.BrowserControl;
 import ai.platon.pulsar.persist.metadata.BrowserType;
 import com.gargoylesoftware.htmlunit.WebClient;
 import org.apache.http.conn.ssl.SSLContextBuilder;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -40,8 +42,6 @@ import java.util.logging.Level;
 
 import static ai.platon.pulsar.common.GlobalExecutor.NCPU;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.net.SeleniumEngine.VIEW_PORT_HEIGHT;
-import static ai.platon.pulsar.net.SeleniumEngine.VIEW_PORT_WIDTH;
 import static org.openqa.selenium.remote.CapabilityType.SUPPORTS_JAVASCRIPT;
 import static org.openqa.selenium.remote.CapabilityType.TAKES_SCREENSHOT;
 
@@ -71,6 +71,8 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
     public static final ChromeOptions DEFAULT_CHROME_CAPABILITIES;
 
     static {
+        Dimension viewPort = BrowserControl.Companion.getViewPort();
+
         // HtmlUnit
         DEFAULT_CAPABILITIES = new DesiredCapabilities();
         DEFAULT_CAPABILITIES.setCapability(SUPPORTS_JAVASCRIPT, true);
@@ -78,13 +80,13 @@ public class WebDriverQueues implements ReloadableParameterized, AutoCloseable {
         DEFAULT_CAPABILITIES.setCapability("downloadImages", false);
         DEFAULT_CAPABILITIES.setCapability("browserLanguage", "zh_CN");
         DEFAULT_CAPABILITIES.setCapability("throwExceptionOnScriptError", false);
-        DEFAULT_CAPABILITIES.setCapability("resolution", VIEW_PORT_WIDTH + "x" + VIEW_PORT_HEIGHT);
+        DEFAULT_CAPABILITIES.setCapability("resolution", viewPort.width + "x" + viewPort.height);
 
         // see https://peter.sh/experiments/chromium-command-line-switches/
         DEFAULT_CHROME_CAPABILITIES = new ChromeOptions();
         DEFAULT_CHROME_CAPABILITIES.merge(DEFAULT_CAPABILITIES);
         DEFAULT_CHROME_CAPABILITIES.setHeadless(true);
-        DEFAULT_CHROME_CAPABILITIES.addArguments("--window-size=" + VIEW_PORT_WIDTH + "," + VIEW_PORT_HEIGHT);
+        DEFAULT_CHROME_CAPABILITIES.addArguments("--window-size=" + viewPort.width + "," + viewPort.height);
         DEFAULT_CHROME_CAPABILITIES.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
     }
 
