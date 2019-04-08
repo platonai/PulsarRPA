@@ -20,6 +20,7 @@ package ai.platon.pulsar.common;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -386,20 +387,23 @@ public class TestString {
 
     @Test
     public void testLoadSlashedLines() throws IOException {
-        String RESOURCE_DIR = Paths.get(System.getProperty("test.data", ".")).toString();
-
         String seeds = "@data/lines-with-slashes.txt";
 
         if (seeds.startsWith("@")) {
-            seeds = new String(Files.readAllBytes(Paths.get(RESOURCE_DIR, seeds.substring(1))));
+            seeds = String.join("\n", new ResourceLoader().readAllLines(seeds.substring(1)));
         }
 
         File seedFile = File.createTempFile("seed", ".txt");
         List<String> unslashedLines = StringUtil.getUnslashedLines(seeds);
-        assertEquals(112, StringUtil.getUnslashedLines(seeds).size());
+
+//        for (int i = 0; i < unslashedLines.size(); i++) {
+//            System.out.println(i + "\t" + unslashedLines.get(i));
+//        }
+
+        assertEquals(111, unslashedLines.size());
 
         FileUtils.writeLines(seedFile, unslashedLines);
-        assertEquals(112, Files.readAllLines(seedFile.toPath()).size());
+        assertEquals(111, Files.readAllLines(seedFile.toPath()).size());
 
 //    System.out.println(StringUtil.getUnslashedLines(seeds).size());
 //    System.out.println(seedFile.getAbsolutePath());
