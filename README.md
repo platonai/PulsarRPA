@@ -6,6 +6,9 @@ collection, extraction, analysis, storage and BI, etc.
 
 [中文文档](README.zh.md)
 
+![product-screenshot](docs/res/pulsar-product-screenshot-1.png)
+![product-screenshot](docs/res/pulsar-product-screenshot-2.png)
+
 # Features
 - X-SQL: Do all data jobs using SQL
 - BI Integration: Turn Web sites into tables and charts using just one simple SQL

@@ -2,6 +2,9 @@ Pulsar 说明文档
 ===================
 Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL 以支持数据处理全周期，涵盖数据采集，结构化，分析，存储和 BI 报表等。
 
+![产品截图](docs/res/pulsar-product-screenshot-1.png)
+![产品截图](docs/res/pulsar-product-screenshot-2.png)
+
 # 主要特性
 - X-SQL：扩展 SQL，覆盖大数据处理完整生命周期：采集，提取，转换，统计，机器学习、NLP、知识图谱以及 BI 报表
 - 网络爬虫：浏览器渲染，Ajax，爬虫调度，页面评分，系统监控，高性能分布式，Solr/Elastic 索引
@@ -12,22 +15,12 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
 将网页转变为表格：
 
     SELECT
-        DOM_TEXT(DOM) AS TITLE,
-        DOM_ABS_HREF(DOM) AS LINK
-    FROM
-        LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
-
-上述 SQL 访问 wikipedia 的一个网页，提取引用区块的所有外部链接。
-
-    SELECT
       DOM_BASE_URI(DOM) AS BaseUri,
       DOM_FIRST_TEXT(DOM, '.brand') AS Title,
       DOM_FIRST_TEXT(DOM, '.titlecon') AS Memo,
       DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
       DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
     FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 100);
-
-上述 SQL 访问蜜牙的一个栏目页，下载所有商品详细页并提取网页数据。
 
 你可以下载 Pulsar 源代码自己运行上述 X-SQL 或者通过我们的[演示版](http://bi.platonic.fun/question/new)运行。
 
