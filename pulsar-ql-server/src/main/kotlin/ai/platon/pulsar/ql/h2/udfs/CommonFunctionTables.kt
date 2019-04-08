@@ -1,19 +1,14 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import com.google.common.reflect.ClassPath
-import org.apache.commons.lang3.StringUtils
 import org.h2.engine.Session
-import org.h2.engine.SessionInterface
 import org.h2.ext.pulsar.annotation.H2Context
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
-import java.awt.SystemColor.text
-
 import java.sql.ResultSet
 import java.sql.Types
 import kotlin.reflect.KCallable
