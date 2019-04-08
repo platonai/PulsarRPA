@@ -14,7 +14,8 @@ import com.google.common.reflect.ClassPath
 import org.h2.engine.SessionInterface
 import kotlin.reflect.KClass
 
-open class QuerySession(val dbSession: DbSession, config: SessionConfig): PulsarSession(applicationContext, config, dbSession.id) {
+open class QuerySession(val dbSession: DbSession, config: SessionConfig)
+    : PulsarSession(applicationContext, config, dbSession.id) {
     private var totalUdfs: Int = 0
 
     init {

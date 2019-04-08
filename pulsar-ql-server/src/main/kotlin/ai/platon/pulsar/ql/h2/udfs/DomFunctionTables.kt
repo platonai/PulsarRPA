@@ -28,19 +28,6 @@ import java.util.*
 @UDFGroup(namespace = "DOM")
 object DomFunctionTables {
 
-    @JvmStatic
-    @UDFunction
-    fun help(): ResultSet {
-        val rs = SimpleResultSet()
-        rs.addColumn("FUNCTION_NAME", DataType.convertTypeToSQLType(Value.STRING), 0, 0)
-        rs.addColumn("PARAMETERS", DataType.convertTypeToSQLType(Value.STRING), 0, 0)
-        rs.addColumn("DESCRIPTION", DataType.convertTypeToSQLType(ValueDom.type), 0, 0)
-
-        rs.addRow("HELP", "", "print help message")
-
-        return rs
-    }
-
     /**
      * Load all urls
      * For example:
@@ -48,7 +35,7 @@ object DomFunctionTables {
      */
     @InterfaceStability.Evolving
     @JvmStatic
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load all pages specified by urls")
     fun loadAll(@H2Context h2session: Session, configuredUrls: ValueArray): ResultSet {
         val session = H2SessionFactory.getSession(h2session.id)
 
@@ -59,7 +46,7 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load a page and select the specified element")
     @JvmStatic
     @JvmOverloads
     fun loadAndSelect(
@@ -86,7 +73,7 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside the specified element")
     @JvmStatic
     @JvmOverloads
     fun loadAndGetLinks(
@@ -116,7 +103,7 @@ object DomFunctionTables {
      * @return The [ResultSet]
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
     @JvmOverloads
     @JvmStatic
     fun loadOutPages(@H2Context h2session: Session,
@@ -129,7 +116,7 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, ignore url queries in the target url")
     @JvmOverloads
     @JvmStatic
     fun loadOutPagesIgnoreUrlQuery(@H2Context h2session: Session,
@@ -153,7 +140,7 @@ object DomFunctionTables {
      * @return The [ResultSet]
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, and select the specified element")
     @JvmOverloads
     @JvmStatic
     fun loadOutPagesAndSelectFirst(
@@ -199,7 +186,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load a page and show the features of it's elements")
     @JvmStatic
     @JvmOverloads
     fun loadAndGetFeatures(

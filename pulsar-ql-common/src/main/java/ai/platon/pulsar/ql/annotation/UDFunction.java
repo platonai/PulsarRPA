@@ -15,4 +15,5 @@ public @interface UDFunction {
      * If a function has a shortcut, the namespace can be avoid
      * */
     boolean hasShortcut() default false;
+    String description() default "";
 }

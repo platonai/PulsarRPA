@@ -38,11 +38,11 @@ Extract data from a batch of pages, and turn them into a table:
       DOM_FIRST_TEXT(DOM, '.titlecon') AS Memo,
       DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
       DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-    FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 100);
+    FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 20);
 
 The SQL above visits an index page in mia.com, download detail pages and then extract data from them.
 
-You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/question/new).
+You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/question/65).
 
 Check [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs).
 
@@ -54,25 +54,27 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
 # Build & Run
 ## Install dependencies
     bin/tools/install-depends.sh
-## Build from source
-    git clone git@github.com:platonai/pulsar.git
-    cd pulsar && mvn -Pthird -Pplugins
 ## Install mongodb
 You can skip this step, in such case, all data will lose after pulsar shutdown.
 Ubuntu/Debian:
 
     sudo apt-get install mongodb
+## Build from source
+    git clone git@github.com:platonai/pulsar.git
+    cd pulsar && mvn -Pthird -Pplugins
 ## Start the pulsar server
     bin/pulsar
-## Use Web console
+## Execute X-SQLs
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
-## Execute a single X-SQL
+
+## Optional methods to execute X-SQLs
+### Execute a single X-SQL
     bin/pulsar sql -sql "SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external')"
-## Use GUI-free console
+### Use GUI-free console
     bin/pulsar sql
 
-## Use advanced BI tool
-Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, and run:
+### Use advanced BI tool
+Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, follow the official install process, and then run:
 
     java -jar metabase.jar
 

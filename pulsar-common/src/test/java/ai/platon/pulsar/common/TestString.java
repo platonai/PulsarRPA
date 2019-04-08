@@ -380,9 +380,6 @@ public class TestString {
 
         lines = StringUtil.getUnslashedLines(s);
         assertEquals(3, lines.size());
-
-//    System.out.println(lines.size());
-//    lines.stream().forEach(System.out::println);
     }
 
     @Test

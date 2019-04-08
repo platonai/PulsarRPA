@@ -82,6 +82,11 @@
     <description>fetch thread will exit if no any fetch item for fetcher.task.timeout minutes</description>
   </property>
 
+  <property>
+    <name>fetch.prefer.parallel</name>
+    <value>true</value>
+  </property>
+
   <!-- Parsing -->
   <property>
     <name>parse.min.anchor.length</name>

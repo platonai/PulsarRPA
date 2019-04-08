@@ -22,9 +22,9 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
       DOM_FIRST_TEXT(DOM, '.titlecon') AS Memo,
       DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
       DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-    FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 100);
+    FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 20);
 
-你可以下载 Pulsar 源代码自己运行上述 X-SQL 或者通过我们的[演示版](http://bi.platonic.fun/question/new)运行。
+你可以下载 pulsar 源代码自己运行上述 X-SQL 或者通过我们的[在线演示版](http://bi.platonic.fun/question/65)运行。
 
 文件 [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) 中包含了所有测试用的X-SQL。
 更多 X-SQL 函数可以在 [ai.platon.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs) 目录下找到。
@@ -35,29 +35,32 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
 现在，您公司里的每个人都可以提出有价值的问题，并立即使用互联网数据作出回答。
 
 # Build & Run
-## Install dependencies
+## 安装依赖项
     bin/tools/install-depends.sh
-## Build from source
+
+## 安装 MongoDB
+    这一步不是必须的，但如果没有一个后端存储，Pulsar 关闭后将不会保留任何数据。
+    在 Ubuntu/Debian 系统上：
+
+        sudo apt-get install mongodb
+
+## 从源代码构建
     git clone git@github.com:platonai/pulsar.git
     cd pulsar && mvn -Pthird -Pplugins
-## Install mongodb
-这一步不是必须的，但如果没有一个后端存储，Pulsar 关闭后将不会保留任何数据。
-Ubuntu/Debian:
-
-    sudo apt-get install mongodb
-## Start the pulsar server
+## 启动 pulsar 服务器
     bin/pulsar
-## Use Web console
+## 使用 Web 控制台
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with Web SQL.
-## Execute a single Web SQL
+
+## 执行 X-SQL 的其他方法
+### 执行单独的 X-SQL
     bin/pulsar sql -sql "SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external')"
-## Use GUI-free console
+### 免 GUI 控制台
     bin/pulsar sql
 
-## Use advanced BI tool
-下载 [Metabase](https://github.com/platonai/metabase) 定制版, 然后执行:
+### 使用 BI 工具
+下载 [Metabase](https://github.com/platonai/metabase) 定制版, 按照 Metabase 安装步骤安装，然后执行:
 
-    -- coming soon ..
     java -jar metabase.jar
 
 # 大规模网络爬虫
