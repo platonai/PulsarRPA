@@ -90,11 +90,9 @@ object WebAccess {
     }
 
     private fun initClientJs() {
-        val browserControl = BrowserControl()
-        mapOf(
-                "propertyNames" to listOf("font-size", "color", "background-color")
-        ).also { browserControl.parameters.putAll(it) }
-        SeleniumEngine.CLIENT_JS = browserControl.getJs(true)
+        val parameters = mapOf("propertyNames" to listOf("font-size", "color", "background-color"))
+        val browserControl = BrowserControl(parameters)
+        SeleniumEngine.browserControl = browserControl
     }
 }
 
