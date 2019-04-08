@@ -26,6 +26,7 @@ public class PulsarOptions implements Parameterized {
     public static final String DEFAULT_DELIMETER = " ";
 
     protected boolean expandAtSign = true;
+    protected String args = "";
     protected String[] argv;
     protected Set<Object> objects = new HashSet<>();
     protected JCommander jc;
@@ -36,6 +37,7 @@ public class PulsarOptions implements Parameterized {
 
     public PulsarOptions(String args) {
         this(split(args));
+        this.args = args;
     }
 
     public PulsarOptions(String[] argv) {
@@ -44,12 +46,19 @@ public class PulsarOptions implements Parameterized {
             // Since space can not appear in dynamic parameters in command line, we use % instead
             this.argv[i] = this.argv[i].replaceAll("%", " ");
         }
+        if (args.isEmpty()) {
+            args = StringUtils.join(argv);
+        }
     }
 
     public PulsarOptions(Map<String, String> argv) {
         this(argv.entrySet().stream()
                 .map(e -> e.getKey() + DEFAULT_DELIMETER + e.getValue())
                 .collect(Collectors.joining(DEFAULT_DELIMETER)));
+    }
+
+    public String getArgs() {
+        return args;
     }
 
     @Nonnull

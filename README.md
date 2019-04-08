@@ -2,9 +2,9 @@ Pulsar README
 ===================
 Pulsar is an un-structure focused intelligent data processing system, 
 it extends SQL to handle the entire life cycle of data processing:
-data collection, extraction, analysis, storage and BI, etc.
+collection, extraction, analysis, storage and BI, etc.
 
-中文文档：[README.zh](README.zh.md).
+[中文文档](README.zh.md)
 
 # Features
 - X-SQL: Do all data jobs using SQL
@@ -14,8 +14,10 @@ data collection, extraction, analysis, storage and BI, etc.
 - Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
 - Various database support: Store data in your favourite database, MongoDB/HBase, etc
 
+For more information check out [platonic.fun](platonic.fun)
+
 ## X-SQL
-Turn a Web page into a table:
+Extract data from a single page:
 
     SELECT
         DOM_TEXT(DOM) AS TITLE,
@@ -25,6 +27,8 @@ Turn a Web page into a table:
 
 The SQL above downloads a Web page from wikipedia, find out the references section and extract all external reference links.
 
+Extract data from a batch of pages, and turn them into a table:
+
     SELECT
       DOM_BASE_URI(DOM) AS BaseUri,
       DOM_FIRST_TEXT(DOM, '.brand') AS Title,
@@ -33,7 +37,7 @@ The SQL above downloads a Web page from wikipedia, find out the references secti
       DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
     FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 100);
 
-The SQL above visit an index page in mia.com, download detail pages and then extract data.
+The SQL above visits an index page in mia.com, download detail pages and then extract data from them.
 
 You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/question/new).
 
@@ -78,4 +82,4 @@ Crawl the open Web from seeds, and index text content using solr, run script:
 # Enterprise Edition:
 
 Pulsar Enterprise Edition supports Auto Web Mining: unsupervised machine learning, no rules or training required, 
-turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/question/40)
+turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/question/20)

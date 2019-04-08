@@ -2,14 +2,9 @@ Pulsar 说明文档
 ===================
 Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL 以支持数据处理全周期，涵盖数据采集，结构化，分析，存储和 BI 报表等。
 
-Pulsar is an un-structure oriented intelligent data processing system, 
-it extends SQL to handle the entire life cycle of data processing:
-data collection, extraction, analysis, storage and BI, etc.
-See [README.en](README.en.md) for more information.
-
 # 主要特性
-- 网络爬虫：浏览器渲染，Ajax，爬虫调度，页面评分，系统监控，高性能分布式，Solr/Elastic 索引
 - X-SQL：扩展 SQL，覆盖大数据处理完整生命周期：采集，提取，转换，统计，机器学习、NLP、知识图谱以及 BI 报表
+- 网络爬虫：浏览器渲染，Ajax，爬虫调度，页面评分，系统监控，高性能分布式，Solr/Elastic 索引
 - BI 集成：无缝衔接 BI 套件。将原始的非结构数据转变为报表，并获得商业见解，仅需要一条或几条简单的 X-SQL
 - 大数据：适应大规模的数据处理任务。分布式架构，支持 HBase/MongoDB 等多种底层存储
 
@@ -78,9 +73,9 @@ Web console [http://localhost:8082](http://localhost:8082) is already open in yo
 
 # 企业版:
 
-Pulsar 企业版提供了更多有趣的特性：
+Pulsar 企业版提供了更多高级特性：
 
 ## 自动网页挖掘（Auto Web Mining）
-使用高级机器学习技术，将网页精确还原为表格，不需要配置规则，也不需要单独训练。
+使用高级信息处理和机器学习技术，将网页精确还原为表格，不需要配置规则，也不需要单独训练。
 
 您可以通过我们的[人工智能网页收割演示](http://bi.platonic.fun/dashboard/20)来体验自动网页挖掘的强大能力。
