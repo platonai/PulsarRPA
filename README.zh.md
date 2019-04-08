@@ -11,7 +11,7 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
 - BI 集成：无缝衔接 BI 套件。将原始的非结构数据转变为报表，并获得商业见解，仅需要一条或几条简单的 X-SQL
 - 大数据：适应大规模的数据处理任务。分布式架构，支持 HBase/MongoDB 等多种底层存储
 
-更多信息请访问 [platonic.fun](platonic.fun)
+更多信息请访问 [platonic.fun](http://platonic.fun)
 
 ## X-SQL
 将网页转变为表格：

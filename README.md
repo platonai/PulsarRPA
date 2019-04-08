@@ -17,7 +17,7 @@ collection, extraction, analysis, storage and BI, etc.
 - Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
 - Various database support: Store data in your favourite database, MongoDB/HBase, etc
 
-For more information check out [platonic.fun](platonic.fun)
+For more information check out [platonic.fun](http://platonic.fun)
 
 ## X-SQL
 Extract data from a single page:
