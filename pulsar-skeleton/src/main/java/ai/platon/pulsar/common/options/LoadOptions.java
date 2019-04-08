@@ -40,9 +40,6 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-preferParallel", "--prefer-parallel"}, description = "Parallel fetch urls whenever applicable")
     private Boolean preferParallel;
 
-//    @Parameter(names = {"--no-normalize"}, description = "Do not normalize urls")
-//    private Boolean noNormalize;
-
     @Parameter(names = {"-fetchMode", "--fetch-mode"}, description = "The fetch mode")
     private String fetchMode;
 
@@ -204,10 +201,10 @@ public class LoadOptions extends CommonOptions {
 
     public boolean isPreferParallel() {
         if (preferParallel == null && mutableConfig != null) {
-            return mutableConfig.getBoolean(CapabilityTypes.FETCH_PREFER_PARALLEL, false);
+            return mutableConfig.getBoolean(CapabilityTypes.FETCH_PREFER_PARALLEL, true);
         }
 
-        return preferParallel != null ? preferParallel : false;
+        return preferParallel != null ? preferParallel : true;
     }
 
     public void setPreferParallel(boolean preferParallel) {

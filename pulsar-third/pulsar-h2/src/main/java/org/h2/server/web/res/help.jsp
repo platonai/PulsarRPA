@@ -19,6 +19,13 @@ function set(s) {
         parent.h2query.document.h2query.sql.value = s;
     }
 }
+
+function setBy(css) {
+    if (parent.h2query) {
+        parent.h2query.document.h2query.sql.value = document.querySelector(css).textContent.replace(/\s+/ig, ' ').trim();
+    }
+}
+
 //-->
 </script>
 
@@ -59,6 +66,33 @@ function set(s) {
 
 </table>
 
+<h3>Sample X-SQL scripts</h3>
+<table>
+    <tr><th><a href="javascript:setBy('.load_and_select');">Extract data form a single page</a></th>
+        <td class="load_and_select">SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');</td>
+    </tr>
+    <tr><th><a href="javascript:setBy('.load-out-pages-ignore-url-query')">Turn pages into a table</a></th>
+        <td class="load-out-pages-ignore-url-query">
+            SELECT<br />
+                DOM_BASE_URI(DOM) AS BaseUri,<br />
+                DOM_FIRST_TEXT(DOM, '.brand') AS Title,<br />
+                DOM_FIRST_TEXT(DOM, '.titlecon') AS Memo,<br />
+                DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,<br />
+                DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters<br />
+            FROM<br />
+                LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 20);
+        </td>
+    </tr>
+    <tr>
+        <th><a href="javascript:setBy('.meta-load');">The metadata of a page</a></th>
+        <td class="meta-load">SELECT * FROM META_LOAD('https://www.mia.com/formulas.html');</td>
+    </tr>
+    <tr>
+        <th><a href="javascript:setBy('.xsql-help');">X-SQL help</a></th>
+        <td class="xsql-help">SELECT * FROM XSQL_HELP();</td>
+    </tr>
+</table>
+
 <h3>${text.helpSampleSQL}</h3>
 <table>
 <tr><td><a href="javascript:set('DROP TABLE IF EXISTS TEST;\rCREATE TABLE TEST(ID INT PRIMARY KEY, NAME VARCHAR(255));\rINSERT INTO TEST VALUES(1, \'Hello\');\rINSERT INTO TEST VALUES(2, \'World\');\rSELECT * FROM TEST ORDER BY ID;\rUPDATE TEST SET NAME=\'Hi\' WHERE ID=1;\rDELETE FROM TEST WHERE ID=2;');">
@@ -70,7 +104,6 @@ function set(s) {
     ${text.helpQuery}<br />
     ${text.helpUpdate}<br />
     ${text.helpDeleteRow}<br />
-    Web SQL
 </a></td><td>
     DROP TABLE IF EXISTS TEST;<br />
     CREATE TABLE TEST(ID INT PRIMARY KEY,<br />
@@ -80,7 +113,6 @@ function set(s) {
     SELECT * FROM TEST ORDER BY ID;<br />
     UPDATE TEST SET NAME='Hi' WHERE ID=1;<br />
     DELETE FROM TEST WHERE ID=2;<br />
-    SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external');
 </td></tr>
 <tr><td><a href="javascript:set('HELP ');">
     ${text.a.help}
@@ -88,11 +120,6 @@ function set(s) {
     HELP ...
 </td></tr>
 </table>
-
-<h3>${text.helpAddDrivers}</h3>
-<p>
-${text.helpAddDriversText}
-</p>
 
 </div>
 
