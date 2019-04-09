@@ -6,16 +6,14 @@ collection, extraction, analysis, storage and BI, etc.
 
 [中文文档](README.zh.md)
 
-![product-screenshot](docs/res/pulsar-product-screenshot-1.png)
-![product-screenshot](docs/res/pulsar-product-screenshot-2.png)
+![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
+![product-screenshot](docs/images/pulsar-product-screenshot-2.png)
 
 # Features
-- X-SQL: Do all data jobs using SQL
-- BI Integration: Turn Web sites into tables and charts using just one simple SQL
-- Ajax support: Access the Web automatically, behave like humans
-- Web site monitoring: monitor news sites, e-commerce sites out-of-box
-- Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
-- Various database support: Store data in your favourite database, MongoDB/HBase, etc
+- X-SQL: eXtend SQL to do all data jobs using SQL: collection, extraction, preparation, processing, storage, BI, etc
+- Web spider: browser rendering, Ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
+- BI Integration: turn Web sites into tables and charts using just one simple SQL
+- Big data: large scale, various storage: HBase/MongoDB
 
 For more information check out [platonic.fun](http://platonic.fun)
 

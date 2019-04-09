@@ -25,26 +25,27 @@
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>pulsar-assembly</artifactId>
-
-    <name>Pulsar Assembly</name>
-    <url>http://pulsar.qiwur.org</url>
+    <artifactId>platon-pulsar</artifactId>
+    <name>Pulsar Distribution</name>
 
     <description>Distribution Package</description>
     <packaging>pom</packaging>
 
-    <properties>
-        <pulsar.skip.assembly>true</pulsar.skip.assembly>
-    </properties>
-
     <build>
-        <defaultGoal>package</defaultGoal>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>${maven-assembly-plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>ai.platon.pulsar.ql.start.H2DbConsole</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>bin</id>
+                        <id>uberjar</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
@@ -52,45 +53,27 @@
                         <configuration>
                             <skipAssembly>${pulsar.skip.assembly}</skipAssembly>
                             <appendAssemblyId>false</appendAssemblyId>
-                            <finalName>pulsar-${project.version}</finalName>
+                            <descriptorRefs>
+                                <descriptorRef>jar-with-dependencies</descriptorRef>
+                            </descriptorRefs>
                             <descriptors>
-                                <descriptor>src/main/assembly/bin.xml</descriptor>
+                                <descriptor>src/main/assembly/uberjar.xml</descriptor>
                             </descriptors>
                             <tarLongFileMode>gnu</tarLongFileMode>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>job</id>
+                        <id>src</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <skipAssembly>true</skipAssembly>
-                            <finalName>pulsar-job-${project.version}</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <!--<skipAssembly>${pulsar.skip.assembly}</skipAssembly>-->
                             <descriptors>
-                                <descriptor>src/main/assembly/job.xml</descriptor>
+                                <descriptor>src/main/assembly/src.xml</descriptor>
                             </descriptors>
-                            <tarLongFileMode>gnu</tarLongFileMode>
                         </configuration>
                     </execution>
-                    <!--<execution>-->
-                    <!--<id>src</id>-->
-                    <!--<phase>package</phase>-->
-                    <!--<goals>-->
-                    <!--<goal>single</goal>-->
-                    <!--</goals>-->
-                    <!--<configuration>-->
-                    <!--&lt;!&ndash;<skipAssembly>${pulsar.skip.assembly}</skipAssembly>&ndash;&gt;-->
-                    <!--<skipAssembly>false</skipAssembly>-->
-                    <!--<descriptors>-->
-                    <!--<descriptor>src/main/assembly/src.xml</descriptor>-->
-                    <!--</descriptors>-->
-                    <!--<tarLongFileMode>gnu</tarLongFileMode>-->
-                    <!--</configuration>-->
-                    <!--</execution>-->
                 </executions>
             </plugin>
         </plugins>
@@ -108,7 +91,7 @@
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-mapr</artifactId>
+            <artifactId>pulsar-ql-server</artifactId>
         </dependency>
     </dependencies>
 </project>

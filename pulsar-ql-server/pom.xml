@@ -21,11 +21,21 @@
     <artifactId>pulsar-ql-server</artifactId>
     <name>Pulsar QL Server</name>
 
-    <url>http://pulsar.platon.ai</url>
-    <inceptionYear>2014</inceptionYear>
-
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>ai.platon.pulsar.ql.start.H2DbConsole</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
             <!-- H2 runtime need local libs -->
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
