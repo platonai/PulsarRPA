@@ -10,12 +10,10 @@ collection, extraction, analysis, storage and BI, etc.
 ![product-screenshot](docs/res/pulsar-product-screenshot-2.png)
 
 # Features
-- X-SQL: Do all data jobs using SQL
-- BI Integration: Turn Web sites into tables and charts using just one simple SQL
-- Ajax support: Access the Web automatically, behave like humans
-- Web site monitoring: monitor news sites, e-commerce sites out-of-box
-- Highly extensible and scalable: runs on Hadoop/Spark, and other big data infrastructure
-- Various database support: Store data in your favourite database, MongoDB/HBase, etc
+- X-SQL: eXtended SQL to do all data jobs using SQL: collection, extraction, preparation, processing, storage, BI, etc
+- Web spider: browser rendering, Ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
+- BI Integration: turn Web sites into tables and charts using just one simple SQL
+- Big data: large scale, various storage: HBase/MongoDB
 
 For more information check out [platonic.fun](http://platonic.fun)
 
@@ -62,7 +60,7 @@ Ubuntu/Debian:
 ## Build from source
     git clone git@github.com:platonai/pulsar.git
     cd pulsar && mvn -Pthird -Pplugins
-## Start the pulsar server
+## Start pulsar server
     bin/pulsar
 ## Execute X-SQLs
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
@@ -74,7 +72,7 @@ Web console [http://localhost:8082](http://localhost:8082) is already open in yo
     bin/pulsar sql
 
 ### Use advanced BI tool
-Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, follow the official install process, and then run:
+Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, follow the official installation process, and then run:
 
     java -jar metabase.jar
 
@@ -87,4 +85,4 @@ Crawl the open Web from seeds, and index text content using solr, run script:
 # Enterprise Edition:
 
 Pulsar Enterprise Edition supports Auto Web Mining: unsupervised machine learning, no rules or training required, 
-turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/question/20)
+turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/dashboard/20)
