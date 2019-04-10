@@ -60,7 +60,7 @@ Ubuntu/Debian:
 ## Build from source
     git clone git@github.com:platonai/pulsar.git
     cd pulsar && mvn -Pthird -Pplugins
-## Start the pulsar server
+## Start pulsar server
     bin/pulsar
 ## Execute X-SQLs
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
@@ -72,7 +72,7 @@ Web console [http://localhost:8082](http://localhost:8082) is already open in yo
     bin/pulsar sql
 
 ### Use advanced BI tool
-Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, follow the official install process, and then run:
+Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, follow the official installation process, and then run:
 
     java -jar metabase.jar
 
@@ -85,4 +85,4 @@ Crawl the open Web from seeds, and index text content using solr, run script:
 # Enterprise Edition:
 
 Pulsar Enterprise Edition supports Auto Web Mining: unsupervised machine learning, no rules or training required, 
-turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/question/20)
+turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/dashboard/20)
