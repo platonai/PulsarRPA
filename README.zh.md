@@ -45,23 +45,19 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
         sudo apt-get install mongodb
 
 ## 从源代码构建
-    git clone git@github.com:platonai/pulsar.git
+    git clone https://github.com/platonai/pulsar.git
     cd pulsar && mvn -Pthird -Pplugins
 ## 启动 pulsar 服务器
     bin/pulsar
 ## 使用 Web 控制台
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with Web SQL.
 
-## 执行 X-SQL 的其他方法
-### 执行单独的 X-SQL
-    bin/pulsar sql -sql "SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external')"
-### 免 GUI 控制台
-    bin/pulsar sql
+### 使用 Metabase
+下载 [Metabase](https://github.com/platonai/metabase) 定制版, 然后执行:
 
-### 使用 BI 工具
-下载 [Metabase](https://github.com/platonai/metabase) 定制版, 按照 Metabase 安装步骤安装，然后执行:
-
-    java -jar metabase.jar
+    git clone https://github.com/platonai/metabase.git
+    cd metabase
+    bin/build && bin/start
 
 # 大规模网络爬虫
 从种子链接出发抓取大规模文本网页，解析后使用 Solr 建立索引：

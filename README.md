@@ -10,7 +10,7 @@ collection, extraction, analysis, storage and BI, etc.
 ![product-screenshot](docs/res/pulsar-product-screenshot-2.png)
 
 # Features
-- X-SQL: eXtended SQL to do all data jobs using SQL: collection, extraction, preparation, processing, storage, BI, etc
+- X-SQL: eXtended SQL to do all data jobs: collection, extraction, preparation, processing, storage, BI, etc
 - Web spider: browser rendering, Ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
 - BI Integration: turn Web sites into tables and charts using just one simple SQL
 - Big data: large scale, various storage: HBase/MongoDB
@@ -58,29 +58,21 @@ Ubuntu/Debian:
 
     sudo apt-get install mongodb
 ## Build from source
-    git clone git@github.com:platonai/pulsar.git
+    git clone https://github.com/platonai/pulsar.git
     cd pulsar && mvn -Pthird -Pplugins
 ## Start pulsar server
     bin/pulsar
 ## Execute X-SQLs
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
 
-## Optional methods to execute X-SQLs
-### Execute a single X-SQL
-    bin/pulsar sql -sql "SELECT DOM_TEXT(DOM) AS TITLE, DOM_ABS_HREF(DOM) AS LINK FROM LOAD_AND_SELECT('https://en.wikipedia.org/wiki/Topology', '.references a.external')"
-### Use GUI-free console
-    bin/pulsar sql
+## Use Metabase
+[Metabase](https://github.com/platonai/metabase) is the easy, open source way for everyone in your company to ask questions and learn from data.
+With X-SQL support, everyone can organize knowledge not just from the company's internal data, but also
+from the WWW.
 
-### Use advanced BI tool
-Download [Metabase](https://github.com/platonai/metabase) X-SQL edition, follow the official installation process, and then run:
-
-    java -jar metabase.jar
-
-# Large scale Web spider
-Crawl the open Web from seeds, and index text content using solr, run script:
-
-    -- coming soon ..
-    bin/crawl.sh default false awesome_crawl_task http://localhost:8983/solr/awesome_crawl_task/ 1
+    git clone https://github.com/platonai/metabase.git
+    cd metabase
+    bin/build && bin/start
 
 # Enterprise Edition:
 
