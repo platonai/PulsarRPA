@@ -34,11 +34,11 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-retry", "--retry"}, description = "Retry fetching the page if it's failed last time")
     private boolean retry = false;
 
-    @Parameter(names = {"-autoFlush", "--auto-flush"}, description = "Auto flush db whenever a fetch task finished")
+    @Parameter(names = {"-autoFlush", "--auto-flush"}, arity = 1, description = "Auto flush db whenever a fetch task finished")
     private boolean autoFlush = true;
 
-    @Parameter(names = {"-preferParallel", "--prefer-parallel"}, description = "Parallel fetch urls whenever applicable")
-    private Boolean preferParallel;
+    @Parameter(names = {"-preferParallel", "--prefer-parallel"}, arity = 1, description = "Parallel fetch urls whenever applicable")
+    private boolean preferParallel = true;
 
     @Parameter(names = {"-fetchMode", "--fetch-mode"}, description = "The fetch mode")
     private String fetchMode;
@@ -46,18 +46,18 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-browser", "--browser"}, description = "The browser to use")
     private String browser;
 
-    @Parameter(names = {"-ignoreFailed", "--ignore-failed"}, description = "Ignore all failed pages in batch loading")
-    private Boolean ignoreFailed;
+    @Parameter(names = {"-ignoreFailed", "--ignore-failed"}, arity = 1, description = "Ignore all failed pages in batch loading")
+    private boolean ignoreFailed = true;
 
     @Parameter(names = {"-background", "--background"}, description = "Fetch the page in background")
-    private Boolean background;
+    private boolean background;
 
     @Parameter(names = {"-nord", "-noRedirect", "--no-redirect"}, description = "Do not redirect")
     private boolean noRedirect = false;
 
-    @Parameter(names = {"-hardRedirect", "--hard-redirect"}, description = "Return the entire page record " +
+    @Parameter(names = {"-hardRedirect", "--hard-redirect"}, arity = 1, description = "Return the entire page record " +
             "instead of the temp page with the target's content when redirect")
-    private Boolean hardRedirect = true;
+    private boolean hardRedirect = true;
 
     @Parameter(names = {"-ps", "-parse", "--parse"}, description = "Parse the page")
     private boolean parse = false;
@@ -200,11 +200,7 @@ public class LoadOptions extends CommonOptions {
     }
 
     public boolean isPreferParallel() {
-        if (preferParallel == null && mutableConfig != null) {
-            return mutableConfig.getBoolean(CapabilityTypes.FETCH_PREFER_PARALLEL, true);
-        }
-
-        return preferParallel != null ? preferParallel : true;
+        return preferParallel;
     }
 
     public void setPreferParallel(boolean preferParallel) {
@@ -272,11 +268,7 @@ public class LoadOptions extends CommonOptions {
     }
 
     public boolean isIgnoreFailed() {
-        if (ignoreFailed == null && mutableConfig != null) {
-            return mutableConfig.getBoolean(CapabilityTypes.LOAD_IGNORE_FAILED_IN_BATCH, true);
-        }
-
-        return ignoreFailed != null ? ignoreFailed : true;
+        return ignoreFailed;
     }
 
     public void setIgnoreFailed(boolean ignoreFailed) {
@@ -284,13 +276,7 @@ public class LoadOptions extends CommonOptions {
     }
 
     public boolean isBackground() {
-        if (background != null) {
-            return background;
-        } else if (mutableConfig != null) {
-            return mutableConfig.getBoolean(CapabilityTypes.FETCH_BACKGROUND, false);
-        } else {
-            return false;
-        }
+        return background;
     }
 
     public void setBackground(boolean background) {
@@ -298,11 +284,7 @@ public class LoadOptions extends CommonOptions {
     }
 
     public boolean isHardRedirect() {
-        if (hardRedirect != null) {
-            return hardRedirect;
-        }
-
-        return mutableConfig != null && mutableConfig.getBoolean(CapabilityTypes.LOAD_HARD_REDIRECT, false);
+        return hardRedirect;
     }
 
     public void setHardRedirect(boolean hardRedirect) {

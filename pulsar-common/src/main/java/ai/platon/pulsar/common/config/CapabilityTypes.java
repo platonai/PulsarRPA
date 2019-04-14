@@ -164,14 +164,11 @@ public interface CapabilityTypes {
      * Load parameters
      */
     String LOAD_HARD_REDIRECT = "load.hard.redirect";
-    String LOAD_IGNORE_FAILED_IN_BATCH = "load.ignore.failed.in.batch";
     /**
      * Fetch parameters
      */
     String FETCH_MODE = "fetch.fetch.mode";
-    String FETCH_PREFER_PARALLEL = "fetch.prefer.parallel";
     String FETCH_EAGER_FETCH_LIMIT = "fetch.eager.fetch.limit";
-    String FETCH_BACKGROUND = "fetch.background";
 
     String FETCH_THREADS_FETCH = "fetch.threads.fetch";
     String FETCH_CRAWL_PATH_STRATEGY = "fetch.crawl.path.strategy";

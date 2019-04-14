@@ -1,6 +1,7 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
 import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
@@ -480,7 +481,12 @@ val Node.namedRect2: String get() = "$name-${rectangle.str2}"
  * Returns a best element to represent this node: if the node itself is an element, return itself
  * otherwise, returns it's parent
  * */
-val Node.bestElement: Element get() = (this as? Element ?: this.parent() as Element)
+val Node.bestElement: Element
+    get() {
+        return if (this is Element) {
+            this
+        } else this.parent() as Element
+    }
 
 /*********************************************************************
  * Actions
@@ -720,7 +726,11 @@ fun Node.countMatches(predicate: (Node) -> Boolean = {true}): Int {
 }
 
 @JvmOverloads
-fun Element.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+    if (this !is Element) {
+        return Elements()
+    }
+
     if (offset == 1 && limit == Int.MAX_VALUE) {
         return MathematicalSelector.select(cssQuery, this)
     }
@@ -730,6 +740,32 @@ fun Element.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALU
     return MathematicalSelector.select(cssQuery, this)
             .takeWhile { i++ >= offset && i <= limit }
             .toCollection(Elements())
+}
+
+@Deprecated("Use first instead", ReplaceWith("MathematicalSelector.selectFirst(cssQuery, this)"))
+fun Node.selectFirst2(cssQuery: String): Element? {
+    return if (this is Element) {
+        MathematicalSelector.selectFirst(cssQuery, this)
+    } else null
+}
+
+fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+                    transformer: (Element) -> O): List<O> {
+    return if (this is Element) {
+        select2(query, offset, limit).map { transformer(it) }
+    } else listOf()
+}
+
+fun Node.first(cssQuery: String): Element? {
+    return if (this is Element) {
+        MathematicalSelector.selectFirst(cssQuery, this)
+    } else null
+}
+
+fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
+    return if (this !is Element) {
+        first(cssQuery)?.let { transformer(it) }
+    } else null
 }
 
 @JvmOverloads
@@ -744,26 +780,8 @@ fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VAL
             .toCollection(Elements())
 }
 
-@Deprecated("Use first instead", ReplaceWith("MathematicalSelector.selectFirst(cssQuery, this)"))
-fun Element.selectFirst2(cssQuery: String): Element? {
-    return MathematicalSelector.selectFirst(cssQuery, this)
-}
-
-fun <O> Element.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                       transformer: (Element) -> O): List<O> {
-    return select2(query, offset, limit).map { transformer(it) }
-}
-
-fun Element.first(cssQuery: String): Element? {
-    return MathematicalSelector.selectFirst(cssQuery, this)
-}
-
-fun <O> Element.first(cssQuery: String, transformer: (Element) -> O): O? {
-    return first(cssQuery)?.let { transformer(it) }
-}
-
-fun Element.parseStyle(): Array<String> {
-    return ai.platon.pulsar.common.StringUtil.stripNonChar(attr("style"), ":;")
+fun Node.parseStyle(): Array<String> {
+    return StringUtil.stripNonChar(attr("style"), ":;")
             .split(";".toRegex())
             .dropLastWhile { it.isEmpty() }
             .toTypedArray()
