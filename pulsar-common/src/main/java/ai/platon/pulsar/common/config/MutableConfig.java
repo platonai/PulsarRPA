@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.config;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 
@@ -45,7 +46,6 @@ public class MutableConfig extends ImmutableConfig {
      */
     public void set(String name, String value) {
         Objects.requireNonNull(name);
-        Objects.requireNonNull(value);
 
         unbox().set(name, value);
     }
@@ -196,9 +196,12 @@ public class MutableConfig extends ImmutableConfig {
         }
     }
 
-    public void merge(Configuration conf) {
+    public void merge(Configuration conf, String... names) {
         for (Map.Entry<String, String> prop : conf) {
-            set(prop.getKey(), prop.getValue());
+            String key = prop.getKey();
+            if (names.length == 0 || ArrayUtils.contains(names, key)) {
+                set(key, prop.getValue());
+            }
         }
     }
 }

@@ -493,6 +493,8 @@ public class WebPage {
      * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
      *
      * BaseUrl may be different from url, it's generally normalized.
+     *
+     * TODO: The semantic differs between WebPage.baseUrl and Document.baseUrl, should we use location instead of baseUrl?
      */
     public String getBaseUrl() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
@@ -504,6 +506,8 @@ public class WebPage {
      * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
      *
      * BaseUrl may be different from url, it's generally normalized.
+     *
+     * TODO: The semantic differs between WebPage.baseUrl and Document.baseUrl, should we use location instead of baseUrl?
      */
     public void setBaseUrl(String value) {
         page.setBaseUrl(value);

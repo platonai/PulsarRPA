@@ -11,9 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +27,7 @@ public class PulsarOptions implements Parameterized {
     public static final Logger LOG = LoggerFactory.getLogger(PulsarOptions.class);
 
     public static final String DEFAULT_DELIMETER = " ";
+    public static final Pattern CMD_SPLIT_PATTERN = Pattern.compile("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\\S+");
 
     protected boolean expandAtSign = true;
     protected String args = "";
@@ -71,9 +75,19 @@ public class PulsarOptions implements Parameterized {
         return StringUtils.replaceChars(args, seps, StringUtils.repeat(' ', seps.length()));
     }
 
+    /**
+     * Split a command line into argument vector (argv)
+     * @see {https://stackoverflow.com/questions/36292591/splitting-a-nested-string-keeping-quotation-marks/36292778}
+     * */
     @Nonnull
     public static String[] split(String args) {
-        return normalize(args).split("\\s+");
+        Matcher matcher = CMD_SPLIT_PATTERN.matcher(normalize(args));
+        matcher.reset();
+        ArrayList<String> result = new ArrayList<>();
+        while (matcher.find()) {
+            result.add(matcher.group(0));
+        }
+        return result.toArray(new String[0]);
     }
 
     public boolean getExpandAtSign() {
@@ -136,7 +150,6 @@ public class PulsarOptions implements Parameterized {
         jc.setAllowParameterOverwriting(true);
 //      jc.setAllowAbbreviatedOptions(false);
         jc.setExpandAtSign(expandAtSign);
-        // log.debug(StringUtils.join(argv, " "));
         if (argv != null) {
             jc.parse(argv);
         }

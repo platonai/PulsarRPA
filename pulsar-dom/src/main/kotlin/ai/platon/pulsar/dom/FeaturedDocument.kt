@@ -58,9 +58,7 @@ open class FeaturedDocument(val document: Document) {
         }
     }
 
-    var baseUri: String
-        get() = document.baseUri()
-        set(value) = document.setBaseUri(value)
+    val baseUri: String get() = document.baseUri()
 
     var title: String
         get() = document.title()
@@ -120,16 +118,12 @@ open class FeaturedDocument(val document: Document) {
     }
 
     @JvmOverloads
-    fun select2(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        return document.select2(query, offset, limit)
-    }
-
     fun select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
         return document.select2(query, offset, limit)
     }
 
-    fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, extractor: (Element) -> T): List<T> {
-        return document.select2(query, offset, limit).map { extractor(it) }
+    fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> T): List<T> {
+        return document.select(query, offset, limit, transformer = transformer)
     }
 
     fun first(query: String): Element? {

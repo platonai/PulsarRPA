@@ -108,7 +108,7 @@ public class JsoupParser extends EntityOptions.Builder {
         try {
             document = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getUrl(), ignoreScripts);
         } catch (IOException e) {
-            LOG.warn("Failed to parse page {}" + page.getUrl());
+            LOG.warn("Failed to parse page {}", page.getUrl());
             LOG.warn(e.toString());
 
             document = Document.createShell(page.getUrl());
