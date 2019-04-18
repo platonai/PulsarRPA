@@ -105,7 +105,7 @@ object WebAccess {
         arrayOf(url)
                 .map { i.load(it) }
                 .map { i.parse(it) }
-                .forEach { println("${it.baseUri} ${it.title}") }
+                .forEach { println("${it.location} ${it.title}") }
     }
 
     fun truncate() {

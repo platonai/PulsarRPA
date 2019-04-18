@@ -31,11 +31,15 @@ import java.awt.Rectangle
 
 val Node.viewPort: Dimension
     get() {
-        return computeDocVariableIfAbsent(V_VIEW_PORT, ownerDocument.calculateViewPort())
+        return computeDocVariableIfAbsent(V_VIEW_PORT) { ownerDocument.calculateViewPort() }
     }
 
-// basic info
-val Node.uri: String get() = baseUri()
+// the internet location of this document
+val Node.location: String get() = (ownerDocument as Document).location()
+
+// the internet location of this document
+// NOTE: the location of a document can differ from baseUri, which can be override by <base> tag
+val Node.uri: String get() = location
 
 var Node.depth: Int
     get() = getFeature(DEP).toInt()
@@ -87,7 +91,7 @@ val Node.centerX
 val Node.centerY
     get() = (y + y2) / 2
 
-val Node.location: Point
+val Node.geoLocation: Point
     get() = Point(x, y)
 
 val Node.dimension: Dimension
@@ -218,11 +222,11 @@ inline fun <reified T> Node.getVariable(name: String, defaultValue: T): T {
     return if (v is T) v else defaultValue
 }
 
-inline fun <reified T> Node.computeVariableIfAbsent(name: String, defaultValue: T): T {
+inline fun <reified T> Node.computeVariableIfAbsent(name: String, compute: (String) -> T): T {
     var v = variables[name]
     if (v !is T) {
-        variables[name] = defaultValue
-        v = defaultValue
+        v = compute(name)
+        variables[name] = v
     }
     return v
 }
@@ -250,8 +254,8 @@ inline fun <reified T> Node.getDocVariable(name: String, defaultValue: T): T {
     return ownerDocument.getVariable(name, defaultValue)
 }
 
-inline fun <reified T> Node.computeDocVariableIfAbsent(name: String, defaultValue: T): T {
-    return ownerDocument.computeVariableIfAbsent(name, defaultValue)
+inline fun <reified T> Node.computeDocVariableIfAbsent(name: String, compute: (String) -> T): T {
+    return ownerDocument.computeVariableIfAbsent(name, compute)
 }
 
 fun Node.setDocVariable(name: String, value: Any) {

@@ -260,8 +260,8 @@ public class ResourceLoader {
         return getMultiSourceReader(stringResource, fileResource, "");
     }
 
-    public Reader getMultiSourceReader(
-            String stringResource, String fileResource, String resourcePrefix) throws FileNotFoundException {
+    public Reader getMultiSourceReader(String stringResource, String fileResource, String resourcePrefix)
+            throws FileNotFoundException {
         Reader reader = null;
         if (!StringUtils.isBlank(stringResource)) {
             reader = new StringReader(stringResource);

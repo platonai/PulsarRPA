@@ -35,7 +35,7 @@ open class FeaturedDocument(val document: Document) {
          * An element is Nil, if it's owner document is nil
          * */
         fun isNil(node: Node): Boolean {
-            return node == NIL || node.baseUri() == NIL.baseUri
+            return node == NIL || node.baseUri() == NIL.location
         }
 
         private fun loadFeatureCalculator(): NodeVisitor {
@@ -57,8 +57,6 @@ open class FeaturedDocument(val document: Document) {
             NodeTraversor.traverse(nodeFeatureCalculator, document)
         }
     }
-
-    val baseUri: String get() = document.baseUri()
 
     var title: String
         get() = document.title()
@@ -100,7 +98,7 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun isNil(): Boolean {
-        return baseUri == NIL.baseUri
+        return location == NIL.location
     }
 
     fun createElement(tagName: String): Element {
@@ -163,8 +161,8 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun export(): Path {
-        val filename = PulsarPaths.fromUri(baseUri, ".html")
-        val path = PulsarPaths.get("analysis", filename)
+        val filename = PulsarPaths.fromUri(location, ".html")
+        val path = PulsarPaths.get(PulsarPaths.webCacheDir, "featured", filename)
         return exportTo(path)
     }
 
@@ -173,11 +171,11 @@ open class FeaturedDocument(val document: Document) {
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is FeaturedDocument && baseUri == other.baseUri
+        return other is FeaturedDocument && location == other.location
     }
 
     override fun hashCode(): Int {
-        return baseUri.hashCode()
+        return location.hashCode()
     }
 
     override fun toString(): String {

@@ -14,7 +14,7 @@ TestMetadataFunctions : TestBase() {
         val pulsar = PulsarSession()
         val page = pulsar.load(url)
         val doc = pulsar.parse(page)
-        assertEquals(page.url, doc.baseUri)
+        assertEquals(page.url, doc.location)
 
         execute("SELECT * FROM META_PARSE('$url')")
     }

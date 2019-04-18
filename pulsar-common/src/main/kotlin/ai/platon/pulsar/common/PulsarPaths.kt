@@ -2,8 +2,10 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.PulsarConstants
+import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -47,8 +49,9 @@ object PulsarPaths {
     }
 
     fun fromUri(uri: String, suffix: String = ""): String {
-        val md5 = DigestUtils.md5Hex(uri)
-        return if (suffix.isNotEmpty()) md5 + suffix else md5
+        val domain = InternetDomainName.from(URL(uri).host).topPrivateDomain().toString()
+        val path = domain.replace('.', '-') + "-" + DigestUtils.md5Hex(uri)
+        return if (suffix.isNotEmpty()) path + suffix else path
     }
 
     fun relative(absolutePath: String): String {

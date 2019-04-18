@@ -273,7 +273,7 @@ open class PulsarSession(
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
-        val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(doc.baseUri, ".htm"))
+        val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(doc.location, ".htm"))
         return PulsarFiles.saveTo(doc.prettyHtml, path)
     }
 

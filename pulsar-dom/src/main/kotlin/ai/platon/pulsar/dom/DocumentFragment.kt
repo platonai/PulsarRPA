@@ -33,8 +33,7 @@ open class DocumentFragment(
         element.getLabels().forEach { addLabel(it) }
     }
 
-    val baseUri: String
-        get() = element.baseUri()
+    val uri: String = element.uri
 
     val elementName: String
         get() = element.uniqueName

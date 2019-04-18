@@ -94,7 +94,7 @@ class TraverseState(val match: Boolean = false, val state: NodeFilter.FilterResu
 val documentComparator = kotlin.Comparator { d1: Document, d2 -> d1.baseUri().compareTo(d2.baseUri()) }
 
 val descriptiveDocumentComparator = kotlin.Comparator {
-    d1: FeaturedDocument, d2 -> d1.baseUri.compareTo(d2.baseUri) }
+    d1: FeaturedDocument, d2 -> d1.location.compareTo(d2.location) }
 
 val nodeComparator = kotlin.Comparator { n1: Node, n2 ->
     val r = documentComparator.compare(n1.ownerDocument(), n2.ownerDocument())

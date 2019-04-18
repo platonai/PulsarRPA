@@ -169,7 +169,7 @@ object FeatureFormatter {
                     is Color -> value.toHexString()
                     is Rectangle -> value.str
                     is Element -> value.name
-                    is FeaturedDocument -> value.baseUri
+                    is FeaturedDocument -> value.location
                     else -> value.toString()
                 }
                 if (s.length > 20) {

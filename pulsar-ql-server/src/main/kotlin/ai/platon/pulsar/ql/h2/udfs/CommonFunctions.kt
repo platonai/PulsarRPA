@@ -101,25 +101,6 @@ object CommonFunctions {
     }
 
     /**
-     * Set config to the given value
-     * @param h2session H2 session
-     * @param ttl The property value time to live in session
-     * @return The old value or null on failure
-     */
-    @UDFunction
-    @JvmStatic
-    fun setParallelFetch(@H2Context h2session: Session, parallel: Boolean, ttl: Int): String? {
-        return getAndSetConf(h2session, FETCH_PREFER_PARALLEL, java.lang.Boolean.toString(parallel), ttl)
-    }
-
-    @UDFunction
-    @JvmStatic
-    fun unsetParallelFetch(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_PREFER_PARALLEL)
-    }
-
-    /**
      * Also retrieve faded links whenever get out links of a page
      * @param ttl The property value time to live in session
      */
