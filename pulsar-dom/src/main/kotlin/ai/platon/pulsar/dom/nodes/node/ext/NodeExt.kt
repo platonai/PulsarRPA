@@ -28,10 +28,9 @@ import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
 
-val Node.viewPort: Dimension
-    get() {
-        return computeDocVariableIfAbsent(V_VIEW_PORT) { calculateViewPort() }
-    }
+val Document.viewPort get() = computeVariableIfAbsent(V_VIEW_PORT) { calculateViewPort() }
+
+val Node.ownerDocument get() = ownerDocumentNode as Document
 
 /**
  * Get the URL this Document was parsed from. If the starting URL is a redirect,
@@ -45,7 +44,7 @@ val Node.viewPort: Dimension
  *
  * @return location
  */
-val Node.location: String get() = (ownerDocument as Document).location()
+val Node.location: String get() = ownerDocument.location()
 
 // The Uniform Resource Identifier of this document, it's simply the location of the document
 val Node.uri: String get() = location
@@ -250,33 +249,6 @@ fun Node.hasVariable(name: String): Boolean {
 
 fun Node.removeVariable(name: String): Any? {
     return variables.remove(name)
-}
-
-/**
- * Temporary document variables
- * */
-inline fun <reified T> Node.getDocVariable(name: String): T? {
-    return ownerDocument.getVariable(name)
-}
-
-inline fun <reified T> Node.getDocVariable(name: String, defaultValue: T): T {
-    return ownerDocument.getVariable(name, defaultValue)
-}
-
-inline fun <reified T> Node.computeDocVariableIfAbsent(name: String, compute: (String) -> T): T {
-    return ownerDocument.computeVariableIfAbsent(name, compute)
-}
-
-fun Node.setDocVariable(name: String, value: Any) {
-    ownerDocument.setVariable(name, value)
-}
-
-fun Node.hasDocVariable(name: String): Boolean {
-    return ownerDocument.hasVariable(name)
-}
-
-fun Node.removeDocVariable(name: String): Any? {
-    return ownerDocument.removeVariable(name)
 }
 
 /**
@@ -793,7 +765,7 @@ fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VAL
             .toCollection(Elements())
 }
 
-fun Node.parseStyle(): Array<String> {
+fun Element.parseStyle(): Array<String> {
     return StringUtil.stripNonChar(attr("style"), ":;")
             .split(";".toRegex())
             .dropLastWhile { it.isEmpty() }
@@ -807,36 +779,7 @@ fun Element.getStyle(styleKey: String): String {
 fun Element.pixelatedValue(value: String, defaultValue: Double): Double {
     // TODO : we currently handle only px
     val units = arrayOf("in", "%", "cm", "mm", "ex", "pt", "pc", "px")
-    return NumberUtils.toDouble(StringUtils.removeEnd(value, "px"), defaultValue)
-}
-
-fun getStyle(styles: Array<String>, styleKey: String): String {
-    val styleValue = ""
-
-    val search = "$styleKey:"
-    for (style in styles) {
-        if (style.startsWith(search)) {
-            return style.substring(search.length)
-        }
-    }
-
-    return styleValue
-}
-
-fun convertBox(box: String): String {
-    val box2 = box.replace(" ", "")
-    val matcher = BOX_SYNTAX_PATTERN.matcher(box2)
-    if (matcher.find()) {
-        return box2.split(",")
-                .map { it.split('x', 'X') }
-                .map { "*:in-box(${it[0]}, ${it[1]})" }
-                .joinToString()
-    } else if (BOX_CSS_PATTERN.matcher(box2).matches()) {
-        return box2
-    }
-
-    // Bad syntax, no element should find
-    return "non:in-box(0, 0, 0, 0)"
+    return value.removeSuffix("px").toDoubleOrNull()?:defaultValue
 }
 
 private fun Node.calculateViewPort(): Dimension {

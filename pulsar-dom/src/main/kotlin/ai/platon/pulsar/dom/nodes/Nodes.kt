@@ -107,3 +107,32 @@ val nodePositionComparator = kotlin.Comparator { n1: Node, n2 ->
     if (r == 0) r = n1.left - n2.left
     r
 }
+
+fun getStyle(styles: Array<String>, styleKey: String): String {
+    val styleValue = ""
+
+    val search = "$styleKey:"
+    for (style in styles) {
+        if (style.startsWith(search)) {
+            return style.substring(search.length)
+        }
+    }
+
+    return styleValue
+}
+
+fun convertBox(box: String): String {
+    val box2 = box.replace(" ", "")
+    val matcher = BOX_SYNTAX_PATTERN.matcher(box2)
+    if (matcher.find()) {
+        return box2.split(",")
+                .map { it.split('x', 'X') }
+                .map { "*:in-box(${it[0]}, ${it[1]})" }
+                .joinToString()
+    } else if (BOX_CSS_PATTERN.matcher(box2).matches()) {
+        return box2
+    }
+
+    // Bad syntax, no element should find
+    return "non:in-box(0, 0, 0, 0)"
+}

@@ -11,7 +11,6 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -29,7 +28,7 @@ public abstract class Node implements Cloneable {
 
     Attributes attributes = new Attributes();
 
-    Node ownerDocument = null;
+    Node ownerDocumentNode = null;
     Node ownerBody = null;
     RealVector features = EMPTY_FEATURE;
     Map<String, Object> variables = new HashMap<>();
@@ -169,11 +168,11 @@ public abstract class Node implements Cloneable {
      * Document is a frequently used element so need a short cut to access it
      * */
     @Nonnull
-    public Node getOwnerDocument() {
-        if (ownerDocument == null) {
-            ownerDocument = ownerDocument();
+    public Node getOwnerDocumentNode() {
+        if (ownerDocumentNode == null) {
+            ownerDocumentNode = ownerDocument();
         }
-        return ownerDocument;
+        return ownerDocumentNode;
     }
 
     /**
