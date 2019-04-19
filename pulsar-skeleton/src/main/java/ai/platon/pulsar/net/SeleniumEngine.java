@@ -5,13 +5,13 @@ import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.dom.data.BrowserControl;
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
+import ai.platon.pulsar.crawl.protocol.Response;
+import ai.platon.pulsar.net.browser.WebDriverQueues;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.BrowserType;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes;
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
-import ai.platon.pulsar.crawl.protocol.Response;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,7 +29,6 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -102,7 +101,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
 
     public SeleniumEngine(ImmutableConfig immutableConfig) {
         executor = GlobalExecutor.getInstance(immutableConfig);
-        drivers = new WebDriverQueues(immutableConfig);
+        drivers = new WebDriverQueues(browserControl, immutableConfig);
 
         reload(immutableConfig);
     }
@@ -331,7 +330,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Selenium timeout. Timeouts: {}/{}/{}, drivers: {}/{}, url: {}",
                     defaultPageLoadTimeout, scriptTimeout, scrollDownWait,
-                    drivers.freeSize(), drivers.totalSize(),
+                    drivers.getFreeSize(), drivers.getTotalSize(),
                     url
             );
         } else {
@@ -364,7 +363,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             LOG.debug("Fetching task: {}/{}, thread: #{}, drivers: {}/{}, timeouts: {}/{}/{}, {}",
                     batchTaskCount.get(), totalTaskCount.get(),
                     Thread.currentThread().getId(),
-                    drivers.freeSize(), drivers.totalSize(),
+                    drivers.getFreeSize(), drivers.getTotalSize(),
                     getPageLoadTimeout(priority, mutableConfig), scriptTimeout, scrollDownWait,
                     page.getConfiguredUrl()
             );

@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
-import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.dom.features.FeatureEntry
 import ai.platon.pulsar.dom.features.FeatureFormatter
 import ai.platon.pulsar.dom.features.NodeFeature
@@ -31,14 +30,24 @@ import java.awt.Rectangle
 
 val Node.viewPort: Dimension
     get() {
-        return computeDocVariableIfAbsent(V_VIEW_PORT) { ownerDocument.calculateViewPort() }
+        return computeDocVariableIfAbsent(V_VIEW_PORT) { calculateViewPort() }
     }
 
-// the internet location of this document
+/**
+ * Get the URL this Document was parsed from. If the starting URL is a redirect,
+ * this will return the final URL from which the document was served from.
+ *
+ * Note: In most cases the base URL is simply the location of the document, but it can be affected by many factors,
+ * including the <base> element in HTML and the xml:base attribute in XML.
+ *
+ * The base URL of a document is used to resolve relative URLs when the browser needs to obtain an absolute URL,
+ * for example when processing the HTML <img> element's src attribute or XML xlink:href attribute.
+ *
+ * @return location
+ */
 val Node.location: String get() = (ownerDocument as Document).location()
 
-// the internet location of this document
-// NOTE: the location of a document can differ from baseUri, which can be override by <base> tag
+// The Uniform Resource Identifier of this document, it's simply the location of the document
 val Node.uri: String get() = location
 
 var Node.depth: Int
@@ -831,11 +840,11 @@ fun convertBox(box: String): String {
 }
 
 private fun Node.calculateViewPort(): Dimension {
-    val viewPort = BrowserControl.viewPort
-    val parts = ownerBody.attr("view-port").split("x".toRegex())
-    if (parts.size != 2) return viewPort
+    val default = Dimension(1920, 1080)
+    val parts = ownerBody.attr("view-port").split("x")
+    if (parts.size != 2) return default
 
-    val w = SParser(parts[0]).getInt(viewPort.width)
-    val h = SParser(parts[1]).getInt(viewPort.height)
+    val w = SParser(parts[0]).getInt(default.width)
+    val h = SParser(parts[1]).getInt(default.height)
     return Dimension(w, h)
 }

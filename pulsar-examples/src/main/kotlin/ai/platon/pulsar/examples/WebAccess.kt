@@ -1,13 +1,11 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.PulsarContext
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.dom.data.BrowserControl
+import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.dom.nodes.node.ext.formatFeatures
 import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.persist.WebPageFormatter
-import com.google.gson.GsonBuilder
 
 object WebAccess {
     private val i = PulsarContext.createSession()

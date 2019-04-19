@@ -494,7 +494,7 @@ public class WebPage {
      *
      * BaseUrl may be different from url, it's generally normalized.
      *
-     * TODO: The semantic differs between WebPage.baseUrl and Document.baseUrl, should we use location instead of baseUrl?
+     * TODO: The semantic differs form Document.baseUrl, should we use location instead of baseUrl?
      */
     public String getBaseUrl() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
@@ -507,7 +507,7 @@ public class WebPage {
      *
      * BaseUrl may be different from url, it's generally normalized.
      *
-     * TODO: The semantic differs between WebPage.baseUrl and Document.baseUrl, should we use location instead of baseUrl?
+     * TODO: The semantic differs form Document.baseUrl, should we use location instead of baseUrl?
      */
     public void setBaseUrl(String value) {
         page.setBaseUrl(value);

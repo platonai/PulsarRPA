@@ -3,14 +3,11 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.PulsarContext
 import ai.platon.pulsar.common.PulsarEnv.applicationContext
 import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
-import ai.platon.pulsar.common.PulsarSession
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
-import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.IteratorUtils
@@ -18,9 +15,6 @@ import org.h2.api.ErrorCode
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**

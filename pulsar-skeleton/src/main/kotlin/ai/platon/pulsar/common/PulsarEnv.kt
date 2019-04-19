@@ -5,10 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.data.BlockPattern.Companion.N2
-import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.dom.features.defined.N
-import ai.platon.pulsar.net.SeleniumEngine
 import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
 import org.springframework.context.support.ClassPathXmlApplicationContext

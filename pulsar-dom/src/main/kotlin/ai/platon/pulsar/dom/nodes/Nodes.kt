@@ -14,15 +14,15 @@ import java.util.regex.Pattern
 /**
  * Attribute names
  * */
-const val A_LABELS = "s-labels"
-const val A_ML_LABELS = "s-ml-labels"
-const val A_CAPTION = "s-caption"
+const val A_LABELS = "a-labels"
+const val A_ML_LABELS = "a-ml-labels"
+const val A_CAPTION = "a-caption"
 
 /**
  * Variable names
  * */
 const val V_OWNER_BODY = "V_OWNER_BODY"
-const val V_VIEW_PORT = "VIEW_PORT"
+const val V_VIEW_PORT = "V_VIEW_PORT"
 
 val BOX_SYNTAX_PATTERN_1 = Pattern.compile("(\\d+)[xX](\\d+)")
 val BOX_SYNTAX_PATTERN = Pattern.compile("$BOX_SYNTAX_PATTERN_1(,$BOX_SYNTAX_PATTERN_1)?")

@@ -122,8 +122,6 @@ public class TestAnything {
         String s = "";
         Utf8 u = new Utf8(s);
         assertEquals(0, u.length());
-//    System.out.println(u.length());
-//    System.out.println(u.toString());
     }
 
     @Test
