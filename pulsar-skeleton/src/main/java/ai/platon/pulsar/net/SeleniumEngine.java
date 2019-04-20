@@ -52,7 +52,6 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(SeleniumEngine.class);
 
     // The javascript to execute by Web browsers
-    // TODO: may use a non-static member
     public static BrowserControl browserControl = new BrowserControl();
 
     private ImmutableConfig immutableConfig;

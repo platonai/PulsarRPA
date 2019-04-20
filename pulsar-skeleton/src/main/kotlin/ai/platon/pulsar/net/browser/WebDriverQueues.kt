@@ -1,8 +1,6 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.BrowserControl
-import ai.platon.pulsar.common.BrowserControl.Companion.DEFAULT_CAPABILITIES
-import ai.platon.pulsar.common.BrowserControl.Companion.DEFAULT_CHROME_CAPABILITIES
 import ai.platon.pulsar.common.GlobalExecutor.NCPU
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -17,10 +15,8 @@ import org.apache.http.conn.ssl.TrustStrategy
 import org.openqa.selenium.Capabilities
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.CapabilityType
-import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException

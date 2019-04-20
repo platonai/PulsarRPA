@@ -11,6 +11,7 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -30,6 +31,7 @@ public abstract class Node implements Cloneable {
 
     Node ownerDocumentNode = null;
     Node ownerBody = null;
+    Object extensions = null;
     RealVector features = EMPTY_FEATURE;
     Map<String, Object> variables = new HashMap<>();
     Map<String, List<Object>> tuples = new HashMap<>();
@@ -185,6 +187,14 @@ public abstract class Node implements Cloneable {
             ownerBody = ownerDocument().body();
         }
         return ownerBody;
+    }
+
+    @Nonnull
+    public Object computeExtensionsIfAbsent(@Nonnull Object extensions) {
+        if (this.extensions == null) {
+            this.extensions = extensions;
+        }
+        return this.extensions;
     }
 
     @Nonnull

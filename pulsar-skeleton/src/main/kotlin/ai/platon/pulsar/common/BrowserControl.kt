@@ -15,38 +15,33 @@ import java.util.*
 class BrowserControl(parameters: Map<String, Any> = mapOf()) {
     companion object {
         val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
-        val viewPort = Dimension(1920, 1080)
+        var viewPort = Dimension(1920, 1080)
 
         var headless = true
         var imagesEnabled = false
-
-        val DEFAULT_CAPABILITIES = DesiredCapabilities()
-        val DEFAULT_CHROME_CAPABILITIES = ChromeOptions()
-
-        init {
-            DEFAULT_CAPABILITIES.setCapability(SUPPORTS_JAVASCRIPT, true)
-            DEFAULT_CAPABILITIES.setCapability(TAKES_SCREENSHOT, false)
-            DEFAULT_CAPABILITIES.setCapability("downloadImages", imagesEnabled)
-            DEFAULT_CAPABILITIES.setCapability("browserLanguage", "zh_CN")
-            DEFAULT_CAPABILITIES.setCapability("throwExceptionOnScriptError", false)
-            DEFAULT_CAPABILITIES.setCapability("resolution", viewPort.width.toString() + "x" + viewPort.height)
-
-            // see https://peter.sh/experiments/chromium-command-line-switches/
-            DEFAULT_CHROME_CAPABILITIES.merge(DEFAULT_CAPABILITIES)
-            // Use headless mode by default, GUI mode can be used for debugging
-            DEFAULT_CHROME_CAPABILITIES.setHeadless(headless)
-            DEFAULT_CHROME_CAPABILITIES.addArguments("--window-size=" + viewPort.width + "," + viewPort.height)
-            DEFAULT_CHROME_CAPABILITIES.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
-            DEFAULT_CHROME_CAPABILITIES.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
-        }
     }
 
-    val generalOptions = DesiredCapabilities(DEFAULT_CAPABILITIES)
-    val chromeOptions = ChromeOptions().merge(DEFAULT_CHROME_CAPABILITIES)
+    val generalOptions = DesiredCapabilities()
+    val chromeOptions = ChromeOptions()
     private val jsParameters = mutableMapOf<String, Any>()
     private var js: String = ""
 
     init {
+        generalOptions.setCapability(SUPPORTS_JAVASCRIPT, true)
+        generalOptions.setCapability(TAKES_SCREENSHOT, false)
+        generalOptions.setCapability("downloadImages", imagesEnabled)
+        generalOptions.setCapability("browserLanguage", "zh_CN")
+        generalOptions.setCapability("throwExceptionOnScriptError", false)
+        generalOptions.setCapability("resolution", viewPort.width.toString() + "x" + viewPort.height)
+
+        // see https://peter.sh/experiments/chromium-command-line-switches/
+        chromeOptions.merge(generalOptions)
+        // Use headless mode by default, GUI mode can be used for debugging
+        chromeOptions.setHeadless(headless)
+        chromeOptions.addArguments("--window-size=" + viewPort.width + "," + viewPort.height)
+        chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
+        chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
+
         mapOf(
                 "viewPortWidth" to viewPort.width,
                 "viewPortHeight" to viewPort.height

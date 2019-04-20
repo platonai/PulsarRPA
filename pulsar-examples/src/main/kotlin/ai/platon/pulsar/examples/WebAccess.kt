@@ -55,7 +55,7 @@ object WebAccess {
                 .let { i.parse(it) }
                 // .also { println(it.document) }
                 .select(outlinkSelector) { it.attr("href") }
-//                .asSequence()
+//                .asSequence() // seems sync
                 .sortedBy { it.length }
                 .take(40)
 //                .onEach { println(it) }

@@ -230,10 +230,10 @@ inline fun <reified T> Node.getVariable(name: String, defaultValue: T): T {
     return if (v is T) v else defaultValue
 }
 
-inline fun <reified T> Node.computeVariableIfAbsent(name: String, compute: (String) -> T): T {
+inline fun <reified T> Node.computeVariableIfAbsent(name: String, mappingFunction: (String) -> T): T {
     var v = variables[name]
     if (v !is T) {
-        v = compute(name)
+        v = mappingFunction(name)
         variables[name] = v
     }
     return v
@@ -241,6 +241,12 @@ inline fun <reified T> Node.computeVariableIfAbsent(name: String, compute: (Stri
 
 fun Node.setVariable(name: String, value: Any) {
     variables[name] = value
+}
+
+fun Node.setVariableIfNotNull(name: String, value: Any?) {
+    if (value != null) {
+        variables[name] = value
+    }
 }
 
 fun Node.hasVariable(name: String): Boolean {
