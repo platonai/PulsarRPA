@@ -9,6 +9,7 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 
 /**
  * Created by vincent on 18-3-23.
@@ -49,8 +50,14 @@ object PulsarPaths {
     }
 
     fun fromUri(uri: String, suffix: String = ""): String {
-        val domain = InternetDomainName.from(URL(uri).host).topPrivateDomain().toString()
-        val path = domain.replace('.', '-') + "-" + DigestUtils.md5Hex(uri)
+        val u = Urls.getURLOrNull(uri)
+        val path = if (u == null) {
+            "unknown-" + UUID.randomUUID().toString()
+        } else {
+            val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
+            domain.replace('.', '-') + "-" + DigestUtils.md5Hex(uri)
+        }
+
         return if (suffix.isNotEmpty()) path + suffix else path
     }
 

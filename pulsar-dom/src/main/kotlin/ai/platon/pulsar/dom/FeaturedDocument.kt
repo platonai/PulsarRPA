@@ -53,7 +53,7 @@ open class FeaturedDocument(val document: Document) {
     constructor(other: FeaturedDocument): this(other.unbox().clone())
 
     init {
-        if (document.features.isEmpty) {
+        if (features.isEmpty) {
             NodeTraversor.traverse(nodeFeatureCalculator, document)
         }
     }
@@ -62,8 +62,7 @@ open class FeaturedDocument(val document: Document) {
         get() = document.title()
         set(value) = document.title(value)
 
-    val location: String
-        get() = document.location()
+    val location: String get() = document.location()
 
     val head: Element
         get() = document.head() ?: throw RuntimeException("Bad document, head tag is missing")
@@ -71,11 +70,9 @@ open class FeaturedDocument(val document: Document) {
     val body: Element
         get() = document.body() ?: throw RuntimeException("Bad document, body tag is missing")
 
-    val text: String
-        get() = document.text()
+    val text: String get() = document.text()
 
-    val html: String
-        get() = document.html()
+    val html: String get() = document.html()
 
     val prettyHtml: String
         get() {

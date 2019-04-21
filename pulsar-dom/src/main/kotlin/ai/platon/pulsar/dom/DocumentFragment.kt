@@ -5,6 +5,7 @@ import ai.platon.pulsar.dom.data.BlockLabel
 import ai.platon.pulsar.dom.data.BlockLabelTracker
 import ai.platon.pulsar.dom.data.BlockPattern
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.nodes.nodeComparator
 import org.apache.commons.codec.digest.DigestUtils
 import org.jsoup.nodes.Element
 import java.util.*
@@ -13,7 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class DocumentFragment(
         val element: Element = Element("div"),
         var fragments: DocumentFragments = DocumentFragments.EMPTY
-) {
+): Comparable<DocumentFragment> {
+
     var parent: DocumentFragment? = null
     val children = LinkedList<DocumentFragment>()
 
@@ -167,5 +169,9 @@ open class DocumentFragment(
 
     override fun equals(other: Any?): Boolean {
         return other is DocumentFragment && element == other.element
+    }
+
+    override fun compareTo(other: DocumentFragment): Int {
+        return nodeComparator.compare(element, other.element)
     }
 }

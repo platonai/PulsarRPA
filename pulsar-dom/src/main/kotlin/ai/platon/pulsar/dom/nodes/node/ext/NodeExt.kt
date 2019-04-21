@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
-import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
@@ -15,7 +14,6 @@ import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
 import ai.platon.pulsar.dom.select.MathematicalSelector
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -27,8 +25,6 @@ import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
-
-val Document.viewPort get() = computeVariableIfAbsent(V_VIEW_PORT) { calculateViewPort() }
 
 val Node.ownerDocument get() = ownerDocumentNode as Document
 
@@ -178,6 +174,84 @@ val Node.slimHtml: String
         this is TextNode -> String.format("<span>%s</span>", this.text())
         this is Element -> String.format("<div>%s</div>", this.text())
         else -> String.format("<b>%s</b>", name)
+    }
+
+val Node.key: String get() = "${baseUri()}#$sequence"
+
+val Node.name: String
+    get() {
+        return when(this) {
+            is Document -> ":root"
+            is Element -> {
+                val id = id()
+                if (id.isNotEmpty()) {
+                    return "#$id"
+                }
+
+                val cls = className()
+                if (cls.isNotEmpty()) {
+                    return "." + cls.replace("\\s+".toRegex(), ".")
+                }
+
+                nodeName()
+            }
+            is TextNode -> {
+                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                return bestElement.name + postfix
+            }
+            else -> nodeName()
+        }
+    }
+
+val Node.canonicalName: String
+    get() {
+        when(this) {
+            is Document -> {
+                var baseUri = baseUri()
+                if (baseUri.isEmpty()) {
+                    baseUri = ownerBody.attr("baseUri")
+                }
+                return ":root@$baseUri"
+            }
+            is Element -> {
+                var id = id().trim()
+                if (!id.isEmpty()) {
+                    id = "#$id"
+                }
+
+                var cls = ""
+                if (id.isEmpty()) {
+                    cls = className().trim()
+                    if (!cls.isEmpty()) {
+                        cls = "." + cls.replace("\\s+".toRegex(), ".")
+                    }
+                }
+
+                return "${nodeName()}$id$cls"
+            }
+            is TextNode -> {
+                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                return bestElement.canonicalName + postfix
+            }
+            else -> return nodeName()
+        }
+    }
+
+val Node.uniqueName: String get() = "$sequence-$canonicalName"
+
+val Node.namedRect: String get() = "$name-${rectangle.str}"
+
+val Node.namedRect2: String get() = "$name-${rectangle.str2}"
+
+/**
+ * Returns a best element to represent this node: if the node itself is an element, return itself
+ * otherwise, returns it's parent
+ * */
+val Node.bestElement: Element
+    get() {
+        return if (this is Element) {
+            this
+        } else this.parent() as Element
     }
 
 /**
@@ -401,84 +475,6 @@ fun Node.formatVariables(): String {
     return sb.toString()
 }
 
-val Node.key: String get() = "${baseUri()}#$sequence"
-
-val Node.name: String
-    get() {
-        return when(this) {
-            is Document -> ":root"
-            is Element -> {
-                val id = id()
-                if (id.isNotEmpty()) {
-                    return "#$id"
-                }
-
-                val cls = className()
-                if (cls.isNotEmpty()) {
-                    return "." + cls.replace("\\s+".toRegex(), ".")
-                }
-
-                nodeName()
-            }
-            is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
-                return bestElement.name + postfix
-            }
-            else -> nodeName()
-        }
-    }
-
-val Node.canonicalName: String
-    get() {
-        when(this) {
-            is Document -> {
-                var baseUri = baseUri()
-                if (baseUri.isEmpty()) {
-                    baseUri = ownerBody.attr("baseUri")
-                }
-                return ":root@$baseUri"
-            }
-            is Element -> {
-                var id = id().trim()
-                if (!id.isEmpty()) {
-                    id = "#$id"
-                }
-
-                var cls = ""
-                if (id.isEmpty()) {
-                    cls = className().trim()
-                    if (!cls.isEmpty()) {
-                        cls = "." + cls.replace("\\s+".toRegex(), ".")
-                    }
-                }
-
-                return "${nodeName()}$id$cls"
-            }
-            is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
-                return bestElement.canonicalName + postfix
-            }
-            else -> return nodeName()
-        }
-    }
-
-val Node.uniqueName: String get() = "$sequence-$canonicalName"
-
-val Node.namedRect: String get() = "$name-${rectangle.str}"
-
-val Node.namedRect2: String get() = "$name-${rectangle.str2}"
-
-/**
- * Returns a best element to represent this node: if the node itself is an element, return itself
- * otherwise, returns it's parent
- * */
-val Node.bestElement: Element
-    get() {
-        return if (this is Element) {
-            this
-        } else this.parent() as Element
-    }
-
 /*********************************************************************
  * Actions
  * *******************************************************************/
@@ -508,6 +504,23 @@ fun Node.findFirstAncestor(predicate: (Element) -> Boolean): Element? {
     var match = false
 
     while (p != null && !match) {
+        match = predicate(p)
+        if (!match) {
+            p = p.parent()
+        }
+    }
+
+    return if (match) p else null
+}
+
+/**
+ * Find first ancestor matches the predication
+ * */
+fun Node.findFirstAncestor(stop: (Element) -> Boolean, predicate: (Element) -> Boolean): Element? {
+    var p = this.parent() as Element?
+    var match = false
+
+    while (p != null && !match && !stop(p)) {
         match = predicate(p)
         if (!match) {
             p = p.parent()
@@ -710,7 +723,7 @@ fun Node.maxByDouble(transform: (Node) -> Double): Node? {
     return node
 }
 
-fun Node.countMatches(predicate: (Node) -> Boolean = {true}): Int {
+fun Node.count(predicate: (Node) -> Boolean = {true}): Int {
     var count = 0
     forEach { if (predicate(it)) ++count }
     return count
@@ -786,14 +799,4 @@ fun Element.pixelatedValue(value: String, defaultValue: Double): Double {
     // TODO : we currently handle only px
     val units = arrayOf("in", "%", "cm", "mm", "ex", "pt", "pc", "px")
     return value.removeSuffix("px").toDoubleOrNull()?:defaultValue
-}
-
-private fun Node.calculateViewPort(): Dimension {
-    val default = Dimension(1920, 1080)
-    val parts = ownerBody.attr("view-port").split("x")
-    if (parts.size != 2) return default
-
-    val w = SParser(parts[0]).getInt(default.width)
-    val h = SParser(parts[1]).getInt(default.height)
-    return Dimension(w, h)
 }
