@@ -34,11 +34,11 @@ public class LoadOptions extends CommonOptions {
     @Parameter(names = {"-retry", "--retry"}, description = "Retry fetching the page if it's failed last time")
     private boolean retry = false;
 
-    @Parameter(names = {"-autoFlush", "--auto-flush"}, arity = 1, description = "Auto flush db whenever a fetch task finished")
-    private boolean autoFlush = true;
+    @Parameter(names = {"-lazyFlush", "--lazy-flush"}, description = "Flush db only explicit called")
+    private boolean lazyFlush = false;
 
-    @Parameter(names = {"-preferParallel", "--prefer-parallel"}, arity = 1, description = "Parallel fetch urls whenever applicable")
-    private boolean preferParallel = true;
+    @Parameter(names = {"-preferParallel", "--prefer-parallel"}, description = "Parallel fetch urls whenever applicable")
+    private boolean preferParallel = false;
 
     @Parameter(names = {"-fetchMode", "--fetch-mode"}, description = "The fetch mode")
     private String fetchMode;
@@ -88,10 +88,12 @@ public class LoadOptions extends CommonOptions {
 
     public LoadOptions(String[] args) {
         super(args);
+        parse();
     }
 
     public LoadOptions(String args) {
         super(args.trim().replaceAll("=", " "));
+        parse();
     }
 
     public static LoadOptions parse(String args) {
@@ -227,12 +229,12 @@ public class LoadOptions extends CommonOptions {
         this.persist = persist;
     }
 
-    public boolean isAutoFlush() {
-        return autoFlush;
+    public boolean isLazyFlush() {
+        return lazyFlush;
     }
 
-    public void setAutoFlush(boolean autoFlush) {
-        this.autoFlush = autoFlush;
+    public void setLazyFlush(boolean lazyFlush) {
+        this.lazyFlush = lazyFlush;
     }
 
     public FetchMode getFetchMode() {
@@ -314,7 +316,7 @@ public class LoadOptions extends CommonOptions {
                 "-prst", isPersist(),
                 "-shortenKey", isShortenKey(),
                 "-expires", getExpires(),
-                "-autoFlush", isAutoFlush(),
+                "-lazyFlush", isLazyFlush(),
                 "-fetchMode", getFetchMode(),
                 "-browser", getBrowser(),
                 "-preferParallel", isPreferParallel(),

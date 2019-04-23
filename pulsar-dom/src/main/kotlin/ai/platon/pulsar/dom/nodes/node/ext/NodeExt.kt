@@ -25,6 +25,50 @@ import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
+import kotlin.reflect.KProperty
+
+class DoubleFeature(val name: Int) {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): Double = thisRef.features[name]
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: Double) {
+        thisRef.features[name] = value
+    }
+}
+
+class IntFeature(val name: Int) {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): Int = thisRef.features[name].toInt()
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: Int) {
+        thisRef.features[name] = value.toDouble()
+    }
+}
+
+class MapField<T>(val initializer: (Node) -> T) {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T =
+            thisRef.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: T): T {
+        thisRef.variables[property.name] = value
+        return value
+    }
+}
+
+class NullableMapField<T> {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T? =
+            thisRef.variables[property.name] as T?
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: T?) {
+        thisRef.variables[property.name] = value
+    }
+}
+
+fun <T> field(initializer: (Node) -> T): MapField<T> {
+    return MapField(initializer)
+}
+
+inline fun <reified T> nullableField(): NullableMapField<T> {
+    return NullableMapField()
+}
 
 val Node.ownerDocument get() = ownerDocumentNode as Document
 
@@ -45,67 +89,45 @@ val Node.location: String get() = ownerDocument.location()
 // The Uniform Resource Identifier of this document, it's simply the location of the document
 val Node.uri: String get() = location
 
-var Node.depth: Int
-    get() = getFeature(DEP).toInt()
-    set(value) = setFeature(DEP, value.toDouble())
+var Node.depth by IntFeature(DEP)
 
-val Node.sequence: Int get() = getFeature(SEQ).toInt()
+val Node.sequence by IntFeature(SEQ)
 
 /*********************************************************************
  * Geometric information
  * *******************************************************************/
 
-var Node.left
-    get() = getFeature(LEFT).toInt()
-    set(value) = setFeature(LEFT, value.toDouble())
+var Node.left by IntFeature(LEFT)
 
-var Node.top
-    get() = getFeature(TOP).toInt()
-    set(value) = setFeature(TOP, value.toDouble())
+var Node.top by IntFeature(TOP)
 
-var Node.width: Int
-    get() = getFeature(WIDTH).toInt()
-    set(value) = setFeature(WIDTH, value.toDouble())
+var Node.width: Int by IntFeature(WIDTH)
 
-var Node.height: Int
-    get() = getFeature(HEIGHT).toInt()
-    set(value) = setFeature(HEIGHT, value.toDouble())
+var Node.height: Int by IntFeature(HEIGHT)
 
-val Node.right: Int
-    get() = left + width
+val Node.right: Int get() = left + width
 
-val Node.bottom: Int
-    get() = top + height
+val Node.bottom: Int get() = top + height
 
-val Node.x
-    get() = left
+val Node.x get() = left
 
-val Node.y
-    get() = top
+val Node.y get() = top
 
-val Node.x2
-    get() = right
+val Node.x2 get() = right
 
-val Node.y2
-    get() = bottom
+val Node.y2 get() = bottom
 
-val Node.centerX
-    get() = (x + x2) / 2
+val Node.centerX get() = (x + x2) / 2
 
-val Node.centerY
-    get() = (y + y2) / 2
+val Node.centerY get() = (y + y2) / 2
 
-val Node.geoLocation: Point
-    get() = Point(x, y)
+val Node.geoLocation get() = Point(x, y)
 
-val Node.dimension: Dimension
-    get() = Dimension(width, height)
+val Node.dimension get() = Dimension(width, height)
 
-val Node.rectangle: Rectangle
-    get() = Rectangle(x, y, width, height)
+val Node.rectangle get() = Rectangle(x, y, width, height)
 
-val Node.area: Int
-    get() = width * height
+val Node.area get() = width * height
 
 /*********************************************************************
  * Distinguished features
@@ -115,25 +137,18 @@ val Node.area: Int
  * features\[SIB] = features\[C]
  * TODO: keep SIB feature be consistent with Node.siblingNodes.size
  * */
-val Node.numSiblings
-    get() = getFeature(SIB).toInt()
-val Node.numChildren
-    get() = getFeature(C).toInt()
 
+val Node.numChars by IntFeature(CH)
+val Node.numSiblings by IntFeature(SIB)
+val Node.numChildren by IntFeature(C)
 /** Number of descend text nodes */
-var Node.numTextNodes
-    get() = getFeature(TN).toInt()
-    set(value) = setFeature(TN, value.toDouble())
+var Node.numTextNodes by IntFeature(TN)
 
 /** Number of descend images */
-var Node.numImages
-    get() = getFeature(IMG).toInt()
-    set(value) = setFeature(IMG, value.toDouble())
+var Node.numImages by IntFeature(IMG)
 
 /** Number of descend anchors */
-var Node.numAnchors
-    get() = getFeature(A).toInt()
-    set(value) = setFeature(A, value.toDouble())
+var Node.numAnchors by IntFeature(A)
 
 // semantics
 val Node.selectorOrName: String
@@ -292,7 +307,6 @@ fun Node.clearFeatures(): Node {
 
 /**
  * Temporary node variables
- * TODO: we may need a fast variable holder which uses int as the key
  * */
 inline fun <reified T> Node.getVariable(name: String): T? {
     val v = variables[name]

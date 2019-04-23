@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.component;
 
-import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.common.options.LinkOptions;
@@ -11,7 +10,6 @@ import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
 import ai.platon.pulsar.crawl.parse.ParseResult;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -422,7 +420,7 @@ public class LoadComponent {
         if (options.isPersist()) {
             webDb.put(page);
 
-            if (options.isAutoFlush()) {
+            if (!options.isLazyFlush()) {
                 flush();
             }
 
@@ -534,7 +532,7 @@ public class LoadComponent {
             response.put("debug", buildDebugInfo(logLevel, linkOptions, options, loadOptions2));
         }
 
-        if (options.isAutoFlush()) {
+        if (!options.isLazyFlush()) {
             flush();
         }
 
@@ -549,7 +547,7 @@ public class LoadComponent {
                 .filter(p -> p.getProtocolStatus().isSuccess())
                 .collect(Collectors.toList());
 
-        if (options.isAutoFlush()) {
+        if (!options.isLazyFlush()) {
             flush();
         }
 

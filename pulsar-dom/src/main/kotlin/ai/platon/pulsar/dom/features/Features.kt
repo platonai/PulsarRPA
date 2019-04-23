@@ -9,6 +9,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.nodes.V_OWNER_BODY
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.nodes.node.ext.name
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -172,9 +173,7 @@ object FeatureFormatter {
                     is FeaturedDocument -> value.location
                     else -> value.toString()
                 }
-                if (s.length > 20) {
-                    s = s.take(20) + ".."
-                }
+                s = StringUtils.abbreviate(s, 20)
                 sb.append(name).append(':').append(s).append(' ')
             }
         }

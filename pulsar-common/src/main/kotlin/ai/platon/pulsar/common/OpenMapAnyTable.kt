@@ -1,5 +1,7 @@
 package ai.platon.pulsar.common
 
+import kotlin.reflect.KProperty
+
 class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
     val metadata = Metadata(numColumns)
     val map = mutableMapOf<String, Row>()
@@ -75,5 +77,35 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
             require(j < cells.size)
             cells[j] = Cell(value)
         }
+    }
+}
+
+class TableAttribute<T: Any>(val initializer: (OpenMapAnyTable) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
+    }
+}
+
+class ColumnAttribute<T: Any>(val initializer: (OpenMapAnyTable.Column) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable.Column, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable.Column, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
+    }
+}
+
+class RowAttribute<T: Any>(val initializer: (OpenMapAnyTable.Row) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
     }
 }
