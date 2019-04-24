@@ -141,7 +141,7 @@ public class PagesResource {
       return "";
     }
 
-    String[] options = PulsarOptions.split(args);
+    String[] options = PulsarOptions.Companion.split(args);
     for (String option : options) {
       if (option.equals("-a") || option.equals("--all")) {
         return new WebPageFormatter(page).withFields().withText().format();
@@ -172,7 +172,7 @@ public class PagesResource {
     boolean ll = false;
     boolean dl = false;
     boolean lk = false;
-    for (String option : PulsarOptions.split(args)) {
+    for (String option : PulsarOptions.Companion.split(args)) {
       switch (option) {
         case "-ll":
         case "--live-links":
@@ -189,7 +189,7 @@ public class PagesResource {
       }
     }
 
-    ParseOptions parseOptions = ParseOptions.parse(args);
+    ParseOptions parseOptions = ParseOptions.Companion.parse(args);
     if (parseOptions.isParse()) {
       parseComponent.parse(page, parseOptions.isReparseLinks(), parseOptions.isNoLinkFilter());
     }
@@ -245,7 +245,7 @@ public class PagesResource {
   ) {
     LOG.debug("Loading " + url);
 
-    LoadOptions loadOptions = LoadOptions.parse(args);
+    LoadOptions loadOptions = LoadOptions.Companion.parse(args);
 
     WebPage page = loadComponent.load(url, loadOptions);
     loadComponent.flush();
@@ -278,9 +278,9 @@ public class PagesResource {
     linkArgs += ",log," + log;
 
     Map<String, Object> results = loadComponent.loadOutPages(url,
-      LoadOptions.parse(loadArgs),
+      LoadOptions.Companion.parse(loadArgs),
       LinkOptions.parse(linkArgs), start, limit,
-      LoadOptions.parse(loadArgs2),
+      LoadOptions.Companion.parse(loadArgs2),
       "",
       log);
     loadComponent.flush();
@@ -303,7 +303,7 @@ public class PagesResource {
           @QueryParam("log") @DefaultValue("0") int log,
           @Context HttpServletRequest request
   ) {
-    LoadOptions loadOptions = LoadOptions.parse(args);
+    LoadOptions loadOptions = LoadOptions.Companion.parse(args);
 
     WebPage page = loadComponent.load(url, loadOptions);
     loadComponent.flush();
@@ -351,9 +351,9 @@ public class PagesResource {
     linkArgs += ",log," + log;
 
     Map<String, Object> results = loadComponent.loadOutPages(
-      url, LoadOptions.parse(args),
+      url, LoadOptions.Companion.parse(args),
       LinkOptions.parse(linkArgs), start, limit,
-      LoadOptions.parse(args2),
+      LoadOptions.Companion.parse(args2),
       "",
       log);
     loadComponent.flush();
@@ -379,7 +379,7 @@ public class PagesResource {
     }
 
     args += ",-ps,--expires,0s";
-    LoadOptions loadOptions = LoadOptions.parse(args);
+    LoadOptions loadOptions = LoadOptions.Companion.parse(args);
 
     List<Map<String, Object>> docs = Stream.of(urls.split("\n"))
       .map(url -> loadComponent.load(url, loadOptions))
@@ -411,7 +411,7 @@ public class PagesResource {
     @QueryParam("url") String url,
     @QueryParam("args") @DefaultValue("--parse,--expires,30m,--with-entities") String args
   ) {
-    LoadOptions loadOptions = LoadOptions.parse(args);
+    LoadOptions loadOptions = LoadOptions.Companion.parse(args);
 
 //    LOG.debug("LoadOptions: " + loadOptions.toString());
 //    LOG.debug("Query: " + query);
@@ -440,9 +440,9 @@ public class PagesResource {
     linkArgs += ",-log," + log;
 
     Map<String, Object> results = loadComponent.loadOutPages(url,
-      LoadOptions.parse(loadArgs),
+      LoadOptions.Companion.parse(loadArgs),
       LinkOptions.parse(linkArgs), start, limit,
-      LoadOptions.parse(loadArgs2),
+      LoadOptions.Companion.parse(loadArgs2),
       query,
       log);
     loadComponent.flush();
@@ -484,7 +484,6 @@ public class PagesResource {
     Map<String, Map<String, List<String>>> indexDocuments = page.getSimpleLiveLinks().stream()
         .skip(start > 1 ? start - 1 : 0).limit(limit)
         .map(l -> loadComponent.load(l, loadOptions))
-        .filter(Objects::nonNull)
         .map(indexComponent::index)
         .collect(Collectors.toMap(IndexDocument::getUrl, IndexDocument::asMultimap, (i, i2) -> i2));
 
@@ -516,7 +515,7 @@ public class PagesResource {
 
     String[] urlArray = urls.split("\n");
     int totalCount = urlArray.length;
-    LoadOptions loadOptions = LoadOptions.parse(args);
+    LoadOptions loadOptions = LoadOptions.Companion.parse(args);
     Map<String, Map<String, List<String>>> indexDocuments = Stream.of(urlArray)
             .map(l -> loadComponent.load(l, loadOptions))
             .filter(Objects::nonNull)
@@ -551,7 +550,7 @@ public class PagesResource {
       return "{}";
     }
 
-    LoadOptions loadOptions = LoadOptions.parse("-ps,-prst");
+    LoadOptions loadOptions = LoadOptions.Companion.parse("-ps,-prst");
     List<WebPage> outgoingPages = page.getSimpleLiveLinks().stream()
         .skip(start > 1 ? start - 1 : 0).limit(limit)
         .map(l -> loadComponent.load(l, loadOptions))

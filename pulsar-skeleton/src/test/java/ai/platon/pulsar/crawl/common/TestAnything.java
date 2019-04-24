@@ -166,7 +166,7 @@ public class TestAnything {
         kotlin.Pair<String, String> pair = Urls.splitUrlArgs(configuredUrl);
         System.out.println(pair);
 
-        LoadOptions options = LoadOptions.parse(pair.getSecond());
+        LoadOptions options = LoadOptions.Companion.parse(pair.getSecond());
         System.out.println(options);
     }
 }

@@ -5,6 +5,7 @@ import ai.platon.pulsar.ql.types.ValueDom
 import ai.platon.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL_LENGTH
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
@@ -117,7 +118,7 @@ object Queries {
             links = links.map { session.normalize(it) }.filterNotNull()
         }
 
-        return session.loadAll(links, ai.platon.pulsar.common.options.LoadOptions())
+        return session.loadAll(links, LoadOptions())
     }
 
     fun loadAndParse(session: QuerySession, configuredUrl: String): FeaturedDocument {

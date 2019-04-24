@@ -92,7 +92,7 @@ public class LoadComponent {
     @Nonnull
     public WebPage load(String configuredUrl) {
         kotlin.Pair<String, String> urlAndOptions = Urls.splitUrlArgs(configuredUrl);
-        LoadOptions options = LoadOptions.parse(urlAndOptions.getSecond());
+        LoadOptions options = LoadOptions.Companion.parse(urlAndOptions.getSecond());
         return load(urlAndOptions.getFirst(), options);
     }
 
@@ -105,7 +105,7 @@ public class LoadComponent {
      */
     @Nonnull
     public WebPage load(String originalUrl, String options) {
-        return load(originalUrl, LoadOptions.parse(options));
+        return load(originalUrl, LoadOptions.Companion.parse(options));
     }
 
     /**
@@ -440,8 +440,8 @@ public class LoadComponent {
             int start, int limit, @Nonnull String loadArgs2,
             @Nonnull String query,
             int logLevel) {
-        return loadOutPages(url, LoadOptions.parse(loadArgs), LinkOptions.parse(linkArgs),
-                start, limit, LoadOptions.parse(loadArgs2), query, logLevel);
+        return loadOutPages(url, LoadOptions.Companion.parse(loadArgs), LinkOptions.parse(linkArgs),
+                start, limit, LoadOptions.Companion.parse(loadArgs2), query, logLevel);
     }
 
     /**

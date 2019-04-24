@@ -91,9 +91,9 @@ public class SeedResource {
       @Context HttpServletRequest request
   ) {
     Map<String, Object> results = loadComponent.loadOutPages(PulsarConstants.SEED_PAGE_1_URL,
-      LoadOptions.parse("-s,-nlf,--expires=36500d"),
+      LoadOptions.Companion.parse("-s,-nlf,--expires=36500d"),
       LinkOptions.parse("-amin=0,-umin=1,-log," + logLevel), start, limit,
-      LoadOptions.parse("-s,--expires=36500d"),"",
+      LoadOptions.Companion.parse("-s,--expires=36500d"),"",
       logLevel);
 
     results.put("uri", request.getRequestURI());

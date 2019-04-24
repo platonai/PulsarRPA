@@ -85,7 +85,7 @@ public class TestPulsarOptions {
     @Test
     public void testNoProgramOpts() {
         for (String cl : argss) {
-            CrawlOptions opts = CrawlOptions.parse(cl, conf);
+            CrawlOptions opts = CrawlOptions.Companion.parse(cl, conf);
             // System.out.println(opts.toString());
             // assertEquals(opts.toString(), StringUtils.substringBefore(cl, " "), "");
         }
@@ -98,7 +98,7 @@ public class TestPulsarOptions {
     @Ignore("Failed to parse CrawlOptions")
     public void testProgramOpts() {
         Stream.of(args1, args2).forEach(args -> {
-            CrawlOptions options = CrawlOptions.parse(args, conf);
+            CrawlOptions options = CrawlOptions.Companion.parse(args, conf);
             System.out.println("====");
             System.out.println(args);
             System.out.println(options.toString());
@@ -130,8 +130,8 @@ public class TestPulsarOptions {
 
     @Test
     public void testRebuildOptions() {
-        CrawlOptions options = CrawlOptions.parse(args2, conf);
-        CrawlOptions options2 = CrawlOptions.parse(options.toString(), conf);
+        CrawlOptions options = CrawlOptions.Companion.parse(args2, conf);
+        CrawlOptions options2 = CrawlOptions.Companion.parse(options.toString(), conf);
         CollectionUtils.containsAll(options.getParams().asStringMap().values(), options2.getParams().asStringMap().values());
 
         System.out.println(args2);
@@ -139,7 +139,7 @@ public class TestPulsarOptions {
         System.out.println(options2.getParams().asStringMap());
 
         String args = "-ps -rpl -nlf -notSupport";
-        LoadOptions loadOptions = LoadOptions.parse(args);
+        LoadOptions loadOptions = LoadOptions.Companion.parse(args);
         assertTrue(loadOptions.getParams().asMap().containsKey("-ps"));
         assertTrue(loadOptions.toString().contains("-rpl"));
         assertTrue(!loadOptions.toString().contains("-notSupport"));
@@ -155,7 +155,7 @@ public class TestPulsarOptions {
     @Test
     public void testOverrideOptions() {
         String args = "-amin=1 -amin=2 -amin=3 -amax=100 -amax=200 -amax=300";
-        LinkOptions linkOptions = LinkOptions.parse(LinkOptions.normalize(args, "="));
+        LinkOptions linkOptions = LinkOptions.parse(LinkOptions.Companion.normalize(args, "="));
         assertEquals(3, linkOptions.getMinAnchorLength());
         assertEquals(300, linkOptions.getMaxAnchorLength());
     }

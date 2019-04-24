@@ -117,13 +117,13 @@ public final class InjectJob extends AppContextAwareJob {
       super(args);
       // We may read seeds from a file using @ sign, the file parsing should be handled manually
       setExpandAtSign(false);
-      this.crawlId = conf.get(STORAGE_CRAWL_ID);
+      this.setCrawlId(conf.get(STORAGE_CRAWL_ID, ""));
     }
 
     @Override
     public Params getParams() {
       return Params.of(
-          ARG_CRAWL_ID, crawlId,
+          ARG_CRAWL_ID, getCrawlId(),
           ARG_SEEDS, seeds.get(0),
           ARG_LIMIT, limit
       );

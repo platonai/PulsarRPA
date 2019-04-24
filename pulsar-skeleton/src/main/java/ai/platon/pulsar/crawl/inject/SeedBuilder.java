@@ -100,7 +100,7 @@ public class SeedBuilder implements ReloadableParameterized {
             return false;
         }
 
-        CrawlOptions options = CrawlOptions.parse(args, conf);
+        CrawlOptions options = CrawlOptions.Companion.parse(args, conf);
 
         page.setDistance(0);
         if (page.getCreateTime().isBefore(TCP_IP_STANDARDIZED_TIME)) {

@@ -76,7 +76,7 @@ object WebAccess {
         println(WebPageFormatter(portal))
         println(portal.simpleVividLinks)
         val links = portal.simpleLiveLinks.filter { it.contains("detail") }
-        val pages = i.parallelLoadAll(links, LoadOptions.parse("--parse"))
+        val pages = i.parallelLoadAll(links, LoadOptions.Companion.parse("--parse"))
         pages.forEach { println("${it.url} ${it.pageTitle}") }
     }
 
@@ -85,7 +85,7 @@ object WebAccess {
 
         val portal = i.load("$url $loadOptions")
         val links = portal.simpleLiveLinks.filter { it.contains("jinrong") }
-        val pages = i.parallelLoadAll(links, LoadOptions.parse("--parse"))
+        val pages = i.parallelLoadAll(links, LoadOptions.Companion.parse("--parse"))
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 

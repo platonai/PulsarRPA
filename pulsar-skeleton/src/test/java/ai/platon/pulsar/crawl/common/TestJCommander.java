@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.options.PulsarOptions;
-import ai.platon.pulsar.common.options.converters.WeightedKeywordsConverter;
+import ai.platon.pulsar.common.options.WeightedKeywordsConverter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class TestJCommander {
         assertEquals(cmd.instances.size(), 2);
 
         String args = "-ins \"string one\" -ins \"string two\"";
-        String[] argv = PulsarOptions.split(args);
+        String[] argv = PulsarOptions.Companion.split(args);
 
         Cmd cmd2 = new Cmd();
         JCommander.newBuilder().addObject(cmd2).args(argv).build();

@@ -20,7 +20,7 @@ public class SelectorList {
     }
 
     public static SelectorList parse(String args) {
-        EntityOptions options = new EntityOptions(args);
+        EntityOptions options = EntityOptions.parse(args);
         options.parse();
         SelectorList selectorList = new SelectorList();
         options.getCssRules().forEach(selectorList::css);

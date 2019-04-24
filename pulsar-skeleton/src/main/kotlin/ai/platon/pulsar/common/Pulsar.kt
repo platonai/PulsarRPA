@@ -144,7 +144,7 @@ class Pulsar: AutoCloseable {
      * @return Pages for all urls.
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions()): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         if (options.mutableConfig == null) {
             options.mutableConfig = defaultMutableConfig
         }
@@ -167,7 +167,7 @@ class Pulsar: AutoCloseable {
      * @return Pages for all urls.
      */
     @JvmOverloads
-    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions()): Collection<WebPage> {
+    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         if (options.mutableConfig == null) {
             options.mutableConfig = defaultMutableConfig
         }

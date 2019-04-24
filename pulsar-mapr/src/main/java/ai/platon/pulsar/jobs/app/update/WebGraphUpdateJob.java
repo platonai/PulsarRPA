@@ -99,7 +99,7 @@ abstract class WebGraphUpdateJob extends AppContextAwareJob {
       }
 
       return Params.of(
-          ARG_CRAWL_ID, crawlId,
+          ARG_CRAWL_ID, getCrawlId(),
           ARG_BATCH_ID, batchId.get(0)
       );
     }
