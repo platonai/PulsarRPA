@@ -13,7 +13,7 @@ open class CommonOptions : PulsarOptions {
     @Parameter(names = ["-config"], description = "config dir")
     var config = ""
     @Parameter(names = ["-h", "-help", "--help"], help = true, description = "Print help text")
-    override val isHelp: Boolean = false
+    override var isHelp: Boolean = false
 
     constructor() {
         addObjects(this)

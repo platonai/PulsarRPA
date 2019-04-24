@@ -4,14 +4,12 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
-import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.ArrayList
 import java.util.HashSet
 import java.util.regex.Pattern
-import java.util.stream.Collectors
 
 
 /**
@@ -21,21 +19,18 @@ import java.util.stream.Collectors
 open class PulsarOptions : Parameterized {
 
     var expandAtSign = true
-    var args = ""
-    protected var argv: Array<String> = arrayOf()
-    protected var objects: MutableSet<Any> = HashSet()
-    protected var jc: JCommander? = null
+    // arguments
+    val args: String
+    // argument vector
+    val argv: Array<String>
+    protected val objects: MutableSet<Any> = HashSet()
+    protected lateinit var jc: JCommander
 
-    open val isHelp: Boolean
-        get() = false
+    open var isHelp: Boolean = false
 
-    constructor() {
-        this.argv = arrayOf()
-    }
+    constructor(): this("")
 
-    constructor(args: String) : this(split(args)) {
-        this.args = args
-    }
+    constructor(args: String): this(split(args))
 
     constructor(argv: Array<String>) {
         this.argv = argv
@@ -43,13 +38,11 @@ open class PulsarOptions : Parameterized {
             // Since space can not appear in dynamic parameters in command line, we use % instead
             this.argv[i] = this.argv[i].replace("%".toRegex(), " ")
         }
-        if (args.isEmpty()) {
-            args = StringUtils.join(argv, DEFAULT_DELIMETER)
-        }
+        args = StringUtils.join(argv, DEFAULT_DELIMETER)
     }
 
     constructor(argv: Map<String, String>)
-            : this(argv.entries.map { it.key + DEFAULT_DELIMETER + it.value }.joinToString(DEFAULT_DELIMETER) { it })
+            : this(argv.entries.joinToString(DEFAULT_DELIMETER) { it.key + DEFAULT_DELIMETER + it.value })
 
     fun setObjects(vararg objects: Any) {
         this.objects.clear()
@@ -64,7 +57,7 @@ open class PulsarOptions : Parameterized {
         try {
             doParse()
         } catch (e: Throwable) {
-            LOG.warn(StringUtil.stringifyException(e))
+            log.warn(StringUtil.stringifyException(e))
             return false
         }
 
@@ -81,34 +74,31 @@ open class PulsarOptions : Parameterized {
             doParse()
 
             if (isHelp) {
-                jc!!.usage()
+                jc.usage()
                 System.exit(0)
             }
         } catch (e: ParameterException) {
             println(e.toString())
             System.exit(0)
         }
-
     }
 
     private fun doParse() {
         objects.add(this)
 
-        if (jc == null) {
-            jc = JCommander(objects)
-        }
+        jc = JCommander(objects)
 
-        jc?.setAcceptUnknownOptions(true)
-        jc?.setAllowParameterOverwriting(true)
+        jc.setAcceptUnknownOptions(true)
+        jc.setAllowParameterOverwriting(true)
         //      jc.setAllowAbbreviatedOptions(false);
-        jc?.setExpandAtSign(expandAtSign)
+        jc.setExpandAtSign(expandAtSign)
         if (argv.isNotEmpty()) {
-            jc?.parse(*argv)
+            jc.parse(*argv)
         }
     }
 
     fun usage() {
-        jc?.usage()
+        jc.usage()
     }
 
     fun toCmdLine(): String {
@@ -122,16 +112,20 @@ open class PulsarOptions : Parameterized {
                 .toTypedArray()
     }
 
+    override fun hashCode(): Int {
+        return args.hashCode()
+    }
+
     override fun equals(other: Any?): Boolean {
-        return other is PulsarOptions && this.toString() == other.toString()
+        return other is PulsarOptions && args == other.args
     }
 
     override fun toString(): String {
-        return StringUtils.join(argv, " ")
+        return args
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(PulsarOptions::class.java)
+        val log = LoggerFactory.getLogger(PulsarOptions::class.java)
 
         val DEFAULT_DELIMETER = " "
         val CMD_SPLIT_PATTERN = Pattern.compile("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\\S+")

@@ -14,7 +14,7 @@ import java.time.Duration
  * ISO-8601 standard : PnDTnHnMn.nS
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
-class LoadOptions : CommonOptions {
+open class LoadOptions : CommonOptions {
 
     @Parameter(names = ["-i", "--expires"], converter = DurationConverter::class, description = "Page datum expire time")
     var expires = Duration.ofDays(3650)

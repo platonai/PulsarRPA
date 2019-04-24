@@ -75,7 +75,7 @@ public class ParserMapper extends GoraMapper<String, GWebPage, String, GWebPage>
       metricsCounters.increase(PageParser.Counter.notFetched);
 
       if (LOG.isDebugEnabled()) {
-//        LOG.debug("Skipping " + TableUtil.unreverseUrl(key) + "; not fetched yet");
+//        log.debug("Skipping " + TableUtil.unreverseUrl(key) + "; not fetched yet");
       }
 
       return false;
