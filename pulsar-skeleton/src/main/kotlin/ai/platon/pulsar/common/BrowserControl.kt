@@ -12,7 +12,7 @@ import java.awt.Dimension
 import java.io.IOException
 import java.util.*
 
-class BrowserControl(parameters: Map<String, Any> = mapOf()) {
+class BrowserControl(parameters: Map<String, Any> = mapOf(), var jsDirectory: String = "js") {
     companion object {
         val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
         var viewPort = Dimension(1920, 1080)
@@ -24,7 +24,7 @@ class BrowserControl(parameters: Map<String, Any> = mapOf()) {
     val generalOptions = DesiredCapabilities()
     val chromeOptions = ChromeOptions()
     private val jsParameters = mutableMapOf<String, Any>()
-    private var js: String = ""
+    private var js = ""
 
     init {
         generalOptions.setCapability(SUPPORTS_JAVASCRIPT, true)
@@ -50,26 +50,26 @@ class BrowserControl(parameters: Map<String, Any> = mapOf()) {
         jsParameters.putAll(parameters)
     }
 
-    fun getJs(reload: Boolean = false): String {
+    fun parseJs(reload: Boolean = false): String {
         if (reload || js.isEmpty()) {
-            js = loadJs()
+            js = loadResource()
         }
+
+        // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
+        val configs = GsonBuilder().create().toJson(jsParameters.toMap())
+        js = ";\nlet PULSAR_CONFIGS = $configs;\n$js"
 
         return js
     }
 
-    private fun loadJs(): String {
+    private fun loadResource(): String {
         val sb = StringBuilder()
 
-        // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
-        val configs = GsonBuilder().create().toJson(jsParameters.toMap())
-        sb.appendln(";\nlet PULSAR_CONFIGS = $configs;")
-
         Arrays.asList(
-                "js/__utils__.js",
-                "js/humanize.js",
-                "js/node_traversor.js",
-                "js/node_visitor.js"
+                "$jsDirectory/__utils__.js",
+                "$jsDirectory/humanize.js",
+                "$jsDirectory/node_traversor.js",
+                "$jsDirectory/node_visitor.js"
         ).forEach { resource ->
             val reader = ResourceLoader().getResourceAsStream(resource)
             try {
@@ -81,6 +81,7 @@ class BrowserControl(parameters: Map<String, Any> = mapOf()) {
         }
 
         sb.append(";\n")
+                .append("__utils__.scrollToBottom();\n")
                 .append("__utils__.scrollToTop();\n")
                 .append("__utils__.visualizeHumanize();\n")
                 .append(";\n")

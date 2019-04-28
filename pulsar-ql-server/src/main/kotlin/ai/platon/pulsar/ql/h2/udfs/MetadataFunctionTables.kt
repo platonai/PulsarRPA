@@ -37,7 +37,7 @@ object MetadataFunctionTables {
     fun parse(@H2Context h2session: Session, configuredUrl: String): ResultSet {
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
         val loadOptions = LoadOptions.parse(urlAndArgs.second)
-        loadOptions.isParse = true
+        loadOptions.parse = true
 
         val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
         return Queries.toResultSet(page)

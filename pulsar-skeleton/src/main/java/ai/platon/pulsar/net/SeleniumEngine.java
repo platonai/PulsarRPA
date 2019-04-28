@@ -134,7 +134,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         scrollDownCount = immutableConfig.getInt(FETCH_SCROLL_DOWN_COUNT, 0);
         scrollDownWait = immutableConfig.getDuration(FETCH_SCROLL_DOWN_COUNT, Duration.ofMillis(500));
 
-        clientJs = browserControl.getJs(true);
+        clientJs = browserControl.parseJs(true);
 
         getParams().withLogger(LOG).info();
     }

@@ -168,12 +168,12 @@ public class LoadComponent {
         Set<WebPage> knownPages = new HashSet<>();
         Set<String> pendingUrls = new HashSet<>();
 
-        boolean ignoreFailed = options.isIgnoreFailed();
+        boolean ignoreFailed = options.getIgnoreFailed();
 
         for (String originalUrl : filteredUrls) {
-            WebPage page = webDb.getOrNil(originalUrl, options.isShortenKey());
+            WebPage page = webDb.getOrNil(originalUrl, options.getShortenKey());
 
-            int reason = getFetchReason(page, options.getExpires(), options.isRetry());
+            int reason = getFetchReason(page, options.getRealExpires(), options.getRetry());
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), originalUrl, options);
             }
@@ -207,7 +207,7 @@ public class LoadComponent {
 
         Collection<WebPage> updatedPages;
         fetchingUrls.addAll(pendingUrls);
-        if (options.isPreferParallel()) {
+        if (options.getPreferParallel()) {
             updatedPages = fetchComponent.parallelFetchAll(pendingUrls, options);
         } else {
             updatedPages = fetchComponent.fetchAll(pendingUrls, options);
@@ -258,10 +258,10 @@ public class LoadComponent {
             return WebPage.NIL;
         }
 
-        boolean ignoreQuery = options.isShortenKey();
+        boolean ignoreQuery = options.getShortenKey();
         WebPage page = webDb.getOrNil(originalUrl, ignoreQuery);
 
-        int reason = getFetchReason(page, options.getExpires(), options.isRetry());
+        int reason = getFetchReason(page, options.getRealExpires(), options.getRetry());
         if (LOG.isTraceEnabled()) {
             LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
         }
@@ -368,7 +368,7 @@ public class LoadComponent {
             return page;
         }
 
-        if (options.isNoRedirect()) {
+        if (options.getNoRedirect()) {
             LOG.warn("Redirect is prohibit, url: " + reprUrl);
             return page;
         }
@@ -378,7 +378,7 @@ public class LoadComponent {
         WebPage redirectedPage = load(reprUrl, options);
         options.setNoRedirect(false);
 
-        if (options.isHardRedirect()) {
+        if (options.getHardRedirect()) {
             page = redirectedPage;
         } else {
             // soft redirect
@@ -399,11 +399,11 @@ public class LoadComponent {
             return;
         }
 
-        if (options.isParse()) {
+        if (options.getParse()) {
             ParseResult parseResult = parseComponent.parse(page,
                     options.getQuery(),
-                    options.isReparseLinks(),
-                    options.isNoLinkFilter());
+                    options.getReparseLinks(),
+                    options.getNoLinkFilter());
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("ParseResult: " + parseResult.toString());
@@ -417,10 +417,10 @@ public class LoadComponent {
             LOG.trace("Fetched: " + page.getConfiguredUrl() + " | LAST_BROWSER: " + page.getLastBrowser());
         }
 
-        if (options.isPersist()) {
+        if (options.getPersist()) {
             webDb.put(page);
 
-            if (!options.isLazyFlush()) {
+            if (!options.getLazyFlush()) {
                 flush();
             }
 
@@ -460,9 +460,9 @@ public class LoadComponent {
         Objects.requireNonNull(loadOptions2);
         Objects.requireNonNull(query);
 
-        boolean persist = options.isPersist();
+        boolean persist = options.getPersist();
         options.setPersist(false);
-        boolean persist2 = loadOptions2.isPersist();
+        boolean persist2 = loadOptions2.getPersist();
         loadOptions2.setPersist(false);
 
         WebPage page = load(url, options);
@@ -498,9 +498,9 @@ public class LoadComponent {
 
             Function<WebPage, Map<String, Object>> converter =
                     p -> new WebPageFormatter(p)
-                            .withLinks(loadOptions2.isWithLinks())
-                            .withText(loadOptions2.isWithText())
-                            .withEntities(loadOptions2.isWithModel())
+                            .withLinks(loadOptions2.getWithLinks())
+                            .withText(loadOptions2.getWithText())
+                            .withEntities(loadOptions2.getWithModel())
                             .toMap();
             outDocs = outPages.stream().map(converter).collect(Collectors.toList());
         }
@@ -519,9 +519,9 @@ public class LoadComponent {
 
         // Main document
         response.put("doc", new WebPageFormatter(page)
-                .withLinks(options.isWithLinks())
-                .withText(options.isWithText())
-                .withEntities(options.isWithModel())
+                .withLinks(options.getWithLinks())
+                .withText(options.getWithText())
+                .withEntities(options.getWithModel())
                 .toMap());
 
         // Outgoing document
@@ -532,7 +532,7 @@ public class LoadComponent {
             response.put("debug", buildDebugInfo(logLevel, linkOptions, options, loadOptions2));
         }
 
-        if (!options.isLazyFlush()) {
+        if (!options.getLazyFlush()) {
             flush();
         }
 
@@ -547,7 +547,7 @@ public class LoadComponent {
                 .filter(p -> p.getProtocolStatus().isSuccess())
                 .collect(Collectors.toList());
 
-        if (!options.isLazyFlush()) {
+        if (!options.getLazyFlush()) {
             flush();
         }
 

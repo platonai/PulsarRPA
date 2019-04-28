@@ -189,7 +189,7 @@ object QueryEngine: AutoCloseable {
 
         val loadOptions = LoadOptions()
         loadOptions.fetchMode = mode
-        loadOptions.isBackground = true
+        loadOptions.background = true
 
         val partitions: List<List<String>> = Lists.partition(IteratorUtils.toList(urls.iterator()), batchSize)
         partitions.forEach { loadAll(it, loadOptions) }

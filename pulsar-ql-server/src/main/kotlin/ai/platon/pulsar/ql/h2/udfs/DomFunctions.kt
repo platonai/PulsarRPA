@@ -51,7 +51,7 @@ object DomFunctions {
         val session = H2SessionFactory.getSession(h2session.id)
 
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.Companion.parse(urlAndArgs.second)
+        val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.expires = Duration.ZERO
 
         val page = session.load(urlAndArgs.first, loadOptions)

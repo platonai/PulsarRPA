@@ -119,7 +119,7 @@ public class BatchFetchComponent extends FetchComponent {
     private Collection<WebPage> fetchAllInternal(Iterable<String> urls, LoadOptions options) {
         Objects.requireNonNull(options);
 
-        if (options.isPreferParallel()) {
+        if (options.getPreferParallel()) {
             return parallelFetchAll(urls, options);
         } else {
             return optimizeBatchSize(urls, options).stream()
@@ -144,7 +144,7 @@ public class BatchFetchComponent extends FetchComponent {
     }
 
     private Collection<WebPage> protocolParallelFetchAll(Iterable<String> urls, Protocol protocol, LoadOptions options) {
-        MutableConfig mutableConfig = options.getMutableConfig();
+        MutableConfig mutableConfig = options.getVolatileConfig();
 
         // TODO: avoid searching a page from the map, carry it inside response
         Map<String, WebPage> pages = Maps.toMap(urls, url -> createFetchEntry(url, options));
@@ -194,7 +194,7 @@ public class BatchFetchComponent extends FetchComponent {
             return urls;
         }
 
-        ImmutableConfig mutableConfig = options.getMutableConfig();
+        ImmutableConfig mutableConfig = options.getVolatileConfig();
         final int eagerFetchLimit = mutableConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20);
         if (urls.size() <= eagerFetchLimit) {
             return urls;

@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -21,13 +22,23 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class Pulsar: AutoCloseable {
 
-    val immutableConfig: ImmutableConfig
     val webDb: WebDb
     val injectComponent: InjectComponent
     val loadComponent: LoadComponent
 
     private val urlNormalizers: UrlNormalizers
+    /**
+     * A immutable config is loaded from the file at program startup, and never changes
+     * */
+    val immutableConfig: ImmutableConfig
+    /**
+     * A mutable config can be changed programmatically, usually be changed at the initialization phrase
+     * */
     private val defaultMutableConfig: MutableConfig
+    /**
+     * A volatile config is usually session scoped, and expected to be changed anywhere and anytime
+     * */
+    private val defaultVolatileConfig: VolatileConfig
     private val seleniumEngine: SeleniumEngine
     private val closeables = mutableListOf<AutoCloseable>()
     private val isClosed = AtomicBoolean(false)
@@ -49,6 +60,7 @@ class Pulsar: AutoCloseable {
         this.urlNormalizers = applicationContext.getBean<UrlNormalizers>(UrlNormalizers::class.java)
         this.seleniumEngine = SeleniumEngine.getInstance(immutableConfig)
         this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
+        this.defaultVolatileConfig = VolatileConfig(defaultMutableConfig)
 
         closeables.add(this.seleniumEngine)
     }
@@ -67,6 +79,7 @@ class Pulsar: AutoCloseable {
 
         this.seleniumEngine = SeleniumEngine.getInstance(immutableConfig)
         this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
+        this.defaultVolatileConfig = VolatileConfig(defaultMutableConfig)
     }
 
     fun normalize(url: String): String? {
@@ -108,8 +121,7 @@ class Pulsar: AutoCloseable {
     fun load(configuredUrl: String): WebPage {
         val urlAndOptions = Urls.splitUrlArgs(configuredUrl)
 
-        val options = LoadOptions.parse(urlAndOptions.second, defaultMutableConfig)
-        options.mutableConfig = defaultMutableConfig
+        val options = LoadOptions.parse(urlAndOptions.second, defaultVolatileConfig)
 
         return loadComponent.load(urlAndOptions.first, options)
     }
@@ -122,8 +134,8 @@ class Pulsar: AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: String, options: LoadOptions): WebPage {
-        if (options.mutableConfig == null) {
-            options.mutableConfig = defaultMutableConfig
+        if (options.volatileConfig == null) {
+            options.volatileConfig = defaultVolatileConfig
         }
         return loadComponent.load(url, options)
     }
@@ -145,8 +157,8 @@ class Pulsar: AutoCloseable {
      */
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        if (options.mutableConfig == null) {
-            options.mutableConfig = defaultMutableConfig
+        if (options.volatileConfig == null) {
+            options.volatileConfig = defaultVolatileConfig
         }
         return loadComponent.loadAll(urls, options)
     }
@@ -168,8 +180,8 @@ class Pulsar: AutoCloseable {
      */
     @JvmOverloads
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        if (options.mutableConfig == null) {
-            options.mutableConfig = defaultMutableConfig
+        if (options.volatileConfig == null) {
+            options.volatileConfig = defaultVolatileConfig
         }
         return loadComponent.parallelLoadAll(urls, options)
     }

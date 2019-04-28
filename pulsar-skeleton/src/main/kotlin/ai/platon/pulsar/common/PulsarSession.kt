@@ -114,7 +114,7 @@ open class PulsarSession(
      * @return The web page
      */
     fun load(url: String, options: LoadOptions): WebPage {
-        options.mutableConfig = config
+        options.volatileConfig = config
 
         return if (enableCache) {
             getCachedOrLoad(url, options)
@@ -132,7 +132,7 @@ open class PulsarSession(
      */
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.DEFAULT): Collection<WebPage> {
-        options.mutableConfig = config
+        options.volatileConfig = config
 
         return if (enableCache) {
             getCachedOrLoadAll(urls, options)
@@ -149,8 +149,8 @@ open class PulsarSession(
      * @return The web pages
      */
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        options.mutableConfig = config
-        options.isPreferParallel = true
+        options.volatileConfig = config
+        options.preferParallel = true
 
         return if (enableCache) {
             getCachedOrLoadAll(urls, options)
@@ -225,7 +225,7 @@ open class PulsarSession(
         }
 
         val freshPages: Collection<WebPage>
-        if (options.isPreferParallel) {
+        if (options.preferParallel) {
             freshPages = pulsar.parallelLoadAll(pendingUrls, options)
         } else {
             freshPages = pulsar.loadAll(pendingUrls, options)

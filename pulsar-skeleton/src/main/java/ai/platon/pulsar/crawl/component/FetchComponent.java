@@ -302,7 +302,7 @@ public class FetchComponent implements AutoCloseable {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(options);
 
-        WebPage page = WebPage.newWebPage(originalUrl, options.isShortenKey(), options.getMutableConfig());
+        WebPage page = WebPage.newWebPage(originalUrl, options.getShortenKey(), options.getVolatileConfig());
         page.setFetchMode(options.getFetchMode());
         page.setOptions(options.toString());
 
@@ -313,7 +313,7 @@ public class FetchComponent implements AutoCloseable {
         Objects.requireNonNull(page);
         Objects.requireNonNull(options);
 
-        page.setMutableConfig(options.getMutableConfig());
+        page.setMutableConfig(options.getVolatileConfig());
         page.setFetchMode(options.getFetchMode());
         page.setOptions(options.toString());
 

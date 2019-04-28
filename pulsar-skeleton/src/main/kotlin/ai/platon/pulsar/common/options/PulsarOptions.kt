@@ -11,7 +11,6 @@ import java.util.ArrayList
 import java.util.HashSet
 import java.util.regex.Pattern
 
-
 /**
  * Created by vincent on 17-4-12.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
