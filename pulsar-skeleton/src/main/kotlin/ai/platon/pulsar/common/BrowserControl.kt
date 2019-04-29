@@ -12,7 +12,10 @@ import java.awt.Dimension
 import java.io.IOException
 import java.util.*
 
-class BrowserControl(parameters: Map<String, Any> = mapOf(), var jsDirectory: String = "js") {
+open class BrowserControl(
+        parameters: Map<String, Any> = mapOf(),
+        var jsDirectory: String = "js"
+) {
     companion object {
         val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
         var viewPort = Dimension(1920, 1080)
@@ -52,7 +55,7 @@ class BrowserControl(parameters: Map<String, Any> = mapOf(), var jsDirectory: St
 
     fun parseJs(reload: Boolean = false): String {
         if (reload || js.isEmpty()) {
-            js = loadResource()
+            js = loadDefaultResource()
         }
 
         // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
@@ -62,7 +65,7 @@ class BrowserControl(parameters: Map<String, Any> = mapOf(), var jsDirectory: St
         return js
     }
 
-    private fun loadResource(): String {
+    private fun loadDefaultResource(): String {
         val sb = StringBuilder()
 
         Arrays.asList(

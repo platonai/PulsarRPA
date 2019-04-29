@@ -109,12 +109,17 @@ object Urls {
 
     @JvmStatic
     fun getUrlWithoutParameters(url: String): String {
-        val uri = URI(url)
-        return URI(uri.scheme,
-                uri.authority,
-                uri.path,
-                null, // Ignore the query part of the input url
-                uri.fragment).toString()
+        try {
+            var uri = URI(url)
+            uri = URI(uri.scheme,
+                    uri.authority,
+                    uri.path,
+                    null, // Ignore the query part of the input url
+                    uri.fragment)
+            return uri.toString()
+        } catch (ignored: Throwable) {}
+
+        return ""
     }
 
     @JvmStatic
