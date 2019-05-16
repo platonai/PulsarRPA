@@ -49,11 +49,13 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
 
-    @Parameter(names = ["-nord", "-noRedirect", "--no-redirect"], description = "Do not redirect")
+    @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
 
-    @Parameter(names = ["-hardRedirect", "--hard-redirect"], arity = 1, description = "Return the entire page record " + "instead of the temp page with the target's content when redirect")
-    var hardRedirect = true
+    @Parameter(names = ["-hardRedirect", "--hard-redirect"],
+            description = "If false, return the temp page with the target's content, " +
+                    "otherwise, return the entire page record when redirects")
+    var hardRedirect = false
 
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page")
     var parse = false
@@ -73,7 +75,7 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
 
-    @Parameter(names = ["-nolf", "-noLinkFilter", "--no-link-filter"], description = "No filters applied to parse links")
+    @Parameter(names = ["-noLinkFilter", "--no-link-filter"], description = "No filters applied to parse links")
     var noLinkFilter = false
 
     // A volatile config is usually session scoped

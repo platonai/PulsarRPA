@@ -132,12 +132,6 @@ val Node.area get() = width * height
 /*********************************************************************
  * Distinguished features
  * *******************************************************************/
-/**
- * The number of element siblings
- * features\[SIB] = features\[C]
- * TODO: keep SIB feature be consistent with Node.siblingNodes.size
- * */
-
 val Node.numChars by IntFeature(CH)
 val Node.numSiblings by IntFeature(SIB)
 val Node.numChildren by IntFeature(C)
@@ -178,18 +172,21 @@ val Node.textOrNull: String?
         else -> null
     }
 
-val Node.textOrEmpty: String get() = textOrNull?:""
+val Node.textOrEmpty by field { it.textOrNull?:"" }
 
-val Node.textOrName: String get() = textOrNull?:name
+val Node.textOrName by field { it.textOrNull?:it.name }
 
-val Node.slimHtml: String
-    get() = when {
-        this.nodeName() == "img" -> createImage(this as Element, keepMetadata = false, lazy = true).toString()
-        this.nodeName() == "a" -> createLink(this as Element, keepMetadata = false, lazy = true).toString()
-        this is TextNode -> String.format("<span>%s</span>", this.text())
-        this is Element -> String.format("<div>%s</div>", this.text())
-        else -> String.format("<b>%s</b>", name)
+val Node.cleanText by field { StringUtil.stripNonPrintableChar(it.textOrEmpty) }
+
+val Node.slimHtml by field {
+    when {
+        it.nodeName() == "img" -> createImage(it as Element, keepMetadata = false, lazy = true).toString()
+        it.nodeName() == "a" -> createLink(it as Element, keepMetadata = false, lazy = true).toString()
+        it is TextNode -> String.format("<span>%s</span>", it.cleanText)
+        it is Element -> String.format("<div>%s</div>", it.cleanText)
+        else -> String.format("<b>%s</b>", it.name)
     }
+}
 
 val Node.key: String get() = "${baseUri()}#$sequence"
 
@@ -259,14 +256,19 @@ val Node.namedRect: String get() = "$name-${rectangle.str}"
 val Node.namedRect2: String get() = "$name-${rectangle.str2}"
 
 /**
- * Returns a best element to represent this node: if the node itself is an element, return itself
+ * Get the parent element of this node, an exception is thrown if it's root
+ * */
+val Node.parentElement get() = this.parent() as Element
+
+/**
+ * Returns a best element to represent this node: if the node itself is an element, returns itself
  * otherwise, returns it's parent
  * */
 val Node.bestElement: Element
     get() {
         return if (this is Element) {
             this
-        } else this.parent() as Element
+        } else this.parentElement
     }
 
 /**

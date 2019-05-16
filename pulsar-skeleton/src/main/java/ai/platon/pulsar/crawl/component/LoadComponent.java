@@ -373,15 +373,15 @@ public class LoadComponent {
             return page;
         }
 
-        // do not run into a rabbit hole
+        // do not run into a rabbit hole, never redirects here
         options.setNoRedirect(true);
         WebPage redirectedPage = load(reprUrl, options);
         options.setNoRedirect(false);
 
         if (options.getHardRedirect()) {
+            // soft redirect
             page = redirectedPage;
         } else {
-            // soft redirect
             page.setContent(redirectedPage.getContent());
         }
 

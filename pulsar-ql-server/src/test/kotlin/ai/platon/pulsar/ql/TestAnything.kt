@@ -1,9 +1,12 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.PulsarContext
+import ai.platon.pulsar.ql.utils.ResultSetFormatter
+import org.h2.tools.SimpleResultSet
 import org.jsoup.Jsoup
 import org.junit.Assert
 import org.junit.Test
+import java.sql.Types
 import java.util.*
 
 /**
@@ -11,8 +14,6 @@ import java.util.*
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class TestAnything {
-
-    val session = PulsarContext.createSession()
 
     @Test
     fun testURL() {
@@ -40,15 +41,17 @@ class TestAnything {
     }
 
     @Test
-    fun test() {
-        val str = "<div>hello</div><div> world</div>"
-        val doc = Jsoup.parseBodyFragment(str)
-        println(doc.outerHtml())
-        println(doc.body().attr("baseuri"))
+    fun testResultSetFormatter() {
+        val rs = SimpleResultSet()
+        rs.addColumn("A", Types.DOUBLE, 6, 4)
+        arrayOf(0.8056499951626754, 0.5259673975756397, 0.869188405723, 0.4140625).forEach { rs.addRow(it) }
+        val fmt = ResultSetFormatter(rs)
+        println(fmt.format())
     }
 
     @Test
     fun testNormalize() {
+        val session = PulsarContext.createSession()
         var url = "http://shop.mogujie.com/detail/1llurfa?acm=3.ms.1_4_1llurfa.15.1331-68998.tPlDtqPaugJED.sd_117_116-swt_15-imt_6-t_tPlDtqPaugJED-lc_3-fcid_10059513-bid_15-dit_17-idx_39-dm1_5002"
         val url2 = session.normalize(url)
         println(url2)

@@ -2,9 +2,8 @@ package ai.platon.pulsar.ql.utils;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,28 +71,53 @@ public class ResultSetFormatter {
         return sb.toString();
     }
 
-    private boolean loadRow(int len, ArrayList<String[]> rows) throws SQLException {
-        boolean truncated = false;
+    private void loadRow(int len, ArrayList<String[]> rows) throws SQLException {
         String[] row = new String[len];
         int i = 0;
         while (i < len) {
-            String s = rs.getString(i + 1);
-            if (s == null) {
-                s = "null";
-            }
-
+            String s = formatRow(rs, i + 1);
             // only truncate if more than one column
             if (len > 1 && s.length() > MAX_COLUMN_LENGTH) {
                 s = s.substring(0, MAX_COLUMN_LENGTH);
                 s += " ...";
-                truncated = true;
             }
             row[i] = s;
 
             ++i;
         }
         rows.add(row);
-        return truncated;
+    }
+
+    /**
+     * Precision and scale:
+     *
+     * Precision is the number of digits in a number.
+     * Scale is the number of digits to the right of the decimal point in a number.
+     * For example, the number 123.45 has a precision of 5 and a scale of 2.
+     * @link {https://docs.microsoft.com/en-us/sql/t-sql/data-types/precision-scale-and-length-transact-sql?view=sql-server-2017}
+     * */
+    private String formatRow(ResultSet rs, int columnIndex) throws SQLException {
+        String s;
+        int type = rs.getMetaData().getColumnType(columnIndex);
+        switch (type) {
+            case Types.DOUBLE:
+            case Types.FLOAT:
+            case Types.REAL:
+                int precision = rs.getMetaData().getPrecision(columnIndex);
+                int scale = rs.getMetaData().getScale(columnIndex);
+                if (precision <= 0) precision = 10;
+                if (scale <= 0) scale = 10;
+                double d = rs.getDouble(columnIndex);
+                s = String.format("%" + precision + "." + scale + "f", d);
+                break;
+            default:
+                s = rs.getString(columnIndex);
+        }
+        if (s == null) {
+            s = "null";
+        }
+
+        return s;
     }
 
     private String formatRows(final ArrayList<String[]> rows, final int len) {
@@ -111,7 +135,6 @@ public class ResultSetFormatter {
 
         StringBuilder buff = new StringBuilder();
         for (String[] row : rows) {
-            // IntStream.range(0, len).mapToObj(i -> row[i]).collect(Collectors.joining(" ", "|", " "));
             int i = 0;
             while (i < len) {
                 if (i > 0) {
@@ -165,7 +188,7 @@ public class ResultSetFormatter {
             sb.append("\n");
         }
         if (rowCount == 0) {
-            String s = Stream.of(columns).collect(Collectors.joining("\n"));
+            String s = String.join("\n", columns);
             sb.append(s).append("\n");
         }
         return sb.toString();

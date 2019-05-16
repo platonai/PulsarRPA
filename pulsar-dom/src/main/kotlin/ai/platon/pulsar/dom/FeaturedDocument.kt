@@ -20,9 +20,10 @@ import java.nio.file.Path
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
-        val nodeFeatureCalculator: NodeVisitor by lazy { loadFeatureCalculator() }
+        private val nodeFeatureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
+        val nodeFeatureCalculator: NodeVisitor get() = nodeFeatureCalculatorClass.newInstance()
 
-        val NIL: FeaturedDocument = FeaturedDocument.createShell(NIL_PAGE_URL)
+        val NIL = FeaturedDocument.createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 
@@ -38,11 +39,10 @@ open class FeaturedDocument(val document: Document) {
             return node == NIL || node.baseUri() == NIL.location
         }
 
-        private fun loadFeatureCalculator(): NodeVisitor {
+        private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
             val className = System.getProperty(NODE_FEATURE_CALCULATOR, defaultClassName)
-            val clazz = ResourceLoader.loadUserClass<NodeVisitor>(className)
-            return clazz.newInstance()
+            return ResourceLoader.loadUserClass<NodeVisitor>(className)
         }
     }
 

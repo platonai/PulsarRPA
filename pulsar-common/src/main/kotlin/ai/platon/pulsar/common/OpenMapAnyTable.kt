@@ -2,7 +2,10 @@ package ai.platon.pulsar.common
 
 import kotlin.reflect.KProperty
 
-class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
+/**
+ * A simple excel like table, every column, every row and every cell can hold metadata and variables
+ * */
+class OpenMapAnyTable(val numColumns: Int) {
     val metadata = Metadata(numColumns)
     val map = mutableMapOf<String, Row>()
 
@@ -105,6 +108,16 @@ class RowAttribute<T: Any>(val initializer: (OpenMapAnyTable.Row) -> T) {
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
     operator fun setValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
+    }
+}
+
+class CellAttribute<T: Any>(val initializer: (OpenMapAnyTable.Cell) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable.Cell, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable.Cell, property: KProperty<*>, value: T): T {
         thisRef.attributes[property.name] = value
         return value
     }

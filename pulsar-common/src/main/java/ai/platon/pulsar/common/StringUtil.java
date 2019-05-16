@@ -44,6 +44,10 @@ public final class StringUtil {
 
     public static final String KEYBOARD_WHITESPACE = String.valueOf(32);
 
+    private static final String HTML_PATTERN = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
+
+    private static Pattern pattern = Pattern.compile(HTML_PATTERN);
+
     // Html entity: {@code &nbsp;} looks just like a white space
     public static final String NBSP = String.valueOf(160);
 
@@ -622,5 +626,10 @@ public final class StringUtil {
         }
 
         return html;
+    }
+
+    public static boolean hasHTMLTags(String text){
+        Matcher matcher = pattern.matcher(text);
+        return matcher.find();
     }
 }
