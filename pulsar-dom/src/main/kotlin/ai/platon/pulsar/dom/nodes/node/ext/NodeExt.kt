@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
+import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
@@ -129,6 +130,68 @@ val Node.rectangle get() = Rectangle(x, y, width, height)
 
 val Node.area get() = width * height
 
+/** Hidden flag set by browser */
+val Node.hasHiddenFlag: Boolean get() = hasAttr("_hidden")
+/** Overflow hidden flag set by browser */
+val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr("_o_hidden")
+/** Check if the node is visible or not */
+val Node.isVisible: Boolean get() {
+    return when {
+        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have a empty rectangle?
+        else -> x >= 0 && y >= 0 && !rectangle.isEmpty && !hasHiddenFlag && !hasOverflowHiddenFlag
+    }
+}
+/** Check if the node is visible or not */
+val Node.isHidden: Boolean get() = !this.isVisible
+/** Whether the element is floating */
+// val Node.isAbsolute: Boolean get() = hasAttr("_absolute")
+// val Node.isFixed: Boolean get() = hasAttr("_fixed")
+
+val Node.isText: Boolean get() = this is TextNode
+
+val Node.isBlankText: Boolean get() { return this is TextNode && this.isBlank }
+
+val Node.isNonBlankText: Boolean get() { return this is TextNode && !this.isBlank }
+
+val Node.isRegularText: Boolean get() { return isVisible && isNonBlankText }
+
+val Node.isImage: Boolean get() = this.nodeName() == "img"
+
+val Node.isRegularImage: Boolean get() {
+    return isImage && isVisible && hasAttr("src")
+}
+
+val Node.isAnchorImage: Boolean get() = isImage && this.parent().isAnchor
+
+val Node.isAnchor: Boolean get() = this.nodeName() == "a"
+
+val Node.isRegularAnchor: Boolean get() = isVisible && this.nodeName() == "a"
+
+val Node.isImageAnchor: Boolean get() = isAnchor && this.numImages == 1
+
+val Node.isRegularImageAnchor: Boolean get() = isRegularAnchor && this.numImages == 1
+
+/**
+ * If the text is short
+ * */
+val Node.isShortText get() = isRegularText && cleanText.length in 1..9
+
+val Node.isMediumText get() = isRegularText && cleanText.length in 1..20
+
+val Node.isCurrencyUnit get() = isShortText && cleanText in arrayOf("¥", "$")
+
+val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
+
+/**
+ * If the text is numeric and have non-numeric surroundings
+ * */
+val Node.isNumericLike get() = isMediumText && StringUtil.isNumericLike(cleanText)
+
+/**
+ * https://www.regextester.com/97725
+ * */
+val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
+
 /*********************************************************************
  * Distinguished features
  * *******************************************************************/
@@ -163,25 +226,39 @@ val Node.captionOrSelector: String
         else -> selectorOrName
     }
 
-val Node.textOrNull: String?
-    get() = when {
-        this.hasAttr("src") -> this.attr("abs:src")
-        this.hasAttr("href") -> this.attr("abs:href")
-        this is TextNode -> this.text().trim()
-        this is Element -> this.text().trim()
+val Node.textOrNull: String? by field {
+    when {
+        it.hasAttr("src") -> it.attr("abs:src")
+        it.hasAttr("href") -> it.attr("abs:href")
+        it is TextNode -> it.text().trim()
+        it is Element -> it.text().trim()
         else -> null
     }
+}
 
 val Node.textOrEmpty by field { it.textOrNull?:"" }
 
 val Node.textOrName by field { it.textOrNull?:it.name }
 
-val Node.cleanText by field { StringUtil.stripNonPrintableChar(it.textOrEmpty) }
+val Node.cleanTextOrNull: String? by field {
+        when {
+            it.hasAttr("src") -> it.attr("abs:src")
+            it.hasAttr("href") -> it.attr("abs:href")
+            it is TextNode -> StringUtil.stripNonPrintableChar(it.text()).trim()
+            it is Element -> StringUtil.stripNonPrintableChar(it.text()).trim()
+            else -> null
+        }
+    }
+
+val Node.cleanTextOrName by field { it.cleanTextOrNull?:it.name }
+
+val Node.cleanText by field { it.cleanTextOrNull?:"" }
 
 val Node.slimHtml by field {
     when {
-        it.nodeName() == "img" -> createImage(it as Element, keepMetadata = false, lazy = true).toString()
-        it.nodeName() == "a" -> createLink(it as Element, keepMetadata = false, lazy = true).toString()
+        it.isImage -> createImage(it as Element, keepMetadata = false, lazy = true).toString()
+        it.isAnchor -> createLink(it as Element, keepMetadata = false, lazy = true).toString()
+        it.isNumericLike || it.isMoneyLike -> "<em>${it.cleanText}</em>"
         it is TextNode -> String.format("<span>%s</span>", it.cleanText)
         it is Element -> String.format("<div>%s</div>", it.cleanText)
         else -> String.format("<b>%s</b>", it.name)
@@ -345,6 +422,11 @@ fun Node.hasVariable(name: String): Boolean {
 
 fun Node.removeVariable(name: String): Any? {
     return variables.remove(name)
+}
+
+fun Node.anyAttr(attributeKey: String, attributeValue: Any): Node {
+    this.attr(attributeKey, attributeValue.toString())
+    return this
 }
 
 /**
@@ -786,6 +868,11 @@ fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
     return if (this !is Element) {
         first(cssQuery)?.let { transformer(it) }
     } else null
+}
+
+fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
+    this.attr(attributeKey, attributeValue.toString())
+    return this
 }
 
 @JvmOverloads

@@ -29,8 +29,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestAnything {
 
-    private ImmutableConfig conf = new ImmutableConfig();
-
     @Test
     @Ignore
     public void generateRegexUrlFilter() throws IOException {

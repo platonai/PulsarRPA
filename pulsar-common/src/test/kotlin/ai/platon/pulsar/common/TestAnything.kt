@@ -115,9 +115,22 @@ class TestAnything {
     }
 
     @Test
-    fun testString() {
+    fun testStringPattern() {
         assertEquals(8891, '⊻'.toInt())
         assertEquals("a", "\t a\t\n".trim())
+
+        println(''.toInt())
+
+        println(' '.isWhitespace())
+
+        var text = "¥58.00"
+        assertTrue { StringUtil.isMoneyLike(text) }
+        assertTrue { StringUtil.isNumericLike(text) }
+
+        text = "10+"
+        assertTrue { StringUtil.isNumericLike(text) }
+
+        text = "￥669.00"
 
         // println(String.format("%10s%10s%10s%10s", "a", *arrayOf("b", "c", "d")))
 

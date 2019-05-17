@@ -21,9 +21,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,9 +46,17 @@ public final class StringUtil {
 
     public static final String KEYBOARD_WHITESPACE = String.valueOf(32);
 
-    private static final String HTML_PATTERN = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
+    public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
 
-    private static Pattern pattern = Pattern.compile(HTML_PATTERN);
+    public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
+
+    public static final String NUMERIC_LIKE_REGEX = "^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$";
+
+    public static Pattern NUMERIC_LIKE_PATTERN = Pattern.compile(NUMERIC_LIKE_REGEX);
+
+    public static final String MONEY_LIKE_REGEX = "^[¥￥$]?[0-9]+(\\.[0-9]{1,2})?$";
+
+    public static Pattern MONEY_LIKE_PATTERN = Pattern.compile(MONEY_LIKE_REGEX);
 
     // Html entity: {@code &nbsp;} looks just like a white space
     public static final String NBSP = String.valueOf(160);
@@ -388,6 +398,10 @@ public final class StringUtil {
         return builder.toString();
     }
 
+    /**
+     *
+     * @link {https://stackoverflow.com/questions/220547/printable-char-in-java}
+     * */
     public static boolean isPrintableUnicodeChar(char ch) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(ch);
         return (!Character.isISOControl(ch)) && ch != KeyEvent.CHAR_UNDEFINED
@@ -628,8 +642,16 @@ public final class StringUtil {
         return html;
     }
 
-    public static boolean hasHTMLTags(String text){
-        Matcher matcher = pattern.matcher(text);
+    public static boolean hasHTMLTags(String text) {
+        Matcher matcher = HTML_TAG_PATTERN.matcher(text);
         return matcher.find();
+    }
+
+    public static boolean isNumericLike(String text) {
+        return NUMERIC_LIKE_PATTERN.matcher(text).matches();
+    }
+
+    public static boolean isMoneyLike(String text) {
+        return MONEY_LIKE_PATTERN.matcher(text).matches();
     }
 }
