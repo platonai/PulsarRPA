@@ -8,6 +8,7 @@ import org.apache.commons.math3.util.Precision
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
+import java.awt.SystemColor.text
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -137,6 +138,35 @@ class TestAnything {
         // println(arrayOf("").joinToString(";"))
     }
 
+    @Ignore("Print special chars if required")
+    @Test
+    fun printSpecialChars() {
+        val s = '!'.toInt()
+        val e = '◻'.toInt()
+        for (i in s..e) {
+            print(i.toChar())
+            print('\t')
+            if (i % 100 == 0) {
+                print('\n')
+            }
+        }
+    }
+
+    @Test
+    fun testSpecialChars() {
+        val text = " hell\uE60Do\uDF21world "
+        assertEquals("hell\uE60Do\uDF21world", StringUtil.stripNonPrintableChar(text))
+        assertEquals("helloworld", StringUtil.stripNonCJKChar(text))
+
+        val unicodeChars = arrayOf('', 'Ɑ', 'ⰿ', '', '?', 'И', ' ')
+        unicodeChars.forEach {
+            print(StringUtil.stripNonPrintableChar("<$it>"))
+            print('\t')
+            print(StringUtil.stripNonCJKChar("<$it>", StringUtil.DEFAULT_KEEP_CHARS))
+            println()
+        }
+    }
+
     @Test
     fun testUrlDecoder() {
         val s = "%E4%B8%89%E9%87%8C%E7%95%882-03%E5%8F%B7%E5%9C%B0%E6%AE%B5%E8%A7%84%E5%88%92%E5%8F%8A%E7%BC%96%E5%88%B6"
@@ -169,20 +199,6 @@ class TestAnything {
         for (i in 0..100) {
             for (j in 0..100) {
                 assertEquals(j, (i * 255 + j) % 255)
-            }
-        }
-    }
-
-    @Ignore("Print special chars if required")
-    @Test
-    fun testSpecialChars() {
-        val s = '!'.toInt()
-        val e = '◻'.toInt()
-        for (i in s..e) {
-            print(i.toChar())
-            print('\t')
-            if (i % 100 == 0) {
-                print('\n')
             }
         }
     }

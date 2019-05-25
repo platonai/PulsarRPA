@@ -17,7 +17,7 @@ open class DocumentFragment(
 ): Comparable<DocumentFragment> {
 
     var parent: DocumentFragment? = null
-    val children = LinkedList<DocumentFragment>()
+    val children = mutableListOf<DocumentFragment>()
 
     var defaultPassmark = FuzzyProbability.MAYBE
     private val requirePatterns = AtomicBoolean(true)
@@ -38,25 +38,16 @@ open class DocumentFragment(
     val uri: String = element.uri
 
     val elementName: String
-        get() = element.uniqueName
+        get() = element.name
 
     val name: String
-        get() = if (definedName.isNotEmpty()) definedName else element.uniqueName
+        get() = if (definedName.isNotEmpty()) definedName else element.name
 
     val baseSequence: Int
         get() = element.sequence
 
     val textDigest: String
-        get() = DigestUtils.md5Hex(text)
-
-    val outerHtml: String
-        get() = element.outerHtml()
-
-    val html: String
-        get() = element.html()
-
-    val text: String
-        get() = element.text()
+        get() = DigestUtils.md5Hex(element.text())
 
     val natureSelector: String
         get() = element.cssSelector()
@@ -168,7 +159,7 @@ open class DocumentFragment(
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is DocumentFragment && element == other.element
+        return other is DocumentFragment && element === other.element
     }
 
     override fun compareTo(other: DocumentFragment): Int {

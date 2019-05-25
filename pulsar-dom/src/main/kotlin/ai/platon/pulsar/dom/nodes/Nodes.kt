@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.nodes
 
+import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.left
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
@@ -7,8 +8,10 @@ import ai.platon.pulsar.dom.nodes.node.ext.top
 import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.math.NumberUtils
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeFilter
+import org.jsoup.select.NodeTraversor
 import java.util.regex.Pattern
 
 /**
@@ -135,4 +138,136 @@ fun convertBox(box: String): String {
 
     // Bad syntax, no element should find
     return "non:in-box(0, 0, 0, 0)"
+}
+
+/*********************************************************************
+ * Actions
+ * *******************************************************************/
+fun Node.forEachAncestor(action: (Element) -> Unit) {
+    var p = this.parent()
+    while (p != null) {
+        action(p as Element)
+        p = p.parent()
+    }
+}
+
+fun Node.forEachAncestorIf(filter: (Element) -> Boolean, action: (Element) -> Unit) {
+    var p = this.parent() as Element?
+
+    while (p != null && filter(p)) {
+        action(p)
+        p = p.parent()
+    }
+}
+
+/**
+ * Find first ancestor matches the predication
+ * */
+fun Node.findFirstAncestor(predicate: (Element) -> Boolean): Element? {
+    var p = this.parent() as Element?
+    var match = false
+
+    while (p != null && !match) {
+        match = predicate(p)
+        if (!match) {
+            p = p.parent()
+        }
+    }
+
+    return if (match) p else null
+}
+
+/**
+ * Find first ancestor matches the predication
+ * */
+fun Node.findFirstAncestor(stop: (Element) -> Boolean, predicate: (Element) -> Boolean): Element? {
+    var p = this.parent() as Element?
+    var match = false
+
+    while (p != null && !match && !stop(p)) {
+        match = predicate(p)
+        if (!match) {
+            p = p.parent()
+        }
+    }
+
+    return if (match) p else null
+}
+
+/**
+ * For each posterity
+ * */
+fun Node.forEach(includeRoot: Boolean = false, action: (Node) -> Unit) {
+    NodeTraversor.traverse({ node, _-> if (includeRoot || node != this) { action(node) } }, this)
+}
+
+fun Node.forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) {
+    NodeTraversor.traverse({ node, _-> if (predicate(node)) { action(node) } }, this)
+}
+
+fun Node.forEachElement(includeRoot: Boolean = false, action: (Element) -> Unit) {
+    NodeTraversor.traverse({ node, _->
+        if ((includeRoot || node != this) && node is Element) { action(node) }
+    }, this)
+}
+
+fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true): Double {
+    return accumulate(featureKey, includeRoot) { true }
+}
+
+fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true, filter: (Node) -> Boolean): Double {
+    var sum = 0.0
+    forEach(includeRoot = includeRoot) {
+        if (filter(it)) {
+            sum += it.features[featureKey]
+        }
+    }
+    return sum
+}
+
+fun Node.minmax(featureKey: Int): Pair<Double, Double> {
+    var min = Double.MAX_VALUE
+    var max = Double.MIN_VALUE
+    forEach {
+        val v = it.features[featureKey]
+        if (v > max) {
+            max = v
+        }
+        if (v < min) {
+            min = v
+        }
+    }
+    return min to max
+}
+
+fun Node.minByDouble(transform: (Node) -> Double): Node? {
+    var min = Double.MAX_VALUE
+    var node: Node? = null
+    forEach {
+        val v = transform(it)
+        if (v < min) {
+            min = v
+            node = it
+        }
+    }
+    return node
+}
+
+fun Node.maxByDouble(transform: (Node) -> Double): Node? {
+    var max = Double.MIN_VALUE
+    var node: Node? = null
+    forEach {
+        val v = transform(it)
+        if (v > max) {
+            max = v
+            node = it
+        }
+    }
+    return node
+}
+
+fun Node.count(predicate: (Node) -> Boolean = {true}): Int {
+    var count = 0
+    forEach { if (predicate(it)) ++count }
+    return count
 }

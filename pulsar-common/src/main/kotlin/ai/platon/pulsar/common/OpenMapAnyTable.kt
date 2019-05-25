@@ -81,6 +81,10 @@ class OpenMapAnyTable(val numColumns: Int) {
             cells[j] = Cell(value)
         }
     }
+
+    companion object {
+        val empty = OpenMapAnyTable(0)
+    }
 }
 
 class TableAttribute<T: Any>(val initializer: (OpenMapAnyTable) -> T) {

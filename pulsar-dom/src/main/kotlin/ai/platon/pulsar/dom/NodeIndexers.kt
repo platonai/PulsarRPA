@@ -3,7 +3,7 @@ package ai.platon.pulsar.dom
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import ai.platon.pulsar.dom.nodes.nodeComparator
-import ai.platon.pulsar.dom.select.AbstractElementVisitor
+import ai.platon.pulsar.dom.select.ElementVisitor
 import com.google.common.collect.TreeMultimap
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -15,6 +15,8 @@ import kotlin.math.roundToInt
 typealias NodeIndexer = TreeMultimap<String, Node>
 
 typealias IntNodeIndexer = TreeMultimap<Int, Node>
+
+typealias IntElementIndexer = TreeMultimap<Int, Element>
 
 class MultiIntNodeIndexer(
         vararg indexerKeys: Int,
@@ -122,13 +124,13 @@ class MultiNodeIndexer(
 class NodeIndexerCalculator(
         private val multiIndexer: MultiIntNodeIndexer,
         private val featuresToIndex: IntArray
-) : AbstractElementVisitor() {
+) : ElementVisitor() {
 
-    override fun head(ele: Element, depth: Int) {
+    override fun head(node: Element, depth: Int) {
         for (feature in featuresToIndex) {
-            val value = ele.getFeature(feature)
+            val value = node.getFeature(feature)
             if (value > 0) {
-                multiIndexer.put(feature, value.roundToInt(), ele)
+                multiIndexer.put(feature, value.roundToInt(), node)
             }
         }
     }

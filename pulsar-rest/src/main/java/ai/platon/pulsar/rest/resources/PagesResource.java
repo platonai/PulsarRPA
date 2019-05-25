@@ -251,9 +251,9 @@ public class PagesResource {
     loadComponent.flush();
 
     Map<String, Object> result = new WebPageFormatter(page)
-      .withText(loadOptions.isWithText())
-      .withLinks(loadOptions.isWithLinks())
-      .withEntities(loadOptions.isWithModel())
+      .withText(loadOptions.getWithText())
+      .withLinks(loadOptions.getWithLinks())
+      .withEntities(loadOptions.getWithModel())
       .toMap();
     return gson.toJson(result);
   }
@@ -319,9 +319,9 @@ public class PagesResource {
     }
 
     Map<String, Object> doc = new WebPageFormatter(page)
-      .withText(loadOptions.isWithText())
-      .withLinks(loadOptions.isWithLinks())
-      .withEntities(loadOptions.isWithModel())
+      .withText(loadOptions.getWithText())
+      .withLinks(loadOptions.getWithLinks())
+      .withEntities(loadOptions.getWithModel())
       .toMap();
 
     Map<String, Object> response = new LinkedHashMap<>();
@@ -418,7 +418,7 @@ public class PagesResource {
     WebPage page = loadComponent.load(url, loadOptions);
     loadComponent.flush();
 
-    return gson.toJson(new WebPageFormatter(page).withEntities(loadOptions.isWithModel()).toMap());
+    return gson.toJson(new WebPageFormatter(page).withEntities(loadOptions.getWithModel()).toMap());
   }
 
   @PUT

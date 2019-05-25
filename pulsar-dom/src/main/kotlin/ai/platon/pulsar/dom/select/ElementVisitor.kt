@@ -2,8 +2,9 @@ package ai.platon.pulsar.dom.select
 
 import org.jsoup.nodes.Element
 import org.jsoup.select.NodeTraversor
+import javax.lang.model.element.ElementVisitor
 
-interface ElementVisitor {
+interface IElementVisitor {
     /**
      * Callback for when a node is first visited.
      *
@@ -25,23 +26,17 @@ interface ElementVisitor {
 }
 
 /**
- * Node visitor interface. Provide an implementing class to [NodeTraversor] to iterate through nodes.
- *
+ * Node visitor interface. Provide an implementing class to [ElementVisitor] to iterate through nodes.
  *
  * This interface provides two methods, `head` and `tail`. The head method is called when the node is first
  * seen, and the tail method when all of the node's children have been visited. As an example, head can be used to
  * create a start tag for a node, and tail to create the end tag.
  */
-abstract class AbstractElementVisitor: ElementVisitor {
+abstract class ElementVisitor: IElementVisitor {
 
-    // TODO: keep consistent with NodeFilter
-    protected var stopped: Boolean = false
+    var isStopped: Boolean = false
 
     fun stop() {
-        stopped = true
-    }
-
-    fun stopped(): Boolean {
-        return stopped
+        isStopped = true
     }
 }

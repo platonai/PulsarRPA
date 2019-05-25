@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.geometric
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
+import java.util.Collections.swap
 
 data class GeoIntPoint(var x: Int, var y: Int): Comparable<GeoIntPoint> {
     constructor(point: Point) : this(point.x, point.y)
@@ -68,11 +69,19 @@ operator fun Rectangle.component4(): Int {
     return height
 }
 
-val Rectangle.str
-    get() = "[$x $y $width $height]"
+fun Rectangle.sim(rect: Rectangle): Double {
+    val overlap = this.intersection(rect)
+    if (overlap.isEmpty) return 0.0
+    val a = overlap.area
+    val b = Math.max(area, rect.area)
+    return 1.0 * a / b
+}
 
-val Rectangle.str2
-    get() = "{x:$x y:$y w:$width h:$height}"
+val Rectangle.area get() = if (isEmpty) 0 else width * height
+
+val Rectangle.str get() = "[$x $y $width $height]"
+
+val Rectangle.str2 get() = "{x:$x y:$y w:$width h:$height}"
 
 /**
  * The align type to define linearity

@@ -7,6 +7,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.DOMRect
 import ai.platon.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
+import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics

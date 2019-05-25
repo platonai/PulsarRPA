@@ -54,6 +54,7 @@ public class ResultSetFormatter {
             columns[i] = s == null ? "" : s;
         }
         rows.add(columns);
+
         while (rs.next()) {
             rowCount++;
             loadRow(len, rows);
@@ -65,8 +66,6 @@ public class ResultSetFormatter {
         }
 
         sb.append(formatRows(rows, len));
-        sb.append("\n");
-        rows.clear();
 
         return sb.toString();
     }

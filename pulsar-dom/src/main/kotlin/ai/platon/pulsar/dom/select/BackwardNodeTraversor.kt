@@ -4,6 +4,9 @@ import ai.platon.pulsar.dom.nodes.node.ext.depth
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeVisitor
 
+/**
+ * TODO: buggy
+ * */
 object BackwardNodeTraversor {
 
     /**
@@ -42,5 +45,7 @@ object BackwardNodeTraversor {
                 node = node.previousSibling()
             }
         }
+
+        TODO("Not implemented, buggy")
     }
 }

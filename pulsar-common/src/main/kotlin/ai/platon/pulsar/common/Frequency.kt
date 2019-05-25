@@ -232,23 +232,14 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     }
 
     @JvmOverloads
-    fun probability(prefix: String = "", postfix: String = "", separator: String = "\t"): String {
-        val sb = StringBuilder(prefix)
-
-        for (entry in entrySet()) {
-            sb.append(entry.element)
-            sb.append(":")
-            sb.append(String.format("%4.2f", 1.0 * entry.count / totalFrequency))
-            sb.append(separator)
-        }
-
-        sb.append(postfix)
-
-        return sb.toString()
+    fun toPString(prefix: String = "", postfix: String = "", separator: String = "\t"): String {
+        return entrySet().joinTo(StringBuilder(), separator, prefix, postfix) {
+            String.format("%s:%4.2f", it.element, 1.0 * it.count / totalFrequency)
+        }.toString()
     }
 
     @JvmOverloads
-    fun report(prefix: String = "", postfix: String = ""): String {
+    fun toReport(prefix: String = "", postfix: String = ""): String {
         val sb = StringBuilder(prefix)
 
         var maxLength = entrySet().map { it.element.toString().length }.max()?:return ""

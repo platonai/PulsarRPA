@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.dom.nodes.node.ext.select2
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.parser.Tag

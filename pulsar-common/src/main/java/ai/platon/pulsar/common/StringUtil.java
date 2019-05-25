@@ -58,6 +58,10 @@ public final class StringUtil {
 
     public static Pattern MONEY_LIKE_PATTERN = Pattern.compile(MONEY_LIKE_REGEX);
 
+    public static final String CHINESE_PHONE_NUMBER_LIKE_REGEX = "^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,1,2,5-9])|(177))\\d{8}$";
+
+    public static Pattern CHINESE_PHONE_NUMBER_LIKE_PATTERN = Pattern.compile(CHINESE_PHONE_NUMBER_LIKE_REGEX);
+
     // Html entity: {@code &nbsp;} looks just like a white space
     public static final String NBSP = String.valueOf(160);
 
@@ -651,6 +655,9 @@ public final class StringUtil {
         return NUMERIC_LIKE_PATTERN.matcher(text).matches();
     }
 
+    /**
+     * https://www.regextester.com/97725
+     * */
     public static boolean isMoneyLike(String text) {
         return MONEY_LIKE_PATTERN.matcher(text).matches();
     }

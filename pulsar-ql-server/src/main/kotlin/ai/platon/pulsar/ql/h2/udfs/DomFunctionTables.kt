@@ -4,7 +4,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
-import ai.platon.pulsar.dom.nodes.node.ext.select2
+import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
-import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
@@ -13,6 +12,7 @@ import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.model.createImage
 import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
+import ai.platon.pulsar.dom.select.ElementTraversor
 import ai.platon.pulsar.dom.select.MathematicalSelector
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
@@ -70,6 +70,14 @@ fun <T> field(initializer: (Node) -> T): MapField<T> {
 inline fun <reified T> nullableField(): NullableMapField<T> {
     return NullableMapField()
 }
+
+val nilNode = Element("div") as Node
+
+val nilElement = Element("div")
+
+val nilDocument = Document.createShell("")
+
+val Node.isNil get() = this === nilNode
 
 val Node.ownerDocument get() = ownerDocumentNode as Document
 
@@ -171,12 +179,18 @@ val Node.isImageAnchor: Boolean get() = isAnchor && this.numImages == 1
 
 val Node.isRegularImageAnchor: Boolean get() = isRegularAnchor && this.numImages == 1
 
+val Node.isTable: Boolean get() = this.nodeName() == "table"
+
+val Node.isList: Boolean get() = this.nodeName() in arrayOf("ul", "ol")
+
 /**
  * If the text is short
  * */
 val Node.isShortText get() = isRegularText && cleanText.length in 1..9
 
 val Node.isMediumText get() = isRegularText && cleanText.length in 1..20
+
+val Node.isLongText get() = isRegularText && cleanText.length > 20
 
 val Node.isCurrencyUnit get() = isShortText && cleanText in arrayOf("¥", "$")
 
@@ -187,9 +201,6 @@ val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
  * */
 val Node.isNumericLike get() = isMediumText && StringUtil.isNumericLike(cleanText)
 
-/**
- * https://www.regextester.com/97725
- * */
 val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
 
 /*********************************************************************
@@ -244,8 +255,8 @@ val Node.cleanTextOrNull: String? by field {
         when {
             it.hasAttr("src") -> it.attr("abs:src")
             it.hasAttr("href") -> it.attr("abs:href")
-            it is TextNode -> StringUtil.stripNonPrintableChar(it.text()).trim()
-            it is Element -> StringUtil.stripNonPrintableChar(it.text()).trim()
+            it is TextNode -> StringUtil.stripNonPrintableChar(it.text())
+            it is Element -> StringUtil.stripNonPrintableChar(it.text())
             else -> null
         }
     }
@@ -573,62 +584,11 @@ fun Node.formatVariables(): String {
     return sb.toString()
 }
 
-/*********************************************************************
- * Actions
- * *******************************************************************/
-
-fun Node.forEachAncestor(action: (Element) -> Unit) {
-    var p = this.parent()
-    while (p != null) {
-        action(p as Element)
-        p = p.parent()
-    }
-}
-
-fun Node.forEachAncestorIf(filter: (Element) -> Boolean, action: (Element) -> Unit) {
-    var p = this.parent() as Element?
-
-    while (p != null && filter(p)) {
-        action(p)
-        p = p.parent()
-    }
-}
-
-/**
- * Find first ancestor matches the predication
- * */
-fun Node.findFirstAncestor(predicate: (Element) -> Boolean): Element? {
-    var p = this.parent() as Element?
-    var match = false
-
-    while (p != null && !match) {
-        match = predicate(p)
-        if (!match) {
-            p = p.parent()
-        }
-    }
-
-    return if (match) p else null
-}
-
-/**
- * Find first ancestor matches the predication
- * */
-fun Node.findFirstAncestor(stop: (Element) -> Boolean, predicate: (Element) -> Boolean): Element? {
-    var p = this.parent() as Element?
-    var match = false
-
-    while (p != null && !match && !stop(p)) {
-        match = predicate(p)
-        if (!match) {
-            p = p.parent()
-        }
-    }
-
-    return if (match) p else null
-}
-
 fun Node.hasAncestor(predicate: (Element) -> Boolean): Boolean {
+    return findFirstAncestor(predicate) != null
+}
+
+fun Node.hasAncestor(stop: (Node) -> Boolean, predicate: (Element) -> Boolean): Boolean {
     return findFirstAncestor(predicate) != null
 }
 
@@ -636,105 +596,8 @@ fun Node.isAncestorOf(other: Node): Boolean {
     return other.findFirstAncestor { it == this} != null
 }
 
-/**
- * For each posterity
- * */
-fun Node.forEach(includeRoot: Boolean = false, action: (Node) -> Unit) {
-    NodeTraversor.traverse({ node, _-> if (includeRoot || node != this) { action(node) } }, this)
-}
-
-fun Node.forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) {
-    NodeTraversor.traverse({ node, _-> if (predicate(node)) { action(node) } }, this)
-}
-
-fun Node.forEachElement(includeRoot: Boolean = false, action: (Element) -> Unit) {
-    NodeTraversor.traverse({ node, _->
-        if ((includeRoot || node != this) && node is Element) { action(node) }
-    }, this)
-}
-
-/**
- * Find posterity matches the condition
- * */
-fun Node.find(predicate: (Node) -> Boolean): List<Node> {
-    return collectIf(predicate)
-}
-
-fun Node.findFirst(predicate: (Node) -> Boolean): Node? {
-    val root = this
-    var result: Node? = null
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            return if (predicate(node)) {
-                result = node
-                NodeFilter.FilterResult.STOP
-            }
-            else NodeFilter.FilterResult.CONTINUE
-        }
-    }, root)
-
-    return result
-}
-
-inline fun Node.collectIf(crossinline filter: (Node) -> Boolean): List<Node> {
-    return collectIfTo(mutableListOf(), filter)
-}
-
-inline fun <C : MutableCollection<Node>> Node.collectIfTo(destination: C, crossinline filter: (Node) -> Boolean): C {
-    NodeTraversor.traverse({ node, _-> if (filter(node)) { destination.add(node) } }, this)
-    return destination
-}
-
-inline fun <O: Node> Node.collect(crossinline transform: (Node) -> O?): List<O> {
-    return collectTo(mutableListOf(), transform)
-}
-
-inline fun <O: Node, C : MutableCollection<O>> Node.collectTo(destination: C, crossinline transform: (Node) -> O?): C {
-    NodeTraversor.traverse({ node, _-> transform(node)?.also { destination.add(it) } }, this)
-    return destination
-}
-
-inline fun Node.filter(crossinline predicate: (Node) -> TraverseState): List<Node> {
-    return filterTo(mutableListOf(), predicate)
-}
-
-inline fun <C : MutableCollection<Node>> Node.filterTo(destination: C, crossinline predicate: (Node) -> TraverseState): C {
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            val result = predicate(node)
-            if (result.match) {
-                destination.add(node)
-            }
-            return result.state
-        }
-    }, this)
-    return destination
-}
-
-fun Node.filter(seq: Int): Node? {
-    var result: Node? = null
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            return when {
-                sequence < seq -> NodeFilter.FilterResult.CONTINUE
-                sequence == seq -> {
-                    result = node
-                    NodeFilter.FilterResult.SKIP_ENTIRELY
-                }
-                else -> NodeFilter.FilterResult.SKIP_ENTIRELY
-            }
-        }
-    }, this)
-
-    return result
-}
-
-fun Node.isAncestor(node: Node): Boolean {
-    var p = this.parent()
-    while (p != null && p.depth < node.depth && p != node) {
-        p = p.parent()
-    }
-    return p == node
+fun Node.isAncestorOf(other: Node, stop: (Node) -> Boolean): Boolean {
+    return other.findFirstAncestor(stop) { it == this} != null
 }
 
 fun Node.ancestors(): List<Element> {
@@ -748,126 +611,12 @@ fun Node.ancestors(): List<Element> {
     return ancestors
 }
 
-fun Node.findBySequence(seq: Int): Node? {
-    var result: Node? = null
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            return when {
-                sequence < seq -> NodeFilter.FilterResult.CONTINUE
-                sequence == seq -> {
-                    result = node
-                    NodeFilter.FilterResult.SKIP_ENTIRELY
-                }
-                else -> NodeFilter.FilterResult.SKIP_ENTIRELY
-            }
-        }
-    }, this)
+// TODO: override Node.isNil or not?
+val Element.isNil get() = this === nilElement
 
-    return result
-}
-
-fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true): Double {
-    return accumulate(featureKey, includeRoot) { true }
-}
-
-fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true, filter: (Node) -> Boolean): Double {
-    var sum = 0.0
-    forEach(includeRoot = includeRoot) {
-        if (filter(it)) {
-            sum += it.features[featureKey]
-        }
-    }
-    return sum
-}
-
-fun Node.minmax(featureKey: Int): Pair<Double, Double> {
-    var min = Double.MAX_VALUE
-    var max = Double.MIN_VALUE
-    forEach {
-        val v = it.features[featureKey]
-        if (v > max) {
-            max = v
-        }
-        if (v < min) {
-            min = v
-        }
-    }
-    return min to max
-}
-
-fun Node.minByDouble(transform: (Node) -> Double): Node? {
-    var min = Double.MAX_VALUE
-    var node: Node? = null
-    forEach {
-        val v = transform(it)
-        if (v < min) {
-            min = v
-            node = it
-        }
-    }
-    return node
-}
-
-fun Node.maxByDouble(transform: (Node) -> Double): Node? {
-    var max = Double.MIN_VALUE
-    var node: Node? = null
-    forEach {
-        val v = transform(it)
-        if (v > max) {
-            max = v
-            node = it
-        }
-    }
-    return node
-}
-
-fun Node.count(predicate: (Node) -> Boolean = {true}): Int {
-    var count = 0
-    forEach { if (predicate(it)) ++count }
-    return count
-}
-
-@JvmOverloads
-fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (this !is Element) {
-        return Elements()
-    }
-
-    if (offset == 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    // TODO: do the filtering inside [MathematicalSelector#select]
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
-            .toCollection(Elements())
-}
-
-@Deprecated("Use first instead", ReplaceWith("MathematicalSelector.selectFirst(cssQuery, this)"))
-fun Node.selectFirst2(cssQuery: String): Element? {
-    return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
-}
-
-fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                    transformer: (Element) -> O): List<O> {
-    return if (this is Element) {
-        select2(query, offset, limit).map { transformer(it) }
-    } else listOf()
-}
-
-fun Node.first(cssQuery: String): Element? {
-    return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
-}
-
-fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
-    return if (this !is Element) {
-        first(cssQuery)?.let { transformer(it) }
-    } else null
+fun Element.addClasses(vararg classNames: String): Element {
+    classNames.forEach { addClass(it) }
+    return this
 }
 
 fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
@@ -875,16 +624,13 @@ fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
     return this
 }
 
-@JvmOverloads
-fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset == 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
-            .toCollection(Elements())
+/**
+ * TODO: experimental
+ * TODO: may not as efficient as Node.collectIfTo since very call of e.nextElementSibling() generate a new element list
+ * */
+inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, crossinline filter: (Element) -> Boolean): C {
+    ElementTraversor.traverse(this) { if (filter(it)) { destination.add(it) } }
+    return destination
 }
 
 fun Element.parseStyle(): Array<String> {
@@ -898,8 +644,4 @@ fun Element.getStyle(styleKey: String): String {
     return getStyle(parseStyle(), styleKey)
 }
 
-fun Element.pixelatedValue(value: String, defaultValue: Double): Double {
-    // TODO : we currently handle only px
-    val units = arrayOf("in", "%", "cm", "mm", "ex", "pt", "pc", "px")
-    return value.removeSuffix("px").toDoubleOrNull()?:defaultValue
-}
+val Document.isNil get() = this === nilDocument

@@ -1,7 +1,5 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.ql.QuerySession
-import ai.platon.pulsar.ql.types.ValueDom
 import ai.platon.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL_LENGTH
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
@@ -9,10 +7,12 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
-import ai.platon.pulsar.dom.nodes.node.ext.first
-import ai.platon.pulsar.dom.nodes.node.ext.select2
+import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
 import org.apache.hadoop.classification.InterfaceStability
 import org.h2.api.ErrorCode

@@ -7,7 +7,11 @@ import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.select
+import ai.platon.pulsar.dom.select.select2
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
