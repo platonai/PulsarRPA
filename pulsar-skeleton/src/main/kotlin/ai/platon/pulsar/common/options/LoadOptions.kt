@@ -43,9 +43,6 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class, description = "The browser to use")
     var browser = BrowserType.CHROME
 
-    @Parameter(names = ["-ignoreFailed", "--ignore-failed"], arity = 1, description = "Ignore all failed pages in batch loading")
-    var ignoreFailed = true
-
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
 

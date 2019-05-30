@@ -1,5 +1,9 @@
 package ai.platon.pulsar.crawl.scoring;
 
+import ai.platon.pulsar.common.ScoreEntry;
+import ai.platon.pulsar.common.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
+
 import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -82,19 +86,19 @@ public class NamedScoreVector extends ScoreVector {
      * To change one parameter's priority, just change it's order in the following enum definition.
      */
     public enum Name {
-        priority,      // bigger,  better
-        distance,      // smaller, better
-        createTime,    // bigger, better, limited
+        priority,      // bigger better
+        distance,      // smaller better
+        createTime,    // bigger better, limited
 
-        contentScore, // bigger, better
-        webGraphScore, // bigger, better
+        contentScore, // bigger better
+        webGraphScore, // bigger better
 
-        refFetchErrDensity,  // smaller, better
-        refParseErrDensity,  // smaller, better
-        refExtractErrDensity,// smaller, better
-        refIndexErrDensity,  // smaller, better
+        refFetchErrDensity,  // smaller better
+        refParseErrDensity,  // smaller better
+        refExtractErrDensity,// smaller better
+        refIndexErrDensity,  // smaller better
 
-        modifyTime,    // bigger, better
-        inlinkOrder,  // smaller, better
+        modifyTime,    // bigger better
+        inlinkOrder,  // smaller better
     }
 }

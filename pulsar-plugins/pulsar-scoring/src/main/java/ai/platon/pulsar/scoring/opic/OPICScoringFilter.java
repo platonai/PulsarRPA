@@ -21,7 +21,7 @@ import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.graph.WebEdge;
 import ai.platon.pulsar.persist.graph.WebGraph;
 import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.ScoringFilter;
 
 import java.net.MalformedURLException;

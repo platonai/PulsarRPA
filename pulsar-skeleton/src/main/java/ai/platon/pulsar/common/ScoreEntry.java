@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl.scoring;
+package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.Params;
 

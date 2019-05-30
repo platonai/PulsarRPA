@@ -1,13 +1,13 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.nodes.TraverseState
+import ai.platon.pulsar.dom.nodes.forEach
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
-import org.jsoup.select.NodeVisitor
 
 /**
  * In-box syntax, cases:
@@ -107,9 +107,13 @@ fun Node.find(predicate: (Node) -> Boolean): List<Node> {
     return collectIf(predicate)
 }
 
-fun Node.findFirst(predicate: (Node) -> Boolean): Node? {
-    val root = this
+fun Node.first(predicate: (Node) -> Boolean): Node {
+    return firstOrNull(predicate)?:throw NoSuchElementException("Node contains no descendant matching the predicate.")
+}
+
+fun Node.firstOrNull(predicate: (Node) -> Boolean): Node? {
     var result: Node? = null
+
     NodeTraversor.filter(object: NodeFilter {
         override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
             return if (predicate(node)) {
@@ -118,11 +122,29 @@ fun Node.findFirst(predicate: (Node) -> Boolean): Node? {
             }
             else NodeFilter.FilterResult.CONTINUE
         }
-    }, root)
-
+    }, this)
     return result
 }
 
+fun Node.any(predicate: (Node) -> Boolean): Boolean {
+    return firstOrNull(predicate) != null
+}
+
+fun Node.all(predicate: (Node) -> Boolean): Boolean {
+    var r = true
+
+    NodeTraversor.filter(object: NodeFilter {
+        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
+            return if (!predicate(node)) {
+                r = false
+                NodeFilter.FilterResult.STOP
+            }
+            else NodeFilter.FilterResult.CONTINUE
+        }
+    }, this)
+
+    return r
+}
 
 @JvmOverloads
 fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {

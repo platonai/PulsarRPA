@@ -1,4 +1,6 @@
-package ai.platon.pulsar.crawl.scoring;
+package ai.platon.pulsar.common;
+
+import com.google.common.math.IntMath;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -10,13 +12,14 @@ import java.util.List;
  * Created by vincent on 17-4-20.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  * <p>
- * TODO : optimization
  */
 public class ScoreVector implements Comparable<ScoreVector> {
 
     // Reserved
     private int arity;
     private ArrayList<ScoreEntry> scoreEntries;
+
+    public static ScoreVector ZERO = new ScoreVector(0);
 
     public ScoreVector(int arity) {
         this.arity = arity;
@@ -71,6 +74,21 @@ public class ScoreVector implements Comparable<ScoreVector> {
         return score;
     }
 
+    public static ScoreVector combine(ScoreVector s1, ScoreVector s2) {
+        List<ScoreEntry> entries = new ArrayList<>();
+        entries.addAll(s1.scoreEntries);
+        entries.addAll(s2.scoreEntries);
+        return new ScoreVector(entries.size(), entries);
+    }
+
+    public static ScoreVector combine(ScoreVector... scores) {
+        List<ScoreEntry> entries = new ArrayList<>();
+        for (ScoreVector score : scores) {
+            entries.addAll(score.scoreEntries);
+        }
+        return new ScoreVector(entries.size(), entries);
+    }
+
     public int getArity() {
         return arity;
     }
@@ -92,6 +110,10 @@ public class ScoreVector implements Comparable<ScoreVector> {
         get(i).setValue((int) value);
     }
 
+    public void setValue(int i, double value) {
+        get(i).setValue((int) value);
+    }
+
     public void setValue(int... values) {
         for (int i = 0; i < values.length && i < scoreEntries.size(); ++i) {
             scoreEntries.get(i).setValue(values[i]);
@@ -103,7 +125,20 @@ public class ScoreVector implements Comparable<ScoreVector> {
     }
 
     /**
-     * TODO : consider the "bigger arity, bigger value" semantics
+     * TODO: may overflow, a better algorithm is required
+     * */
+    public double toDouble() {
+        double sum = 0.0;
+        int sz = scoreEntries.size();
+        for (int i = 0; i < sz; ++i) {
+            double s = IntMath.pow(10, sz - i) * scoreEntries.get(i).getValue();
+            sum += Math.abs(s);
+        }
+        return sum;
+    }
+
+    /**
+     * TODO : consider about the "bigger arity, bigger value" semantics
      */
     @Override
     public int compareTo(@Nonnull ScoreVector other) {

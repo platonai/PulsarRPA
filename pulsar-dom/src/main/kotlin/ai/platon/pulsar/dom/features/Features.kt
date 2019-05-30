@@ -18,7 +18,10 @@ import java.awt.Color
 import java.awt.Rectangle
 import java.util.concurrent.atomic.AtomicInteger
 
-data class FeatureEntry(val key: Int, val value: Double)
+data class FeatureEntry(val key: Int, val value: Double) {
+    constructor(key: Int, value: Int): this(key, value.toDouble())
+    constructor(key: Int, value: Boolean): this(key, if (value) 1.0 else 0.0)
+}
 
 data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = true, val isFloat: Boolean = false) {
 

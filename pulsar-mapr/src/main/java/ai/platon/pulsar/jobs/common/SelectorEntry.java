@@ -1,6 +1,6 @@
 package ai.platon.pulsar.jobs.common;
 
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.io.ScoreVectorWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;

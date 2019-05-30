@@ -14,6 +14,7 @@ import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
 import ai.platon.pulsar.dom.select.ElementTraversor
 import ai.platon.pulsar.dom.select.MathematicalSelector
+import ai.platon.pulsar.dom.select.any
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.jsoup.nodes.Document
@@ -146,7 +147,7 @@ val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr("_o_hidden")
 val Node.isVisible: Boolean get() {
     return when {
         isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have a empty rectangle?
-        else -> x >= 0 && y >= 0 && !rectangle.isEmpty && !hasHiddenFlag && !hasOverflowHiddenFlag
+        else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
     }
 }
 /** Check if the node is visible or not */
@@ -165,9 +166,7 @@ val Node.isRegularText: Boolean get() { return isVisible && isNonBlankText }
 
 val Node.isImage: Boolean get() = this.nodeName() == "img"
 
-val Node.isRegularImage: Boolean get() {
-    return isImage && isVisible && hasAttr("src")
-}
+val Node.isRegularImage: Boolean get() { return isImage && isVisible && hasAttr("src") }
 
 val Node.isAnchorImage: Boolean get() = isImage && this.parent().isAnchor
 
@@ -206,9 +205,9 @@ val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
 /*********************************************************************
  * Distinguished features
  * *******************************************************************/
-val Node.numChars by IntFeature(CH)
-val Node.numSiblings by IntFeature(SIB)
-val Node.numChildren by IntFeature(C)
+var Node.numChars by IntFeature(CH)
+var Node.numSiblings by IntFeature(SIB)
+var Node.numChildren by IntFeature(C)
 /** Number of descend text nodes */
 var Node.numTextNodes by IntFeature(TN)
 

@@ -168,8 +168,6 @@ public class LoadComponent {
         Set<WebPage> knownPages = new HashSet<>();
         Set<String> pendingUrls = new HashSet<>();
 
-        boolean ignoreFailed = options.getIgnoreFailed();
-
         for (String originalUrl : filteredUrls) {
             WebPage page = webDb.getOrNil(originalUrl, options.getShortenKey());
 
@@ -191,6 +189,8 @@ public class LoadComponent {
             } else if (reason == FETCH_REASON_DO_NOT_FETCH) {
                 if (page.getProtocolStatus().isSuccess()) {
                     knownPages.add(page);
+                } else {
+                    // failed
                 }
             } else {
                 LOG.error("Unknown fetch reason #{}, url: {}, options: {}", reason, originalUrl, options);
@@ -216,9 +216,6 @@ public class LoadComponent {
 
         updatedPages.forEach(page -> update(page, options));
 
-        if (ignoreFailed) {
-            CollectionUtils.filter(updatedPages, page -> page.getProtocolStatus().isSuccess());
-        }
         knownPages.addAll(updatedPages);
 
         return knownPages;

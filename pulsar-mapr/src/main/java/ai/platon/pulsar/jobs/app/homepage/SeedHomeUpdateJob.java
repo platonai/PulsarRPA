@@ -17,7 +17,7 @@
 package ai.platon.pulsar.jobs.app.homepage;
 
 import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
 import ai.platon.pulsar.jobs.common.SelectorEntry;
 import ai.platon.pulsar.jobs.common.URLPartitioner;

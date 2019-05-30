@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.scoring.io;
 
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector;
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
