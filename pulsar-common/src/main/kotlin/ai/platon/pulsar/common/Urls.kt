@@ -9,16 +9,7 @@ object Urls {
 
     @JvmStatic
     fun getURLOrNull(url: String): URL? {
-        if (url.isEmpty()) {
-            return null
-        }
-
-        try {
-            return URL(url)
-        } catch (ignored: Exception) {
-        }
-
-        return null
+        return try { URL(url) } catch (ignored: MalformedURLException) { null }
     }
 
     @JvmStatic

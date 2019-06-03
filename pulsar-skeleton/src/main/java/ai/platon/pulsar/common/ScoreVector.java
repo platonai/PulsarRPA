@@ -1,12 +1,17 @@
 package ai.platon.pulsar.common;
 
+import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Iterables;
 import com.google.common.math.IntMath;
+import com.google.common.primitives.Ints;
+import org.apache.commons.collections4.IteratorUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.analysis.function.Sigmoid;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.IllegalFormatException;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-4-20.
@@ -16,51 +21,58 @@ import java.util.List;
 public class ScoreVector implements Comparable<ScoreVector> {
 
     // Reserved
-    private int arity;
-    private ArrayList<ScoreEntry> scoreEntries;
+    private int dimension;
+    private ArrayList<ScoreEntry> entries;
 
     public static ScoreVector ZERO = new ScoreVector(0);
 
-    public ScoreVector(int arity) {
-        this.arity = arity;
-        scoreEntries = new ArrayList<>(arity);
-        for (int i = 0; i < arity; ++i) {
-            scoreEntries.add(new ScoreEntry("s" + i, i, 0, 0));
+    /**
+     * Create zero score vector with dimension {dimension}
+     * */
+    public ScoreVector(int dimension) {
+        this.dimension = dimension;
+        entries = new ArrayList<>(dimension);
+        for (int i = 0; i < dimension; ++i) {
+            entries.add(new ScoreEntry("s" + i, i, 0, 0));
         }
     }
 
     /**
-     * @param arityStr The string representation of a integer
+     * @param dimensionStr The string representation of a integer
      *                 Use string just to explicitly say it's not a score
-     * @param scores   Score value for each arity, the size
+     * @param scores   Score value for each dimension, the size
      */
-    public ScoreVector(String arityStr, int... scores) {
-        int arity = Integer.valueOf(arityStr);
-        if (arity != scores.length) {
-            throw new IllegalArgumentException("Illegal ScoreEntry number");
+    public ScoreVector(String dimensionStr, int... scores) {
+        this(Integer.valueOf(dimensionStr), Ints.asList(scores));
+    }
+
+    public ScoreVector(int dimension, Collection<Integer> scores) {
+        Integer[] list = scores.toArray(new Integer[0]);
+        if (dimension != list.length) {
+            throw new IllegalArgumentException("Illegal dimension");
         }
-        this.arity = arity;
-        scoreEntries = new ArrayList<>(arity);
-        for (int i = 0; i < arity; ++i) {
-            scoreEntries.add(new ScoreEntry("s" + i, i, scores[i], 0));
+        this.dimension = dimension;
+        entries = new ArrayList<>(dimension);
+        for (int i = 0; i < dimension; ++i) {
+            entries.add(new ScoreEntry("s" + i, i, list[i], 0));
         }
     }
 
-    public ScoreVector(int arity, ScoreEntry... scores) {
-        if (arity != scores.length) {
-            throw new IllegalArgumentException("Illegal ScoreEntry number");
+    public ScoreVector(int dimension, ScoreEntry... scores) {
+        if (dimension != scores.length) {
+            throw new IllegalArgumentException("Illegal dimension");
         }
-        this.arity = arity;
-        scoreEntries = new ArrayList<>(arity);
-        scoreEntries.addAll(Arrays.asList(scores));
+        this.dimension = dimension;
+        entries = new ArrayList<>(dimension);
+        entries.addAll(Arrays.asList(scores));
     }
 
-    public ScoreVector(int arity, List<ScoreEntry> scores) {
-        if (arity != scores.size()) {
-            throw new IllegalArgumentException("Illegal ScoreEntry number");
+    public ScoreVector(int dimension, List<ScoreEntry> scores) {
+        if (dimension != scores.size()) {
+            throw new IllegalArgumentException("Illegal dimension");
         }
-        this.arity = arity;
-        scoreEntries = new ArrayList<>(scores);
+        this.dimension = dimension;
+        entries = new ArrayList<>(scores);
     }
 
     public static ScoreVector parse(String multiValueScore) throws IllegalFormatException {
@@ -76,30 +88,34 @@ public class ScoreVector implements Comparable<ScoreVector> {
 
     public static ScoreVector combine(ScoreVector s1, ScoreVector s2) {
         List<ScoreEntry> entries = new ArrayList<>();
-        entries.addAll(s1.scoreEntries);
-        entries.addAll(s2.scoreEntries);
+        entries.addAll(s1.entries);
+        entries.addAll(s2.entries);
         return new ScoreVector(entries.size(), entries);
     }
 
     public static ScoreVector combine(ScoreVector... scores) {
         List<ScoreEntry> entries = new ArrayList<>();
         for (ScoreVector score : scores) {
-            entries.addAll(score.scoreEntries);
+            entries.addAll(score.entries);
         }
         return new ScoreVector(entries.size(), entries);
     }
 
-    public int getArity() {
-        return arity;
+    public List<ScoreEntry> getEntries() {
+        return entries;
+    }
+
+    public int getDimension() {
+        return dimension;
     }
 
     public int getDigits() {
-        return scoreEntries.stream().mapToInt(ScoreEntry::getDigits).sum();
+        return entries.stream().mapToInt(ScoreEntry::getDigits).sum();
     }
 
     public int size() {
-        assert (arity == scoreEntries.size());
-        return scoreEntries.size();
+        assert (dimension == entries.size());
+        return entries.size();
     }
 
     public void setValue(int i, int value) {
@@ -115,30 +131,34 @@ public class ScoreVector implements Comparable<ScoreVector> {
     }
 
     public void setValue(int... values) {
-        for (int i = 0; i < values.length && i < scoreEntries.size(); ++i) {
-            scoreEntries.get(i).setValue(values[i]);
+        for (int i = 0; i < values.length && i < entries.size(); ++i) {
+            entries.get(i).setValue(values[i]);
         }
     }
 
     public ScoreEntry get(int i) {
-        return scoreEntries.get(i);
+        return entries.get(i);
     }
 
     /**
-     * TODO: may overflow, a better algorithm is required
+     * TODO: overflow
      * */
     public double toDouble() {
+        // TODO: normalization
+        Sigmoid sig = new Sigmoid(0, 1);
+
         double sum = 0.0;
-        int sz = scoreEntries.size();
-        for (int i = 0; i < sz; ++i) {
-            double s = IntMath.pow(10, sz - i) * scoreEntries.get(i).getValue();
-            sum += Math.abs(s);
+        for (ScoreEntry entry : entries) {
+            double s = entry.getValue();
+            s = sig.value(s);
+            s = (int) Math.min(100 * s, 99);
+            sum = 100 * sum + s;
         }
         return sum;
     }
 
     /**
-     * TODO : consider about the "bigger arity, bigger value" semantics
+     * TODO : consider about the "bigger dimension, bigger value" semantics
      */
     @Override
     public int compareTo(@Nonnull ScoreVector other) {
@@ -146,9 +166,9 @@ public class ScoreVector implements Comparable<ScoreVector> {
             return size() - other.size();
         }
 
-        for (int i = 0; i < scoreEntries.size(); ++i) {
-            ScoreEntry v1 = scoreEntries.get(i);
-            ScoreEntry v2 = other.scoreEntries.get(i);
+        for (int i = 0; i < entries.size(); ++i) {
+            ScoreEntry v1 = entries.get(i);
+            ScoreEntry v2 = other.entries.get(i);
 
             int comp = v1.compareTo(v2);
             if (comp != 0) {
@@ -163,7 +183,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
     public int hashCode() {
         final int PRIME = 31;
         int hash = 1;
-        for (ScoreEntry scoreEntry : scoreEntries) {
+        for (ScoreEntry scoreEntry : entries) {
             hash = PRIME * hash + scoreEntry.getValue();
         }
         return hash;
@@ -181,7 +201,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (ScoreEntry scoreEntry : scoreEntries) {
+        for (ScoreEntry scoreEntry : entries) {
             sb.append(",").append(scoreEntry.getValue());
         }
         sb.replace(0, 1, "");

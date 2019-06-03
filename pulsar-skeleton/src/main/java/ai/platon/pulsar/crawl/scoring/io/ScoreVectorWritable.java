@@ -25,7 +25,7 @@ public class ScoreVectorWritable implements Writable {
     }
 
     public void write(DataOutput out) throws IOException {
-        out.writeInt(scoreVector.getArity());
+        out.writeInt(scoreVector.getDimension());
         Text.writeString(out, scoreVector.toString());
     }
 

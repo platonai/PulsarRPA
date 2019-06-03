@@ -1,9 +1,9 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.PulsarContext
-import ai.platon.pulsar.ql.utils.ResultSetFormatter
+import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.sql.ResultSetFormatter
 import org.h2.tools.SimpleResultSet
-import org.jsoup.Jsoup
 import org.junit.Assert
 import org.junit.Test
 import java.sql.Types
@@ -36,7 +36,7 @@ class TestAnything {
         Assert.assertTrue(11 == urls.size)
         Assert.assertTrue(urls[0].length > urls[1].length)
 
-        val domains = urls.map { ai.platon.pulsar.common.URLUtil.getHostName(it) }.filter { Objects.nonNull(it) }.toList()
+        val domains = urls.map { URLUtil.getHostName(it) }.filter { Objects.nonNull(it) }.toList()
         Assert.assertTrue(11 == domains.size)
     }
 
@@ -44,7 +44,10 @@ class TestAnything {
     fun testResultSetFormatter() {
         val rs = SimpleResultSet()
         rs.addColumn("A", Types.DOUBLE, 6, 4)
-        arrayOf(0.8056499951626754, 0.5259673975756397, 0.869188405723, 0.4140625).forEach { rs.addRow(it) }
+        rs.addColumn("B")
+        val a = arrayOf(0.8056499951626754, 0.5259673975756397, 0.869188405723, 0.4140625)
+        val b = arrayOf("a", "b", "c", "d")
+        a.zip(b).map { arrayOf(it.first, it.second) }.forEach { rs.addRow(*it) }
         val fmt = ResultSetFormatter(rs)
         println(fmt.format())
     }

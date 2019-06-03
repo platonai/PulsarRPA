@@ -1,6 +1,9 @@
 package ai.platon.pulsar.crawl.scoring;
 
+import ai.platon.pulsar.common.ScoreEntry;
 import ai.platon.pulsar.common.ScoreVector;
+import com.google.common.math.IntMath;
+import org.apache.commons.math3.analysis.function.Sigmoid;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -83,11 +86,23 @@ public class TestScoreVector {
         assertNotEquals(new Integer(1), new Long(1));
     }
 
-//  @Test
-//  public void testFloatValue() {
-//    MultiValueScore score = new MultiValueScore(1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11);
-//    System.out.println(score.floatValue());
-//  }
+    @Test
+    public void testDoubleValue() {
+        Sigmoid sig = new Sigmoid();
+        ScoreVector score = new ScoreVector("16", 1, 2, 3, 4, 5, 6, -7, -8, 9, 10, 11, 12, 13, 14, 15, 16);
+        int sz = score.getEntries().size();
+        for (int i = 0; i < sz; i++) {
+            double s = score.getEntries().get(i).getValue();
+            System.out.print(String.format("%,f", s));
+            System.out.print('\t');
+            s = IntMath.pow(10, 2 * (sz - i)) * (int)(100 * sig.value(s) - 1);
+            System.out.print(String.format("%,f", s));
+            System.out.print('\t');
+        }
+        System.out.println();
+        System.out.println(String.format("%s", score.toString()));
+        System.out.println(String.format("%,f", score.toDouble()));
+    }
 
     @Test
     public void testIO() {

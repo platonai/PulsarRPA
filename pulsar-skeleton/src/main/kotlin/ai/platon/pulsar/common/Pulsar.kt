@@ -152,7 +152,7 @@ class Pulsar: AutoCloseable {
     /**
      * Load a url with specified options, see [LoadOptions] for all options
      *
-     * @param url     The url to load
+     * @param url     The url to load, ignore the arguments in the url
      * @param options The options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
