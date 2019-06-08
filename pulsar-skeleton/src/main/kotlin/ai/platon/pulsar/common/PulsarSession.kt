@@ -131,7 +131,7 @@ open class PulsarSession(
      * @return The web pages
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.DEFAULT): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.default): Collection<WebPage> {
         options.volatileConfig = config
 
         return if (enableCache) {

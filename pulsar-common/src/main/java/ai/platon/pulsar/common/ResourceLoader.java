@@ -127,9 +127,7 @@ public class ResourceLoader {
             return (Class<Z>) Class.forName(className);
         } catch (ClassNotFoundException e) {
             try {
-                return (Class<Z>) Class.forName(
-                        className, true,
-                        Thread.currentThread().getContextClassLoader());
+                return (Class<Z>) Class.forName(className, true, Thread.currentThread().getContextClassLoader());
             } catch (Exception e2) {
                 throw e2;
             }

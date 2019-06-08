@@ -168,7 +168,10 @@ val Node.isImage: Boolean get() = this.nodeName() == "img"
 
 val Node.isRegularImage: Boolean get() { return isImage && isVisible && hasAttr("src") }
 
-val Node.isAnchorImage: Boolean get() = isImage && this.parent().isAnchor
+/**
+ * A <img> tag can contain any tag
+ * */
+val Node.isAnchorImage: Boolean get() = isImage && this.hasAncestor { it.isAnchor }
 
 val Node.isAnchor: Boolean get() = this.nodeName() == "a"
 

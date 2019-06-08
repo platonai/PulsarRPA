@@ -105,6 +105,14 @@ open class PulsarOptions : Parameterized {
                 .replace("\\s+".toRegex(), " ")
     }
 
+    fun toArgsMap(): Map<String, String> {
+        return params.asStringMap()
+    }
+
+    fun toMutableArgsMap(): MutableMap<String, String> {
+        return params.asStringMap()
+    }
+
     fun toArgv(): Array<String> {
         return params.withKVDelimiter(" ").formatAsLine()
                 .split("\\s+".toRegex())

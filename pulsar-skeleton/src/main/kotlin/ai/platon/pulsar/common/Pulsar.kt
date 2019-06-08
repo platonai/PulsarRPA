@@ -105,62 +105,65 @@ class Pulsar: AutoCloseable {
         this.defaultVolatileConfig = VolatileConfig(defaultMutableConfig)
     }
 
-    fun normalize(url: String): String? {
-        return urlNormalizers.normalize(url)
+    fun normalize(url: String): String {
+        return urlNormalizers.normalize(Urls.normalize(url))?:""
+    }
+
+    fun normalize(urls: Iterable<String>): List<String> {
+        return urls.map { normalize(it) }
     }
 
     /**
      * Inject a url
      *
-     * @param configuredUrl The url followed by config options
+     * @param url The url followed by config options
      * @return The web page created
      */
-    fun inject(configuredUrl: String): WebPage {
-        return injectComponent.inject(Urls.splitUrlArgs(configuredUrl))
+    fun inject(url: String): WebPage {
+        return injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
     operator fun get(url: String): WebPage? {
-        return webDb.get(url, false)
+        return webDb.get(normalize(url), false)
     }
 
     fun getOrNil(url: String): WebPage {
-        return webDb.getOrNil(url, false)
+        return webDb.getOrNil(normalize(url), false)
     }
 
-    fun scan(urlBase: String): Iterator<WebPage> {
-        return webDb.scan(urlBase)
+    fun scan(urlPrefix: String): Iterator<WebPage> {
+        return webDb.scan(urlPrefix)
     }
 
-    fun scan(urlBase: String, fields: Array<String>): Iterator<WebPage> {
-        return webDb.scan(urlBase, fields)
+    fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
+        return webDb.scan(urlPrefix, fields)
     }
 
     /**
      * Load a url, options can be specified following the url, see [LoadOptions] for all options
      *
-     * @param configuredUrl The url followed by options
+     * @param url The url followed by options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    fun load(configuredUrl: String): WebPage {
-        val urlAndOptions = Urls.splitUrlArgs(configuredUrl)
-
+    fun load(url: String): WebPage {
+        val urlAndOptions = Urls.splitUrlArgs(url)
         val options = LoadOptions.parse(urlAndOptions.second, defaultVolatileConfig)
-
         return loadComponent.load(urlAndOptions.first, options)
     }
 
     /**
      * Load a url with specified options, see [LoadOptions] for all options
      *
-     * @param url     The url to load, ignore the arguments in the url
+     * @param url     The url followed by options
      * @param options The options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: String, options: LoadOptions): WebPage {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = defaultVolatileConfig
-        }
-        return loadComponent.load(url, options)
+        val urlAndOptions = Urls.splitUrlArgs(url)
+        val volatileConfig = options.volatileConfig?:defaultVolatileConfig
+        val options2 = LoadOptions.parse(urlAndOptions.second, volatileConfig)
+
+        return loadComponent.load(urlAndOptions.first, options.merge(options2))
     }
 
     /**
@@ -181,7 +184,7 @@ class Pulsar: AutoCloseable {
         if (options.volatileConfig == null) {
             options.volatileConfig = defaultVolatileConfig
         }
-        return loadComponent.loadAll(urls, options)
+        return loadComponent.loadAll(normalize(urls), options)
     }
 
     /**
@@ -204,7 +207,7 @@ class Pulsar: AutoCloseable {
         if (options.volatileConfig == null) {
             options.volatileConfig = defaultVolatileConfig
         }
-        return loadComponent.parallelLoadAll(urls, options)
+        return loadComponent.parallelLoadAll(normalize(urls), options)
     }
 
     /**

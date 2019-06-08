@@ -22,13 +22,19 @@ object Urls {
      * TODO: move to general normalize module
      * */
     @JvmStatic
-    fun normalizeUrl(url: String, ignoreQuery: Boolean = false): String {
-        var u = getURLOrNull(url)?.toString()?:return ""
+    fun normalize(url: String, ignoreQuery: Boolean = false): String {
+        var u = splitUrlArgs(url).first
+        u = getURLOrNull(u)?.toString()?:return ""
         u = u.substringBefore("#")
         if (ignoreQuery) {
             u = getUrlWithoutParameters(u)
         }
         return u
+    }
+
+    @JvmStatic
+    fun normalizeUrls(urls: Iterable<String>, ignoreQuery: Boolean = false): List<String> {
+        return urls.mapNotNull { normalize(it, ignoreQuery).takeIf { it.isNotBlank() } }
     }
 
     /**
@@ -115,7 +121,7 @@ object Urls {
 
     @JvmStatic
     fun normalizedUrlAndKey(originalUrl: String, ignoreQuery: Boolean = false): Pair<String, String> {
-        val url = if (ignoreQuery) normalizeUrl(originalUrl) else originalUrl
+        val url = if (ignoreQuery) normalize(originalUrl) else originalUrl
         val key = Urls.reverseUrlOrEmpty(url)
         return url to key
     }

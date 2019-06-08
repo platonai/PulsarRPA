@@ -130,7 +130,7 @@ public class WebPage {
     @Nonnull
     public static WebPage newWebPage(String originalUrl, boolean ignoreQuery) {
         Objects.requireNonNull(originalUrl);
-        String url = ignoreQuery ? Urls.normalizeUrl(originalUrl, ignoreQuery) : originalUrl;
+        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
@@ -138,7 +138,7 @@ public class WebPage {
     public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, MutableConfig mutableConfig) {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(mutableConfig);
-        String url = ignoreQuery ? Urls.normalizeUrl(originalUrl, ignoreQuery) : originalUrl;
+        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
         return newWebPageInternal(url, mutableConfig);
     }
 

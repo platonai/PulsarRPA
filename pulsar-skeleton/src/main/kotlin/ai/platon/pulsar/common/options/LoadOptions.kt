@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATUM_EXPIRES
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -111,9 +110,27 @@ open class LoadOptions : CommonOptions {
                 .formatAsLine().replace("\\s+".toRegex(), " ")
     }
 
+    /**
+     * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
+     * */
+    fun merge(other: LoadOptions): LoadOptions {
+        val argsMap = toMutableArgsMap()
+        val modifiedArgs = other.toArgsMap().entries.filter { it.value != defaultArgsMap[it.key] }
+
+        modifiedArgs.forEach { (k, v) ->
+            if (argsMap[k] != v) {
+                argsMap[k] = v
+            }
+        }
+
+        val args = argsMap.entries.joinToString(" ") { "${it.key} ${it.value}" }
+        return LoadOptions.parse(args)
+    }
+
     companion object {
 
-        var DEFAULT = LoadOptions()
+        val default = LoadOptions()
+        val defaultArgsMap = default.toArgsMap()
 
         fun create(): LoadOptions {
             val options = LoadOptions()
@@ -121,13 +138,8 @@ open class LoadOptions : CommonOptions {
             return options
         }
 
-        fun parse(args: String): LoadOptions {
-            val options = LoadOptions(args)
-            options.parse()
-            return options
-        }
-
-        fun parse(args: String, volatileConfig: VolatileConfig): LoadOptions {
+        @JvmOverloads
+        fun parse(args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
             val options = LoadOptions(args)
             options.parse()
             options.volatileConfig = volatileConfig

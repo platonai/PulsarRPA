@@ -164,7 +164,7 @@ public final class UrlNormalizers {
      */
     public String normalize(String urlString, String scope) {
         // optionally loop several times, and break if no further changes
-        String initialString = urlString;
+        String s = urlString;
         for (int k = 0; k < loopCount; k++) {
             for (UrlNormalizer normalizer : this.urlNormalizers) {
                 if (urlString == null) {
@@ -172,10 +172,10 @@ public final class UrlNormalizers {
                 }
                 urlString = normalizer.normalize(urlString, scope);
             }
-            if (initialString.equals(urlString)) {
+            if (s.equals(urlString)) {
                 break;
             }
-            initialString = urlString;
+            s = urlString;
         }
         return urlString;
     }
