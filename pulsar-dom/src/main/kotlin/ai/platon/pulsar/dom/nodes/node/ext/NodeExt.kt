@@ -15,12 +15,10 @@ import ai.platon.pulsar.dom.nodes.*
 import ai.platon.pulsar.dom.select.ElementTraversor
 import ai.platon.pulsar.dom.select.MathematicalSelector
 import ai.platon.pulsar.dom.select.any
+import ai.platon.pulsar.dom.select.filter
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
-import org.jsoup.nodes.TextNode
+import org.jsoup.nodes.*
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
@@ -437,9 +435,28 @@ fun Node.removeVariable(name: String): Any? {
     return variables.remove(name)
 }
 
+/**
+ * Set attribute [attributeKey] to [attributeValue]
+ * */
 fun Node.anyAttr(attributeKey: String, attributeValue: Any): Node {
     this.attr(attributeKey, attributeValue.toString())
     return this
+}
+
+/**
+ * Set attribute [attributeKey] to [attributeValue] and return [attributeValue]
+ * */
+fun Node.rAttr(attributeKey: String, attributeValue: String): String {
+    this.attr(attributeKey, attributeValue)
+    return attributeValue
+}
+
+/**
+ * Set attribute [attributeKey] to [attributeValue] and return [attributeValue]
+ * */
+fun Node.rAnyAttr(attributeKey: String, attributeValue: Any): Any {
+    this.attr(attributeKey, attributeValue.toString())
+    return attributeValue
 }
 
 /**
@@ -560,6 +577,15 @@ fun Node.clearCaption() {
 
 fun Node.removeAttrs(vararg attributeKeys: String) {
     attributeKeys.forEach { this.removeAttr(it) }
+}
+
+fun Node.removeAttrs(attributeKeys: Iterable<String>) {
+    attributeKeys.forEach { this.removeAttr(it) }
+}
+
+fun Node.removeAttrsIf(filter: (Attribute) -> Boolean) {
+    val keys = attributes().mapNotNull { it.takeIf { filter(it) }?.key }
+    removeAttrs(keys)
 }
 
 fun Node.formatEachFeatures(vararg featureKeys: Int): String {

@@ -241,10 +241,10 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
         } finally {
             if (JavascriptExecutor.class.isAssignableFrom(driver.getClass())) {
                 JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
-                jsExecutor.executeScript(";return window.stop;");
+                // execute script and block for return
+                jsExecutor.executeScript(";return window.stop();");
             }
 
-            // TODO: wait for return?
             pageSource = driver.getPageSource();
             pageSource = handleSuccess(pageSource, page, driver, headers);
             drivers.put(priority, driver);
@@ -305,7 +305,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                 }
 
                 if (scrollDownCount > 0) {
-                    jsExecutor.executeScript(";return window.stop;");
+                    jsExecutor.executeScript(";return window.stop();");
                 }
             }
 

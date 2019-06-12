@@ -240,6 +240,32 @@ fun Node.minmax(featureKey: Int): Pair<Double, Double> {
     return min to max
 }
 
+fun Node.minBy(transform: (Node) -> Int): Node? {
+    var min = Int.MAX_VALUE
+    var node: Node? = null
+    forEach {
+        val v = transform(it)
+        if (v < min) {
+            min = v
+            node = it
+        }
+    }
+    return node
+}
+
+fun Node.maxBy(transform: (Node) -> Int): Node? {
+    var max = Int.MIN_VALUE
+    var node: Node? = null
+    forEach {
+        val v = transform(it)
+        if (v > max) {
+            max = v
+            node = it
+        }
+    }
+    return node
+}
+
 fun Node.minByDouble(transform: (Node) -> Double): Node? {
     var min = Double.MAX_VALUE
     var node: Node? = null
