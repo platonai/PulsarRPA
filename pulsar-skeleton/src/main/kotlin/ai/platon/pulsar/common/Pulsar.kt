@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
@@ -18,6 +19,7 @@ import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
+import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
 
 class Pulsar: AutoCloseable {
@@ -105,16 +107,37 @@ class Pulsar: AutoCloseable {
         this.defaultVolatileConfig = VolatileConfig(defaultMutableConfig)
     }
 
-    fun normalize(url: String): String {
-        return urlNormalizers.normalize(Urls.normalize(url))?:""
+    fun normalize(url: String): NormUrl {
+        val parts = Urls.splitUrlArgs(url)
+        val options = LoadOptions.parse(parts.second, defaultVolatileConfig)
+        val normalizedUrl = urlNormalizers.normalize(Urls.normalize(parts.first, options.shortenKey))
+                ?: return NormUrl.nil
+        return NormUrl(normalizedUrl, initOptions(options))
     }
 
-    fun normalize(urls: Iterable<String>): List<String> {
-        return urls.map { normalize(it) }
+    fun normalize(url: String, options: LoadOptions): NormUrl {
+        val parts = Urls.splitUrlArgs(url)
+        val normalizedUrl = urlNormalizers.normalize(Urls.normalize(parts.first, options.shortenKey))
+                ?: return NormUrl.nil
+
+        if (parts.second.isBlank()) {
+            return NormUrl(normalizedUrl, options)
+        }
+
+        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(parts.second), options.volatileConfig)
+        return NormUrl(normalizedUrl, initOptions(options2))
+    }
+
+    fun normalize(urls: Iterable<String>): List<NormUrl> {
+        return urls.mapNotNull { normalize(it).takeIf { it.isNotNil } }
+    }
+
+    fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
+        return urls.mapNotNull { normalize(it, options).takeIf { it.isNotNil } }
     }
 
     /**
-     * Inject a url
+     * Inject an url
      *
      * @param url The url followed by config options
      * @return The web page created
@@ -123,12 +146,12 @@ class Pulsar: AutoCloseable {
         return injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
-    operator fun get(url: String): WebPage? {
-        return webDb.get(normalize(url), false)
+    fun get(url: String): WebPage? {
+        return webDb.get(normalize(url).url, false)
     }
 
     fun getOrNil(url: String): WebPage {
-        return webDb.getOrNil(normalize(url), false)
+        return webDb.getOrNil(normalize(url).url, false)
     }
 
     fun scan(urlPrefix: String): Iterator<WebPage> {
@@ -146,9 +169,9 @@ class Pulsar: AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: String): WebPage {
-        val urlAndOptions = Urls.splitUrlArgs(url)
-        val options = LoadOptions.parse(urlAndOptions.second, defaultVolatileConfig)
-        return loadComponent.load(urlAndOptions.first, options)
+        val normUrl = normalize(url)
+        initOptions(normUrl.options)
+        return loadComponent.load(normUrl)
     }
 
     /**
@@ -159,11 +182,40 @@ class Pulsar: AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: String, options: LoadOptions): WebPage {
-        val urlAndOptions = Urls.splitUrlArgs(url)
-        val volatileConfig = options.volatileConfig?:defaultVolatileConfig
-        val options2 = LoadOptions.parse(urlAndOptions.second, volatileConfig)
+        val normUrl = normalize(url, initOptions(options))
+        return loadComponent.load(normUrl)
+    }
 
-        return loadComponent.load(urlAndOptions.first, options.merge(options2))
+    /**
+     * Load a url, options can be specified following the url, see [LoadOptions] for all options
+     *
+     * @param url The url followed by options
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     */
+    fun load(url: URL): WebPage {
+        return loadComponent.load(url, initOptions(LoadOptions()))
+    }
+
+    /**
+     * Load a url with specified options, see [LoadOptions] for all options
+     *
+     * @param url     The url followed by options
+     * @param options The options
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     */
+    fun load(url: URL, options: LoadOptions): WebPage {
+        return loadComponent.load(url, initOptions(options))
+    }
+
+    /**
+     * Load a url, options can be specified following the url, see [LoadOptions] for all options
+     *
+     * @param url The url followed by options
+     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
+     */
+    fun load(url: NormUrl): WebPage {
+        initOptions(url.options)
+        return loadComponent.load(url)
     }
 
     /**
@@ -181,20 +233,21 @@ class Pulsar: AutoCloseable {
      */
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = defaultVolatileConfig
-        }
-        return loadComponent.loadAll(normalize(urls), options)
+        initOptions(options)
+        return loadComponent.loadAll(normalize(urls, options), options)
+    }
+
+    @JvmOverloads
+    fun loadAll(urls: Collection<NormUrl>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
+        return loadComponent.loadAll(urls, initOptions(options))
     }
 
     /**
      * Load a batch of urls with the specified options.
      *
-     *
      * Urls are fetched in a parallel manner whenever applicable.
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
-     *
      *
      * If a page does not exists neither in local storage nor at the given remote location, [WebPage.NIL] is returned
      *
@@ -204,10 +257,13 @@ class Pulsar: AutoCloseable {
      */
     @JvmOverloads
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = defaultVolatileConfig
-        }
-        return loadComponent.parallelLoadAll(normalize(urls), options)
+        initOptions(options)
+        return loadComponent.parallelLoadAll(normalize(urls, options), options)
+    }
+
+    @JvmOverloads
+    fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
+        return loadComponent.loadAll(urls, initOptions(options))
     }
 
     /**
@@ -229,6 +285,7 @@ class Pulsar: AutoCloseable {
 
     fun delete(url: String) {
         webDb.delete(url)
+        webDb.delete(normalize(url).url)
     }
 
     fun delete(page: WebPage) {
@@ -245,5 +302,12 @@ class Pulsar: AutoCloseable {
         }
 
         closeables.forEach { it.use { it.close() } }
+    }
+
+    private fun initOptions(options: LoadOptions): LoadOptions {
+        if (options.volatileConfig == null) {
+            options.volatileConfig = defaultVolatileConfig
+        }
+        return options
     }
 }

@@ -394,20 +394,23 @@ public class Params {
                 sb.append(pairDelimeter);
             }
 
+            String key = arg.getKey();
             if (arg.getValue() == null) {
+                if (!cmdLineStyle) {
+                    sb.append(key);
+                    sb.append(kvDelimiter);
+                    sb.append("null");
+                }
+            } else if (cmdLineStyle && key.startsWith("-") && "true".equals(arg.getValue().toString())) {
                 sb.append(arg.getKey());
-                sb.append(kvDelimiter);
-                sb.append("null");
-            } else if (cmdLineStyle && arg.getKey().startsWith("-") && "true".equals(arg.getValue().toString())) {
-                sb.append(arg.getKey());
-            } else if (cmdLineStyle && arg.getKey().startsWith("-") && "false".equals(arg.getValue().toString())) {
+            } else if (cmdLineStyle && key.startsWith("-") && "false".equals(arg.getValue().toString())) {
                 // nothing
             } else {
-                sb.append(arg.getKey());
+                sb.append(key);
                 String value = arg.getValue().toString().replaceAll(kvDelimiter, "");
                 if (!value.isEmpty()) {
                     sb.append(kvDelimiter);
-                    sb.append(arg.getValue());
+                    sb.append(value);
                 }
             }
         }

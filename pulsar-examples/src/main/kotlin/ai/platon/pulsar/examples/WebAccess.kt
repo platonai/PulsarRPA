@@ -19,16 +19,18 @@ object WebAccess {
             5 to "https://list.jd.com/list.html?cat=6728,6742,13246",
             6 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
             7 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
-            8 to "http://www.sh.chinanews.com/jinrong/index.shtml"
+            8 to "http://www.sh.chinanews.com/jinrong/index.shtml",
+            9 to "https://music.163.com/"
     )
 
     // private val loadOptions = "--parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium --browser=chrome"
-    private val loadOptions = "--expires=1s"
+    private val loadOptions = "--expires=1d"
 
     fun load() {
-        val url = seeds[3]?:return
+        val url = seeds[9]?:return
+        val args = "-expires 1s"
 
-        val page = i.load("$url $loadOptions")
+        val page = i.load("$url $loadOptions", LoadOptions.parse(args))
         // println(WebPageFormatter(page).withLinks())
         // println(WebPageFormatter(page))
 
@@ -51,7 +53,7 @@ object WebAccess {
 
         initClientJs()
 
-        i.load("$url --expires 1d")
+        i.load("$url --expires 1s")
                 .let { i.parse(it) }
                 // .also { println(it.document) }
                 .select(outlinkSelector) { it.attr("href") }
@@ -118,5 +120,5 @@ object WebAccess {
 }
 
 fun main() {
-    WebAccess.loadAllProducts()
+    WebAccess.load()
 }

@@ -392,14 +392,26 @@ public final class StringUtil {
     public static String stripNonPrintableChar(String text) {
         StringBuilder builder = new StringBuilder();
 
-        for (int i = 0; i < text.length(); ++i) {
+        int len = text.length();
+        int i = 0;
+        for (; i < len;) {
             char ch = text.charAt(i);
-            if (isPrintableUnicodeChar(ch) && !Character.isWhitespace(ch)) {
+            boolean isWhitespace = Character.isWhitespace(ch);
+            if (isPrintableUnicodeChar(ch) && !isWhitespace) {
                 builder.append(ch);
+                ++i;
+            }
+
+            if (isWhitespace) {
+                if (i > 0 && i < len - 1) {
+                    builder.append(' ');
+                }
+                while (++i < len && Character.isWhitespace(text.charAt(i))) {}
             }
         }
 
-        return builder.toString();
+        // TODO: do it in the loop
+        return builder.toString().replace("\\s+", " ").trim();
     }
 
     /**

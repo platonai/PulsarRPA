@@ -12,6 +12,7 @@ import java.awt.Dimension
 import java.io.IOException
 import java.util.*
 
+
 open class BrowserControl(
         parameters: Map<String, Any> = mapOf(),
         var jsDirectory: String = "js"
@@ -36,14 +37,16 @@ open class BrowserControl(
         generalOptions.setCapability("browserLanguage", "zh_CN")
         generalOptions.setCapability("throwExceptionOnScriptError", false)
         generalOptions.setCapability("resolution", viewPort.width.toString() + "x" + viewPort.height)
+        generalOptions.setCapability("pageLoadStrategy", "none")
 
         // see https://peter.sh/experiments/chromium-command-line-switches/
         chromeOptions.merge(generalOptions)
         // Use headless mode by default, GUI mode can be used for debugging
         chromeOptions.setHeadless(headless)
+        chromeOptions.addArguments("--disable-extensions")
         chromeOptions.addArguments("--window-size=" + viewPort.width + "," + viewPort.height)
-        chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
         chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
+        chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
 
         mapOf(
                 "viewPortWidth" to viewPort.width,

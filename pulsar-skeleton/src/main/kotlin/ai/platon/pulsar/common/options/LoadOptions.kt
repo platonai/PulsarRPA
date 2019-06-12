@@ -7,6 +7,7 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
+import java.util.*
 
 /**
  * Created by vincent on 19-4-24.
@@ -84,6 +85,24 @@ open class LoadOptions : CommonOptions {
             return expires?:(volatileConfig?.getDuration(STORAGE_DATUM_EXPIRES, d)?:d)
         }
 
+    val modifiedParams: Params get() {
+        val rowFormat = "%40s: %s"
+        val fields = this.javaClass.declaredFields
+        return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
+                .onEach { it.isAccessible = true }
+                .filter { it.get(this) != null }
+                .associate { "-${it.name}" to it.get(this) }
+                .let { Params.of(it).withRowFormat(rowFormat) }
+    }
+
+    val modifiedOptions: Map<String, Any> get() {
+        val fields = this.javaClass.declaredFields
+        return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
+                .onEach { it.isAccessible = true }
+                .filter { it.get(this) != null }
+                .associate { it.name to it.get(this) }
+    }
+
     constructor() {
         addObjects(this)
     }
@@ -96,41 +115,49 @@ open class LoadOptions : CommonOptions {
         addObjects(this)
     }
 
+    open fun isDefault(optionName: String): Boolean {
+        val value = this.javaClass.declaredFields.find { it.name == optionName }
+                ?.also { it.isAccessible = true }?.get(this)
+        return value == defaultParams[optionName]
+    }
+
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
         val fields = this.javaClass.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } }
+                .onEach { it.isAccessible = true }
                 .associate { "-${it.name}" to it.get(this) }
                 .filter { it.value != null }
                 .let { Params.of(it).withRowFormat(rowFormat) }
     }
 
     override fun toString(): String {
-        return params.withCmdLineStyle(true).withKVDelimiter(" ")
+        return modifiedParams.withCmdLineStyle(true).withKVDelimiter(" ")
                 .formatAsLine().replace("\\s+".toRegex(), " ")
     }
 
     /**
      * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
      * */
-    fun merge(other: LoadOptions): LoadOptions {
-        val argsMap = toMutableArgsMap()
-        val modifiedArgs = other.toArgsMap().entries.filter { it.value != defaultArgsMap[it.key] }
+    fun mergeModified(other: LoadOptions): LoadOptions {
+        val modified = other.modifiedOptions
 
-        modifiedArgs.forEach { (k, v) ->
-            if (argsMap[k] != v) {
-                argsMap[k] = v
+        this.javaClass.declaredFields.forEach {
+            if (it.name in modified.keys) {
+                it.set(this, modified[it.name])
             }
         }
 
-        val args = argsMap.entries.joinToString(" ") { "${it.key} ${it.value}" }
-        return LoadOptions.parse(args)
+        return this
     }
 
     companion object {
 
         val default = LoadOptions()
+        val defaultParams = default.javaClass.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
+        val optionNames: List<String> = default.javaClass.declaredFields
+                .filter { it.annotations.any { it is Parameter } }.map { it.name }
 
         fun create(): LoadOptions {
             val options = LoadOptions()
@@ -144,6 +171,13 @@ open class LoadOptions : CommonOptions {
             options.parse()
             options.volatileConfig = volatileConfig
             return options
+        }
+
+        @JvmOverloads
+        fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
+            val options = LoadOptions()
+            options.volatileConfig = volatileConfig
+            return options.mergeModified(o1).mergeModified(o2)
         }
     }
 }

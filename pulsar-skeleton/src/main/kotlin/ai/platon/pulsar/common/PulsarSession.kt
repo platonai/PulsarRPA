@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
@@ -75,8 +76,20 @@ open class PulsarSession(
         enableCache = false
     }
 
-    fun normalize(url: String): String? {
+    fun normalize(url: String): NormUrl {
         return pulsar.normalize(url)
+    }
+
+    fun normalize(url: String, options: LoadOptions): NormUrl {
+        return pulsar.normalize(url, initOptions(options))
+    }
+
+    fun normalize(urls: Iterable<String>): List<NormUrl> {
+        return pulsar.normalize(urls)
+    }
+
+    fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
+        return pulsar.normalize(urls, initOptions(options))
     }
 
     /**
@@ -96,14 +109,13 @@ open class PulsarSession(
     /**
      * Load a url with default options
      *
-     * @param configuredUrl The url followed by config options
+     * @param url The url followed by config options
      * @return The Web page
      */
-    fun load(configuredUrl: String): WebPage {
-        val urlAndOptions = Urls.splitUrlArgs(configuredUrl)
-        val options = LoadOptions.parse(urlAndOptions.second, config)
-
-        return load(urlAndOptions.first, options)
+    fun load(url: String): WebPage {
+        val normUrl = normalize(url)
+        initOptions(normUrl.options)
+        return load(normUrl)
     }
 
     /**
@@ -114,13 +126,8 @@ open class PulsarSession(
      * @return The web page
      */
     fun load(url: String, options: LoadOptions): WebPage {
-        options.volatileConfig = config
-
-        return if (enableCache) {
-            getCachedOrLoad(url, options)
-        } else {
-            pulsar.load(url, options)
-        }
+        val normUrl = normalize(url, initOptions(options))
+        return load(normUrl)
     }
 
     /**
@@ -132,12 +139,13 @@ open class PulsarSession(
      */
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.default): Collection<WebPage> {
-        options.volatileConfig = config
+        initOptions(options)
+        val normUrls = normalize(urls, options)
 
         return if (enableCache) {
-            getCachedOrLoadAll(urls, options)
+            getCachedOrLoadAll(normUrls, options)
         } else {
-            pulsar.loadAll(urls, options)
+            pulsar.loadAll(normUrls, options)
         }
     }
 
@@ -149,13 +157,14 @@ open class PulsarSession(
      * @return The web pages
      */
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        options.volatileConfig = config
+        initOptions(options)
         options.preferParallel = true
+        val normUrls = normalize(urls, options)
 
         return if (enableCache) {
-            getCachedOrLoadAll(urls, options)
+            getCachedOrLoadAll(normUrls, options)
         } else {
-            pulsar.loadAll(urls, options)
+            pulsar.loadAll(normUrls, options)
         }
     }
 
@@ -193,30 +202,32 @@ open class PulsarSession(
             return page
         }
 
-        page = pulsar[url]
+        page = pulsar.get(url)
         pageCache.put(url, page)
 
         return page
     }
 
-    private fun getCachedOrLoad(url: String, options: LoadOptions): WebPage {
-        var page: WebPage? = pageCache.get(url)
+    private fun getCachedOrLoad(url: NormUrl): WebPage {
+        var page: WebPage? = pageCache.get(url.url)
         if (page != null) {
             return page
         }
 
-        page = pulsar.load(url, options)
-        pageCache.put(url, page)
+        page = pulsar.load(url.url, url.options)
+        pageCache.put(url.url, page)
 
         return page
     }
 
-    private fun getCachedOrLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
+    private fun getCachedOrLoadAll(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        initOptions(options)
+
         val pages = ArrayList<WebPage>()
-        val pendingUrls = ArrayList<String>()
+        val pendingUrls = ArrayList<NormUrl>()
 
         for (url in urls) {
-            val page = pageCache.get(url)
+            val page = pageCache.get(url.url)
             if (page != null) {
                 pages.add(page)
             } else {
@@ -224,11 +235,10 @@ open class PulsarSession(
             }
         }
 
-        val freshPages: Collection<WebPage>
-        if (options.preferParallel) {
-            freshPages = pulsar.parallelLoadAll(pendingUrls, options)
+        val freshPages = if (options.preferParallel) {
+            pulsar.parallelLoadAll(pendingUrls, options)
         } else {
-            freshPages = pulsar.loadAll(pendingUrls, options)
+            pulsar.loadAll(pendingUrls, options)
         }
 
         pages.addAll(freshPages)
@@ -304,6 +314,23 @@ open class PulsarSession(
         pulsar.use { it.close() }
 
         clearCache()
+    }
+
+    private fun load(url: NormUrl): WebPage {
+        initOptions(url.options)
+
+        return if (enableCache) {
+            getCachedOrLoad(url)
+        } else {
+            pulsar.load(url)
+        }
+    }
+
+    private fun initOptions(options: LoadOptions): LoadOptions {
+        if (options.volatileConfig == null) {
+            options.volatileConfig = config
+        }
+        return options
     }
 
     companion object {

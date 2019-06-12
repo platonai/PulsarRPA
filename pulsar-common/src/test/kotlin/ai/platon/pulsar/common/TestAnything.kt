@@ -167,6 +167,10 @@ class TestAnything {
             print(StringUtil.stripNonCJKChar("<$it>", StringUtil.DEFAULT_KEEP_CHARS))
             println()
         }
+
+        arrayOf("hello world", " hello      world ", " hello world ", "                 hello world").forEach {
+            assertEquals("hello world", StringUtil.stripNonPrintableChar(it))
+        }
     }
 
     @Test

@@ -227,10 +227,11 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                 finalAddress = page.getUrl();
             }
             visit(finalAddress, driver);
-            pageSource = driver.getPageSource();
-            pageSource = handleSuccess(pageSource, page, driver, headers);
+            // TODO: handle with frames
+            // driver.switchTo().frame(1);
         } catch (org.openqa.selenium.TimeoutException e) {
             LOG.debug(e.toString());
+            pageSource = driver.getPageSource();
             handleWebDriverTimeout(url, pageSource, driver);
             // TODO: the reason may be one of page load timeout, script timeout and implicit wait timeout
             status = ProtocolStatusCodes.WEB_DRIVER_TIMEOUT;
@@ -238,6 +239,14 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
             status = ProtocolStatusCodes.EXCEPTION;
             LOG.warn(e.toString());
         } finally {
+            if (JavascriptExecutor.class.isAssignableFrom(driver.getClass())) {
+                JavascriptExecutor jsExecutor = (JavascriptExecutor) driver;
+                jsExecutor.executeScript(";return window.stop;");
+            }
+
+            // TODO: wait for return?
+            pageSource = driver.getPageSource();
+            pageSource = handleSuccess(pageSource, page, driver, headers);
             drivers.put(priority, driver);
         }
         afterVisit(status, page, driver);
@@ -281,9 +290,10 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                     }
 
                     // TODO: some websites do not allow scroll to below the bottom
-                    String scrollJs = ";window.scrollBy(0, 300);";
+                    String scrollJs = ";window.scrollBy(0, 500);";
                     jsExecutor.executeScript(scrollJs);
 
+                    // TODO: is there better way to do this?
                     long millis = scrollDownWait.toMillis();
                     if (millis > 0) {
                         try {
@@ -292,6 +302,10 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                             LOG.warn("Sleep interruption. " + e);
                         }
                     }
+                }
+
+                if (scrollDownCount > 0) {
+                    jsExecutor.executeScript(";return window.stop;");
                 }
             }
 
@@ -424,7 +438,7 @@ public class SeleniumEngine implements ReloadableParameterized, AutoCloseable {
                 try {
                     byte[] bytes = remoteWebDriver.getScreenshotAs(OutputType.BYTES);
                     PulsarPaths paths = PulsarPaths.INSTANCE;
-                    Path path = paths.get(paths.getWebCacheDir().toString(), paths.fromUri(page.getUrl(), ".png"));
+                    Path path = paths.get(paths.getWebCacheDir(), paths.fromUri(page.getUrl(), ".png"));
                     PulsarFiles.INSTANCE.saveTo(bytes, path, true);
                 } catch (Exception e) {
                     LOG.warn("Failed to take screenshot for " + page.getUrl());
