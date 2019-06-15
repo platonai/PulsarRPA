@@ -4,7 +4,7 @@
  * NodeVisitor: used with NodeTraversor together
  */
 
-const DATA_VERSION = "0.2.2";
+const DATA_VERSION = "0.2.3";
 
 // the vision schema keeps consistent with DOMRect
 const VISION_SCHEMA = ["left", "top", "width", "height"];
@@ -20,8 +20,272 @@ const ATTR_TEXT_NODE_VI = 'tv';
 const ATTR_DEBUG = '_debug';
 const ATTR_DEBUG_LEVEL = "_debugLevel";
 const ATTR_HIDDEN = '_hidden';
+const ATTR_OVERFLOW_HIDDEN = '_o_hidden';
 
 "use strict";
+
+let NodeExt = function (node, config) {
+    /**
+     * The config
+     * */
+    this.config = config;
+    /**
+     * Desired property names of computed styles
+     * Array
+     * */
+    this.propertyNames = [];
+    /**
+     * Computed styles
+     * Map
+     * */
+    this.styles = {};
+    /**
+     * Max width for all descendants, if an element have property overflow:hidden, then
+     * all it's descendants should hide the parts overflowed.
+     * Number
+     * */
+    this.maxWidth = config.viewPortWidth;
+    /**
+     * The rectangle of this node
+     * DOMRect
+     * */
+    this.rect = null;
+    /**
+     * Integer
+     * */
+    this.depth = 0;
+    /**
+     * Sequence
+     * */
+    this.sequence = 0;
+    /**
+     * Node
+     * */
+    this.node = node;
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isText = function() {
+    return this.node != null && this.node.nodeType === Node.TEXT_NODE;
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isElement = function() {
+    return this.node != null && this.node.nodeType === Node.ELEMENT_NODE;
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isTextOrElement = function() {
+    return this.isText() || this.isElement();
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isImage = function() {
+    return this.node.nodeName === "img";
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isAnchor = function() {
+    return this.node.nodeName === "a";
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isTile = function() {
+    return this.isImage() || this.isText();
+};
+
+/**
+ * Check if it's visible
+ * https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
+ * @return {boolean}
+ * */
+NodeExt.prototype.isVisible = function() {
+    let hidden = this.node.offsetParent === null;
+
+    if (hidden) {
+        // this.setAttributeIfNotBlank("_offset", this.node.offsetWidth + "x" + this.node.offsetHeight);
+        return false
+    }
+
+    return !this.isOverflowHidden()
+};
+
+NodeExt.prototype.isHidden = function() {
+    return !this.isVisible();
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isOverflown = function() {
+    return this.node.scrollHeight > this.node.clientHeight || this.node.scrollWidth > this.node.clientWidth;
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.isOverflowHidden = function() {
+    let p = this.parent();
+    let maxWidth = this.config.viewPortWidth;
+    if (p != null && p.maxWidth < maxWidth && (this.left() >= p.right() || this.right() <= p.left())) {
+        return true
+    }
+    return false
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.hasOverflowHidden = function() {
+    return this.styles["overflow"] === "hidden";
+};
+
+/**
+ * @return {boolean}
+ * */
+NodeExt.prototype.hasParent = function() {
+    return this.node.parentElement != null && this.parent() != null;
+};
+
+/**
+ * @return {NodeExt}
+ * */
+NodeExt.prototype.parent = function() {
+    return this.node.parentElement.nodeExt;
+};
+
+NodeExt.prototype.getRect = function() {
+    this.rect = __utils__.getClientRect(this.node);
+
+    if (this.isImage()) {
+        if (this.rect.width === 0) {
+            let w = this.attr("width");
+            if (w.match(/\d+/)) {
+                this.rect.width = Number.parseInt(w)
+            }
+        }
+
+        if (this.rect.height === 0) {
+            let h = this.attr("height");
+            if (w.match(/\d+/)) {
+                this.rect.height = Number.parseInt(h)
+            }
+        }
+    }
+
+    return this.rect
+};
+
+/**
+ * Get left
+ * */
+NodeExt.prototype.left = function() {
+    return this.rect.left
+};
+
+/**
+ * Get right
+ * */
+NodeExt.prototype.right = function() {
+    return this.left() + this.width()
+};
+
+/**
+ * Get top
+ * */
+NodeExt.prototype.top = function() {
+    return this.rect.top
+};
+
+/**
+ * Get bottom
+ * */
+NodeExt.prototype.bottom = function() {
+    return this.top() + this.height()
+};
+
+/**
+ * Get width
+ * */
+NodeExt.prototype.width = function() {
+    return this.rect.width
+};
+
+/**
+ * Get height
+ * */
+NodeExt.prototype.height = function() {
+    return this.rect.height
+};
+
+/**
+ * @param width {Number|null}
+ * */
+NodeExt.prototype.updateMaxWidth = function(width) {
+    if (this.hasParent()) {
+        this.maxWidth = Math.min(this.parent().maxWidth, width);
+    }
+};
+
+/**
+ * Get the attribute value
+ * @param attrName {String}
+ * @return {String|null}
+ * */
+NodeExt.prototype.attr = function(attrName) {
+    if (this.isElement()) {
+        return this.node.getAttribute(attrName)
+    }
+    return null
+};
+
+/**
+ * Set attribute if it's not blank
+ * @param attrName {String}
+ * @param attrValue {String}
+ * */
+NodeExt.prototype.setAttributeIfNotBlank = function(attrName, attrValue) {
+    if (this.isElement() && attrValue && attrValue.trim().length > 0) {
+        this.node.setAttribute(attrName, attrValue.trim())
+    }
+};
+
+/**
+ * Get the formatted rect
+ * */
+NodeExt.prototype.formatDOMRect = function() {
+    return __utils__.formatDOMRect(this.rect)
+};
+
+/**
+ * Get the formatted rect
+ * */
+NodeExt.prototype.formatStyles = function() {
+    return this.propertyNames.map(propertyName => this.styles[propertyName]).join(", ")
+};
+
+/**
+ * Adjust the node's DOMRect
+ * If the child element larger than the parent and the parent have overflow:hidden style,
+ * the child element's DOMRect should be adjusted
+ * */
+NodeExt.prototype.adjustDOMRect = function() {
+    if (this.rect) {
+        this.rect.width = Math.min(this.rect.width, this.maxWidth);
+    }
+};
 
 /**
  * Create a new WarpsNodeVisitor
@@ -49,11 +313,7 @@ let WarpsNodeVisitor = function() {
  * Generate meta data
  *
  * MetaInformation version :
- * No version : as the same as 0.1.0, the first div was selected as the holder
- * 0.2.0 : add a input element at the end of body element
- * 0.2.1 : add "vi" attribute for each (important) element, deprecate "data-" series
- * 		to deduce file size
- * 0.2.2 : coming soon...
+ * 0.2.2 :
  * */
 WarpsNodeVisitor.prototype.generateMetadata = function() {
     document.body.setAttribute("data-url", document.URL);
@@ -70,8 +330,11 @@ WarpsNodeVisitor.prototype.generateMetadata = function() {
     ele.setAttribute("code-structure", CODE_STRUCTURE_SCHEMA_STRING);
     ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
     ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
+    ele.setAttribute("timestamp", date.getTime().toString());
 
-    // TODO: insert a piece of javascript code install of add a hidden element
+    if (this.config.version !== DATA_VERSION) {
+        ele.setAttribute("version-mismatch", this.config.version + "-" + DATA_VERSION);
+    }
 
     document.body.firstElementChild.appendChild(ele)
 };
@@ -90,6 +353,9 @@ WarpsNodeVisitor.prototype.isStopped = function() {
  */
 WarpsNodeVisitor.prototype.head = function(node, depth) {
     ++this.sequence;
+
+    node.nodeExt = new NodeExt(node, this.config);
+
     this.calcSelfIndicator(node, depth);
 };
 
@@ -99,67 +365,77 @@ WarpsNodeVisitor.prototype.head = function(node, depth) {
  * @param  depth {Number} the depth in the DOM
  */
 WarpsNodeVisitor.prototype.calcSelfIndicator = function(node, depth) {
-    if (node.nodeType !== Node.TEXT_NODE && node.nodeType !== Node.ELEMENT_NODE) {
+    let nodeExt = node.nodeExt;
+
+    if (nodeExt.isText()) {
+        this.calcCharacterWidth(node, depth);
+    }
+
+    nodeExt.depth = depth;
+    nodeExt.sequence = this.sequence;
+
+    if (nodeExt.isElement()) {
+        // Browser computed styles. Only leaf elements matter
+        nodeExt.propertyNames = this.config.propertyNames || [];
+        let requiredPropertyNames = nodeExt.propertyNames.concat("overflow");
+        nodeExt.styles = __utils__.getComputedStyle(node, requiredPropertyNames);
+    }
+
+    // Calculate the rectangle of this node
+    nodeExt.getRect();
+
+    if (nodeExt.isElement()) {
+        // "hidden" seems not defined properly,
+        // some parent element is "hidden" and some of there children are not expected to be hidden
+        // for example, ul tag often have a zero dimension
+        if (nodeExt.isHidden()) {
+            node.setAttribute(ATTR_HIDDEN, '1');
+        }
+
+        if (nodeExt.isOverflowHidden() || (nodeExt.hasParent() && nodeExt.parent().node.hasAttribute(ATTR_OVERFLOW_HIDDEN))) {
+            node.setAttribute(ATTR_OVERFLOW_HIDDEN, '1');
+        }
+    }
+
+    // all descendant nodes should be smaller than this one
+    if (nodeExt.hasOverflowHidden()) {
+        // TODO: also update max height
+        nodeExt.updateMaxWidth(nodeExt.rect.width);
+    } else {
+        nodeExt.updateMaxWidth(this.config.viewPortWidth);
+    }
+
+    nodeExt.adjustDOMRect();
+};
+
+/**
+ * Leaving the the element
+ *
+ * @param node {Node|Element} the node visited
+ * @param  depth {Number} the depth in the DOM
+ */
+WarpsNodeVisitor.prototype.tail = function(node, depth) {
+    let nodeExt = node.nodeExt;
+    if (!nodeExt) {
         return
     }
 
-    // check if it's visible
-    // https://makandracards.com/makandra/1339-check-whether-an-element-is-visible-or-hidden-with-javascript
-    let visible = node.offsetWidth > 0 && node.offsetHeight > 0;
-    if (node.nodeType === Node.ELEMENT_NODE) {
-        if (!visible) {
-            node.setAttribute(ATTR_HIDDEN, '1');
-        }
-    }
-
-    if (node.nodeType === Node.TEXT_NODE) {
-        this.calcCharacterWidth(node, depth);
-
-        // Browser computed styles. Only leaf elements matter
-        let propertyNames = this.config.propertyNames || [];
-        if (propertyNames.length > 0 && node.textContent.length > 0) {
-            let text = __utils__.getTextContent(node);
-            if (text.length > 0) {
-                let parent = node.parentElement;
-                let computed = parent.hasAttribute(ATTR_COMPUTED_STYLE);
-                if (!computed) {
-                    let styles = __utils__.getComputedStyle(parent, propertyNames);
-                    if (styles) {
-                        parent.setAttribute(ATTR_COMPUTED_STYLE, styles);
-                    }
-                }
-            }
-        }
-    }
-
-    if (node.nodeType === Node.ELEMENT_NODE) {
-        // calculate the rectangle of this element
-        let rect = __utils__.getClientRect(node);
-        if (rect) {
-            node.setAttribute(ATTR_ELEMENT_NODE_VI, __utils__.formatDOMRect(rect));
-        }
+    if (nodeExt.isElement()) {
+        nodeExt.setAttributeIfNotBlank(ATTR_COMPUTED_STYLE, nodeExt.formatStyles());
+        nodeExt.setAttributeIfNotBlank(ATTR_ELEMENT_NODE_VI, nodeExt.formatDOMRect());
 
         // calculate the rectangle of each child text node
         for (let i = 0; i < node.childNodes.length; ++i) {
-            let nd = node.childNodes[i];
-            if (nd.nodeType === Node.TEXT_NODE) {
-                rect = __utils__.getClientRect(nd);
-                if (rect) {
-                    // 'tv' is short for 'text node vision information'
-                    node.setAttribute(ATTR_TEXT_NODE_VI + i, __utils__.formatDOMRect(rect));
-                    // 'l' is short for 'text length', it's used to diagnosis
-                    if (this.debug > 0 && nd.textContent) {
-                        __utils__.addTuple(node, ATTR_DEBUG, "l" + i, nd.textContent.length);
-                    }
-                }
+            let childPulsar = node.childNodes[i].nodeExt;
+            if (childPulsar && childPulsar.isText()) {
+                // 'tv' is short for 'text node vision information'
+                nodeExt.setAttributeIfNotBlank(ATTR_TEXT_NODE_VI + i, childPulsar.formatDOMRect());
             }
         }
+    }
 
-        if (this.debug > 0) {
-            // code structure calculated using js, this can be a complement to native code calculated info
-            __utils__.addTuple(node, ATTR_DEBUG, "d", depth);
-            __utils__.addTuple(node, ATTR_DEBUG, "s", this.sequence);
-        }
+    if (this.debug > 0) {
+        this.addDebugInfo()
     }
 };
 
@@ -185,22 +461,20 @@ WarpsNodeVisitor.prototype.calcCharacterWidth = function(node, depth) {
     return width
 };
 
-/**
- * Leaving the the element
- *
- * @param node {Node|Element} the node visited
- * @param  depth {Number} the depth in the DOM
- */
-WarpsNodeVisitor.prototype.tail = function(node, depth) {
-    if (node.nodeType !== Node.TEXT_NODE && node.nodeType !== Node.ELEMENT_NODE) {
+WarpsNodeVisitor.prototype.addDebugInfo = function(node) {
+    if (!node.nodeExt) {
         return
     }
 
-    if (node.nodeType === Node.ELEMENT_NODE) {
-        // Element descends
-        if (this.debug > 0) {
-            let descend = __utils__.getIntAttribute(node, "_d", 0);
-            __utils__.increaseIntAttribute(node.parentElement, '_d', descend + 1);
+    let nodeExt = node.nodeExt;
+
+    if (nodeExt.isText()) {
+        // 'tl' is short for 'text length', it's used to diagnosis
+        if (node.textContent) {
+            __utils__.addTuple(node, ATTR_DEBUG, "tl" + i, node.textContent.length);
         }
+    } else {
+        let descend = __utils__.getIntAttribute(node, "_d", 0);
+        __utils__.increaseIntAttribute(node.parentElement, '_d', 1);
     }
 };

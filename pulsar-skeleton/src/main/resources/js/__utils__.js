@@ -21,11 +21,17 @@ __utils__.checkVariables = function(variables) {
 };
 
 __utils__.scrollToBottom = function() {
+    let rootElement = document.documentElement;
+    if (!rootElement) {
+        return
+    }
+
     let x = 0;
     let y = Math.max(
-        document.documentElement.scrollHeight,
+        rootElement.scrollHeight,
         document.body.scrollHeight,
-        document.documentElement.clientHeight);
+        rootElement.clientHeight
+    );
 
     window.scrollTo(x, Math.min(y, 15000));
 };
@@ -76,48 +82,6 @@ __utils__.mergeObjects = function(origin, add, opts) {
     }
 
     return origin;
-};
-
-__utils__.createCaptureArea = function(captureAreaSelector) {
-    // TODO : remove dependency to jQuery
-    jQuery("<div class='WarpsCaptureArea' style='position:absolute; top:0; left:0; min-width:1000px; min-height:1000px; z-index:1000; display:block'>" +
-        "<div class='holder' style='position:absolute; top:0px; left:20px; min-width:20px; min-height:20px; padding:0 40px; display:block'></div>" +
-        "</div>")
-        .prependTo('body');
-
-    let holder = jQuery('.WarpsCaptureArea > div.holder');
-    let target = jQuery(captureAreaSelector);
-    // __utils__.echo("Target tag name " + target.prop('tagName'));
-    let counter = 4;
-    while (target.prop('tagName') !== 'DIV' && counter-- > 0) {
-        target = target.parent();
-    }
-    holder.append(target.clone());
-    holder.width(target.width());
-    holder.height(target.height());
-};
-
-__utils__.cleanCaptureArea = function() {
-    jQuery('.WarpsCaptureArea').remove();
-};
-
-__utils__.insertImage = function(nearBy, name, imagePath) {
-    let counter = 4;
-    let neighbor = jQuery(nearBy);
-    while (neighbor.prop('tagName') !== 'DIV' && counter-- > 0) {
-        neighbor = neighbor.parent();
-    }
-
-    let insert = neighbor.clone().html('')
-        .attr('class', 'monitor-inserted')
-        .attr('name', name)
-        .attr('value', imagePath)
-        .attr('label', 'Captured');
-    let image = "<img src='" + imagePath + "' />";
-    insert.append('<div>' + name + '</div>');
-    insert.append('<div>' + image + '</div>');
-
-    neighbor.after(insert);
 };
 
 /**
@@ -244,7 +208,7 @@ __utils__.getMergedTextContent = function(nodeOrList) {
  * @return {String} The clean string, "" if no text content available.
  * */
 __utils__.getTextContent = function(node) {
-    if (!node || !node.textContent) {
+    if (!node || !node.textContent || node.textContent.length === 0) {
         return "";
     }
 
@@ -310,7 +274,7 @@ __utils__.formatRect = function(top, left, width, height) {
  * @return {String|Boolean}
  * */
 __utils__.formatDOMRect = function(rect) {
-    if (rect.width === 0 && rect.height === 0) {
+    if (!rect || (rect.width === 0 && rect.height === 0)) {
         return false;
     }
 
@@ -342,13 +306,16 @@ __utils__.getClientRect = function(node) {
  *
  * @param node {Node|Element|Text}
  * @param propertyNames {Array}
- * @return {String|Boolean}
+ * @return {Object|Boolean}
  * */
 __utils__.getComputedStyle = function(node, propertyNames) {
     if (node.nodeType === Node.ELEMENT_NODE) {
-        let style = window.getComputedStyle(node, null);
-        // TODO: simplify the notation
-        return propertyNames.map(propertyName => __utils__.getPropertyValue(style, propertyName)).join("; ")
+        let styles = {};
+        let computedStyle = window.getComputedStyle(node, null);
+        propertyNames.forEach(propertyName =>
+            styles[propertyName] = __utils__.getPropertyValue(computedStyle, propertyName)
+        );
+        return styles
     } else {
         return null
     }
@@ -388,11 +355,11 @@ __utils__.getPropertyValue = function(style, propertyName) {
  * @return {String}
  * */
 __utils__.rgb2hex = function(rgb) {
-    rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
-    return (rgb && rgb.length === 4) ? "#" +
-        ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
-        ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
-        ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
+    let parts = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+    return (parts && parts.length === 4) ? "#" +
+        ("0" + parseInt(parts[1],10).toString(16)).slice(-2) +
+        ("0" + parseInt(parts[2],10).toString(16)).slice(-2) +
+        ("0" + parseInt(parts[3],10).toString(16)).slice(-2) : '';
 };
 
 /**

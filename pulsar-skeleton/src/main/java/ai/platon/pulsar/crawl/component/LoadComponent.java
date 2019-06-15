@@ -9,7 +9,6 @@ import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
 import ai.platon.pulsar.crawl.parse.ParseResult;
-import com.google.common.collect.Sets;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -25,7 +24,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
 import static org.apache.commons.collections4.CollectionUtils.addIgnoreNull;
@@ -46,6 +44,8 @@ public class LoadComponent {
     public static final int FETCH_REASON_RETRY_ON_FAILURE = 4;
     public static final HashMap<Integer, String> fetchReasonCodes = new HashMap<>();
 
+    private final static Set<String> globalFetchingUrls = Collections.synchronizedSet(new HashSet<>());
+
     static {
         fetchReasonCodes.put(FETCH_REASON_DO_NOT_FETCH, "do_not_fetch");
         fetchReasonCodes.put(FETCH_REASON_NEW_PAGE, "new_page");
@@ -58,7 +58,6 @@ public class LoadComponent {
     private final BatchFetchComponent fetchComponent;
     private final ParseComponent parseComponent;
     private final UpdateComponent updateComponent;
-    private final Set<String> fetchingUrls = Collections.synchronizedSet(new HashSet<>());
     private final TaskStatusTracker taskStatusTracker;
 
     public LoadComponent(
@@ -221,13 +220,16 @@ public class LoadComponent {
         }
 
         Collection<WebPage> updatedPages;
-        fetchingUrls.addAll(pendingUrls);
-        if (options.getPreferParallel()) {
-            updatedPages = fetchComponent.parallelFetchAll(pendingUrls, options);
-        } else {
-            updatedPages = fetchComponent.fetchAll(pendingUrls, options);
+        try {
+            globalFetchingUrls.addAll(pendingUrls);
+            if (options.getPreferParallel()) {
+                updatedPages = fetchComponent.parallelFetchAll(pendingUrls, options);
+            } else {
+                updatedPages = fetchComponent.fetchAll(pendingUrls, options);
+            }
+        } finally {
+            globalFetchingUrls.removeAll(pendingUrls);
         }
-        fetchingUrls.removeAll(pendingUrls);
 
         updatedPages.forEach(page -> update(page, options));
 
@@ -265,7 +267,7 @@ public class LoadComponent {
 
         String url = normUrl.getUrl();
         LoadOptions options = normUrl.getOptions();
-        if (fetchingUrls.contains(url)) {
+        if (globalFetchingUrls.contains(url)) {
             LOG.debug("Load later, it's fetching by someone else. Url: {}", url);
             return WebPage.NIL;
         }
@@ -291,12 +293,12 @@ public class LoadComponent {
             page = fetchComponent.initFetchEntry(page, options);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Fetching: " + page.getConfiguredUrl() + " | Browser: " + page.getFetchMode());
+                LOG.debug("Fetching: " + page.getConfiguredUrl() + " | FetchMode: " + page.getFetchMode());
             }
 
-            fetchingUrls.add(url);
+            globalFetchingUrls.add(url);
             page = fetchComponent.fetchContent(page);
-            fetchingUrls.remove(url);
+            globalFetchingUrls.remove(url);
 
             update(page, options);
         }
@@ -317,7 +319,7 @@ public class LoadComponent {
             return null;
         }
 
-        if (fetchingUrls.contains(url)) {
+        if (globalFetchingUrls.contains(url)) {
             return null;
         }
 

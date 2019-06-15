@@ -12,7 +12,6 @@ import java.awt.Dimension
 import java.io.IOException
 import java.util.*
 
-
 open class BrowserControl(
         parameters: Map<String, Any> = mapOf(),
         var jsDirectory: String = "js"

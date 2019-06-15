@@ -110,4 +110,8 @@ public interface ProtocolStatusCodes {
      * Temporary failure. Application may retry immediately.
      */
     int RETRY = 601;
+    /**
+     * The fetch task is canceled by the client
+     */
+    int CANCELED = 602;
 }

@@ -16,10 +16,7 @@
  */
 package ai.platon.pulsar.crawl.protocol.http;
 
-import ai.platon.pulsar.common.DeflateUtils;
-import ai.platon.pulsar.common.GZIPUtils;
-import ai.platon.pulsar.common.MimeUtil;
-import ai.platon.pulsar.common.NetUtil;
+import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
@@ -283,8 +280,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
                     ++tryCount;
                     response = null;
                     lastThrowable = e;
-                    // log.warn(StringUtil.stringifyException(e));
-                    LOG.warn(e.toString());
+                    LOG.warn(StringUtil.stringifyException(e));
+                    // LOG.warn(e.toString());
                 }
             }
 
