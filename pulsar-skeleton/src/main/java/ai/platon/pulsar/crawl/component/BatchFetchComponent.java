@@ -194,8 +194,11 @@ public class BatchFetchComponent extends FetchComponent {
             return urls;
         }
 
-        ImmutableConfig mutableConfig = options.getVolatileConfig();
-        final int eagerFetchLimit = mutableConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20);
+        ImmutableConfig config = options.getVolatileConfig();
+        if (config == null) {
+            config = this.getImmutableConfig();
+        }
+        final int eagerFetchLimit = config.getUint(FETCH_EAGER_FETCH_LIMIT, 20);
         if (urls.size() <= eagerFetchLimit) {
             return urls;
         }

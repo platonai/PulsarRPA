@@ -173,18 +173,7 @@ public class Metadata {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof Metadata)) {
-            return false;
-        }
-
-        Metadata other;
-        try {
-            other = (Metadata) o;
-        } catch (ClassCastException e) {
-            return false;
-        }
-
-        return data.equals(other.data);
+        return o instanceof Metadata && data.equals(((Metadata) o).data);
     }
 
     @Override

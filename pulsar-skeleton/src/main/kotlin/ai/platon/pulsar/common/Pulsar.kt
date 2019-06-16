@@ -14,7 +14,7 @@ import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.net.SeleniumEngine
+import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import org.springframework.context.ConfigurableApplicationContext

@@ -19,10 +19,20 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
     public static final String ARG_URL = "url";
 
+    public static final short NOTFETCHED = 0;
+    /**
+     * Content was retrieved without errors.
+     */
+    public static final short SUCCESS = 1;
+    /**
+     * Content was not retrieved. Any further errors may be indicated in args.
+     */
+    public static final short FAILED = 2;
+
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
-
     public static final ProtocolStatus STATUS_FAILED = new ProtocolStatus(FAILED);
+
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);

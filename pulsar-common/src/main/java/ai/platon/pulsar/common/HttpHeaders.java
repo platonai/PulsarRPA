@@ -47,7 +47,8 @@ public interface HttpHeaders {
     String Q_PRIORITY = "Q-Priority";
     String Q_QUEUE_ID = "Q-Queue-Id";
     String Q_ITEM_ID = "Q-Item-Id";
-    String Q_RESPONSE_TIME = "Q-Response-Time";
+    String Q_REQUEST_TIME = "Q-Request-Time"; // should be millis from epoch, e.g. System.currentTimeMillis()
+    String Q_RESPONSE_TIME = "Q-Response-Time"; // should be millis from epoch, e.g. System.currentTimeMillis()
     String Q_STATUS_CODE = "Q-Status-Code";
     String Q_CHECKSUM = "Q-Checksum";
     String Q_URL = "Q-Url";

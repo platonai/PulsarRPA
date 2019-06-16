@@ -18,9 +18,9 @@ package ai.platon.pulsar.protocol.selenium;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.net.browser.SeleniumEngine;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.protocol.Response;
-import ai.platon.pulsar.net.SeleniumEngine;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
 
 import java.util.Collection;
@@ -43,7 +43,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
     @Override
     public void setConf(ImmutableConfig conf) {
         super.setConf(conf);
-        engine = SeleniumEngine.getInstance(conf);
+        engine = SeleniumEngine.Companion.getInstance(conf);
     }
 
     public boolean supportParallel() {

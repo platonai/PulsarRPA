@@ -488,13 +488,12 @@ public class WebPage {
     }
 
     /**
-     * The url is the permanent internal address, it might not still available to access the target.
+     * WebPage.url is the permanent internal address, it might not still available to access the target.
+     * And WebPage.baseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
+     * WebPage.baseUrl may be different from url, it's generally normalized.
+     * WebPage.location is an alias of WebPage.baseUrl
      *
-     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
-     *
-     * BaseUrl may be different from url, it's generally normalized.
-     *
-     * TODO: The semantic differs form Document.baseUrl, should we use location instead of baseUrl?
+     * Note: The semantic differs form Document.baseUrl
      */
     public String getBaseUrl() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();

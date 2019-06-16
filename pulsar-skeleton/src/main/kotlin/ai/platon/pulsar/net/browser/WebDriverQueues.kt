@@ -38,6 +38,10 @@ import java.util.logging.Level
 class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
 
+    companion object {
+        val capacity = 1.5 * NCPU
+    }
+
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
 
@@ -130,7 +134,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
 
     private fun allocateWebDriver(queue: ArrayBlockingQueue<WebDriver>, conf: ImmutableConfig) {
         // TODO: configurable factor
-        if (allDrivers.size >= 1.5 * NCPU) {
+        if (allDrivers.size >= capacity) {
             log.warn("Too many WebDrivers ... cpu cores: {}, free/total: {}/{}", NCPU, freeSize, totalSize)
             return
         }

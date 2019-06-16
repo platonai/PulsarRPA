@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static ai.platon.pulsar.common.HttpHeaders.Q_REQUEST_TIME;
 import static ai.platon.pulsar.common.HttpHeaders.Q_RESPONSE_TIME;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.persist.ProtocolStatus.*;
@@ -410,9 +411,10 @@ public abstract class AbstractHttpProtocol implements Protocol {
         Duration elapsedTime;
         FetchMode pageFetchMode = page.getFetchMode();
         if (pageFetchMode == FetchMode.CROWDSOURCING || pageFetchMode == FetchMode.SELENIUM) {
-            int epochMillis = NumberUtils.toInt(response.getHeader(Q_RESPONSE_TIME), -1);
-            if (epochMillis > 0) {
-                elapsedTime = Duration.between(startTime, Instant.ofEpochMilli(epochMillis));
+            long requestTime = NumberUtils.toLong(response.getHeader(Q_REQUEST_TIME), -1);
+            long responseTime = NumberUtils.toLong(response.getHeader(Q_RESPONSE_TIME), -1);
+            if (requestTime > 0 && responseTime > 0) {
+                elapsedTime = Duration.ofMillis(responseTime - requestTime);
             } else {
                 // -1 hour means an invalid response time
                 elapsedTime = Duration.ofHours(-1);

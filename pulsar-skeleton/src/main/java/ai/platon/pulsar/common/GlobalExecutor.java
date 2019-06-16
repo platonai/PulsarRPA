@@ -6,8 +6,10 @@ import ai.platon.pulsar.common.config.Params;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GlobalExecutor implements AutoCloseable {
@@ -53,7 +55,6 @@ public class GlobalExecutor implements AutoCloseable {
 
     /**
      * TODO: Allocate executors for sessions separately
-     * TODO: Check
      */
     public ExecutorService getExecutor() {
         if (executor == null) {
@@ -61,6 +62,10 @@ public class GlobalExecutor implements AutoCloseable {
         }
 
         return executor;
+    }
+
+    public <T> Future<T> submit(Callable<T> task) {
+        return getExecutor().submit(task);
     }
 
     private void initExecutorService() {

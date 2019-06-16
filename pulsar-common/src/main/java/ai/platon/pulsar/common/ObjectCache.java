@@ -18,9 +18,12 @@ package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import org.apache.hadoop.conf.Configuration;
+import org.checkerframework.checker.units.qual.K;
 
 import java.util.HashMap;
 import java.util.WeakHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * TODO: use BeanFactory(Spring or Apache Configuration)
@@ -66,14 +69,23 @@ public class ObjectCache {
     }
 
     public <T> T getBean(Class<T> clazz) {
-        return (T)objectMap.get(clazz.getName());
+        return (T) objectMap.get(clazz.getName());
+    }
+
+    public <T> T computeIfAbsent(Class<T> clazz, Function<Class<T>, T> mappingFunction) {
+        T value = getBean(clazz);
+        if (value == null) {
+            value = mappingFunction.apply(clazz);
+            put(value);
+        }
+        return value;
     }
 
     public void put(String key, Object value) {
         objectMap.put(key, value);
     }
 
-    public <T> void put(Object obj) {
+    public void put(Object obj) {
         objectMap.put(obj.getClass().getName(), obj);
     }
 }

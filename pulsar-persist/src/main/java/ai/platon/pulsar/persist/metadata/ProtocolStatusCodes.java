@@ -16,20 +16,15 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist.metadata;
 
+/**
+ * See ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol#getProtocolOutput for more information
+ * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
+ * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
+ * */
 public interface ProtocolStatusCodes {
 
-    short NOTFETCHED = 0;
-    /**
-     * Content was retrieved without errors.
-     */
-    short SUCCESS = 1;
-    /**
-     * Content was not retrieved. Any further errors may be indicated in args.
-     */
-    short FAILED = 2;
-
     //
-    // The following codes are compatible with HTTP status codes
+    // The following codes are compatible with HTTP status codes, close but may not equals to HTTP status code
     // @see {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
     //
 
@@ -70,48 +65,48 @@ public interface ProtocolStatusCodes {
     /**
      * Failed to find the target host.
      */
-    int UNKNOWN_HOST = 460;
+    int UNKNOWN_HOST = 1460;
     /**
      * Access denied by robots.txt rules.
      */
-    int ROBOTS_DENIED = 461;
+    int ROBOTS_DENIED = 1461;
     /**
      * Unspecified exception occured. Further information may be provided in args.
      */
-    int EXCEPTION = 462;
+    int EXCEPTION = 1462;
     /**
      * Too many redirects.
      */
-    int REDIR_EXCEEDED = 463;
+    int REDIR_EXCEEDED = 1463;
     /**
      * Request was refused by protocol plugins, because it would block. The
      * expected number of milliseconds to wait before retry may be provided in
      * args.
      */
-    int WOULDBLOCK = 465;
+    int WOULDBLOCK = 1465;
     /**
      * Thread was blocked http.max.delays times during fetching.
      */
-    int BLOCKED = 466;
+    int BLOCKED = 1466;
     /**
      * The fetch thread is timeout.
      */
-    int THREAD_TIMEOUT = 467;
+    int THREAD_TIMEOUT = 1467;
     /**
      * Selenium web driver is timeout.
      */
-    int WEB_DRIVER_TIMEOUT = 468;
+    int WEB_DRIVER_TIMEOUT = 1468;
 
     /**
      * This protocol was not found. Application may attempt to retry later.
      */
-    int PROTO_NOT_FOUND = 600;
+    int PROTO_NOT_FOUND = 1600;
     /**
      * Temporary failure. Application may retry immediately.
      */
-    int RETRY = 601;
+    int RETRY = 1601;
     /**
      * The fetch task is canceled by the client
      */
-    int CANCELED = 602;
+    int CANCELED = 1602;
 }

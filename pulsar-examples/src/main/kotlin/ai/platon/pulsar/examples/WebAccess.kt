@@ -4,8 +4,7 @@ import ai.platon.pulsar.common.PulsarContext
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.URLUtil
-import ai.platon.pulsar.dom.nodes.node.ext.formatFeatures
-import ai.platon.pulsar.net.SeleniumEngine
+import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.WebPageFormatter
 
 object WebAccess {

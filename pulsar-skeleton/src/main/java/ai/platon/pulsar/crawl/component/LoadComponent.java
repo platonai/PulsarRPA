@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
+import static ai.platon.pulsar.persist.metadata.Name.RESPONSE_TIME;
 import static org.apache.commons.collections4.CollectionUtils.addIgnoreNull;
 
 /**
@@ -276,9 +277,7 @@ public class LoadComponent {
         WebPage page = webDb.getOrNil(url, ignoreQuery);
 
         int reason = getFetchReason(page, options.getRealExpires(), options.getRetry());
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
-        }
+        LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
 
         if (reason == FETCH_REASON_TEMP_MOVED) {
             return redirect(page, options);
@@ -292,9 +291,7 @@ public class LoadComponent {
 
             page = fetchComponent.initFetchEntry(page, options);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Fetching: " + page.getConfiguredUrl() + " | FetchMode: " + page.getFetchMode());
-            }
+            LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
 
             globalFetchingUrls.add(url);
             page = fetchComponent.fetchContent(page);
@@ -413,9 +410,7 @@ public class LoadComponent {
         ProtocolStatus protocolStatus = page.getProtocolStatus();
         if (protocolStatus.isFailed()) {
             // Follow redirection
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Fetch failed: " + protocolStatus);
-            }
+            LOG.debug("Fetch failed: {}", protocolStatus);
             updateComponent.updateFetchSchedule(page);
             return;
         }
@@ -434,9 +429,10 @@ public class LoadComponent {
 
         updateComponent.updateFetchSchedule(page);
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Fetched: " + page.getConfiguredUrl() + " | LAST_BROWSER: " + page.getLastBrowser());
-        }
+        LOG.debug("Fetched: {} | LAST_BROWSER: {} bytes: {} time: {}",
+                page.getConfiguredUrl(),
+                page.getLastBrowser(), page.getContentBytes(), page.getMetadata().get(RESPONSE_TIME)
+        );
 
         if (options.getPersist()) {
             webDb.put(page);
@@ -445,9 +441,7 @@ public class LoadComponent {
                 flush();
             }
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Persisted: " + page.getConfiguredUrl());
-            }
+            LOG.trace("Persisted {} | bytes: {}", page.getUrl(), page.getContentBytes());
         }
     }
 

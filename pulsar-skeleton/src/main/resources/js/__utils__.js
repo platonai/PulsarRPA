@@ -21,16 +21,15 @@ __utils__.checkVariables = function(variables) {
 };
 
 __utils__.scrollToBottom = function() {
-    let rootElement = document.documentElement;
-    if (!rootElement) {
+    if (!document || !document.documentElement || !document.body) {
         return
     }
 
     let x = 0;
     let y = Math.max(
-        rootElement.scrollHeight,
-        document.body.scrollHeight,
-        rootElement.clientHeight
+        document.documentElement.scrollHeight,
+        document.documentElement.clientHeight,
+        document.body.scrollHeight
     );
 
     window.scrollTo(x, Math.min(y, 15000));
