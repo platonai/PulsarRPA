@@ -57,12 +57,12 @@ class NodeFeatureCalculator : NodeVisitor {
         if (node is TextNode) {
             // Trim: remove all surrounding unicode white spaces, including all HT, VT, LF, FF, CR, ASCII space, etc
             // @see https://en.wikipedia.org/wiki/Whitespace_character
-            val text = node.text().trim()
+            node.immutableText = node.text()
+            val text = node.immutableText
             val ch = text.length.toDouble()
 
             if (ch > 0) {
-                accumulateFeatures(node,
-                        FeatureEntry(CH, ch)
+                accumulateFeatures(node, FeatureEntry(CH, ch)
                 )
             }
         }

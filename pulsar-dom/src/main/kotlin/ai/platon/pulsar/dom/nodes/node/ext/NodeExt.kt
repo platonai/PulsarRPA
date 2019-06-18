@@ -12,15 +12,9 @@ import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.model.createImage
 import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
-import ai.platon.pulsar.dom.select.ElementTraversor
-import ai.platon.pulsar.dom.select.MathematicalSelector
-import ai.platon.pulsar.dom.select.any
-import ai.platon.pulsar.dom.select.filter
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.jsoup.nodes.*
-import org.jsoup.select.Elements
-import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.awt.Point
@@ -237,33 +231,30 @@ val Node.captionOrSelector: String
         else -> selectorOrName
     }
 
-val Node.textOrNull: String? by field {
-    when {
-        it.hasAttr("src") -> it.attr("abs:src")
-        it.hasAttr("href") -> it.attr("abs:href")
-        it is TextNode -> it.text().trim()
-        it is Element -> it.text().trim()
-        else -> null
-    }
-}
-
-val Node.textOrEmpty by field { it.textOrNull?:"" }
-
-val Node.textOrName by field { it.textOrNull?:it.name }
-
-val Node.cleanTextOrNull: String? by field {
-        when {
-            it.hasAttr("src") -> it.attr("abs:src")
-            it.hasAttr("href") -> it.attr("abs:href")
-            it is TextNode -> StringUtil.stripNonPrintableChar(it.text())
-            it is Element -> StringUtil.stripNonPrintableChar(it.text())
+/**
+ * TextNodes' clean texts are calculated and stored in advance while Elements' clean texts are calculated when required
+ * This is a balance of space and time
+ * */
+val Node.cleanText: String
+    get() {
+        val text = when (this) {
+            is TextNode -> immutableText
+            is Element -> accumulateText(this)
             else -> null
         }
+
+        return text?:""
     }
 
-val Node.cleanTextOrName by field { it.cleanTextOrNull?:it.name }
-
-val Node.cleanText by field { it.cleanTextOrNull?:"" }
+val Node.textRepresentation: String get() {
+    return when {
+        isImage -> attr("abs:src")
+        isAnchor -> attr("abs:href")
+        this is TextNode -> cleanText
+        this is Element -> cleanText
+        else -> ""
+    }
+}
 
 val Node.slimHtml by field {
     when {
@@ -591,14 +582,14 @@ fun Node.removeAttrsIf(filter: (Attribute) -> Boolean) {
 fun Node.formatEachFeatures(vararg featureKeys: Int): String {
     val sb = StringBuilder()
     NodeTraversor.traverse({ node, _ ->
-        FeatureFormatter.format(node.features, featureKeys = *featureKeys, sb = sb)
+        FeatureFormatter.format(node.features, featureKeys.asIterable(), sb = sb)
         sb.append('\n')
     }, this)
     return sb.toString()
 }
 
 fun Node.formatFeatures(vararg featureKeys: Int): String {
-    return FeatureFormatter.format(features, featureKeys = *featureKeys).toString()
+    return FeatureFormatter.format(features, featureKeys.asIterable()).toString()
 }
 
 fun Node.formatVariables(): String {
@@ -652,15 +643,6 @@ fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
     return this
 }
 
-/**
- * TODO: experimental
- * TODO: may not as efficient as Node.collectIfTo since very call of e.nextElementSibling() generate a new element list
- * */
-inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, crossinline filter: (Element) -> Boolean): C {
-    ElementTraversor.traverse(this) { if (filter(it)) { destination.add(it) } }
-    return destination
-}
-
 fun Element.parseStyle(): Array<String> {
     return StringUtil.stripNonChar(attr("style"), ":;")
             .split(";".toRegex())
@@ -673,3 +655,20 @@ fun Element.getStyle(styleKey: String): String {
 }
 
 val Document.isNil get() = this === nilDocument
+
+private fun accumulateText(root: Element): String {
+    val sb = StringBuilder()
+    NodeTraversor.traverse({ node, depth ->
+        if (node is TextNode) {
+            if (node.immutableText.isNotBlank()) {
+                sb.append(node.immutableText)
+            }
+        } else if (node is Element) {
+            if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
+                    && !(sb.isNotEmpty() && sb[sb.length - 1] == ' '))
+                sb.append(" ")
+        }
+    }, root)
+
+    return sb.toString()
+}

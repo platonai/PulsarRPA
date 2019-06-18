@@ -1,8 +1,10 @@
 package ai.platon.pulsar.crawl.component;
 
 import ai.platon.pulsar.common.GlobalExecutor;
+import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
@@ -144,11 +146,10 @@ public class BatchFetchComponent extends FetchComponent {
     }
 
     private Collection<WebPage> protocolParallelFetchAll(Iterable<String> urls, Protocol protocol, LoadOptions options) {
-        MutableConfig mutableConfig = options.getVolatileConfig();
-
+        VolatileConfig volatileConfig = options.getVolatileConfig();
         // TODO: avoid searching a page from the map, carry it inside response
         Map<String, WebPage> pages = Maps.toMap(urls, url -> createFetchEntry(url, options));
-        return protocol.getResponses(pages.values(), mutableConfig).stream()
+        return protocol.getResponses(pages.values(), volatileConfig).stream()
                 .map(response -> forwardResponse(protocol, response, pages.get(response.getUrl())))
                 .collect(Collectors.toList());
     }

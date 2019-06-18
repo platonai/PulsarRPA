@@ -419,7 +419,7 @@ public class LoadComponent {
             ParseResult parseResult = parseComponent.parse(page,
                     options.getQuery(),
                     options.getReparseLinks(),
-                    options.getNoLinkFilter());
+                    options.getNoFilter());
 
             if (LOG.isTraceEnabled()) {
                 LOG.trace("ParseResult: " + parseResult.toString());
@@ -429,10 +429,15 @@ public class LoadComponent {
 
         updateComponent.updateFetchSchedule(page);
 
-        LOG.debug("Fetched: {} | LAST_BROWSER: {} bytes: {} time: {}",
-                page.getConfiguredUrl(),
-                page.getLastBrowser(), page.getContentBytes(), page.getMetadata().get(RESPONSE_TIME)
-        );
+        if (LOG.isDebugEnabled()) {
+            int bytes = page.getContentBytes();
+            LOG.debug("Fetched{}{} bytes in {} with {} | {}",
+                    bytes < 2000 ? " #only# " : " ",
+                    bytes, page.getMetadata().get(RESPONSE_TIME),
+                    page.getLastBrowser().name().toLowerCase(),
+                    page.getConfiguredUrl()
+            );
+        }
 
         if (options.getPersist()) {
             webDb.put(page);
@@ -441,7 +446,7 @@ public class LoadComponent {
                 flush();
             }
 
-            LOG.trace("Persisted {} | bytes: {}", page.getUrl(), page.getContentBytes());
+            LOG.trace("Persisted {} bytes | {}", page.getContentBytes(), page.getUrl());
         }
     }
 

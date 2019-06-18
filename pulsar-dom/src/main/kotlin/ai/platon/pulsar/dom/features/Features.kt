@@ -9,8 +9,10 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.nodes.V_OWNER_BODY
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.nodes.node.ext.name
+import com.google.common.collect.Iterables
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.RealVector
+import org.apache.commons.math3.util.Precision
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -141,18 +143,28 @@ object FeatureFormatter {
         return key.toString() + ":" + formatValue(key, feature.value)
     }
 
-    fun format(features: RealVector, vararg featureKeys: Int, sb: StringBuilder = StringBuilder()): StringBuilder {
-        if (featureKeys.isEmpty()) {
+    /**
+     * Get the string representation of the features
+     *
+     * @features The feature vector
+     * @featureKeys The feature keys to format
+     * @sb The string builder
+     * @eps The amount of allowed absolute error to judge if a double value is zero which is ignored
+     * @return string
+     */
+    fun format(features: RealVector, featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.00001): StringBuilder {
+        val size = Iterables.size(featureKeys)
+        if (size == 0) {
             for (i in featureNames.indices) {
                 val value = features[i]
-                if (value != 0.0) {
+                if (!Precision.equals(value, 0.0, eps)) {
                     sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
                 }
             }
         } else {
             for (i in featureKeys) {
                 val value = features.getEntry(i)
-                if (value != 0.0) {
+                if (!Precision.equals(value, 0.0, eps)) {
                     sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
                 }
             }

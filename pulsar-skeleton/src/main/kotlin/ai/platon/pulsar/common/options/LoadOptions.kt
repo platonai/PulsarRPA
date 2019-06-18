@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATUM_EXPIRES
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -18,66 +19,65 @@ import java.util.*
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
 open class LoadOptions : CommonOptions {
-
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class, description = "Page datum expires time")
     var expires: Duration? = null
-
     @Parameter(names = ["-pst", "-persist", "--persist"], description = "Persist page(s) once fetched")
     var persist = true
-
     @Parameter(names = ["-shortenKey", "--shorten-key"], description = "Page key is generated from baseUrl with parameters removed")
     var shortenKey = false
 
     @Parameter(names = ["-retry", "--retry"], description = "Retry fetching the page if it's failed last time")
     var retry = false
-
     @Parameter(names = ["-lazyFlush", "--lazy-flush"], description = "Flush db only explicit called")
     var lazyFlush = false
-
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], description = "Parallel fetch urls whenever applicable")
     var preferParallel = false
-
     @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class, description = "The fetch mode")
     var fetchMode = FetchMode.SELENIUM
-
     @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class, description = "The browser to use")
     var browser = BrowserType.CHROME
+    @Parameter(names = ["-scrollCount"])
+    var scrollCount = 10
+    @Parameter(names = ["-scrollWaitTime"], converter = DurationConverter::class)
+    var scrollWaitTime: Duration = Duration.ofMillis(1000)
+    @Parameter(names = ["-pageLoadTimeout"], converter = DurationConverter::class)
+    var pageLoadTimeout: Duration = Duration.ofSeconds(60)
 
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
-
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
-
     @Parameter(names = ["-hardRedirect", "--hard-redirect"],
             description = "If false, return the temp page with the target's content, " +
                     "otherwise, return the entire page record when redirects")
     var hardRedirect = false
-
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page")
     var parse = false
-
     @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
-    var query: String? = null
 
+    var query: String? = null
     @Parameter(names = ["-m", "-withModel", "--with-model"], description = "Also load page model")
     var withModel = false
-
     @Parameter(names = ["-lk", "-withLinks", "--with-links"], description = "Contains links when loading page model")
     var withLinks = false
-
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
-
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
-
-    @Parameter(names = ["-noLinkFilter", "--no-link-filter"], description = "No filters applied to parse links")
-    var noLinkFilter = false
+    @Parameter(names = ["-noNorm", "--no-link-normalizer"], arity = 1, description = "No normalizer is applied to parse links")
+    var noNorm = true
+    @Parameter(names = ["-noFilter", "--no-link-filter"], arity = 1, description = "No filter is applied to parse links")
+    var noFilter = true
 
     // A volatile config is usually session scoped
     // TODO: easy to cause bugs, a better way to init volatile config is required
     var volatileConfig: VolatileConfig? = null
+        set(value) {
+            value?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+            value?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_WAIT, scrollWaitTime)
+            value?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+            field = value
+        }
 
     val realExpires: Duration
         get() {

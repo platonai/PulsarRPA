@@ -7,14 +7,11 @@ import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATIO
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import org.springframework.context.ConfigurableApplicationContext
@@ -48,10 +45,6 @@ class Pulsar: AutoCloseable {
      * */
     private val urlNormalizers: UrlNormalizers
     /**
-     * The selenium engine
-     * */
-    private val seleniumEngine: SeleniumEngine
-    /**
      * The web db
      * */
     val webDb: WebDb
@@ -66,11 +59,11 @@ class Pulsar: AutoCloseable {
     /**
      * The parse component
      * */
-    val parseComponent: ParseComponent get() = loadComponent.parseComponent
+    val parseComponent get() = loadComponent.parseComponent
     /**
      * The fetch component
      * */
-    val fetchComponent: BatchFetchComponent get() = loadComponent.fetchComponent
+    val fetchComponent get() = loadComponent.fetchComponent
 
     constructor(appConfigLocation: String) : this(ClassPathXmlApplicationContext(appConfigLocation))
 
@@ -83,11 +76,8 @@ class Pulsar: AutoCloseable {
         this.injectComponent = applicationContext.getBean<InjectComponent>(InjectComponent::class.java)
         this.loadComponent = applicationContext.getBean<LoadComponent>(LoadComponent::class.java)
         this.urlNormalizers = applicationContext.getBean<UrlNormalizers>(UrlNormalizers::class.java)
-        this.seleniumEngine = SeleniumEngine.getInstance(immutableConfig)
         this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
         this.defaultVolatileConfig = VolatileConfig(defaultMutableConfig)
-
-        closeables.add(this.seleniumEngine)
     }
 
     constructor(
@@ -102,7 +92,6 @@ class Pulsar: AutoCloseable {
         this.urlNormalizers = urlNormalizers
         this.immutableConfig = immutableConfig
 
-        this.seleniumEngine = SeleniumEngine.getInstance(immutableConfig)
         this.defaultMutableConfig = MutableConfig(immutableConfig.unbox())
         this.defaultVolatileConfig = VolatileConfig(defaultMutableConfig)
     }
@@ -110,15 +99,19 @@ class Pulsar: AutoCloseable {
     fun normalize(url: String): NormUrl {
         val parts = Urls.splitUrlArgs(url)
         val options = LoadOptions.parse(parts.second, defaultVolatileConfig)
-        val normalizedUrl = urlNormalizers.normalize(Urls.normalize(parts.first, options.shortenKey))
-                ?: return NormUrl.nil
+        var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
+        if (!options.noFilter) {
+            normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
+        }
         return NormUrl(normalizedUrl, initOptions(options))
     }
 
     fun normalize(url: String, options: LoadOptions): NormUrl {
         val parts = Urls.splitUrlArgs(url)
-        val normalizedUrl = urlNormalizers.normalize(Urls.normalize(parts.first, options.shortenKey))
-                ?: return NormUrl.nil
+        var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
+        if (!options.noFilter) {
+            normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
+        }
 
         if (parts.second.isBlank()) {
             return NormUrl(normalizedUrl, options)

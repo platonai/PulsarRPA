@@ -44,8 +44,6 @@ public final class StringUtil {
     // all special chars on a standard keyboard
     public static final String DEFAULT_KEEP_CHARS = "~!@#$%^&*()_+`-={}|[]\\:\";'<>?,./' \n\r\t";
 
-    public static final String KEYBOARD_WHITESPACE = String.valueOf(32);
-
     public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
 
     public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
@@ -62,8 +60,12 @@ public final class StringUtil {
 
     public static Pattern CHINESE_PHONE_NUMBER_LIKE_PATTERN = Pattern.compile(CHINESE_PHONE_NUMBER_LIKE_REGEX);
 
+    public static final int CODE_KEYBOARD_WHITESPACE = 32;
+    public static final int CODE_NBSP = 160;
+
+    public static final String KEYBOARD_WHITESPACE = String.valueOf(CODE_KEYBOARD_WHITESPACE);
     // Html entity: {@code &nbsp;} looks just like a white space
-    public static final String NBSP = String.valueOf(160);
+    public static final String NBSP = String.valueOf(CODE_NBSP);
 
     public static final char[] HEX_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
             'f'};
@@ -92,18 +94,12 @@ public final class StringUtil {
     }
 
     /**
-     * Tests if a code point is "whitespace" as defined in the HTML spec.
-     *
+     * Tests if a code point is "whitespace" as defined by what it looks like. Used for Element.text etc.
      * @param c code point to test
      * @return true if code point is whitespace, false otherwise
      */
-    public static boolean isWhitespace(int c) {
-        // note : the first character is not the last one
-        // the last one is &nbsp;
-        // String s = " ";
-        // String s2 = " ";
-        // System.out.println(s.equals(s2));
-        return c == KEYBOARD_WHITESPACE.charAt(0) || c == '\t' || c == '\n' || c == '\f' || c == '\r' || c == NBSP.charAt(0);
+    public static boolean isActuallyWhitespace(int c) {
+        return c == CODE_KEYBOARD_WHITESPACE || c == '\t' || c == '\n' || c == '\f' || c == '\r' || c == CODE_NBSP;
     }
 
     /**
@@ -393,25 +389,23 @@ public final class StringUtil {
         StringBuilder builder = new StringBuilder();
 
         int len = text.length();
-        int i = 0;
-        for (; i < len;) {
+        for (int i = 0; i < len; ++i) {
             char ch = text.charAt(i);
-            boolean isWhitespace = Character.isWhitespace(ch);
-            if (isPrintableUnicodeChar(ch) && !isWhitespace) {
-                builder.append(ch);
-                ++i;
-            }
-
-            if (isWhitespace) {
+            if (isActuallyWhitespace(ch)) {
                 if (i > 0 && i < len - 1) {
                     builder.append(' ');
                 }
-                while (++i < len && Character.isWhitespace(text.charAt(i))) {}
+                int j = i + 1;
+                while (j < len && isActuallyWhitespace(text.charAt(j))) {
+                    ++j;
+                }
+                i = j - 1;
+            } else if (isPrintableUnicodeChar(ch)) {
+                builder.append(ch);
             }
         }
 
-        // TODO: do it in the loop
-        return builder.toString().replace("\\s+", " ").trim();
+        return builder.toString();
     }
 
     /**

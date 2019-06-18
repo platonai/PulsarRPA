@@ -29,6 +29,8 @@ import java.util.Collections;
 
 /**
  * A retriever of url content. Implemented by protocol extensions.
+ *
+ * TODO: protocols are designed to be initialized at setConf() method, which is not good
  */
 public interface Protocol extends Configurable, AutoCloseable {
 
@@ -59,6 +61,6 @@ public interface Protocol extends Configurable, AutoCloseable {
     BaseRobotRules getRobotRules(WebPage page);
 
     @Override
-    default void close() throws Exception {
+    default void close() {
     }
 }

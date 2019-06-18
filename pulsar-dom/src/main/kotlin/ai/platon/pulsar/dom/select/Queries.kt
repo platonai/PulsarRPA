@@ -200,3 +200,12 @@ fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VAL
             .takeWhile { i++ >= offset && i <= limit }
             .toCollection(Elements())
 }
+
+/**
+ * TODO: experimental
+ * TODO: may not as efficient as Node.collectIfTo since very call of e.nextElementSibling() generate a new element list
+ * */
+inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, crossinline filter: (Element) -> Boolean): C {
+    ElementTraversor.traverse(this) { if (filter(it)) { destination.add(it) } }
+    return destination
+}

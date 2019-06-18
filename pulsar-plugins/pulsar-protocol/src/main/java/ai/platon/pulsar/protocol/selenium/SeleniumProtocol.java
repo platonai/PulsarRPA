@@ -34,12 +34,13 @@ public class SeleniumProtocol extends ForwardingProtocol {
 
     @Override
     public void close() {
-        if (engine != null) {
-            engine.close();
-            engine = null;
-        }
+        engine.close();
     }
 
+    /**
+     * Called just after creation
+     * @see ai.platon.pulsar.crawl.protocol.ProtocolFactory#ProtocolFactory
+     * */
     @Override
     public void setConf(ImmutableConfig conf) {
         super.setConf(conf);

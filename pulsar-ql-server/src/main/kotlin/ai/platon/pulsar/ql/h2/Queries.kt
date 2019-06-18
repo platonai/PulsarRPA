@@ -115,7 +115,7 @@ object Queries {
         }
 
         if (normalize) {
-            links = links.map { session.normalize(it) }.filterNotNull()
+            links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
         return session.loadAll(links, LoadOptions())

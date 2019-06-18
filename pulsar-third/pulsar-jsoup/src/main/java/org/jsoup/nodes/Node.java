@@ -31,7 +31,7 @@ public abstract class Node implements Cloneable {
 
     Node ownerDocumentNode = null;
     Node ownerBody = null;
-    Object extensions = null;
+    String immutableText = null;
     RealVector features = EMPTY_FEATURE;
     Map<String, Object> variables = new HashMap<>();
     Map<String, List<Object>> tuples = new HashMap<>();
@@ -189,12 +189,17 @@ public abstract class Node implements Cloneable {
         return ownerBody;
     }
 
-    @Nonnull
-    public Object computeExtensionsIfAbsent(@Nonnull Object extensions) {
-        if (this.extensions == null) {
-            this.extensions = extensions;
+    public String getImmutableText() {
+        if (immutableText == null) {
+            if (this instanceof TextNode) {
+                immutableText = ((TextNode) this).text();
+            }
         }
-        return this.extensions;
+        return immutableText;
+    }
+
+    public void setImmutableText(String immutableText) {
+        this.immutableText = immutableText;
     }
 
     @Nonnull

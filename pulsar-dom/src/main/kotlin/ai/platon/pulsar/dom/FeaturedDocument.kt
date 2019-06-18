@@ -3,6 +3,7 @@ package ai.platon.pulsar.dom
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
@@ -16,6 +17,7 @@ import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
+import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor

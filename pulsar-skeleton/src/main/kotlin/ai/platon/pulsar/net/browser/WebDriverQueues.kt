@@ -1,12 +1,13 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.BrowserControl
+import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
+import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
 import ai.platon.pulsar.common.GlobalExecutor.NCPU
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import com.gargoylesoftware.htmlunit.WebClient
@@ -35,30 +36,26 @@ import java.util.logging.Level
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
+internal class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
 
     companion object {
-        val capacity = 1.5 * NCPU
+        // TODO: Web Drivers should grouped by conf, and free we the context with this config is not available
+        val capacity = (1.5 * NCPU).toInt()
+        private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
+        private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
+        private val freeDriverCount = AtomicInteger(0)
     }
 
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-
-    private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
-    private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
     private val proxyPool: ProxyPool = ProxyPool.getInstance(conf)
-    private val freeDriverCount = AtomicInteger(0)
-
-    val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
-    val implicitlyWait = conf.getDuration(FETCH_DOM_WAIT_FOR_TIMEOUT, Duration.ofSeconds(20))
-    val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
-    val scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(5))
+    private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
+    private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
+    private val isClosed = AtomicBoolean(false)
 
     val freeSize get() = freeDriverCount.get().toLong()
     val totalSize get() = allDrivers.size.toLong()
-
-    private val closed = AtomicBoolean(false)
 
     internal inner class PulsarHtmlUnitDriver(capabilities: Capabilities) : HtmlUnitDriver() {
         private val throwExceptionOnScriptError: Boolean = capabilities.`is`("throwExceptionOnScriptError")
@@ -73,22 +70,12 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
         Runtime.getRuntime().addShutdownHook(Thread(Runnable { this.close() }))
     }
 
-    override fun getParams(): Params {
-        return Params.of(
-                "defaultWebDriverClass", defaultWebDriverClass,
-                "isHeadless", isHeadless,
-                "implicitlyWait", implicitlyWait,
-                "pageLoadTimeout", pageLoadTimeout,
-                "scriptTimeout", scriptTimeout
-        )
-    }
-
     fun put(priority: Int, driver: WebDriver) {
         try {
             val queue = freeDrivers[priority]
             if (queue != null) {
                 queue.put(driver)
-                freeDriverCount.getAndIncrement()
+                freeDriverCount.incrementAndGet()
             }
         } catch (e: InterruptedException) {
             log.warn("Failed to put a WebDriver into pool, $e")
@@ -96,8 +83,6 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     }
 
     fun poll(priority: Int, conf: ImmutableConfig): WebDriver? {
-        Objects.requireNonNull(conf)
-
         try {
             var queue: ArrayBlockingQueue<WebDriver>? = freeDrivers[priority]
             if (queue == null) {
@@ -115,7 +100,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
 
             return driver
         } catch (e: InterruptedException) {
-            log.warn("Failed to poll a WebDriver from pool, $e")
+            log.warn("Failed to poll a web driver from pool. {}", e)
         }
 
         // TODO: throw exception
@@ -135,16 +120,33 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     private fun allocateWebDriver(queue: ArrayBlockingQueue<WebDriver>, conf: ImmutableConfig) {
         // TODO: configurable factor
         if (allDrivers.size >= capacity) {
-            log.warn("Too many WebDrivers ... cpu cores: {}, free/total: {}/{}", NCPU, freeSize, totalSize)
+            log.warn("Too many web drivers ... cpu cores: {}, free/total: {}/{}", NCPU, freeSize, totalSize)
             return
         }
 
         try {
             val driver = doCreateWebDriver(conf)
+
+            // Set log level
+            var level: Level = Level.FINE
+            if (driver is RemoteWebDriver) {
+                val l = LoggerFactory.getLogger(WebDriver::class.java)
+                level = when {
+                    l.isDebugEnabled -> Level.FINER
+                    l.isTraceEnabled -> Level.ALL
+                    else -> Level.FINE
+                }
+
+                driver.setLogLevel(level)
+            }
+
             allDrivers.add(driver)
             queue.put(driver)
             freeDriverCount.incrementAndGet()
-            log.info("The {}th WebDriver is online, browser: {}", allDrivers.size, driver.javaClass.simpleName)
+            log.info("The {}th web driver is online, " +
+                    "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
+                    allDrivers.size, driver.javaClass.simpleName.toLowerCase(),
+                    imagesEnabled, pageLoadStrategy, capacity, level)
         } catch (e: Throwable) {
             log.error(StringUtil.stringifyException(e))
             // throw new RuntimeException("Can not create WebDriver");
@@ -195,26 +197,6 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
             }
         }
 
-        // Set timeouts
-        val timeouts = driver.manage().timeouts()
-        timeouts.pageLoadTimeout(pageLoadTimeout.seconds, TimeUnit.SECONDS)
-        timeouts.setScriptTimeout(scriptTimeout.seconds, TimeUnit.SECONDS)
-        timeouts.implicitlyWait(implicitlyWait.seconds, TimeUnit.SECONDS)
-
-        // Set log level
-        if (driver is RemoteWebDriver) {
-            val webDriverLog = LoggerFactory.getLogger(WebDriver::class.java)
-            var level = Level.FINE
-            if (webDriverLog.isDebugEnabled) {
-                level = Level.FINER
-            } else if (webDriverLog.isTraceEnabled) {
-                level = Level.ALL
-            }
-
-            log.info("WebDriver log level: $level")
-            driver.setLogLevel(level)
-        }
-
         return driver
     }
 
@@ -262,7 +244,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     }
 
     override fun close() {
-        if (closed.getAndSet(true)) {
+        if (isClosed.getAndSet(true)) {
             return
         }
 
@@ -274,7 +256,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
                 it.remove()
 
                 try {
-                    log.info("Closing WebDriver $driver")
+                    log.info("Closing web driver {}", driver)
                     driver.quit()
                 } catch (e: Exception) {
                     log.error(e.toString())

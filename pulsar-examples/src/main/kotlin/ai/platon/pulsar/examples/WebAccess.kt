@@ -45,12 +45,12 @@ object WebAccess {
     private val loadOptions = "--expires=1d"
 
     fun load() {
-        val url = seeds[10]?:return
+        val url = seeds[8]?:return
         val args = "-ps -expires 1s"
 
         val page = i.load("$url $args")
         val document = i.parse(page)
-        page.links.forEach { i.load("$it") }
+        page.links.stream().parallel().forEach { i.load("$it") }
         // println(WebPageFormatter(page).withLinks())
 
 //        val document = i.parse(page)
@@ -140,7 +140,8 @@ object WebAccess {
     }
 
     fun run() {
-        parallelLoadAll()
+        load()
+        // parallelLoadAll()
     }
 }
 

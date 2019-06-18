@@ -15,6 +15,7 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.collect.Iterables
+import com.udojava.evalex.Expression.e
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.By
 import org.openqa.selenium.JavascriptExecutor
@@ -23,16 +24,21 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.RemoteWebDriver
+import org.openqa.selenium.support.ui.ExpectedCondition
 import org.openqa.selenium.support.ui.FluentWait
+import org.openqa.selenium.support.ui.WebDriverWait
 import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
 import java.time.Duration
+import java.time.LocalDateTime
+import java.time.MonthDay
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
+import kotlin.NoSuchElementException
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -51,17 +57,21 @@ data class DriverConfig(
 /**
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
+ *
+ * Note: SeleniumEngine should be process scope
  */
 class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoCloseable {
 
-    private val executor: GlobalExecutor = GlobalExecutor.getInstance(immutableConfig)
-    private val drivers: WebDriverQueues = WebDriverQueues(browserControl, immutableConfig)
+    private val executor = GlobalExecutor.getInstance(immutableConfig)
+    private val drivers = WebDriverQueues(browserControl, immutableConfig)
 
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
     private val defaultDriverConfig = DriverConfig(immutableConfig)
+    private var libJs = browserControl.parseLibJs(true)
     private var clientJs = browserControl.parseJs(true)
 
+    private val monthDay = DateTimeUtil.now("MMdd")
     private val totalTaskCount = AtomicInteger(0)
     private val totalSuccessCount = AtomicInteger(0)
 
@@ -69,9 +79,11 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     private val batchTaskCount = AtomicInteger(0)
     private val batchSuccessCount = AtomicInteger(0)
 
-    private val closed = AtomicBoolean(false)
+    private val isClosed = AtomicBoolean(false)
 
     init {
+        instanceCount.incrementAndGet()
+        // log.debug("Get #{}th selenium engine instance" + conf.hashCode() + "\t" + engine.hashCode())
         params.withLogger(log).info()
     }
 
@@ -150,7 +162,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
 
         val priority = mutableConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)!!
 
-        // create a task submitter
+        // Create a task submitter
         val submitter = { page: WebPage ->
             executor.submit<Response> { fetchContentInternal(priority, page, mutableConfig) }
         }
@@ -253,18 +265,27 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         val driverConfig = getDriverConfig(priority, page, config)
         var status: ProtocolStatus
         val headers = MultiMetadata()
-        headers.put(Q_REQUEST_TIME, System.currentTimeMillis().toString())
+        val startTime = System.currentTimeMillis()
+        headers.put(Q_REQUEST_TIME, startTime.toString())
+
+        var pageSource = ""
 
         try {
             visit(location, page, driver, driverConfig)
+            pageSource = driver.pageSource
             status = ProtocolStatus.STATUS_SUCCESS
             // TODO: handle with frames
             // driver.switchTo().frame(1);
         } catch (e: org.openqa.selenium.TimeoutException) {
-            log.warn(e.toString())
-            handleWebDriverTimeout(page.url, driver, driverConfig)
-            // TODO: the reason may be one of page load timeout, script timeout and implicit wait timeout
-            status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
+            // log.warn(e.toString())
+            pageSource = getPageSourceSlient(driver)
+            handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
+            // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
+            status = if (isJsSuccess(pageSource)) {
+                ProtocolStatus.STATUS_SUCCESS
+            } else {
+                ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
+            }
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
             status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
@@ -275,16 +296,15 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         } catch (e: Throwable) {
             // must not throw again
             status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
-            log.warn("Unexpected exception: {}", e.toString())
+            log.warn("Unexpected exception: {}", e)
         }
 
-        var pageSource = ""
-
         try {
-            pageSource = handlePageSource(status, page, driver)
-            handleFetchFinish(pageSource, page, driver, headers)
+            handleFetchFinish(page, driver, headers)
+            pageSource = handlePageSource(pageSource, status, page, driver)
+            headers.put(CONTENT_LENGTH, pageSource.length.toString())
             if (status.isSuccess) {
-                handleFetchSuccess(pageSource, page, driver)
+                handleFetchSuccess(page, driver)
             }
         } finally {
             drivers.put(priority, driver)
@@ -296,6 +316,19 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         // TODO: ignore timeout and get the page source
 
         return ForwardingResponse(page.url, pageSource, status.minorCode, headers)
+    }
+
+    private fun isJsSuccess(pageSource: String): Boolean {
+        val p1 = pageSource.indexOf("<body")
+        if (p1 <= 0) return false
+        val p2 = pageSource.indexOf(">", p1)
+        if (p2 <= 0) return false
+        // no any link, it's incomplete
+        val p3 = pageSource.indexOf("<a", p2)
+        if (p3 <= 0) return false
+
+        val bodyTag = pageSource.substring(p1, p2)
+        return bodyTag.contains("data-error=\"0\"")
     }
 
     private fun getResponse(url: String, future: Future<Response>, timeout: Duration): Response {
@@ -331,7 +364,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
             headers.put("EXCEPTION", e.toString())
 
-            log.warn("url: {}, {}", url, e)
+            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         }
 
         return ForwardingResponse(url, status.minorCode, headers)
@@ -339,12 +372,12 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
 
     @Throws(org.openqa.selenium.TimeoutException::class)
     private fun visit(url: String, page: WebPage, driver: WebDriver, driverConfig: DriverConfig) {
-        log.debug("Fetching task: {}/{}, thread: #{}, drivers: {}/{}, timeouts: {}/{}/{}, {}",
+        log.debug("Fetching task {}/{} in thread #{}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
                 batchTaskCount, totalTaskCount,
                 Thread.currentThread().id,
                 drivers.freeSize, drivers.totalSize,
-                driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollDownWait,
-                page.configuredUrl
+                page.configuredUrl,
+                driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollDownWait
         )
 
         val timeouts = driver.manage().timeouts()
@@ -363,54 +396,43 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig) {
         val jsExecutor = driver as? JavascriptExecutor ?: return
 
+        val timeout = driverConfig.pageLoadTimeout.seconds
+        val maxRound = timeout - 2
         val wait = FluentWait<WebDriver>(driver)
-                .withTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
-                .pollingEvery(500, TimeUnit.MILLISECONDS)
+                .withTimeout(timeout, TimeUnit.SECONDS)
+                .pollingEvery(1, TimeUnit.SECONDS)
+                // .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         // make sure the document is ready
         try {
-            wait.until { dr -> dr.findElement(By.tagName("body")) }
+            val js = ";$libJs;return __utils__.waitForReady($maxRound);"
+            val r = wait.until { (it as? JavascriptExecutor)?.executeScript(js) }
+
+            if (r == "timeout") {
+                log.debug("Hit max round $maxRound to wait document | {}", url)
+            } else {
+                log.debug("Document is ready. {} | {}", r, url)
+            }
+        } catch (e: org.openqa.selenium.TimeoutException) {
+            log.info("Timeout to wait document, timeout {}s | {}", timeout, url)
         } catch (e: Exception) {
             // the representation of the underlying DOM
-            log.warn("Failed to render document {}, length: {}", url, driver.pageSource.length)
+            log.warn("Failed to render document {}, \n{}", url, e)
             throw e
-        }
-
-        // Scroll down times to ensure ajax content can be loaded
-        // TODO: no way to determine if there is ajax response while it scrolls, i remember phantomjs has a way
-        for (i in 1..driverConfig.scrollDownCount) {
-            log.trace("Scrolling down #{}", i)
-
-            // TODO: some websites do not allow scroll to below the bottom
-            val scrollJs = ";window.scrollBy(0, 500);"
-            jsExecutor.executeScript(scrollJs)
-
-            // TODO: is there better way to do this?
-            val millis = driverConfig.scrollDownWait.toMillis()
-            if (millis > 0) {
-                try { TimeUnit.MILLISECONDS.sleep(millis) } catch (e: InterruptedException) {
-                    log.warn("Scrolling interrupted. {}", e)
-                    break
-                }
-            }
-        }
-
-        // now we must stop everything
-        if (driverConfig.scrollDownCount > 0) {
-            jsExecutor.executeScript(";return window.stop();")
         }
 
         if (StringUtils.isNotBlank(clientJs)) {
             jsExecutor.executeScript(clientJs)
         }
-
-        jsExecutor.executeScript(";return window.stop();")
     }
 
-    private fun handleFetchFinish(pageSource: String, page: WebPage, driver: WebDriver, headers: MultiMetadata) {
+    private fun getPageSourceSlient(driver: WebDriver): String {
+        return try { driver.pageSource } catch (e: Throwable) { "" }
+    }
+
+    private fun handleFetchFinish(page: WebPage, driver: WebDriver, headers: MultiMetadata) {
         // The page content's encoding is already converted to UTF-8 by Web driver
         headers.put(CONTENT_ENCODING, "UTF-8")
-        headers.put(CONTENT_LENGTH, pageSource.length.toString())
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
         headers.put(Q_RESPONSE_TIME, System.currentTimeMillis().toString())
         headers.put(Q_WEB_DRIVER, driver.javaClass.name)
@@ -425,12 +447,12 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         }
     }
 
-    private fun handleFetchSuccess(pageSource: String, page: WebPage, driver: WebDriver) {
+    private fun handleFetchSuccess(page: WebPage, driver: WebDriver) {
         batchSuccessCount.incrementAndGet()
         totalSuccessCount.incrementAndGet()
 
         // TODO: A metrics system is required
-        log.debug("Selenium batch task success: {}/{}, total task success: {}/{}",
+        log.debug("Selenium task success: {}/{}, total task success: {}/{}",
                 batchSuccessCount, batchTaskCount,
                 totalSuccessCount, totalTaskCount
         )
@@ -438,54 +460,73 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         if (totalTaskCount.get() % 100 == 0) {
             log.debug("Total task success: {}/{}", totalSuccessCount, totalTaskCount)
         }
-        // headers.put(CONTENT_TYPE, "");
     }
 
-    private fun takeScreenshot(page: WebPage, driver: RemoteWebDriver, ident: String) {
+    private fun takeScreenshot(pageSource: String, page: WebPage, driver: RemoteWebDriver, ident: String) {
         if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
-            var length = 0
             try {
-                val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                length = bytes.size
-                export(page, bytes, ident, ".png")
+                if (pageSource.length > 100) {
+                    val bytes = driver.getScreenshotAs(OutputType.BYTES)
+                    export(page, bytes, ident, ".png")
+                }
             } catch (e: Exception) {
-                log.warn("Failed to take screenshot, url: {} | bytes: {}", page.url, length)
-                log.warn(e.toString())
+                log.warn("Cannot take screenshot, page length {} | {}", pageSource.length, page.url)
             }
         }
     }
 
-    private fun handlePageSource(status: ProtocolStatus, page: WebPage, driver: WebDriver): String {
-        val pageSource = driver.pageSource
-
+    private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: WebDriver): String {
         if (pageSource.isEmpty()) {
             return ""
         }
 
+        // take the head part and replace charset to UTF-8
+        val pos = pageSource.indexOf("</head>")
+        var head = pageSource.take(pos)
+        // TODO: can still faster
         // Some parsers use html directive to decide the content's encoding, correct it to be UTF-8
-        // TODO: Do it only for html content
-        // TODO: Replace only corresponding html meta directive, not all occurrence
-        val content = charsetPattern.matcher(pageSource).replaceFirst("UTF-8")
+        head = charsetPattern.matcher(head).replaceAll("UTF-8")
+
+        // append the rest
+        val sb = StringBuilder(head)
+        var i = pos
+        while (i < pageSource.length) {
+            sb.append(pageSource[i])
+            ++i
+        }
+
+        val content = sb.toString()
 
         if (log.isDebugEnabled && content.isNotEmpty()) {
-            val ident = status.minorName
+            sb.setLength(0)
+            sb.append(status.minorName).append('/').append(monthDay)
+            if (content.length < 1000) {
+                sb.append('/').append(content.length / 200 * 200)
+            } else {
+                sb.append('/').append(content.length / 2000 * 2000)
+            }
+
+            val ident = sb.toString()
             export(page, content.toByteArray(), ident)
-            takeScreenshot(page, driver as RemoteWebDriver, ident)
+            if (log.isTraceEnabled) {
+                takeScreenshot(content, page, driver as RemoteWebDriver, ident)
+            }
         }
 
         return content
     }
 
-    private fun handleWebDriverTimeout(url: String, driver: WebDriver, driverConfig: DriverConfig) {
-        val pageSource = driver.pageSource
+    private fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
+        val elapsed = Duration.ofMillis(System.currentTimeMillis() - startTime)
         if (log.isDebugEnabled) {
-            log.debug("Selenium timeout. Timeouts: {}/{}/{}, drivers: {}/{}, length: {}, url: {}",
-                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollDownWait,
+            log.debug("Selenium timeout. Elapsed {} length {} drivers: {}/{} timeouts: {}/{}/{} | {}",
+                    elapsed, pageSource.length,
                     drivers.freeSize, drivers.totalSize,
-                    pageSource.length, url
+                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollDownWait,
+                    url
             )
         } else {
-            log.warn("Selenium timeout, length: {}, url: {}", pageSource.length, url)
+            log.warn("Selenium timeout, elapsed: {} length: {} | {}", elapsed, pageSource.length, url)
         }
     }
 
@@ -515,8 +556,13 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     }
 
     override fun close() {
-        if (closed.getAndSet(true)) {
+        if (isClosed.getAndSet(true)) {
             return
+        }
+
+        if (instanceCount.decrementAndGet() <= 0) {
+//            executor.close()
+//            drivers.close()
         }
 
         executor.close()
@@ -526,9 +572,10 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     companion object {
         val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
+        private val batchTaskId = AtomicInteger(0)
+        private var instanceCount = AtomicInteger()
         // The javascript to execute by Web browsers
         var browserControl = BrowserControl()
-        private val batchTaskId = AtomicInteger(0)
         val defaultSupportedCharsets = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
                 "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
         val systemAvailableCharsets = Charset.availableCharsets().values.joinToString("|") { it.name() }
@@ -536,7 +583,10 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         // The set is big, can use a static cache to hold them if necessary
         val defaultCharsetPattern = defaultSupportedCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
         val systemAvailableCharsetPattern = systemAvailableCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
-
+        /**
+         * Every process have an unique ImmutableConfig object which is created at the process startup.
+         * */
+        @Synchronized
         fun getInstance(conf: ImmutableConfig): SeleniumEngine {
             return ObjectCache.get(conf).computeIfAbsent(SeleniumEngine::class.java) { SeleniumEngine(conf) }
         }

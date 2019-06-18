@@ -155,10 +155,16 @@ class TestAnything {
     }
 
     @Test
-    fun testSpecialChars() {
+    fun testStripSpecialChars() {
         val text = " hell\uE60Do\uDF21world "
-        assertEquals("hell\uE60Do\uDF21world", StringUtil.stripNonPrintableChar(text))
+
+        // text.forEachIndexed { i, it -> println("$i.\t$it -> ${StringUtil.isActuallyWhitespace(it.toInt())}") }
+
         assertEquals("helloworld", StringUtil.stripNonCJKChar(text))
+
+        assertEquals("hell\uE60Do\uDF21world", StringUtil.stripNonPrintableChar(text))
+        assertEquals("", StringUtil.stripNonPrintableChar("              "))
+        assertEquals("a b c d e f g", StringUtil.stripNonPrintableChar(" a b c d e f g "))
 
         val unicodeChars = arrayOf('', 'Ɑ', 'ⰿ', '', '?', 'И', ' ')
         unicodeChars.forEach {

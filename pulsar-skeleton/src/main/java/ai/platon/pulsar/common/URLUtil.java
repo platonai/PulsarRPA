@@ -38,6 +38,11 @@ public class URLUtil {
     }
 
     @Nonnull
+    public static String getHost(String url) {
+        return getHost(Urls.getURLOrNull(url), GroupMode.BY_HOST);
+    }
+
+    @Nonnull
     public static String getHost(String url, GroupMode groupMode) {
         return getHost(Urls.getURLOrNull(url), groupMode);
     }

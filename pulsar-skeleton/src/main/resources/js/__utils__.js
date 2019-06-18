@@ -20,6 +20,73 @@ __utils__.checkVariables = function(variables) {
     return report;
 };
 
+/**
+ * @param maxRound The maximum round to check ready
+ * */
+__utils__.waitForReady = function(maxRound) {
+    // document.body.scrollHeight
+    if (!document.platonStatus) {
+        document.platonStatus = { n: 0, scroll: 0, height: 0, na: 0, ni: 0 }
+    }
+    document.platonStatus.n += 1;
+
+    let n = document.platonStatus.n;
+    if (maxRound && maxRound > 0 && n > maxRound) {
+        return "timeout"
+    }
+
+    if (document.readyState !== "complete") {
+        return false
+    }
+
+    let body = document.body;
+    if (!body) {
+        return false
+    }
+
+    window.scrollBy(0, 500);
+
+    // last data
+    let status = document.platonStatus;
+    status.scroll += 1;
+
+    let ready = __utils__.isActuallyReady(status);
+
+    // The document is ready
+    if (ready) return JSON.stringify(status);
+    else return false
+};
+
+__utils__.isActuallyReady = function(lastStatus) {
+    let ready = false;
+    let body = document.body;
+    let width = body.scrollWidth;
+    let height = body.scrollHeight;
+    let na = body.count((node) => { return node.isAnchor() });
+    let ni = body.count((node) => { return node.isImage() });
+
+    // The document is good enough to analysis
+    // TODO: how to know this is OK?
+    if (height >= 3000 && (na >= 20 || ni >= 10)) {
+        ready = true
+    } else if (height >= 2000 && (na >= 30 || ni >= 20)) {
+        ready = true;
+    } else {
+        let delta = Math.abs(height - status.height);
+        if (delta > 10 || na !== status.na || ni !== status.ni) {
+            // DOM changed since last check, store the latest status and return false to wait for the next check
+            ready = false
+        }
+    }
+
+    lastStatus.width = width;
+    lastStatus.height = height;
+    lastStatus.na = na;
+    lastStatus.ni = ni;
+
+    return ready;
+};
+
 __utils__.scrollToBottom = function() {
     if (!document || !document.documentElement || !document.body) {
         return
@@ -469,7 +536,7 @@ __utils__.visualizeHumanize = function() {
     }
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization
-    new WarpsNodeTraversor(new WarpsNodeVisitor(), {}).traverse(document.body);
+    new PlatonNodeTraversor(new PlatonNodeVisitor(), {}).traverse(document.body);
 
     // do something like a human being
     // humanize(document.body);

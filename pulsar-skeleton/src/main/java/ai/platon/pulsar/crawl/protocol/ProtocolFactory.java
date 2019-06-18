@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,7 @@ public class ProtocolFactory implements AutoCloseable {
 
     private ImmutableConfig immutableConfig;
     private Map<String, Protocol> protocols = Collections.synchronizedMap(new HashMap<>());
+    private AtomicBoolean isClosed = new AtomicBoolean();
 
     public ProtocolFactory(ImmutableConfig immutableConfig) {
         this.immutableConfig = immutableConfig;
@@ -74,15 +76,7 @@ public class ProtocolFactory implements AutoCloseable {
 
     @Deprecated
     public static ProtocolFactory create(ImmutableConfig conf) {
-        ObjectCache cache = ObjectCache.get(conf);
-
-        ProtocolFactory protocolFactory = cache.getBean(ProtocolFactory.class);
-        if (protocolFactory == null) {
-            protocolFactory = new ProtocolFactory(conf);
-            cache.put(protocolFactory);
-        }
-
-        return protocolFactory;
+        return ObjectCache.get(conf).computeIfAbsent(ProtocolFactory.class, c -> new ProtocolFactory(conf));
     }
 
     /**
@@ -150,6 +144,10 @@ public class ProtocolFactory implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        if (isClosed.getAndSet(true)) {
+            return;
+        }
+
         Iterator<Protocol> it = protocols.values().iterator();
         while (it.hasNext()) {
             Protocol protocol = it.next();
