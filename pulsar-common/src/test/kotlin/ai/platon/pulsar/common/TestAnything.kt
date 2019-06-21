@@ -186,6 +186,31 @@ class TestAnything {
     }
 
     @Test
+    fun testQualifiedClassNames() {
+        val classNames = arrayOf(
+                mutableSetOf(""),
+                mutableSetOf("", "a", "b", "clearfix", "d", "right", "e", "f")
+        ).map { getQualifiedClassNames(it) }.forEach {
+            if (it.isNotEmpty()) {
+                println(it.joinToString(".", ".") { it })
+            }
+        }
+    }
+
+    fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<String> {
+        classNames.remove("")
+        if (classNames.isEmpty()) return classNames
+        arrayOf("clearfix", "left", "right", "l", "r").forEach {
+            classNames.remove(it)
+            if (classNames.isEmpty()) {
+                classNames.add(it)
+                return@forEach
+            }
+        }
+        return classNames
+    }
+
+    @Test
     fun testStringFormat() {
         println(String.format("%06x", 0x333))
         println(String.format("%s %s", "a", null?:""))

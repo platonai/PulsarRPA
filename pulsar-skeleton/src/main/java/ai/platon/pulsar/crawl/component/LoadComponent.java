@@ -291,7 +291,7 @@ public class LoadComponent {
 
             page = fetchComponent.initFetchEntry(page, options);
 
-            LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
+            // LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
 
             globalFetchingUrls.add(url);
             page = fetchComponent.fetchContent(page);

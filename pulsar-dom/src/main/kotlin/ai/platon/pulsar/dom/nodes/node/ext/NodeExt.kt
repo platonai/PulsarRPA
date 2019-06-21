@@ -1,6 +1,9 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
 import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_HIDDEN
+import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
@@ -70,6 +73,47 @@ val nilElement = Element("div")
 
 val nilDocument = Document.createShell("")
 
+val Document.isNil get() = this === nilDocument
+
+val Document.pulsarMetaElement get() = getElementById("#${PulsarConstants.PULSAR_META_INFORMATION_ID}")
+
+val Document.pulsarScriptElement get() = getElementById("#${PulsarConstants.PULSAR_SCRIPT_SECTION_ID}")
+
+val Document.pulsarScript get() = ownerDocument.pulsarScriptElement.text()
+
+//var Document.originalExportPath by field {
+//    PulsarPaths.get(PulsarPaths.webCacheDir, "original", getExportFilename(it.baseUri()))
+//}
+
+// TODO: check if this override Node.isNil or not?
+val Element.isNil get() = this === nilElement
+
+fun Element.addClasses(vararg classNames: String): Element {
+    classNames.forEach { addClass(it) }
+    return this
+}
+
+fun Element.qualifiedClassNames(): Set<String> {
+    val classNames = className().split("\\s+".toRegex()).toMutableSet()
+    return getQualifiedClassNames(classNames)
+}
+
+fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
+    this.attr(attributeKey, attributeValue.toString())
+    return this
+}
+
+fun Element.parseStyle(): Array<String> {
+    return StringUtil.stripNonChar(attr("style"), ":;")
+            .split(";".toRegex())
+            .dropLastWhile { it.isEmpty() }
+            .toTypedArray()
+}
+
+fun Element.getStyle(styleKey: String): String {
+    return getStyle(parseStyle(), styleKey)
+}
+
 val Node.isNil get() = this === nilNode
 
 val Node.ownerDocument get() = ownerDocumentNode as Document
@@ -87,9 +131,6 @@ val Node.ownerDocument get() = ownerDocumentNode as Document
  * @return location
  */
 val Node.location: String get() = ownerDocument.location()
-
-// The Uniform Resource Identifier of this document, it's simply the location of the document
-val Node.uri: String get() = location
 
 var Node.depth by IntFeature(DEP)
 
@@ -132,9 +173,9 @@ val Node.rectangle get() = Rectangle(x, y, width, height)
 val Node.area get() = width * height
 
 /** Hidden flag set by browser */
-val Node.hasHiddenFlag: Boolean get() = hasAttr("_hidden")
+val Node.hasHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_HIDDEN)
 /** Overflow hidden flag set by browser */
-val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr("_o_hidden")
+val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HIDDEN)
 /** Check if the node is visible or not */
 val Node.isVisible: Boolean get() {
     return when {
@@ -142,6 +183,7 @@ val Node.isVisible: Boolean get() {
         else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
     }
 }
+
 /** Check if the node is visible or not */
 val Node.isHidden: Boolean get() = !this.isVisible
 /** Whether the element is floating */
@@ -267,7 +309,7 @@ val Node.slimHtml by field {
     }
 }
 
-val Node.key: String get() = "${baseUri()}#$sequence"
+val Node.key: String get() = "$location#$sequence"
 
 val Node.name: String
     get() {
@@ -279,9 +321,9 @@ val Node.name: String
                     return "#$id"
                 }
 
-                val cls = className()
+                val cls = qualifiedClassNames()
                 if (cls.isNotEmpty()) {
-                    return "." + cls.replace("\\s+".toRegex(), ".")
+                    return cls.joinToString(".", ".") { it }
                 }
 
                 nodeName()
@@ -298,11 +340,7 @@ val Node.canonicalName: String
     get() {
         when(this) {
             is Document -> {
-                var baseUri = baseUri()
-                if (baseUri.isEmpty()) {
-                    baseUri = ownerBody.attr("baseUri")
-                }
-                return ":root@$baseUri"
+                return location
             }
             is Element -> {
                 var id = id().trim()
@@ -310,15 +348,15 @@ val Node.canonicalName: String
                     id = "#$id"
                 }
 
-                var cls = ""
+                var classes = ""
                 if (id.isEmpty()) {
-                    cls = className().trim()
-                    if (!cls.isEmpty()) {
-                        cls = "." + cls.replace("\\s+".toRegex(), ".")
+                    val cls = qualifiedClassNames()
+                    if (cls.isNotEmpty()) {
+                        classes = cls.joinToString(".", ".") { it }
                     }
                 }
 
-                return "${nodeName()}$id$cls"
+                return "${nodeName()}$id$classes"
             }
             is TextNode -> {
                 val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
@@ -630,32 +668,6 @@ fun Node.ancestors(): List<Element> {
     return ancestors
 }
 
-// TODO: override Node.isNil or not?
-val Element.isNil get() = this === nilElement
-
-fun Element.addClasses(vararg classNames: String): Element {
-    classNames.forEach { addClass(it) }
-    return this
-}
-
-fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
-    this.attr(attributeKey, attributeValue.toString())
-    return this
-}
-
-fun Element.parseStyle(): Array<String> {
-    return StringUtil.stripNonChar(attr("style"), ":;")
-            .split(";".toRegex())
-            .dropLastWhile { it.isEmpty() }
-            .toTypedArray()
-}
-
-fun Element.getStyle(styleKey: String): String {
-    return getStyle(parseStyle(), styleKey)
-}
-
-val Document.isNil get() = this === nilDocument
-
 private fun accumulateText(root: Element): String {
     val sb = StringBuilder()
     NodeTraversor.traverse({ node, depth ->
@@ -671,4 +683,17 @@ private fun accumulateText(root: Element): String {
     }, root)
 
     return sb.toString()
+}
+
+private fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<String> {
+    classNames.remove("")
+    if (classNames.isEmpty()) return classNames
+    arrayOf("clearfix", "left", "right", "l", "r").forEach {
+        classNames.remove(it)
+        if (classNames.isEmpty()) {
+            classNames.add(it)
+            return@forEach
+        }
+    }
+    return classNames
 }

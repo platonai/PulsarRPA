@@ -350,7 +350,7 @@ public class EncodingDetector {
      * @return Guessed encoding or defaultValue
      */
     public String guessEncoding(WebPage page, String defaultValue) {
-        return guessEncoding(page.getBaseUrl(), defaultValue);
+        return guessEncoding(page.getLocation(), defaultValue);
     }
 
     /**

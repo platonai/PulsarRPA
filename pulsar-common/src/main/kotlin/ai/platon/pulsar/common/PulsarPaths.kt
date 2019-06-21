@@ -26,12 +26,18 @@ object PulsarPaths {
     val reportDir = get(tmpDir, "report")
     val testDir = get(tmpDir, "test")
 
-    @JvmField val PATH_LAST_BATCH_ID = get(tmpDir, "last-batch-id")
-    @JvmField val PATH_LAST_GENERATED_ROWS = get(tmpDir, "last-generated-rows")
-    @JvmField val PATH_LOCAL_COMMAND = get(tmpDir, "pulsar-commands")
-    @JvmField val PATH_EMERGENT_SEEDS = get(tmpDir, "emergent-seeds")
-    @JvmField val PATH_BANNED_URLS = get(tmpDir, "banned-urls")
-    @JvmField val PATH_UNREACHABLE_HOSTS = get(tmpDir, "unreachable-hosts.txt")
+    @JvmField
+    val PATH_LAST_BATCH_ID = get(tmpDir, "last-batch-id")
+    @JvmField
+    val PATH_LAST_GENERATED_ROWS = get(tmpDir, "last-generated-rows")
+    @JvmField
+    val PATH_LOCAL_COMMAND = get(tmpDir, "pulsar-commands")
+    @JvmField
+    val PATH_EMERGENT_SEEDS = get(tmpDir, "emergent-seeds")
+    @JvmField
+    val PATH_BANNED_URLS = get(tmpDir, "banned-urls")
+    @JvmField
+    val PATH_UNREACHABLE_HOSTS = get(tmpDir, "unreachable-hosts.txt")
 
     private val rootDirStr get() = homeDir.toString()
 
@@ -49,13 +55,13 @@ object PulsarPaths {
         return Paths.get(rootDirStr, first.removePrefix(rootDirStr), *more)
     }
 
-    fun fromUri(uri: String, suffix: String = ""): String {
-        val u = Urls.getURLOrNull(uri)
+    fun fromUri(url: String, suffix: String = ""): String {
+        val u = Urls.getURLOrNull(url)
         val path = if (u == null) {
             "unknown-" + UUID.randomUUID().toString()
         } else {
             val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
-            domain.replace('.', '-') + "-" + DigestUtils.md5Hex(uri)
+            domain.replace('.', '-') + "-" + DigestUtils.md5Hex(url)
         }
 
         return if (suffix.isNotEmpty()) path + suffix else path

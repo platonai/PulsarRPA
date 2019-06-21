@@ -261,9 +261,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
             Instant startTime = Instant.now();
 
             // page.baseUrl is the last working address, and page.url is the permanent internal address
-            String finalAddress = page.getBaseUrl();
-            if (finalAddress == null) {
-                finalAddress = page.getUrl();
+            String location = page.getLocation();
+            if (location == null) {
+                location = page.getUrl();
             }
 
             Response response = null;
@@ -276,7 +276,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
                         LOG.info("Fetching {} , retries: {}/{}", page.getUrl(), tryCount, maxTry);
                     }
 
-                    response = getResponse(finalAddress, page, false);
+                    response = getResponse(location, page, false);
                 } catch (Throwable e) {
                     ++tryCount;
                     response = null;
@@ -294,20 +294,20 @@ public abstract class AbstractHttpProtocol implements Protocol {
                 storeResponseTime(startTime, page, response);
             }
 
-            return getProtocolOutput(page.getUrl(), finalAddress, response);
+            return getProtocolOutput(page.getUrl(), location, response);
         } catch (Throwable e) {
             return new ProtocolOutput(null, new MultiMetadata(), ProtocolStatus.failed(e));
         }
     }
 
-    private ProtocolOutput getProtocolOutput(String url, String baseUrl, Response response) throws MalformedURLException {
+    private ProtocolOutput getProtocolOutput(String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         String contentType = response.getHeader("Content-Type");
-        Content content = new Content(url, baseUrl, bytes, contentType, response.getHeaders(), mimeTypes);
+        Content content = new Content(url, location, bytes, contentType, response.getHeaders(), mimeTypes);
         MultiMetadata headers = response.getHeaders();
         ProtocolStatus status;
 
@@ -316,16 +316,16 @@ public abstract class AbstractHttpProtocol implements Protocol {
         } else if (httpCode == 304) {
             return new ProtocolOutput(content, headers, ProtocolStatus.STATUS_NOTMODIFIED);
         } else if (httpCode >= 300 && httpCode < 400) { // handle redirect
-            String location = response.getHeader("Location");
+            String redirect = response.getHeader("Location");
             // some broken servers, such as MS IIS, use lowercase header name...
-            if (location == null) {
-                location = response.getHeader("location");
+            if (redirect == null) {
+                redirect = response.getHeader("location");
             }
-            if (location == null) {
-                location = "";
+            if (redirect == null) {
+                redirect = "";
             }
 
-            u = new URL(u, location);
+            u = new URL(u, redirect);
             int code;
             switch (httpCode) {
                 case SC_MULTIPLE_CHOICES: // multiple choices, preferred value in Location

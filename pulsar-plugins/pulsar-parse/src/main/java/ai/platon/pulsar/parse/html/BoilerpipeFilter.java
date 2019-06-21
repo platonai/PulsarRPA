@@ -119,7 +119,7 @@ public class BoilerpipeFilter implements ParseFilter {
             }
 
             InputSource inputSource = page.getContentAsSaxInputSource();
-            TextDocument doc = new SAXInput().parse(page.getBaseUrl(), inputSource);
+            TextDocument doc = new SAXInput().parse(page.getLocation(), inputSource);
 
             ChineseNewsExtractor extractor = new ChineseNewsExtractor();
             extractor.process(doc);

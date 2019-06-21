@@ -9,36 +9,33 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
+import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.collect.Iterables
-import com.udojava.evalex.Expression.e
-import org.apache.commons.lang3.StringUtils
-import org.openqa.selenium.By
+import com.google.common.net.InternetDomainName
+import org.apache.commons.codec.digest.DigestUtils
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.RemoteWebDriver
-import org.openqa.selenium.support.ui.ExpectedCondition
 import org.openqa.selenium.support.ui.FluentWait
-import org.openqa.selenium.support.ui.WebDriverWait
 import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
+import java.nio.file.Path
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.MonthDay
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
-import kotlin.NoSuchElementException
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -171,9 +168,9 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         val finishedTasks = mutableMapOf<String, Response>()
 
         // The function must return in a reasonable time
-        val threadTimeout = defaultDriverConfig.pageLoadTimeout.plusSeconds(10)
+        val threadTimeout = mutableConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
         val numTotalTasks = pendingTasks.size
-        val wait = Duration.ofSeconds(1)
+        val interval = Duration.ofSeconds(1)
         val idleTimeout = Duration.ofMinutes(2).seconds
         val numAllowedFailures = Math.max(10, numTotalTasks / 3)
 
@@ -186,7 +183,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         var i = 0
         while (numFinishedTasks < numTotalTasks && numFailedTasks <= numAllowedFailures && idleSeconds < idleTimeout) {
             if (++i > 1) {
-                try { TimeUnit.SECONDS.sleep(wait.seconds) } catch (e: InterruptedException) {
+                try { TimeUnit.SECONDS.sleep(interval.seconds) } catch (e: InterruptedException) {
                     log.warn("Selenium interrupted. {}", e)
                     break
                 }
@@ -258,7 +255,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         batchTaskCount.getAndIncrement()
 
         // page.baseUrl is the last working address, and page.url is the permanent internal address
-        var location = page.baseUrl
+        var location = page.location
         if (location.isBlank()) {
             location = page.url
         }
@@ -372,7 +369,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
 
     @Throws(org.openqa.selenium.TimeoutException::class)
     private fun visit(url: String, page: WebPage, driver: WebDriver, driverConfig: DriverConfig) {
-        log.debug("Fetching task {}/{} in thread #{}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
+        log.info("Fetching task {}/{} in thread #{}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
                 batchTaskCount, totalTaskCount,
                 Thread.currentThread().id,
                 drivers.freeSize, drivers.totalSize,
@@ -386,7 +383,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         driver.manage().window().maximize()
         driver.get(url)
 
-        // As a JavascriptExecutor
+        // Block and wait for the document is ready: all css and resources are OK
         if (JavascriptExecutor::class.java.isAssignableFrom(driver.javaClass)) {
             executeJs(url, driver, driverConfig)
         }
@@ -411,7 +408,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             if (r == "timeout") {
                 log.debug("Hit max round $maxRound to wait document | {}", url)
             } else {
-                log.debug("Document is ready. {} | {}", r, url)
+                log.trace("Document is ready. {} | {}", r, url)
             }
         } catch (e: org.openqa.selenium.TimeoutException) {
             log.info("Timeout to wait document, timeout {}s | {}", timeout, url)
@@ -421,9 +418,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             throw e
         }
 
-        if (StringUtils.isNotBlank(clientJs)) {
-            jsExecutor.executeScript(clientJs)
-        }
+        jsExecutor.executeScript(clientJs)
     }
 
     private fun getPageSourceSlient(driver: WebDriver): String {
@@ -452,25 +447,21 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         totalSuccessCount.incrementAndGet()
 
         // TODO: A metrics system is required
-        log.debug("Selenium task success: {}/{}, total task success: {}/{}",
-                batchSuccessCount, batchTaskCount,
-                totalSuccessCount, totalTaskCount
-        )
-
-        if (totalTaskCount.get() % 100 == 0) {
-            log.debug("Total task success: {}/{}", totalSuccessCount, totalTaskCount)
+        if (totalTaskCount.get() % 20 == 0) {
+            log.debug("Selenium task success: {}/{}, total task success: {}/{}",
+                    batchSuccessCount, batchTaskCount, totalSuccessCount, totalTaskCount)
         }
     }
 
-    private fun takeScreenshot(pageSource: String, page: WebPage, driver: RemoteWebDriver, ident: String) {
+    private fun takeScreenshot(contentLength: Int, page: WebPage, driver: RemoteWebDriver) {
         if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
             try {
-                if (pageSource.length > 100) {
+                if (contentLength > 100) {
                     val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                    export(page, bytes, ident, ".png")
+                    export(page, bytes, ".png")
                 }
             } catch (e: Exception) {
-                log.warn("Cannot take screenshot, page length {} | {}", pageSource.length, page.url)
+                log.warn("Cannot take screenshot, page length {} | {}", contentLength, page.url)
             }
         }
     }
@@ -498,22 +489,33 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         val content = sb.toString()
 
         if (log.isDebugEnabled && content.isNotEmpty()) {
-            sb.setLength(0)
-            sb.append(status.minorName).append('/').append(monthDay)
-            if (content.length < 1000) {
-                sb.append('/').append(content.length / 200 * 200)
-            } else {
-                sb.append('/').append(content.length / 2000 * 2000)
-            }
+            export(sb, status, content, page)
 
-            val ident = sb.toString()
-            export(page, content.toByteArray(), ident)
             if (log.isTraceEnabled) {
-                takeScreenshot(content, page, driver as RemoteWebDriver, ident)
+                takeScreenshot(content.length, page, driver as RemoteWebDriver)
             }
         }
 
         return content
+    }
+
+    private fun export(sb: StringBuilder, status: ProtocolStatus, content: String, page: WebPage) {
+        val document = Documents.parse(content, page.baseUrl)
+        document.absoluteLinks()
+        val prettyHtml = document.prettyHtml
+
+        sb.setLength(0)
+        sb.append(status.minorName).append('/').append(monthDay)
+        if (prettyHtml.length < 2000) {
+            sb.append("/a").append(prettyHtml.length / 500 * 500)
+        } else {
+            sb.append("/b").append(prettyHtml.length / 20000 * 20000)
+        }
+
+        val ident = sb.toString()
+        val path = export(page, prettyHtml.toByteArray(), ident)
+
+        page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
     }
 
     private fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
@@ -548,11 +550,14 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         return DriverConfig(pageLoadTimeout, scriptTimeout, scrollDownCount, scrollDownWait)
     }
 
-    private fun export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm") {
+    private fun export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
         val browser = page.lastBrowser.name.toLowerCase()
-        val filename = PulsarPaths.fromUri(page.url, suffix)
-        val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), browser, ident, filename)
+        val u = Urls.getURLOrNull(page.url)?: return PulsarPaths.tmpDir
+        val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
+        val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
+        val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), "original", browser, domain, filename)
         PulsarFiles.saveTo(content, path, true)
+        return path
     }
 
     override fun close() {

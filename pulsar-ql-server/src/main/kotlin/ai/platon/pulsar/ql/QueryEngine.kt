@@ -191,6 +191,7 @@ object QueryEngine: AutoCloseable {
         loadOptions.fetchMode = mode
         loadOptions.background = true
 
+        // TODO: lower priority
         val partitions: List<List<String>> = Lists.partition(IteratorUtils.toList(urls.iterator()), batchSize)
         partitions.forEach { loadAll(it, loadOptions) }
 

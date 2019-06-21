@@ -74,7 +74,7 @@ public class TestMSWordParser {
         in.readFully(bytes);
         in.close();
         WebPage page = WebPage.newWebPage("file:" + urlString);
-        page.setBaseUrl(page.getUrl());
+        page.setLocation(page.getUrl());
         page.setContent(bytes);
         // set the content type?
         MimeUtil mimeutil = new MimeUtil(conf);

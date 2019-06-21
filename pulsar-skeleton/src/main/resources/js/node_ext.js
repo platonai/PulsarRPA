@@ -1,34 +1,28 @@
-const DATA_VERSION = "0.2.3";
-
-// the vision schema keeps consistent with DOMRect
-const VISION_SCHEMA = ["left", "top", "width", "height"];
-const VISION_SCHEMA_STRING = "l-t-w-h";
-const CODE_STRUCTURE_SCHEMA_STRING = "d-s";
-const VISUALIZE_TAGS = ["BODY", "DIV", "A", "IMG", "TABLE", "UL", "DL", "H1", "H2", "H3"];
-const META_INFORMATION_ID = "ScrapingMetaInformation";
-
-const ATTR_COMPUTED_STYLE = 'st';
-const ATTR_ELEMENT_NODE_VI = 'vi';
-const ATTR_TEXT_NODE_VI = 'tv';
-
-const ATTR_DEBUG = '_debug';
-const ATTR_DEBUG_LEVEL = "_debugLevel";
-const ATTR_HIDDEN = '_hidden';
-const ATTR_OVERFLOW_HIDDEN = '_o_hidden';
-
 "use strict";
+
+/**
+ * Set attribute if it's not blank
+ * @param attrName {String}
+ * @param attrValue {String}
+ * */
+Node.prototype.setAttributeIfNotBlank = function(attrName, attrValue) {
+    if (this.isElement() && attrValue && attrValue.trim().length > 0) {
+        this.setAttribute(attrName, attrValue.trim())
+    }
+};
 
 /**
  * @param predicate The predicate
  * */
 Node.prototype.count = function(predicate) {
     let c = 0;
-    let visitor = {};
+    let visitor = function () {};
     visitor.head = function (node, depth) {
         if (predicate(node)) {
             ++c;
         }
     };
+
     new PlatonNodeTraversor(visitor).traverse(this);
     return c;
 };
@@ -61,14 +55,14 @@ Node.prototype.forEachElement = function(action) {
  * @return {boolean}
  * */
 Node.prototype.isText = function() {
-    return this.node != null && this.node.nodeType === Node.TEXT_NODE;
+    return this.nodeType === Node.TEXT_NODE;
 };
 
 /**
  * @return {boolean}
  * */
 Node.prototype.isElement = function() {
-    return this.node != null && this.node.nodeType === Node.ELEMENT_NODE;
+    return this.nodeType === Node.ELEMENT_NODE;
 };
 
 /**
@@ -82,14 +76,16 @@ Node.prototype.isTextOrElement = function() {
  * @return {boolean}
  * */
 Node.prototype.isImage = function() {
-    return this.nodeName.toLowerCase() === "img";
+    // HTML-uppercased qualified name
+    return this.nodeName === "IMG";
 };
 
 /**
  * @return {boolean}
  * */
 Node.prototype.isAnchor = function() {
-    return this.nodeName.toLowerCase() === "a";
+    // HTML-uppercased qualified name
+    return this.nodeName === "A";
 };
 
 /**
@@ -148,7 +144,6 @@ NodeExt.prototype.isVisible = function() {
     let hidden = this.node.offsetParent === null;
 
     if (hidden) {
-        // this.setAttributeIfNotBlank("_offset", this.node.offsetWidth + "x" + this.node.offsetHeight);
         return false
     }
 
@@ -172,10 +167,8 @@ NodeExt.prototype.isOverflown = function() {
 NodeExt.prototype.isOverflowHidden = function() {
     let p = this.parent();
     let maxWidth = this.config.viewPortWidth;
-    if (p != null && p.maxWidth < maxWidth && (this.left() >= p.right() || this.right() <= p.left())) {
-        return true
-    }
-    return false
+    return p != null && p.maxWidth < maxWidth && (this.left() >= p.right() || this.right() <= p.left());
+
 };
 
 /**
@@ -278,21 +271,10 @@ NodeExt.prototype.updateMaxWidth = function(width) {
  * @return {String|null}
  * */
 NodeExt.prototype.attr = function(attrName) {
-    if (this.isElement()) {
+    if (this.node.isElement()) {
         return this.node.getAttribute(attrName)
     }
     return null
-};
-
-/**
- * Set attribute if it's not blank
- * @param attrName {String}
- * @param attrValue {String}
- * */
-NodeExt.prototype.setAttributeIfNotBlank = function(attrName, attrValue) {
-    if (this.isElement() && attrValue && attrValue.trim().length > 0) {
-        this.node.setAttribute(attrName, attrValue.trim())
-    }
 };
 
 /**
@@ -304,6 +286,7 @@ NodeExt.prototype.formatDOMRect = function() {
 
 /**
  * Get the formatted rect
+ * @return string
  * */
 NodeExt.prototype.formatStyles = function() {
     return this.propertyNames.map(propertyName => this.styles[propertyName]).join(", ")

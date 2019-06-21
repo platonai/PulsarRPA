@@ -106,7 +106,7 @@ public class HtmlParserTestBase {
     protected WebPage getPage(String html, Charset charset) {
         WebPage page = WebPage.newWebPage(exampleUrl);
 
-        page.setBaseUrl(exampleUrl);
+        page.setLocation(exampleUrl);
         page.setContent(html.getBytes(charset));
         page.setContentType("text/html");
 

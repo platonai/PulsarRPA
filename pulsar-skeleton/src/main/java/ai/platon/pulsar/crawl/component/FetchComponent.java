@@ -20,6 +20,7 @@ package ai.platon.pulsar.crawl.component;
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.persist.CrawlStatus;
 import ai.platon.pulsar.persist.ProtocolHeaders;
@@ -65,6 +66,14 @@ public class FetchComponent implements AutoCloseable {
 
     public FetchComponent(ProtocolFactory protocolFactory,
                           TaskStatusTracker taskStatusTracker,
+                          MutableConfig mutableConfig) {
+        this.immutableConfig = mutableConfig;
+        this.protocolFactory = protocolFactory;
+        this.taskStatusTracker = taskStatusTracker;
+    }
+
+    public FetchComponent(ProtocolFactory protocolFactory,
+                          TaskStatusTracker taskStatusTracker,
                           ImmutableConfig immutableConfig) {
         this.immutableConfig = immutableConfig;
         this.protocolFactory = protocolFactory;
@@ -92,7 +101,7 @@ public class FetchComponent implements AutoCloseable {
             return;
         }
 
-        page.setBaseUrl(content.getBaseUrl());
+        page.setLocation(content.getBaseUrl());
         page.setContent(content.getContent());
 
         if (contentType != null) {

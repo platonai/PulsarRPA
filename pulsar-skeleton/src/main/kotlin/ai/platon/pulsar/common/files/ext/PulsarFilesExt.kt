@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 fun PulsarFiles.save(page: WebPage, ident: String = ""): Path {
-    val filename = page.headers.decodedDispositionFilename ?: PulsarPaths.fromUri(page.baseUrl)
+    val filename = page.headers.decodedDispositionFilename ?: PulsarPaths.fromUri(page.location)
     var postfix = filename.substringAfter(".").toLowerCase()
     if (postfix.length > 5) {
         postfix = "other"

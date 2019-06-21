@@ -58,7 +58,7 @@ public class WebGraph extends DirectedWeightedPseudograph<WebVertex, WebEdge> {
         // create provider of vertex attributes
         ComponentAttributeProvider<WebVertex> vertexAttributeProvider = v -> {
             Map<String, String> m = new HashMap<>();
-            m.put("baseUrl", v.getWebPage().getBaseUrl());
+            m.put("baseUrl", v.getWebPage().getLocation());
             m.put("depth", String.valueOf(v.getWebPage().getDistance()));
             return m;
         };
@@ -86,7 +86,7 @@ public class WebGraph extends DirectedWeightedPseudograph<WebVertex, WebEdge> {
             int depth = Integer.valueOf(attributes.get("depth"));
 
             WebPage page = WebPage.newWebPage(url);
-            page.setBaseUrl(baseUrl);
+            page.setLocation(baseUrl);
             page.setDistance(depth);
 
             return new WebVertex(WebPage.newWebPage(url));

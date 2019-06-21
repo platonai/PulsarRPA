@@ -21,7 +21,8 @@ object WebAccess {
             7 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
             8 to "http://www.sh.chinanews.com/jinrong/index.shtml",
             9 to "https://music.163.com/",
-            10 to "https://news.sogou.com/ent.shtml"
+            10 to "https://news.sogou.com/ent.shtml",
+            11 to "http://shop.boqii.com/brand/"
     )
 
     private val trivialUrls = listOf(
@@ -45,12 +46,12 @@ object WebAccess {
     private val loadOptions = "--expires=1d"
 
     fun load() {
-        val url = seeds[8]?:return
+        val url = seeds[11]?:return
         val args = "-ps -expires 1s"
 
         val page = i.load("$url $args")
         val document = i.parse(page)
-        page.links.stream().parallel().forEach { i.load("$it") }
+        // page.links.stream().parallel().forEach { i.load("$it") }
         // println(WebPageFormatter(page).withLinks())
 
 //        val document = i.parse(page)

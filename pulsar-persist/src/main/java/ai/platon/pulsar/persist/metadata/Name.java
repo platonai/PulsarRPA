@@ -49,6 +49,11 @@ public enum Name {
     ANCHORS("P_AS"),
 
     /**
+     * storage
+     */
+    ORIGINAL_EXPORT_PATH("S_OEP"),
+
+    /**
      * index
      */
     INDEX_TIME_HISTORY("I_ITH"),

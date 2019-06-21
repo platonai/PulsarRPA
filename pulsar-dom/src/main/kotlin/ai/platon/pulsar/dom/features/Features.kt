@@ -152,7 +152,7 @@ object FeatureFormatter {
      * @eps The amount of allowed absolute error to judge if a double value is zero which is ignored
      * @return string
      */
-    fun format(features: RealVector, featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.00001): StringBuilder {
+    fun format(features: RealVector, featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
         val size = Iterables.size(featureKeys)
         if (size == 0) {
             for (i in featureNames.indices) {

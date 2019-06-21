@@ -138,7 +138,7 @@ class GoraWebPage(override val url: String, val page: GWebPage) : IWebPage {
         }
 
     /**
-     * BaseUrl comes from Content#getBaseUrl which comes from ProtocolOutput
+     * BaseUrl comes from Content#getLocation which comes from ProtocolOutput
      * Maybe be different from url if the request redirected.
      */
     override var baseUrl: String?

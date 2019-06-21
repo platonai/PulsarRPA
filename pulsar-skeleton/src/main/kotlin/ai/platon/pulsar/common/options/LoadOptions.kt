@@ -65,9 +65,9 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
     @Parameter(names = ["-noNorm", "--no-link-normalizer"], arity = 1, description = "No normalizer is applied to parse links")
-    var noNorm = true
+    var noNorm = false
     @Parameter(names = ["-noFilter", "--no-link-filter"], arity = 1, description = "No filter is applied to parse links")
-    var noFilter = true
+    var noFilter = false
 
     // A volatile config is usually session scoped
     // TODO: easy to cause bugs, a better way to init volatile config is required

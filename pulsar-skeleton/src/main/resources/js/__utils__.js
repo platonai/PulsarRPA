@@ -24,17 +24,17 @@ __utils__.checkVariables = function(variables) {
  * @param maxRound The maximum round to check ready
  * */
 __utils__.waitForReady = function(maxRound) {
-    // document.body.scrollHeight
-    if (!document.platonStatus) {
-        document.platonStatus = { n: 0, scroll: 0, height: 0, na: 0, ni: 0 }
-    }
-    document.platonStatus.n += 1;
+    __utils__.createPulsarDataIfAbsent();
 
-    let n = document.platonStatus.n;
+    let status = document.pulsarData.status;
+    let n = status.n;
+
+    n += 1;
     if (maxRound && maxRound > 0 && n > maxRound) {
         return "timeout"
     }
 
+    // TODO: what is exactly "complete" state is?
     if (document.readyState !== "complete") {
         return false
     }
@@ -47,14 +47,40 @@ __utils__.waitForReady = function(maxRound) {
     window.scrollBy(0, 500);
 
     // last data
-    let status = document.platonStatus;
     status.scroll += 1;
 
     let ready = __utils__.isActuallyReady(status);
 
     // The document is ready
-    if (ready) return JSON.stringify(status);
-    else return false
+    if (ready) {
+        return JSON.stringify(status)
+    } else return false
+};
+
+__utils__.createPulsarDataIfAbsent = function() {
+    if (!document.pulsarData) {
+        document.pulsarData = {
+            status: { n: 0, scroll: 0, height: 0, na: 0, ni: 0 }
+        };
+    }
+};
+
+__utils__.writePulsarData = function() {
+    if (document.readyState !== "complete") {
+        return false
+    }
+
+    let script = document.querySelector(`#${SCRIPT_SECTION_ID}`);
+    if (!script) {
+        script = document.createElement('script');
+        script.id = SCRIPT_SECTION_ID;
+        script.type = 'text/javascript';
+        let lastElement = document.lastElementChild || document.body;
+        lastElement.appendChild(script);
+    }
+
+    let pulsarData = JSON.stringify(document.pulsarData, null, 3);
+    script.textContent = "\n" + `let pulsarData = ${pulsarData};\n`
 };
 
 __utils__.isActuallyReady = function(lastStatus) {
@@ -536,7 +562,7 @@ __utils__.visualizeHumanize = function() {
     }
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization
-    new PlatonNodeTraversor(new PlatonNodeVisitor(), {}).traverse(document.body);
+    new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
 
     // do something like a human being
     // humanize(document.body);

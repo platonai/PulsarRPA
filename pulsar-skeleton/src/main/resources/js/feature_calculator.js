@@ -5,9 +5,9 @@
  */
 
 /**
- * Create a new PlatonNodeVisitor
+ * Create a new NodeFeatureCalculator
  */
-let PlatonNodeVisitor = function() {
+let NodeFeatureCalculator = function() {
     this.stopped = false;
 
     this.config = PULSAR_CONFIGS || {};
@@ -16,7 +16,7 @@ let PlatonNodeVisitor = function() {
 
     this.sequence = 0;
 
-    let metadata = document.querySelector("#" + META_INFORMATION_ID);
+    let metadata = document.querySelector(`#${META_INFORMATION_ID}`);
     if (metadata) {
         // already exists
         this.stopped = true;
@@ -32,7 +32,7 @@ let PlatonNodeVisitor = function() {
  * MetaInformation version :
  * 0.2.2 :
  * */
-PlatonNodeVisitor.prototype.generateMetadata = function() {
+NodeFeatureCalculator.prototype.generateMetadata = function() {
     document.body.setAttribute("data-url", document.URL);
     let date = new Date();
 
@@ -53,13 +53,14 @@ PlatonNodeVisitor.prototype.generateMetadata = function() {
         ele.setAttribute("version-mismatch", this.config.version + "-" + DATA_VERSION);
     }
 
-    document.body.firstElementChild.appendChild(ele)
+    let parent = document.body.firstElementChild||document.body;
+    parent.appendChild(ele)
 };
 
 /**
  * Check if stopped
  */
-PlatonNodeVisitor.prototype.isStopped = function() {
+NodeFeatureCalculator.prototype.isStopped = function() {
     return this.stopped;
 };
 
@@ -68,7 +69,7 @@ PlatonNodeVisitor.prototype.isStopped = function() {
  * @param node {Node} the node to enter
  * @param  depth {Number} the depth in the DOM
  */
-PlatonNodeVisitor.prototype.head = function(node, depth) {
+NodeFeatureCalculator.prototype.head = function(node, depth) {
     ++this.sequence;
 
     node.nodeExt = new NodeExt(node, this.config);
@@ -81,7 +82,7 @@ PlatonNodeVisitor.prototype.head = function(node, depth) {
  * @param node {Node|Text|HTMLElement} the node to enter
  * @param  depth {Number} the depth in the DOM
  */
-PlatonNodeVisitor.prototype.calcSelfIndicator = function(node, depth) {
+NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, depth) {
     let nodeExt = node.nodeExt;
 
     if (node.isText()) {
@@ -101,16 +102,19 @@ PlatonNodeVisitor.prototype.calcSelfIndicator = function(node, depth) {
     // Calculate the rectangle of this node
     nodeExt.getRect();
 
+    // TODO: since there are too many _hidden nodes, we should simplified it to save space
     if (node.isElement()) {
         // "hidden" seems not defined properly,
         // some parent element is "hidden" and some of there children are not expected to be hidden
         // for example, ul tag often have a zero dimension
         if (nodeExt.isHidden()) {
-            node.setAttribute(ATTR_HIDDEN, '1');
+            // node.toggleAttribute(ATTR_HIDDEN, true);
+            node.setAttribute(ATTR_HIDDEN, '');
         }
 
         if (nodeExt.isOverflowHidden() || (nodeExt.hasParent() && nodeExt.parent().node.hasAttribute(ATTR_OVERFLOW_HIDDEN))) {
-            node.setAttribute(ATTR_OVERFLOW_HIDDEN, '1');
+            // node.toggleAttribute(ATTR_OVERFLOW_HIDDEN, true);
+            node.setAttribute(ATTR_OVERFLOW_HIDDEN, '');
         }
     }
 
@@ -131,22 +135,22 @@ PlatonNodeVisitor.prototype.calcSelfIndicator = function(node, depth) {
  * @param node {Node|Element} the node visited
  * @param  depth {Number} the depth in the DOM
  */
-PlatonNodeVisitor.prototype.tail = function(node, depth) {
+NodeFeatureCalculator.prototype.tail = function(node, depth) {
     let nodeExt = node.nodeExt;
     if (!nodeExt) {
         return
     }
 
     if (node.isElement()) {
-        nodeExt.setAttributeIfNotBlank(ATTR_COMPUTED_STYLE, nodeExt.formatStyles());
-        nodeExt.setAttributeIfNotBlank(ATTR_ELEMENT_NODE_VI, nodeExt.formatDOMRect());
+        node.setAttributeIfNotBlank(ATTR_COMPUTED_STYLE, nodeExt.formatStyles());
+        node.setAttributeIfNotBlank(ATTR_ELEMENT_NODE_VI, nodeExt.formatDOMRect());
 
         // calculate the rectangle of each child text node
         for (let i = 0; i < node.childNodes.length; ++i) {
-            let childPulsar = node.childNodes[i].nodeExt;
-            if (childPulsar && childPulsar.isText()) {
+            let childNodeExt = node.childNodes[i].nodeExt;
+            if (childNodeExt && childNodeExt.node.isText()) {
                 // 'tv' is short for 'text node vision information'
-                nodeExt.setAttributeIfNotBlank(ATTR_TEXT_NODE_VI + i, childPulsar.formatDOMRect());
+                node.setAttributeIfNotBlank(ATTR_TEXT_NODE_VI + i, childNodeExt.formatDOMRect());
             }
         }
     }
@@ -163,7 +167,7 @@ PlatonNodeVisitor.prototype.tail = function(node, depth) {
  * @param  depth {Number} the depth in the DOM
  * @return {Number}
  */
-PlatonNodeVisitor.prototype.calcCharacterWidth = function(node, depth) {
+NodeFeatureCalculator.prototype.calcCharacterWidth = function(node, depth) {
     let parent = node.parentElement;
     let cw = parent.getAttribute('_cw');
     let width = 0;
@@ -178,7 +182,7 @@ PlatonNodeVisitor.prototype.calcCharacterWidth = function(node, depth) {
     return width
 };
 
-PlatonNodeVisitor.prototype.addDebugInfo = function(node) {
+NodeFeatureCalculator.prototype.addDebugInfo = function(node) {
     if (!node.nodeExt) {
         return
     }

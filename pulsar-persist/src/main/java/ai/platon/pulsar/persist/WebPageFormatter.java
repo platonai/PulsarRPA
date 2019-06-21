@@ -122,7 +122,7 @@ public class WebPageFormatter {
         fields.put("fetchTime", format(page.getFetchTime()));
         fields.put("prevModifiedTime", format(page.getPrevModifiedTime()));
         fields.put("modifiedTime", format(page.getModifiedTime()));
-        fields.put("baseUrl", page.getBaseUrl());
+        fields.put("baseUrl", page.getLocation());
         fields.put("reprUrl", page.getReprUrl());
         fields.put("batchId", page.getBatchId());
 
@@ -212,7 +212,7 @@ public class WebPageFormatter {
         StringBuilder sb = new StringBuilder();
 
         sb.append("url:\t" + page.getUrl() + "\n")
-                .append("baseUrl:\t" + page.getBaseUrl() + "\n")
+                .append("baseUrl:\t" + page.getLocation() + "\n")
                 .append("batchId:\t" + page.getBatchId() + "\n")
                 .append("crawlStatus:\t" + page.getCrawlStatus() + "\n")
                 .append("protocolStatus:\t" + page.getProtocolStatus() + "\n")
@@ -348,7 +348,7 @@ public class WebPageFormatter {
     }
 
     public Document createDocument() {
-        Document doc = Document.createShell(page.getBaseUrl());
+        Document doc = Document.createShell(page.getLocation());
 
         doc.head().appendElement("title").appendText(page.getPageTitle());
         doc.body().appendElement("h1").appendText(page.getContentTitle());

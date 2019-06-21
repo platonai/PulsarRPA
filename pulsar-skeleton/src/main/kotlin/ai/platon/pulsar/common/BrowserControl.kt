@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.PulsarConstants.*
 import com.google.gson.GsonBuilder
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.chrome.ChromeOptions
@@ -53,12 +54,13 @@ open class BrowserControl(
         var viewPort = Dimension(1920, 1080)
 
         var headless = true
-        var imagesEnabled = false
-        // var pageLoadStrategy = "normal"
+        // There are too many exceptions if images are disabled
+        var imagesEnabled = true
+        // We will wait for document ready manually using javascript
         var pageLoadStrategy = "none"
 
+        // Special
         // var mobileEmulationEnabled = true
-        //
     }
 
     val generalOptions = DesiredCapabilities()
@@ -101,7 +103,15 @@ open class BrowserControl(
             // Note: Json-2.6.2 does not recognize MutableMap, but knows Map
             val configs = GsonBuilder().create().toJson(jsParameters.toMap())
 
-            val sb = StringBuilder(";\nlet PULSAR_CONFIGS = $configs;\n")
+            val sb = StringBuilder()
+            sb.append(";\n")
+            // set predefined variables shared between javascript and jvm program
+            sb.appendln("let META_INFORMATION_ID = \"$PULSAR_META_INFORMATION_ID\";")
+            sb.appendln("let SCRIPT_SECTION_ID = \"$PULSAR_SCRIPT_SECTION_ID\";")
+            sb.appendln("let ATTR_HIDDEN = \"$PULSAR_ATTR_HIDDEN\";")
+            sb.appendln("let ATTR_OVERFLOW_HIDDEN = \"$PULSAR_ATTR_OVERFLOW_HIDDEN\";")
+            sb.appendln("let ATTR_OVERFLOW_VISIBLE = \"$PULSAR_ATTR_OVERFLOW_VISIBLE\";")
+            sb.appendln("let PULSAR_CONFIGS = $configs;")
             scripts.values.joinTo(sb, ";\n")
             libJs = sb.toString()
         }
@@ -117,6 +127,7 @@ open class BrowserControl(
                     .append(";\n__utils__.scrollToBottom();")
                     .append(";\n__utils__.scrollToTop();")
                     .append(";\n__utils__.visualizeHumanize();")
+                    .append(";\n__utils__.writePulsarData();")
                     .append(";\nwindow.stop();")
                     .append(";\n")
 
@@ -128,10 +139,11 @@ open class BrowserControl(
 
     private fun loadDefaultResource() {
         arrayOf(
+                "configs.js",
                 "__utils__.js",
                 "node_ext.js",
                 "node_traversor.js",
-                "node_visitor.js",
+                "feature_calculator.js",
                 "humanize.js"
         ).associateTo(scripts) {
             it to ResourceLoader().readAllLines("$jsDirectory/$it").joinToString("\n") { it }
