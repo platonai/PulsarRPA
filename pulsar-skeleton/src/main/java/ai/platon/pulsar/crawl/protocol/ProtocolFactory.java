@@ -56,7 +56,7 @@ public class ProtocolFactory implements AutoCloseable {
     public ProtocolFactory(ImmutableConfig immutableConfig) {
         this.immutableConfig = immutableConfig;
 
-        Map<String, Protocol> results = new ResourceLoader()
+        Map<String, Protocol> results = ResourceLoader
                 .readAllLines("", "protocol-plugins.txt")
                 .stream()
                 .map(String::trim)

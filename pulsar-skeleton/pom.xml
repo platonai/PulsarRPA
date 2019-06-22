@@ -97,7 +97,6 @@
             <artifactId>htmlunit-driver</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-client</artifactId>
@@ -113,7 +112,6 @@
             <artifactId>jersey-json</artifactId>
             <version>${jersey-1.version}</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.springframework</groupId>

@@ -32,6 +32,10 @@ public class BrowserInstanceService {
 
   private Dao<BrowserInstance, Long> browserInstanceDao;
 
+  public BrowserInstanceService(OrmliteDaoFactory daoFactory) {
+    this(daoFactory, false);
+  }
+  
   public BrowserInstanceService(OrmliteDaoFactory daoFactory, boolean autoTruncate) {
     browserInstanceDao = daoFactory.createDao(BrowserInstance.class);
     if (autoTruncate) {

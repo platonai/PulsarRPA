@@ -65,7 +65,7 @@ public class TestSuffixUrlFilter extends UrlFilterTestBase {
 
     @Before
     public void setUp() throws IOException {
-        filter = new SuffixUrlFilter(new ResourceLoader().readAllLines(suffixes, null));
+        filter = new SuffixUrlFilter(ResourceLoader.readAllLines(suffixes, null));
     }
 
     @Test

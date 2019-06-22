@@ -109,11 +109,13 @@ public class WebPageFormatter {
         fields.put("createTime", format(page.getCreateTime()));
         fields.put("distance", page.getDistance());
 
-    /* Fetch */
+        /* Fetch */
         fields.put("crawlStatus", page.getCrawlStatus().toString());
         fields.put("protocolStatus", page.getProtocolStatus().getName());
         fields.put("protocolStatusMessage", page.getProtocolStatus().toString());
-        fields.put("contentLength", page.getContent().array().length);
+        if (page.getContent() != null) {
+            fields.put("contentLength", page.getContent().array().length);
+        }
         fields.put("fetchCount", page.getFetchCount());
         fields.put("fetchPriority", page.getFetchPriority());
         fields.put("fetchInterval", page.getFetchInterval().toString());
@@ -126,7 +128,7 @@ public class WebPageFormatter {
         fields.put("reprUrl", page.getReprUrl());
         fields.put("batchId", page.getBatchId());
 
-    /* Parse */
+        /* Parse */
         fields.put("parseStatus", page.getParseStatus().getName());
         fields.put("parseStatusMessage", page.getParseStatus().toString());
         fields.put("encoding", page.getEncoding());

@@ -146,7 +146,7 @@ open class BrowserControl(
                 "feature_calculator.js",
                 "humanize.js"
         ).associateTo(scripts) {
-            it to ResourceLoader().readAllLines("$jsDirectory/$it").joinToString("\n") { it }
+            it to ResourceLoader.readAllLines("$jsDirectory/$it").joinToString("\n") { it }
         }
     }
 }

@@ -75,7 +75,7 @@ public class ParserConfigReader {
         String fileResource = conf.get(PARSE_PLUGINS_FILE, "parse-plugins.xml");
 
         Document document;
-        try (Reader reader = new ResourceLoader().getResourceAsReader(fileResource, resourcePrefix)) {
+        try (Reader reader = ResourceLoader.getResourceAsReader(fileResource, resourcePrefix)) {
             InputSource inputSource = new InputSource(reader);
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder parser = factory.newDocumentBuilder();

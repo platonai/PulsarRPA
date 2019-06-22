@@ -760,7 +760,7 @@
         <selenium.version>3.8.1</selenium.version>
 
         <!-- Persistence -->
-        <ormlite.version>4.48</ormlite.version>
+        <ormlite.version>5.1</ormlite.version>
 
         <!-- Spring -->
         <spring.version>4.3.6.RELEASE</spring.version>

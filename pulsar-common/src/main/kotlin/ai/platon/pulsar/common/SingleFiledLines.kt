@@ -17,7 +17,6 @@ class SingleFiledLines(
      * Load features from file. Nothing to do if the file does not exist,
      * and the there is no features available.
      *
-     *
      * Null file name means load nothing
      */
     init {
@@ -53,7 +52,7 @@ class SingleFiledLines(
             return
         }
 
-        ResourceLoader().readAllLines(file)
+        ResourceLoader.readAllLines(file)
                 .map { preprocessor.process(it) }
                 .filter { it.isNotBlank() }
                 .toCollection(lines)

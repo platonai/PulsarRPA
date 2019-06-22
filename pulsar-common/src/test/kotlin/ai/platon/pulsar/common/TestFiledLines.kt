@@ -12,7 +12,7 @@ class TestFiledLines {
 
     @Test
     fun testSingleFiledLines() {
-        val url = ResourceLoader().getResource(resource)
+        val url = ResourceLoader.getResource(resource)
         log.info("Resource : $url")
 
         assertNotNull(url)

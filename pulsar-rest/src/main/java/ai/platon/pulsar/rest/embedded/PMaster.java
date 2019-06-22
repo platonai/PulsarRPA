@@ -17,7 +17,7 @@
 package ai.platon.pulsar.rest.embedded;
 
 import ai.platon.pulsar.rest.MasterApplication;
-import ai.platon.pulsar.rest.resources.WelcomeResource;
+import ai.platon.pulsar.rest.resources.SeedResource;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
@@ -94,17 +94,16 @@ public class PMaster {
     System.out.println("Usage : PMaster [-i] [stop]");
   }
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     printUsage();
 
     boolean interactive = false;
     boolean stop = false;
-    for (int i = 0; i < args.length; ++i) {
-      if ("stop".equals(args[i])) {
-        stop = true;
-      }
-      else if ("-i".equals(args[i])) {
-        interactive = true;
+    for (String arg : args) {
+      if ("stop".equals(arg)) {
+          stop = true;
+      } else if ("-i".equals(arg)) {
+          interactive = true;
       }
     }
 
@@ -118,7 +117,7 @@ public class PMaster {
     else {
       masterApplication.property("contextConfig", applicationContext);
       masterApplication.registerClasses(AdminResource.class);
-      masterApplication.packages(false, WelcomeResource.class.getPackage().getName());
+      masterApplication.packages(false, SeedResource.class.getPackage().getName());
       masterApplication.property("log4jConfigLocation", "log4j-jetty.properties");
 
       PMaster pMaster = new PMaster(masterApplication);

@@ -67,7 +67,7 @@ public class RegexUrlFilter extends RegexUrlFilterBase {
         String stringResource = conf.get(URLFILTER_REGEX_RULES);
         String fileResource = conf.get(URLFILTER_REGEX_FILE, "regex-urlfilter.txt");
         String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
-        return new ResourceLoader().getMultiSourceReader(stringResource, fileResource, resourcePrefix);
+        return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix);
     }
 
     // Inherited Javadoc

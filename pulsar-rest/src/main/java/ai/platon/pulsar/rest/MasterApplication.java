@@ -1,8 +1,8 @@
 package ai.platon.pulsar.rest;
 
-import ai.platon.pulsar.rest.resources.WelcomeResource;
-import ai.platon.pulsar.rest.filters.CORSResponseFilter;
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.rest.filters.CORSResponseFilter;
+import ai.platon.pulsar.rest.resources.SeedResource;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import javax.inject.Singleton;
@@ -23,11 +23,11 @@ public class MasterApplication extends ResourceConfig {
   public static final String ROOT_PATH = "/api";
 
   public MasterApplication() {
-    this(new ImmutableConfig(), WelcomeResource.class.getPackage().getName());
+    this(new ImmutableConfig(), SeedResource.class.getPackage().getName());
   }
 
   public MasterApplication(ImmutableConfig conf) {
-    this(conf, WelcomeResource.class.getPackage().getName());
+    this(conf, SeedResource.class.getPackage().getName());
   }
 
   public MasterApplication(ImmutableConfig conf, String... packages) {

@@ -85,8 +85,8 @@ public class ResourceLoader {
         return userClassFactories;
     }
 
-    private ClassLoader classLoader;
-    {
+    private static ClassLoader classLoader;
+    static {
         classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
             classLoader = ResourceLoader.class.getClassLoader();
@@ -136,7 +136,11 @@ public class ResourceLoader {
         }
     }
 
-    public List<String> readAllLines(String stringResource, String fileResource, String resourcePrefix) {
+    /**
+     * Read all lines from one of the following resource: string, file by file name and resource by resource name
+     * The front resource have higher priority
+     * */
+    public static List<String> readAllLines(String stringResource, String fileResource, String resourcePrefix) {
         try (Reader reader = getMultiSourceReader(stringResource, fileResource, resourcePrefix)) {
             if (reader != null) {
                 return new BufferedReader(reader).lines()
@@ -150,11 +154,11 @@ public class ResourceLoader {
         return new ArrayList<>(0);
     }
 
-    public List<String> readAllLines(String stringResource, String fileResource) {
+    public static List<String> readAllLines(String stringResource, String fileResource) {
         return readAllLines(stringResource, fileResource, "");
     }
 
-    public List<String> readAllLines(String fileResource) {
+    public static List<String> readAllLines(String fileResource) {
         try (Reader reader = getResourceAsReader(fileResource)) {
             if (reader != null) {
                 return new BufferedReader(reader).lines()
@@ -168,24 +172,40 @@ public class ResourceLoader {
         return new ArrayList<>(0);
     }
 
+    public static String readString(String fileResource) {
+        return readStringTo(fileResource, new StringBuilder());
+    }
+
+    public static String readStringTo(String fileResource, StringBuilder sb) {
+        try (Reader reader = getResourceAsReader(fileResource)) {
+            if (reader != null) {
+                new BufferedReader(reader).lines().forEach(sb::append);
+            }
+        } catch (IOException e) {
+            LOG.error(StringUtil.stringifyException(e));
+        }
+
+        return sb.toString();
+    }
+
     /**
      * Get a {@link Reader} attached to the configuration resource with the
      * given <code>name</code>.
      *
-     * @param fileResource configuration resource name.
+     * @param name resource name.
      * @return a reader attached to the resource.
      */
     @Nullable
-    public InputStream getResourceAsStream(String fileResource) {
-        Objects.requireNonNull(fileResource);
+    public static InputStream getResourceAsStream(String name) {
+        Objects.requireNonNull(name);
         try {
-            URL url = getResource(fileResource);
+            URL url = getResource(name);
 
             if (url == null) {
                 // LOG.info(name + " not found");
                 return null;
             } else {
-                LOG.info("Found resource " + fileResource + " at " + url);
+                LOG.info("Found resource " + name + " at " + url);
             }
 
             return url.openStream();
@@ -194,21 +214,24 @@ public class ResourceLoader {
         }
     }
 
+    /**
+     * Find the first resource associated by prefix/name
+     * */
     @Nullable
-    public InputStream getResourceAsStream(String fileResource, String... resourcePrefixes) {
-        Objects.requireNonNull(fileResource);
+    public static InputStream getResourceAsStream(String name, String... resourcePrefixes) {
+        Objects.requireNonNull(name);
         InputStream[] streams = {null};
         return Stream.of(resourcePrefixes)
                 .filter(StringUtils::isNotBlank)
                 .map(resourcePrefix -> {
                     if (streams[0] == null) {
-                        streams[0] = getResourceAsStream(resourcePrefix + "/" + fileResource);
+                        streams[0] = getResourceAsStream(resourcePrefix + "/" + name);
                     }
                     return streams[0];
                 })
                 .filter(Objects::nonNull)
                 .findFirst()
-                .orElse(getResourceAsStream(fileResource));
+                .orElse(getResourceAsStream(name));
     }
 
     /**
@@ -219,7 +242,7 @@ public class ResourceLoader {
      * @return a reader attached to the resource.
      */
     @Nullable
-    public Reader getResourceAsReader(String fileResource, String... resourcePrefixes) {
+    public static Reader getResourceAsReader(String fileResource, String... resourcePrefixes) {
         Objects.requireNonNull(fileResource);
         InputStream stream = getResourceAsStream(fileResource, resourcePrefixes);
         return stream == null ? null : new InputStreamReader(stream);
@@ -228,10 +251,16 @@ public class ResourceLoader {
     /**
      * Get the {@link URL} for the named resource.
      *
-     * @param name resource name.
-     * @return the url for the named resource.
+     * Finds a resource with a given name.
+     * Find resources first by each registered class loader and then by the default class loader.
+     *
+     * @see Class#getResource(java.lang.String)
+     *
+     * @param  name name of the desired resource
+     * @return      A  {@link java.net.URL} object or {@code null} if no
+     *              resource with this name is found
      */
-    public URL getResource(String name) {
+    public static URL getResource(String name) {
         URL url = null;
         // User provided class loader first
         Iterator<ClassFactory> it = userClassFactories.iterator();
@@ -249,27 +278,27 @@ public class ResourceLoader {
      *                             fallback to other class loaders if the resource not found by preferred class loader.
      * @return the url for the named resource.
      */
-    public <T> URL getResource(String name, Class<T> preferredClassLoader) {
+    public static <T> URL getResource(String name, Class<T> preferredClassLoader) {
         URL url = preferredClassLoader.getResource(name);
-        return url != null ? url : this.getResource(name);
+        return url != null ? url : getResource(name);
     }
 
-    public Reader getMultiSourceReader(String stringResource, String fileResource) throws FileNotFoundException {
+    public static Reader getMultiSourceReader(String stringResource, String fileResource) throws FileNotFoundException {
         return getMultiSourceReader(stringResource, fileResource, "");
     }
 
-    public Reader getMultiSourceReader(String stringResource, String fileResource, String resourcePrefix)
+    public static Reader getMultiSourceReader(String stringResource, String namedResource, String resourcePrefix)
             throws FileNotFoundException {
         Reader reader = null;
         if (!StringUtils.isBlank(stringResource)) {
             reader = new StringReader(stringResource);
         } else {
-            if (Files.exists(Paths.get(fileResource))) {
-                reader = new FileReader(fileResource);
+            if (Files.exists(Paths.get(namedResource))) {
+                reader = new FileReader(namedResource);
             } else {
                 // Read specified location
-                if (!fileResource.startsWith("/") && StringUtils.isNotBlank(resourcePrefix)) {
-                    reader = getResourceAsReader(resourcePrefix + "/" + fileResource);
+                if (!namedResource.startsWith("/") && StringUtils.isNotBlank(resourcePrefix)) {
+                    reader = getResourceAsReader(resourcePrefix + "/" + namedResource);
                 }
 
                 // Read default config dir
@@ -279,7 +308,7 @@ public class ResourceLoader {
 
                 // Search in classpath
                 if (reader == null) {
-                    reader = getResourceAsReader(fileResource);
+                    reader = getResourceAsReader(namedResource);
                 }
             }
         }

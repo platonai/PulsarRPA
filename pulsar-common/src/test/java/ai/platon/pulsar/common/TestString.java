@@ -140,7 +140,7 @@ public class TestString {
 
     @Test
     public void testReplaceCharsetInHtml() {
-        List<String> lines = new ResourceLoader().readAllLines("data/html-charsets.txt");
+        List<String> lines = ResourceLoader.readAllLines("data/html-charsets.txt");
         for (String line : lines) {
             line = StringUtil.replaceCharsetInHtml(line, "UTF-8");
             assertTrue(line, line.contains("UTF-8"));
@@ -387,7 +387,7 @@ public class TestString {
         String seeds = "@data/lines-with-slashes.txt";
 
         if (seeds.startsWith("@")) {
-            seeds = String.join("\n", new ResourceLoader().readAllLines(seeds.substring(1)));
+            seeds = String.join("\n", ResourceLoader.readAllLines(seeds.substring(1)));
         }
 
         File seedFile = File.createTempFile("seed", ".txt");

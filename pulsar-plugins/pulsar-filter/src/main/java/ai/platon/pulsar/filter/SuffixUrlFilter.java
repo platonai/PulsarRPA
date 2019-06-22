@@ -130,7 +130,7 @@ public class SuffixUrlFilter implements UrlFilter {
             String stringResource = conf.get(PARAM_URLFILTER_SUFFIX_RULES);
             String fileResource = conf.get(PARAM_URLFILTER_SUFFIX_FILE, "suffix-urlfilter.txt");
             String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
-            List<String> lines = new ResourceLoader().readAllLines(stringResource, fileResource, resourcePrefix);
+            List<String> lines = ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix);
 
             parse(lines);
         } catch (IOException e) {
@@ -146,7 +146,7 @@ public class SuffixUrlFilter implements UrlFilter {
         ImmutableConfig conf = new ImmutableConfig();
         SuffixUrlFilter filter;
         if (args.length >= 1)
-            filter = new SuffixUrlFilter(new ResourceLoader().readAllLines(args[0], null));
+            filter = new SuffixUrlFilter(ResourceLoader.readAllLines(args[0], null));
         else {
             filter = new SuffixUrlFilter(conf);
         }

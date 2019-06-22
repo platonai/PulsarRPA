@@ -70,7 +70,7 @@ object QueryEngine: AutoCloseable {
         Runtime.getRuntime().addShutdownHook(Thread(this::close))
 
         proxyPool = ProxyPool.getInstance(unmodifiedConfig)
-        handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, true)
+        handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, false)
         taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
 
         backgroundSession.disableCache()
@@ -137,8 +137,11 @@ object QueryEngine: AutoCloseable {
         while (!isClosed.get()) {
             Thread.sleep(10000)
 
-            loadLazyTasks()
-            fetchSeeds()
+            if (handlePeriodicalFetchTasks) {
+                loadLazyTasks()
+                fetchSeeds()
+            }
+
             maintainProxyPool()
         }
     }

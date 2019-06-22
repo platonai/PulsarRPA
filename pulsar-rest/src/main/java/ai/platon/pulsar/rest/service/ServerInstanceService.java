@@ -30,11 +30,19 @@ public class ServerInstanceService {
 
   private Dao<ServerInstance, Long> serverInstanceDao;
 
+  public ServerInstanceService(OrmliteDaoFactory daoFactory) {
+    this(daoFactory, false);
+  }
+
   public ServerInstanceService(OrmliteDaoFactory daoFactory, boolean autoTruncate) {
     serverInstanceDao = daoFactory.createDao(ServerInstance.class);
     if (autoTruncate) {
       truncate();
     }
+  }
+
+  public Dao<ServerInstance, Long> db() {
+    return serverInstanceDao;
   }
 
   public ServerInstance register(ServerInstance serverInstance) {

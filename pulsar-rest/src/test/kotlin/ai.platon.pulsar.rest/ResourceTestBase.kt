@@ -9,21 +9,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import javax.ws.rs.core.Application
 
-open class KResourceTestBase : JerseyTest() {
+open class ResourceTestBase : JerseyTest() {
     protected lateinit var conf: ImmutableConfig
 
     /**
      * TODO : create a mock site
      */
-    protected lateinit var pageResourceReference: PageResourceReference
 
     @Before
     override fun setUp() {
         super.setUp()
-
-        pageResourceReference = PageResourceReference(baseUri, client())
-        pageResourceReference.fetch(seedUrl)
-        pageResourceReference.fetch(detailUrl)
     }
 
     override fun configure(): Application {
@@ -38,14 +33,10 @@ open class KResourceTestBase : JerseyTest() {
 
     @After
     override fun tearDown() {
-        pageResourceReference.delete(seedUrl)
-        pageResourceReference.delete(detailUrl)
         super.tearDown()
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(ResourceTestBase::class.java)
-        val seedUrl = "http://news.cqnews.net/html/2017-06/08/content_41874417.htm"
-        val detailUrl = "http://news.163.com/17/0607/21/CMC14QCD000189FH.html"
+        val log = LoggerFactory.getLogger(ResourceTestBase::class.java)
     }
 }

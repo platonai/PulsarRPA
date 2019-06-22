@@ -87,6 +87,7 @@ open class FeaturedDocument(val document: Document) {
 
     val prettyHtml: String
         get() {
+            document.outputSettings().prettyPrint()
             val str = document.html()
                     .replace("s-features", "\n\t\t\ts-features")
                     .replace("s-named-features", "\n\t\t\ts-named-features")

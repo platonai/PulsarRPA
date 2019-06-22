@@ -31,38 +31,16 @@
 
     <bean id="serverInstanceService" class="ai.platon.pulsar.rest.service.ServerInstanceService">
         <constructor-arg ref="ormliteDaoFactory"/>
-        <constructor-arg value="true"/>
+        <constructor-arg name="autoTruncate" value="true"/>
     </bean>
 
     <bean id="browserInstanceService" class="ai.platon.pulsar.rest.service.BrowserInstanceService">
         <constructor-arg ref="ormliteDaoFactory"/>
-        <constructor-arg value="true"/>
+        <constructor-arg name="autoTruncate" value="true"/>
     </bean>
 
     <bean id="masterApplication" class="ai.platon.pulsar.rest.MasterApplication">
         <constructor-arg ref="conf"/>
     </bean>
-
-    <!--<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />-->
-
-    <!-- =============== MyBATIS beans configuration ================== -->
-    <!--<bean id="podcastDao" class="org.mybatis.spring.mapper.MapperFactoryBean">-->
-        <!--<property name="sqlSessionFactory" ref="sqlSessionFactory"/>-->
-        <!--<property name="mapperInterface" value="org.codingpedia.demo.rest.dao.PodcastDao" />-->
-    <!--</bean>-->
-
-    <!--<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">-->
-        <!--<property name="dataSource" ref="dataSource" />-->
-        <!--<property name="configLocation" value="classpath:config/mybatisV3.xml"/>-->
-    <!--</bean>-->
-
-    <!--<bean id="podcastRestService" class="org.codingpedia.demo.rest.service.PodcastRestService" >-->
-        <!--<property name="podcastDao" ref="podcastDao"/>-->
-    <!--</bean>-->
-
-    <!--<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">-->
-        <!--<property name="jndiName" value="java:comp/env/jdbc/restDemoDB" />-->
-        <!--<property name="resourceRef" value="true" />-->
-    <!--</bean>-->
 
 </beans>
