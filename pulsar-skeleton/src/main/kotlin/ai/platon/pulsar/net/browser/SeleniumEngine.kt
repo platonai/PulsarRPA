@@ -65,8 +65,6 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
     private val defaultDriverConfig = DriverConfig(immutableConfig)
-    private var libJs = browserControl.parseLibJs(true)
-    private var clientJs = browserControl.parseJs(true)
 
     private val monthDay = DateTimeUtil.now("MMdd")
     private val totalTaskCount = AtomicInteger(0)
@@ -581,6 +579,8 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         private var instanceCount = AtomicInteger()
         // The javascript to execute by Web browsers
         var browserControl = BrowserControl()
+        val libJs = browserControl.parseLibJs(false)
+        val clientJs = browserControl.parseJs(false)
         val defaultSupportedCharsets = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
                 "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
         val systemAvailableCharsets = Charset.availableCharsets().values.joinToString("|") { it.name() }

@@ -34,6 +34,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -88,6 +89,7 @@ public class ServiceResource {
    * */
   @GET
   @Path("/listOfInteger")
+  @Produces(MediaType.APPLICATION_JSON)
   public List<Integer> getListOfInteger() {
     return IntStream.range(0, 10).boxed().collect(Collectors.toList());
   }
@@ -96,6 +98,7 @@ public class ServiceResource {
    * List all servers instances
    * */
   @GET
+  @Produces(MediaType.APPLICATION_JSON)
   public List<ServerInstance> list() {
     return serverInstanceService.list();
   }

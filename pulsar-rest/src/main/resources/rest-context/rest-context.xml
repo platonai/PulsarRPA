@@ -20,11 +20,11 @@
         <constructor-arg ref="h2DatabaseType" />
     </bean>
 
-    <bean id="ormliteDaoFactory" class="ai.platon.pulsar.persist.rdb.model.dao.OrmliteDaoFactory">
+    <bean id="ormliteDaoFactory" class="ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory">
         <constructor-arg ref="connectionSource"/>
     </bean>
 
-    <bean id="ormliteTableCreator" class="ai.platon.pulsar.persist.rdb.model.dao.OrmliteTableCreator">
+    <bean id="ormliteTableCreator" class="ai.platon.pulsar.persist.rdb.dao.OrmliteTableCreator">
         <constructor-arg ref="connectionSource"/>
         <constructor-arg ref="ormliteDaoFactory"/>
     </bean>

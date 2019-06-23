@@ -763,7 +763,7 @@
         <ormlite.version>5.1</ormlite.version>
 
         <!-- Spring -->
-        <spring.version>4.3.6.RELEASE</spring.version>
+        <spring.version>4.3.24.RELEASE</spring.version>
         <!--<spring.version>5.0.0.M5</spring.version>-->
 
         <!-- Server Dependencies -->
@@ -777,7 +777,7 @@
         <!-- Hadoop [2, ) depends on jersey-1, jersey-1 is required if the code starts by hadoop's RunJar -->
         <jersey-1.version>1.19.3</jersey-1.version>
         <!-- Jersey-2 has better test, serialization, document, examples support, used if the program runs outside hadoop -->
-        <jersey-2.version>2.26-b03</jersey-2.version>
+        <jersey-2.version>2.28</jersey-2.version>
 
         <jetty.version>9.4.4.v20170414</jetty.version>
         <jetty-maven-plugin.version>9.4.4.v20170414</jetty-maven-plugin.version>

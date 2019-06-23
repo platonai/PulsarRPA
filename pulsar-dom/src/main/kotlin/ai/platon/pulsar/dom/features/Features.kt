@@ -143,6 +143,10 @@ object FeatureFormatter {
         return key.toString() + ":" + formatValue(key, feature.value)
     }
 
+    fun format(features: RealVector, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
+        return format(features, listOf(), sb, eps)
+    }
+
     /**
      * Get the string representation of the features
      *

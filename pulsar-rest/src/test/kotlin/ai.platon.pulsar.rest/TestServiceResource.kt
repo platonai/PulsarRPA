@@ -25,10 +25,15 @@ class TestServiceResource : ResourceTestBase() {
     @Test
     fun testListOfInteger() {
         val listOfInteger = target("service").path("listOfInteger").request()
-                .get(object : GenericType<List<Int>>() {
-
-                })
+                .get(object : GenericType<List<Int>>() {})
         println(listOfInteger)
+    }
+
+    @Test
+    fun testList() {
+        val servers = target("service").request()
+                .get(object : GenericType<List<ServerInstance>>() {})
+        println(servers)
     }
 
     @Ignore("@context is not available if jersey-test-framework-provider-inmemory is used")
