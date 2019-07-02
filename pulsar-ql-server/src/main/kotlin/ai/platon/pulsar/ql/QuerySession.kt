@@ -12,11 +12,13 @@ import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
 import org.h2.engine.SessionInterface
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 open class QuerySession(val dbSession: DbSession, config: SessionConfig)
     : PulsarSession(applicationContext, config, dbSession.id) {
-    private var totalUdfs: Int = 0
+    private var totalUdfs = AtomicInteger()
+    private var totalUdas = AtomicInteger()
 
     init {
         if (dbSession.implementation is org.h2.engine.Session) {
@@ -41,8 +43,8 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
                 .filter { it.annotations.any { it is UDFGroup } }
                 .forEach { registerUdfs(session, it.kotlin) }
 
-        if (totalUdfs > 0) {
-            log.info("Added total {} new UDFs", totalUdfs)
+        if (totalUdfs.get() > 0) {
+            log.info("Added total {} new UDFs for session {}", totalUdfs, session)
         }
     }
 
@@ -102,6 +104,8 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
         command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate()
 
+        totalUdas.incrementAndGet()
+
         if (log.isTraceEnabled) {
             log.trace(sql)
         }
@@ -127,6 +131,8 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
         sql = "CREATE ALIAS IF NOT EXISTS $alias FOR \"${udfClass.qualifiedName}.$method\""
         command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate()
+
+        totalUdfs.incrementAndGet()
 
         if (log.isTraceEnabled) {
             log.trace(sql)

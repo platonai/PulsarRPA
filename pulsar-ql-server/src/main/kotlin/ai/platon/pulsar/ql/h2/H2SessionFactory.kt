@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 
 object H2SessionFactory : org.h2.engine.SessionFactory {
 
-    private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)
+    private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
 
     init {
         H2Config.config()

@@ -181,14 +181,14 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstRe1(dom: ValueDom, cssQuery: String, regex: String): String {
         val text = text(selectFirst(dom, cssQuery))
-        return ai.platon.pulsar.common.RegexExtractor().re1(text, regex)
+        return RegexExtractor().re1(text, regex)
     }
 
     @UDFunction
     @JvmStatic
     fun firstRe1(dom: ValueDom, cssQuery: String, regex: String, group: Int): String {
         val text = text(selectFirst(dom, cssQuery))
-        return ai.platon.pulsar.common.RegexExtractor().re1(text, regex, group)
+        return RegexExtractor().re1(text, regex, group)
     }
 
     @UDFunction

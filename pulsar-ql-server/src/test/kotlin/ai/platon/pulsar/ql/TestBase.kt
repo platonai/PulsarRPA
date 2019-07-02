@@ -103,7 +103,7 @@ abstract class TestBase {
     }
 
     val db = ai.platon.pulsar.ql.h2.H2Db()
-    val baseDir = db.baseTestDir
+    val baseDir = db.baseDir
     var name: String = db.generateTempDbName()
     lateinit var conn: Connection
     lateinit var stat: Statement

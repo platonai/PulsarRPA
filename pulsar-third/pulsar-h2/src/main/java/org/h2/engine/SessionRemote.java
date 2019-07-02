@@ -89,7 +89,7 @@ public class SessionRemote extends SessionWithState implements DataHandler {
 
     private CompareMode compareMode = CompareMode.getInstance(null, 0);
 
-    private static Class<?> getEngineImplementation() {
+    public static Class<?> getEngineImplementation() {
         String className = Utils.getProperty("h2.sessionFactory", "org.h2.engine.Engine");
         return JdbcUtils.loadUserClass(className);
     }

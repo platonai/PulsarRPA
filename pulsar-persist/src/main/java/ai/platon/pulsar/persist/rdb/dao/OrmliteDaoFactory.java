@@ -35,6 +35,9 @@ public class OrmliteDaoFactory {
         this.connectionSource = connectionSource;
     }
 
+    /**
+     * Create a dao if absent
+     * */
     public <T, ID> Dao<T, ID> createDao(Class<T> clazz) {
         try {
             Dao<T, ID> dao = DaoFactory.createDao(connectionSource, clazz);

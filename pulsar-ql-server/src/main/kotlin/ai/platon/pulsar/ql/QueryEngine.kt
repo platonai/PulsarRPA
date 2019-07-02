@@ -44,7 +44,7 @@ object QueryEngine: AutoCloseable {
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
-    private val sessions: MutableMap<DbSession, QuerySession> = mutableMapOf()
+    private val sessions: MutableMap<DbSession, QuerySession> = Collections.synchronizedMap(mutableMapOf())
 
     private val taskStatusTracker: TaskStatusTracker
 
@@ -83,25 +83,21 @@ object QueryEngine: AutoCloseable {
         status = Status.RUNNING
     }
 
-    @Synchronized
     fun createQuerySession(dbSession: DbSession): QuerySession {
         val querySession = QuerySession(dbSession, SessionConfig(dbSession, unmodifiedConfig))
         sessions[dbSession] = querySession
         return querySession
     }
 
-    @Synchronized
     fun sessionCount(): Int {
         return sessions.size
     }
 
-    @Synchronized
     fun getSession(sessionId: Int): QuerySession {
         return sessions.entries.firstOrNull { it.key.id == sessionId }?.value
                 ?:throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, "Failed to find session in cache")
     }
 
-    @Synchronized
     fun closeSession(sessionId: Int) {
         val removal = sessions.filter { it.key.id == sessionId }
         removal.forEach {
@@ -110,7 +106,6 @@ object QueryEngine: AutoCloseable {
         }
     }
 
-    @Synchronized
     override fun close() {
         if (isClosed.getAndSet(true)) {
             return
