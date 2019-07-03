@@ -126,8 +126,8 @@ class H2Db(
      * @param admin true if the current user is an admin
      * @return the database URL
      */
-    fun buildURL(name_: String, admin: Boolean): String {
-        var name = name_
+    fun buildURL(dbName: String, admin: Boolean): String {
+        var name = dbName
         var url: String
         if (name.startsWith("jdbc:")) {
             if (config.mvStore) {

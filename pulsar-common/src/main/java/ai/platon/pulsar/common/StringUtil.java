@@ -46,6 +46,10 @@ public final class StringUtil {
 
     public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
 
+    public static final String FLOAT_REGEX = "^([+-]?(\\d+\\.)?\\d+)$";
+
+    public static Pattern FLOAT_PATTERN = Pattern.compile(FLOAT_REGEX);
+
     public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
 
     public static final String NUMERIC_LIKE_REGEX = "^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$";
@@ -655,6 +659,10 @@ public final class StringUtil {
     public static boolean hasHTMLTags(String text) {
         Matcher matcher = HTML_TAG_PATTERN.matcher(text);
         return matcher.find();
+    }
+
+    public static boolean isFloat(String text) {
+        return FLOAT_PATTERN.matcher(text).matches();
     }
 
     public static boolean isNumericLike(String text) {

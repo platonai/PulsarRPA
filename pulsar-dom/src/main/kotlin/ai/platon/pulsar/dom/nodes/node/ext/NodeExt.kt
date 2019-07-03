@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
+import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_HIDDEN
@@ -232,12 +233,22 @@ val Node.isCurrencyUnit get() = isShortText && cleanText in arrayOf("¥", "$")
 
 val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
 
+// TODO: "isShortText" should be in -2147483648 to 2147483647, it's mapped to java.lang.Integer.
+// TODO: detect all SQL types
+val Node.isInt get() = isShortText && StringUtils.isNumeric(cleanText)
+
+val Node.isFloat get() = isShortText && StringUtil.isFloat(cleanText)
+
 /**
  * If the text is numeric and have non-numeric surroundings
  * */
 val Node.isNumericLike get() = isMediumText && StringUtil.isNumericLike(cleanText)
 
 val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
+
+val Node.intValue by field { SParser(it.cleanText).getInt(Int.MIN_VALUE) }
+
+val Node.doubleValue by field { SParser(it.cleanText).getDouble(Double.NaN) }
 
 /*********************************************************************
  * Distinguished features

@@ -30,6 +30,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-war-plugin</artifactId>
+                        <version>${maven-war-plugin.version}</version>
                         <configuration>
                             <skip>true</skip>
                             <packagingExcludes>
@@ -318,7 +319,7 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
+            <version>${javax.servlet-api.version}</version>
         </dependency>
 
     </dependencies>

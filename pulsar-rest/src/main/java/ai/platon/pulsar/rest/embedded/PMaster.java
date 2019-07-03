@@ -133,8 +133,7 @@ public class PMaster {
             break;
           }
         }
-      }
-      else {
+      } else {
         pMaster.start();
       }
     }

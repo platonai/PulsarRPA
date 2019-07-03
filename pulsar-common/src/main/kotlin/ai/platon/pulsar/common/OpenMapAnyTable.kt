@@ -18,6 +18,8 @@ class OpenMapAnyTable(val numColumns: Int) {
     val isEmpty: Boolean get() = numRows == 0
     val isNotEmpty: Boolean get() = !isEmpty
 
+    private var array = map.values.toTypedArray()
+
     operator fun get(key: String): Row? {
         return map[key]
     }
@@ -39,8 +41,7 @@ class OpenMapAnyTable(val numColumns: Int) {
     }
 
     class Metadata(numColumns: Int) {
-        val columns = IntRange(1, numColumns)
-                .map { Column("C$it") }.toTypedArray()
+        val columns = IntRange(1, numColumns).map { Column("C$it") }.toTypedArray()
         operator fun get(j: Int): Column {
             return columns[j]
         }
@@ -58,7 +59,7 @@ class OpenMapAnyTable(val numColumns: Int) {
             val attributes: MutableMap<String, Any> = mutableMapOf()
     )
 
-    class Cell(val value: Any? = null) {
+    class Cell(var j: Int = 0, val value: Any? = null) {
         val attributes: MutableMap<String, Any> = mutableMapOf()
         override fun toString(): String {
             return value?.toString()?:""
@@ -73,12 +74,20 @@ class OpenMapAnyTable(val numColumns: Int) {
         val cells: Array<Cell?> = arrayOfNulls(numColumns)
         val attributes: MutableMap<String, Any> = mutableMapOf()
         val values get() = cells.map { it?.value }
-        operator fun get(j: Int): Any? {
+        operator fun get(j: Int): Cell? {
+            return cells[j]
+        }
+        operator fun set(j: Int, value: Cell) {
+            require(j < cells.size)
+            cells[j] = Cell(j, value)
+        }
+
+        fun getValue(j: Int): Any? {
             return cells[j]?.value
         }
-        operator fun set(j: Int, value: Any?) {
+        fun setValue(j: Int, value: Any?) {
             require(j < cells.size)
-            cells[j] = Cell(value)
+            cells[j] = Cell(j, value)
         }
     }
 
