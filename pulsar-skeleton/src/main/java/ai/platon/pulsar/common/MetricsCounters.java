@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * TODO: Use org.apache.hadoop.metrics2
+ * TODO: Use com.codahale.metrics.MetricRegistry or Spark Metrics System
  */
 public class MetricsCounters {
 

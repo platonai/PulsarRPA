@@ -77,16 +77,19 @@ public class DateTimeUtil {
         return format(LocalDateTime.now());
     }
 
-    public static String elapsedTime(long start) {
-        return elapsedTime(start, System.currentTimeMillis());
+    public static Duration elapsedTime(long start) {
+        return elapsedTime(Instant.ofEpochMilli(start), Instant.now());
     }
 
-    public static String elapsedTime(Instant start) {
-        return elapsedTime(start.toEpochMilli(), System.currentTimeMillis());
+    public static Duration elapsedTime(Instant start) {
+        return elapsedTime(start, Instant.now());
     }
 
-    public static double elapsedSeconds(long start) {
-        return (System.currentTimeMillis() - start) / 1000.0;
+    /**
+     * Calculate the elapsed time between two times specified in milliseconds.
+     */
+    public static Duration elapsedTime(Instant start, Instant end) {
+        return Duration.between(start, end);
     }
 
     /**
@@ -157,38 +160,5 @@ public class DateTimeUtil {
         }
 
         return false;
-    }
-
-    /**
-     * Calculate the elapsed time between two times specified in milliseconds.
-     *
-     * @param start The start of the time period
-     * @param end   The end of the time period
-     * @return a string of the form "XhYmZs" when the elapsed time is X hours, Y
-     * minutes and Z seconds or null if start > end.
-     */
-    private static String elapsedTime(long start, long end) {
-        if (start > end) {
-            return null;
-        }
-
-        long[] elapsedTime = new long[TIME_FACTOR.length];
-
-        for (int i = 0; i < TIME_FACTOR.length; i++) {
-            elapsedTime[i] = start > end ? -1 : (end - start) / TIME_FACTOR[i];
-            start += TIME_FACTOR[i] * elapsedTime[i];
-        }
-
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMinimumIntegerDigits(2);
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < elapsedTime.length; i++) {
-            if (i > 0) {
-                sb.append(":");
-            }
-            sb.append(nf.format(elapsedTime[i]));
-        }
-
-        return sb.toString();
     }
 }

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarSession
+import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarSession
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -11,7 +12,7 @@ TestMetadataFunctions : TestBase() {
     fun testMetadata() {
         val url = urlGroups["mia"]!![2]
 
-        val pulsar = PulsarSession()
+        val pulsar = PulsarContext.createSession()
         val page = pulsar.load(url)
         val doc = pulsar.parse(page)
         assertEquals(page.url, doc.location)

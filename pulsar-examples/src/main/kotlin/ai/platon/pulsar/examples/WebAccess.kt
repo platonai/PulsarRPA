@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.common.PulsarContext
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.URLUtil
@@ -8,7 +8,8 @@ import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.WebPageFormatter
 
 object WebAccess {
-    private val i = PulsarContext.createSession()
+    private val pc = PulsarContext.create()
+    private val i = pc.createSession()
 
     val seeds = mapOf(
             0 to "https://www.mia.com/formulas.html",
@@ -63,8 +64,11 @@ object WebAccess {
         val options = LoadOptions.parse(args)
         i.loadAll(trivialUrls, options).flatMap { it.links }.map { it.toString() }
                 .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }
-                .forEach { domain, urls ->
-                    PulsarContext.createSession().loadAll(urls.distinct().shuffled().take(20), options)
+                .entries.parallelStream()
+                .forEach { (_, urls) ->
+                    pc.createSession().use {
+                        it.loadAll(urls.distinct().shuffled().take(10), options)
+                    }
                 }
     }
 
@@ -72,8 +76,6 @@ object WebAccess {
         val url = seeds[2]?:return
         // val outlinkSelector = ".goods_item a[href~=detail]"
         val outlinkSelector = ".shoplist .cloth_shoplist li a.pic"
-
-        initClientJs()
 
         i.load("$url --expires 1s")
                 .let { i.parse(it) }
@@ -115,7 +117,7 @@ object WebAccess {
 
     fun scan() {
         val contractBaseUri = "http://www.ccgp-hubei.gov.cn:8040/fcontractAction!download.action?path="
-        i.pulsar.scan(contractBaseUri).forEachRemaining {
+        pc.scan(contractBaseUri).forEachRemaining {
             val size = it.content?.array()?.size?:0
             println(size)
         }
@@ -131,18 +133,12 @@ object WebAccess {
     }
 
     fun truncate() {
-        i.pulsar.webDb.truncate()
-    }
-
-    private fun initClientJs() {
-        val parameters = mapOf("propertyNames" to listOf("font-size", "color", "background-color"))
-        val browserControl = BrowserControl(parameters)
-        SeleniumEngine.browserControl = browserControl
+        pc.webDb.truncate()
     }
 
     fun run() {
-        load()
-        // parallelLoadAll()
+        // load()
+        parallelLoadAll()
     }
 }
 

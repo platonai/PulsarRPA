@@ -1,7 +1,8 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarEnv.applicationContext
-import ai.platon.pulsar.common.PulsarSession
+import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarEnv.applicationContext
+import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -15,8 +16,8 @@ import org.h2.engine.SessionInterface
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-open class QuerySession(val dbSession: DbSession, config: SessionConfig)
-    : PulsarSession(applicationContext, config, dbSession.id) {
+open class QuerySession(pc: PulsarContext, dbSession: DbSession, config: SessionConfig)
+    : PulsarSession(pc, config, dbSession.id) {
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 

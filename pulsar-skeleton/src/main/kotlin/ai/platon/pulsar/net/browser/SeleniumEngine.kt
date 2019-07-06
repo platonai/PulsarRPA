@@ -19,6 +19,7 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.collect.Iterables
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.gora.util.TimingUtil
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriver
@@ -30,12 +31,14 @@ import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
+import kotlin.math.max
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -57,33 +60,32 @@ data class DriverConfig(
  *
  * Note: SeleniumEngine should be process scope
  */
-class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoCloseable {
+class SeleniumEngine(
+        browserControl: BrowserControl,
+        private val executor: GlobalExecutor,
+        private val drivers: WebDriverQueues,
+        private val immutableConfig: ImmutableConfig
+): Parameterized, AutoCloseable {
 
-    private val executor = GlobalExecutor.getInstance(immutableConfig)
-    private val drivers = WebDriverQueues(browserControl, immutableConfig)
+    private val libJs = browserControl.parseLibJs(false)
+    private val clientJs = browserControl.parseJs(false)
 
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
     private val defaultDriverConfig = DriverConfig(immutableConfig)
 
     private val monthDay = DateTimeUtil.now("MMdd")
-    private val totalTaskCount = AtomicInteger(0)
-    private val totalSuccessCount = AtomicInteger(0)
-
-    // TODO: associate by batch id
-    private val batchTaskCount = AtomicInteger(0)
-    private val batchSuccessCount = AtomicInteger(0)
 
     private val isClosed = AtomicBoolean(false)
 
     init {
         instanceCount.incrementAndGet()
-        // log.debug("Get #{}th selenium engine instance" + conf.hashCode() + "\t" + engine.hashCode())
         params.withLogger(log).info()
     }
 
     override fun getParams(): Params {
         return Params.of(
+                "instanceCount", instanceCount,
                 "charsetPattern", charsetPattern,
                 "pageLoadTimeout", defaultDriverConfig.pageLoadTimeout,
                 "scriptTimeout", defaultDriverConfig.scriptTimeout,
@@ -107,62 +109,53 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     fun fetchContent(page: WebPage): Response {
         val conf = page.mutableConfig ?: immutableConfig
         val priority = conf.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
-        return fetchContentInternal(priority, page, conf)
+        return fetchContentInternal(nextBatchId, priority, page, conf)
     }
 
-    fun fetchAll(batchName: String, urls: Iterable<String>): Collection<Response> {
-        batchTaskCount.set(0)
-        batchSuccessCount.set(0)
-
+    fun fetchAll(batchId: Int, urls: Iterable<String>): Collection<Response> {
         return urls.map { this.fetch(it) }
     }
 
     fun fetchAll(urls: Iterable<String>): Collection<Response> {
-        val batchName = batchTaskId.incrementAndGet().toString()
-        return fetchAll(batchName, urls)
+        return fetchAll(nextBatchId, urls)
     }
 
-    fun fetchAll(batchName: String, urls: Iterable<String>, mutableConfig: MutableConfig): Collection<Response> {
-        batchTaskCount.set(0)
-        batchSuccessCount.set(0)
-
+    fun fetchAll(batchId: Int, urls: Iterable<String>, mutableConfig: MutableConfig): Collection<Response> {
         return urls.map { fetch(it, mutableConfig) }
     }
 
     fun fetchAll(urls: Iterable<String>, mutableConfig: MutableConfig): Collection<Response> {
-        val batchName = batchTaskId.incrementAndGet().toString()
-        return fetchAll(batchName, urls, mutableConfig)
+        return fetchAll(nextBatchId, urls, mutableConfig)
     }
 
     fun parallelFetchAll(urls: Iterable<String>, mutableConfig: MutableConfig): Collection<Response> {
         return parallelFetchAllPages(urls.map { WebPage.newWebPage(it) }, mutableConfig)
     }
 
-    fun parallelFetchAll(batchName: String, urls: Iterable<String>, mutableConfig: MutableConfig): Collection<Response> {
-        return parallelFetchAllPages(batchName, urls.map { WebPage.newWebPage(it) }, mutableConfig)
+    fun parallelFetchAll(batchId: Int, urls: Iterable<String>, mutableConfig: MutableConfig): Collection<Response> {
+        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it) }, mutableConfig)
     }
 
     fun parallelFetchAllPages(pages: Iterable<WebPage>, mutableConfig: MutableConfig): Collection<Response> {
-        val batchName = batchTaskId.incrementAndGet().toString()
-        return parallelFetchAllPages("#$batchName", pages, mutableConfig)
+        return parallelFetchAllPages(nextBatchId, pages, mutableConfig)
     }
 
-    fun parallelFetchAllPages(batchName: String, pages: Iterable<WebPage>, mutableConfig: MutableConfig): Collection<Response> {
+    fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, mutableConfig: MutableConfig): Collection<Response> {
+        val startTime = Instant.now()
         val size = Iterables.size(pages)
 
-        log.info("Selenium batch task {}: fetching {} pages in parallel", batchName, size)
-
-        batchTaskCount.set(0)
-        batchSuccessCount.set(0)
+        log.info("Start batch task {} with {} pages in parallel", batchId, size)
 
         val priority = mutableConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)!!
 
         // Create a task submitter
-        val submitter = { page: WebPage ->
-            executor.submit<Response> { fetchContentInternal(priority, page, mutableConfig) }
+        val submitter = { i: Int, page: WebPage ->
+            executor.submit { fetchContentInternal(batchId, i, priority, page, mutableConfig) }
         }
+
         // Submit all tasks
-        val pendingTasks = pages.associateTo(HashMap()) { it.url to submitter(it) }
+        var i = 0
+        val pendingTasks = pages.associateTo(HashMap()) { it.url to submitter(++i, it) }
         val finishedTasks = mutableMapOf<String, Response>()
 
         // The function must return in a reasonable time
@@ -170,7 +163,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         val numTotalTasks = pendingTasks.size
         val interval = Duration.ofSeconds(1)
         val idleTimeout = Duration.ofMinutes(2).seconds
-        val numAllowedFailures = Math.max(10, numTotalTasks / 3)
+        val numAllowedFailures = max(10, numTotalTasks / 3)
 
         var numFinishedTasks = 0
         var numFailedTasks = 0
@@ -178,19 +171,26 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
 
         // since the urls in the batch are usually from the same domain,
         // if there are too many failure, the rest tasks are very likely run to failure too
-        var i = 0
-        while (numFinishedTasks < numTotalTasks && numFailedTasks <= numAllowedFailures && idleSeconds < idleTimeout) {
+        i = 0
+        while (numFinishedTasks < numTotalTasks && numFailedTasks <= numAllowedFailures && idleSeconds < idleTimeout
+                && !isClosed.get()) {
             if (++i > 1) {
-                try { TimeUnit.SECONDS.sleep(interval.seconds) } catch (e: InterruptedException) {
+                try {
+                    TimeUnit.SECONDS.sleep(interval.seconds)
+                } catch (e: InterruptedException) {
                     log.warn("Selenium interrupted. {}", e)
                     break
                 }
             }
 
+            if (isClosed.get()) {
+                break
+            }
+
             if (i >= 60 && i % 30 == 0) {
                 // report every 30 round if it takes long time
-                log.warn("Batch {}: round #{}, {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}s",
-                        batchName, i, pendingTasks.size, finishedTasks.size, numFailedTasks, idleSeconds, idleTimeout)
+                log.warn("Batch {} takes long time - round {} - {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}s",
+                        batchId, i, pendingTasks.size, finishedTasks.size, numFailedTasks, idleSeconds, idleTimeout)
             }
 
             // loop and wait for all parallel tasks return
@@ -199,9 +199,32 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             pendingTasks.asSequence().filter { it.value.isDone }.forEach { (key, future) ->
                 try {
                     val response = getResponse(key, future, threadTimeout)
-                    if (response.code !in arrayOf(ProtocolStatusCodes.SUCCESS_OK, ProtocolStatusCodes.CANCELED)) {
+                    val time = Duration.ofSeconds(1)// response.headers
+                    val isFailed = response.code !in arrayOf(ProtocolStatusCodes.SUCCESS_OK, ProtocolStatusCodes.CANCELED)
+                    if (isFailed) {
                         ++numFailedTasks
+
+                        if (log.isInfoEnabled) {
+                            log.info("Batch {} round {} fetch failed with code {}, got {} bytes in {}, total {} failed | {}",
+                                    batchId, String.format("%2d", i),
+                                    response.code, String.format("%,7d", response.size()), time,
+                                    numFailedTasks,
+                                    key
+                            )
+                        }
+                    } else {
+                        if (log.isDebugEnabled) {
+                            // TODO: track timeout
+                            val bytes = response.size()
+                            log.debug("Batch {} round {} fetched{}{} bytes in {} with code {} | {}",
+                                    batchId, String.format("%2d", i),
+                                    if (bytes < 2000) " only " else " ", String.format("%,7d", response.size()),
+                                    time,
+                                    response.code, key
+                            )
+                        }
                     }
+
                     finishedTasks[key] = response
                 } catch (e: Throwable) {
                     log.error("Unexpected error {}", StringUtil.stringifyException(e))
@@ -213,6 +236,10 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             }
             removal.forEach { pendingTasks.remove(it) }
 
+            if (numFinishedTasks > 5) {
+                // We may do something eagerly
+            }
+
             idleSeconds = if (numTaskDone == 0) 1 + idleSeconds else 0
         }
 
@@ -222,7 +249,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
 
             // if there are still pending tasks, cancel them
             pendingTasks.forEach { it.value.cancel(true) }
-            pendingTasks.forEach { url, task ->
+            pendingTasks.forEach { (url, task) ->
                 // Attempts to cancel execution of this task
                 try {
                     val response = getResponse(url, task, threadTimeout)
@@ -233,24 +260,34 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             }
         }
 
+        val elapsed = Duration.between(startTime, Instant.now())
+        log.info("Batch {} with {} tasks is finished in {}, average {}s for each tasks",
+                batchId, size, elapsed,
+                String.format("%.2f", 1.0 * elapsed.seconds / size)
+        )
+
         return finishedTasks.values
     }
 
     private fun fetchContentInternal(page: WebPage): Response {
         val config = page.mutableConfig ?: immutableConfig
         val priority = config.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
-        return fetchContentInternal(priority, page, config)
+        return fetchContentInternal(nextBatchId, priority, page, config)
+    }
+
+    private fun fetchContentInternal(batchId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
+        return fetchContentInternal(batchId, 0, priority, page, config)
     }
 
     /**
      * Must be thread safe
      */
-    private fun fetchContentInternal(priority: Int, page: WebPage, config: ImmutableConfig): Response {
+    private fun fetchContentInternal(batchId: Int, i: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
         val driver = drivers.poll(priority, config)
-                ?: return ForwardingResponse(page.url, ProtocolStatusCodes.RETRY, MultiMetadata())
+                ?: return ForwardingResponse(page.url, ProtocolStatus.failed(ProtocolStatusCodes.RETRY), MultiMetadata())
 
         totalTaskCount.getAndIncrement()
-        batchTaskCount.getAndIncrement()
+        batchTaskCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
 
         // page.baseUrl is the last working address, and page.url is the permanent internal address
         var location = page.location
@@ -266,21 +303,14 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         var pageSource = ""
 
         try {
-            visit(location, page, driver, driverConfig)
-            pageSource = driver.pageSource
-            status = ProtocolStatus.STATUS_SUCCESS
+            status = visit(batchId, i, location, page, driver, driverConfig)
+            pageSource = getPageSourceSlient(driver)
             // TODO: handle with frames
             // driver.switchTo().frame(1);
         } catch (e: org.openqa.selenium.TimeoutException) {
             // log.warn(e.toString())
             pageSource = getPageSourceSlient(driver)
-            handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
-            // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
-            status = if (isJsSuccess(pageSource)) {
-                ProtocolStatus.STATUS_SUCCESS
-            } else {
-                ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
-            }
+            status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
             status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
@@ -294,12 +324,28 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             log.warn("Unexpected exception: {}", e)
         }
 
+        if (status.minorCode == ProtocolStatusCodes.WEB_DRIVER_TIMEOUT
+                || status.minorCode == ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT) {
+            // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
+            if (isJsSuccess(pageSource)) {
+                status = ProtocolStatus.STATUS_SUCCESS
+            }
+
+            if (status.isSuccess) {
+                log.info("Document ok but timeout after {} with length {} | {}",
+                        DateTimeUtil.elapsedTime(startTime),
+                        pageSource.length, page.url)
+            } else {
+                handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
+            }
+        }
+
         try {
             handleFetchFinish(page, driver, headers)
             pageSource = handlePageSource(pageSource, status, page, driver)
             headers.put(CONTENT_LENGTH, pageSource.length.toString())
             if (status.isSuccess) {
-                handleFetchSuccess(page, driver)
+                handleFetchSuccess(batchId)
             }
         } finally {
             drivers.put(priority, driver)
@@ -310,7 +356,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         // TODO: fetch only the major pages, css, js, etc, ignore the rest resources, ignore external resources
         // TODO: ignore timeout and get the page source
 
-        return ForwardingResponse(page.url, pageSource, status.minorCode, headers)
+        return ForwardingResponse(page.url, pageSource, status, headers)
     }
 
     private fun isJsSuccess(pageSource: String): Boolean {
@@ -362,13 +408,13 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         }
 
-        return ForwardingResponse(url, status.minorCode, headers)
+        return ForwardingResponse(url, status, headers)
     }
 
     @Throws(org.openqa.selenium.TimeoutException::class)
-    private fun visit(url: String, page: WebPage, driver: WebDriver, driverConfig: DriverConfig) {
-        log.info("Fetching task {}/{} in thread #{}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
-                batchTaskCount, totalTaskCount,
+    private fun visit(batchId: Int, i: Int, url: String, page: WebPage, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
+        log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
+                i, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
                 drivers.freeSize, drivers.totalSize,
                 page.configuredUrl,
@@ -381,16 +427,22 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         driver.manage().window().maximize()
         driver.get(url)
 
+        var status = ProtocolStatus.STATUS_SUCCESS
+
         // Block and wait for the document is ready: all css and resources are OK
         if (JavascriptExecutor::class.java.isAssignableFrom(driver.javaClass)) {
-            executeJs(url, driver, driverConfig)
+            status = executeJs(url, driver, driverConfig)
         }
+
+        return status
     }
 
     @Throws(org.openqa.selenium.TimeoutException::class)
-    private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig) {
-        val jsExecutor = driver as? JavascriptExecutor ?: return
+    private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
+        val jsExecutor = driver as? JavascriptExecutor
+                ?: return ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
 
+        var status = ProtocolStatus.STATUS_SUCCESS
         val timeout = driverConfig.pageLoadTimeout.seconds
         val maxRound = timeout - 2
         val wait = FluentWait<WebDriver>(driver)
@@ -409,7 +461,8 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
                 log.trace("Document is ready. {} | {}", r, url)
             }
         } catch (e: org.openqa.selenium.TimeoutException) {
-            log.info("Timeout to wait document, timeout {}s | {}", timeout, url)
+            log.trace("Timeout to wait for document ready, timeout {}s | {}", timeout, url)
+            status = ProtocolStatus.failed(ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT)
         } catch (e: Exception) {
             // the representation of the underlying DOM
             log.warn("Failed to render document {}, \n{}", url, e)
@@ -417,6 +470,8 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         }
 
         jsExecutor.executeScript(clientJs)
+
+        return status
     }
 
     private fun getPageSourceSlient(driver: WebDriver): String {
@@ -440,14 +495,14 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         }
     }
 
-    private fun handleFetchSuccess(page: WebPage, driver: WebDriver) {
-        batchSuccessCount.incrementAndGet()
+    private fun handleFetchSuccess(batchId: Int) {
+        batchSuccessCounters[batchId]?.incrementAndGet()
         totalSuccessCount.incrementAndGet()
 
         // TODO: A metrics system is required
         if (totalTaskCount.get() % 20 == 0) {
             log.debug("Selenium task success: {}/{}, total task success: {}/{}",
-                    batchSuccessCount, batchTaskCount, totalSuccessCount, totalTaskCount)
+                    batchSuccessCounters[batchId], batchTaskCounters[batchId], totalSuccessCount, totalTaskCount)
         }
     }
 
@@ -519,7 +574,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     private fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
         val elapsed = Duration.ofMillis(System.currentTimeMillis() - startTime)
         if (log.isDebugEnabled) {
-            log.debug("Selenium timeout. Elapsed {} length {} drivers: {}/{} timeouts: {}/{}/{} | {}",
+            log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{} timeouts: {}/{}/{} | {}",
                     elapsed, pageSource.length,
                     drivers.freeSize, drivers.totalSize,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollDownWait,
@@ -575,12 +630,7 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
     companion object {
         val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-        private val batchTaskId = AtomicInteger(0)
         private var instanceCount = AtomicInteger()
-        // The javascript to execute by Web browsers
-        var browserControl = BrowserControl()
-        val libJs = browserControl.parseLibJs(false)
-        val clientJs = browserControl.parseJs(false)
         val defaultSupportedCharsets = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
                 "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
         val systemAvailableCharsets = Charset.availableCharsets().values.joinToString("|") { it.name() }
@@ -588,12 +638,14 @@ class SeleniumEngine(val immutableConfig: ImmutableConfig): Parameterized, AutoC
         // The set is big, can use a static cache to hold them if necessary
         val defaultCharsetPattern = defaultSupportedCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
         val systemAvailableCharsetPattern = systemAvailableCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
-        /**
-         * Every process have an unique ImmutableConfig object which is created at the process startup.
-         * */
-        @Synchronized
-        fun getInstance(conf: ImmutableConfig): SeleniumEngine {
-            return ObjectCache.get(conf).computeIfAbsent(SeleniumEngine::class.java) { SeleniumEngine(conf) }
-        }
+
+        private val batchIdGen = AtomicInteger(0)
+        val nextBatchId get() = batchIdGen.incrementAndGet()
+
+        val totalTaskCount = AtomicInteger(0)
+        val totalSuccessCount = AtomicInteger(0)
+
+        val batchTaskCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
+        val batchSuccessCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
     }
 }

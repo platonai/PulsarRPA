@@ -26,7 +26,10 @@ import javax.annotation.Nonnull;
 import java.net.*;
 import java.util.regex.Pattern;
 
-/** Utility class for URL analysis */
+/**
+ * Utility class for URL analysis
+ * TODO: merge with ai.platon.pulsar.common.Urls
+ * */
 public class URLUtil {
 
     public static final Logger LOG = LoggerFactory.getLogger(URLUtil.class);

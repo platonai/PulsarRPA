@@ -282,7 +282,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
                     response = null;
                     lastThrowable = e;
                     LOG.warn(StringUtil.stringifyException(e));
-                    // LOG.warn(e.toString());
                 }
             }
 
@@ -303,6 +302,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     private ProtocolOutput getProtocolOutput(String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
+        int httpStatus = response.getStatus();
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;

@@ -175,22 +175,32 @@ public class HttpResponse implements Response {
         }
     }
 
+    @Override
     public String getUrl() {
         return url.toString();
     }
 
+    @Override
+    public int getStatus() {
+        return -1;
+    }
+
+    @Override
     public int getCode() {
         return code;
     }
 
+    @Override
     public String getHeader(String name) {
         return headers.get(name);
     }
 
+    @Override
     public MultiMetadata getHeaders() {
         return headers;
     }
 
+    @Override
     public byte[] getContent() {
         return content;
     }

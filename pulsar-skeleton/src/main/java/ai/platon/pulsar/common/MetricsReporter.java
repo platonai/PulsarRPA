@@ -27,7 +27,7 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * TODO : Use org.apache.hadoop.metrics2
+ * TODO: Use com.codahale.metrics.MetricRegistry or Spark Metrics System
  */
 public class MetricsReporter extends Thread {
 

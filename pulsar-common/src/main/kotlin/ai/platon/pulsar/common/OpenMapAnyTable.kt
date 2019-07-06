@@ -18,8 +18,6 @@ class OpenMapAnyTable(val numColumns: Int) {
     val isEmpty: Boolean get() = numRows == 0
     val isNotEmpty: Boolean get() = !isEmpty
 
-    private var array = map.values.toTypedArray()
-
     operator fun get(key: String): Row? {
         return map[key]
     }
@@ -59,7 +57,7 @@ class OpenMapAnyTable(val numColumns: Int) {
             val attributes: MutableMap<String, Any> = mutableMapOf()
     )
 
-    class Cell(var j: Int = 0, val value: Any? = null) {
+    class Cell(var j: Int = 0, var value: Any? = null) {
         val attributes: MutableMap<String, Any> = mutableMapOf()
         override fun toString(): String {
             return value?.toString()?:""

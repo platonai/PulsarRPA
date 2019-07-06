@@ -141,7 +141,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
     }
 
     /**
-     * TODO: overflow
+     * TODO: numeric overflow
      * */
     public double toDouble() {
         // TODO: normalization

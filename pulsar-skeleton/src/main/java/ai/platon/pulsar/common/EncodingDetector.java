@@ -154,7 +154,7 @@ public class EncodingDetector {
      * This method was copied from org.apache.catalina.util.RequestUtil, which is
      * licensed under the Apache License, Version 2.0 (the "License").
      *
-     * @param contentTypeUtf8
+     * @param contentTypeUtf8 utf8 encoded content
      */
     public static String parseCharacterEncoding(CharSequence contentTypeUtf8) {
         if (contentTypeUtf8 == null) {

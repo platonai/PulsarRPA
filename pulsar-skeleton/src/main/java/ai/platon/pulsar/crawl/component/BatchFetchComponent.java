@@ -1,28 +1,22 @@
 package ai.platon.pulsar.crawl.component;
 
-import ai.platon.pulsar.common.GlobalExecutor;
-import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
+import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
+import ai.platon.pulsar.crawl.protocol.Protocol;
+import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
+import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
-import ai.platon.pulsar.crawl.protocol.Protocol;
-import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
-import ai.platon.pulsar.crawl.protocol.Response;
 import org.apache.commons.collections4.CollectionUtils;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT;
@@ -34,14 +28,12 @@ public class BatchFetchComponent extends FetchComponent {
      */
     private WebDb webDb;
     private ProtocolFactory protocolFactory;
-    private GlobalExecutor executorService;
 
     public BatchFetchComponent(
             WebDb webDb, TaskStatusTracker statusTracker, ProtocolFactory protocolFactory, ImmutableConfig immutableConfig) {
         super(protocolFactory, statusTracker, immutableConfig);
         this.protocolFactory = protocolFactory;
         this.webDb = webDb;
-        this.executorService = GlobalExecutor.getInstance(immutableConfig);
     }
 
     /**
@@ -159,8 +151,8 @@ public class BatchFetchComponent extends FetchComponent {
             LOG.debug("Manual parallel fetch urls");
         }
 
-        Collection<Future<WebPage>> futures = CollectionUtils.collect(urls,
-                url -> executorService.getExecutor().submit(() -> fetch(url, options)));
+        ExecutorService executor = Executors.newWorkStealingPool(5);
+        Collection<Future<WebPage>> futures = CollectionUtils.collect(urls, url -> executor.submit(() -> fetch(url, options)));
 
         return CollectionUtils.collect(futures, this::getResponse);
     }

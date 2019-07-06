@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.start;
 
-import ai.platon.pulsar.common.PulsarEnv;
+import ai.platon.pulsar.PulsarEnv;
 import org.h2.tools.Console;
 
 import java.sql.SQLException;

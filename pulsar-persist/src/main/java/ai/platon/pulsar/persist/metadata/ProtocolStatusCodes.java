@@ -96,7 +96,10 @@ public interface ProtocolStatusCodes {
      * Selenium web driver is timeout.
      */
     int WEB_DRIVER_TIMEOUT = 1468;
-
+    /**
+     * Selenium web driver is timeout.
+     */
+    int DOCUMENT_READY_TIMEOUT = 1469;
     /**
      * This protocol was not found. Application may attempt to retry later.
      */

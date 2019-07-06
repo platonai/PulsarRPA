@@ -14,4 +14,9 @@ public enum BrowserType {
             return NATIVE;
         }
     }
+
+    @Override
+    public String toString() {
+        return name().toLowerCase();
+    }
 }

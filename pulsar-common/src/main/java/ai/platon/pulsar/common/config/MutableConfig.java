@@ -27,6 +27,9 @@ public class MutableConfig extends ImmutableConfig {
         super(conf);
     }
 
+    /**
+     * TODO: copy on write
+     * */
     public MutableConfig(ImmutableConfig conf) {
         super(conf.unbox());
     }

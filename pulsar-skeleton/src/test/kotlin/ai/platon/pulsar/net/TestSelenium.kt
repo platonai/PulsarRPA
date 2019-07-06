@@ -3,7 +3,6 @@ package ai.platon.pulsar.net
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.net.browser.SeleniumEngine
 import org.junit.Before
 import org.junit.Test
 import org.openqa.selenium.WebDriver
@@ -14,7 +13,6 @@ import java.time.Duration
 class TestSelenium {
 
     internal var conf = MutableConfig()
-    internal var engine = SeleniumEngine(conf)
     internal var productIndexUrl = "https://www.mia.com/formulas.html"
     val browserControl = BrowserControl()
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarContext
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import org.h2.tools.SimpleResultSet

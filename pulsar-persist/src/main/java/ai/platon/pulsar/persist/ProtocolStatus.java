@@ -65,6 +65,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(RETRY, "retry");
         minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
         minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
+        minorCodes.put(DOCUMENT_READY_TIMEOUT, "document_ready_timeout");
     }
 
     private GProtocolStatus protocolStatus;
@@ -123,6 +124,14 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     @Nonnull
     public static ProtocolStatus failed(Throwable e) {
         return failed(EXCEPTION, "error", e.getMessage());
+    }
+
+    public static ProtocolStatus fromMinor(int minorCode) {
+        if (minorCode == SUCCESS_OK || minorCode == NOTMODIFIED) {
+            return STATUS_SUCCESS;
+        } else {
+            return failed(minorCode);
+        }
     }
 
     public GProtocolStatus unbox() {

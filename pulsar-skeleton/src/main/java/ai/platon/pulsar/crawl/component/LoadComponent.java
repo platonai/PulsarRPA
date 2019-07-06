@@ -87,7 +87,7 @@ public class LoadComponent {
     }
 
     /**
-     * Load a url, options can be specified following the url, see {@link LoadOptions} for all options
+     * Load an url, options can be specified following the url, see {@link LoadOptions} for all options
      *
      * @param configuredUrl The url followed by options
      * @return The WebPage. If there is no web page at local storage nor remote location, {@link WebPage#NIL} is returned
@@ -100,7 +100,7 @@ public class LoadComponent {
     }
 
     /**
-     * Load a url with specified options, see {@link LoadOptions} for all options
+     * Load an url with specified options, see {@link LoadOptions} for all options
      *
      * @param originalUrl The url to load
      * @param options The options
@@ -112,10 +112,10 @@ public class LoadComponent {
     }
 
     /**
-     * Load a url with specified options
+     * Load an url with specified options
      * If there is no page in local storage nor at the given remote location, {@link WebPage#NIL} is returned
      *
-     * @param originalUrl     The url to load
+     * @param originalUrl The url to load
      * @param options The options
      * @return The WebPage.
      */
@@ -132,7 +132,7 @@ public class LoadComponent {
     }
 
     /**
-     * Load a url in {@link GHypeLink} format
+     * Load an url in {@link GHypeLink} format
      * If there is no page in local storage nor at the given remote location, {@link WebPage#NIL} is returned
      *
      * @param link    The url in {@link GHypeLink} format to load
@@ -216,9 +216,7 @@ public class LoadComponent {
             return knownPages;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Fetching {} urls with options {}", pendingUrls.size(), options);
-        }
+        LOG.debug("Fetching {} urls with options {}", pendingUrls.size(), options);
 
         Collection<WebPage> updatedPages;
         try {
@@ -432,10 +430,9 @@ public class LoadComponent {
         if (LOG.isDebugEnabled()) {
             int bytes = page.getContentBytes();
             LOG.debug("Fetched{}{} bytes in {} with {} | {}",
-                    bytes < 2000 ? " #only# " : " ",
-                    bytes, page.getMetadata().get(RESPONSE_TIME),
-                    page.getLastBrowser().name().toLowerCase(),
-                    page.getConfiguredUrl()
+                    bytes < 2000 ? " only " : " ", String.format("%,7d", page.getContentBytes()),
+                    page.getMetadata().get(RESPONSE_TIME),
+                    page.getLastBrowser(), page.getConfiguredUrl()
             );
         }
 

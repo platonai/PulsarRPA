@@ -53,8 +53,10 @@ NodeFeatureCalculator.prototype.generateMetadata = function() {
         ele.setAttribute("version-mismatch", this.config.version + "-" + DATA_VERSION);
     }
 
-    let parent = document.body.firstElementChild||document.body;
-    parent.appendChild(ele)
+    let parent = document.body.firstElementChild || document.body;
+    if (parent) {
+        parent.appendChild(ele)
+    }
 };
 
 /**

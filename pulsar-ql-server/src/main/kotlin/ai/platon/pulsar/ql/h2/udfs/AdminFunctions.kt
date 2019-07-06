@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
+import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.proxy.ProxyPool

@@ -53,7 +53,7 @@ open class FeaturedDocument(val document: Document) {
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
             val className = System.getProperty(NODE_FEATURE_CALCULATOR, defaultClassName)
-            return ResourceLoader.loadUserClass<NodeVisitor>(className)
+            return ResourceLoader.loadUserClass(className)
         }
     }
 

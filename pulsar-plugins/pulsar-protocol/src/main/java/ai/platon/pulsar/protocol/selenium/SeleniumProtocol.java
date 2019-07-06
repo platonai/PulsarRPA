@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.protocol.selenium;
 
+import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.net.browser.SeleniumEngine;
@@ -24,17 +25,15 @@ import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
 
 import java.util.Collection;
+import java.util.Objects;
 
 public class SeleniumProtocol extends ForwardingProtocol {
-
-    private SeleniumEngine engine;
 
     public SeleniumProtocol() {
     }
 
     @Override
     public void close() {
-        engine.close();
     }
 
     /**
@@ -44,7 +43,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
     @Override
     public void setConf(ImmutableConfig conf) {
         super.setConf(conf);
-        engine = SeleniumEngine.Companion.getInstance(conf);
+        // engine = SeleniumEngine.Companion.getInstance(conf);
     }
 
     public boolean supportParallel() {
@@ -53,12 +52,14 @@ public class SeleniumProtocol extends ForwardingProtocol {
 
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, MutableConfig mutableConfig) {
+        SeleniumEngine engine = PulsarEnv.INSTANCE.getSeleniumEngine();
         return engine.parallelFetchAllPages(pages, mutableConfig);
     }
 
     @Override
     public Response getResponse(String url, WebPage page, boolean followRedirects) {
         Response response = super.getResponse(url, page, followRedirects);
+        SeleniumEngine engine = PulsarEnv.INSTANCE.getSeleniumEngine();
         return response != null ? response : engine.fetchContent(page);
     }
 }

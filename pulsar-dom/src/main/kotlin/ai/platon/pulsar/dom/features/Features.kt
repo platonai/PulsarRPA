@@ -177,23 +177,29 @@ object FeatureFormatter {
         return if (sb.endsWith(' ')) sb.deleteCharAt(sb.length - 1) else sb
     }
 
-    fun format(variables: Map<String, Any>, sb: StringBuilder = StringBuilder()): StringBuilder {
-        return format(variables, listOf(), sb)
+    fun format(variables: Map<String, Any>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
+        return format(variables, listOf(), sb, eps)
     }
 
-    fun format(variables: Map<String, Any>, names: Collection<String>, sb: StringBuilder = StringBuilder()): StringBuilder {
+    fun format(variables: Map<String, Any>, names: Collection<String>): StringBuilder {
+        return FeatureFormatter.format(variables, names, StringBuilder(), 0.001)
+    }
+
+    fun format(variables: Map<String, Any>, names: Collection<String>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
         variables.filter { it.key !in commonVariables }.forEach { (name, value) ->
             if (names.isEmpty() || name in names) {
                 var s = when (value) {
-                    is Double -> formatValue(value)
+                    is Double -> formatValue(value, true, eps)
                     is Color -> value.toHexString()
                     is Rectangle -> value.str
                     is Element -> value.name
                     is FeaturedDocument -> value.location
                     else -> value.toString()
                 }
-                s = StringUtils.abbreviate(s, 20)
-                sb.append(name).append(':').append(s).append(' ')
+                if (s.isNotEmpty()) {
+                    s = StringUtils.abbreviate(s, 20)
+                    sb.append(name).append(':').append(s).append(' ')
+                }
             }
         }
         return if (sb.endsWith(' ')) sb.deleteCharAt(sb.length - 1) else sb
@@ -203,9 +209,9 @@ object FeatureFormatter {
         return formatValue(value, isFloating(key))
     }
 
-    fun formatValue(value: Double, isFloating: Boolean = true): String {
+    fun formatValue(value: Double, isFloating: Boolean = true, eps: Double = 0.001): String {
         return if (isFloating) {
-            String.format("%.2f", value)
+            if (Precision.equals(value, 0.0, eps)) String.format("%.2f", value) else ""
         } else {
             String.format("%d", value.toInt())
         }

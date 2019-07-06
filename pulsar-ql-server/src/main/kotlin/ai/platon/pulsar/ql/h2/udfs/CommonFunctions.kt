@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.PulsarEnv
-import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
+import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.URLUtil
@@ -30,7 +30,7 @@ import java.util.*
 @UDFGroup
 object CommonFunctions {
 
-    val LOG = LoggerFactory.getLogger(CommonFunctions::class.java)
+    val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
     @UDFunction
     @JvmStatic
@@ -56,11 +56,11 @@ object CommonFunctions {
         try {
             mode = FetchMode.valueOf(mode.toUpperCase()).toString()
         } catch (e: Throwable) {
-            LOG.warn("Unknown FetchMode $mode")
+            log.warn("Unknown FetchMode $mode")
             return null
         }
 
-        LOG.debug("Set fetch mode to $mode")
+        log.debug("Set fetch mode to $mode")
         return getAndSetConf(h2session, FETCH_MODE, mode, ttl)
     }
 
@@ -88,7 +88,7 @@ object CommonFunctions {
             setFetchMode(h2session, FetchMode.SELENIUM.name, ttl)
         }
 
-        LOG.debug("Set browser to $browser")
+        log.debug("Set browser to $browser")
         return getAndSetConf(h2session, SELENIUM_BROWSER, browserType.name, ttl)
     }
 

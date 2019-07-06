@@ -1,8 +1,8 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarContext
-import ai.platon.pulsar.common.PulsarEnv.applicationContext
-import ai.platon.pulsar.common.PulsarEnv.unmodifiedConfig
+import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarEnv.applicationContext
+import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
@@ -38,7 +38,9 @@ object QueryEngine: AutoCloseable {
 
     var status: Status = Status.NOT_READY
 
-    private var backgroundSession = PulsarContext.createSession()
+    private val pc = PulsarContext.create()
+
+    private var backgroundSession = pc.createSession()
 
     /**
      * The sessions container
@@ -84,7 +86,7 @@ object QueryEngine: AutoCloseable {
     }
 
     fun createQuerySession(dbSession: DbSession): QuerySession {
-        val querySession = QuerySession(dbSession, SessionConfig(dbSession, unmodifiedConfig))
+        val querySession = QuerySession(pc, dbSession, SessionConfig(dbSession, unmodifiedConfig))
         sessions[dbSession] = querySession
         return querySession
     }

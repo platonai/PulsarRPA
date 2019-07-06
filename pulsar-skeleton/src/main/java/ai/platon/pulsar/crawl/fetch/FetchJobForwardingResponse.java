@@ -1,8 +1,10 @@
 package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.HttpHeaders;
+import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
+import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import static ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEFAULT;
@@ -13,7 +15,7 @@ import static ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEFA
 public class FetchJobForwardingResponse extends ForwardingResponse implements HttpHeaders {
 
     public FetchJobForwardingResponse(MultiMetadata headers, byte[] content) {
-        super(headers.get(Q_URL), content, NumberUtils.toInt(headers.get(Q_STATUS_CODE), 404), headers);
+        super(headers.get(Q_URL), content, ProtocolStatus.fromMinor(NumberUtils.toInt(headers.get(Q_STATUS_CODE), ProtocolStatusCodes.NOTFOUND)), headers);
     }
 
     public int getJobId() {

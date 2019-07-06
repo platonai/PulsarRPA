@@ -66,7 +66,7 @@ __utils__.createPulsarDataIfAbsent = function() {
 };
 
 __utils__.writePulsarData = function() {
-    if (document.readyState !== "complete") {
+    if (document.readyState !== "complete" || !document.body) {
         return false
     }
 

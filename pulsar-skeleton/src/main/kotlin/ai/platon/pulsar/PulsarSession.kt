@@ -1,5 +1,9 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar
 
+import ai.platon.pulsar.common.BeanFactory
+import ai.platon.pulsar.common.ConcurrentLRUCache
+import ai.platon.pulsar.common.PulsarFiles
+import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.PulsarPaths.webCacheDir
 import ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -26,11 +30,11 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 open class PulsarSession(
         /**
-         * The spring application context
+         * The pulsar context
          * */
-        applicationContext: ConfigurableApplicationContext,
+        val context: PulsarContext,
         /**
-         * The volatile config
+         * The session scope volatile config, every item is supposed to be changed at any time and any place
          * */
         val config: VolatileConfig,
         /**
@@ -39,7 +43,10 @@ open class PulsarSession(
         val id: Int = 9000000 + idGen.incrementAndGet()
 ) : AutoCloseable {
     val log = LoggerFactory.getLogger(PulsarSession::class.java)
-    val pulsar: Pulsar = Pulsar(applicationContext)
+    /**
+     * The scoped bean factory: for each config object, there is a bean factory
+     * TODO: session scoped?
+     * */
     val beanFactory = BeanFactory(config)
     private var enableCache = true
     private var pageCache: ConcurrentLRUCache<String, WebPage>
@@ -47,15 +54,7 @@ open class PulsarSession(
     // Session variables
     private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
     private val closableObjects = mutableSetOf<AutoCloseable>()
-    private val closed = AtomicBoolean()
-
-    constructor(appConfigLocation: String) : this(ClassPathXmlApplicationContext(appConfigLocation))
-
-    @JvmOverloads
-    constructor(
-            applicationContext: ConfigurableApplicationContext = getApplicationContext(),
-            config: ImmutableConfig = getUnmodifiedConfig(applicationContext)
-    ): this(applicationContext, VolatileConfig(config))
+    private val isClosed = AtomicBoolean()
 
     init {
         var capacity = config.getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY)
@@ -77,19 +76,19 @@ open class PulsarSession(
     }
 
     fun normalize(url: String): NormUrl {
-        return pulsar.normalize(url)
+        return context.normalize(url)
     }
 
     fun normalize(url: String, options: LoadOptions): NormUrl {
-        return pulsar.normalize(url, initOptions(options))
+        return context.normalize(url, initOptions(options))
     }
 
     fun normalize(urls: Iterable<String>): List<NormUrl> {
-        return pulsar.normalize(urls)
+        return context.normalize(urls)
     }
 
     fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
-        return pulsar.normalize(urls, initOptions(options))
+        return context.normalize(urls, initOptions(options))
     }
 
     /**
@@ -99,11 +98,11 @@ open class PulsarSession(
      * @return The web page created
      */
     fun inject(configuredUrl: String): WebPage {
-        return pulsar.inject(configuredUrl)
+        return context.inject(configuredUrl)
     }
 
     fun getOrNil(url: String): WebPage {
-        return pulsar.getOrNil(url)
+        return context.getOrNil(url)
     }
 
     /**
@@ -145,7 +144,7 @@ open class PulsarSession(
         return if (enableCache) {
             getCachedOrLoadAll(normUrls, options)
         } else {
-            pulsar.loadAll(normUrls, options)
+            context.loadAll(normUrls, options)
         }
     }
 
@@ -164,7 +163,7 @@ open class PulsarSession(
         return if (enableCache) {
             getCachedOrLoadAll(normUrls, options)
         } else {
-            pulsar.loadAll(normUrls, options)
+            context.loadAll(normUrls, options)
         }
     }
 
@@ -177,7 +176,7 @@ open class PulsarSession(
 
         var document = documentCache.get(key)
         if (document == null) {
-            document = pulsar.parse(page)
+            document = context.parse(page)
             documentCache.put(key, document)
 
             val prevFetchTime = page.prevFetchTime
@@ -202,7 +201,7 @@ open class PulsarSession(
             return page
         }
 
-        page = pulsar.get(url)
+        page = context.get(url)
         pageCache.put(url, page)
 
         return page
@@ -214,7 +213,7 @@ open class PulsarSession(
             return page
         }
 
-        page = pulsar.load(url.url, url.options)
+        page = context.load(url.url, url.options)
         pageCache.put(url.url, page)
 
         return page
@@ -236,9 +235,9 @@ open class PulsarSession(
         }
 
         val freshPages = if (options.preferParallel) {
-            pulsar.parallelLoadAll(pendingUrls, options)
+            context.parallelLoadAll(pendingUrls, options)
         } else {
-            pulsar.loadAll(pendingUrls, options)
+            context.loadAll(pendingUrls, options)
         }
 
         pages.addAll(freshPages)
@@ -266,15 +265,15 @@ open class PulsarSession(
     }
 
     fun delete(url: String) {
-        pulsar.delete(url)
+        context.delete(url)
     }
 
     fun flush() {
-        pulsar.webDb.flush()
+        context.webDb.flush()
     }
 
     fun persist(page: WebPage) {
-        pulsar.webDb.put(page)
+        context.webDb.put(page)
     }
 
     fun export(page: WebPage, ident: String = ""): Path {
@@ -304,14 +303,13 @@ open class PulsarSession(
     }
 
     override fun close() {
-        if (closed.getAndSet(true)) {
+        if (isClosed.getAndSet(true)) {
             return
         }
 
         log.info("Closing session $this ...")
 
-        closableObjects.forEach { it.use { it.close() } }
-        pulsar.use { it.close() }
+        closableObjects.forEach { o -> o.use { it.close() } }
 
         clearCache()
     }
@@ -322,7 +320,7 @@ open class PulsarSession(
         return if (enableCache) {
             getCachedOrLoad(url)
         } else {
-            pulsar.load(url)
+            context.load(url)
         }
     }
 

@@ -1,9 +1,9 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
-import ai.platon.pulsar.common.GlobalExecutor.NCPU
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -36,14 +36,15 @@ import java.util.logging.Level
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-internal class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
+class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
 
     companion object {
         // TODO: Web Drivers should grouped by conf, and free we the context with this config is not available
-        val capacity = (1.5 * NCPU).toInt()
+        val capacity = (1.5 * PulsarEnv.NCPU).toInt()
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
+        private val totalDriverCount = AtomicInteger(0)
         private val freeDriverCount = AtomicInteger(0)
     }
 
@@ -54,8 +55,8 @@ internal class WebDriverQueues(val browserControl: BrowserControl, val conf: Imm
     private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
     private val isClosed = AtomicBoolean(false)
 
-    val freeSize get() = freeDriverCount.get().toLong()
-    val totalSize get() = allDrivers.size.toLong()
+    val freeSize get() = freeDriverCount.get()
+    val totalSize get() = totalDriverCount.get()
 
     internal inner class PulsarHtmlUnitDriver(capabilities: Capabilities) : HtmlUnitDriver() {
         private val throwExceptionOnScriptError: Boolean = capabilities.`is`("throwExceptionOnScriptError")
@@ -86,7 +87,7 @@ internal class WebDriverQueues(val browserControl: BrowserControl, val conf: Imm
         try {
             var queue: ArrayBlockingQueue<WebDriver>? = freeDrivers[priority]
             if (queue == null) {
-                queue = ArrayBlockingQueue(NCPU)
+                queue = ArrayBlockingQueue(PulsarEnv.NCPU)
                 freeDrivers[priority] = queue
             }
 
@@ -119,37 +120,28 @@ internal class WebDriverQueues(val browserControl: BrowserControl, val conf: Imm
 
     private fun allocateWebDriver(queue: ArrayBlockingQueue<WebDriver>, conf: ImmutableConfig) {
         // TODO: configurable factor
-        if (allDrivers.size >= capacity) {
-            log.warn("Too many web drivers ... cpu cores: {}, free/total: {}/{}", NCPU, freeSize, totalSize)
+        if (totalSize >= capacity) {
+            log.warn("Too many web drivers ... cpu cores: {}, free/total: {}/{}", PulsarEnv.NCPU, freeSize, totalSize)
             return
         }
 
         try {
             val driver = doCreateWebDriver(conf)
+            val level = setLogLevel(driver)
 
-            // Set log level
-            var level: Level = Level.FINE
-            if (driver is RemoteWebDriver) {
-                val l = LoggerFactory.getLogger(WebDriver::class.java)
-                level = when {
-                    l.isDebugEnabled -> Level.FINER
-                    l.isTraceEnabled -> Level.ALL
-                    else -> Level.FINE
-                }
+            synchronized(WebDriverQueues::class.java) {
+                totalDriverCount.incrementAndGet()
+                freeDriverCount.incrementAndGet()
+                allDrivers.add(driver)
+                queue.put(driver)
 
-                driver.setLogLevel(level)
+                log.info("The {}th web driver is online, " +
+                        "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
+                        totalDriverCount, driver.javaClass.simpleName.toLowerCase(),
+                        imagesEnabled, pageLoadStrategy, capacity, level)
             }
-
-            allDrivers.add(driver)
-            queue.put(driver)
-            freeDriverCount.incrementAndGet()
-            log.info("The {}th web driver is online, " +
-                    "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
-                    allDrivers.size, driver.javaClass.simpleName.toLowerCase(),
-                    imagesEnabled, pageLoadStrategy, capacity, level)
         } catch (e: Throwable) {
             log.error(StringUtil.stringifyException(e))
-            // throw new RuntimeException("Can not create WebDriver");
         }
     }
 
@@ -198,6 +190,22 @@ internal class WebDriverQueues(val browserControl: BrowserControl, val conf: Imm
         }
 
         return driver
+    }
+
+    private fun setLogLevel(driver: WebDriver): Level {
+        // Set log level
+        var level = Level.FINE
+        if (driver is RemoteWebDriver) {
+            val l = LoggerFactory.getLogger(WebDriver::class.java)
+            level = when {
+                l.isDebugEnabled -> Level.FINER
+                l.isTraceEnabled -> Level.ALL
+                else -> Level.FINE
+            }
+
+            driver.setLogLevel(level)
+        }
+        return level
     }
 
     /**
