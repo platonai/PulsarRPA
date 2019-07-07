@@ -1,7 +1,6 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv.applicationContext
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDAggregation

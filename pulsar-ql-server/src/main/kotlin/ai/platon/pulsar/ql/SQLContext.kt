@@ -1,13 +1,14 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv.applicationContext
-import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
+import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.IteratorUtils
@@ -16,6 +17,7 @@ import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The SQLContext fuses h2database and pulsar big data engine
@@ -31,18 +33,36 @@ import java.util.concurrent.atomic.AtomicBoolean
  * <li>TODO: machine learning</li>
  * </ul>
  */
-object SQLContext: AutoCloseable {
+class SQLContext: AutoCloseable {
+
+    companion object {
+        private val activeContext = AtomicReference<SQLContext>()
+
+        fun getOrCreate(): SQLContext {
+            synchronized(PulsarContext::class.java) {
+                if (activeContext.get() == null) {
+                    activeContext.set(SQLContext())
+                }
+                return activeContext.get()
+            }
+        }
+    }
+
     private val log = LoggerFactory.getLogger(SQLContext::class.java)
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
 
     var status: Status = Status.NOT_READY
 
-    private val pulsarContext = PulsarContext.create()
+    val unmodifiedConfig: ImmutableConfig
+
+    val env = PulsarEnv.getOrCreate()
+
+    private val pulsarContext = PulsarContext.getOrCreate()
 
     private var backgroundSession = pulsarContext.createSession()
 
-    /**pulsarContext
+    /**
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
@@ -71,9 +91,10 @@ object SQLContext: AutoCloseable {
 
         Runtime.getRuntime().addShutdownHook(Thread(this::close))
 
+        unmodifiedConfig = pulsarContext.unmodifiedConfig
         proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, false)
-        taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
+        taskStatusTracker = PulsarEnv.applicationContext.getBean(TaskStatusTracker::class.java)
 
         backgroundSession.disableCache()
         backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
@@ -85,7 +106,7 @@ object SQLContext: AutoCloseable {
         status = Status.RUNNING
     }
 
-    fun createQuerySession(dbSession: DbSession): QuerySession {
+    fun createSession(dbSession: DbSession): QuerySession {
         val querySession = QuerySession(pulsarContext, dbSession, SessionConfig(dbSession, unmodifiedConfig))
         sessions[dbSession] = querySession
         return querySession

@@ -3,14 +3,13 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.URLUtil
-import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists
 
 object WebAccess {
-    private val pc = PulsarContext.create()
+    private val env = PulsarEnv.getOrCreate()
+    private val pc = PulsarContext.getOrCreate()
     private val i = pc.createSession()
 
     val seeds = mapOf(

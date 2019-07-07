@@ -336,7 +336,7 @@ class SeleniumEngine(
             if (status.isSuccess) {
                 log.info("Document ok but timeout after {} with {} bytes | {}",
                         DateTimeUtil.elapsedTime(startTime),
-                        String.format("%,7s", pageSource.length), page.url)
+                        String.format("%,7d", pageSource.length), page.url)
             } else {
                 handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
             }

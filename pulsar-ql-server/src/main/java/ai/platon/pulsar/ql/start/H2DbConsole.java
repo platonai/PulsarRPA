@@ -13,7 +13,7 @@ public class H2DbConsole {
     public static void main(String[] args) throws SQLException {
         System.setProperty("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2SessionFactory.class.getName());
 
-        PulsarEnv.INSTANCE.ensureEnv();
+        PulsarEnv.Companion.getOrCreate();
 
         new Console().runTool(args);
     }

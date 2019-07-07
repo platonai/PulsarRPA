@@ -1,7 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.URLUtil
@@ -30,12 +29,14 @@ import java.util.*
 @UDFGroup
 object CommonFunctions {
 
-    val log = LoggerFactory.getLogger(CommonFunctions::class.java)
+    private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
+
+    private val unmodifiedConfig = PulsarEnv.unmodifiedConfig
 
     @UDFunction
     @JvmStatic
     fun getProxyPoolStatus(): String {
-        val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
+        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         return proxyPool.toString()
     }
 
@@ -311,7 +312,7 @@ object CommonFunctions {
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
 
-        for ((key, value) in PulsarEnv.unmodifiedConfig.unbox()) {
+        for ((key, value) in unmodifiedConfig.unbox()) {
             rs.addRow(key, value)
         }
 
@@ -372,7 +373,7 @@ object CommonFunctions {
     fun addProxy(ipPort: String): Boolean {
         val proxyEntry = ProxyEntry.parse(ipPort)
         if (proxyEntry != null && proxyEntry.testNetwork()) {
-            val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
+            val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
             return proxyPool.offer(proxyEntry)
         }
 
@@ -383,8 +384,8 @@ object CommonFunctions {
     @JvmStatic
     fun addProxy(ip: String, port: Int): Boolean {
         if (ai.platon.pulsar.common.NetUtil.testNetwork(ip, port)) {
-            val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
-            return proxyPool.offer(ai.platon.pulsar.common.proxy.ProxyEntry(ip, port))
+            val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
+            return proxyPool.offer(ProxyEntry(ip, port))
         }
 
         return false

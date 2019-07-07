@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.proxy.ProxyPool
@@ -14,7 +13,9 @@ import org.slf4j.LoggerFactory
 
 @UDFGroup(namespace = "ADMIN")
 object AdminFunctions {
-    val LOG = LoggerFactory.getLogger(AdminFunctions::class.java)
+    val log = LoggerFactory.getLogger(AdminFunctions::class.java)
+    private val sqlContext = SQLContext.getOrCreate()
+    private val unmodifiedConfig = sqlContext.unmodifiedConfig
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context h2session: Session, message: String): String {
@@ -36,7 +37,7 @@ object AdminFunctions {
     @JvmStatic
     fun sessionCount(@H2Context h2session: Session): Int {
         checkPrivilege(h2session)
-        return SQLContext.sessionCount()
+        return sqlContext.sessionCount()
     }
 
     @UDFunction

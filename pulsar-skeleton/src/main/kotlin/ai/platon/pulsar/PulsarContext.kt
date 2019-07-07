@@ -1,21 +1,23 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.PulsarEnv.applicationContext
+import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import org.apache.log4j.LogManager
-import java.lang.RuntimeException
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.reflect.KClass
 
 /**
@@ -26,21 +28,27 @@ import kotlin.reflect.KClass
 class PulsarContext {
 
     companion object {
-        fun create(): PulsarContext {
-            return PulsarContext()
+        private val activeContext = AtomicReference<PulsarContext>()
+
+        fun getOrCreate(): PulsarContext {
+            synchronized(PulsarContext::class.java) {
+                if (activeContext.get() == null) {
+                    activeContext.set(PulsarContext())
+                }
+                return activeContext.get()
+            }
         }
 
         fun createSession(): PulsarSession {
-            return PulsarContext().createSession()
+            return getOrCreate().createSession()
         }
     }
 
     val log = LogManager.getLogger(PulsarContext::class.java)
-
     /**
-     * The start time
+     * The program environment
      * */
-    val env = PulsarEnv
+    val env = PulsarEnv.getOrCreate()
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
@@ -60,27 +68,49 @@ class PulsarContext {
     /**
      * Url normalizers
      * */
-    val urlNormalizers: UrlNormalizers = PulsarEnv.urlNormalizers
+    val urlNormalizers: UrlNormalizers
     /**
      * The web db
      * */
-    val webDb: WebDb = PulsarEnv.webDb
+    val webDb: WebDb
     /**
      * The inject component
      * */
-    val injectComponent = PulsarEnv.injectComponent
+    val injectComponent: InjectComponent
     /**
      * The load component
      * */
-    val loadComponent = PulsarEnv.loadComponent
+    val loadComponent: LoadComponent
     /**
      * The parse component
      * */
-    val parseComponent = PulsarEnv.parseComponent
+    val parseComponent: ParseComponent
     /**
      * The fetch component
      * */
-    val fetchComponent = PulsarEnv.fetchComponent
+    val fetchComponent: FetchComponent
+
+//    val taskTracker = PulsarEnv.
+
+    val pageCache: ConcurrentLRUCache<String, WebPage>
+    val documentCache: ConcurrentLRUCache<String, FeaturedDocument>
+
+    val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
+
+    init {
+        var capacity = unmodifiedConfig.getUint("session.page.cache.size", PulsarSession.SESSION_PAGE_CACHE_CAPACITY)
+        pageCache = ConcurrentLRUCache(PulsarSession.SESSION_PAGE_CACHE_TTL.seconds, capacity)
+
+        capacity = unmodifiedConfig.getUint("session.document.cache.size", PulsarSession.SESSION_DOCUMENT_CACHE_CAPACITY)
+        documentCache = ConcurrentLRUCache(PulsarSession.SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
+
+        webDb = PulsarEnv.applicationContext.getBean(WebDb::class.java)
+        injectComponent = PulsarEnv.applicationContext.getBean(InjectComponent::class.java)
+        loadComponent = PulsarEnv.applicationContext.getBean(LoadComponent::class.java)
+        fetchComponent = PulsarEnv.applicationContext.getBean(BatchFetchComponent::class.java)
+        parseComponent = PulsarEnv.applicationContext.getBean(ParseComponent::class.java)
+        urlNormalizers = PulsarEnv.applicationContext.getBean(UrlNormalizers::class.java)
+    }
 
     fun createSession(): PulsarSession {
         ensureRunning()
@@ -89,17 +119,17 @@ class PulsarContext {
 
     fun getBean(name: String): Any? {
         ensureRunning()
-        return applicationContext.getBean(name)
+        return PulsarEnv.applicationContext.getBean(name)
     }
 
     fun getBean(clazz: Class<Any>): Any? {
         ensureRunning()
-        return applicationContext.getBean(clazz)
+        return PulsarEnv.applicationContext.getBean(clazz)
     }
 
     fun getBean(clazz: KClass<Any>): Any? {
         ensureRunning()
-        return applicationContext.getBean(clazz.java)
+        return PulsarEnv.applicationContext.getBean(clazz.java)
     }
 
     fun normalize(url: String): NormUrl {

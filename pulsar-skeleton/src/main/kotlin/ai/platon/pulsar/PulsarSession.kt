@@ -49,20 +49,10 @@ open class PulsarSession(
      * */
     val beanFactory = BeanFactory(config)
     private var enableCache = true
-    private var pageCache: ConcurrentLRUCache<String, WebPage>
-    private var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
     // Session variables
     private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val isClosed = AtomicBoolean()
-
-    init {
-        var capacity = config.getUint("session.page.cache.size", SESSION_PAGE_CACHE_CAPACITY)
-        pageCache = ConcurrentLRUCache(SESSION_PAGE_CACHE_TTL.seconds, capacity)
-
-        capacity = config.getUint("session.document.cache.size", SESSION_DOCUMENT_CACHE_CAPACITY)
-        documentCache = ConcurrentLRUCache(SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
-    }
 
     /**
      * Close objects when sessions closes
@@ -174,16 +164,16 @@ open class PulsarSession(
     fun parse(page: WebPage): FeaturedDocument {
         val key = page.key + "\t" + page.fetchTime
 
-        var document = documentCache.get(key)
+        var document = context.documentCache.get(key)
         if (document == null) {
             document = context.parse(page)
-            documentCache.put(key, document)
+            context.documentCache.put(key, document)
 
             val prevFetchTime = page.prevFetchTime
             if (prevFetchTime.plusSeconds(3600).isAfter(Instant.now())) {
                 // It might be still in the cache
                 val oldKey = page.key + "\t" + prevFetchTime
-                documentCache.tryRemove(oldKey)
+                context.documentCache.tryRemove(oldKey)
             }
         }
 
@@ -191,30 +181,28 @@ open class PulsarSession(
     }
 
     fun clearCache() {
-        documentCache.clear()
-        pageCache.clear()
     }
 
     private fun getCachedOrGet(url: String): WebPage? {
-        var page: WebPage? = pageCache.get(url)
+        var page: WebPage? = context.pageCache.get(url)
         if (page != null) {
             return page
         }
 
         page = context.get(url)
-        pageCache.put(url, page)
+        context.pageCache.put(url, page)
 
         return page
     }
 
     private fun getCachedOrLoad(url: NormUrl): WebPage {
-        var page: WebPage? = pageCache.get(url.url)
+        var page: WebPage? = context.pageCache.get(url.url)
         if (page != null) {
             return page
         }
 
         page = context.load(url.url, url.options)
-        pageCache.put(url.url, page)
+        context.pageCache.put(url.url, page)
 
         return page
     }
@@ -226,7 +214,7 @@ open class PulsarSession(
         val pendingUrls = ArrayList<NormUrl>()
 
         for (url in urls) {
-            val page = pageCache.get(url.url)
+            val page = context.pageCache.get(url.url)
             if (page != null) {
                 pages.add(page)
             } else {

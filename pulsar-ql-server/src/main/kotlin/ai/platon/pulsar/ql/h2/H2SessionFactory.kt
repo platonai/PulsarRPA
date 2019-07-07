@@ -17,6 +17,8 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
 
+    private val sqlContext = SQLContext.getOrCreate()
+
     init {
         H2Config.config()
         SysProperties.serializeJavaObject = true
@@ -48,7 +50,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val querySession = SQLContext.createQuerySession(DbSession(h2session.id, h2session))
+        val querySession = sqlContext.createSession(DbSession(h2session.id, h2session))
         require(querySession.id == h2session.id)
 
         log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
@@ -59,12 +61,12 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun getSession(sessionId: Int): QuerySession {
-        return SQLContext.getSession(sessionId)
+        return sqlContext.getSession(sessionId)
     }
 
     @Synchronized
     override fun closeSession(sessionId: Int) {
-        SQLContext.closeSession(sessionId)
+        sqlContext.closeSession(sessionId)
     }
 }
 

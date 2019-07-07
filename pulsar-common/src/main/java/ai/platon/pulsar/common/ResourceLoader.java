@@ -93,6 +93,8 @@ public class ResourceLoader {
         }
     }
 
+    // private static Map<String, byte[]> loadedResources = Collections.synchronizedMap(new HashMap<>());
+
     public ResourceLoader() {
     }
 
@@ -300,11 +302,6 @@ public class ResourceLoader {
                 if (!namedResource.startsWith("/") && StringUtils.isNotBlank(resourcePrefix)) {
                     reader = getResourceAsReader(resourcePrefix + "/" + namedResource);
                 }
-
-                // Read default config dir
-                //        if (reader == null) {
-                //          reader = getResourceAsReader("conf/" + fileResource);
-                //        }
 
                 // Search in classpath
                 if (reader == null) {
