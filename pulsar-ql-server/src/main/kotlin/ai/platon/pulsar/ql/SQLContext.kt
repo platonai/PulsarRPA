@@ -18,7 +18,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The QueryEngine fuses h2database and pulsar big data engine
+ * The SQLContext fuses h2database and pulsar big data engine
  * So we can use SQL to do big data tasks, include but not limited:
  * <ul>
  * <li>Web spider</li>
@@ -31,18 +31,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  * <li>TODO: machine learning</li>
  * </ul>
  */
-object QueryEngine: AutoCloseable {
-    private val log = LoggerFactory.getLogger(QueryEngine::class.java)
+object SQLContext: AutoCloseable {
+    private val log = LoggerFactory.getLogger(SQLContext::class.java)
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
 
     var status: Status = Status.NOT_READY
 
-    private val pc = PulsarContext.create()
+    private val pulsarContext = PulsarContext.create()
 
-    private var backgroundSession = pc.createSession()
+    private var backgroundSession = pulsarContext.createSession()
 
-    /**
+    /**pulsarContext
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
@@ -86,7 +86,7 @@ object QueryEngine: AutoCloseable {
     }
 
     fun createQuerySession(dbSession: DbSession): QuerySession {
-        val querySession = QuerySession(pc, dbSession, SessionConfig(dbSession, unmodifiedConfig))
+        val querySession = QuerySession(pulsarContext, dbSession, SessionConfig(dbSession, unmodifiedConfig))
         sessions[dbSession] = querySession
         return querySession
     }
@@ -115,7 +115,7 @@ object QueryEngine: AutoCloseable {
 
         status = Status.CLOSING
 
-        log.info("[Destruction] Destructing QueryEngine ...")
+        log.info("[Destruction] Destructing SQLContext ...")
 
         backgroundSession.use { it.close() }
         backgroundThread.join()
@@ -169,7 +169,7 @@ object QueryEngine: AutoCloseable {
 
         for (mode in FetchMode.values()) {
             val urls = taskStatusTracker.getSeeds(mode, 1000)
-            if (!urls.isEmpty()) {
+            if (urls.isNotEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
         }

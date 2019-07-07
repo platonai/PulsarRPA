@@ -4,7 +4,7 @@ import ai.platon.pulsar.PulsarEnv.unmodifiedConfig
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.ql.QueryEngine
+import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
@@ -36,7 +36,7 @@ object AdminFunctions {
     @JvmStatic
     fun sessionCount(@H2Context h2session: Session): Int {
         checkPrivilege(h2session)
-        return QueryEngine.sessionCount()
+        return SQLContext.sessionCount()
     }
 
     @UDFunction

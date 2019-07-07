@@ -136,6 +136,14 @@ public interface PulsarConstants {
 
     String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
 
+
+    /**
+     * Other notable properties:
+     * overflow
+     * text-overflow
+     * */
+    String CLIENT_JS_PROPERTY_NAMES = "font-size, color, background-color";
+
     /**
      * Directories
      * */

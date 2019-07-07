@@ -168,6 +168,7 @@ class SeleniumEngine(
         var numFinishedTasks = 0
         var numFailedTasks = 0
         var idleSeconds = 0
+        var bytes = 0
 
         // since the urls in the batch are usually from the same domain,
         // if there are too many failure, the rest tasks are very likely run to failure too
@@ -199,15 +200,15 @@ class SeleniumEngine(
             pendingTasks.asSequence().filter { it.value.isDone }.forEach { (key, future) ->
                 try {
                     val response = getResponse(key, future, threadTimeout)
-                    val time = Duration.ofSeconds(1)// response.headers
+                    bytes += response.size()
+                    val time = Duration.ofSeconds(i.toLong())// response.headers
                     val isFailed = response.code !in arrayOf(ProtocolStatusCodes.SUCCESS_OK, ProtocolStatusCodes.CANCELED)
                     if (isFailed) {
                         ++numFailedTasks
-
                         if (log.isInfoEnabled) {
-                            log.info("Batch {} round {} fetch failed with code {}, got {} bytes in {}, total {} failed | {}",
+                            log.info("Batch {} round {} task failed with reason {}, {} bytes in {}, total {} failed | {}",
                                     batchId, String.format("%2d", i),
-                                    response.code, String.format("%,7d", response.size()), time,
+                                    ProtocolStatus.getMinorName(response.code), String.format("%,d", response.size()), time,
                                     numFailedTasks,
                                     key
                             )
@@ -215,7 +216,6 @@ class SeleniumEngine(
                     } else {
                         if (log.isDebugEnabled) {
                             // TODO: track timeout
-                            val bytes = response.size()
                             log.debug("Batch {} round {} fetched{}{} bytes in {} with code {} | {}",
                                     batchId, String.format("%2d", i),
                                     if (bytes < 2000) " only " else " ", String.format("%,7d", response.size()),
@@ -261,9 +261,11 @@ class SeleniumEngine(
         }
 
         val elapsed = Duration.between(startTime, Instant.now())
-        log.info("Batch {} with {} tasks is finished in {}, average {}s for each tasks",
+        log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave bytes: {}, speed: {}bps",
                 batchId, size, elapsed,
-                String.format("%.2f", 1.0 * elapsed.seconds / size)
+                String.format("%,.2f", 1.0 * elapsed.seconds / size),
+                bytes / size,
+                String.format("%,.2f", 1.0 * bytes * 8 / elapsed.seconds)
         )
 
         return finishedTasks.values
@@ -332,9 +334,9 @@ class SeleniumEngine(
             }
 
             if (status.isSuccess) {
-                log.info("Document ok but timeout after {} with length {} | {}",
+                log.info("Document ok but timeout after {} with {} bytes | {}",
                         DateTimeUtil.elapsedTime(startTime),
-                        pageSource.length, page.url)
+                        String.format("%,7s", pageSource.length), page.url)
             } else {
                 handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
             }

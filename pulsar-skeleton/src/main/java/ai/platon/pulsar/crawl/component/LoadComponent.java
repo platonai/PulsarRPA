@@ -429,11 +429,13 @@ public class LoadComponent {
 
         if (LOG.isDebugEnabled()) {
             int bytes = page.getContentBytes();
-            LOG.debug("Fetched{}{} bytes in {} with {} | {}",
-                    bytes < 2000 ? " only " : " ", String.format("%,7d", page.getContentBytes()),
-                    page.getMetadata().get(RESPONSE_TIME),
-                    page.getLastBrowser(), page.getConfiguredUrl()
-            );
+            if (bytes > 0) {
+                LOG.debug("Fetched{}{} bytes in {} with {} | {}",
+                        bytes < 2000 ? " only " : " ", String.format("%,7d", page.getContentBytes()),
+                        page.getMetadata().get(RESPONSE_TIME),
+                        page.getLastBrowser(), page.getConfiguredUrl()
+                );
+            }
         }
 
         if (options.getPersist()) {

@@ -2,7 +2,7 @@ package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
-import ai.platon.pulsar.ql.QueryEngine
+import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.QuerySession
 import org.h2.engine.ConnectionInfo
 import org.h2.engine.Mode
@@ -48,7 +48,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val querySession = QueryEngine.createQuerySession(DbSession(h2session.id, h2session))
+        val querySession = SQLContext.createQuerySession(DbSession(h2session.id, h2session))
         require(querySession.id == h2session.id)
 
         log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
@@ -59,12 +59,12 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun getSession(sessionId: Int): QuerySession {
-        return QueryEngine.getSession(sessionId)
+        return SQLContext.getSession(sessionId)
     }
 
     @Synchronized
     override fun closeSession(sessionId: Int) {
-        QueryEngine.closeSession(sessionId)
+        SQLContext.closeSession(sessionId)
     }
 }
 

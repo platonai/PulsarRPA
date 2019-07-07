@@ -3,7 +3,9 @@ package ai.platon.pulsar
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_PROPERTY_NAMES
+import ai.platon.pulsar.common.config.PulsarConstants.CLIENT_JS_PROPERTY_NAMES
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
@@ -27,6 +29,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Currently Pulsar code finds the PulsarEnv through a global variable, so all the threads shares the same PulsarEnv.
  */
 object PulsarEnv {
+    val clientJsVersion = "0.2.3"
+
     val applicationContext: ClassPathXmlApplicationContext
     val storageService: AutoDetectedStorageService
     val startTime = Instant.now()
@@ -116,8 +120,11 @@ object PulsarEnv {
         globalExecutor = GlobalExecutor(unmodifiedConfig)
 
         // The javascript to execute by Web browsers
-        val jsPropertyNames = unmodifiedConfig.getStrings(FETCH_CLIENT_JS_PROPERTY_NAMES, "font-size, color, background-color")
-        val parameters = mapOf("propertyNames" to jsPropertyNames)
+        val propertyNames = unmodifiedConfig.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
+        val parameters = mapOf(
+                "version" to clientJsVersion,
+                "propertyNames" to propertyNames
+        )
         browserControl = BrowserControl(parameters)
         webDrivers = WebDriverQueues(browserControl, unmodifiedConfig)
         seleniumEngine = SeleniumEngine(browserControl, globalExecutor, webDrivers, unmodifiedConfig)

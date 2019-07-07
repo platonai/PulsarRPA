@@ -35,7 +35,6 @@ open class QuerySession(pc: PulsarContext, dbSession: DbSession, config: Session
 
     /**
      * Register user defined functions into database
-     * TODO: Hot register UDFs
      */
     fun registerDefaultUdfs(session: SessionInterface) {
         ClassPath.from(CommonFunctions.javaClass.classLoader)

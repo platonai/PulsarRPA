@@ -1,11 +1,13 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.WebPageFormatter
+import com.google.common.collect.Lists
 
 object WebAccess {
     private val pc = PulsarContext.create()
@@ -62,14 +64,15 @@ object WebAccess {
     fun parallelLoadAll() {
         val args = "-parse -expires 1s -preferParallel"
         val options = LoadOptions.parse(args)
-        i.loadAll(trivialUrls, options).flatMap { it.links }.map { it.toString() }
-                .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }
-                .entries.parallelStream()
-                .forEach { (_, urls) ->
-                    pc.createSession().use {
-                        it.loadAll(urls.distinct().shuffled().take(10), options)
-                    }
+        val tasks = i.loadAll(trivialUrls, options).flatMap { it.links }.map { it.toString() }
+                .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }.toList()
+        Lists.partition(tasks, PulsarEnv.NCPU).forEach { partition ->
+            partition.parallelStream().forEach { (_, urls) ->
+                pc.createSession().use {
+                    it.loadAll(urls.distinct().shuffled().take(10), options)
                 }
+            }
+        }
     }
 
     fun loadAllProducts() {
