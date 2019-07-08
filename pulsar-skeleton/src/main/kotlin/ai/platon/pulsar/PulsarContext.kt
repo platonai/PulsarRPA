@@ -7,8 +7,6 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyUpdateThread
 import ai.platon.pulsar.crawl.component.*
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
@@ -16,8 +14,7 @@ import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import avro.shaded.com.google.common.collect.Iterators
-import org.apache.log4j.LogManager
+import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -48,7 +45,7 @@ class PulsarContext: AutoCloseable {
         }
     }
 
-    val log = LogManager.getLogger(PulsarContext::class.java)
+    val log = LoggerFactory.getLogger(PulsarContext::class.java)
     /**
      * The program environment
      * */

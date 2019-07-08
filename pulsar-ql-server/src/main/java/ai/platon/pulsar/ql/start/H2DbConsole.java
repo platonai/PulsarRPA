@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.start;
 
 import ai.platon.pulsar.PulsarEnv;
+import ai.platon.pulsar.common.SystemKt;
 import org.h2.tools.Console;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -35,7 +36,7 @@ public class H2DbConsole {
     }
 
     public static void main(String[] args) {
-        System.setProperty("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2SessionFactory.class.getName());
+        SystemKt.setPropertyIfAbsent("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2SessionFactory.class.getName());
         SpringApplication.run(H2DbConsole.class, args);
     }
 }
