@@ -52,32 +52,39 @@ open class PulsarSession(
     // Session variables
     private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
     private val closableObjects = mutableSetOf<AutoCloseable>()
-    private val isClosed = AtomicBoolean()
+    private val closed = AtomicBoolean()
+    public val isClosed = closed.get()
 
     /**
      * Close objects when sessions closes
      * */
     fun registerClosable(closable: AutoCloseable) {
+        ensureRunning()
         closableObjects.add(closable)
     }
 
     fun disableCache() {
+        ensureRunning()
         enableCache = false
     }
 
     fun normalize(url: String): NormUrl {
+        ensureRunning()
         return context.normalize(url)
     }
 
     fun normalize(url: String, options: LoadOptions): NormUrl {
+        ensureRunning()
         return context.normalize(url, initOptions(options))
     }
 
     fun normalize(urls: Iterable<String>): List<NormUrl> {
+        ensureRunning()
         return context.normalize(urls)
     }
 
     fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
+        ensureRunning()
         return context.normalize(urls, initOptions(options))
     }
 
@@ -88,10 +95,12 @@ open class PulsarSession(
      * @return The web page created
      */
     fun inject(configuredUrl: String): WebPage {
+        ensureRunning()
         return context.inject(configuredUrl)
     }
 
     fun getOrNil(url: String): WebPage {
+        ensureRunning()
         return context.getOrNil(url)
     }
 
@@ -102,6 +111,7 @@ open class PulsarSession(
      * @return The Web page
      */
     fun load(url: String): WebPage {
+        ensureRunning()
         val normUrl = normalize(url)
         initOptions(normUrl.options)
         return load(normUrl)
@@ -115,6 +125,7 @@ open class PulsarSession(
      * @return The web page
      */
     fun load(url: String, options: LoadOptions): WebPage {
+        ensureRunning()
         val normUrl = normalize(url, initOptions(options))
         return load(normUrl)
     }
@@ -128,6 +139,7 @@ open class PulsarSession(
      */
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.default): Collection<WebPage> {
+        ensureRunning()
         initOptions(options)
         val normUrls = normalize(urls, options)
 
@@ -146,6 +158,7 @@ open class PulsarSession(
      * @return The web pages
      */
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
+        ensureRunning()
         initOptions(options)
         options.preferParallel = true
         val normUrls = normalize(urls, options)
@@ -162,6 +175,7 @@ open class PulsarSession(
      * If the Web page is not changed since last parse, use the last result if available
      */
     fun parse(page: WebPage): FeaturedDocument {
+        ensureRunning()
         val key = page.key + "\t" + page.fetchTime
 
         var document = context.documentCache.get(key)
@@ -180,10 +194,8 @@ open class PulsarSession(
         return document
     }
 
-    fun clearCache() {
-    }
-
     private fun getCachedOrGet(url: String): WebPage? {
+        ensureRunning()
         var page: WebPage? = context.pageCache.get(url)
         if (page != null) {
             return page
@@ -196,6 +208,7 @@ open class PulsarSession(
     }
 
     private fun getCachedOrLoad(url: NormUrl): WebPage {
+        ensureRunning()
         var page: WebPage? = context.pageCache.get(url.url)
         if (page != null) {
             return page
@@ -208,6 +221,7 @@ open class PulsarSession(
     }
 
     private fun getCachedOrLoadAll(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        ensureRunning()
         initOptions(options)
 
         val pages = ArrayList<WebPage>()
@@ -237,14 +251,17 @@ open class PulsarSession(
     }
 
     fun getVariable(name: String): Any? {
+        ensureRunning()
         return variables[name]
     }
 
     fun setVariable(name: String, value: Any) {
+        ensureRunning()
         variables[name] = value
     }
 
     fun putBean(obj: Any) {
+        ensureRunning()
         beanFactory.putBean(obj)
     }
 
@@ -253,28 +270,34 @@ open class PulsarSession(
     }
 
     fun delete(url: String) {
+        ensureRunning()
         context.delete(url)
     }
 
     fun flush() {
+        ensureRunning()
         context.webDb.flush()
     }
 
     fun persist(page: WebPage) {
+        ensureRunning()
         context.webDb.put(page)
     }
 
     fun export(page: WebPage, ident: String = ""): Path {
+        ensureRunning()
         val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(page.url, ".htm"))
         return PulsarFiles.saveTo(page.contentAsString, path)
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
+        ensureRunning()
         val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(doc.location, ".htm"))
         return PulsarFiles.saveTo(doc.prettyHtml, path)
     }
 
     fun exportTo(doc: FeaturedDocument, path: Path): Path {
+        ensureRunning()
         return PulsarFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
     }
 
@@ -291,15 +314,13 @@ open class PulsarSession(
     }
 
     override fun close() {
-        if (isClosed.getAndSet(true)) {
+        if (closed.getAndSet(true)) {
             return
         }
 
-        log.info("Closing session $this ...")
+        log.info("Closing pulsar session $this ...")
 
         closableObjects.forEach { o -> o.use { it.close() } }
-
-        clearCache()
     }
 
     private fun load(url: NormUrl): WebPage {
@@ -317,6 +338,13 @@ open class PulsarSession(
             options.volatileConfig = config
         }
         return options
+    }
+
+    private fun ensureRunning() {
+        if (closed.get()) {
+            throw IllegalStateException(
+                    """Cannot call methods on a closed PulsarSession.""")
+        }
     }
 
     companion object {

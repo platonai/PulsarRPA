@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.common.proxy.ProxyUpdateThread;
 import ai.platon.pulsar.jobs.fetch.indexer.IndexThread;
 import ai.platon.pulsar.jobs.fetch.indexer.JITIndexer;
 import ai.platon.pulsar.persist.metadata.FetchMode;
@@ -247,11 +246,6 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
     if (FetchMode.CROWDSOURCING.equals(fetchMode)) {
       startCrowdsourcingThreads(context);
     } else {
-      if (FetchMode.PROXY.equals(fetchMode)) {
-        ProxyUpdateThread proxyUpdateThread = new ProxyUpdateThread(immutableConfig);
-        proxyUpdateThread.start();
-      }
-
       // Threads for native or proxy mode
       startNativeFetcherThreads(context);
     }

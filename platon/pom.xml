@@ -149,7 +149,26 @@
                         </filesets>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.0.0</version>
 
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>add-source</goal>
+                            </goals>
+                            <configuration>
+                                <sources>
+                                    <source>src/main/java</source>
+                                    <source>src/main/kotlin</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
@@ -197,6 +216,10 @@
             </plugin>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
@@ -516,6 +539,22 @@
                 <version>${spring.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>test</scope>
+            </dependency>
 
             <!-- Storage -->
             <dependency>
@@ -672,26 +711,15 @@
                 <version>${codahale.metrics.version}</version>
             </dependency>
             <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>${log4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>log4j-over-slf4j</artifactId>
-                <version>${slf4j.version}</version>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
-
             <!-- Testing -->
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -771,8 +799,8 @@
         <ormlite.version>5.1</ormlite.version>
 
         <!-- Spring -->
-        <spring.version>4.3.24.RELEASE</spring.version>
-        <!--<spring.version>5.0.0.M5</spring.version>-->
+        <spring.version>5.1.8.RELEASE</spring.version>
+        <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
 
         <!-- Server Dependencies -->
         <!--
@@ -805,8 +833,8 @@
         <codahale.metrics.version>3.1.5</codahale.metrics.version>
         <perf4j.version>0.9.16</perf4j.version>
         <!-- Logging And Testing Dependencies -->
-        <log4j.version>1.2.16</log4j.version>
-        <slf4j.version>1.7.5</slf4j.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
         <junit.version>4.12</junit.version>
 
         <!-- Java -->

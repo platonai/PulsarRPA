@@ -16,38 +16,14 @@ public class ProxyUpdateThread extends Thread {
 
     protected static final Logger LOG = LoggerFactory.getLogger(ProxyUpdateThread.class);
     private final ImmutableConfig conf;
-    protected long updatePeriod = 10 * 1000;
+    protected long updatePeriod;
     private ProxyPool proxyPool;
 
-    public ProxyUpdateThread(ImmutableConfig conf) {
+    public ProxyUpdateThread(ProxyPool proxyPool, ImmutableConfig conf) {
         this.conf = conf;
-        this.proxyPool = ProxyPool.getInstance(conf);
+        this.proxyPool = proxyPool;
         this.updatePeriod = conf.getInt("http.proxy.pool.update.period", 10 * 1000);
         this.setDaemon(true);
-    }
-
-    public static void main(String[] args) {
-        ImmutableConfig conf = new ImmutableConfig();
-
-        ProxyUpdateThread updateThread = new ProxyUpdateThread(conf);
-        updateThread.start();
-
-        ProxyPool proxyPool = ProxyPool.getInstance(conf);
-
-        while (!proxyPool.isEmpty()) {
-            ProxyEntry proxy = proxyPool.poll();
-
-            if (proxy.testNetwork()) {
-                LOG.debug("proxy : {} is available", proxy);
-            } else {
-                LOG.debug("proxy : {} is not available", proxy);
-            }
-
-            try {
-                TimeUnit.SECONDS.sleep(3);
-            } catch (InterruptedException ignored) {
-            }
-        }
     }
 
     @Override
@@ -108,6 +84,29 @@ public class ProxyUpdateThread extends Thread {
             }
         } catch (IOException e) {
             LOG.error(e.toString());
+        }
+    }
+
+    public static void main(String[] args) {
+        ImmutableConfig conf = new ImmutableConfig();
+
+        ProxyPool proxyPool = new ProxyPool(conf);
+        ProxyUpdateThread updateThread = new ProxyUpdateThread(proxyPool, conf);
+        updateThread.start();
+
+        while (!proxyPool.isEmpty()) {
+            ProxyEntry proxy = proxyPool.poll();
+
+            if (proxy.testNetwork()) {
+                LOG.debug("proxy : {} is available", proxy);
+            } else {
+                LOG.debug("proxy : {} is not available", proxy);
+            }
+
+            try {
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException ignored) {
+            }
         }
     }
 }

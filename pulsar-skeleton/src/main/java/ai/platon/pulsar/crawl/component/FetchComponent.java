@@ -337,7 +337,6 @@ public class FetchComponent implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        protocolFactory.close();
+    public void close() {
     }
 }

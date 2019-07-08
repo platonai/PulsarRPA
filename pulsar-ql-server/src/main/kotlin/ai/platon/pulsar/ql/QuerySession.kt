@@ -15,8 +15,8 @@ import org.h2.engine.SessionInterface
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-open class QuerySession(pc: PulsarContext, dbSession: DbSession, config: SessionConfig)
-    : PulsarSession(pc, config, dbSession.id) {
+open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSession, config: SessionConfig)
+    : PulsarSession(pulsarContext, config, dbSession.id) {
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 

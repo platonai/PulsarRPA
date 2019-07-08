@@ -110,10 +110,21 @@ public abstract class AbstractConfiguration {
 
         LOG.info(toString());
 
-        checkLog4jProperties();
+        if (!checkLogbackConfig() && !checkLog4jProperties()) {
+            System.err.println("Failed to find log4j or logback configuration");
+        }
     }
 
-    private void checkLog4jProperties() {
+    private boolean checkLogbackConfig() {
+        URL url = getResource("logback.xml");
+        if (url != null) {
+            LOG.info("logback(classpath): " + url);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkLog4jProperties() {
         String log4j = System.getProperty("Log4j.configuration");
         if (log4j != null) {
             LOG.info("Log4j(specified): " + log4j);
@@ -122,9 +133,10 @@ public abstract class AbstractConfiguration {
             if (url != null) {
                 LOG.info("Log4j(classpath): " + url);
             } else {
-                System.out.println("Failed to find log4j.properties");
+                return false;
             }
         }
+        return true;
     }
 
     private String getRealResource(String prefix, String dir, String name) {

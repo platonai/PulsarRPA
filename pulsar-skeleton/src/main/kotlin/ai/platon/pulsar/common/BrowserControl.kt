@@ -1,5 +1,9 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.*
 import com.google.gson.GsonBuilder
 import org.openqa.selenium.UnexpectedAlertBehaviour
@@ -47,7 +51,8 @@ import java.awt.Dimension
  * */
 open class BrowserControl(
         parameters: Map<String, Any> = mapOf(),
-        var jsDirectory: String = "js"
+        var jsDirectory: String = "js",
+        immutableConfig: ImmutableConfig
 ) {
     companion object {
         val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
@@ -62,6 +67,8 @@ open class BrowserControl(
         // Special
         // var mobileEmulationEnabled = true
     }
+
+    constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
 
     val generalOptions = DesiredCapabilities()
     val chromeOptions = ChromeOptions()
@@ -88,7 +95,13 @@ open class BrowserControl(
         chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
         chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
 
+        // The javascript to execute by Web browsers
+        val propertyNames = immutableConfig.getTrimmedStrings(
+                FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
+
         mapOf(
+                "version" to PulsarEnv.clientJsVersion,
+                "propertyNames" to propertyNames,
                 "viewPortWidth" to viewPort.width,
                 "viewPortHeight" to viewPort.height
         ).also { jsParameters.putAll(it) }

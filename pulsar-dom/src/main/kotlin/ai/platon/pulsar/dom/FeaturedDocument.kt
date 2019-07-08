@@ -28,7 +28,7 @@ open class FeaturedDocument(val document: Document) {
         private val nodeFeatureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
         val nodeFeatureCalculator: NodeVisitor get() = nodeFeatureCalculatorClass.newInstance()
 
-        val NIL = FeaturedDocument.createShell(NIL_PAGE_URL)
+        val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 
@@ -36,12 +36,11 @@ open class FeaturedDocument(val document: Document) {
             val document = Document.createShell(baseUri)
             return FeaturedDocument(document)
         }
-
         /**
-         * An element is Nil, if it's owner document is nil
+         * An node is Nil, if it's owner document is nil
          * */
-        fun isNil(node: Node): Boolean {
-            return node == NIL || node.baseUri() == NIL.location
+        fun isNil(doc: FeaturedDocument): Boolean {
+            return doc == NIL || doc.location == NIL.location
         }
         fun getExportFilename(uri: String): String {
             return PulsarPaths.fromUri(uri, ".htm")
@@ -88,12 +87,10 @@ open class FeaturedDocument(val document: Document) {
     val prettyHtml: String
         get() {
             document.outputSettings().prettyPrint()
-            val str = document.html()
+            return document.html()
                     .replace("s-features", "\n\t\t\ts-features")
                     .replace("s-named-features", "\n\t\t\ts-named-features")
                     .replace("s-caption", "\n\t\t\ts-caption")
-
-            return str
         }
 
     var features: RealVector

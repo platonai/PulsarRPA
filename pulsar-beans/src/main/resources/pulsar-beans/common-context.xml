@@ -44,10 +44,42 @@
         <constructor-arg ref="conf"/>
     </bean>
 
+    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.ProxyPool" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="proxyUpdateThread" class="ai.platon.pulsar.common.proxy.ProxyUpdateThread">
+        <constructor-arg ref="conf"/>
+        <constructor-arg ref="proxyPool"/>
+    </bean>
+
     <bean id="fetchStatusTracker" class="ai.platon.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="pulsarMetrics"/>
         <constructor-arg ref="conf"/>
     </bean>
 
+    <bean id="globalExecutor" class="ai.platon.pulsar.common.GlobalExecutor" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserControl" class="ai.platon.pulsar.common.BrowserControl">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="webDriverQueues" class="ai.platon.pulsar.net.browser.WebDriverQueues" destroy-method="close">
+        <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="seleniumEngine" class="ai.platon.pulsar.net.browser.SeleniumEngine" destroy-method="close">
+        <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="globalExecutor"/>
+        <constructor-arg ref="webDriverQueues"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="pulsarContext" class="ai.platon.pulsar.PulsarContext" scope="prototype" destroy-method="close"/>
+
+    <!--<bean id="h2Console" class="org.h2.tools.Console" destroy-method="shutdown"/>-->
 </beans>

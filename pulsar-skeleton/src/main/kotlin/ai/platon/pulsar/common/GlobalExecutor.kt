@@ -12,9 +12,6 @@ import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.max
 
-/**
- * TODO: check necessary
- * */
 class GlobalExecutor(immutableConfig: ImmutableConfig) : AutoCloseable {
     val log = LoggerFactory.getLogger(GlobalExecutor::class.java)
 

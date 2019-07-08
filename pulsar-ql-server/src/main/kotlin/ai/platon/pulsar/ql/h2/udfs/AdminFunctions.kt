@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.proxy.ProxyPool
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory
 object AdminFunctions {
     val log = LoggerFactory.getLogger(AdminFunctions::class.java)
     private val sqlContext = SQLContext.getOrCreate()
-    private val unmodifiedConfig = sqlContext.unmodifiedConfig
+    private val proxyPool = PulsarEnv.proxyPool
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context h2session: Session, message: String): String {
@@ -61,7 +62,6 @@ object AdminFunctions {
     @UDFunction
     @JvmStatic
     fun testProxy(ipPort: String): String {
-        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         return proxyPool.toString()
     }
 

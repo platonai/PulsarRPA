@@ -198,6 +198,10 @@ class SeleniumEngine(
             var numTaskDone = 0
             val removal = mutableListOf<String>()
             pendingTasks.asSequence().filter { it.value.isDone }.forEach { (key, future) ->
+                if (isClosed.get()) {
+                    return@forEach
+                }
+
                 try {
                     val response = getResponse(key, future, threadTimeout)
                     bytes += response.size()
@@ -619,14 +623,6 @@ class SeleniumEngine(
         if (isClosed.getAndSet(true)) {
             return
         }
-
-        if (instanceCount.decrementAndGet() <= 0) {
-//            executor.close()
-//            drivers.close()
-        }
-
-        executor.close()
-        drivers.close()
     }
 
     companion object {

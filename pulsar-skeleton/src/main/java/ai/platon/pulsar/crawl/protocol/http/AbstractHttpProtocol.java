@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.crawl.protocol.http;
 
+import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
@@ -55,6 +56,11 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
     public static final int BUFFER_SIZE = 8 * 1024;
     private static final int MAX_REY_GUARD = 10;
+
+    /**
+     * The process environment
+     * */
+    private PulsarEnv env = PulsarEnv.Companion.getOrCreate();
     /**
      * Prevent multiple threads generate the same log unnecessary
      */
@@ -163,7 +169,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.proxyPort = conf.getInt("http.proxy.port", 8080);
         this.useProxyPool = conf.getBoolean("http.proxy.pool", false);
         if (this.useProxyPool) {
-            this.proxyPool = ProxyPool.getInstance(conf);
+            this.proxyPool = PulsarEnv.Companion.getProxyPool();
         }
         this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
 

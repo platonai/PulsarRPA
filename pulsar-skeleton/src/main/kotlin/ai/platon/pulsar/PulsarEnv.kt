@@ -6,6 +6,8 @@ import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
 import ai.platon.pulsar.common.config.PulsarConstants.CLIENT_JS_PROPERTY_NAMES
 import ai.platon.pulsar.common.getMemoryMax
+import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.common.proxy.ProxyUpdateThread
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -19,6 +21,7 @@ import ai.platon.pulsar.net.browser.WebDriverQueues
 import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.GoraStorage
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
 import java.util.*
@@ -31,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class PulsarEnv {
     companion object {
+        // TODO: read form version file
         val clientJsVersion = "0.2.3"
 
         val applicationContext: ClassPathXmlApplicationContext
@@ -48,6 +52,16 @@ class PulsarEnv {
         val unmodifiedConfig: ImmutableConfig
 
         val globalExecutor: GlobalExecutor
+
+        val proxyPool: ProxyPool
+
+        val proxyUpdateThread: ProxyUpdateThread
+
+        val browserControl: BrowserControl
+
+        val webDrivers: WebDriverQueues
+
+        val seleniumEngine: SeleniumEngine
 
         private val env = AtomicReference<PulsarEnv>()
 
@@ -70,16 +84,20 @@ class PulsarEnv {
             // the primary configuration, keep unchanged with the configuration files
             unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
 
-            globalExecutor = GlobalExecutor(unmodifiedConfig)
+            proxyPool = applicationContext.getBean(ProxyPool::class.java)
+            globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
+            proxyUpdateThread = applicationContext.getBean(ProxyUpdateThread::class.java)
+            browserControl = applicationContext.getBean(BrowserControl::class.java)
+            webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
+            seleniumEngine = applicationContext.getBean(SeleniumEngine::class.java)
+
+            // proxyUpdateThread.start()
         }
 
         fun getOrCreate(): PulsarEnv {
             synchronized(PulsarEnv::class.java) {
                 if (env.get() == null) {
                     env.set(PulsarEnv())
-                    val nil = FeaturedDocument.NIL
-                    require(nil.html.startsWith("<html>"))
-                    require(nil.features.dimension == N)
                 }
 
                 return env.get()
@@ -89,36 +107,13 @@ class PulsarEnv {
 
     val isStopped = AtomicBoolean()
 
-    val browserControl: BrowserControl
-
-    val webDrivers: WebDriverQueues
-
-    val seleniumEngine: SeleniumEngine
-
     // other possible environment scope objects
     // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
     // serializers, etc
-
-    init {
-        // The javascript to execute by Web browsers
-        val propertyNames = unmodifiedConfig.getTrimmedStrings(FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
-        val parameters = mapOf(
-                "version" to clientJsVersion,
-                "propertyNames" to propertyNames
-        )
-        browserControl = BrowserControl(parameters)
-        webDrivers = WebDriverQueues(browserControl, unmodifiedConfig)
-        seleniumEngine = SeleniumEngine(browserControl, globalExecutor, webDrivers, unmodifiedConfig)
-    }
 
     fun stop() {
         if (isStopped.getAndSet(true)) {
             return
         }
-
-        // TODO: use spring?
-        globalExecutor.use { it.close() }
-        seleniumEngine.use { it.close() }
-        webDrivers.use { it.close() }
     }
 }

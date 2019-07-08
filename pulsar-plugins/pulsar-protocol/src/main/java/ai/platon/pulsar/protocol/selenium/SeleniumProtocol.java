@@ -50,14 +50,14 @@ public class SeleniumProtocol extends ForwardingProtocol {
 
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, MutableConfig mutableConfig) {
-        SeleniumEngine engine = PulsarEnv.Companion.getOrCreate().getSeleniumEngine();
+        SeleniumEngine engine = PulsarEnv.Companion.getSeleniumEngine();
         return engine.parallelFetchAllPages(pages, mutableConfig);
     }
 
     @Override
     public Response getResponse(String url, WebPage page, boolean followRedirects) {
         Response response = super.getResponse(url, page, followRedirects);
-        SeleniumEngine engine = PulsarEnv.Companion.getOrCreate().getSeleniumEngine();
+        SeleniumEngine engine = PulsarEnv.Companion.getSeleniumEngine();
         return response != null ? response : engine.fetchContent(page);
     }
 }

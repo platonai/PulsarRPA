@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
@@ -41,6 +42,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
 
     companion object {
         // TODO: Web Drivers should grouped by conf, and free we the context with this config is not available
+        private val pulsarContext = PulsarContext.getOrCreate()
         val capacity = (1.5 * PulsarEnv.NCPU).toInt()
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
@@ -50,7 +52,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
 
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-    private val proxyPool: ProxyPool = ProxyPool.getInstance(conf)
+    private val proxyPool = PulsarEnv.proxyPool
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
     private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
     private val isClosed = AtomicBoolean(false)
@@ -65,10 +67,6 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
             client.options.isThrowExceptionOnScriptError = throwExceptionOnScriptError
             return client
         }
-    }
-
-    init {
-        Runtime.getRuntime().addShutdownHook(Thread(Runnable { this.close() }))
     }
 
     fun put(priority: Int, driver: WebDriver) {

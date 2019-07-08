@@ -16,7 +16,7 @@
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="injectComponent" class="ai.platon.pulsar.crawl.component.InjectComponent">
+    <bean id="injectComponent" class="ai.platon.pulsar.crawl.component.InjectComponent" destroy-method="close">
         <constructor-arg ref="seedBuilder"/>
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
@@ -31,12 +31,12 @@
         <property name="fetchSchedule" ref="fetchSchedule"/>
         <property name="pulsarMetrics" ref="pulsarMetrics"/>
     </bean>
-    <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent">
+    <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchStatusTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent">
+    <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchStatusTracker"/>

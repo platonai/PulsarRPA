@@ -8,12 +8,15 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.common.proxy.ProxyUpdateThread
 import ai.platon.pulsar.crawl.component.*
+import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import avro.shaded.com.google.common.collect.Iterators
 import org.apache.log4j.LogManager
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,7 +28,7 @@ import kotlin.reflect.KClass
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
-class PulsarContext {
+class PulsarContext: AutoCloseable {
 
     companion object {
         private val activeContext = AtomicReference<PulsarContext>()
@@ -33,7 +36,8 @@ class PulsarContext {
         fun getOrCreate(): PulsarContext {
             synchronized(PulsarContext::class.java) {
                 if (activeContext.get() == null) {
-                    activeContext.set(PulsarContext())
+                    val pulsarContext = PulsarEnv.applicationContext.getBean(PulsarContext::class.java)
+                    activeContext.set(pulsarContext)
                 }
                 return activeContext.get()
             }
@@ -54,17 +58,25 @@ class PulsarContext {
      * */
     val unmodifiedConfig: ImmutableConfig = PulsarEnv.unmodifiedConfig
     /**
+     * The spring application context
+     * */
+    val applicationContext = PulsarEnv.applicationContext
+    /**
      * The start time
      * */
     val startTime = System.currentTimeMillis()
     /**
      * Whether this pulsar object is already closed
      * */
-    val isStopped = AtomicBoolean()
+    private val stopped = AtomicBoolean()
+    /**
+     * Whether this pulsar object is already closed
+     * */
+    val isStopped = stopped.get()
     /**
      * Registered closeables, will be closed by Pulsar object
      * */
-    private val closeables = mutableListOf<AutoCloseable>()
+    private val closableObjects = mutableListOf<AutoCloseable>()
     /**
      * Url normalizers
      * */
@@ -92,10 +104,10 @@ class PulsarContext {
 
 //    val taskTracker = PulsarEnv.
 
+    val taskStatusTracker: TaskStatusTracker
+
     val pageCache: ConcurrentLRUCache<String, WebPage>
     val documentCache: ConcurrentLRUCache<String, FeaturedDocument>
-
-    val proxyPool = ProxyPool.getInstance(PulsarEnv.unmodifiedConfig)
 
     init {
         var capacity = unmodifiedConfig.getUint("session.page.cache.size", PulsarSession.SESSION_PAGE_CACHE_CAPACITY)
@@ -104,12 +116,13 @@ class PulsarContext {
         capacity = unmodifiedConfig.getUint("session.document.cache.size", PulsarSession.SESSION_DOCUMENT_CACHE_CAPACITY)
         documentCache = ConcurrentLRUCache(PulsarSession.SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
 
-        webDb = PulsarEnv.applicationContext.getBean(WebDb::class.java)
-        injectComponent = PulsarEnv.applicationContext.getBean(InjectComponent::class.java)
-        loadComponent = PulsarEnv.applicationContext.getBean(LoadComponent::class.java)
-        fetchComponent = PulsarEnv.applicationContext.getBean(BatchFetchComponent::class.java)
-        parseComponent = PulsarEnv.applicationContext.getBean(ParseComponent::class.java)
-        urlNormalizers = PulsarEnv.applicationContext.getBean(UrlNormalizers::class.java)
+        webDb = applicationContext.getBean(WebDb::class.java)
+        injectComponent = applicationContext.getBean(InjectComponent::class.java)
+        loadComponent = applicationContext.getBean(LoadComponent::class.java)
+        fetchComponent = applicationContext.getBean(BatchFetchComponent::class.java)
+        parseComponent = applicationContext.getBean(ParseComponent::class.java)
+        urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)
+        taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
     }
 
     fun createSession(): PulsarSession {
@@ -130,6 +143,14 @@ class PulsarContext {
     fun getBean(clazz: KClass<Any>): Any? {
         ensureRunning()
         return PulsarEnv.applicationContext.getBean(clazz.java)
+    }
+
+    /**
+     * Close objects when sessions closes
+     * */
+    fun registerClosable(closable: AutoCloseable) {
+        ensureRunning()
+        closableObjects.add(closable)
     }
 
     fun normalize(url: String): NormUrl {
@@ -350,17 +371,22 @@ class PulsarContext {
     }
 
     fun stop() {
-        if (isStopped.getAndSet(true)) {
+        if (stopped.getAndSet(true)) {
             return
         }
 
-        closeables.forEach { it.use { it.close() } }
+        closableObjects.forEach { o -> o.use { it.close() } }
+    }
+
+    override fun close() {
+        stop()
     }
 
     private fun ensureRunning() {
-        if (isStopped.get()) {
-            throw IllegalStateException(
-                    """Cannot call methods on a stopped PulsarContext.""")
+        if (stopped.get()) {
+
+//            throw IllegalStateException(
+//                    """Cannot call methods on a stopped PulsarContext.""")
         }
     }
 

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.common.NetUtil.testNetwork
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.URLUtil
@@ -10,6 +11,7 @@ import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
@@ -31,12 +33,13 @@ object CommonFunctions {
 
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
-    private val unmodifiedConfig = PulsarEnv.unmodifiedConfig
+    private val sqlContext = SQLContext.getOrCreate()
+    private val proxyPool = PulsarEnv.proxyPool
+    private val unmodifiedConfig = sqlContext.unmodifiedConfig
 
     @UDFunction
     @JvmStatic
     fun getProxyPoolStatus(): String {
-        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         return proxyPool.toString()
     }
 
@@ -373,7 +376,6 @@ object CommonFunctions {
     fun addProxy(ipPort: String): Boolean {
         val proxyEntry = ProxyEntry.parse(ipPort)
         if (proxyEntry != null && proxyEntry.testNetwork()) {
-            val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
             return proxyPool.offer(proxyEntry)
         }
 
@@ -383,8 +385,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun addProxy(ip: String, port: Int): Boolean {
-        if (ai.platon.pulsar.common.NetUtil.testNetwork(ip, port)) {
-            val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
+        if (testNetwork(ip, port)) {
             return proxyPool.offer(ProxyEntry(ip, port))
         }
 
@@ -410,7 +411,6 @@ object CommonFunctions {
     fun addProxiesUnchecked(ipPorts: ValueArray): Int {
         var count = 0
 
-        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         for (value in ipPorts.list) {
             val proxyEntry = ProxyEntry.parse(value.string)
             if (proxyEntry != null) {
@@ -425,7 +425,6 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun recoverProxyPool(n: Int): Int {
-        val proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         return proxyPool.recover(n)
     }
 

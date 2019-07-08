@@ -90,6 +90,12 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-shaded-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.gora</groupId>

@@ -16,6 +16,7 @@ import org.h2.api.ErrorCode
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -58,7 +59,7 @@ class SQLContext: AutoCloseable {
 
     val env = PulsarEnv.getOrCreate()
 
-    private val pulsarContext = PulsarContext.getOrCreate()
+    val pulsarContext = PulsarContext.getOrCreate()
 
     private var backgroundSession = pulsarContext.createSession()
 
@@ -67,10 +68,6 @@ class SQLContext: AutoCloseable {
      * A session will be closed if it's expired or the pool is full
      */
     private val sessions: MutableMap<DbSession, QuerySession> = Collections.synchronizedMap(mutableMapOf())
-
-    private val taskStatusTracker: TaskStatusTracker
-
-    private val proxyPool: ProxyPool
 
     private val backgroundTaskBatchSize: Int
 
@@ -89,12 +86,11 @@ class SQLContext: AutoCloseable {
     init {
         status = Status.INITIALIZING
 
-        Runtime.getRuntime().addShutdownHook(Thread(this::close))
+        // TODO: should be closed by database engine?
+        pulsarContext.registerClosable(this)
 
         unmodifiedConfig = pulsarContext.unmodifiedConfig
-        proxyPool = ProxyPool.getInstance(unmodifiedConfig)
         handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, false)
-        taskStatusTracker = PulsarEnv.applicationContext.getBean(TaskStatusTracker::class.java)
 
         backgroundSession.disableCache()
         backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
@@ -107,21 +103,25 @@ class SQLContext: AutoCloseable {
     }
 
     fun createSession(dbSession: DbSession): QuerySession {
+        ensureRunning()
         val querySession = QuerySession(pulsarContext, dbSession, SessionConfig(dbSession, unmodifiedConfig))
         sessions[dbSession] = querySession
         return querySession
     }
 
     fun sessionCount(): Int {
+        ensureRunning()
         return sessions.size
     }
 
     fun getSession(sessionId: Int): QuerySession {
+        ensureRunning()
         return sessions.entries.firstOrNull { it.key.id == sessionId }?.value
-                ?:throw DbException.get(ErrorCode.DATABASE_IS_CLOSED, "Failed to find session in cache")
+                ?:throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session is closed")
     }
 
     fun closeSession(sessionId: Int) {
+        ensureRunning()
         val removal = sessions.filter { it.key.id == sessionId }
         removal.forEach {
             sessions.remove(it.key)
@@ -141,26 +141,27 @@ class SQLContext: AutoCloseable {
         backgroundSession.use { it.close() }
         backgroundThread.join()
 
-        sessions.values.forEach { it.use { it.close() } }
+        // database engine will close the sessions
         sessions.clear()
-
-        taskStatusTracker.use { it.close() }
-
-        proxyPool.use { it.close() }
 
         status = Status.CLOSED
     }
 
     private fun runBackgroundTasks() {
-        while (!isClosed.get()) {
-            Thread.sleep(10000)
+        // start after 30 seconds
+        TimeUnit.SECONDS.sleep(30)
 
+        while (!isClosed.get()) {
             if (handlePeriodicalFetchTasks) {
                 loadLazyTasks()
                 fetchSeeds()
             }
 
             maintainProxyPool()
+
+            try {
+                TimeUnit.SECONDS.sleep(10)
+            } catch (e: InterruptedException) {}
         }
     }
 
@@ -168,12 +169,13 @@ class SQLContext: AutoCloseable {
      * Get background tasks and run them
      */
     private fun loadLazyTasks() {
+        ensureRunning()
         if (loading.get()) {
             return
         }
 
         for (mode in FetchMode.values()) {
-            val urls = taskStatusTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
+            val urls = pulsarContext.taskStatusTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
             if (!urls.isEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
@@ -184,12 +186,13 @@ class SQLContext: AutoCloseable {
      * Get periodical tasks and run them
      */
     private fun fetchSeeds() {
+        ensureRunning()
         if (loading.get()) {
             return
         }
 
         for (mode in FetchMode.values()) {
-            val urls = taskStatusTracker.getSeeds(mode, 1000)
+            val urls = pulsarContext.taskStatusTracker.getSeeds(mode, 1000)
             if (urls.isNotEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
@@ -197,10 +200,12 @@ class SQLContext: AutoCloseable {
     }
 
     private fun maintainProxyPool() {
-        proxyPool.recover(100)
+        ensureRunning()
+        PulsarEnv.proxyPool.recover(100)
     }
 
     private fun loadAll(urls: Iterable<String>, batchSize: Int, mode: FetchMode) {
+        ensureRunning()
         if (!urls.iterator().hasNext() || batchSize <= 0) {
             log.debug("Not loading lazy tasks")
             return
@@ -220,8 +225,18 @@ class SQLContext: AutoCloseable {
     }
 
     private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
-        ++lazyTaskRound
-        log.debug("Running {}th round for lazy tasks", lazyTaskRound)
-        backgroundSession.parallelLoadAll(urls, loadOptions)
+        ensureRunning()
+        if (!isClosed.get()) {
+            ++lazyTaskRound
+            log.debug("Running {}th round for lazy tasks", lazyTaskRound)
+            backgroundSession.parallelLoadAll(urls, loadOptions)
+        }
+    }
+
+    private fun ensureRunning() {
+        if (isClosed.get()) {
+            throw IllegalStateException(
+                    """Cannot call methods on a stopped SQLContext.""")
+        }
     }
 }
