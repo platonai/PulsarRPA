@@ -111,9 +111,13 @@ if [[ "$PULSAR_CONF_DIR" = "" ]]; then
   export PULSAR_CONF_DIR="$PULSAR_CONF_DIR"
 fi
 
-# Log4j configuration directory
+# Log4j configuration
 if [[ "$LOG4J_CONFIGURATION" = "" ]]; then
   export LOG4J_CONFIGURATION="$PULSAR_CONF_DIR/log4j.properties"
+fi
+
+if [[ "$LOGBACK_CONFIGURATION" = "" ]]; then
+  export LOGBACK_CONFIGURATION="$PULSAR_CONF_DIR/logback-product.xml"
 fi
 
 # REST JMX opts

@@ -109,10 +109,15 @@ public abstract class AbstractConfiguration {
         realResources.forEach(conf::addResource);
 
         LOG.info(toString());
+    }
 
-//        if (!checkLogbackConfig() && !checkLog4jProperties()) {
-//            System.err.println("Failed to find log4j or logback configuration");
-//        }
+    /**
+     * Most logging systems check it's environment by itself, if not, use this one
+     * */
+    private void checkLogConfig() {
+        if (!checkLogbackConfig() && !checkLog4jProperties()) {
+            System.err.println("Failed to find log4j or logback configuration");
+        }
     }
 
     private boolean checkLogbackConfig() {

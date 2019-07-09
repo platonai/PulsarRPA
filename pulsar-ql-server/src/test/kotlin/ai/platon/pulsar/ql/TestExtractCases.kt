@@ -63,7 +63,7 @@ class TestExtractCases : TestBase() {
     fun testLoadOutPagesForMia() {
         val url = urlGroups["mia"]!![0]
         val limit = 20
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30 LIMIT $limit")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1d') WHERE SIBLING > 30 LIMIT $limit")
 
         execute("CALL SET_PAGE_EXPIRES('1d', 1)")
         val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"

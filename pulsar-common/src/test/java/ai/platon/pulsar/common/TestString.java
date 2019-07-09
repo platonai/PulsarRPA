@@ -18,6 +18,7 @@
 package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Ignore;
@@ -404,5 +405,17 @@ public class TestString {
 
 //    System.out.println(StringUtil.getUnslashedLines(seeds).size());
 //    System.out.println(seedFile.getAbsolutePath());
+    }
+
+    @Test
+    public void testGetFirstInteger() {
+        String s = "-hello world 999 i love you 520 forever";
+        assertEquals(999, StringUtil.getFirstInteger(s, -1));
+    }
+
+    @Test
+    public void testGetFirstFloatNumber() {
+        String s = "-hello world 999.00.0 i love you 520.0 forever";
+        assertEquals(999.00f, StringUtil.getFirstFloatNumber(s, Float.MIN_VALUE), 0.1);
     }
 }

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
+import ai.platon.pulsar.dom.nodes.node.ext.name
 import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.persist.WebPage

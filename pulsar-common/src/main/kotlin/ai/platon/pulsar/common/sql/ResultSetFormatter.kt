@@ -101,13 +101,12 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
     @Throws(SQLException::class)
     private fun formatColumn(columnIndex: Int): String {
         var s: String?
-        val type = rs.metaData.getColumnType(columnIndex)
-        when (type) {
+        when (rs.metaData.getColumnType(columnIndex)) {
             Types.DOUBLE, Types.FLOAT, Types.REAL -> {
                 var precision = rs.metaData.getPrecision(columnIndex)
                 var scale = rs.metaData.getScale(columnIndex)
-                if (precision <= 0) precision = 10
-                if (scale <= 0) scale = 10
+                if (precision !in 0..10) precision = 10
+                if (scale !in 0..10) scale = 10
                 val d = rs.getDouble(columnIndex)
                 s = String.format("%" + precision + "." + scale + "f", d)
             }

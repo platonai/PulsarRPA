@@ -43,6 +43,7 @@ logout="${PULSAR_LOG_DIR}/${PULSAR_LOGOUT}"
 logcmd="${PULSAR_TMP_DIR}/last-cmd-name"
 
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -DLog4j.configuration=$LOG4J_CONFIGURATION)
+PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dlogback.configurationFile=$LOGBACK_CONFIGURATION)
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.home.dir=$PULSAR_HOME)
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.tmp.dir=$PULSAR_TMP_DIR)
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" -Dpulsar.id.str=$PULSAR_IDENT_STRING)

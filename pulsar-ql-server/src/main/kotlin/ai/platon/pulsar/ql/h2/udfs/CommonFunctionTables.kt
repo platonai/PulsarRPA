@@ -44,7 +44,7 @@ object CommonFunctionTables {
         rs.addColumn("KEY")
         rs.addColumn("VALUE")
 
-        if (kvs.size == 0) {
+        if (kvs.isEmpty()) {
             return rs
         }
 
@@ -72,7 +72,7 @@ object CommonFunctionTables {
         val rs = SimpleResultSet()
         rs.autoClose = false
 
-        if (values.list.size == 0) {
+        if (values.list.isEmpty()) {
             return rs
         }
 
@@ -104,7 +104,7 @@ object CommonFunctionTables {
         val rs = SimpleResultSet()
         rs.autoClose = false
 
-        if (values.list.size == 0) {
+        if (values.list.isEmpty()) {
             return rs
         }
 

@@ -184,7 +184,7 @@ fun Node.first(cssQuery: String): Element? {
 }
 
 fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
-    return if (this !is Element) {
+    return if (this is Element) {
         first(cssQuery)?.let { transformer(it) }
     } else null
 }

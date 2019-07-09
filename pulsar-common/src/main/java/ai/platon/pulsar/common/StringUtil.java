@@ -17,6 +17,9 @@
 
 package ai.platon.pulsar.common;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -24,6 +27,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -99,6 +103,7 @@ public final class StringUtil {
 
     /**
      * Tests if a code point is "whitespace" as defined by what it looks like. Used for Element.text etc.
+     *
      * @param c code point to test
      * @return true if code point is whitespace, false otherwise
      */
@@ -413,9 +418,8 @@ public final class StringUtil {
     }
 
     /**
-     *
      * @link {https://stackoverflow.com/questions/220547/printable-char-in-java}
-     * */
+     */
     public static boolean isPrintableUnicodeChar(char ch) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(ch);
         return (!Character.isISOControl(ch)) && ch != KeyEvent.CHAR_UNDEFINED
@@ -498,7 +502,7 @@ public final class StringUtil {
         return text + seperator + suffix;
     }
 
-    public static int getLeadingNumber(String s, int defaultValue) {
+    public static int getLeadingInteger(String s, int defaultValue) {
         int numberEnd = StringUtils.lastIndexOfAny(s, "123456789");
         if (numberEnd == StringUtils.INDEX_NOT_FOUND) {
             return defaultValue;
@@ -506,12 +510,43 @@ public final class StringUtil {
         return NumberUtils.toInt(s.substring(0, numberEnd), defaultValue);
     }
 
-    public static int getTailingNumber(String s, int defaultValue) {
+    public static int getTailingInteger(String s, int defaultValue) {
         int numberStart = StringUtils.indexOfAny(s, "123456789");
         if (numberStart == StringUtils.INDEX_NOT_FOUND) {
             return defaultValue;
         }
         return NumberUtils.toInt(s.substring(numberStart), defaultValue);
+    }
+
+    public static int getFirstInteger(String s, int defaultValue) {
+        int numberStart = StringUtils.indexOfAny(s, "123456789");
+        if (numberStart == StringUtils.INDEX_NOT_FOUND) {
+            return defaultValue;
+        }
+
+        StringBuilder sb = new StringBuilder(s.length() - numberStart);
+        int j = 0;
+        for (int i = numberStart; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if (Character.isDigit(c)) {
+                sb.append(c);
+            } else {
+                break;
+            }
+        }
+
+        return NumberUtils.toInt(sb.toString(), defaultValue);
+    }
+
+    public static float getFirstFloatNumber(String s, float defaultValue) {
+        Pattern floatNumberPattern = Pattern.compile("[-]?[0-9]*\\.?,?[0-9]+");
+
+        Matcher m = floatNumberPattern.matcher(s);
+        if (m.find()) {
+            return NumberUtils.toFloat(m.group());
+        }
+
+        return defaultValue;
     }
 
     public static boolean contains(String text, CharSequence... searchCharSequences) {
@@ -575,12 +610,6 @@ public final class StringUtil {
      * */
     public static Map<String, String> parseKvs(String line, String delimiter) {
         return SParser.wrap(line).getKvs(delimiter);
-//    String[] kvs = line.split("\\s+");
-//    return Stream.of(kvs)
-//        .filter(kv -> StringUtils.countMatches(kv, delimiter) == 1)
-//        .map(kv -> StringUtils.split(kv, delimiter))
-//        .filter(kv -> !kv[0].isEmpty() && !kv[1].isEmpty())
-//        .collect(Collectors.toMap(kv -> kv[0], kv -> kv[1], (kv1, kv2) -> kv2));
     }
 
     /**
