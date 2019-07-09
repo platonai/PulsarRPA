@@ -27,5 +27,6 @@
     <name>parse.ignore.external.links</name>
     <value>false</value>
   </property>
+
   <!-- Solr Index -->
 </configuration>

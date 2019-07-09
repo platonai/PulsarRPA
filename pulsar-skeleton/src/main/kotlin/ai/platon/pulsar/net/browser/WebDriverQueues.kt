@@ -43,7 +43,6 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     companion object {
         // TODO: Web Drivers should grouped by conf, and free we the context with this config is not available
         private val pulsarContext = PulsarContext.getOrCreate()
-        val capacity = (1.5 * PulsarEnv.NCPU).toInt()
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
         private val totalDriverCount = AtomicInteger(0)
@@ -56,6 +55,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
     private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
     private val isClosed = AtomicBoolean(false)
+    val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
 
     val freeSize get() = freeDriverCount.get()
     val totalSize get() = totalDriverCount.get()
@@ -119,7 +119,8 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     private fun allocateWebDriver(queue: ArrayBlockingQueue<WebDriver>, conf: ImmutableConfig) {
         // TODO: configurable factor
         if (totalSize >= capacity) {
-            log.warn("Too many web drivers ... cpu cores: {}, free/total: {}/{}", PulsarEnv.NCPU, freeSize, totalSize)
+            log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/total: {}/{}",
+                    PulsarEnv.NCPU, capacity, freeSize, totalSize)
             return
         }
 

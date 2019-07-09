@@ -207,7 +207,7 @@ public class ResourceLoader {
                 // LOG.info(name + " not found");
                 return null;
             } else {
-                LOG.info("Found resource " + name + " at " + url);
+                LOG.info("Find resource " + name + " at " + url);
             }
 
             return url.openStream();

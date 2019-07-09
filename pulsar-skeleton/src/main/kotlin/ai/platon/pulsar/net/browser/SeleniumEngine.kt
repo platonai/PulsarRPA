@@ -66,6 +66,7 @@ class SeleniumEngine(
         private val drivers: WebDriverQueues,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
+    val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
     private val libJs = browserControl.parseLibJs(false)
     private val clientJs = browserControl.parseJs(false)
@@ -91,7 +92,8 @@ class SeleniumEngine(
                 "scriptTimeout", defaultDriverConfig.scriptTimeout,
                 "scrollDownCount", defaultDriverConfig.scrollDownCount,
                 "scrollDownWait", defaultDriverConfig.scrollDownWait,
-                "clientJsLength", clientJs.length
+                "clientJsLength", clientJs.length,
+                "maxWebDrivers", drivers.capacity
         )
     }
 
@@ -627,8 +629,6 @@ class SeleniumEngine(
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
-
         private var instanceCount = AtomicInteger()
         val defaultSupportedCharsets = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
                 "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"

@@ -151,7 +151,8 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun setPageExpires(@H2Context h2session: Session, duration: String, ttl: Int): String? {
+    @JvmOverloads
+    fun setPageExpires(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
         val d = getDuration(duration)
         val value = d?.toString()
         return getAndSetConf(h2session, STORAGE_DATUM_EXPIRES, value, ttl)
@@ -173,7 +174,8 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun setPageLoadTimeout(@H2Context h2session: Session, duration: String, ttl: Int): String? {
+    @JvmOverloads
+    fun setPageLoadTimeout(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
         val d = getDuration(duration)
         val value = d?.toString()
         return getAndSetConf(h2session, FETCH_PAGE_LOAD_TIMEOUT, value, ttl)
@@ -195,7 +197,8 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun setScriptTimeout(@H2Context h2session: Session, duration: String, ttl: Int): String? {
+    @JvmOverloads
+    fun setScriptTimeout(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
         val d = getDuration(duration)
         val value = d?.toString()
         return getAndSetConf(h2session, FETCH_SCRIPT_TIMEOUT, value, ttl)
@@ -217,8 +220,9 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun setScrollDownCount(@H2Context h2session: Session, count: Int, ttl: Int): String? {
-        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_COUNT, Integer.toString(count), ttl)
+    @JvmOverloads
+    fun setScrollDownCount(@H2Context h2session: Session, count: Int, ttl: Int = 1): String? {
+        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_COUNT, count.toString(), ttl)
     }
 
     @UDFunction

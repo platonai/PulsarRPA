@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage

@@ -210,6 +210,7 @@ public interface CapabilityTypes {
      * Selenium
      */
     String SELENIUM_BROWSER = "selenium.browser";
+    String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
     String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
     String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
     String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";

@@ -40,8 +40,7 @@ public abstract class AbstractConfiguration {
 
     public static final Logger LOG = LoggerFactory.getLogger(AbstractConfiguration.class);
 
-    public static final List<String> DEFAULT_RESOURCES =
-            Lists.newArrayList("pulsar-default.xml", "pulsar-site.xml", "pulsar-task.xml");
+    public static final List<String> DEFAULT_RESOURCES = Lists.newArrayList();
 
     private Configuration conf;
 
@@ -168,11 +167,13 @@ public abstract class AbstractConfiguration {
 
         URL url = getResource(realResource);
         if (url != null) {
+            LOG.info("Find resource {}", url);
             return realResource;
         }
 
         url = getResource(name);
         if (url != null) {
+            LOG.info("Find resource {}", url);
             realResource = name;
             return realResource;
         }
@@ -529,6 +530,6 @@ public abstract class AbstractConfiguration {
 
     @Override
     public String toString() {
-        return conf.toString();
+        return "Expected " + conf;
     }
 }

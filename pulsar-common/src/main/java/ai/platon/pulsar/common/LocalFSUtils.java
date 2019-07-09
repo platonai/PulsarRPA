@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,19 +43,14 @@ public class LocalFSUtils {
 
     public static List<String> readAllLinesSilent(Path path) {
         try {
-            return Files.readAllLines(path);
+            if (Files.exists(path)) {
+                return Files.readAllLines(path);
+            } else {
+                Files.createDirectories(path.getParent());
+                Files.write(path, "".getBytes(), StandardOpenOption.CREATE);
+            }
         } catch (IOException e) {
             LOG.warn(e.toString());
-        }
-
-        return Collections.emptyList();
-    }
-
-    public static List<String> readAllLinesSilent(String path) {
-        try {
-            return readAllLines(path);
-        } catch (IOException e) {
-            LOG.error(e.toString());
         }
 
         return Collections.emptyList();

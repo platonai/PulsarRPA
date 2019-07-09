@@ -30,7 +30,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>ai.platon.pulsar.ql.start.H2DbConsole</mainClass>
+                            <mainClass>ai.platon.pulsar.ql.h2.start.H2DbConsole</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -58,7 +58,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ai.platon.pulsar.ql.start.H2DbConsole</mainClass>
+                    <mainClass>ai.platon.pulsar.ql.h2.start.H2DbConsole</mainClass>
                     <arguments>
                         <!--<argument>-trace</argument>-->
                         <argument>-tcp</argument>

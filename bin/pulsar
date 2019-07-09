@@ -100,20 +100,6 @@ if [[ "$COMMAND" == "" ]]; then
   COMMAND=server
 fi
 
-# Copy specified config files into the main config dir and overwrite the old one
-# To protect from mishandling, short paths are not allowed
-if [[ ${#PULSAR_EXTRA_CONF_DIR} -gt 5 ]]; then
-  find $PULSAR_EXTRA_CONF_DIR -maxdepth 1 -type f | xargs -I {} cp {} $PULSAR_CONF_DIR
-else
-  echo "<$PULSAR_EXTRA_CONF_DIR> seems not a valid directory, please check it ..."
-  exit 1
-fi
-
-# Put the config dir path at the front of CLASSPATH
-if [[ -d "$PULSAR_CONF_DIR" ]]; then
-  CLASSPATH="${CLASSPATH}:$PULSAR_CONF_DIR"
-fi
-
 CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
 
 # Choose runnable
@@ -126,10 +112,10 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-ql-server
-  CLASS=ai.platon.pulsar.ql.start.H2DbConsole
+  CLASS=ai.platon.pulsar.ql.h2.start.H2DbConsole
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-ql-server
-  CLASS=ai.platon.pulsar.ql.start.H2Shell
+  CLASS=ai.platon.pulsar.ql.h2.start.H2Shell
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else
