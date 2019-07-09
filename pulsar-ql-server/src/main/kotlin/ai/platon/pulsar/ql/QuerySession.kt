@@ -43,7 +43,7 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
                 .forEach { registerUdfs(session, it.kotlin) }
 
         if (totalUdfs.get() > 0) {
-            log.info("Added total {} new UDFs for session {}", totalUdfs, session)
+            log.debug("Added total {} new UDFs for session {}", totalUdfs, session)
         }
     }
 

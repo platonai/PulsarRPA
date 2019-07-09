@@ -420,8 +420,7 @@ public class LoadComponent {
                     options.getNoFilter());
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("ParseResult: " + parseResult.toString());
-                LOG.trace("ParseReport: " + parseComponent.getReport());
+                LOG.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getReport());
             }
         }
 

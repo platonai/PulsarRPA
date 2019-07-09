@@ -17,7 +17,7 @@ object MetadataFunctionTables {
     @UDFunction
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ResultSet {
-        val page = H2SessionFactory.getSession(h2session.id).load(configuredUrl)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(configuredUrl)
         return Queries.toResultSet(page)
     }
 
@@ -28,7 +28,7 @@ object MetadataFunctionTables {
         val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.expires = Duration.ZERO
 
-        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(urlAndArgs.first, loadOptions)
         return Queries.toResultSet(page)
     }
 
@@ -39,7 +39,7 @@ object MetadataFunctionTables {
         val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.parse = true
 
-        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(urlAndArgs.first, loadOptions)
         return Queries.toResultSet(page)
     }
 }

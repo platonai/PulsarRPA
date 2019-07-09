@@ -13,7 +13,7 @@ object MetadataFunctions {
     @UDFunction
     @JvmStatic
     fun get(@H2Context h2session: Session, url: String): String {
-        val page = H2SessionFactory.getSession(h2session.id).load(url)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(url)
         return WebPageFormatter(page).toString()
     }
 }

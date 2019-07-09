@@ -450,6 +450,7 @@ class SeleniumEngine(
 
         var status = ProtocolStatus.STATUS_SUCCESS
         val timeout = driverConfig.pageLoadTimeout.seconds
+        val scroll = driverConfig.scrollDownCount
         val maxRound = timeout - 2
         val wait = FluentWait<WebDriver>(driver)
                 .withTimeout(timeout, TimeUnit.SECONDS)
@@ -458,7 +459,7 @@ class SeleniumEngine(
 
         // make sure the document is ready
         try {
-            val js = ";$libJs;return __utils__.waitForReady($maxRound);"
+            val js = ";$libJs;return __utils__.waitForReady($maxRound, $scroll);"
             val r = wait.until { (it as? JavascriptExecutor)?.executeScript(js) }
 
             if (r == "timeout") {

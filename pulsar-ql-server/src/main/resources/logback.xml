@@ -1,43 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration>
+<configuration scan="true" scanPeriod="30 seconds" debug="true">
+    <property name="log.dir" value="logs1" />
+    <property name="log.file" value="pulsar.log" />
+
     <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
         <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy-->
         <!--for further documentation-->
-        <File>${pulsar.log.dir}/${pulsar.log.file}</File>
+        <File>${log.dir}/${log.file}</File>
         <encoder>
-            <pattern>%d{ISO8601} %t %-5p %c{2} - %m%n</pattern>
+            <!--<pattern>%d{ISO8601} %t %-5p %c{2} - %m%n</pattern>-->
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${pulsar.log.dir}/${pulsar.log.file}.%d{.yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${log.dir}/${log.file}.%d{.yyyy-MM-dd}</fileNamePattern>
         </rollingPolicy>
     </appender>
-    <appender name="cmdstdout" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{ISO8601} %c{2} - %m%n</pattern>
         </encoder>
     </appender>
-    <logger name="ai.platon.pulsar.ql" level="DEBUG"/>
-    <logger name="org.apache.zookeeper" level="ERROR"/>
+
+    <logger name="ai.platon.pulsar" level="INFO"/>
+    <logger name="ai.platon.pulsar.ql" level="INFO"/>
     <logger name="ai.platon.pulsar.parse.html" level="INFO"/>
-    <logger name="ai.platon.scent" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.protocol" level="TRACE"/>
+    <logger name="ai.platon.pulsar.crawl.protocol" level="INFO"/>
+    <logger name="ai.platon.pulsar.cli.shell" level="INFO"/>
+    <logger name="ai.platon.pulsar.crawl" level="INFO"/>
+    <logger name="ai.platon.pulsar.net" level="INFO"/>
+    <logger name="ai.platon.pulsar.crawl.component" level="INFO"/>
+
+    <logger name="org.apache.gora" level="ERROR"/>
+    <logger name="org.apache.hadoop.mapreduce.Job" level="WARN"/>
+    <logger name="org.apache.hadoop.conf.Configuration" level="WARN"/>
+    <logger name="org.apache.zookeeper" level="ERROR"/>
     <logger name="org.apache.solr" level="INFO"/>
     <logger name="com.j256.ormlite" level="WARN"/>
     <logger name="org.apache.hadoop" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
-    <logger name="ai.platon.pulsar.cli.shell" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.crawl" level="DEBUG"/>
-    <logger name="org.apache.gora" level="ERROR"/>
-    <logger name="org.apache.hadoop.mapreduce.Job" level="INFO"/>
-    <logger name="ai.platon.pulsar" level="DEBUG"/>
-    <logger name="ai.platon.scent.extract" level="TRACE"/>
-    <logger name="ai.platon.pulsar.net" level="TRACE"/>
-    <logger name="ai.platon.pulsar.crawl.component" level="TRACE"/>
-    <logger name="org.apache.hadoop.conf.Configuration" level="INFO"/>
-    <root level="INFO">
+
+    <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>
-        <appender-ref ref="cmdstdout"/>
+        <appender-ref ref="stdout"/>
     </root>
 </configuration>

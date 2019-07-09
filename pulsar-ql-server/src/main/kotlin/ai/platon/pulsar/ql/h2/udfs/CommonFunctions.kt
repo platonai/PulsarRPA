@@ -496,7 +496,7 @@ object CommonFunctions {
     }
 
     private fun getSession(h2session: Session): QuerySession {
-        return H2SessionFactory.getSession(h2session.id)
+        return H2SessionFactory.getSession(h2session.serialId)
     }
 
     private fun getDuration(duration: String): Duration? {

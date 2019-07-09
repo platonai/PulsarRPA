@@ -55,7 +55,7 @@ class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
          * @param conf PulsarConstants configuration
          * @return the DataStore persistent class
          */
-        fun detectDataStoreClassName(conf: ai.platon.pulsar.common.config.ImmutableConfig): String {
+        fun detectDataStoreClassName(conf: ImmutableConfig): String {
             return when {
                 conf.isDryRun -> MEM_STORE_CLASS
                 conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)

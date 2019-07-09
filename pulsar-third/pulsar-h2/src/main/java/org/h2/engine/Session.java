@@ -880,6 +880,10 @@ public class Session extends SessionWithState {
         return id;
     }
 
+    public int getSerialId() {
+        return serialId;
+    }
+
     @Override
     public void cancel() {
         cancelAtNs = System.nanoTime();

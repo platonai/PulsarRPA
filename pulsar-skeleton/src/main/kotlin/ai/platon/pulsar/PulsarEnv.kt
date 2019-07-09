@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class PulsarEnv {
     companion object {
-        // TODO: read form version file
+        // TODO: read form config file
         val clientJsVersion = "0.2.3"
 
         val applicationContext: ClassPathXmlApplicationContext

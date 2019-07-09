@@ -35,7 +35,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val page = session.load(configuredUrl)
         return session.parseToValue(page)
     }
@@ -48,7 +48,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
 
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
         val loadOptions = LoadOptions.parse(urlAndArgs.second)
@@ -66,7 +66,7 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun parse(@H2Context h2session: Session, url: String): ValueDom {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val page = session.load(url)
         if (!page.isInternal && page.protocolStatus.isSuccess) {
             return session.parseToValue(page)

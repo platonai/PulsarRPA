@@ -37,7 +37,7 @@ object DomFunctionTables {
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load all pages specified by urls")
     fun loadAll(@H2Context h2session: Session, configuredUrls: ValueArray): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
 
         val pages = Queries.loadAll(session, configuredUrls)
         val doms = pages.map { session.parseToValue(it) }
@@ -51,7 +51,7 @@ object DomFunctionTables {
     @JvmOverloads
     fun loadAndSelect(
             @H2Context h2session: Session, configuredPortal: Value, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val elements = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::select)
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
@@ -79,7 +79,7 @@ object DomFunctionTables {
     fun loadAndGetLinks(
             @H2Context h2session: Session,
             configuredPortal: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val links = Queries.loadAll(session, configuredPortal, restrictCss, offset, limit, Queries::getLinks)
         return toResultSet("LINK", links)
     }
@@ -164,7 +164,7 @@ object DomFunctionTables {
             targetCss: String = ":root",
             normalize: Boolean = true,
             ignoreQuery: Boolean = false): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
 
         val docs =
                 Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
@@ -195,7 +195,7 @@ object DomFunctionTables {
             cssQuery: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD,H1,H2,H3",
             offset: Int = 1,
             limit: Int = 100): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
         return features(h2session, dom, cssQuery, offset, limit)
@@ -249,7 +249,7 @@ object DomFunctionTables {
             restrictCss: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
         return getElementsWithMostSibling(h2session, dom, restrictCss, offset, limit)

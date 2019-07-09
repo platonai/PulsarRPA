@@ -45,7 +45,7 @@ object AdminFunctions {
     @JvmStatic
     fun closeSession(@H2Context h2session: Session): String {
         checkPrivilege(h2session)
-        H2SessionFactory.closeSession(h2session.id)
+        H2SessionFactory.closeSession(h2session.serialId)
         return h2session.toString()
     }
 
@@ -54,7 +54,7 @@ object AdminFunctions {
     @JvmOverloads
     fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
         checkPrivilege(h2session)
-        val page = H2SessionFactory.getSession(h2session.id).load(url)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(url)
         val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), PulsarPaths.fromUri(page.url, ".htm"))
         return PulsarFiles.saveTo(page, path).toString()
     }

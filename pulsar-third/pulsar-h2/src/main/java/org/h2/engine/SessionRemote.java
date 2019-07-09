@@ -103,8 +103,11 @@ public class SessionRemote extends SessionWithState implements DataHandler {
         return sessionFactory.createSession(ci);
     }
 
+    /**
+     * Do the external cleansing jobs, for example, release pulsar resources
+     * */
     public static void closeSession(Session session) throws Exception {
-        sessionFactory.closeSession(session.getId());
+        sessionFactory.closeSession(session.getSerialId());
     }
 
     public SessionRemote(ConnectionInfo ci) {

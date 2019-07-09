@@ -22,8 +22,9 @@ __utils__.checkVariables = function(variables) {
 
 /**
  * @param maxRound The maximum round to check ready
+ * @param scroll The scroll down times
  * */
-__utils__.waitForReady = function(maxRound) {
+__utils__.waitForReady = function(maxRound = 30, scroll = 3) {
     __utils__.createPulsarDataIfAbsent();
 
     let status = document.pulsarData.status;
@@ -34,7 +35,8 @@ __utils__.waitForReady = function(maxRound) {
         return "timeout"
     }
 
-    // TODO: what is exactly "complete" state is?
+    // A document is ready when the major html is downloaded
+    // and all sub resources(images, css, js) are also downloaded
     if (document.readyState !== "complete") {
         return false
     }
@@ -44,17 +46,18 @@ __utils__.waitForReady = function(maxRound) {
         return false
     }
 
-    window.scrollBy(0, 500);
-
-    // last data
-    status.scroll += 1;
-
     let ready = __utils__.isActuallyReady(status);
+    if (ready && status.scroll < scroll) {
+        window.scrollBy(0, 500);
+        status.scroll += 1;
+    }
+
+    if (!ready || status.scroll < scroll) {
+        return false
+    }
 
     // The document is ready
-    if (ready) {
-        return JSON.stringify(status)
-    } else return false
+    return JSON.stringify(status)
 };
 
 __utils__.createPulsarDataIfAbsent = function() {

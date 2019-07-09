@@ -110,18 +110,23 @@ public abstract class AbstractConfiguration {
 
         LOG.info(toString());
 
-        if (!checkLogbackConfig() && !checkLog4jProperties()) {
-            System.err.println("Failed to find log4j or logback configuration");
-        }
+//        if (!checkLogbackConfig() && !checkLog4jProperties()) {
+//            System.err.println("Failed to find log4j or logback configuration");
+//        }
     }
 
     private boolean checkLogbackConfig() {
-        URL url = getResource("logback.xml");
-        if (url != null) {
-            LOG.info("logback(classpath): " + url);
-            return true;
+        String logback = System.getProperty("logback.configurationFile");
+        if (logback != null) {
+            LOG.info("Logback(specified): " + logback);
+        } else {
+            URL url = getResource("logback.xml");
+            if (url != null) {
+                LOG.info("Logback(classpath): " + url);
+                return true;
+            }
         }
-        return false;
+        return true;
     }
 
     private boolean checkLog4jProperties() {
