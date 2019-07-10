@@ -34,7 +34,6 @@
             </activation>
             <modules>
                 <module>pulsar-boilerpipe</module>
-                <module>pulsar-gora</module>
                 <module>pulsar-jsoup</module>
                 <module>pulsar-h2</module>
             </modules>

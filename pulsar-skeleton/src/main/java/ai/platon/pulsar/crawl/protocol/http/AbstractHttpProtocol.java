@@ -305,6 +305,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
         }
     }
 
+    /**
+     * TODO: do not translate status code, they are just OK to handle in FetchComponent
+     * */
     private ProtocolOutput getProtocolOutput(String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
@@ -372,6 +375,10 @@ public abstract class AbstractHttpProtocol implements Protocol {
             status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == WEB_DRIVER_TIMEOUT) {
             status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+        } else if (httpCode == RETRY) {
+            status = ProtocolStatus.failed(RETRY, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+        } else if (httpCode == CANCELED) {
+            status = ProtocolStatus.failed(CANCELED, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else {
             status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         }

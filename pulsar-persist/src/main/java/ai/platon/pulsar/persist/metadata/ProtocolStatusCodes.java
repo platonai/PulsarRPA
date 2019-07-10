@@ -71,7 +71,7 @@ public interface ProtocolStatusCodes {
      */
     int ROBOTS_DENIED = 1461;
     /**
-     * Unspecified exception occured. Further information may be provided in args.
+     * Unspecified exception occurs. Further information may be provided in args.
      */
     int EXCEPTION = 1462;
     /**

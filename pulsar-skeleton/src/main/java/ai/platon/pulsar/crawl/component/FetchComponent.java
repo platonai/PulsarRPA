@@ -285,10 +285,11 @@ public class FetchComponent implements AutoCloseable {
                 break;
             case ProtocolStatus.EXCEPTION:
                 taskStatusTracker.trackFailed(page.getUrl());
-                LOG.warn("Fetch failed, " + protocolStatus);
+                LOG.warn("Fetch failed, protocol status: {}", protocolStatus);
                 /* FALL THROUGH **/
             case ProtocolStatus.RETRY:          // retry
             case ProtocolStatus.BLOCKED:
+            case ProtocolStatus.CANCELED:       // canceled
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY);
                 break;
             case ProtocolStatus.GONE:           // gone

@@ -50,6 +50,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
      * Constructs a new, empty data.
      */
     public MultiMetadata() {
+
     }
 
     /**

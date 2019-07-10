@@ -21,7 +21,8 @@ import java.util.*
 open class LoadOptions : CommonOptions {
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class, description = "Page datum expires time")
     var expires: Duration? = null
-    @Parameter(names = ["-pst", "-persist", "--persist"], description = "Persist page(s) once fetched")
+    // TODO: change to lazyPersist
+    @Parameter(names = ["-pst", "-persist", "--persist"], arity = 1, description = "Persist page(s) once fetched")
     var persist = true
     @Parameter(names = ["-shortenKey", "--shorten-key"], description = "Page key is generated from baseUrl with parameters removed")
     var shortenKey = false
@@ -30,8 +31,9 @@ open class LoadOptions : CommonOptions {
     var retry = false
     @Parameter(names = ["-lazyFlush", "--lazy-flush"], description = "Flush db only explicit called")
     var lazyFlush = false
-    @Parameter(names = ["-preferParallel", "--prefer-parallel"], description = "Parallel fetch urls whenever applicable")
-    var preferParallel = false
+    // TODO: change to disableParallel
+    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1, description = "Parallel fetch urls whenever applicable")
+    var preferParallel = true
     @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class, description = "The fetch mode")
     var fetchMode = FetchMode.SELENIUM
     @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class, description = "The browser to use")

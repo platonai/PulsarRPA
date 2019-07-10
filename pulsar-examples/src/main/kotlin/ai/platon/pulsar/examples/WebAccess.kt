@@ -61,7 +61,7 @@ object WebAccess {
     }
 
     fun parallelLoadAll() {
-        val args = "-parse -expires 1s -preferParallel"
+        val args = "-parse -expires 1s -preferParallel true"
         val options = LoadOptions.parse(args)
         val tasks = i.loadAll(trivialUrls, options).flatMap { it.links }.map { it.toString() }
                 .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }.toList()

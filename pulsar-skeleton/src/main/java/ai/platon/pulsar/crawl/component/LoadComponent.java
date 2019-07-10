@@ -408,7 +408,6 @@ public class LoadComponent {
         ProtocolStatus protocolStatus = page.getProtocolStatus();
         if (protocolStatus.isFailed()) {
             // Follow redirection
-            LOG.debug("Fetch failed: {}", protocolStatus);
             updateComponent.updateFetchSchedule(page);
             return;
         }

@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import com.gargoylesoftware.htmlunit.WebClient
 import org.apache.http.conn.ssl.SSLContextBuilder
@@ -47,6 +46,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
         private val totalDriverCount = AtomicInteger(0)
         private val freeDriverCount = AtomicInteger(0)
+        private val workingDriverCount = AtomicInteger(0)
     }
 
     private val defaultWebDriverClass = conf.getClass(
@@ -54,7 +54,8 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     private val proxyPool = PulsarEnv.proxyPool
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
     private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
-    private val isClosed = AtomicBoolean(false)
+    private val closed = AtomicBoolean(false)
+    private val isClosed = closed.get()
     val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
 
     val freeSize get() = freeDriverCount.get()
@@ -74,6 +75,8 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
             val queue = freeDrivers[priority]
             if (queue != null) {
                 queue.put(driver)
+
+                workingDriverCount.decrementAndGet()
                 freeDriverCount.incrementAndGet()
             }
         } catch (e: InterruptedException) {
@@ -82,28 +85,32 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     }
 
     fun poll(priority: Int, conf: ImmutableConfig): WebDriver? {
-        try {
-            var queue: ArrayBlockingQueue<WebDriver>? = freeDrivers[priority]
-            if (queue == null) {
-                queue = ArrayBlockingQueue(PulsarEnv.NCPU)
-                freeDrivers[priority] = queue
-            }
-
-            if (queue.isEmpty()) {
-                allocateWebDriver(queue, conf)
-            }
-
-            val timeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-            val driver = queue.poll(2 * timeout.seconds, TimeUnit.SECONDS)
-            freeDriverCount.decrementAndGet()
-
-            return driver
-        } catch (e: InterruptedException) {
-            log.warn("Failed to poll a web driver from pool. {}", e)
+        if (isClosed) {
+            return null
         }
 
-        // TODO: throw exception
+        val queue = getOrCreateWebDriverQueue(priority)
+        val timeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+
+        try {
+            val driver = queue.poll(2 * timeout.seconds, TimeUnit.SECONDS)
+            workingDriverCount.incrementAndGet()
+            freeDriverCount.decrementAndGet()
+            return driver
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            log.info("Interrupted, no web driver should return")
+        }
+
         return null
+    }
+
+    private fun getOrCreateWebDriverQueue(priority: Int): ArrayBlockingQueue<WebDriver> {
+        val queue = freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }
+        if (queue.isEmpty()) {
+            allocateWebDriver(queue, conf)
+        }
+        return queue
     }
 
     @Throws(KeyStoreException::class, NoSuchAlgorithmException::class, KeyManagementException::class)
@@ -113,11 +120,11 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
         // SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, new NoopHostnameVerifier());
     }
 
-    private fun getRunningBrowserCount() {
-    }
-
     private fun allocateWebDriver(queue: ArrayBlockingQueue<WebDriver>, conf: ImmutableConfig) {
-        // TODO: configurable factor
+        if (isClosed) {
+            return
+        }
+
         if (totalSize >= capacity) {
             log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/total: {}/{}",
                     PulsarEnv.NCPU, capacity, freeSize, totalSize)
@@ -251,24 +258,43 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     }
 
     override fun close() {
-        if (isClosed.getAndSet(true)) {
+        if (closed.getAndSet(true)) {
             return
         }
 
-        if (isHeadless) {
-            freeDrivers.clear()
-            val it = allDrivers.iterator()
-            while (it.hasNext()) {
-                val driver = it.next()
-                it.remove()
+        freeDrivers.values.forEach { it.clear() }
+        freeDrivers.clear()
 
-                try {
-                    log.info("Closing web driver {}", driver)
-                    driver.quit()
-                } catch (e: Exception) {
-                    log.error(e.toString())
+        if (!isHeadless) {
+            // should close the browsers by hand
+            return
+        }
+
+        // wait for all drivers are recycled
+        var maxWait = 5
+        while (maxWait-- > 0 && workingDriverCount.get() > 0) {
+            try {
+                TimeUnit.SECONDS.sleep(1)
+            } catch (e: InterruptedException) {}
+        }
+
+        val it = allDrivers.iterator()
+        while (it.hasNext()) {
+            val driver = it.next()
+            it.remove()
+
+            try {
+                log.info("Closing web driver {}", driver)
+                driver.quit()
+            } catch (e: org.openqa.selenium.WebDriverException) {
+                if (e.cause is org.apache.http.conn.HttpHostConnectException) {
+                    // already closed, nothing to do
+                    log.trace("Web driver is already closed: {}", e.message)
+                } else {
+                    log.error("Unexpected exception: {}", e)
                 }
-
+            } catch (e: Exception) {
+                log.error("Unexpected exception: {}", e)
             }
         }
     }

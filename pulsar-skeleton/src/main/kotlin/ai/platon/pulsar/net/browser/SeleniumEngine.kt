@@ -20,12 +20,11 @@ import com.google.common.collect.Iterables
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.gora.util.TimingUtil
-import org.openqa.selenium.JavascriptExecutor
-import org.openqa.selenium.OutputType
-import org.openqa.selenium.WebDriver
+import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.RemoteWebDriver
+import org.openqa.selenium.remote.UnreachableBrowserException
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
@@ -176,19 +175,8 @@ class SeleniumEngine(
         // if there are too many failure, the rest tasks are very likely run to failure too
         i = 0
         while (numFinishedTasks < numTotalTasks && numFailedTasks <= numAllowedFailures && idleSeconds < idleTimeout
-                && !isClosed.get()) {
-            if (++i > 1) {
-                try {
-                    TimeUnit.SECONDS.sleep(interval.seconds)
-                } catch (e: InterruptedException) {
-                    log.warn("Selenium interrupted. {}", e)
-                    break
-                }
-            }
-
-            if (isClosed.get()) {
-                break
-            }
+                && !isClosed.get() && !Thread.currentThread().isInterrupted) {
+            ++i
 
             if (i >= 60 && i % 30 == 0) {
                 // report every 30 round if it takes long time
@@ -200,7 +188,7 @@ class SeleniumEngine(
             var numTaskDone = 0
             val removal = mutableListOf<String>()
             pendingTasks.asSequence().filter { it.value.isDone }.forEach { (key, future) ->
-                if (isClosed.get()) {
+                if (isClosed.get() || Thread.currentThread().isInterrupted) {
                     return@forEach
                 }
 
@@ -212,7 +200,7 @@ class SeleniumEngine(
                     if (isFailed) {
                         ++numFailedTasks
                         if (log.isInfoEnabled) {
-                            log.info("Batch {} round {} task failed with reason {}, {} bytes in {}, total {} failed | {}",
+                            log.info("Batch {} round {} task failed, reason {}, {} bytes in {}, total {} failed | {}",
                                     batchId, String.format("%2d", i),
                                     ProtocolStatus.getMinorName(response.code), String.format("%,d", response.size()), time,
                                     numFailedTasks,
@@ -247,6 +235,13 @@ class SeleniumEngine(
             }
 
             idleSeconds = if (numTaskDone == 0) 1 + idleSeconds else 0
+
+            try {
+                TimeUnit.SECONDS.sleep(interval.seconds)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                log.warn("Selenium interrupted, {} pending tasks will be canceled", pendingTasks.size)
+            }
         }
 
         if (pendingTasks.isNotEmpty()) {
@@ -287,16 +282,34 @@ class SeleniumEngine(
         return fetchContentInternal(batchId, 0, priority, page, config)
     }
 
-    /**
-     * Must be thread safe
-     */
-    private fun fetchContentInternal(batchId: Int, i: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
-        val driver = drivers.poll(priority, config)
-                ?: return ForwardingResponse(page.url, ProtocolStatus.failed(ProtocolStatusCodes.RETRY), MultiMetadata())
+    private fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
+        if (isClosed.get()) {
+            return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
+        }
 
+        val driver = drivers.poll(priority, config)
+                ?: return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_RETRY, MultiMetadata())
         totalTaskCount.getAndIncrement()
         batchTaskCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
 
+        try {
+            return fetchContentInternal1(driver, batchId, taskId, priority, page, config)
+        } finally {
+            drivers.put(priority, driver)
+        }
+    }
+
+    /**
+     * Must be thread safe
+     */
+    private fun fetchContentInternal1(
+            driver: WebDriver,
+            batchId: Int,
+            taskId: Int,
+            priority: Int,
+            page: WebPage,
+            config: ImmutableConfig
+    ): Response {
         // page.baseUrl is the last working address, and page.url is the permanent internal address
         var location = page.location
         if (location.isBlank()) {
@@ -311,24 +324,24 @@ class SeleniumEngine(
         var pageSource = ""
 
         try {
-            status = visit(batchId, i, location, page, driver, driverConfig)
+            status = visit(batchId, taskId, location, page, driver, driverConfig)
             pageSource = getPageSourceSlient(driver)
             // TODO: handle with frames
             // driver.switchTo().frame(1);
-        } catch (e: org.openqa.selenium.TimeoutException) {
+        } catch (e: TimeoutException) {
             // log.warn(e.toString())
             pageSource = getPageSourceSlient(driver)
             status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+            status = ProtocolStatus.STATUS_RETRY
             log.warn(e.toString())
-        } catch (e: org.openqa.selenium.WebDriverException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+        } catch (e: WebDriverException) {
+            status = ProtocolStatus.STATUS_RETRY
             log.warn(e.toString())
         } catch (e: Throwable) {
             // must not throw again
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+            status = ProtocolStatus.STATUS_EXCEPTION
             log.warn("Unexpected exception: {}", e)
         }
 
@@ -348,15 +361,11 @@ class SeleniumEngine(
             }
         }
 
-        try {
-            handleFetchFinish(page, driver, headers)
-            pageSource = handlePageSource(pageSource, status, page, driver)
-            headers.put(CONTENT_LENGTH, pageSource.length.toString())
-            if (status.isSuccess) {
-                handleFetchSuccess(batchId)
-            }
-        } finally {
-            drivers.put(priority, driver)
+        handleFetchFinish(page, driver, headers)
+        pageSource = handlePageSource(pageSource, status, page, driver)
+        headers.put(CONTENT_LENGTH, pageSource.length.toString())
+        if (status.isSuccess) {
+            handleFetchSuccess(batchId)
         }
 
         // TODO: handle redirect
@@ -400,12 +409,12 @@ class SeleniumEngine(
 
             log.warn("Fetch resource timeout, $e")
         } catch (e: java.util.concurrent.ExecutionException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
             headers.put("EXCEPTION", e.toString())
 
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         } catch (e: InterruptedException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
             headers.put("EXCEPTION", e.toString())
 
             log.warn("Interrupted when fetch resource {}", e)
@@ -416,13 +425,19 @@ class SeleniumEngine(
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         }
 
-        return ForwardingResponse(url, status, headers)
+        return ForwardingResponse(url, "", status, headers)
     }
 
-    @Throws(org.openqa.selenium.TimeoutException::class)
-    private fun visit(batchId: Int, i: Int, url: String, page: WebPage, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
+    private fun visit(
+            batchId: Int,
+            taskId: Int,
+            url: String,
+            page: WebPage,
+            driver: WebDriver,
+            driverConfig: DriverConfig
+    ): ProtocolStatus {
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
-                i, batchTaskCounters[batchId], totalTaskCount,
+                taskId, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
                 drivers.freeSize, drivers.totalSize,
                 page.configuredUrl,
@@ -447,8 +462,7 @@ class SeleniumEngine(
 
     @Throws(org.openqa.selenium.TimeoutException::class)
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
-        val jsExecutor = driver as? JavascriptExecutor
-                ?: return ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+        val jsExecutor = driver as? JavascriptExecutor?: return ProtocolStatus.STATUS_RETRY
 
         var status = ProtocolStatus.STATUS_SUCCESS
         val timeout = driverConfig.pageLoadTimeout.seconds
@@ -457,6 +471,7 @@ class SeleniumEngine(
         val wait = FluentWait<WebDriver>(driver)
                 .withTimeout(timeout, TimeUnit.SECONDS)
                 .pollingEvery(1, TimeUnit.SECONDS)
+                .ignoring(InterruptedException::class.java)
                 // .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         // make sure the document is ready
@@ -472,13 +487,31 @@ class SeleniumEngine(
         } catch (e: org.openqa.selenium.TimeoutException) {
             log.trace("Timeout to wait for document ready, timeout {}s | {}", timeout, url)
             status = ProtocolStatus.failed(ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT)
+        } catch (e: InterruptedException) {
+            log.warn("Waiting for document interrupted | {}", url)
+            Thread.currentThread().interrupt()
+            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+        } catch (e: UnreachableBrowserException) {
+            log.warn("Browser unreachable | {}", url)
+            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+        } catch (e: WebDriverException) {
+            if (e.cause is org.apache.http.conn.HttpHostConnectException) {
+                // Web driver closed
+            } else if (e.cause is InterruptedException) {
+                // Web driver closed
+            } else {
+                log.warn("Web driver exception | {} \n>>>\n{}\n<<<", url, e.message)
+            }
+            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
         } catch (e: Exception) {
-            // the representation of the underlying DOM
-            log.warn("Failed to render document {}, \n{}", url, e)
+            log.warn("Unexpected exception | {}", url)
+            log.warn(StringUtil.stringifyException(e))
             throw e
         }
 
-        jsExecutor.executeScript(clientJs)
+        if (status.isSuccess) {
+            jsExecutor.executeScript(clientJs)
+        }
 
         return status
     }
