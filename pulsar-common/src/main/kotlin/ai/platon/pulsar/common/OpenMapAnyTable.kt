@@ -75,9 +75,10 @@ class OpenMapAnyTable(val numColumns: Int) {
         operator fun get(j: Int): Cell? {
             return cells[j]
         }
-        operator fun set(j: Int, value: Cell) {
+        operator fun set(j: Int, cell: Cell) {
             require(j < cells.size)
-            cells[j] = Cell(j, value)
+            require(j == cell.j)
+            cells[j] = cell
         }
 
         fun getValue(j: Int): Any? {

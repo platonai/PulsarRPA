@@ -135,6 +135,17 @@ __utils__.scrollToTop = function() {
     window.scrollTo(0, 0);
 };
 
+__utils__.scrollDownN = function(scrollCount = 5) {
+    __utils__.createPulsarDataIfAbsent();
+
+    let status = document.pulsarData.status;
+
+    window.scrollBy(0, 500);
+    status.scroll += 1;
+
+    return status.scroll >= scrollCount
+};
+
 /**
  * Clones an object.
  *

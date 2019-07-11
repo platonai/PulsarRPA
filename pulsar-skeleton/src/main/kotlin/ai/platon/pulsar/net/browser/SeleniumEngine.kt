@@ -19,7 +19,6 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.collect.Iterables
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.gora.util.TimingUtil
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
@@ -46,10 +45,11 @@ data class DriverConfig(
         var scrollDownWait: Duration
 ) {
     constructor(config: ImmutableConfig): this(
-            config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30)),
-            config.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(30)),
-            config.getInt(FETCH_SCROLL_DOWN_COUNT, 1),
-            config.getDuration(FETCH_SCROLL_DOWN_COUNT, Duration.ofMillis(500))
+            config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(60)),
+            // wait page ready using script, so it can not smaller than pageLoadTimeout
+            config.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
+            config.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
+            config.getDuration(FETCH_SCROLL_DOWN_WAIT, Duration.ofMillis(500))
     )
 }
 
@@ -325,18 +325,18 @@ class SeleniumEngine(
 
         try {
             status = visit(batchId, taskId, location, page, driver, driverConfig)
-            pageSource = getPageSourceSlient(driver)
+            pageSource = getPageSourceSilently(driver)
             // TODO: handle with frames
             // driver.switchTo().frame(1);
         } catch (e: TimeoutException) {
             // log.warn(e.toString())
-            pageSource = getPageSourceSlient(driver)
+            pageSource = getPageSourceSilently(driver)
             status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_RETRY
             log.warn(e.toString())
-        } catch (e: WebDriverException) {
+        } catch (e: org.openqa.selenium.WebDriverException) {
             status = ProtocolStatus.STATUS_RETRY
             log.warn(e.toString())
         } catch (e: Throwable) {
@@ -462,31 +462,37 @@ class SeleniumEngine(
 
     @Throws(org.openqa.selenium.TimeoutException::class)
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
-        val jsExecutor = driver as? JavascriptExecutor?: return ProtocolStatus.STATUS_RETRY
+        val jsExecutor = driver as? JavascriptExecutor?: return ProtocolStatus.STATUS_CANCELED
 
         var status = ProtocolStatus.STATUS_SUCCESS
-        val timeout = driverConfig.pageLoadTimeout.seconds
-        val scroll = driverConfig.scrollDownCount
-        val maxRound = timeout - 2
-        val wait = FluentWait<WebDriver>(driver)
-                .withTimeout(timeout, TimeUnit.SECONDS)
-                .pollingEvery(1, TimeUnit.SECONDS)
-                .ignoring(InterruptedException::class.java)
-                // .ignoring(org.openqa.selenium.TimeoutException::class.java)
+        val scriptTimeout = driverConfig.scriptTimeout.seconds
 
-        // make sure the document is ready
         try {
-            val js = ";$libJs;return __utils__.waitForReady($maxRound, $scroll);"
-            val r = wait.until { (it as? JavascriptExecutor)?.executeScript(js) }
+            val scroll = 2
+            val maxRound = scriptTimeout - scroll
+            val documentWait = FluentWait<WebDriver>(driver)
+                    .withTimeout(scriptTimeout, TimeUnit.SECONDS)
+                    .pollingEvery(1, TimeUnit.SECONDS)
+                    .ignoring(InterruptedException::class.java)
 
-            if (r == "timeout") {
-                log.debug("Hit max round $maxRound to wait document | {}", url)
-            } else {
-                log.trace("Document is ready. {} | {}", r, url)
+            try {
+                // make sure the document is ready
+                val js = ";$libJs;return __utils__.waitForReady($maxRound, $scroll);"
+                val r = documentWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
+
+                if (r == "timeout") {
+                    log.debug("Hit max round $maxRound to wait document | {}", url)
+                } else {
+                    log.trace("Document is ready. {} | {}", r, url)
+                }
+            } catch (e: org.openqa.selenium.TimeoutException) {
+                log.trace("Timeout to wait for document ready, timeout {}s | {}", scriptTimeout, url)
+                status = ProtocolStatus.failed(ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT)
             }
-        } catch (e: org.openqa.selenium.TimeoutException) {
-            log.trace("Timeout to wait for document ready, timeout {}s | {}", timeout, url)
-            status = ProtocolStatus.failed(ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT)
+
+            if (status.isSuccess) {
+                performScrollDown(driver, driverConfig)
+            }
         } catch (e: InterruptedException) {
             log.warn("Waiting for document interrupted | {}", url)
             Thread.currentThread().interrupt()
@@ -516,7 +522,24 @@ class SeleniumEngine(
         return status
     }
 
-    private fun getPageSourceSlient(driver: WebDriver): String {
+    private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {
+        val scrollDownCount = driverConfig.scrollDownCount.toLong()
+        val scrollDownWait = driverConfig.scrollDownWait
+        val timeout = scrollDownCount * scrollDownWait.toMillis() + 500
+        val scrollWait = FluentWait<WebDriver>(driver)
+                .withTimeout(timeout, TimeUnit.MILLISECONDS)
+                .pollingEvery(scrollDownWait.toMillis(), TimeUnit.MILLISECONDS)
+                .ignoring(org.openqa.selenium.TimeoutException::class.java)
+
+        try {
+            val js = ";$libJs;return __utils__.scrollDownN($scrollDownCount);"
+            scrollWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
+        } catch (e: org.openqa.selenium.TimeoutException) {
+            // ignore
+        }
+    }
+
+    private fun getPageSourceSilently(driver: WebDriver): String {
         return try { driver.pageSource } catch (e: Throwable) { "" }
     }
 
@@ -617,13 +640,13 @@ class SeleniumEngine(
         val elapsed = Duration.ofMillis(System.currentTimeMillis() - startTime)
         if (log.isDebugEnabled) {
             log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{} timeouts: {}/{}/{} | {}",
-                    elapsed, pageSource.length,
+                    elapsed, String.format("%,7d", pageSource.length),
                     drivers.freeSize, drivers.totalSize,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollDownWait,
                     url
             )
         } else {
-            log.warn("Selenium timeout, elapsed: {} length: {} | {}", elapsed, pageSource.length, url)
+            log.warn("Selenium timeout, elapsed: {} length: {} | {}", elapsed, String.format("%,7d", pageSource.length), url)
         }
     }
 

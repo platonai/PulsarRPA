@@ -39,9 +39,9 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class, description = "The browser to use")
     var browser = BrowserType.CHROME
     @Parameter(names = ["-scrollCount"])
-    var scrollCount = 10
+    var scrollCount = 5
     @Parameter(names = ["-scrollWaitTime"], converter = DurationConverter::class)
-    var scrollWaitTime: Duration = Duration.ofMillis(1000)
+    var scrollWaitTime: Duration = Duration.ofMillis(500)
     @Parameter(names = ["-pageLoadTimeout"], converter = DurationConverter::class)
     var pageLoadTimeout: Duration = Duration.ofSeconds(60)
 
@@ -78,6 +78,8 @@ open class LoadOptions : CommonOptions {
             value?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
             value?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_WAIT, scrollWaitTime)
             value?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+            // wait page ready using script, so it can not smaller than pageLoadTimeout
+            value?.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, pageLoadTimeout)
             field = value
         }
 
