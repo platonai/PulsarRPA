@@ -24,35 +24,31 @@ __utils__.checkVariables = function(variables) {
  * @param maxRound The maximum round to check ready
  * @param scroll The scroll down times
  * */
-__utils__.waitForReady = function(maxRound = 30, scroll = 3) {
+__utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     __utils__.createPulsarDataIfAbsent();
 
     let status = document.pulsarData.status;
     let n = status.n;
 
     n += 1;
-    if (maxRound && maxRound > 0 && n > maxRound) {
+    if (maxRound > 0 && n > maxRound) {
         return "timeout"
     }
 
     // A document is ready when the major html is downloaded
     // and all sub resources(images, css, js) are also downloaded
-    if (document.readyState !== "complete") {
-        return false
-    }
-
-    let body = document.body;
-    if (!body) {
+    if (document.readyState !== "interactive" && document.readyState !== "complete") {
         return false
     }
 
     let ready = __utils__.isActuallyReady(status);
-    if (ready && status.scroll < scroll) {
-        window.scrollBy(0, 500);
-        status.scroll += 1;
+    if (!ready) {
+        return false
     }
 
-    if (!ready || status.scroll < scroll) {
+    if (status.scroll < scroll) {
+        window.scrollBy(0, 500);
+        status.scroll += 1;
         return false
     }
 
@@ -69,7 +65,7 @@ __utils__.createPulsarDataIfAbsent = function() {
 };
 
 __utils__.writePulsarData = function() {
-    if (document.readyState !== "complete" || !document.body) {
+    if (!document.body) {
         return false
     }
 
@@ -83,10 +79,15 @@ __utils__.writePulsarData = function() {
     }
 
     let pulsarData = JSON.stringify(document.pulsarData, null, 3);
-    script.textContent = "\n" + `let pulsarData = ${pulsarData};\n`
+    script.textContent = "\n" + `;let pulsarData = ${pulsarData};\n`
 };
 
 __utils__.isActuallyReady = function(lastStatus) {
+    // unexpected
+    if (!document.body) {
+        return false
+    }
+
     let ready = false;
     let body = document.body;
     let width = body.scrollWidth;
@@ -112,6 +113,10 @@ __utils__.isActuallyReady = function(lastStatus) {
     lastStatus.height = height;
     lastStatus.na = na;
     lastStatus.ni = ni;
+
+    if (document.readyState === "complete") {
+        ready = true
+    }
 
     return ready;
 };

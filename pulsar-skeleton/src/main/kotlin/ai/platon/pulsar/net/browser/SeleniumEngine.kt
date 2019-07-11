@@ -468,8 +468,6 @@ class SeleniumEngine(
         val scriptTimeout = driverConfig.scriptTimeout.seconds
 
         try {
-            val scroll = 2
-            val maxRound = scriptTimeout - scroll
             val documentWait = FluentWait<WebDriver>(driver)
                     .withTimeout(scriptTimeout, TimeUnit.SECONDS)
                     .pollingEvery(1, TimeUnit.SECONDS)
@@ -477,7 +475,9 @@ class SeleniumEngine(
 
             try {
                 // make sure the document is ready
-                val js = ";$libJs;return __utils__.waitForReady($maxRound, $scroll);"
+                val initialScroll = 2
+                val maxRound = scriptTimeout - 1
+                val js = ";$libJs;return __utils__.waitForReady($maxRound, $initialScroll);"
                 val r = documentWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
 
                 if (r == "timeout") {
