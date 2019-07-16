@@ -199,18 +199,19 @@ class SeleniumEngine(
                     val isFailed = response.code !in arrayOf(ProtocolStatusCodes.SUCCESS_OK, ProtocolStatusCodes.CANCELED)
                     if (isFailed) {
                         ++numFailedTasks
-                        if (log.isInfoEnabled) {
+                    }
+                    finishedTasks[key] = response
+
+                    if (log.isInfoEnabled) {
+                        if (isFailed) {
                             log.info("Batch {} round {} task failed, reason {}, {} bytes in {}, total {} failed | {}",
                                     batchId, String.format("%2d", i),
                                     ProtocolStatus.getMinorName(response.code), String.format("%,d", response.size()), time,
                                     numFailedTasks,
                                     key
                             )
-                        }
-                    } else {
-                        if (log.isDebugEnabled) {
-                            // TODO: track timeout
-                            log.debug("Batch {} round {} fetched{}{} bytes in {} with code {} | {}",
+                        } else {
+                            log.info("Batch {} round {} fetched{}{} bytes in {} with code {} | {}",
                                     batchId, String.format("%2d", i),
                                     if (bytes < 2000) " only " else " ", String.format("%,7d", response.size()),
                                     time,
@@ -218,8 +219,6 @@ class SeleniumEngine(
                             )
                         }
                     }
-
-                    finishedTasks[key] = response
                 } catch (e: Throwable) {
                     log.error("Unexpected error {}", StringUtil.stringifyException(e))
                 } finally {
@@ -299,9 +298,6 @@ class SeleniumEngine(
         }
     }
 
-    /**
-     * Must be thread safe
-     */
     private fun fetchContentInternal1(
             driver: WebDriver,
             batchId: Int,
@@ -325,12 +321,10 @@ class SeleniumEngine(
 
         try {
             status = visit(batchId, taskId, location, page, driver, driverConfig)
-            pageSource = getPageSourceSilently(driver)
             // TODO: handle with frames
             // driver.switchTo().frame(1);
         } catch (e: TimeoutException) {
             // log.warn(e.toString())
-            pageSource = getPageSourceSilently(driver)
             status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
@@ -345,18 +339,22 @@ class SeleniumEngine(
             log.warn("Unexpected exception: {}", e)
         }
 
+        pageSource = getPageSourceSilently(driver)
         if (status.minorCode == ProtocolStatusCodes.WEB_DRIVER_TIMEOUT
                 || status.minorCode == ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT) {
             // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
-            if (isJsSuccess(pageSource)) {
+            val oldStatus = status
+            val integrity = checkHtmlIntegrity(pageSource)
+            if (integrity.first) {
                 status = ProtocolStatus.STATUS_SUCCESS
             }
 
             if (status.isSuccess) {
-                log.info("Document ok but timeout after {} with {} bytes | {}",
-                        DateTimeUtil.elapsedTime(startTime),
+                log.info("Html is OK but timeout ({}) after {} with {} bytes | {}",
+                        oldStatus.minorName, DateTimeUtil.elapsedTime(startTime),
                         String.format("%,7d", pageSource.length), page.url)
             } else {
+                log.info("Timeout with page source check {}", integrity.second)
                 handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
             }
         }
@@ -376,17 +374,23 @@ class SeleniumEngine(
         return ForwardingResponse(page.url, pageSource, status, headers)
     }
 
-    private fun isJsSuccess(pageSource: String): Boolean {
+    private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
         val p1 = pageSource.indexOf("<body")
-        if (p1 <= 0) return false
+        if (p1 <= 0) return false to "NO_BODY_START"
         val p2 = pageSource.indexOf(">", p1)
-        if (p2 <= 0) return false
+        if (p2 < p1) return false to "NO_BODY_END"
         // no any link, it's incomplete
         val p3 = pageSource.indexOf("<a", p2)
-        if (p3 <= 0) return false
+        if (p3 < p2) return false to "NO_ANCHOR"
 
+        // TODO: optimization using region match
         val bodyTag = pageSource.substring(p1, p2)
-        return bodyTag.contains("data-error=\"0\"")
+        val r = bodyTag.contains("data-error=\"0\"")
+        if (!r) {
+            return false to "NO_JS_OK"
+        }
+
+        return true to "OK"
     }
 
     private fun getResponse(url: String, future: Future<Response>, timeout: Duration): Response {
@@ -428,14 +432,8 @@ class SeleniumEngine(
         return ForwardingResponse(url, "", status, headers)
     }
 
-    private fun visit(
-            batchId: Int,
-            taskId: Int,
-            url: String,
-            page: WebPage,
-            driver: WebDriver,
-            driverConfig: DriverConfig
-    ): ProtocolStatus {
+    private fun visit(batchId: Int, taskId: Int, url: String, page: WebPage,
+            driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
                 taskId, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
@@ -490,9 +488,7 @@ class SeleniumEngine(
                 status = ProtocolStatus.failed(ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT)
             }
 
-            if (status.isSuccess) {
-                performScrollDown(driver, driverConfig)
-            }
+            performScrollDown(driver, driverConfig)
         } catch (e: InterruptedException) {
             log.warn("Waiting for document interrupted | {}", url)
             Thread.currentThread().interrupt()
@@ -515,11 +511,35 @@ class SeleniumEngine(
             throw e
         }
 
-        if (status.isSuccess) {
-            jsExecutor.executeScript(clientJs)
+        val data = jsExecutor.executeScript(clientJs)
+        if (log.isDebugEnabled) {
+            if (data is MutableMap<*, *>) {
+                log.debug(formatPulsarData(data))
+            }
         }
 
         return status
+    }
+
+    private fun formatPulsarData(data: MutableMap<*, *>): String {
+        val s1 = data["initStat"] as? Map<*, *>
+        val s2 = data["lastStat"] as? Map<*, *>
+        val s3 = data["initD"] as? Map<*, *>
+        val s4 = data["lastD"] as? Map<*, *>
+        val s = String.format(
+                "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
+                        "w: %s/%s/%s/%s, h: %s/%s/%s/%s",
+                s1?.get("ni"),  s2?.get("ni"),  s3?.get("ni"),  s4?.get("ni"),
+                s1?.get("na"),  s2?.get("na"),  s3?.get("na"),  s4?.get("na"),
+                s1?.get("nnm"), s2?.get("nnm"), s3?.get("nnm"), s4?.get("nnm"),
+                s1?.get("nst"), s2?.get("nst"), s3?.get("nst"), s4?.get("nst"),
+                s1?.get("w"),   s2?.get("w"),   s3?.get("w"),   s4?.get("w"),
+                s1?.get("h"),   s2?.get("h"),   s3?.get("h"),   s4?.get("h")
+        )
+        val st = data["status"] as? Map<*, *>
+        val m = String.format("n:%s scroll:%s st:%s idl:%s\t%s\t(is,ls,id,ld)",
+                st?.get("n"), st?.get("scroll"), st?.get("st"), st?.get("idl"), s)
+        return m
     }
 
     private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {
@@ -532,6 +552,7 @@ class SeleniumEngine(
                 .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         try {
+            // TODO: which one is the better? browser side timer or selenium side timer?
             val js = ";$libJs;return __utils__.scrollDownN($scrollDownCount);"
             scrollWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
         } catch (e: org.openqa.selenium.TimeoutException) {

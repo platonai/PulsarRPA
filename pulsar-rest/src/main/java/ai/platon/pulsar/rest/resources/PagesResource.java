@@ -480,7 +480,7 @@ public class PagesResource {
     WebPage page = loadComponent.load(url);
 
     int totalCount = page.getLiveLinks().size();
-    LoadOptions loadOptions = new LoadOptions();
+    LoadOptions loadOptions = LoadOptions.Companion.create();
     Map<String, Map<String, List<String>>> indexDocuments = page.getSimpleLiveLinks().stream()
         .skip(start > 1 ? start - 1 : 0).limit(limit)
         .map(l -> loadComponent.load(l, loadOptions))

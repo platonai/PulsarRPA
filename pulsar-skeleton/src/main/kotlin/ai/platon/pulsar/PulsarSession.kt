@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import org.h2.util.Utils
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ConfigurableApplicationContext
@@ -38,7 +39,7 @@ open class PulsarSession(
          * */
         val config: VolatileConfig,
         /**
-         * The session id. Session id is expected to be set by the container
+         * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
         val id: Int = 9000000 + idGen.incrementAndGet()
 ) : AutoCloseable {
@@ -117,6 +118,18 @@ open class PulsarSession(
         return load(normUrl)
     }
 
+    fun load(url: NormUrl): WebPage {
+        ensureRunning()
+
+        initOptions(url.options)
+
+        return if (enableCache) {
+            getCachedOrLoad(url)
+        } else {
+            context.load(url)
+        }
+    }
+
     /**
      * Load a url with specified options
      *
@@ -138,7 +151,7 @@ open class PulsarSession(
      * @return The web pages
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.default): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
         initOptions(options)
         val normUrls = normalize(urls, options)
@@ -306,6 +319,7 @@ open class PulsarSession(
     }
 
     override fun hashCode(): Int {
+        // return just id itself
         return Integer.hashCode(id)
     }
 
@@ -318,19 +332,12 @@ open class PulsarSession(
             return
         }
 
-        log.info("Closing pulsar session $this ...")
+        context.webDb.flush()
 
         closableObjects.forEach { o -> o.use { it.close() } }
-    }
 
-    private fun load(url: NormUrl): WebPage {
-        initOptions(url.options)
-
-        return if (enableCache) {
-            getCachedOrLoad(url)
-        } else {
-            context.load(url)
-        }
+        String.format("Pulsar session $this is closed. Used memory: %,dKB, free memory: %,dKB",
+                Utils.getMemoryUsed(), Utils.getMemoryFree()).also { log.info(it) }
     }
 
     private fun initOptions(options: LoadOptions): LoadOptions {
@@ -354,14 +361,5 @@ open class PulsarSession(
         val SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1)
         val SESSION_DOCUMENT_CACHE_CAPACITY = 100
         private val idGen = AtomicInteger()
-
-        fun getApplicationContext(): ClassPathXmlApplicationContext {
-            return ClassPathXmlApplicationContext(
-                    System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION))
-        }
-
-        fun getUnmodifiedConfig(applicationContext: ApplicationContext): ImmutableConfig {
-            return applicationContext.getBean(ImmutableConfig::class.java)
-        }
     }
 }

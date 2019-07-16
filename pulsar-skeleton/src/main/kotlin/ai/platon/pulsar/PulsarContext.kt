@@ -252,7 +252,7 @@ class PulsarContext: AutoCloseable {
      */
     fun load(url: URL): WebPage {
         ensureRunning()
-        return loadComponent.load(url, initOptions(LoadOptions()))
+        return loadComponent.load(url, initOptions(LoadOptions.create()))
     }
 
     /**

@@ -6,9 +6,9 @@ import java.util.Map;
 
 /**
  * A very simple yet fast LRU cache with TTL support
+ * TODO: compare with Collections.synchronizedMap(LRUMap<K, V>)
  */
 public class ConcurrentLRUCache<KEY, VALUE> {
-
     /**
      * A fast yet short life least recently used cache
      */

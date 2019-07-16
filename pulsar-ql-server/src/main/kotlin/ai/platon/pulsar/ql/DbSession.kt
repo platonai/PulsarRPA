@@ -43,6 +43,6 @@ class DbSession(val id: Int, val implementation: Any) {
     }
 
     override fun equals(obj: Any?): Boolean {
-        return obj is ai.platon.pulsar.ql.DbSession && obj.id == id
+        return obj is DbSession && obj.id == id
     }
 }

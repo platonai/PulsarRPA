@@ -107,15 +107,15 @@ open class LoadOptions : CommonOptions {
                 .associate { it.name to it.get(this) }
     }
 
-    constructor() {
+    protected constructor() {
         addObjects(this)
     }
 
-    constructor(args: Array<String>) : super(args) {
+    protected constructor(args: Array<String>) : super(args) {
         addObjects(this)
     }
 
-    constructor(args: String) : super(args.trim { it <= ' ' }.replace("=".toRegex(), " ")) {
+    protected constructor(args: String) : super(args.trim { it <= ' ' }.replace("=".toRegex(), " ")) {
         addObjects(this)
     }
 
@@ -163,9 +163,11 @@ open class LoadOptions : CommonOptions {
         val optionNames: List<String> = default.javaClass.declaredFields
                 .filter { it.annotations.any { it is Parameter } }.map { it.name }
 
-        fun create(): LoadOptions {
+        @JvmOverloads
+        fun create(volatileConfig: VolatileConfig? = null): LoadOptions {
             val options = LoadOptions()
             options.parse()
+            options.volatileConfig = volatileConfig
             return options
         }
 

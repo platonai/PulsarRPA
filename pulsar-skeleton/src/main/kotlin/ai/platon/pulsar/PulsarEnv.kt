@@ -44,10 +44,12 @@ class PulsarEnv {
          * The number of processors available to the Java virtual machine
          */
         val NCPU = Runtime.getRuntime().availableProcessors()
-        // val log4jProperties: Properties
+        /**
+         * Gora properties
+         * */
         val goraProperties: Properties
         /**
-         * A immutable config loaded from the config file at process startup, and never changes
+         * The unmodified config loaded from the config file at process startup, and never changes
          * */
         val unmodifiedConfig: ImmutableConfig
 

@@ -276,8 +276,6 @@ public class FetchComponent implements AutoCloseable {
                 updatePage(page, content, protocolStatus, crawlStatus);
                 break;
 
-            case ProtocolStatus.THREAD_TIMEOUT:
-            case ProtocolStatus.WEB_DRIVER_TIMEOUT:
             case ProtocolStatus.REQUEST_TIMEOUT:
             case ProtocolStatus.UNKNOWN_HOST:
                 taskStatusTracker.trackTimeout(page.getUrl());
@@ -290,6 +288,9 @@ public class FetchComponent implements AutoCloseable {
             case ProtocolStatus.RETRY:          // retry
             case ProtocolStatus.BLOCKED:
             case ProtocolStatus.CANCELED:       // canceled
+            case ProtocolStatus.THREAD_TIMEOUT:
+            case ProtocolStatus.WEB_DRIVER_TIMEOUT:
+            case ProtocolStatus.DOCUMENT_READY_TIMEOUT:
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY);
                 break;
             case ProtocolStatus.GONE:           // gone

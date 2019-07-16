@@ -6,13 +6,15 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists
+import org.slf4j.LoggerFactory
 
 object WebAccess {
     private val env = PulsarEnv.getOrCreate()
     private val pc = PulsarContext.getOrCreate()
     private val i = pc.createSession()
+    private val log = LoggerFactory.getLogger(WebAccess::class.java)
 
-    val seeds = mapOf(
+    private val seeds = mapOf(
             0 to "https://www.mia.com/formulas.html",
             1 to "https://www.mia.com/diapers.html",
             2 to "http://category.dangdang.com/cid4002590.html",
@@ -21,10 +23,10 @@ object WebAccess {
             5 to "https://list.jd.com/list.html?cat=6728,6742,13246",
             6 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
             7 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
-            8 to "http://www.sh.chinanews.com/jinrong/index.shtml",
             9 to "https://music.163.com/",
             10 to "https://news.sogou.com/ent.shtml",
-            11 to "http://shop.boqii.com/brand/"
+            11 to "http://shop.boqii.com/brand/",
+            12 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163"
     )
 
     private val trivialUrls = listOf(
@@ -44,26 +46,38 @@ object WebAccess {
             "https://tianjiaji.b2b168.com/ranyoutianjiaji/ranseji/"
     )
 
-    // private val loadOptions = "--parse --reparse-links --no-link-filter --expires=1s --fetch-mode=selenium --browser=chrome"
-    private val loadOptions = "--expires=1d"
+    private val loadOptions = "-expires=1d"
 
     fun load() {
-        val url = seeds[11]?:return
+        val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
+        val page = i.load(url)
+        val doc = i.parse(page)
+        doc.absoluteLinks()
+        doc.stripScripts()
+        val path = i.export(doc)
+        log.info("Export to: file://{}", path)
+    }
+
+    fun loadOutPages() {
+        val url = seeds[0]?:return
+
         val args = "-ps -expires 1s"
+        val outlink = ".nfList .nfPic a"
 
         val page = i.load("$url $args")
         val document = i.parse(page)
+        val links = document.select(outlink) { it.attr("abs:href") }
+        i.loadAll(links)
         // page.links.stream().parallel().forEach { i.load("$it") }
         // println(WebPageFormatter(page).withLinks())
 
-//        val document = i.parse(page)
-//        i.export(page)
+        i.export(page)
     }
 
-    fun parallelLoadAll() {
+    fun parallelLoadAllOutPages() {
         val args = "-parse -expires 1s -preferParallel true"
         val options = LoadOptions.parse(args)
-        val tasks = i.loadAll(trivialUrls, options).flatMap { it.links }.map { it.toString() }
+        val tasks = i.loadAll(seeds.values, options).flatMap { it.links }.map { it.toString() }
                 .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }.toList()
         Lists.partition(tasks, PulsarEnv.NCPU).forEach { partition ->
             partition.parallelStream().forEach { (_, urls) ->
@@ -77,23 +91,20 @@ object WebAccess {
     fun loadAllProducts() {
         val url = seeds[2]?:return
         // val outlinkSelector = ".goods_item a[href~=detail]"
-        val outlinkSelector = ".shoplist .cloth_shoplist li a.pic"
+        val outlinkSelector = ".cloth_shoplist li a.pic"
 
-        i.load("$url --expires 1s")
+        val links = i.load("$url -expires 1s")
                 .let { i.parse(it) }
-                // .also { println(it.document) }
                 .select(outlinkSelector) { it.attr("href") }
-//                .asSequence() // seems sync
                 .sortedBy { it.length }
                 .take(40)
-//                .onEach { println(it) }
-                .map { i.load("$it -persist") }
-                .map { i.parse(it) }
-                .onEach { println("${it.location}\t${it.title}") }
-                .map { i.export(it) }
+        log.info("Loading {} pages", links.size)
+        val pages = i.loadAll(links, LoadOptions.parse("-retry -expires 1s"))
+
+        println(pages.size)
     }
 
-    fun loadAllProducts2() {
+    fun parallelLoadAllProducts() {
         val url = seeds[3]?:return
 
         val portal = i.load("$url $loadOptions")
@@ -104,7 +115,7 @@ object WebAccess {
         println(WebPageFormatter(portal))
         println(portal.simpleVividLinks)
         val links = portal.simpleLiveLinks.filter { it.contains("detail") }
-        val pages = i.parallelLoadAll(links, LoadOptions.Companion.parse("--parse"))
+        val pages = i.parallelLoadAll(links, LoadOptions.parse("-ps"))
         pages.forEach { println("${it.url} ${it.pageTitle}") }
     }
 
@@ -139,8 +150,10 @@ object WebAccess {
     }
 
     fun run() {
-        // load()
-        parallelLoadAll()
+        load()
+        // loadAllProducts()
+        // parallelLoadAll()
+        // parallelLoadAllProducts()
     }
 }
 

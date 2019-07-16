@@ -22,7 +22,7 @@ function PlatonNodeTraversor(visitor) {
 
 /**
  * Start a depth-first traverse of the root and all of its descendants.
- * @param root {Node} the root ele point to traverse.
+ * @param root {Node} the root node point to traverse.
  */
 PlatonNodeTraversor.prototype.traverse = function(root) {
     let node = root;

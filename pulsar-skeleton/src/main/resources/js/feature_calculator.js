@@ -102,7 +102,7 @@ NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, depth) {
     }
 
     // Calculate the rectangle of this node
-    nodeExt.getRect();
+    nodeExt.rect = node.getRect();
 
     // TODO: since there are too many _hidden nodes, we should simplified it to save space
     if (node.isElement()) {

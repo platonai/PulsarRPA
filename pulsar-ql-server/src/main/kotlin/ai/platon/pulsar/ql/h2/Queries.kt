@@ -108,18 +108,20 @@ object Queries {
         var links: Collection<String>
 
         if (ignoreQuery) {
-            links = loadAll(session, configuredPortal, restrictCss, offset, limit
-            ) { ele, rc, os, lt -> getLinks(ele, rc, os, lt) }
+            links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
+                ele, rc, os, lt -> getLinks(ele, rc, os, lt)
+            }
         } else {
-            links = loadAll(session, configuredPortal, restrictCss, offset, limit
-            ) { ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt) }
+            links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
+                ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt)
+            }
         }
 
         if (normalize) {
             links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
-        return session.loadAll(links, LoadOptions())
+        return session.loadAll(links, LoadOptions.create())
     }
 
     fun loadAndParse(session: QuerySession, configuredUrl: String): FeaturedDocument {

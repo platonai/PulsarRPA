@@ -375,6 +375,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
             status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == WEB_DRIVER_TIMEOUT) {
             status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+        } else if (httpCode == DOCUMENT_READY_TIMEOUT) {
+            // TODO: the document is still analysable?
+            status = ProtocolStatus.failed(DOCUMENT_READY_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == RETRY) {
             status = ProtocolStatus.failed(RETRY, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == CANCELED) {

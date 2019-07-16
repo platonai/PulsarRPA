@@ -116,17 +116,14 @@ class SQLContext: AutoCloseable {
 
     fun getSession(sessionId: Int): QuerySession {
         ensureRunning()
-        return sessions.entries.firstOrNull { it.key.id == sessionId }?.value
-                ?:throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session is closed")
+        val key = DbSession(sessionId, Any())
+        return sessions[key]?:throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session is closed")
     }
 
     fun closeSession(sessionId: Int) {
         ensureRunning()
-        val removal = sessions.filter { it.key.id == sessionId }
-        removal.forEach {
-            sessions.remove(it.key)
-            it.value.use { it.close() }
-        }
+        val key = DbSession(sessionId, Any())
+        sessions.remove(key)?.use { it.close() }
     }
 
     override fun close() {
@@ -213,7 +210,7 @@ class SQLContext: AutoCloseable {
 
         loading.set(true)
 
-        val loadOptions = LoadOptions()
+        val loadOptions = LoadOptions.create()
         loadOptions.fetchMode = mode
         loadOptions.background = true
 

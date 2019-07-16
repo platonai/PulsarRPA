@@ -136,12 +136,13 @@ open class BrowserControl(
         if (reload || mainJs.isEmpty()) {
             val sb = StringBuilder(parseLibJs(reload))
             sb.append("\n")
-                    .append(";\nwindow.stop();")
                     .append(";\n__utils__.scrollToBottom();")
                     .append(";\n__utils__.scrollToTop();")
+                    .append(";\nwindow.stop();")
                     .append(";\n__utils__.visualizeHumanize();")
                     .append(";\n__utils__.writePulsarData();")
                     .append(";\nwindow.stop();")
+                    .append(";\nreturn document.pulsarData;")
                     .append(";\n")
 
             mainJs = sb.toString()

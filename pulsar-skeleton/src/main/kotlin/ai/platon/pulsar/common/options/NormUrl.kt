@@ -26,7 +26,7 @@ class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is NormUrl && url.equals(other.url)
+        return other is NormUrl && url == other.url
     }
 
     override fun compareTo(other: NormUrl): Int {

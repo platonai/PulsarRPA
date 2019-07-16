@@ -59,10 +59,49 @@ Node.prototype.isText = function() {
 };
 
 /**
+ * @return {string}
+ * */
+Node.prototype.cleanText = function() {
+    let text = this.textContent.replace(/\s+/g, ' ');
+    // remove &nbsp;
+    text = text.replace(/\u00A0/g, ' ');
+    return text.trim();
+};
+
+/**
+ * @return {boolean}
+ * */
+Node.prototype.isShortText = function() {
+    if (!this.isText()) return false;
+
+    let text = this.cleanText();
+    return text.length >= 1 && text.length <= 9;
+};
+
+/**
+ * @return {boolean}
+ * */
+Node.prototype.isNumberLike = function() {
+    if (!this.isShortText()) return false;
+
+    let text = this.cleanText().replace(/\s+/g, '');
+    // matches ￥3,412.25, ￥3,412.25, 3,412.25, 3412.25, etc
+    return /.{0,4}((\d+),?)*(\d+)\.?\d+.{0,3}/.test(text);
+};
+
+/**
  * @return {boolean}
  * */
 Node.prototype.isElement = function() {
     return this.nodeType === Node.ELEMENT_NODE;
+};
+
+/**
+ * @return {Element}
+ * */
+Node.prototype.bestElement = function() {
+    if (this.isElement()) return this;
+    else return this.parentElement;
 };
 
 /**
@@ -75,9 +114,66 @@ Node.prototype.isTextOrElement = function() {
 /**
  * @return {boolean}
  * */
+Node.prototype.isDiv = function() {
+    // HTML-uppercased qualified name
+    return this.nodeName === "DIV";
+};
+
+/**
+ * @return {boolean}
+ * */
 Node.prototype.isImage = function() {
     // HTML-uppercased qualified name
     return this.nodeName === "IMG";
+};
+
+/**
+ * @return {Number}
+ * */
+Node.prototype.nScreen = function() {
+    let rect = this.getRect();
+    const config = PULSAR_CONFIGS;
+    const viewPortHeight = config.viewPortHeight;
+    let ns = rect.y / viewPortHeight;
+    return Math.ceil(ns);
+};
+
+/**
+ * @return {boolean}
+ * */
+Node.prototype.isSmallImage = function() {
+    if (!this.isImage()) {
+        return false
+    }
+
+    let rect = this.getRect();
+    return rect.width <= 50 || rect.height <= 50;
+};
+
+/**
+ * @return {boolean}
+ * */
+Node.prototype.isMediumImage = function() {
+    if (!this.isImage()) {
+        return false
+    }
+
+    let rect = this.getRect();
+    let area = rect.width * rect.height;
+    return rect.width > 50 && rect.height > 50 && area < 300 * 300;
+};
+
+/**
+ * @return {boolean}
+ * */
+Node.prototype.isLargeImage = function() {
+    if (!this.isImage()) {
+        return false
+    }
+
+    let rect = this.getRect();
+    let area = rect.width * rect.height;
+    return area > 300 * 300;
 };
 
 /**
@@ -93,6 +189,41 @@ Node.prototype.isAnchor = function() {
  * */
 Node.prototype.isTile = function() {
     return this.isImage() || this.isText();
+};
+
+/**
+ * Get the estimated rect of this node, if the node is not an element, return it's parent element's rect
+ * @return {DOMRect|null}
+ * */
+Node.prototype.getRect = function() {
+    let element = this.bestElement();
+    if (element == null) {
+        return null
+    }
+
+    let rect = __utils__.getClientRect(element);
+
+    if (element.isImage()) {
+        if (!rect) {
+            rect = new DOMRect(0, 0, 0, 0)
+        }
+
+        if (rect.width === 0) {
+            let w = element.getAttribute("width");
+            if (w && w.match(/\d+/)) {
+                rect.width = Number.parseInt(w)
+            }
+        }
+
+        if (rect.height === 0) {
+            let h = element.getAttribute("height");
+            if (h && h.match(/\d+/)) {
+                rect.height = Number.parseInt(h)
+            }
+        }
+    }
+
+    return rect
 };
 
 let NodeExt = function (node, config) {
@@ -190,28 +321,6 @@ NodeExt.prototype.hasParent = function() {
  * */
 NodeExt.prototype.parent = function() {
     return this.node.parentElement.nodeExt;
-};
-
-NodeExt.prototype.getRect = function() {
-    this.rect = __utils__.getClientRect(this.node);
-
-    if (this.node.isImage()) {
-        if (this.rect.width === 0) {
-            let w = this.attr("width");
-            if (w.match(/\d+/)) {
-                this.rect.width = Number.parseInt(w)
-            }
-        }
-
-        if (this.rect.height === 0) {
-            let h = this.attr("height");
-            if (w.match(/\d+/)) {
-                this.rect.height = Number.parseInt(h)
-            }
-        }
-    }
-
-    return this.rect
 };
 
 /**

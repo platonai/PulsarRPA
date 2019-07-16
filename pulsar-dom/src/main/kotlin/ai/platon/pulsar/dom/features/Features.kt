@@ -156,20 +156,21 @@ object FeatureFormatter {
      * @eps The amount of allowed absolute error to judge if a double value is zero which is ignored
      * @return string
      */
-    fun format(features: RealVector, featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
+    fun format(features: RealVector,
+               featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
         val size = Iterables.size(featureKeys)
         if (size == 0) {
             for (i in featureNames.indices) {
                 val value = features[i]
                 if (!Precision.equals(value, 0.0, eps)) {
-                    sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
+                    sb.append(featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
                 }
             }
         } else {
             for (i in featureKeys) {
                 val value = features.getEntry(i)
                 if (!Precision.equals(value, 0.0, eps)) {
-                    sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
+                    sb.append(featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
                 }
             }
         }
@@ -205,13 +206,13 @@ object FeatureFormatter {
         return if (sb.endsWith(' ')) sb.deleteCharAt(sb.length - 1) else sb
     }
 
-    fun formatValue(key: Int, value: Double): String {
+    fun formatValue(key: Int, value: Double, eps: Double = 0.001): String {
         return formatValue(value, isFloating(key))
     }
 
     fun formatValue(value: Double, isFloating: Boolean = true, eps: Double = 0.001): String {
         return if (isFloating) {
-            if (Precision.equals(value, 0.0, eps)) String.format("%.2f", value) else ""
+            if (Precision.equals(value, 0.0, eps)) "" else String.format("%.2f", value)
         } else {
             String.format("%d", value.toInt())
         }
