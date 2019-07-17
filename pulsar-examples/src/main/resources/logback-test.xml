@@ -24,23 +24,25 @@
         </encoder>
     </appender>
 
-    <logger name="ai.platon.pulsar" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.ql" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.parse.html" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.cli.shell" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.crawl" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.net" level="DEBUG"/>
-    <logger name="ai.platon.pulsar.crawl.component" level="DEBUG"/>
+    <logger name="ai.platon.pulsar" level="DEBUG" />
+    <logger name="ai.platon.pulsar.ql" level="DEBUG" />
+    <logger name="ai.platon.pulsar.net" level="DEBUG" />
+    <logger name="ai.platon.pulsar.net.browser" level="TRACE" />
+    <logger name="ai.platon.pulsar.crawl" level="DEBUG" />
+    <logger name="ai.platon.pulsar.crawl.component" level="DEBUG" />
+    <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG" />
 
-    <logger name="org.apache.gora" level="ERROR"/>
-    <logger name="org.apache.hadoop.mapreduce.Job" level="INFO"/>
-    <logger name="org.apache.hadoop.conf.Configuration" level="INFO"/>
-    <logger name="org.apache.zookeeper" level="ERROR"/>
-    <logger name="org.apache.solr" level="INFO"/>
-    <logger name="com.j256.ormlite" level="WARN"/>
-    <logger name="org.apache.hadoop" level="WARN"/>
-    <logger name="org.springframework" level="WARN"/>
+    <logger name="ai.platon.pulsar.parse.html" level="INFO" />
+    <logger name="ai.platon.pulsar.cli.shell" level="DEBUG" />
+
+    <logger name="org.apache.gora" level="ERROR" />
+    <logger name="org.apache.hadoop.mapreduce.Job" level="INFO" />
+    <logger name="org.apache.hadoop.conf.Configuration" level="INFO" />
+    <logger name="org.apache.zookeeper" level="ERROR" />
+    <logger name="org.apache.solr" level="INFO" />
+    <logger name="com.j256.ormlite" level="WARN" />
+    <logger name="org.apache.hadoop" level="WARN" />
+    <logger name="org.springframework" level="WARN" />
 
     <root level="INFO">
         <appender-ref ref="DRFA"/>

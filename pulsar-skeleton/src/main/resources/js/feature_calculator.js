@@ -20,42 +20,6 @@ let NodeFeatureCalculator = function() {
     if (metadata) {
         // already exists
         this.stopped = true;
-        return;
-    }
-
-    this.generateMetadata();
-};
-
-/**
- * Generate meta data
- *
- * MetaInformation version :
- * 0.2.2 :
- * */
-NodeFeatureCalculator.prototype.generateMetadata = function() {
-    document.body.setAttribute("data-url", document.URL);
-    let date = new Date();
-
-    let ele = document.createElement("input");
-    ele.setAttribute("type", "hidden");
-    ele.setAttribute("id", META_INFORMATION_ID);
-    ele.setAttribute("domain", document.domain);
-    ele.setAttribute("version", DATA_VERSION);
-    ele.setAttribute("url", document.URL);
-    ele.setAttribute("base-uri", document.baseURI);
-    ele.setAttribute("view-port", this.config.viewPortWidth + "x" + this.config.viewPortHeight);
-    ele.setAttribute("code-structure", CODE_STRUCTURE_SCHEMA_STRING);
-    ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
-    ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
-    ele.setAttribute("timestamp", date.getTime().toString());
-
-    if (this.config.version !== DATA_VERSION) {
-        ele.setAttribute("version-mismatch", this.config.version + "-" + DATA_VERSION);
-    }
-
-    let parent = document.body.firstElementChild || document.body;
-    if (parent) {
-        parent.appendChild(ele)
     }
 };
 
@@ -72,6 +36,10 @@ NodeFeatureCalculator.prototype.isStopped = function() {
  * @param  depth {Number} the depth in the DOM
  */
 NodeFeatureCalculator.prototype.head = function(node, depth) {
+    if (node.isIFrame()) {
+        return
+    }
+
     ++this.sequence;
 
     node.nodeExt = new NodeExt(node, this.config);
@@ -138,6 +106,10 @@ NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, depth) {
  * @param  depth {Number} the depth in the DOM
  */
 NodeFeatureCalculator.prototype.tail = function(node, depth) {
+    if (node.isIFrame()) {
+        return
+    }
+
     let nodeExt = node.nodeExt;
     if (!nodeExt) {
         return

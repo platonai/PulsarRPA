@@ -1,39 +1,39 @@
+"use strict";
+
 let __utils__ = function () {};
 
 /**
  * @param maxRound The maximum round to check ready
- * @param scroll The scroll down times
+ * @param scroll The count to scroll down
  * */
 __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
-    if (!document.pulsarData) {
-        __utils__.createPulsarDataIfAbsent();
-        window.addEventListener('DOMContentLoaded', (event) => {
-            __utils__.updatePulsarStatus(true);
-        });
-    }
-
     // A document is ready when the major html is downloaded
     // and all sub resources(images, css, js) are also downloaded
-    if (document.readyState !== "interactive" && document.readyState !== "complete") {
+    if (document.readyState === "loading") {
         return false
+    }
+
+    if (!document.pulsarData) {
+        // initialization
+        __utils__.createPulsarDataIfAbsent();
+        __utils__.updatePulsarStat(true);
     }
 
     let status = document.pulsarData.status;
+    status.n += 1;
 
     // start count down latch
-    status.n += 1;
     if (maxRound > 0 && status.n > maxRound) {
         return "timeout"
-    }
-
-    let ready = __utils__.isActuallyReady();
-    if (!ready) {
-        return false
     }
 
     if (status.scroll < scroll) {
         window.scrollBy(0, 500);
         status.scroll += 1;
+    }
+
+    let ready = __utils__.isActuallyReady();
+    if (!ready) {
         return false
     }
 
@@ -44,7 +44,7 @@ __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
 __utils__.createPulsarDataIfAbsent = function() {
     if (!document.pulsarData) {
         document.pulsarData = {
-            status: { n: 0, scroll: 0, idl: 0, r: {} },
+            status: { n: 0, scroll: 0, idl: 0, st: "", r: "" },
             initStat: null,
             lastStat: {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
             lastD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
@@ -58,19 +58,19 @@ __utils__.writePulsarData = function() {
         return false
     }
 
-    let script = document.querySelector(`#${SCRIPT_SECTION_ID}`);
-    if (!script) {
-        script = document.createElement('script');
-        script.id = SCRIPT_SECTION_ID;
-        script.type = 'text/javascript';
-        let lastElement = document.lastElementChild || document.body;
-        lastElement.appendChild(script);
+    let script = document.getElementById(SCRIPT_SECTION_ID);
+    if (script != null) {
+        return
     }
+
+    script = document.createElement('script');
+    script.id = SCRIPT_SECTION_ID;
+    script.type = 'text/javascript';
 
     let pulsarData = JSON.stringify(document.pulsarData, null, 3);
     script.textContent = "\n" + `;let pulsarData = ${pulsarData};\n`;
 
-    return document.pulsarData
+    document.body.appendChild(script);
 };
 
 /**
@@ -83,37 +83,39 @@ __utils__.isActuallyReady = function() {
         return false
     }
 
+    __utils__.updatePulsarStat();
+
     const fineHeight = 4000;
     const fineNumAnchor = 100;
     const fineNumImage = 20;
 
     let ready = false;
-    __utils__.updatePulsarStatus();
 
-    let stat = document.pulsarData.lastStat;
+    let status = document.pulsarData.status;
     let d = document.pulsarData.lastD;
-    if (d.h < 10 && d.dna === 0 && d.dni === 0 && d.dnst === 0 && d.dnnm === 0) {
+    if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
         // DOM changed since last check, store the latest stat and return false to wait for the next check
-        ++stat.idl;
-        if (stat.idl > 30) {
-            // idle for 30 seconds
-            stat.r = "idl";
+        ++status.idl;
+        if (status.idl > 10) {
+            // idle for 10 seconds
+            status.r = "idl";
             ready = true
         }
     }
 
     // all sub resources are loaded, the document is ready now
-    if (stat.st === "c") {
+    if (status.st === "c") {
         // assert(document.readyState === "complete")
-        stat.r = "st";
+        status.r = "st";
         ready = true
     }
 
     // The DOM is very good for analysis, no wait for more information
     // But a page should be loaded for at least 30 seconds if state is not complete
-    if (stat.n > 30 && stat.h >= fineHeight && stat.na >= fineNumAnchor && stat.ni >= fineNumImage) {
-        stat.r = "ct";
-        // ready = true;
+    let stat = document.pulsarData.lastStat;
+    if (status.n > 20 && stat.h >= fineHeight && stat.na >= fineNumAnchor && stat.ni >= fineNumImage) {
+        status.r = "ct";
+        ready = true;
     }
 
     return ready;
@@ -122,7 +124,7 @@ __utils__.isActuallyReady = function() {
 /**
  * @return {Object}
  * */
-__utils__.updatePulsarStatus = function(init = false) {
+__utils__.updatePulsarStat = function(init = false) {
     const config = PULSAR_CONFIGS;
     const viewPortWidth = config.viewPortWidth;
     const viewPortHeight = config.viewPortHeight;
@@ -137,11 +139,14 @@ __utils__.updatePulsarStatus = function(init = false) {
     let nnm = 0; // number like text in first screen
 
     document.body.forEach((node) => {
+        if (node.isIFrame()) {
+            return
+        }
+
         if (node.isAnchor()) ++na;
         if (node.isImage() && !node.isSmallImage()) ++ni;
 
-        // actually no restrict to screen
-        if (node.isText() && node.nScreen() <= 1000) {
+        if (node.isText() && node.nScreen() <= 20) {
             let isShortText = node.isShortText();
             let isNumberLike = isShortText && node.isNumberLike();
             if (isShortText) {
@@ -167,14 +172,14 @@ __utils__.updatePulsarStatus = function(init = false) {
 
     let initStat = document.pulsarData.initStat;
     if (!initStat) {
-        initStat = {w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm};
+        initStat = { w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm };
         document.pulsarData.initStat = initStat
     }
     let lastStat = document.pulsarData.lastStat;
     let lastStatus = document.pulsarData.status;
     let state = document.readyState.substr(0, 1);
     let data = {
-        status: {st: state, n: lastStatus.n, scroll: lastStatus.scroll, idl: lastStatus.idl},
+        status: {n: lastStatus.n, scroll: lastStatus.scroll, idl: lastStatus.idl, st: state, r: lastStatus.r},
         lastStat: {w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm},
         // changes from last round
         lastD: {
@@ -234,7 +239,6 @@ __utils__.scrollDownN = function(scrollCount = 5) {
  * @return {Object}
  */
 __utils__.clone = function(o) {
-    "use strict";
     return JSON.parse(JSON.stringify(o))
 };
 
@@ -272,31 +276,6 @@ __utils__.increaseIntAttribute = function(node, attrName, add) {
 
     value = parseInt(value) + add;
     node.setAttribute(attrName, value)
-};
-
-/**
- * Get the sibling index
- * @param node {Node} the node
- * */
-__utils__.siblingIndex = function(node) {
-    let parent = node.parentNode;
-    if (parent == null) {
-        return false
-    }
-
-    let i = 0;
-    let found = false;
-    for (let n in parent.childNodes.values()) {
-        if (n === node) {
-            found = true;
-            break
-        }
-        ++i
-    }
-
-    // assert(found)
-
-    return found ? i : false;
 };
 
 /**
@@ -610,23 +589,73 @@ __utils__.getTextNodeClientRect = function(node) {
 };
 
 /**
+ * Generate meta data
+ *
+ * MetaInformation version :
+ * 0.2.2 :
+ * */
+__utils__.generateMetadata = function() {
+    let meta = document.getElementById(META_INFORMATION_ID);
+    if (meta != null) {
+        // already generated
+        return
+    }
+
+    let config = PULSAR_CONFIGS || {};
+
+    document.body.setAttribute("data-url", document.URL);
+    let date = new Date();
+
+    let ele = document.createElement("input");
+    ele.setAttribute("type", "hidden");
+    ele.setAttribute("id", META_INFORMATION_ID);
+    ele.setAttribute("domain", document.domain);
+    ele.setAttribute("version", DATA_VERSION);
+    ele.setAttribute("url", document.URL);
+    ele.setAttribute("base-uri", document.baseURI);
+    ele.setAttribute("view-port", config.viewPortWidth + "x" + config.viewPortHeight);
+    ele.setAttribute("code-structure", CODE_STRUCTURE_SCHEMA_STRING);
+    ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
+    ele.setAttribute("date-time", date.toLocaleDateString() + " " + date.toLocaleTimeString());
+    ele.setAttribute("timestamp", date.getTime().toString());
+
+    if (config.version !== DATA_VERSION) {
+        ele.setAttribute("version-mismatch", config.version + "-" + DATA_VERSION);
+    }
+
+    document.body.appendChild(ele);
+};
+
+/**
  * Calculate visualization info and do human actions
  * */
 __utils__.visualizeHumanize = function() {
-    "use strict";
-
     if (!document.body || !document.body.firstChild) {
         return
     }
 
-    __utils__.updatePulsarStatus();
+    // __utils__.scrollToBottom();
+    __utils__.scrollToTop();
+
+    window.stop();
 
     // traverse the DOM and compute necessary data, we must compute data before we perform humanization
     new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
 
+    __utils__.updatePulsarStat();
+    __utils__.writePulsarData();
+
     // do something like a human being
     // humanize(document.body);
 
+    document.body.forEachElement(ele => {
+        ele.removeAttribute("_ps_tp")
+    });
+
+    __utils__.generateMetadata();
+
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute("data-error", '0');
+
+    window.stop();
 };

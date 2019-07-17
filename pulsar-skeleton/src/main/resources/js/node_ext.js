@@ -192,6 +192,13 @@ Node.prototype.isTile = function() {
 };
 
 /**
+ * @return {boolean}
+ * */
+Node.prototype.isIFrame = function() {
+    return this.nodeName === "IFRAME";
+};
+
+/**
  * Get the estimated rect of this node, if the node is not an element, return it's parent element's rect
  * @return {DOMRect|null}
  * */
@@ -210,14 +217,14 @@ Node.prototype.getRect = function() {
 
         if (rect.width === 0) {
             let w = element.getAttribute("width");
-            if (w && w.match(/\d+/)) {
+            if (w && /\d+/.test(w)) {
                 rect.width = Number.parseInt(w)
             }
         }
 
         if (rect.height === 0) {
             let h = element.getAttribute("height");
-            if (h && h.match(/\d+/)) {
+            if (h && /\d+/.test(h)) {
                 rect.height = Number.parseInt(h)
             }
         }

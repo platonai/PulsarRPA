@@ -300,13 +300,13 @@ open class PulsarSession(
     fun export(page: WebPage, ident: String = ""): Path {
         ensureRunning()
         val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(page.url, ".htm"))
-        return PulsarFiles.saveTo(page.contentAsString, path)
+        return PulsarFiles.saveTo(page.contentAsString, path, true)
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
         ensureRunning()
         val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(doc.location, ".htm"))
-        return PulsarFiles.saveTo(doc.prettyHtml, path)
+        return PulsarFiles.saveTo(doc.prettyHtml, path, true)
     }
 
     fun exportTo(doc: FeaturedDocument, path: Path): Path {

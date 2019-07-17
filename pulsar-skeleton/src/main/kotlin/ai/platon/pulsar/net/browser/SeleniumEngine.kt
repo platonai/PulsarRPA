@@ -458,23 +458,22 @@ class SeleniumEngine(
         return status
     }
 
-    @Throws(org.openqa.selenium.TimeoutException::class)
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
         val jsExecutor = driver as? JavascriptExecutor?: return ProtocolStatus.STATUS_CANCELED
 
         var status = ProtocolStatus.STATUS_SUCCESS
-        val scriptTimeout = driverConfig.scriptTimeout.seconds
+        val pageLoadTimeout = driverConfig.pageLoadTimeout.seconds
 
         try {
             val documentWait = FluentWait<WebDriver>(driver)
-                    .withTimeout(scriptTimeout, TimeUnit.SECONDS)
+                    .withTimeout(pageLoadTimeout, TimeUnit.SECONDS)
                     .pollingEvery(1, TimeUnit.SECONDS)
                     .ignoring(InterruptedException::class.java)
 
             try {
                 // make sure the document is ready
                 val initialScroll = 2
-                val maxRound = scriptTimeout - 1
+                val maxRound = pageLoadTimeout - 10 //leave 10 seconds to wait for script finish
                 val js = ";$libJs;return __utils__.waitForReady($maxRound, $initialScroll);"
                 val r = documentWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
 
@@ -484,7 +483,7 @@ class SeleniumEngine(
                     log.trace("Document is ready. {} | {}", r, url)
                 }
             } catch (e: org.openqa.selenium.TimeoutException) {
-                log.trace("Timeout to wait for document ready, timeout {}s | {}", scriptTimeout, url)
+                log.trace("Timeout to wait for document ready, timeout {}s | {}", pageLoadTimeout, url)
                 status = ProtocolStatus.failed(ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT)
             }
 
@@ -537,15 +536,15 @@ class SeleniumEngine(
                 s1?.get("h"),   s2?.get("h"),   s3?.get("h"),   s4?.get("h")
         )
         val st = data["status"] as? Map<*, *>
-        val m = String.format("n:%s scroll:%s st:%s idl:%s\t%s\t(is,ls,id,ld)",
-                st?.get("n"), st?.get("scroll"), st?.get("st"), st?.get("idl"), s)
+        val m = String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
+                st?.get("n"), st?.get("scroll"), st?.get("st"), st?.get("r"), st?.get("idl"), s)
         return m
     }
 
     private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {
         val scrollDownCount = driverConfig.scrollDownCount.toLong()
         val scrollDownWait = driverConfig.scrollDownWait
-        val timeout = scrollDownCount * scrollDownWait.toMillis() + 500
+        val timeout = scrollDownCount * scrollDownWait.toMillis() + 3 * 1000
         val scrollWait = FluentWait<WebDriver>(driver)
                 .withTimeout(timeout, TimeUnit.MILLISECONDS)
                 .pollingEvery(scrollDownWait.toMillis(), TimeUnit.MILLISECONDS)

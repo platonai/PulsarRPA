@@ -46,10 +46,12 @@ object WebAccess {
             "https://tianjiaji.b2b168.com/ranyoutianjiaji/ranseji/"
     )
 
-    private val loadOptions = "-expires=1d"
+    private val loadOptions = "-expires 1d"
 
     fun load() {
-        val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
+        // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
+        // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
+        val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
