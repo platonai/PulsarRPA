@@ -41,7 +41,7 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-scrollCount"])
     var scrollCount = 5
     @Parameter(names = ["-scrollWaitTime"], converter = DurationConverter::class)
-    var scrollWaitTime: Duration = Duration.ofMillis(500)
+    var scrollWaitTime: Duration = Duration.ofMillis(1000)
     @Parameter(names = ["-pageLoadTimeout"], converter = DurationConverter::class)
     var pageLoadTimeout: Duration = Duration.ofSeconds(60)
 

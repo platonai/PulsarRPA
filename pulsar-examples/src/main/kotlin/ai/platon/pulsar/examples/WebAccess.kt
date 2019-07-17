@@ -49,9 +49,9 @@ object WebAccess {
     private val loadOptions = "-expires 1d"
 
     fun load() {
-        // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
+        val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
         // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
-        val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
+//        val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
@@ -61,19 +61,21 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[0]?:return
+        // val url = seeds[0]?:return
+        val url = "https://list.mogujie.com/book/magic/51894"
 
         val args = "-ps -expires 1s"
-        val outlink = ".nfList .nfPic a"
+        val outlink = ".goods_list_mod a"
 
         val page = i.load("$url $args")
         val document = i.parse(page)
-        val links = document.select(outlink) { it.attr("abs:href") }
-        i.loadAll(links)
+        val path = i.export(page)
+        println("Export to: file://$path")
+
+//        val links = document.select(outlink) { it.attr("abs:href") }
+//        i.loadAll(links, LoadOptions.parse("-expires 1s"))
         // page.links.stream().parallel().forEach { i.load("$it") }
         // println(WebPageFormatter(page).withLinks())
-
-        i.export(page)
     }
 
     fun parallelLoadAllOutPages() {
@@ -152,7 +154,8 @@ object WebAccess {
     }
 
     fun run() {
-        load()
+        // load()
+        loadOutPages()
         // loadAllProducts()
         // parallelLoadAll()
         // parallelLoadAllProducts()

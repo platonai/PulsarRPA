@@ -513,7 +513,7 @@ class SeleniumEngine(
         val data = jsExecutor.executeScript(clientJs)
         if (log.isDebugEnabled) {
             if (data is MutableMap<*, *>) {
-                log.debug(formatPulsarData(data))
+                log.debug("{} | {}", formatPulsarData(data), url)
             }
         }
 

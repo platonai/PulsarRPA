@@ -1,5 +1,9 @@
 "use strict";
 
+const fineHeight = 4000;
+const fineNumAnchor = 100;
+const fineNumImage = 20;
+
 let __utils__ = function () {};
 
 /**
@@ -38,7 +42,7 @@ __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     }
 
     // The document is ready
-    return JSON.stringify(status)
+    return JSON.stringify(document.pulsarData.status)
 };
 
 __utils__.createPulsarDataIfAbsent = function() {
@@ -85,23 +89,10 @@ __utils__.isActuallyReady = function() {
 
     __utils__.updatePulsarStat();
 
-    const fineHeight = 4000;
-    const fineNumAnchor = 100;
-    const fineNumImage = 20;
-
     let ready = false;
 
     let status = document.pulsarData.status;
     let d = document.pulsarData.lastD;
-    if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
-        // DOM changed since last check, store the latest stat and return false to wait for the next check
-        ++status.idl;
-        if (status.idl > 10) {
-            // idle for 10 seconds
-            status.r = "idl";
-            ready = true
-        }
-    }
 
     // all sub resources are loaded, the document is ready now
     if (status.st === "c") {
@@ -111,14 +102,35 @@ __utils__.isActuallyReady = function() {
     }
 
     // The DOM is very good for analysis, no wait for more information
-    // But a page should be loaded for at least 30 seconds if state is not complete
     let stat = document.pulsarData.lastStat;
     if (status.n > 20 && stat.h >= fineHeight && stat.na >= fineNumAnchor && stat.ni >= fineNumImage) {
-        status.r = "ct";
-        ready = true;
+        if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
+            // DOM changed since last check, store the latest stat and return false to wait for the next check
+            ++status.idl;
+            if (status.idl > 10) {
+                // idle for 10 seconds
+                status.r = "ct";
+                ready = true;
+            }
+        }
     }
 
     return ready;
+};
+
+__utils__.isIdle = function(init = false) {
+    let idle = false;
+    let status = document.pulsarData.status;
+    let stat = document.pulsarData.lastStat;
+    if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
+        // DOM changed since last check, store the latest stat and return false to wait for the next check
+        ++status.idl;
+        if (status.idl > 5) {
+            // idle for 10 seconds
+            idle = true;
+        }
+    }
+    return idle
 };
 
 /**
@@ -634,13 +646,17 @@ __utils__.visualizeHumanize = function() {
         return
     }
 
+    const DATA_ERROR = "data-error";
+
+    let done = document.body.hasAttribute(DATA_ERROR);
+    if (done) {
+        return
+    }
+
     // __utils__.scrollToBottom();
     __utils__.scrollToTop();
 
     window.stop();
-
-    // traverse the DOM and compute necessary data, we must compute data before we perform humanization
-    new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
 
     __utils__.updatePulsarStat();
     __utils__.writePulsarData();
@@ -652,10 +668,13 @@ __utils__.visualizeHumanize = function() {
         ele.removeAttribute("_ps_tp")
     });
 
+    // traverse the DOM and compute necessary data, we must compute data before we perform humanization
+    new PlatonNodeTraversor(new NodeFeatureCalculator()).traverse(document.body);
+
     __utils__.generateMetadata();
 
     // if any script error occurs, the flag can NOT be seen
-    document.body.setAttribute("data-error", '0');
+    document.body.setAttribute(DATA_ERROR, '0');
 
     window.stop();
 };

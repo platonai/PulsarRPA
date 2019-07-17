@@ -15,12 +15,6 @@ let NodeFeatureCalculator = function() {
     this.debug = this.config.debug;
 
     this.sequence = 0;
-
-    let metadata = document.querySelector(`#${META_INFORMATION_ID}`);
-    if (metadata) {
-        // already exists
-        this.stopped = true;
-    }
 };
 
 /**

@@ -53,7 +53,7 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
     private val proxyPool = PulsarEnv.proxyPool
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
-    private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(30))
+    private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(60))
     private val closed = AtomicBoolean(false)
     private val isClosed = closed.get()
     val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
