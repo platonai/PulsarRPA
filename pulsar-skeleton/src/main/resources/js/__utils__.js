@@ -89,8 +89,11 @@ __utils__.isActuallyReady = function() {
 
     __utils__.updatePulsarStat();
 
-    let ready = false;
+    if (!document.pulsarData) {
+        return false
+    }
 
+    let ready = false;
     let status = document.pulsarData.status;
     let d = document.pulsarData.lastD;
 
@@ -121,7 +124,7 @@ __utils__.isActuallyReady = function() {
 __utils__.isIdle = function(init = false) {
     let idle = false;
     let status = document.pulsarData.status;
-    let stat = document.pulsarData.lastStat;
+    let d = document.pulsarData.lastD;
     if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
         // DOM changed since last check, store the latest stat and return false to wait for the next check
         ++status.idl;
@@ -182,6 +185,11 @@ __utils__.updatePulsarStat = function(init = false) {
         if (node.isDiv() && node.scrollWidth >= fineWidth && node.scrollHeight > height) height = node.scrollHeight;
     });
 
+    // unexpected but occurs when do performance test to parallel harvest Web sites
+    if (!document.pulsarData) {
+        return
+    }
+
     let initStat = document.pulsarData.initStat;
     if (!initStat) {
         initStat = { w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm };
@@ -236,6 +244,11 @@ __utils__.scrollToTop = function() {
 };
 
 __utils__.scrollDownN = function(scrollCount = 5) {
+    if (!document.pulsarData) {
+        // TODO: this occurs when do performance test, but the reason is not investigated
+        return false
+    }
+
     let status = document.pulsarData.status;
 
     window.scrollBy(0, 500);
