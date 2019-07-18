@@ -186,7 +186,7 @@ public class LoadComponent {
 
             WebPage page = webDb.getOrNil(url, op.getShortenKey());
 
-            int reason = getFetchReason(page, op.getRealExpires(), op.getRetry());
+            int reason = getFetchReason(page, op.getExpires(), op.getRetry());
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), url, op);
             }
@@ -274,7 +274,7 @@ public class LoadComponent {
         boolean ignoreQuery = options.getShortenKey();
         WebPage page = webDb.getOrNil(url, ignoreQuery);
 
-        int reason = getFetchReason(page, options.getRealExpires(), options.getRetry());
+        int reason = getFetchReason(page, options.getExpires(), options.getRetry());
         LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
 
         if (reason == FETCH_REASON_TEMP_MOVED) {

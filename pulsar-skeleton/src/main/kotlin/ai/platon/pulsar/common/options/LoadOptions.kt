@@ -8,7 +8,6 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
-import java.util.*
 
 /**
  * Created by vincent on 19-4-24.
@@ -19,30 +18,42 @@ import java.util.*
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
 open class LoadOptions : CommonOptions {
-    @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class, description = "Page datum expires time")
-    var expires: Duration? = null
-    // TODO: change to lazyPersist
-    @Parameter(names = ["-pst", "-persist", "--persist"], arity = 1, description = "Persist page(s) once fetched")
+    @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
+            description = "If a page is expired, it should be fetched from the internet again")
+    var expires: Duration = Duration.ofDays(36500)
+    @Parameter(names = ["-pst", "-persist", "--persist"], arity = 1,
+            description = "Persist fetched pages as soon as possible")
     var persist = true
-    @Parameter(names = ["-shortenKey", "--shorten-key"], description = "Page key is generated from baseUrl with parameters removed")
+    @Parameter(names = ["-shortenKey", "--shorten-key"],
+            description = "Remove the query parameters when generate the page's key (reversed url)")
     var shortenKey = false
 
-    @Parameter(names = ["-retry", "--retry"], description = "Retry fetching the page if it's failed last time")
+    @Parameter(names = ["-retry", "--retry"],
+            description = "Retry fetching the page if it's failed last time")
     var retry = false
-    @Parameter(names = ["-lazyFlush", "--lazy-flush"], description = "Flush db only explicit called")
+    @Parameter(names = ["-lazyFlush", "--lazy-flush"],
+            description = "If false, flush persisted pages into database as soon as possible")
     var lazyFlush = false
-    // TODO: change to disableParallel
-    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1, description = "Parallel fetch urls whenever applicable")
+    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
+            description = "Parallel fetch pages whenever applicable")
     var preferParallel = true
-    @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class, description = "The fetch mode")
+    @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
+            description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
     var fetchMode = FetchMode.SELENIUM
-    @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class, description = "The browser to use")
+    @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class,
+            description = "The browser to use, google chrome is the default")
     var browser = BrowserType.CHROME
-    @Parameter(names = ["-scrollCount"])
+    @Parameter(names = ["-scrollCount"],
+            description = "The count to scroll down after a page is opened by a browser")
     var scrollCount = 5
-    @Parameter(names = ["-scrollWaitTime"], converter = DurationConverter::class)
-    var scrollWaitTime: Duration = Duration.ofMillis(1000)
-    @Parameter(names = ["-pageLoadTimeout"], converter = DurationConverter::class)
+    @Parameter(names = ["-scrollInterval"], converter = DurationConverter::class,
+            description = "The interval to scroll down after a page is opened by a browser")
+    var scrollInterval: Duration = Duration.ofMillis(1000)
+    @Parameter(names = ["-scriptTimeout"], converter = DurationConverter::class,
+            description = "The maximum time to perform javascript injected into selenium")
+    var scriptTimeout: Duration = Duration.ofSeconds(60)
+    @Parameter(names = ["-pageLoadTimeout"], converter = DurationConverter::class,
+            description = "The maximum time to wait for a page to be finished by selenium")
     var pageLoadTimeout: Duration = Duration.ofSeconds(60)
 
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
@@ -50,43 +61,38 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
     @Parameter(names = ["-hardRedirect", "--hard-redirect"],
-            description = "If false, return the temp page with the target's content, " +
-                    "otherwise, return the entire page record when redirects")
+            description = "If false, return the original page record but the redirect target's content, " +
+                    "otherwise, return the page record of the redirected target")
     var hardRedirect = false
-    @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page")
-    var parse = false
-    @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
 
-    var query: String? = null
-    @Parameter(names = ["-m", "-withModel", "--with-model"], description = "Also load page model")
-    var withModel = false
-    @Parameter(names = ["-lk", "-withLinks", "--with-links"], description = "Contains links when loading page model")
-    var withLinks = false
-    @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
-    var withText = false
+    // parse options
+    @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page after fetch")
+    var parse = false
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
     @Parameter(names = ["-noNorm", "--no-link-normalizer"], arity = 1, description = "No normalizer is applied to parse links")
     var noNorm = false
     @Parameter(names = ["-noFilter", "--no-link-filter"], arity = 1, description = "No filter is applied to parse links")
     var noFilter = false
+    @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
+    var query: String? = null
+    @Parameter(names = ["-m", "-withModel", "--with-model"], description = "Also load page model when loading a page")
+    var withModel = false
+    @Parameter(names = ["-lk", "-withLinks", "--with-links"], description = "Contains links when loading page model")
+    var withLinks = false
+    @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
+    var withText = false
 
     // A volatile config is usually session scoped
-    // TODO: easy to cause bugs, a better way to init volatile config is required
     var volatileConfig: VolatileConfig? = null
         set(value) {
-            value?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-            value?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_WAIT, scrollWaitTime)
-            value?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-            // wait page ready using script, so it can not smaller than pageLoadTimeout
-            value?.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, pageLoadTimeout)
+            if (value != null) {
+                value.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+                value.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_WAIT, scrollInterval)
+                value.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+                value.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+            }
             field = value
-        }
-
-    val realExpires: Duration
-        get() {
-            val d = Duration.ofDays(3650)
-            return expires?:(volatileConfig?.getDuration(STORAGE_DATUM_EXPIRES, d)?:d)
         }
 
     val modifiedParams: Params get() {
