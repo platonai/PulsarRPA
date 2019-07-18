@@ -265,8 +265,8 @@ public interface CapabilityTypes {
     String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
+    // TODO: not used, may be caused by a git merge problem
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
-
 
     /**
      * DbUpdater parameters

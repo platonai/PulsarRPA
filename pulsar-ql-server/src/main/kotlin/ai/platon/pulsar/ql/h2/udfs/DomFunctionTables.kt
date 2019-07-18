@@ -35,7 +35,7 @@ object DomFunctionTables {
      */
     @InterfaceStability.Evolving
     @JvmStatic
-    @UDFunction(hasShortcut = true, description = "Load all pages specified by urls")
+    @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
     fun loadAll(@H2Context h2session: Session, configuredUrls: ValueArray): ResultSet {
         val session = H2SessionFactory.getSession(h2session.serialId)
 
@@ -46,7 +46,7 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true, description = "Load a page and select the specified element")
+    @UDFunction(hasShortcut = true, description = "Load a page and select the specified element by cssQuery")
     @JvmStatic
     @JvmOverloads
     fun loadAndSelect(
@@ -58,24 +58,24 @@ object DomFunctionTables {
 
     @InterfaceStability.Stable
     @JvmStatic
-    @UDFunction
+    @UDFunction(description = "Select all elements by cssQuery")
     fun select(dom: ValueDom, cssQuery: String): ResultSet {
         Objects.requireNonNull(dom)
         return select(dom, cssQuery, 0, Integer.MAX_VALUE)
     }
 
     @InterfaceStability.Stable
-    @UDFunction
     @JvmStatic
+    @UDFunction(description = "Select all elements by cssQuery")
     fun select(dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ResultSet {
         val elements = dom.element.select2(cssQuery, offset, limit)
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside the specified element")
     @JvmStatic
     @JvmOverloads
+    @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside all the selected elements")
     fun loadAndGetLinks(
             @H2Context h2session: Session,
             configuredPortal: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
@@ -85,9 +85,9 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction
     @JvmOverloads
     @JvmStatic
+    @UDFunction(description = "Get all links inside the all selected elements")
     fun links(dom: ValueDom, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         return toResultSet("LINK", Queries.getLinks(dom.element, restrictCss, offset, limit))
     }
@@ -103,9 +103,9 @@ object DomFunctionTables {
      * @return The [ResultSet]
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
     @JvmOverloads
     @JvmStatic
+    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
     fun loadOutPages(@H2Context h2session: Session,
                      configuredPortal: Value,
                      restrictCss: String = ":root",
@@ -209,7 +209,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction
+    @UDFunction(description = "Get the features of the given element")
     @JvmOverloads
     @JvmStatic
     fun features(@H2Context h2session: Session,
@@ -240,7 +240,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load and get the elements with most siblings")
     @JvmOverloads
     @JvmStatic
     fun loadAndGetElementsWithMostSibling(
@@ -263,7 +263,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Get the elements with most siblings of the given element")
     @JvmOverloads
     @JvmStatic
     fun getElementsWithMostSibling(

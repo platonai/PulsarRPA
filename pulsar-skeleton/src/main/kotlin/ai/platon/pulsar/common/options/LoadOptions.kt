@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATUM_EXPIRES
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -21,12 +20,12 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires: Duration = Duration.ofDays(36500)
-    @Parameter(names = ["-pst", "-persist", "--persist"], arity = 1,
-            description = "Persist fetched pages as soon as possible")
-    var persist = true
     @Parameter(names = ["-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
     var shortenKey = false
+    @Parameter(names = ["-persist", "--persist"], arity = 1,
+            description = "Persist fetched pages as soon as possible")
+    var persist = true
 
     @Parameter(names = ["-retry", "--retry"],
             description = "Retry fetching the page if it's failed last time")
@@ -43,16 +42,16 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
     var browser = BrowserType.CHROME
-    @Parameter(names = ["-scrollCount"],
+    @Parameter(names = ["-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
     var scrollCount = 5
-    @Parameter(names = ["-scrollInterval"], converter = DurationConverter::class,
+    @Parameter(names = ["-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
     var scrollInterval: Duration = Duration.ofMillis(1000)
-    @Parameter(names = ["-scriptTimeout"], converter = DurationConverter::class,
+    @Parameter(names = ["-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
     var scriptTimeout: Duration = Duration.ofSeconds(60)
-    @Parameter(names = ["-pageLoadTimeout"], converter = DurationConverter::class,
+    @Parameter(names = ["-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to be finished by selenium")
     var pageLoadTimeout: Duration = Duration.ofSeconds(60)
 
@@ -74,6 +73,7 @@ open class LoadOptions : CommonOptions {
     var noNorm = false
     @Parameter(names = ["-noFilter", "--no-link-filter"], arity = 1, description = "No filter is applied to parse links")
     var noFilter = false
+
     @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
     var query: String? = null
     @Parameter(names = ["-m", "-withModel", "--with-model"], description = "Also load page model when loading a page")
@@ -168,6 +168,11 @@ open class LoadOptions : CommonOptions {
         val defaultArgsMap = default.toArgsMap()
         val optionNames: List<String> = default.javaClass.declaredFields
                 .filter { it.annotations.any { it is Parameter } }.map { it.name }
+
+        val helpList: List<List<String>> =
+                LoadOptions::class.java.declaredFields
+                        .mapNotNull { it.annotations.firstOrNull { it is Parameter } as? Parameter }
+                        .map { listOf(it.names.joinToString { it }, it.description) }
 
         @JvmOverloads
         fun create(volatileConfig: VolatileConfig? = null): LoadOptions {

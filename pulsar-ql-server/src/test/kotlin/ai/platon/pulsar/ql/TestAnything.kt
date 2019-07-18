@@ -2,12 +2,22 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
+import com.beust.jcommander.Parameter
+import org.h2.ext.pulsar.annotation.H2Context
 import org.h2.tools.SimpleResultSet
 import org.junit.Assert
 import org.junit.Test
 import java.sql.Types
 import java.util.*
+import kotlin.reflect.KParameter
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.javaType
 
 /**
  * Created by vincent on 17-7-29.
@@ -58,5 +68,16 @@ class TestAnything {
         var url = "http://shop.mogujie.com/detail/1llurfa?acm=3.ms.1_4_1llurfa.15.1331-68998.tPlDtqPaugJED.sd_117_116-swt_15-imt_6-t_tPlDtqPaugJED-lc_3-fcid_10059513-bid_15-dit_17-idx_39-dm1_5002"
         val url2 = session.normalize(url)
         println(url2)
+    }
+
+    @Test
+    fun testFunctionParameters() {
+        CommonFunctions::class.declaredMemberFunctions
+                .filter { it.visibility == KVisibility.PUBLIC }.map { it.parameters }.forEach {
+            it.filter { it.kind == KParameter.Kind.VALUE }.filter { !it.annotations.any { it is H2Context } }.forEach {
+                println("${it.name}: ${it.type.javaType.typeName}")
+            }
+            println()
+        }
     }
 }

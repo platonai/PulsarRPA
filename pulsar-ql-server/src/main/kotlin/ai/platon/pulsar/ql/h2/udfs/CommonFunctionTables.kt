@@ -1,7 +1,9 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.h2.H2SessionFactory
 import com.google.common.reflect.ClassPath
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
@@ -9,34 +11,53 @@ import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
+import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Types
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
+import kotlin.reflect.KParameter
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.jvm.javaType
 
 @UDFGroup
 object CommonFunctionTables {
 
-    @UDFunction(deterministic = true, description = "Show all X-SQL functions")
+    @UDFunction(deterministic = true, hasShortcut = true, description = "Show all load options, " +
+            "almost every user defined functions who have an url parameter " +
+            "can be configured by adding load options to the url parameter")
     @JvmStatic
-    fun xsqlHelp(): ResultSet {
+    fun loadOptions(): ResultSet {
         val rs = SimpleResultSet()
         rs.autoClose = false
-        rs.addColumn("XSQL FUNCTION")
-        rs.addColumn("NATIVE FUNCTION")
+        rs.addColumn("OPTION")
         rs.addColumn("DESCRIPTION")
 
-        ClassPath.from(CommonFunctions.javaClass.classLoader)
-                .getTopLevelClasses(CommonFunctions.javaClass.`package`.name)
-                .map { it.load() }
-                .filter { it.annotations.any { it is UDFGroup } }
-                .flatMap { findUdfs(it.kotlin) }
-                .forEach { rs.addRow(*it) }
+        LoadOptions.helpList.forEach { rs.addRow(*it.toTypedArray()) }
 
         return rs
     }
 
-    @UDFunction
+    @UDFunction(deterministic = true, hasShortcut = true, description = "Show all X-SQL functions")
+    @JvmStatic
+    fun xsqlHelp(@H2Context h2session: Session): ResultSet {
+        val rs = SimpleResultSet()
+        rs.autoClose = false
+
+        rs.addColumn("XSQL FUNCTION")
+        rs.addColumn("NATIVE FUNCTION")
+        rs.addColumn("DESCRIPTION")
+
+        val session = H2SessionFactory.getSession(h2session.serialId)
+        session.registeredUdfClasses.flatMap { findUdfs(it.kotlin) }.forEach { rs.addRow(*it) }
+
+        return rs
+    }
+
+    @UDFunction(deterministic = true,
+            description = "Create a ResultSet from a list of values, the values should have format kvkv ... kv")
     @JvmStatic
     fun map(vararg kvs: Value): ResultSet {
         val rs = SimpleResultSet()
@@ -57,7 +78,7 @@ object CommonFunctionTables {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(deterministic = true, description = "Create an empty ResultSet")
     @JvmStatic
     fun explode(): ResultSet {
         val rs = SimpleResultSet()
@@ -65,7 +86,7 @@ object CommonFunctionTables {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(deterministic = true, description = "Create a ResultSet from an array")
     @JvmStatic
     @JvmOverloads
     fun explode(@H2Context h2session: Session, values: ValueArray, col: String = "COL"): ResultSet {
@@ -89,7 +110,7 @@ object CommonFunctionTables {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(deterministic = true, description = "Create an empty ResultSet")
     @JvmStatic
     fun posexplode(): ResultSet {
         val rs = SimpleResultSet()
@@ -97,7 +118,7 @@ object CommonFunctionTables {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(deterministic = true, description = "Create a ResultSet from an array with the position in the array")
     @JvmStatic
     @JvmOverloads
     fun posexplode(values: ValueArray, col: String = "COL"): ResultSet {
@@ -127,9 +148,14 @@ object CommonFunctionTables {
         val group = udfClass.annotations.first { it is UDFGroup } as UDFGroup
         val namespace = group.namespace
 
-        return udfClass.members
-                .filter { it.annotations.any { it is UDFunction } }
-                .map { arrayOf(getAlias(udfClass, it.name, namespace), className + "." + it.name, getDescription(it)) }
+        return udfClass.members.filter { it.annotations.any { it is UDFunction } }
+                .map {
+                    val parameters = getParameters(it).joinToString { it }
+                    arrayOf(
+                        getAlias(udfClass, it.name, namespace) + "(" + parameters.toUpperCase() + ")",
+                        className + "." + it.name + "(" + parameters + ")",
+                        getDescription(it))
+                }
     }
 
     /**
@@ -141,6 +167,13 @@ object CommonFunctionTables {
         var alias = method.split("(?=\\p{Upper})".toRegex()).joinToString("_") { it }
         alias = if (namespace.isEmpty()) alias else namespace + "_" + alias
         return alias.toUpperCase()
+    }
+
+    private fun getParameters(udf: KCallable<*>): List<String> {
+        return udf.parameters
+                .filter { it.kind == KParameter.Kind.VALUE }
+                .filter { !it.annotations.any { it is H2Context } }
+                .map { "${it.name}: ${it.type.javaType.typeName.substringAfterLast(".")}" }
     }
 
     private fun getDescription(udf: KCallable<*>): String {

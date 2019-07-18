@@ -37,7 +37,7 @@ object CommonFunctions {
     private val proxyPool = PulsarEnv.proxyPool
     private val unmodifiedConfig = sqlContext.unmodifiedConfig
 
-    @UDFunction
+    @UDFunction(description = "Get the proxy pool status")
     @JvmStatic
     fun getProxyPoolStatus(): String {
         return proxyPool.toString()
@@ -68,7 +68,8 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_MODE, mode, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's unmodified config")
     @JvmStatic
     fun unsetFetchMode(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -96,7 +97,8 @@ object CommonFunctions {
         return getAndSetConf(h2session, SELENIUM_BROWSER, browserType.name, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's unmodified config")
     @JvmStatic
     fun unsetBrowser(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -126,7 +128,8 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_EAGER_FETCH_LIMIT, parallel.toString(), ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's unmodified config")
     @JvmStatic
     fun unsetEagerFetchLimit(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -149,7 +152,7 @@ object CommonFunctions {
      * @param ttl The property value time to live in session
      * @return The old page expires in seconds, or null if failed
      */
-    @UDFunction
+    @UDFunction(description = "Set the page expire time with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
     fun setPageExpires(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
@@ -158,7 +161,8 @@ object CommonFunctions {
         return getAndSetConf(h2session, STORAGE_DATUM_EXPIRES, value, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's unmodified config")
     @JvmStatic
     fun unsetPageExpires(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -172,7 +176,7 @@ object CommonFunctions {
      * @param ttl The property value time to live in session
      * @return The old value or null on failure
      */
-    @UDFunction
+    @UDFunction(description = "Set the page load timeout with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
     fun setPageLoadTimeout(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
@@ -181,7 +185,8 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_PAGE_LOAD_TIMEOUT, value, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's unmodified config")
     @JvmStatic
     fun unsetPageLoadTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -195,7 +200,7 @@ object CommonFunctions {
      * @param ttl The property value time to live in session
      * @return The old value or null on failure
      */
-    @UDFunction
+    @UDFunction(description = "Set the script timeout with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
     fun setScriptTimeout(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
@@ -204,7 +209,8 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_SCRIPT_TIMEOUT, value, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's unmodified config")
     @JvmStatic
     fun unsetScriptTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -218,14 +224,15 @@ object CommonFunctions {
      * @param ttl The property value time to live in session
      * @return The old value or null on failure
      */
-    @UDFunction
+    @UDFunction(description = "Set the scroll down count with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
     fun setScrollDownCount(@H2Context h2session: Session, count: Int, ttl: Int = 1): String? {
         return getAndSetConf(h2session, FETCH_SCROLL_DOWN_COUNT, count.toString(), ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's initial config")
     @JvmStatic
     fun unsetScrollDownCount(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -239,15 +246,16 @@ object CommonFunctions {
      * @param ttl The property value time to live in session
      * @return The old value or null on failure
      */
-    @UDFunction
+    @UDFunction(description = "Set the scroll interval with time-to-life of the calling session")
     @JvmStatic
-    fun setScrollDownWait(@H2Context h2session: Session, duration: String, ttl: Int): String? {
+    fun setScrollInterval(@H2Context h2session: Session, duration: String, ttl: Int): String? {
         val d = getDuration(duration)
         val value = d?.toString()
         return getAndSetConf(h2session, FETCH_SCROLL_DOWN_WAIT, value, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's initial config")
     @JvmStatic
     fun unsetScrollDownWait(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
@@ -264,7 +272,7 @@ object CommonFunctions {
      * @param h2session The H2 session, auto injected by h2 runtime
      * @return The old value of the key
      */
-    @UDFunction
+    @UDFunction(description = "Set the config property associated by name with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
     fun setConfig(@H2Context h2session: Session, name: String, value: String, ttl: Int = Integer.MAX_VALUE / 2): String? {
@@ -272,46 +280,48 @@ object CommonFunctions {
         return session.config.getAndSet(name, value, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Set the config property associated by name with time-to-life of the calling session")
     @JvmStatic
     fun setConf(@H2Context h2session: Session, name: String, value: String, ttl: Int): String? {
         return setConfig(h2session, name, value, ttl)
     }
 
-    @UDFunction
+    @UDFunction(description = "Set the config property associated by name of the calling session")
     @JvmStatic
     fun setConf(@H2Context h2session: Session, name: String, value: String): String? {
         return setConfig(h2session, name, value, Integer.MAX_VALUE / 2)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's initial config")
     @JvmStatic
     fun unsetConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
         return session.config.getAndUnset(name)
     }
 
-    @UDFunction
+    @UDFunction(description = "Unset the config property of the calling session, " +
+            "so it fallback to the process's initial config")
     @JvmStatic
     fun unsetConfig(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
         return session.config.getAndUnset(name)
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
     fun getConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
         return session.config.get(name)
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
     fun getConfig(@H2Context h2session: Session, name: String): String? {
         return getConf(h2session, name)
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the initial configuration properties of the process")
     @JvmStatic
     fun config(): SimpleResultSet {
         val rs = SimpleResultSet()
@@ -326,7 +336,7 @@ object CommonFunctions {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the configuration properties of the calling session")
     @JvmStatic
     fun sessionConfig(@H2Context h2session: Session): SimpleResultSet {
         val rs = SimpleResultSet()
@@ -341,7 +351,7 @@ object CommonFunctions {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the system info")
     @JvmStatic
     fun sysInfo(@H2Context h2session: Session): SimpleResultSet {
         val rs = SimpleResultSet()
@@ -375,7 +385,7 @@ object CommonFunctions {
         return rs
     }
 
-    @UDFunction
+    @UDFunction(description = "Add a proxy into the proxy pool")
     @JvmStatic
     fun addProxy(ipPort: String): Boolean {
         val proxyEntry = ProxyEntry.parse(ipPort)
@@ -386,7 +396,7 @@ object CommonFunctions {
         return false
     }
 
-    @UDFunction
+    @UDFunction(description = "Add a proxy into the proxy pool")
     @JvmStatic
     fun addProxy(ip: String, port: Int): Boolean {
         if (testNetwork(ip, port)) {
@@ -396,7 +406,7 @@ object CommonFunctions {
         return false
     }
 
-    @UDFunction
+    @UDFunction(description = "Add a list of proxies into the proxy pool, i.e. call add_proxies(array(ip1, ip2, ip3))")
     @JvmStatic
     fun addProxies(ipPorts: ValueArray): Int {
         var count = 0
@@ -410,7 +420,7 @@ object CommonFunctions {
         return count
     }
 
-    @UDFunction
+    @UDFunction(description = "Add a proxy into the proxy pool without checking it's availability")
     @JvmStatic
     fun addProxiesUnchecked(ipPorts: ValueArray): Int {
         var count = 0
@@ -426,37 +436,37 @@ object CommonFunctions {
         return count
     }
 
-    @UDFunction
+    @UDFunction(description = "Recover proxies in proxy pool")
     @JvmStatic
     fun recoverProxyPool(n: Int): Int {
         return proxyPool.recover(n)
     }
 
-    @UDFunction
+    @UDFunction(description = "Test if the given string is a number")
     @JvmStatic
     fun isNumeric(str: String): Boolean {
         return StringUtils.isNumeric(str)
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the domain of a url")
     @JvmStatic
     fun getDomain(url: String): String {
         return URLUtil.getDomainName(url, "")
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher()")
     @JvmStatic
     fun re1(text: String, regex: String): String {
         return RegexExtractor().re1(text, regex)
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract the nth group of the result of java.util.regex.matcher()")
     @JvmStatic
     fun re1(text: String, regex: String, group: Int): String {
         return RegexExtractor().re1(text, regex, group)
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract two groups of the result of java.util.regex.matcher()")
     @JvmStatic
     fun re2(text: String, regex: String): ValueArray {
         val result = RegexExtractor().re2(text, regex)
@@ -464,7 +474,7 @@ object CommonFunctions {
         return ValueArray.get(array)
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract two groups(key and value) of the result of java.util.regex.matcher()")
     @JvmStatic
     fun re2(text: String, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
         val result = RegexExtractor().re2(text, regex, keyGroup, valueGroup)

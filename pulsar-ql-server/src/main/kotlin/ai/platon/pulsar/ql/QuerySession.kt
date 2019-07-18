@@ -20,6 +20,14 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 
+    val registeredAllUserUdfClasses = mutableListOf<Class<out Any>>()
+    val registeredAdminUdfClasses get() = registeredAllUserUdfClasses.filter {
+        it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
+    }
+    val registeredUdfClasses get() = registeredAllUserUdfClasses.filterNot {
+        it in registeredAdminUdfClasses
+    }
+
     init {
         if (dbSession.implementation is org.h2.engine.Session) {
             registerDefaultUdfs(dbSession.implementation)
@@ -36,11 +44,13 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
      * Register user defined functions into database
      */
     fun registerDefaultUdfs(session: SessionInterface) {
-        ClassPath.from(CommonFunctions.javaClass.classLoader)
+        val udfClasses = ClassPath.from(CommonFunctions.javaClass.classLoader)
                 .getTopLevelClasses(CommonFunctions.javaClass.`package`.name)
                 .map { it.load() }
                 .filter { it.annotations.any { it is UDFGroup } }
-                .forEach { registerUdfs(session, it.kotlin) }
+
+        registeredAllUserUdfClasses.addAll(udfClasses)
+        registeredAllUserUdfClasses.forEach { registerUdfs(session, it.kotlin) }
 
         if (totalUdfs.get() > 0) {
             log.debug("Added total {} new UDFs for session {}", totalUdfs, session)
@@ -48,11 +58,13 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     }
 
     fun registerUdfsInPackage(session: SessionInterface, classLoader: ClassLoader, packageName: String) {
-        ClassPath.from(classLoader)
+        val udfClasses = ClassPath.from(classLoader)
                 .getTopLevelClasses(packageName)
                 .map { it.load() }
                 .filter { it.annotations.any { it is UDFGroup } }
-                .forEach { registerUdfs(session, it.kotlin) }
+
+        registeredAllUserUdfClasses.addAll(udfClasses)
+        registeredAllUserUdfClasses.forEach { registerUdfs(session, it.kotlin) }
     }
 
     /**
@@ -65,7 +77,7 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     /**
      * Register a kotlin UDF class
      * */
-    fun registerUdfs(session: SessionInterface, udfClass: KClass<out Any>) {
+    private fun registerUdfs(session: SessionInterface, udfClass: KClass<out Any>) {
         val group = udfClass.annotations.first { it is UDFGroup } as UDFGroup
         val namespace = group.namespace
 

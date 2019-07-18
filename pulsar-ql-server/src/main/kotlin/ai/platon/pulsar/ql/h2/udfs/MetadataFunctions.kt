@@ -10,7 +10,7 @@ import org.h2.ext.pulsar.annotation.H2Context
 @UDFGroup(namespace = "META")
 object MetadataFunctions {
 
-    @UDFunction
+    @UDFunction(description = "Get a page specified by url from the database, return the formatted page as a string")
     @JvmStatic
     fun get(@H2Context h2session: Session, url: String): String {
         val page = H2SessionFactory.getSession(h2session.serialId).load(url)

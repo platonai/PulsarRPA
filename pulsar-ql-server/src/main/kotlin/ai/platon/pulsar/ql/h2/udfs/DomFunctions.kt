@@ -27,12 +27,8 @@ import java.time.Duration
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
 object DomFunctions {
-    /**
-     * Load the given url from db, if absent, fetch it from the web, and then parse it
-     *
-     * @return The dom
-     */
-    @UDFunction
+    @UDFunction(description = "Load the page specified by url from db, if absent or expired, " +
+            "fetch it from the web, and then parse it into a document")
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
         val session = H2SessionFactory.getSession(h2session.serialId)
@@ -40,12 +36,7 @@ object DomFunctions {
         return session.parseToValue(page)
     }
 
-    /**
-     * Fetch the given url immediately without cache, and then parse it
-     *
-     * @return The dom
-     */
-    @UDFunction
+    @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
         val session = H2SessionFactory.getSession(h2session.serialId)
@@ -56,23 +47,6 @@ object DomFunctions {
 
         val page = session.load(urlAndArgs.first, loadOptions)
         return session.parseToValue(page)
-    }
-
-    /**
-     * Load the given url from db, if absent, fetch it from the web, and then parse it
-     *
-     * @return The dom
-     */
-    @UDFunction
-    @JvmStatic
-    fun parse(@H2Context h2session: Session, url: String): ValueDom {
-        val session = H2SessionFactory.getSession(h2session.serialId)
-        val page = session.load(url)
-        if (!page.isInternal && page.protocolStatus.isSuccess) {
-            return session.parseToValue(page)
-        }
-
-        return ValueDom.NIL
     }
 
     /**
@@ -158,19 +132,6 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    @JvmOverloads
-    fun symbolPath(dom: ValueDom, numParts: Int = Int.MAX_VALUE): String {
-        val path = dom.element.cssSelector()
-
-        if (numParts != Int.MAX_VALUE) {
-            return path.split(">").takeLast(numParts).map { it.trim() }.joinToString(" > ")
-        }
-
-        return path
-    }
-
-    @UDFunction
-    @JvmStatic
     fun siblingSize(dom: ValueDom): Int {
         return dom.element.siblingSize()
     }
@@ -223,13 +184,13 @@ object DomFunctions {
         return dom.element.absUrl("abs:src")
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the element title")
     @JvmStatic
     fun title(dom: ValueDom): String {
         return dom.element.attr("title")
     }
 
-    @UDFunction
+    @UDFunction(description = "Get the document title")
     @JvmStatic
     fun docTitle(dom: ValueDom): String {
         val ele = dom.element
@@ -282,21 +243,21 @@ object DomFunctions {
         return dom.element.ownText().length
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher() over the node text")
     @JvmStatic
     fun re1(dom: ValueDom, regex: String): String {
         val text = text(dom)
-        return ai.platon.pulsar.common.RegexExtractor().re1(text, regex)
+        return RegexExtractor().re1(text, regex)
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract the nth group of the result of java.util.regex.matcher() over the node text")
     @JvmStatic
     fun re1(dom: ValueDom, regex: String, group: Int): String {
         val text = text(dom)
         return ai.platon.pulsar.common.RegexExtractor().re1(text, regex, group)
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract two groups of the result of java.util.regex.matcher() over the node text")
     @JvmStatic
     fun re2(dom: ValueDom, regex: String): ValueArray {
         val text = text(dom)
@@ -305,7 +266,7 @@ object DomFunctions {
         return ValueArray.get(array)
     }
 
-    @UDFunction
+    @UDFunction(description = "Extract two groups(key and value) of the result of java.util.regex.matcher() over the node text")
     @JvmStatic
     fun re2(dom: ValueDom, regex: String, keyGroup: Int, valueGroup: Int): ValueArray {
         val text = text(dom)
@@ -465,19 +426,13 @@ object DomFunctions {
         return getFeature(dom, HEIGHT)
     }
 
-    /**
-     * Get the area of the css box of a DOM, area = width * height
-     */
-    @UDFunction
+    @UDFunction(description = "Get the area of the css box of a DOM, area = width * height")
     @JvmStatic
     fun area(dom: ValueDom): Double {
         return width(dom) * height(dom)
     }
 
-    /**
-     * Get the aspect ratio of the DOM, aspect ratio = width / height
-     */
-    @UDFunction
+    @UDFunction(description = "Get the aspect ratio of the DOM, aspect ratio = width / height")
     @JvmStatic
     fun aspectRatio(dom: ValueDom): Double {
         return width(dom) / height(dom)
