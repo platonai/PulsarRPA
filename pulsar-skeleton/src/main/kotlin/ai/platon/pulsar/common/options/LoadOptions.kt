@@ -169,10 +169,16 @@ open class LoadOptions : CommonOptions {
         val optionNames: List<String> = default.javaClass.declaredFields
                 .filter { it.annotations.any { it is Parameter } }.map { it.name }
 
-        val helpList: List<List<String>> =
+        val helpList: List<List<String>> get() =
                 LoadOptions::class.java.declaredFields
-                        .mapNotNull { it.annotations.firstOrNull { it is Parameter } as? Parameter }
-                        .map { listOf(it.names.joinToString { it }, it.description) }
+                        .mapNotNull { (it.annotations.firstOrNull { it is Parameter } as? Parameter)?.to(it) }
+                        .map {
+                            listOf(it.first.names.joinToString { it },
+                                    it.second.type.typeName.substringAfterLast("."),
+                                    defaultParams[it.second.name].toString(),
+                                    it.first.description
+                            )
+                        }
 
         @JvmOverloads
         fun create(volatileConfig: VolatileConfig? = null): LoadOptions {

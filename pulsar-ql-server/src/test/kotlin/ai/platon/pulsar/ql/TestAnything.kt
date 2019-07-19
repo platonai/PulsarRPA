@@ -71,6 +71,13 @@ class TestAnything {
     }
 
     @Test
+    fun testShowLoadOptions() {
+        LoadOptions.helpList.forEach {
+            println(it)
+        }
+    }
+
+    @Test
     fun testFunctionParameters() {
         CommonFunctions::class.declaredMemberFunctions
                 .filter { it.visibility == KVisibility.PUBLIC }.map { it.parameters }.forEach {
