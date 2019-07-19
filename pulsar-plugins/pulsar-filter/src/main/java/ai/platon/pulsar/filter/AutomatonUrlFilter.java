@@ -56,7 +56,7 @@ public class AutomatonUrlFilter extends RegexUrlFilterBase {
         String stringResource = conf.get(URLFILTER_AUTOMATON_RULES);
         String fileResource = conf.get(URLFILTER_AUTOMATON_FILE, "automaton-urlfilter.txt");
         String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
-        return new ResourceLoader().getMultiSourceReader(stringResource, fileResource, resourcePrefix);
+        return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix);
     }
 
     // Inherited Javadoc

@@ -1,7 +1,10 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -16,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Created by vincent on 19-1-19.
  * Copyright @ 2013-2019 Platon AI. All rights reserved
  */
-class AutoDetectedStorageService(conf: ai.platon.pulsar.common.config.ImmutableConfig): AutoCloseable {
+class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
 
     val storeClassName: String = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> = detectDataStoreClass(conf)
@@ -27,10 +30,10 @@ class AutoDetectedStorageService(conf: ai.platon.pulsar.common.config.ImmutableC
         try {
             pageStore = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java, pageStoreClass)
         } catch (e: ClassNotFoundException) {
-            log.error(ai.platon.pulsar.common.StringUtil.stringifyException(e))
+            log.error(StringUtil.stringifyException(e))
             throw RuntimeException(e.message)
         } catch (e: GoraException) {
-            log.error(ai.platon.pulsar.common.StringUtil.stringifyException(e))
+            log.error(StringUtil.stringifyException(e))
             throw RuntimeException(e.message)
         }
     }
@@ -53,15 +56,15 @@ class AutoDetectedStorageService(conf: ai.platon.pulsar.common.config.ImmutableC
          * @param conf PulsarConstants configuration
          * @return the DataStore persistent class
          */
-        fun detectDataStoreClassName(conf: ai.platon.pulsar.common.config.ImmutableConfig): String {
+        fun detectDataStoreClassName(conf: ImmutableConfig): String {
             return when {
                 conf.isDryRun -> MEM_STORE_CLASS
                 conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                ai.platon.pulsar.common.RuntimeUtils.checkIfProcessRunning(".+HMaster.+") ->
+                RuntimeUtils.checkIfProcessRunning(".+HMaster.+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                ai.platon.pulsar.common.RuntimeUtils.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
+                RuntimeUtils.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
-                ai.platon.pulsar.common.RuntimeUtils.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
+                RuntimeUtils.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
                 else -> MEM_STORE_CLASS
             }
@@ -74,7 +77,7 @@ class AutoDetectedStorageService(conf: ai.platon.pulsar.common.config.ImmutableC
          * @return the DataStore persistent class
          */
         @Throws(ClassNotFoundException::class)
-        fun <K, V : Persistent> detectDataStoreClass(conf: ai.platon.pulsar.common.config.ImmutableConfig): Class<out DataStore<K, V>> {
+        fun <K, V : Persistent> detectDataStoreClass(conf: ImmutableConfig): Class<out DataStore<K, V>> {
             return Class.forName(detectDataStoreClassName(conf)) as Class<out DataStore<K, V>>
         }
 

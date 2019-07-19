@@ -93,7 +93,7 @@ public class TestRSSParser {
             in.close();
 
             WebPage page = WebPage.newWebPage(urlString);
-            page.setBaseUrl(urlString);
+            page.setLocation(urlString);
             page.setContent(bytes);
             String mtype = mimeutil.getMimeType(file);
             page.setContentType(mtype);

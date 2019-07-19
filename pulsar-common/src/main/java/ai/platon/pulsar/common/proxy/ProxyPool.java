@@ -18,6 +18,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -57,12 +58,7 @@ public class ProxyPool extends AbstractQueue<ProxyEntry> implements AutoCloseabl
     }
 
     public static ProxyPool getInstance(ImmutableConfig conf) {
-        ProxyPool proxyPool = ObjectCache.get(conf).getBean(ProxyPool.class);
-        if (proxyPool == null) {
-            proxyPool = new ProxyPool(conf);
-            ObjectCache.get(conf).put(proxyPool);
-        }
-        return proxyPool;
+        return ObjectCache.get(conf).computeIfAbsent(ProxyPool.class, c -> new ProxyPool(conf));
     }
 
     @Override

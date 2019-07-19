@@ -1,17 +1,19 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.ql.QuerySession
-import ai.platon.pulsar.ql.types.ValueDom
 import ai.platon.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL_LENGTH
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
-import ai.platon.pulsar.dom.nodes.node.ext.first
-import ai.platon.pulsar.dom.nodes.node.ext.select2
+import ai.platon.pulsar.dom.nodes.node.ext.name
+import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
 import org.apache.hadoop.classification.InterfaceStability
 import org.h2.api.ErrorCode
@@ -106,18 +108,20 @@ object Queries {
         var links: Collection<String>
 
         if (ignoreQuery) {
-            links = loadAll(session, configuredPortal, restrictCss, offset, limit
-            ) { ele, rc, os, lt -> getLinks(ele, rc, os, lt) }
+            links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
+                ele, rc, os, lt -> getLinks(ele, rc, os, lt)
+            }
         } else {
-            links = loadAll(session, configuredPortal, restrictCss, offset, limit
-            ) { ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt) }
+            links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
+                ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt)
+            }
         }
 
         if (normalize) {
-            links = links.map { session.normalize(it) }.filterNotNull()
+            links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
-        return session.loadAll(links, ai.platon.pulsar.common.options.LoadOptions())
+        return session.loadAll(links, LoadOptions.create())
     }
 
     fun loadAndParse(session: QuerySession, configuredUrl: String): FeaturedDocument {

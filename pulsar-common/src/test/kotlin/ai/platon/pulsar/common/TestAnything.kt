@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.sql.ResultSetFormatter
 import com.google.common.collect.TreeMultimap
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
@@ -8,15 +9,18 @@ import org.apache.commons.math3.util.Precision
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
+import java.awt.SystemColor.text
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import java.sql.Types
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+
 
 class TestAnything {
 
@@ -114,19 +118,96 @@ class TestAnything {
     }
 
     @Test
-    fun testString() {
+    fun testStringPattern() {
         assertEquals(8891, '⊻'.toInt())
         assertEquals("a", "\t a\t\n".trim())
+
+        println(''.toInt())
+
+        println(' '.isWhitespace())
+
+        var text = "¥58.00"
+        assertTrue { StringUtil.isMoneyLike(text) }
+        assertTrue { StringUtil.isNumericLike(text) }
+
+        text = "10+"
+        assertTrue { StringUtil.isNumericLike(text) }
+
+        text = "￥669.00"
 
         // println(String.format("%10s%10s%10s%10s", "a", *arrayOf("b", "c", "d")))
 
         // println(arrayOf("").joinToString(";"))
     }
 
+    @Ignore("Print special chars if required")
+    @Test
+    fun printSpecialChars() {
+        val s = '!'.toInt()
+        val e = '◻'.toInt()
+        for (i in s..e) {
+            print(i.toChar())
+            print('\t')
+            if (i % 100 == 0) {
+                print('\n')
+            }
+        }
+    }
+
+    @Test
+    fun testStripSpecialChars() {
+        val text = " hell\uE60Do\uDF21world "
+
+        // text.forEachIndexed { i, it -> println("$i.\t$it -> ${StringUtil.isActuallyWhitespace(it.toInt())}") }
+
+        assertEquals("helloworld", StringUtil.stripNonCJKChar(text))
+
+        assertEquals("hell\uE60Do\uDF21world", StringUtil.stripNonPrintableChar(text))
+        assertEquals("", StringUtil.stripNonPrintableChar("              "))
+        assertEquals("a b c d e f g", StringUtil.stripNonPrintableChar(" a b c d e f g "))
+
+        val unicodeChars = arrayOf('', 'Ɑ', 'ⰿ', '', '?', 'И', ' ')
+        unicodeChars.forEach {
+            print(StringUtil.stripNonPrintableChar("<$it>"))
+            print('\t')
+            print(StringUtil.stripNonCJKChar("<$it>", StringUtil.DEFAULT_KEEP_CHARS))
+            println()
+        }
+
+        arrayOf("hello world", " hello      world ", " hello world ", "                 hello world").forEach {
+            assertEquals("hello world", StringUtil.stripNonPrintableChar(it))
+        }
+    }
+
     @Test
     fun testUrlDecoder() {
         val s = "%E4%B8%89%E9%87%8C%E7%95%882-03%E5%8F%B7%E5%9C%B0%E6%AE%B5%E8%A7%84%E5%88%92%E5%8F%8A%E7%BC%96%E5%88%B6"
         println(URLDecoder.decode(s, StandardCharsets.UTF_8.toString()))
+    }
+
+    @Test
+    fun testQualifiedClassNames() {
+        val classNames = arrayOf(
+                mutableSetOf(""),
+                mutableSetOf("", "a", "b", "clearfix", "d", "right", "e", "f")
+        ).map { getQualifiedClassNames(it) }.forEach {
+            if (it.isNotEmpty()) {
+                println(it.joinToString(".", ".") { it })
+            }
+        }
+    }
+
+    fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<String> {
+        classNames.remove("")
+        if (classNames.isEmpty()) return classNames
+        arrayOf("clearfix", "left", "right", "l", "r").forEach {
+            classNames.remove(it)
+            if (classNames.isEmpty()) {
+                classNames.add(it)
+                return@forEach
+            }
+        }
+        return classNames
     }
 
     @Test
@@ -155,20 +236,6 @@ class TestAnything {
         for (i in 0..100) {
             for (j in 0..100) {
                 assertEquals(j, (i * 255 + j) % 255)
-            }
-        }
-    }
-
-    @Ignore("Print special chars if required")
-    @Test
-    fun testSpecialChars() {
-        val s = '!'.toInt()
-        val e = '◻'.toInt()
-        for (i in s..e) {
-            print(i.toChar())
-            print('\t')
-            if (i % 100 == 0) {
-                print('\n')
             }
         }
     }

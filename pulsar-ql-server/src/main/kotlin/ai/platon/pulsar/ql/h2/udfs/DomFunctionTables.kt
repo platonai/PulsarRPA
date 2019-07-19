@@ -4,7 +4,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
-import ai.platon.pulsar.dom.nodes.node.ext.select2
+import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
@@ -35,9 +35,9 @@ object DomFunctionTables {
      */
     @InterfaceStability.Evolving
     @JvmStatic
-    @UDFunction(hasShortcut = true, description = "Load all pages specified by urls")
+    @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
     fun loadAll(@H2Context h2session: Session, configuredUrls: ValueArray): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
 
         val pages = Queries.loadAll(session, configuredUrls)
         val doms = pages.map { session.parseToValue(it) }
@@ -46,48 +46,48 @@ object DomFunctionTables {
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true, description = "Load a page and select the specified element")
+    @UDFunction(hasShortcut = true, description = "Load a page and select the specified element by cssQuery")
     @JvmStatic
     @JvmOverloads
     fun loadAndSelect(
             @H2Context h2session: Session, configuredPortal: Value, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val elements = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::select)
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
 
     @InterfaceStability.Stable
     @JvmStatic
-    @UDFunction
+    @UDFunction(description = "Select all elements by cssQuery")
     fun select(dom: ValueDom, cssQuery: String): ResultSet {
         Objects.requireNonNull(dom)
         return select(dom, cssQuery, 0, Integer.MAX_VALUE)
     }
 
     @InterfaceStability.Stable
-    @UDFunction
     @JvmStatic
+    @UDFunction(description = "Select all elements by cssQuery")
     fun select(dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ResultSet {
         val elements = dom.element.select2(cssQuery, offset, limit)
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
 
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside the specified element")
     @JvmStatic
     @JvmOverloads
+    @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside all the selected elements")
     fun loadAndGetLinks(
             @H2Context h2session: Session,
             configuredPortal: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val links = Queries.loadAll(session, configuredPortal, restrictCss, offset, limit, Queries::getLinks)
         return toResultSet("LINK", links)
     }
 
     @InterfaceStability.Stable
-    @UDFunction
     @JvmOverloads
     @JvmStatic
+    @UDFunction(description = "Get all links inside the all selected elements")
     fun links(dom: ValueDom, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         return toResultSet("LINK", Queries.getLinks(dom.element, restrictCss, offset, limit))
     }
@@ -103,9 +103,9 @@ object DomFunctionTables {
      * @return The [ResultSet]
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
     @JvmOverloads
     @JvmStatic
+    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
     fun loadOutPages(@H2Context h2session: Session,
                      configuredPortal: Value,
                      restrictCss: String = ":root",
@@ -164,7 +164,7 @@ object DomFunctionTables {
             targetCss: String = ":root",
             normalize: Boolean = true,
             ignoreQuery: Boolean = false): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
 
         val docs =
                 Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
@@ -195,7 +195,7 @@ object DomFunctionTables {
             cssQuery: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD,H1,H2,H3",
             offset: Int = 1,
             limit: Int = 100): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
         return features(h2session, dom, cssQuery, offset, limit)
@@ -209,7 +209,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction
+    @UDFunction(description = "Get the features of the given element")
     @JvmOverloads
     @JvmStatic
     fun features(@H2Context h2session: Session,
@@ -240,7 +240,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Load and get the elements with most siblings")
     @JvmOverloads
     @JvmStatic
     fun loadAndGetElementsWithMostSibling(
@@ -249,7 +249,7 @@ object DomFunctionTables {
             restrictCss: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.id)
+        val session = H2SessionFactory.getSession(h2session.serialId)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
         return getElementsWithMostSibling(h2session, dom, restrictCss, offset, limit)
@@ -263,7 +263,7 @@ object DomFunctionTables {
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
-    @UDFunction(hasShortcut = true)
+    @UDFunction(hasShortcut = true, description = "Get the elements with most siblings of the given element")
     @JvmOverloads
     @JvmStatic
     fun getElementsWithMostSibling(

@@ -20,7 +20,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.ScoringFilter;
 
 public class LinkAnalysisScoringFilter implements ScoringFilter {

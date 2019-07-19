@@ -1,6 +1,11 @@
 package ai.platon.pulsar.common
 
-class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
+import kotlin.reflect.KProperty
+
+/**
+ * A simple excel like table, every column, every row and every cell can hold metadata and variables
+ * */
+class OpenMapAnyTable(val numColumns: Int) {
     val metadata = Metadata(numColumns)
     val map = mutableMapOf<String, Row>()
 
@@ -34,8 +39,7 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
     }
 
     class Metadata(numColumns: Int) {
-        val columns = IntRange(1, numColumns)
-                .map { Column("C$it") }.toTypedArray()
+        val columns = IntRange(1, numColumns).map { Column("C$it") }.toTypedArray()
         operator fun get(j: Int): Column {
             return columns[j]
         }
@@ -53,7 +57,7 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
             val attributes: MutableMap<String, Any> = mutableMapOf()
     )
 
-    class Cell(val value: Any? = null) {
+    class Cell(var j: Int = 0, var value: Any? = null) {
         val attributes: MutableMap<String, Any> = mutableMapOf()
         override fun toString(): String {
             return value?.toString()?:""
@@ -68,12 +72,65 @@ class OpenMapAnyTable(val numColumns: Int, var score: Double = 0.0) {
         val cells: Array<Cell?> = arrayOfNulls(numColumns)
         val attributes: MutableMap<String, Any> = mutableMapOf()
         val values get() = cells.map { it?.value }
-        operator fun get(j: Int): Any? {
+        operator fun get(j: Int): Cell? {
+            return cells[j]
+        }
+        operator fun set(j: Int, cell: Cell) {
+            require(j < cells.size)
+            require(j == cell.j)
+            cells[j] = cell
+        }
+
+        fun getValue(j: Int): Any? {
             return cells[j]?.value
         }
-        operator fun set(j: Int, value: Any?) {
+        fun setValue(j: Int, value: Any?) {
             require(j < cells.size)
-            cells[j] = Cell(value)
+            cells[j] = Cell(j, value)
         }
+    }
+
+    companion object {
+        val empty = OpenMapAnyTable(0)
+    }
+}
+
+class TableAttribute<T: Any>(val initializer: (OpenMapAnyTable) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
+    }
+}
+
+class ColumnAttribute<T: Any>(val initializer: (OpenMapAnyTable.Column) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable.Column, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable.Column, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
+    }
+}
+
+class RowAttribute<T: Any>(val initializer: (OpenMapAnyTable.Row) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
+    }
+}
+
+class CellAttribute<T: Any>(val initializer: (OpenMapAnyTable.Cell) -> T) {
+    operator fun getValue(thisRef: OpenMapAnyTable.Cell, property: KProperty<*>): T =
+            thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: OpenMapAnyTable.Cell, property: KProperty<*>, value: T): T {
+        thisRef.attributes[property.name] = value
+        return value
     }
 }

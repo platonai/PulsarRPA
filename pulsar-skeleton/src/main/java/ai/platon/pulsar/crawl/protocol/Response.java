@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * A response interface. Makes all protocols model HTTP.
@@ -29,6 +31,9 @@ public interface Response {
     Logger LOG = LoggerFactory.getLogger(Response.class);
 
     String getUrl();
+
+    /** The protocol's response code, without transform. */
+    int getStatus();
 
     /** The protocol's response code, without transform. */
     int getCode();
@@ -42,4 +47,9 @@ public interface Response {
     /** Returns the full content of the response. */
     @Nullable
     byte[] getContent();
+
+    default int size() {
+        byte[] c = getContent();
+        return c == null ? 0 : c.length;
+    }
 }

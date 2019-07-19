@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 
 class SessionConfig(private val dbSession: DbSession, fallbackConfig: ImmutableConfig): VolatileConfig(fallbackConfig) {

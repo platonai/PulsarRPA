@@ -14,32 +14,24 @@ import java.time.Duration
 @UDFGroup(namespace = "META")
 object MetadataFunctionTables {
 
-    @UDFunction
+    @UDFunction(description = "Load a page specified by url from the database, " +
+            "return the fields of the page as key-value pairs")
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ResultSet {
-        val page = H2SessionFactory.getSession(h2session.id).load(configuredUrl)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(configuredUrl)
         return Queries.toResultSet(page)
     }
 
-    @UDFunction
+    @UDFunction(description = "Load a page specified by url from the database, " +
+            "fetch it from the internet if absent or expired" +
+            "return the fields of the page as key-value pairs")
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ResultSet {
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
         val loadOptions = LoadOptions.parse(urlAndArgs.second)
         loadOptions.expires = Duration.ZERO
 
-        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
-        return Queries.toResultSet(page)
-    }
-
-    @UDFunction
-    @JvmStatic
-    fun parse(@H2Context h2session: Session, configuredUrl: String): ResultSet {
-        val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.second)
-        loadOptions.isParse = true
-
-        val page = H2SessionFactory.getSession(h2session.id).load(urlAndArgs.first, loadOptions)
+        val page = H2SessionFactory.getSession(h2session.serialId).load(urlAndArgs.first, loadOptions)
         return Queries.toResultSet(page)
     }
 }

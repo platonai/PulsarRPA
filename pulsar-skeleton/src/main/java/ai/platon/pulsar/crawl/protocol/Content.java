@@ -63,7 +63,7 @@ public final class Content {
         this.contentType = getContentType(contentType, url, content);
     }
 
-
+    // The baseUrl where the HTML was retrieved from, to resolve relative links against.
     public Content(String url, String baseUrl, @Nullable byte[] content, String contentType, MultiMetadata metadata, MimeUtil mimeTypes) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(baseUrl);

@@ -16,9 +16,11 @@
  */
 package ai.platon.pulsar.crawl.protocol;
 
+import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -28,37 +30,28 @@ public class ForwardingResponse implements Response {
 
     private String url;
     private byte[] content;
-    private int code;
+    private ProtocolStatus status;
     private MultiMetadata headers;
 
-    public ForwardingResponse(String url, int code, MultiMetadata headers) {
-        Objects.requireNonNull(url);
-        Objects.requireNonNull(headers);
-
-        this.url = url;
-        this.code = code;
-        this.headers = headers;
-    }
-
-    public ForwardingResponse(String url, String content, int code, MultiMetadata headers) {
+    public ForwardingResponse(String url, String content, ProtocolStatus status, MultiMetadata headers) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(content);
         Objects.requireNonNull(headers);
 
         this.url = url;
         this.content = content.getBytes();
-        this.code = code;
+        this.status = status;
         this.headers = headers;
     }
 
-    public ForwardingResponse(String url, byte[] content, int code, MultiMetadata headers) {
+    public ForwardingResponse(String url, byte[] content, ProtocolStatus status, MultiMetadata headers) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(content);
         Objects.requireNonNull(headers);
 
         this.url = url;
         this.content = content;
-        this.code = code;
+        this.status = status;
         this.headers = headers;
     }
 
@@ -68,8 +61,13 @@ public class ForwardingResponse implements Response {
     }
 
     @Override
+    public int getStatus() {
+        return status.getMajorCode();
+    }
+
+    @Override
     public int getCode() {
-        return code;
+        return status.getMinorCode();
     }
 
     @Override

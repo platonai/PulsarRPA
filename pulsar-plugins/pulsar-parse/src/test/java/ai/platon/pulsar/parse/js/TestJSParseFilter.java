@@ -83,7 +83,7 @@ public class TestJSParseFilter {
         dip.close();
 
         WebPage page = WebPage.newWebPage(urlString);
-        page.setBaseUrl(urlString);
+        page.setLocation(urlString);
         page.setContent(bytes);
         MimeUtil mutil = new MimeUtil(conf);
         String mime = mutil.getMimeType(file);

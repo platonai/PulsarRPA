@@ -39,7 +39,7 @@ public class TikaTestBase {
         byte[] bytes = Files.readAllBytes(path);
 
         WebPage page = WebPage.newWebPage(baseUrl);
-        page.setBaseUrl(baseUrl);
+        page.setLocation(baseUrl);
         page.setContent(bytes);
         String mtype = mimeutil.getMimeType(baseUrl);
         page.setContentType(mtype);

@@ -29,8 +29,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestAnything {
 
-    private ImmutableConfig conf = new ImmutableConfig();
-
     @Test
     @Ignore
     public void generateRegexUrlFilter() throws IOException {
@@ -122,8 +120,6 @@ public class TestAnything {
         String s = "";
         Utf8 u = new Utf8(s);
         assertEquals(0, u.length());
-//    System.out.println(u.length());
-//    System.out.println(u.toString());
     }
 
     @Test
@@ -168,7 +164,7 @@ public class TestAnything {
         kotlin.Pair<String, String> pair = Urls.splitUrlArgs(configuredUrl);
         System.out.println(pair);
 
-        LoadOptions options = LoadOptions.parse(pair.getSecond());
+        LoadOptions options = LoadOptions.Companion.parse(pair.getSecond());
         System.out.println(options);
     }
 }

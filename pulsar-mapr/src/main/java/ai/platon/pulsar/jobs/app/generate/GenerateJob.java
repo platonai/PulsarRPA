@@ -150,7 +150,7 @@ public final class GenerateJob extends AppContextAwareJob {
         getInactiveFilter(), false);
     initReducer(currentJob, GenerateReducer.class);
 
-//    LOG.debug("Loaded Fields : " + StringUtils.join(fields, ", "));
+//    log.debug("Loaded Fields : " + StringUtils.join(fields, ", "));
   }
 
   @Override

@@ -52,7 +52,7 @@ public class TestDateUrlFilter extends UrlFilterTestBase {
     @Test
     public void testNotSupportedDateFormat() {
         String dataFile = Paths.get(TEST_DIR, "datedata", "urls_with_not_supported_old_date.txt").toString();
-        List<String> urls = new ResourceLoader().readAllLines(null, dataFile);
+        List<String> urls = ResourceLoader.readAllLines(null, dataFile);
 
         for (String url : urls) {
             assertNotNull(url, dateUrlFilter.filter(url));
@@ -62,7 +62,7 @@ public class TestDateUrlFilter extends UrlFilterTestBase {
     @Test
     public void testDateTimeDetector() {
         String dataFile = Paths.get(TEST_DIR, "datedata", "urls_with_old_date.txt").toString();
-        List<String> urls = new ResourceLoader().readAllLines(null, dataFile);
+        List<String> urls = ResourceLoader.readAllLines(null, dataFile);
 
         for (String url : urls) {
             assertNull(url, dateUrlFilter.filter(url));

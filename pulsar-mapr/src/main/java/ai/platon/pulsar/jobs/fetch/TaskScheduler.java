@@ -352,7 +352,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
     /**
      * Multiple threaded
      */
-    public FetchJobForwardingResponse pollFetchResut() {
+    public FetchJobForwardingResponse pollFetchResult() {
         return fetchResultQueue.remove();
     }
 

@@ -31,11 +31,11 @@ public class EntityOptions extends PulsarOptions {
 
     private CollectionOptions collectionOptions = new CollectionOptions();
 
-    public EntityOptions() {
+    protected EntityOptions() {
         this.addObjects(this, collectionOptions);
     }
 
-    public EntityOptions(String args) {
+    protected EntityOptions(String args) {
         super(args);
         this.addObjects(this, collectionOptions);
     }

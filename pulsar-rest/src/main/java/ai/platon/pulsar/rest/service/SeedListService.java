@@ -19,7 +19,7 @@ package ai.platon.pulsar.rest.service;
 import com.j256.ormlite.dao.Dao;
 import ai.platon.pulsar.persist.rdb.model.SeedList;
 import ai.platon.pulsar.persist.rdb.model.SeedUrl;
-import ai.platon.pulsar.persist.rdb.model.dao.OrmliteDaoFactory;
+import ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory;
 
 import javax.annotation.Resource;
 import java.sql.SQLException;

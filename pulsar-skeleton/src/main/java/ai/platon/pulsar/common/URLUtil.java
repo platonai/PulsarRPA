@@ -26,7 +26,10 @@ import javax.annotation.Nonnull;
 import java.net.*;
 import java.util.regex.Pattern;
 
-/** Utility class for URL analysis */
+/**
+ * Utility class for URL analysis
+ * TODO: merge with ai.platon.pulsar.common.Urls
+ * */
 public class URLUtil {
 
     public static final Logger LOG = LoggerFactory.getLogger(URLUtil.class);
@@ -35,6 +38,11 @@ public class URLUtil {
     @Nonnull
     public static String getHost(CharSequence url, GroupMode groupMode) {
         return getHost(Urls.getURLOrNull(url.toString()), groupMode);
+    }
+
+    @Nonnull
+    public static String getHost(String url) {
+        return getHost(Urls.getURLOrNull(url), GroupMode.BY_HOST);
     }
 
     @Nonnull

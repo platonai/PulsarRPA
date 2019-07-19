@@ -1,26 +1,22 @@
 package ai.platon.pulsar.crawl.component;
 
-import ai.platon.pulsar.common.GlobalExecutor;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
+import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
+import ai.platon.pulsar.crawl.protocol.Protocol;
+import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
+import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
-import ai.platon.pulsar.crawl.protocol.Protocol;
-import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
-import ai.platon.pulsar.crawl.protocol.Response;
 import org.apache.commons.collections4.CollectionUtils;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT;
@@ -32,14 +28,12 @@ public class BatchFetchComponent extends FetchComponent {
      */
     private WebDb webDb;
     private ProtocolFactory protocolFactory;
-    private GlobalExecutor executorService;
 
     public BatchFetchComponent(
             WebDb webDb, TaskStatusTracker statusTracker, ProtocolFactory protocolFactory, ImmutableConfig immutableConfig) {
         super(protocolFactory, statusTracker, immutableConfig);
         this.protocolFactory = protocolFactory;
         this.webDb = webDb;
-        this.executorService = GlobalExecutor.getInstance(immutableConfig);
     }
 
     /**
@@ -119,7 +113,7 @@ public class BatchFetchComponent extends FetchComponent {
     private Collection<WebPage> fetchAllInternal(Iterable<String> urls, LoadOptions options) {
         Objects.requireNonNull(options);
 
-        if (options.isPreferParallel()) {
+        if (options.getPreferParallel()) {
             return parallelFetchAll(urls, options);
         } else {
             return optimizeBatchSize(urls, options).stream()
@@ -144,11 +138,10 @@ public class BatchFetchComponent extends FetchComponent {
     }
 
     private Collection<WebPage> protocolParallelFetchAll(Iterable<String> urls, Protocol protocol, LoadOptions options) {
-        MutableConfig mutableConfig = options.getMutableConfig();
-
+        VolatileConfig volatileConfig = options.getVolatileConfig();
         // TODO: avoid searching a page from the map, carry it inside response
         Map<String, WebPage> pages = Maps.toMap(urls, url -> createFetchEntry(url, options));
-        return protocol.getResponses(pages.values(), mutableConfig).stream()
+        return protocol.getResponses(pages.values(), volatileConfig).stream()
                 .map(response -> forwardResponse(protocol, response, pages.get(response.getUrl())))
                 .collect(Collectors.toList());
     }
@@ -158,8 +151,8 @@ public class BatchFetchComponent extends FetchComponent {
             LOG.debug("Manual parallel fetch urls");
         }
 
-        Collection<Future<WebPage>> futures = CollectionUtils.collect(urls,
-                url -> executorService.getExecutor().submit(() -> fetch(url, options)));
+        ExecutorService executor = Executors.newWorkStealingPool(5);
+        Collection<Future<WebPage>> futures = CollectionUtils.collect(urls, url -> executor.submit(() -> fetch(url, options)));
 
         return CollectionUtils.collect(futures, this::getResponse);
     }
@@ -194,8 +187,11 @@ public class BatchFetchComponent extends FetchComponent {
             return urls;
         }
 
-        ImmutableConfig mutableConfig = options.getMutableConfig();
-        final int eagerFetchLimit = mutableConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20);
+        ImmutableConfig config = options.getVolatileConfig();
+        if (config == null) {
+            config = this.getImmutableConfig();
+        }
+        final int eagerFetchLimit = config.getUint(FETCH_EAGER_FETCH_LIMIT, 20);
         if (urls.size() <= eagerFetchLimit) {
             return urls;
         }

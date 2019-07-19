@@ -59,7 +59,7 @@ public class TestEncodingDetector {
 
         String url = "http://www.example.com/";
         WebPage page = WebPage.newWebPage(url);
-        page.setBaseUrl(url);
+        page.setLocation(url);
         page.setContentType("text/plain");
         page.setContent(contentInOctets);
 
@@ -70,7 +70,7 @@ public class TestEncodingDetector {
         assertEquals("utf-8", encoding.toLowerCase());
 
         page = WebPage.newWebPage(url);
-        page.setBaseUrl(url);
+        page.setLocation(url);
         page.setContentType("text/plain");
         page.setContent(contentInOctets);
         page.getHeaders().put(HttpHeaders.CONTENT_TYPE, "text/plain; charset=UTF-16");
@@ -81,7 +81,7 @@ public class TestEncodingDetector {
         assertEquals("utf-16", encoding.toLowerCase());
 
         page = WebPage.newWebPage(url);
-        page.setBaseUrl(url);
+        page.setLocation(url);
         page.setContentType("text/plain");
         page.setContent(contentInOctets);
 
@@ -94,7 +94,7 @@ public class TestEncodingDetector {
         // enable autodetection
         conf.setInt(EncodingDetector.MIN_CONFIDENCE_KEY, 50);
         page = WebPage.newWebPage(url);
-        page.setBaseUrl(url);
+        page.setLocation(url);
         page.setContentType("text/plain");
         page.setContent(contentInOctets);
         page.unbox().getMetadata().put(new Utf8(HttpHeaders.CONTENT_TYPE),

@@ -165,7 +165,7 @@ public class FetchThread extends Thread implements Comparable<FetchThread> {
     FetchTask fetchTask = null;
 
     if (fetchMode.equals(FetchMode.CROWDSOURCING)) {
-      fetchResult = taskScheduler.pollFetchResut();
+      fetchResult = taskScheduler.pollFetchResult();
 
       if (fetchResult != null) {
         URL url = Urls.getURLOrNull(fetchResult.getQueueId());

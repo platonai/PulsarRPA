@@ -25,7 +25,7 @@ import ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector
-import ai.platon.pulsar.crawl.scoring.ScoreVector
+import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge

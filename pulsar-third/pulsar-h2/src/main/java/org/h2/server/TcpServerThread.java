@@ -138,6 +138,9 @@ public class TcpServerThread implements Runnable {
                     }
                 }
                 // session = Engine.getInstance().createSession(ci);
+                /**
+                 * Support external session, e.g. PulsarSession
+                 * */
                 session = (Session) SessionRemote.createSession(ci);
                 transfer.setSession(session);
                 server.addConnection(threadId, originalURL, ci.getUserName());
@@ -178,6 +181,9 @@ public class TcpServerThread implements Runnable {
                 server.traceError(e);
             }
             try {
+                /**
+                 * Support external session, e.g. PulsarSession
+                 * */
                 SessionRemote.closeSession(session);
                 session.close();
                 server.removeConnection(threadId);

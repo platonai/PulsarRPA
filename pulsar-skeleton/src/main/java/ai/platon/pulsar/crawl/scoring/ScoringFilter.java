@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.crawl.scoring;
 
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.graph.WebEdge;

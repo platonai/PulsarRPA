@@ -1,12 +1,12 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.ql.h2.H2Db
-import ai.platon.pulsar.ql.utils.ResultSetFormatter
-import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_DATA_DIR
 import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR
+import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.ql.h2.H2Db
 import org.h2.engine.SysProperties
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
@@ -104,8 +104,8 @@ abstract class TestBase {
         )
     }
 
-    val db = ai.platon.pulsar.ql.h2.H2Db()
-    val baseDir = db.baseTestDir
+    val db = H2Db()
+    val baseDir = db.baseDir
     var name: String = db.generateTempDbName()
     lateinit var conn: Connection
     lateinit var stat: Statement
@@ -114,6 +114,8 @@ abstract class TestBase {
     @Before
     open fun setup() {
         try {
+            // Runtime.getRuntime().addShutdownHook(Thread(this::teardown))
+
             initializeDatabase()
 
             val numTests = this::class.members.count {
@@ -134,6 +136,7 @@ abstract class TestBase {
     open fun teardown() {
         try {
             destroyDatabase()
+            PulsarEnv.applicationContext.close()
         } catch (e: Throwable) {
             println(ai.platon.pulsar.common.StringUtil.stringifyException(e))
         }

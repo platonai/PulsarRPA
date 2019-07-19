@@ -34,6 +34,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -70,17 +71,36 @@ public class ServiceResource {
   }
 
   /**
+   * For test
+   * Register pulsar relative server
+   * */
+  @POST
+  @Path("/echo")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public ServerInstance echo(ServerInstance serverInstance) {
+    return serverInstance;
+  }
+
+  /**
+   * For test
+   * Return a list of integer
+   * NOTE: return of a list of integers is not supported by jersey-2.26-b03, use string instead
+   * */
+  @GET
+  @Path("/listOfInteger")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<Integer> getListOfInteger() {
+    return IntStream.range(0, 10).boxed().collect(Collectors.toList());
+  }
+
+  /**
    * List all servers instances
    * */
   @GET
+  @Produces(MediaType.APPLICATION_JSON)
   public List<ServerInstance> list() {
     return serverInstanceService.list();
-  }
-
-  @GET
-  @Path("/listOfInteger")
-  public List<Integer> getListOfInteger() {
-    return IntStream.range(0, 10).boxed().collect(Collectors.toList());
   }
 
   /**
@@ -139,18 +159,8 @@ public class ServiceResource {
       serverInstance.setIp(request.getRemoteAddr());
       LOG.debug(request.getRemoteAddr());
     }
-    return serverInstanceService.register(serverInstance);
-  }
 
-  /**
-   * Register pulsar relative server
-   * */
-  @POST
-  @Path("/echo")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public ServerInstance echo(ServerInstance serverInstance) {
-    return serverInstance;
+    return serverInstanceService.register(serverInstance);
   }
 
   /**

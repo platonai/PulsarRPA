@@ -22,7 +22,7 @@ import ai.platon.pulsar.crawl.component.FetchComponent;
 import ai.platon.pulsar.crawl.protocol.Content;
 import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule;
 import ai.platon.pulsar.crawl.schedule.FetchSchedule;
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.graph.WebEdge;
 import ai.platon.pulsar.persist.graph.WebGraph;

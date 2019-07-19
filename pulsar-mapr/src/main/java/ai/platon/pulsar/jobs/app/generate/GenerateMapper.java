@@ -20,7 +20,7 @@ import ai.platon.pulsar.common.CounterUtils;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.component.GenerateComponent;
 import ai.platon.pulsar.crawl.filter.CrawlFilter;
-import ai.platon.pulsar.crawl.scoring.ScoreVector;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
 import ai.platon.pulsar.jobs.common.SelectorEntry;
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper;
@@ -35,7 +35,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static ai.platon.pulsar.common.CommonCounter.*;
-import static ai.platon.pulsar.common.PulsarParams.*;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 
 public class GenerateMapper extends AppContextAwareGoraMapper<String, GWebPage, SelectorEntry, GWebPage> {

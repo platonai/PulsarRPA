@@ -25,6 +25,7 @@ import ai.platon.pulsar.crawl.filter.UrlFilter;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
 import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
@@ -41,6 +42,9 @@ public class BannedUrlFilter implements UrlFilter {
     private final Set<String> unreachableHosts = new HashSet<>();
     private ImmutableConfig conf;
 
+    /**
+     * TODO: conf is not initialized
+     * */
     public BannedUrlFilter() {
         bannedUrls.addAll(FSUtils.readAllLinesSilent(PATH_BANNED_URLS, conf));
         unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS));

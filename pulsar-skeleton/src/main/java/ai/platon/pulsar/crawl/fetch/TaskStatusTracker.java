@@ -18,10 +18,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH;
 import static ai.platon.pulsar.common.config.PulsarConstants.SEED_HOME_URL;
 import static ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL;
-import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 import static java.util.stream.Collectors.joining;
 
 public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable {
@@ -148,6 +148,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
         Instant now = Instant.now();
         return seedIndexer.getAll(pageNo).stream()
                 .map(url -> webDb.get(url.toString()))
+                .filter(Objects::nonNull)
                 .filter(page -> page.getFetchMode() == mode)
                 .filter(page -> page.getFetchTime().isBefore(now))
                 .limit(limit)
@@ -303,13 +304,9 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
         hostStatistics.put(host, fetchStatus);
 
         // The host is reachable
-        if (unreachableHosts.contains(host)) {
-            unreachableHosts.remove(host);
-        }
+        unreachableHosts.remove(host);
 
-        if (failureHostsTracker.contains(host)) {
-            failureHostsTracker.remove(host);
-        }
+        failureHostsTracker.remove(host);
     }
 
     @Override

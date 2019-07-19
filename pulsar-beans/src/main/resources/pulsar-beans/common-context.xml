@@ -7,20 +7,50 @@
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
+    <!--RDMS -->
+    <bean id="h2DatabaseType" class="com.j256.ormlite.db.H2DatabaseType" />
+
+    <bean id="connectionSource" class="com.j256.ormlite.jdbc.JdbcConnectionSource">
+        <constructor-arg value="jdbc:h2:~/.pulsar/pulsar" />
+        <constructor-arg ref="h2DatabaseType" />
+    </bean>
+
+    <bean id="ormliteDaoFactory" class="ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory">
+        <constructor-arg ref="connectionSource"/>
+    </bean>
+
+    <bean id="ormliteTableCreator" class="ai.platon.pulsar.persist.rdb.dao.OrmliteTableCreator">
+        <constructor-arg ref="connectionSource"/>
+        <constructor-arg ref="ormliteDaoFactory"/>
+    </bean>
+
+    <!--Big Data Storage -->
     <bean id="storageService" class="ai.platon.pulsar.persist.AutoDetectedStorageService" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
+    <!--Web Page Database -->
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
         <constructor-arg ref="storageService" />
     </bean>
 
+    <!--System counters -->
     <bean id="pulsarCounters" class="ai.platon.pulsar.common.MetricsCounters"/>
 
+    <!--System metrics -->
     <bean id="pulsarMetrics" class="ai.platon.pulsar.common.MetricsSystem" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.ProxyPool" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="proxyUpdateThread" class="ai.platon.pulsar.common.proxy.ProxyUpdateThread">
+        <constructor-arg ref="conf"/>
+        <constructor-arg ref="proxyPool"/>
     </bean>
 
     <bean id="fetchStatusTracker" class="ai.platon.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
@@ -29,4 +59,27 @@
         <constructor-arg ref="conf"/>
     </bean>
 
+    <bean id="globalExecutor" class="ai.platon.pulsar.common.GlobalExecutor" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserControl" class="ai.platon.pulsar.common.BrowserControl">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="webDriverQueues" class="ai.platon.pulsar.net.browser.WebDriverQueues" destroy-method="close">
+        <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="seleniumEngine" class="ai.platon.pulsar.net.browser.SeleniumEngine" destroy-method="close">
+        <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="globalExecutor"/>
+        <constructor-arg ref="webDriverQueues"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="pulsarContext" class="ai.platon.pulsar.PulsarContext" scope="prototype" destroy-method="close"/>
+
+    <!--<bean id="h2Console" class="org.h2.tools.Console" destroy-method="shutdown"/>-->
 </beans>

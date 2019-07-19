@@ -203,7 +203,6 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   }
 
   public void setFeederCompleted() { feederCompleted.set(true); }
-
   /**
    * @see FetchMonitor#isFeederAlive
    * @return Return true if the feeder is completed

@@ -63,7 +63,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
                 System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, APP_CONTEXT_CONFIG_LOCATION));
 
         MutableConfig conf = context.getBean(MutableConfig.class);
-        conf.setIfNotEmpty(STORAGE_CRAWL_ID, opts.crawlId);
+        conf.setIfNotEmpty(STORAGE_CRAWL_ID, opts.getCrawlId());
 
         String seeds = opts.seeds.get(0);
         if (seeds.startsWith("@")) {
@@ -257,7 +257,7 @@ public class InjectComponent implements ReloadableParameterized, AutoCloseable {
         @Override
         public Params getParams() {
             return Params.of(
-                    ARG_CRAWL_ID, crawlId,
+                    ARG_CRAWL_ID, getCrawlId(),
                     ARG_SEEDS, seeds.get(0)
             );
         }

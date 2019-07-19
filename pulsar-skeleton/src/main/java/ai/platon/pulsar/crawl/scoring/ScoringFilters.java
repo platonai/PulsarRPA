@@ -17,6 +17,7 @@
 
 package ai.platon.pulsar.crawl.scoring;
 
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.persist.WebPage;

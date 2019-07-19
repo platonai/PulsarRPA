@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarEnv.applicationContext
-import ai.platon.pulsar.common.PulsarSession
+import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -12,11 +12,21 @@ import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
 import org.h2.engine.SessionInterface
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-open class QuerySession(val dbSession: DbSession, config: SessionConfig)
-    : PulsarSession(applicationContext, config, dbSession.id) {
-    private var totalUdfs: Int = 0
+open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSession, config: SessionConfig)
+    : PulsarSession(pulsarContext, config, dbSession.id) {
+    private var totalUdfs = AtomicInteger()
+    private var totalUdas = AtomicInteger()
+
+    val registeredAllUserUdfClasses = mutableListOf<Class<out Any>>()
+    val registeredAdminUdfClasses get() = registeredAllUserUdfClasses.filter {
+        it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
+    }
+    val registeredUdfClasses get() = registeredAllUserUdfClasses.filterNot {
+        it in registeredAdminUdfClasses
+    }
 
     init {
         if (dbSession.implementation is org.h2.engine.Session) {
@@ -32,26 +42,29 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
 
     /**
      * Register user defined functions into database
-     * TODO: Hot register UDFs
      */
     fun registerDefaultUdfs(session: SessionInterface) {
-        ClassPath.from(CommonFunctions.javaClass.classLoader)
+        val udfClasses = ClassPath.from(CommonFunctions.javaClass.classLoader)
                 .getTopLevelClasses(CommonFunctions.javaClass.`package`.name)
                 .map { it.load() }
                 .filter { it.annotations.any { it is UDFGroup } }
-                .forEach { registerUdfs(session, it.kotlin) }
 
-        if (totalUdfs > 0) {
-            log.info("Added total {} new UDFs", totalUdfs)
+        registeredAllUserUdfClasses.addAll(udfClasses)
+        registeredAllUserUdfClasses.forEach { registerUdfs(session, it.kotlin) }
+
+        if (totalUdfs.get() > 0) {
+            log.debug("Added total {} new UDFs for session {}", totalUdfs, session)
         }
     }
 
     fun registerUdfsInPackage(session: SessionInterface, classLoader: ClassLoader, packageName: String) {
-        ClassPath.from(classLoader)
+        val udfClasses = ClassPath.from(classLoader)
                 .getTopLevelClasses(packageName)
                 .map { it.load() }
                 .filter { it.annotations.any { it is UDFGroup } }
-                .forEach { registerUdfs(session, it.kotlin) }
+
+        registeredAllUserUdfClasses.addAll(udfClasses)
+        registeredAllUserUdfClasses.forEach { registerUdfs(session, it.kotlin) }
     }
 
     /**
@@ -64,7 +77,7 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
     /**
      * Register a kotlin UDF class
      * */
-    fun registerUdfs(session: SessionInterface, udfClass: KClass<out Any>) {
+    private fun registerUdfs(session: SessionInterface, udfClass: KClass<out Any>) {
         val group = udfClass.annotations.first { it is UDFGroup } as UDFGroup
         val namespace = group.namespace
 
@@ -102,6 +115,8 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
         command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate()
 
+        totalUdas.incrementAndGet()
+
         if (log.isTraceEnabled) {
             log.trace(sql)
         }
@@ -127,6 +142,8 @@ open class QuerySession(val dbSession: DbSession, config: SessionConfig)
         sql = "CREATE ALIAS IF NOT EXISTS $alias FOR \"${udfClass.qualifiedName}.$method\""
         command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate()
+
+        totalUdfs.incrementAndGet()
 
         if (log.isTraceEnabled) {
             log.trace(sql)

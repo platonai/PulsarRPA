@@ -366,14 +366,13 @@ public abstract class PulsarJob implements PulsarJobBase {
         }
     }
 
-    public void updateResults() throws IOException, InterruptedException {
+    public void updateResults() {
         String finishTime = DateTimeUtil.format(System.currentTimeMillis());
-        String timeElapsed = DateTimeUtil.elapsedTime(startTime);
 
         results.putAll(Params.toArgMap(
                 "startTime", DateTimeUtil.format(startTime),
                 "finishTime", finishTime,
-                "timeElapsed", timeElapsed
+                "timeElapsed", DateTimeUtil.elapsedTime(startTime)
         ));
     }
 

@@ -94,7 +94,7 @@ public class TaskSchedulers implements AutoCloseable {
 
     Integer id = fetchSchedulerIds.poll();
     if (id == null) {
-      // LOG.debug("No running fetcher job");
+      // log.debug("No running fetcher job");
       return Lists.newArrayList();
     }
 

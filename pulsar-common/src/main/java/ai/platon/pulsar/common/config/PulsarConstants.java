@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.common.config;
 
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -110,10 +111,6 @@ public interface PulsarConstants {
     float SCORE_DETAIL_PAGE = 10000.0f;
     float SCORE_PAGES_FROM_SEED = 10000.0f;
 
-//  public final static String PAGE_TITLE_SEQUENCE = "scent.page.title.sequence";
-//  public final static String PAGE_MENU_SEQUENCE = "scent.page.menu.sequence";
-//  public final static String PAGE_MENU_DESCEND = "scent.page.menu.descend";
-
     String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
     String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
 
@@ -139,6 +136,14 @@ public interface PulsarConstants {
 
     String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
 
+
+    /**
+     * Other notable properties:
+     * overflow
+     * text-overflow
+     * */
+    String CLIENT_JS_PROPERTY_NAMES = "font-size, color, background-color";
+
     /**
      * Directories
      * */
@@ -147,4 +152,10 @@ public interface PulsarConstants {
 
     Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
     Path PULSAR_DEFAULT_DATA_DIR = Paths.get(HOME_DIR, ".pulsar");
+
+    String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
+    String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";
+    String PULSAR_ATTR_HIDDEN = "_h";
+    String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
+    String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
 }

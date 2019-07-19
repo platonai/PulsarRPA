@@ -13,6 +13,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- TODO: maven may not support locally relative parent path -->
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
@@ -23,7 +24,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 
     <name>Pulsar</name>
 
@@ -85,9 +86,10 @@
             <id>assembly</id>
             <properties>
                 <active-plugins>true</active-plugins>
+                <pulsar.skip.assembly>false</pulsar.skip.assembly>
             </properties>
             <modules>
-                <module>pulsar-assembly</module>
+                <module>pulsar-distribution</module>
             </modules>
         </profile>
 

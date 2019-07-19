@@ -24,17 +24,34 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
  * @param smooth The smooth
  * @return The outlier fence
  * */
-fun getOutlierFence(values: DoubleArray, p1: Double = 25.0, p2: Double = 75.0, smooth: Double = 1.0): Pair<Double, Double> {
+fun getOutlierInnerFence(values: DoubleArray, p1: Double = 25.0, p2: Double = 75.0, smooth: Double = 1.0): Pair<Double, Double> {
     val ds = DescriptiveStatistics(values)
-    return getOutlierFence(ds, p1, p2, smooth)
+    return getOutlierInnerFence(ds, p1, p2, smooth)
 }
 
-fun getOutlierFence(ds: DescriptiveStatistics, p1: Double = 25.0, p2: Double = 75.0, smooth: Double = 1.0): Pair<Double, Double> {
+fun getOutlierInnerFence(ds: DescriptiveStatistics, p1: Double = 25.0, p2: Double = 75.0, smooth: Double = 1.0): Pair<Double, Double> {
     val q1 = ds.getPercentile(p1)
     val q3 = ds.getPercentile(p2)
     val iqr = q3 - q1
-    // upper 1.5*IQR whisker
-    val f1 = q3 + 1.5 * iqr + smooth
+
+    val f1 = q1 - 1.5 * iqr + smooth
+    val f2 = q3 + 1.5 * iqr + smooth
+
+    return f1 to f2
+}
+
+fun getOutlierOuterFence(values: DoubleArray, p1: Double = 25.0, p2: Double = 75.0, smooth: Double = 1.0): Pair<Double, Double> {
+    val ds = DescriptiveStatistics(values)
+    return getOutlierOuterFence(ds, p1, p2, smooth)
+}
+
+fun getOutlierOuterFence(ds: DescriptiveStatistics, p1: Double = 25.0, p2: Double = 75.0, smooth: Double = 1.0): Pair<Double, Double> {
+    val q1 = ds.getPercentile(p1)
+    val q3 = ds.getPercentile(p2)
+    val iqr = q3 - q1
+
+    val f1 = q1 - 3 * iqr + smooth
     val f2 = q3 + 3 * iqr + smooth
+
     return f1 to f2
 }

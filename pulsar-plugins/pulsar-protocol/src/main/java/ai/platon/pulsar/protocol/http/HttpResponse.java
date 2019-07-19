@@ -37,6 +37,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -51,12 +52,11 @@ public class HttpResponse implements Response {
     private byte[] content;
     private int code;
 
-    public HttpResponse(AbstractHttpProtocol http, URL url, WebPage page)
-            throws ProtocolException, IOException, InterruptedException, NoProxyException {
+    public HttpResponse(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, NoProxyException {
         this.http = http;
         this.url = url;
 
-        Scheme scheme = null;
+        Scheme scheme;
 
         if ("http".equals(url.getProtocol())) {
             scheme = Scheme.HTTP;
@@ -249,45 +249,16 @@ public class HttpResponse implements Response {
         }
     }
 
-    private static int readLine(PushbackInputStream in, StringBuffer line,
-                                boolean allowContinuedLine) throws IOException {
-        line.setLength(0);
-        for (int c = in.read(); c != -1; c = in.read()) {
-            switch (c) {
-                case '\r':
-                    if (peek(in) == '\n') {
-                        in.read();
-                    }
-                case '\n':
-                    if (line.length() > 0) {
-                        // at EOL -- check for continued line if the current
-                        // (possibly continued) line wasn't blank
-                        if (allowContinuedLine)
-                            switch (peek(in)) {
-                                case ' ':
-                                case '\t': // line is continued
-                                    in.read();
-                                    continue;
-                            }
-                    }
-                    return line.length(); // else halt
-                default:
-                    line.append((char) c);
-            }
-        }
-        throw new EOFException();
-    }
-
-    private static int peek(PushbackInputStream in) throws IOException {
-        int value = in.read();
-        in.unread(value);
-        return value;
-    }
-
     public String getUrl() {
         return url.toString();
     }
 
+    @Override
+    public int getStatus() {
+        return -1;
+    }
+
+    @Override
     public int getCode() {
         return code;
     }
@@ -507,6 +478,41 @@ public class HttpResponse implements Response {
 
             processHeaderLine(line);
         }
+    }
+
+    private static int readLine(PushbackInputStream in, StringBuffer line,
+                                boolean allowContinuedLine) throws IOException {
+        line.setLength(0);
+        for (int c = in.read(); c != -1; c = in.read()) {
+            switch (c) {
+                case '\r':
+                    if (peek(in) == '\n') {
+                        in.read();
+                    }
+                case '\n':
+                    if (line.length() > 0) {
+                        // at EOL -- check for continued line if the current
+                        // (possibly continued) line wasn't blank
+                        if (allowContinuedLine)
+                            switch (peek(in)) {
+                                case ' ':
+                                case '\t': // line is continued
+                                    in.read();
+                                    continue;
+                            }
+                    }
+                    return line.length(); // else halt
+                default:
+                    line.append((char) c);
+            }
+        }
+        throw new EOFException();
+    }
+
+    private static int peek(PushbackInputStream in) throws IOException {
+        int value = in.read();
+        in.unread(value);
+        return value;
     }
 
     protected enum Scheme {

@@ -7,7 +7,6 @@ import ai.platon.pulsar.dom.features.defined.HEIGHT
 import ai.platon.pulsar.dom.features.defined.WIDTH
 import ai.platon.pulsar.dom.nodes.node.ext.canonicalName
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
-import ai.platon.pulsar.dom.nodes.node.ext.select2
 import org.junit.Before
 import org.junit.Test
 import kotlin.test.assertEquals
@@ -36,9 +35,9 @@ class TestExtendedCss {
     @Test
     fun testByExpression() {
         val expr = "img == 1 && width > 400 && width < 500 && height > 400 && height < 500"
-        val elements = doc.select2("div:expr($expr)")
+        val elements = doc.select("div:expr($expr)")
         assertEquals(1, elements.size)
-        assertTrue { elements.select2("img").isNotEmpty() }
+        assertTrue { elements.select("img").isNotEmpty() }
         assertTrue { elements.last().getFeature(WIDTH) > 400 }
         assertTrue { elements.last().getFeature(HEIGHT) < 500 }
     }
@@ -46,7 +45,7 @@ class TestExtendedCss {
     @Test
     fun testByExpression2() {
         val expr = "width > 400 && width < 500 && height > 400 && height < 500"
-        val elements = doc.select2("*:expr($expr)")
+        val elements = doc.select("*:expr($expr)")
         assertEquals(3, elements.size)
         assertTrue { elements.last().getFeature(WIDTH) > 400 }
         assertTrue { elements.last().getFeature(HEIGHT) < 500 }
@@ -56,7 +55,7 @@ class TestExtendedCss {
     @Test
     fun testByBoxAccurate() {
         val box = "$box   ,$box2"
-        val elements = doc.select2(convertCssQuery(box))
+        val elements = doc.select(convertCssQuery(box))
         assertEquals(3, elements.size)
         assertEquals("div.big.rel", elements[0].canonicalName)
         assertEquals("img", elements[1].canonicalName)
@@ -67,7 +66,7 @@ class TestExtendedCss {
     @Test
     fun testByBoxInaccurate() {
         val box = " 450x450     , 470x440  "
-        val elements = doc.select2(convertCssQuery(box))
+        val elements = doc.select(convertCssQuery(box))
         assertEquals(3, elements.size)
         assertEquals("div.big.rel", elements[0].canonicalName)
         assertEquals("img", elements[1].canonicalName)
@@ -81,7 +80,7 @@ class TestExtendedCss {
 
             val w = box.width + i * 5
             val h = box.height + i * 5
-            val elements = doc.select2(convertCssQuery("${w}x${h}"))
+            val elements = doc.select(convertCssQuery("${w}x${h}"))
             // elements.forEach { println(it) }
             assertEquals(2, elements.size)
             assertEquals("div.big.rel", elements[0].canonicalName)
@@ -90,7 +89,7 @@ class TestExtendedCss {
 
         val w = box.width + SELECTOR_IN_BOX_DEVIATION + 1
         val h = box.height + SELECTOR_IN_BOX_DEVIATION + 1
-        val elements = doc.select2("$w x $h")
+        val elements = doc.select("$w x $h")
         assertTrue { elements.isEmpty() }
     }
 }

@@ -9,7 +9,10 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.nodes.V_OWNER_BODY
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.nodes.node.ext.name
+import com.google.common.collect.Iterables
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.RealVector
+import org.apache.commons.math3.util.Precision
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -17,7 +20,10 @@ import java.awt.Color
 import java.awt.Rectangle
 import java.util.concurrent.atomic.AtomicInteger
 
-data class FeatureEntry(val key: Int, val value: Double)
+data class FeatureEntry(val key: Int, val value: Double) {
+    constructor(key: Int, value: Int): this(key, value.toDouble())
+    constructor(key: Int, value: Boolean): this(key, if (value) 1.0 else 0.0)
+}
 
 data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = true, val isFloat: Boolean = false) {
 
@@ -137,19 +143,34 @@ object FeatureFormatter {
         return key.toString() + ":" + formatValue(key, feature.value)
     }
 
-    fun format(features: RealVector, vararg featureKeys: Int, sb: StringBuilder = StringBuilder()): StringBuilder {
-        if (featureKeys.isEmpty()) {
+    fun format(features: RealVector, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
+        return format(features, listOf(), sb, eps)
+    }
+
+    /**
+     * Get the string representation of the features
+     *
+     * @features The feature vector
+     * @featureKeys The feature keys to format
+     * @sb The string builder
+     * @eps The amount of allowed absolute error to judge if a double value is zero which is ignored
+     * @return string
+     */
+    fun format(features: RealVector,
+               featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
+        val size = Iterables.size(featureKeys)
+        if (size == 0) {
             for (i in featureNames.indices) {
                 val value = features[i]
-                if (value != 0.0) {
-                    sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
+                if (!Precision.equals(value, 0.0, eps)) {
+                    sb.append(featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
                 }
             }
         } else {
             for (i in featureKeys) {
                 val value = features.getEntry(i)
-                if (value != 0.0) {
-                    sb.append(featureNames[i]).append(":").append(formatValue(i, value)).append(' ')
+                if (!Precision.equals(value, 0.0, eps)) {
+                    sb.append(featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
                 }
             }
         }
@@ -157,37 +178,41 @@ object FeatureFormatter {
         return if (sb.endsWith(' ')) sb.deleteCharAt(sb.length - 1) else sb
     }
 
-    fun format(variables: Map<String, Any>, sb: StringBuilder = StringBuilder()): StringBuilder {
-        return format(variables, listOf(), sb)
+    fun format(variables: Map<String, Any>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
+        return format(variables, listOf(), sb, eps)
     }
 
-    fun format(variables: Map<String, Any>, names: Collection<String>, sb: StringBuilder = StringBuilder()): StringBuilder {
+    fun format(variables: Map<String, Any>, names: Collection<String>): StringBuilder {
+        return FeatureFormatter.format(variables, names, StringBuilder(), 0.001)
+    }
+
+    fun format(variables: Map<String, Any>, names: Collection<String>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
         variables.filter { it.key !in commonVariables }.forEach { (name, value) ->
             if (names.isEmpty() || name in names) {
                 var s = when (value) {
-                    is Double -> formatValue(value)
+                    is Double -> formatValue(value, true, eps)
                     is Color -> value.toHexString()
                     is Rectangle -> value.str
                     is Element -> value.name
-                    is FeaturedDocument -> value.baseUri
+                    is FeaturedDocument -> value.location
                     else -> value.toString()
                 }
-                if (s.length > 20) {
-                    s = s.take(20) + ".."
+                if (s.isNotEmpty()) {
+                    s = StringUtils.abbreviate(s, 20)
+                    sb.append(name).append(':').append(s).append(' ')
                 }
-                sb.append(name).append(':').append(s).append(' ')
             }
         }
         return if (sb.endsWith(' ')) sb.deleteCharAt(sb.length - 1) else sb
     }
 
-    fun formatValue(key: Int, value: Double): String {
+    fun formatValue(key: Int, value: Double, eps: Double = 0.001): String {
         return formatValue(value, isFloating(key))
     }
 
-    fun formatValue(value: Double, isFloating: Boolean = true): String {
+    fun formatValue(value: Double, isFloating: Boolean = true, eps: Double = 0.001): String {
         return if (isFloating) {
-            String.format("%.2f", value)
+            if (Precision.equals(value, 0.0, eps)) "" else String.format("%.2f", value)
         } else {
             String.format("%d", value.toInt())
         }

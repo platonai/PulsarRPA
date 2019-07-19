@@ -8,22 +8,18 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.time.Instant
 import java.util.*
+import kotlin.math.abs
 
 /**
  * The base class for all tests.
  */
-class H2Db(sessionFactory: String = H2SessionFactory::class.java.name) {
-
+class H2Db(
+        sessionFactory: String = H2SessionFactory::class.java.name,
+        var config:H2DbConfig = H2DbConfig()
+) {
     init {
         System.setProperty("h2.sessionFactory", sessionFactory)
     }
-
-    val config = H2DbConfig()
-
-    /**
-     * The base directory.
-     */
-    val baseTestDir = PulsarPaths.get(PulsarPaths.testDir, "test", "h2")
 
     /**
      * The temporary directory.
@@ -31,14 +27,9 @@ class H2Db(sessionFactory: String = H2SessionFactory::class.java.name) {
     val tmpDir = PulsarPaths.get(PulsarPaths.tmpDir, "h2")
 
     /**
-     * The time when the test was started.
-     */
-    val startTime: Instant = Instant.now()
-
-    /**
      * The base directory to write test databases.
      */
-    private var baseDir = getTestDir("")
+    val baseDir = PulsarPaths.get(PulsarPaths.testDir, "h2")
 
     /**
      * Get the file password (only required if file encryption is used).
@@ -58,7 +49,18 @@ class H2Db(sessionFactory: String = H2SessionFactory::class.java.name) {
     val user: String = "sa"
 
     fun generateTempDbName(): String {
-        return "" + System.currentTimeMillis() + "_" + Math.abs(Random().nextInt());
+        return "" + System.currentTimeMillis() + "_" + abs(Random().nextInt());
+    }
+
+    /**
+     * Open a database with a random named connection in admin mode.
+     * The default user name and password is used.
+     *
+     * @param name the database name
+     * @return the connection
+     */
+    fun getRandomConnection(): Connection {
+        return getConnection(generateTempDbName())
     }
 
     /**
@@ -124,8 +126,8 @@ class H2Db(sessionFactory: String = H2SessionFactory::class.java.name) {
      * @param admin true if the current user is an admin
      * @return the database URL
      */
-    fun buildURL(name_: String, admin: Boolean): String {
-        var name = name_
+    fun buildURL(dbName: String, admin: Boolean): String {
+        var name = dbName
         var url: String
         if (name.startsWith("jdbc:")) {
             if (config.mvStore) {
@@ -246,18 +248,8 @@ class H2Db(sessionFactory: String = H2SessionFactory::class.java.name) {
         DeleteDbFiles.execute(dir, name, true)
          val list = FileLister.getDatabaseFiles(baseDir.toString(), name, true);
          if (list.isNotEmpty()) {
-            System.out.println("Not deleted: $list");
+            println("Not deleted: $list")
          }
-    }
-
-    /**
-     * Get the test directory for this test.
-     *
-     * @param name the directory name suffix
-     * @return the test directory
-     */
-    fun getTestDir(name: String): Path {
-        return PulsarPaths.get(baseTestDir, name)
     }
 
     private fun addOption(url: String, option: String, value: String): String {

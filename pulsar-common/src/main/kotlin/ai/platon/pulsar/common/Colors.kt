@@ -71,6 +71,12 @@ object ColorFamily {
             redRgbs1, redRgbs2, redRgbs3, redRgbs4
     )
 
+    val lightColorRgbs = arrayOf(
+            0xFFFFCC, 0xCCFFFF, 0xCCCCCC, 0xFFCCCC, 0xFFCC99,
+            0xFFFFCC, 0xFFFF99, 0xFFFF00, 0xCCFFFF, 0xFFFFCC,
+            0xFFCC99, 0xCC99CC, 0xFFFFCC, 0xCCCC99, 0xCCCCFF
+    )
+
     val blueColors = blueRgbs.map { Color(it) }
 
     val greenColors = greenRgbs.map { Color(it) }
@@ -86,6 +92,8 @@ object ColorFamily {
     val redColors4 = redRgbs4.map { Color(it) }
 
     val redColors = arrayOf(redColors1, redColors2, redColors3, redColors4)
+
+    val lightColors = lightColorRgbs.map { Color(it) }
 }
 
 private fun initColorList(): ArrayList<NamedColor> {

@@ -126,8 +126,8 @@ public class FetchResource {
       }
     }
 
-//    LOG.debug("headers-1 : {}", httpHeaders.getRequestHeaders().entrySet());
-//    LOG.debug("headers-2 : {}", customHeaders);
+//    log.debug("headers-1 : {}", httpHeaders.getRequestHeaders().entrySet());
+//    log.debug("headers-2 : {}", customHeaders);
 
     FetchJobForwardingResponse fetchResult = new FetchJobForwardingResponse(customHeaders, content);
     TaskScheduler taskScheduler = taskSchedulers.get(fetchResult.getJobId());

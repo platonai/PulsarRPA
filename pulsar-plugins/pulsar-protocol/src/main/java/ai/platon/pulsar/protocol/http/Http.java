@@ -39,12 +39,6 @@ public class Http extends AbstractHttpProtocol {
     @Override
     protected Response getResponse(String url, WebPage page, boolean redirect)
             throws ProtocolException, IOException, NoProxyException {
-        Response r = null;
-        try {
-            r = new HttpResponse(this, new URL(url), page);
-        } catch (InterruptedException e) {
-            Protocol.LOG.error(e.toString());
-        }
-        return r;
+        return new HttpResponse(this, new URL(url), page);
     }
 }

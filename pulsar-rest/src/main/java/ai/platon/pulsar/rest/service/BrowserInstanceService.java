@@ -21,7 +21,7 @@ import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.table.TableUtils;
 import ai.platon.pulsar.persist.rdb.model.BrowserInstance;
-import ai.platon.pulsar.persist.rdb.model.dao.OrmliteDaoFactory;
+import ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
@@ -32,6 +32,10 @@ public class BrowserInstanceService {
 
   private Dao<BrowserInstance, Long> browserInstanceDao;
 
+  public BrowserInstanceService(OrmliteDaoFactory daoFactory) {
+    this(daoFactory, false);
+  }
+  
   public BrowserInstanceService(OrmliteDaoFactory daoFactory, boolean autoTruncate) {
     browserInstanceDao = daoFactory.createDao(BrowserInstance.class);
     if (autoTruncate) {

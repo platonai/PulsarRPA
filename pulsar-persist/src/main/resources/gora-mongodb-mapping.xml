@@ -83,6 +83,6 @@
         <field name="metadata" docfield="metadata" type="document" />
 
         <!-- extract fields                                     -->
-        <field name="pageModel" docfield="pageModel" type="document" />
+        <field name="pageModel" docfield="pageModel" type="list" />
     </class>
 </gora-otd>

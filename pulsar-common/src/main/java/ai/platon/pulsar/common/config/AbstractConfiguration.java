@@ -40,8 +40,7 @@ public abstract class AbstractConfiguration {
 
     public static final Logger LOG = LoggerFactory.getLogger(AbstractConfiguration.class);
 
-    public static final List<String> DEFAULT_RESOURCES =
-            Lists.newArrayList("pulsar-default.xml", "pulsar-site.xml", "pulsar-task.xml");
+    public static final List<String> DEFAULT_RESOURCES = Lists.newArrayList();
 
     private Configuration conf;
 
@@ -109,11 +108,32 @@ public abstract class AbstractConfiguration {
         realResources.forEach(conf::addResource);
 
         LOG.info(toString());
-
-        checkLog4jProperties();
     }
 
-    private void checkLog4jProperties() {
+    /**
+     * Most logging systems check it's environment by itself, if not, use this one
+     * */
+    private void checkLogConfig() {
+        if (!checkLogbackConfig() && !checkLog4jProperties()) {
+            System.err.println("Failed to find log4j or logback configuration");
+        }
+    }
+
+    private boolean checkLogbackConfig() {
+        String logback = System.getProperty("logback.configurationFile");
+        if (logback != null) {
+            LOG.info("Logback(specified): " + logback);
+        } else {
+            URL url = getResource("logback.xml");
+            if (url != null) {
+                LOG.info("Logback(classpath): " + url);
+                return true;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkLog4jProperties() {
         String log4j = System.getProperty("Log4j.configuration");
         if (log4j != null) {
             LOG.info("Log4j(specified): " + log4j);
@@ -122,9 +142,10 @@ public abstract class AbstractConfiguration {
             if (url != null) {
                 LOG.info("Log4j(classpath): " + url);
             } else {
-                System.out.println("Failed to find log4j.properties");
+                return false;
             }
         }
+        return true;
     }
 
     private String getRealResource(String prefix, String dir, String name) {
@@ -146,11 +167,13 @@ public abstract class AbstractConfiguration {
 
         URL url = getResource(realResource);
         if (url != null) {
+            LOG.info("Find resource {}", url);
             return realResource;
         }
 
         url = getResource(name);
         if (url != null) {
+            LOG.info("Find resource {}", url);
             realResource = name;
             return realResource;
         }
@@ -507,6 +530,6 @@ public abstract class AbstractConfiguration {
 
     @Override
     public String toString() {
-        return conf.toString();
+        return "Expected " + conf;
     }
 }

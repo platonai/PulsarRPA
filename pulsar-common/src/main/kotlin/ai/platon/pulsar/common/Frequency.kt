@@ -46,6 +46,11 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
      * The mode of a sample is the element that occurs most often in the collection.
      * */
     val modes: List<T> get() = entrySet().sortedByDescending { it.count }.map { it.element }
+    /**
+     * The mode value
+     * The mode of a sample is the element that occurs most often in the collection.
+     * */
+    val modePercentage: Double get() = mostEntry.count.toDouble() / totalFrequency
 
     override fun add(element: T): Boolean {
         return counter.add(element)
@@ -119,10 +124,9 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
      * @return the proportion of values equal to v
      */
     fun percentageOf(v: T): Double {
-        val sumFreq = totalFrequency
-        return if (sumFreq == 0) {
+        return if (totalFrequency == 0) {
             Double.NaN
-        } else count(v) / sumFreq.toDouble()
+        } else count(v) / totalFrequency.toDouble()
     }
 
     /**
@@ -232,21 +236,15 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
     }
 
     @JvmOverloads
-    fun probabilityString(total: Int, separator: String = "\n"): String {
-        val sb = StringBuilder()
-
-        for (entry in entrySet()) {
-            sb.append(entry.element)
-            sb.append(":")
-            sb.append(String.format("%4.2f", 1.0 * entry.count / total))
-            sb.append(separator)
-        }
-
-        return sb.toString()
+    fun toPString(prefix: String = "", postfix: String = "", separator: String = "\t"): String {
+        return entrySet().joinTo(StringBuilder(), separator, prefix, postfix) {
+            String.format("%s:%4.2f", it.element, 1.0 * it.count / totalFrequency)
+        }.toString()
     }
 
-    fun report(): String {
-        val sb = StringBuilder()
+    @JvmOverloads
+    fun toReport(prefix: String = "", postfix: String = ""): String {
+        val sb = StringBuilder(prefix)
 
         var maxLength = entrySet().map { it.element.toString().length }.max()?:return ""
         maxLength += 2
@@ -258,6 +256,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
                     i + 1, value, e.count, 100 * percentageOf(value), 100 * cumulativePercentageOf(value)))
         }
         sb.append("totalFrequency: $totalFrequency\tmode: $mode")
+        sb.append(postfix)
 
         return sb.toString()
     }

@@ -17,6 +17,11 @@ class TestCases: TestBase() {
     }
 
     @Test
+    fun testXSqlHelp() {
+        execute("SELECT * FROM XSQL_HELP()")
+    }
+
+    @Test
     fun projectFields() {
         execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')")
         execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")

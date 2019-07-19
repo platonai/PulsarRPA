@@ -102,7 +102,7 @@ public class TestGoraStorageInMemory {
             String url = SHORTEST_VALID_URL + "/" + id + "/" + i;
             WebPage page = WebPage.newWebPage(url);
 
-            page.setBaseUrl(url);
+            page.setLocation(url);
             page.setPageText("text");
             page.setDistance(0);
             page.getHeaders().put("header1", "header1");

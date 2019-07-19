@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -34,20 +35,19 @@ object PulsarFiles {
         return path
     }
 
-    fun appendlog(message: String, path: Path) {
+    fun appendLog(message: String, path: Path) {
         try {
-            org.apache.commons.io.FileUtils.writeStringToFile(
-                    path.toFile(), ai.platon.pulsar.common.DateTimeUtil.now() + SPACE + message, true)
+            // TODO: cached
+            FileUtils.writeStringToFile(path.toFile(), DateTimeUtil.now() + SPACE + message, true)
         } catch (e: IOException) {
             e.printStackTrace()
         }
-
     }
 
-    fun appendlog(message: String, file: String) {
+    fun appendLog(message: String, file: String) {
         try {
-            org.apache.commons.io.FileUtils.writeStringToFile(
-                    File(file), ai.platon.pulsar.common.DateTimeUtil.now() + SPACE + message, true)
+            // TODO: cached
+            FileUtils.writeStringToFile(File(file), DateTimeUtil.now() + SPACE + message, true)
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -142,7 +142,6 @@ object PulsarFiles {
         } catch (e: IOException) {
             log.error(e.toString())
         }
-
     }
 
     fun getCachedWebPage(url: String): String? {
@@ -162,8 +161,8 @@ object PulsarFiles {
     }
 
     fun logUnreachableHosts(unreachableHosts: Collection<String>) {
-        val report = unreachableHosts.map { ai.platon.pulsar.common.StringUtil.reverse(it) }.sorted()
-                .map { ai.platon.pulsar.common.StringUtil.reverse(it) }.joinToString { "\n" }
+        val report = unreachableHosts.map { StringUtil.reverse(it) }.sorted()
+                .map { StringUtil.reverse(it) }.joinToString { "\n" }
 
         try {
             Files.write(PulsarPaths.PATH_UNREACHABLE_HOSTS, report.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)

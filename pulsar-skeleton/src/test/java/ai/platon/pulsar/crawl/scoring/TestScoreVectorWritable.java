@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.scoring;
 
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.gora.GoraStorage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;

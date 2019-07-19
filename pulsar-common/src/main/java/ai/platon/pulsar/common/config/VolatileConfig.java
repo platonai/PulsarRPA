@@ -13,7 +13,7 @@ import java.util.Objects;
  */
 public class VolatileConfig extends MutableConfig {
 
-    private ImmutableConfig fallbackConfig;
+    private MutableConfig fallbackConfig;
     private Map<String, Integer> ttls = Collections.synchronizedMap(new HashMap<>());
 
     public VolatileConfig() {
@@ -21,6 +21,10 @@ public class VolatileConfig extends MutableConfig {
     }
 
     public VolatileConfig(ImmutableConfig fallbackConfig) {
+        this(new MutableConfig(fallbackConfig));
+    }
+
+    public VolatileConfig(MutableConfig fallbackConfig) {
         super(false);
         this.fallbackConfig = Objects.requireNonNull(fallbackConfig);
     }
@@ -105,11 +109,11 @@ public class VolatileConfig extends MutableConfig {
         return false;
     }
 
-    public ImmutableConfig getFallbackConfig() {
+    public MutableConfig getFallbackConfig() {
         return fallbackConfig;
     }
 
-    public void setFallbackConfig(ImmutableConfig fallbackConfig) {
+    public void setFallbackConfig(MutableConfig fallbackConfig) {
         this.fallbackConfig = fallbackConfig;
     }
 }

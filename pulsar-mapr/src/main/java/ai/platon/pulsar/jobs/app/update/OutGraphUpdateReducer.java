@@ -177,7 +177,7 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
           focus.setWebPage(edge.getSourceWebPage());
         }
 
-        // LOG.info("MultiMetadata " + url + "\t<-\t" + edge.getMetadata());
+        // log.info("MultiMetadata " + url + "\t<-\t" + edge.getMetadata());
         graph.addEdgeLenient(edge.getSource(), focus, subGraph.getEdgeWeight(edge)).setMetadata(edge.getMetadata());
       });
     }
@@ -220,7 +220,7 @@ public class OutGraphUpdateReducer extends AppContextAwareGoraReducer<GraphGroup
         continue;
       }
 
-      // LOG.info(incomingEdge.toString());
+      // log.info(incomingEdge.toString());
 
       /* Update in-links */
       if (focusedPage.getInlinks().size() <= maxInLinks) {

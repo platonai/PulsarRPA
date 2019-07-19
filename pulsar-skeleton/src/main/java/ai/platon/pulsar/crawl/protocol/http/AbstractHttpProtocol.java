@@ -16,10 +16,8 @@
  */
 package ai.platon.pulsar.crawl.protocol.http;
 
-import ai.platon.pulsar.common.DeflateUtils;
-import ai.platon.pulsar.common.GZIPUtils;
-import ai.platon.pulsar.common.MimeUtil;
-import ai.platon.pulsar.common.NetUtil;
+import ai.platon.pulsar.PulsarEnv;
+import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
@@ -47,6 +45,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import static ai.platon.pulsar.common.HttpHeaders.Q_REQUEST_TIME;
 import static ai.platon.pulsar.common.HttpHeaders.Q_RESPONSE_TIME;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.persist.ProtocolStatus.*;
@@ -57,6 +56,11 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
     public static final int BUFFER_SIZE = 8 * 1024;
     private static final int MAX_REY_GUARD = 10;
+
+    /**
+     * The process environment
+     * */
+    private PulsarEnv env = PulsarEnv.Companion.getOrCreate();
     /**
      * Prevent multiple threads generate the same log unnecessary
      */
@@ -165,7 +169,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.proxyPort = conf.getInt("http.proxy.port", 8080);
         this.useProxyPool = conf.getBoolean("http.proxy.pool", false);
         if (this.useProxyPool) {
-            this.proxyPool = ProxyPool.getInstance(conf);
+            this.proxyPool = PulsarEnv.Companion.getProxyPool();
         }
         this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
 
@@ -263,9 +267,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
             Instant startTime = Instant.now();
 
             // page.baseUrl is the last working address, and page.url is the permanent internal address
-            String finalAddress = page.getBaseUrl();
-            if (finalAddress == null) {
-                finalAddress = page.getUrl();
+            String location = page.getLocation();
+            if (location == null) {
+                location = page.getUrl();
             }
 
             Response response = null;
@@ -278,13 +282,12 @@ public abstract class AbstractHttpProtocol implements Protocol {
                         LOG.info("Fetching {} , retries: {}/{}", page.getUrl(), tryCount, maxTry);
                     }
 
-                    response = getResponse(finalAddress, page, false);
+                    response = getResponse(location, page, false);
                 } catch (Throwable e) {
                     ++tryCount;
                     response = null;
                     lastThrowable = e;
-                    // log.warn(StringUtil.stringifyException(e));
-                    LOG.warn(e.toString());
+                    LOG.warn(StringUtil.stringifyException(e));
                 }
             }
 
@@ -296,20 +299,24 @@ public abstract class AbstractHttpProtocol implements Protocol {
                 storeResponseTime(startTime, page, response);
             }
 
-            return getProtocolOutput(page.getUrl(), finalAddress, response);
+            return getProtocolOutput(page.getUrl(), location, response);
         } catch (Throwable e) {
             return new ProtocolOutput(null, new MultiMetadata(), ProtocolStatus.failed(e));
         }
     }
 
-    private ProtocolOutput getProtocolOutput(String url, String baseUrl, Response response) throws MalformedURLException {
+    /**
+     * TODO: do not translate status code, they are just OK to handle in FetchComponent
+     * */
+    private ProtocolOutput getProtocolOutput(String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
+        int httpStatus = response.getStatus();
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         String contentType = response.getHeader("Content-Type");
-        Content content = new Content(url, baseUrl, bytes, contentType, response.getHeaders(), mimeTypes);
+        Content content = new Content(url, location, bytes, contentType, response.getHeaders(), mimeTypes);
         MultiMetadata headers = response.getHeaders();
         ProtocolStatus status;
 
@@ -318,16 +325,16 @@ public abstract class AbstractHttpProtocol implements Protocol {
         } else if (httpCode == 304) {
             return new ProtocolOutput(content, headers, ProtocolStatus.STATUS_NOTMODIFIED);
         } else if (httpCode >= 300 && httpCode < 400) { // handle redirect
-            String location = response.getHeader("Location");
+            String redirect = response.getHeader("Location");
             // some broken servers, such as MS IIS, use lowercase header name...
-            if (location == null) {
-                location = response.getHeader("location");
+            if (redirect == null) {
+                redirect = response.getHeader("location");
             }
-            if (location == null) {
-                location = "";
+            if (redirect == null) {
+                redirect = "";
             }
 
-            u = new URL(u, location);
+            u = new URL(u, redirect);
             int code;
             switch (httpCode) {
                 case SC_MULTIPLE_CHOICES: // multiple choices, preferred value in Location
@@ -368,6 +375,13 @@ public abstract class AbstractHttpProtocol implements Protocol {
             status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else if (httpCode == WEB_DRIVER_TIMEOUT) {
             status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+        } else if (httpCode == DOCUMENT_READY_TIMEOUT) {
+            // TODO: the document is still analysable?
+            status = ProtocolStatus.failed(DOCUMENT_READY_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+        } else if (httpCode == RETRY) {
+            status = ProtocolStatus.failed(RETRY, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+        } else if (httpCode == CANCELED) {
+            status = ProtocolStatus.failed(CANCELED, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         } else {
             status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode, ARG_URL, u);
         }
@@ -413,9 +427,10 @@ public abstract class AbstractHttpProtocol implements Protocol {
         Duration elapsedTime;
         FetchMode pageFetchMode = page.getFetchMode();
         if (pageFetchMode == FetchMode.CROWDSOURCING || pageFetchMode == FetchMode.SELENIUM) {
-            int epochMillis = NumberUtils.toInt(response.getHeader(Q_RESPONSE_TIME), -1);
-            if (epochMillis > 0) {
-                elapsedTime = Duration.between(startTime, Instant.ofEpochMilli(epochMillis));
+            long requestTime = NumberUtils.toLong(response.getHeader(Q_REQUEST_TIME), -1);
+            long responseTime = NumberUtils.toLong(response.getHeader(Q_RESPONSE_TIME), -1);
+            if (requestTime > 0 && responseTime > 0) {
+                elapsedTime = Duration.ofMillis(responseTime - requestTime);
             } else {
                 // -1 hour means an invalid response time
                 elapsedTime = Duration.ofHours(-1);

@@ -82,7 +82,11 @@ internal abstract class MathematicalEvaluator : Evaluator() {
         override fun matches(root: Element, element: Element): Boolean {
             for (name in featureNames) {
                 // the prefix "_" is compatible with Web SQL, may remove in later versions
-                val value = BigDecimal(element.getFeature(name))
+                val v = element.getFeature(name)
+                if (v.isNaN()) {
+                    return false
+                }
+                val value = BigDecimal(v)
                 if (expr.contains("_$name")) {
                     expression.setVariable("_$name", value)
                 } else if (expr.contains(name)) {

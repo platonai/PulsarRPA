@@ -122,7 +122,7 @@ public class HtmlParser implements Parser {
         try {
             // The base url is set by protocol. Might be different from url if the request redirected.
             String url = page.getUrl();
-            String baseUrl = page.getBaseUrl();
+            String baseUrl = page.getLocation();
             URL baseURL = new URL(baseUrl);
 
             if (page.getEncoding() == null) {

@@ -17,7 +17,6 @@
 
 package ai.platon.pulsar.parse.metatags;
 
-import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
@@ -185,7 +184,7 @@ public class TestMetaTagsParser {
             byte[] bytes = Files.readAllBytes(path);
 
             WebPage page = WebPage.newWebPage(urlString);
-            page.setBaseUrl(page.getUrl());
+            page.setLocation(page.getUrl());
             page.setContent(bytes);
             page.setContentType("text/html");
 

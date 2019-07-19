@@ -17,13 +17,19 @@
 
 package ai.platon.pulsar.common;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,10 +48,32 @@ public final class StringUtil {
     // all special chars on a standard keyboard
     public static final String DEFAULT_KEEP_CHARS = "~!@#$%^&*()_+`-={}|[]\\:\";'<>?,./' \n\r\t";
 
-    public static final String KEYBOARD_WHITESPACE = String.valueOf(32);
+    public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
 
+    public static final String FLOAT_REGEX = "^([+-]?(\\d+\\.)?\\d+)$";
+
+    public static Pattern FLOAT_PATTERN = Pattern.compile(FLOAT_REGEX);
+
+    public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
+
+    public static final String NUMERIC_LIKE_REGEX = "^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$";
+
+    public static Pattern NUMERIC_LIKE_PATTERN = Pattern.compile(NUMERIC_LIKE_REGEX);
+
+    public static final String MONEY_LIKE_REGEX = "^[¥￥$]?[0-9]+(\\.[0-9]{1,2})?$";
+
+    public static Pattern MONEY_LIKE_PATTERN = Pattern.compile(MONEY_LIKE_REGEX);
+
+    public static final String CHINESE_PHONE_NUMBER_LIKE_REGEX = "^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,1,2,5-9])|(177))\\d{8}$";
+
+    public static Pattern CHINESE_PHONE_NUMBER_LIKE_PATTERN = Pattern.compile(CHINESE_PHONE_NUMBER_LIKE_REGEX);
+
+    public static final int CODE_KEYBOARD_WHITESPACE = 32;
+    public static final int CODE_NBSP = 160;
+
+    public static final String KEYBOARD_WHITESPACE = String.valueOf(CODE_KEYBOARD_WHITESPACE);
     // Html entity: {@code &nbsp;} looks just like a white space
-    public static final String NBSP = String.valueOf(160);
+    public static final String NBSP = String.valueOf(CODE_NBSP);
 
     public static final char[] HEX_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
             'f'};
@@ -74,18 +102,13 @@ public final class StringUtil {
     }
 
     /**
-     * Tests if a code point is "whitespace" as defined in the HTML spec.
+     * Tests if a code point is "whitespace" as defined by what it looks like. Used for Element.text etc.
      *
      * @param c code point to test
      * @return true if code point is whitespace, false otherwise
      */
-    public static boolean isWhitespace(int c) {
-        // note : the first character is not the last one
-        // the last one is &nbsp;
-        // String s = " ";
-        // String s2 = " ";
-        // System.out.println(s.equals(s2));
-        return c == KEYBOARD_WHITESPACE.charAt(0) || c == '\t' || c == '\n' || c == '\f' || c == '\r' || c == NBSP.charAt(0);
+    public static boolean isActuallyWhitespace(int c) {
+        return c == CODE_KEYBOARD_WHITESPACE || c == '\t' || c == '\n' || c == '\f' || c == '\r' || c == CODE_NBSP;
     }
 
     /**
@@ -374,9 +397,19 @@ public final class StringUtil {
     public static String stripNonPrintableChar(String text) {
         StringBuilder builder = new StringBuilder();
 
-        for (int i = 0; i < text.length(); ++i) {
+        int len = text.length();
+        for (int i = 0; i < len; ++i) {
             char ch = text.charAt(i);
-            if (isPrintableUnicodeChar(ch) && !Character.isWhitespace(ch)) {
+            if (isActuallyWhitespace(ch)) {
+                if (i > 0 && i < len - 1) {
+                    builder.append(' ');
+                }
+                int j = i + 1;
+                while (j < len && isActuallyWhitespace(text.charAt(j))) {
+                    ++j;
+                }
+                i = j - 1;
+            } else if (isPrintableUnicodeChar(ch)) {
                 builder.append(ch);
             }
         }
@@ -384,6 +417,9 @@ public final class StringUtil {
         return builder.toString();
     }
 
+    /**
+     * @link {https://stackoverflow.com/questions/220547/printable-char-in-java}
+     */
     public static boolean isPrintableUnicodeChar(char ch) {
         Character.UnicodeBlock block = Character.UnicodeBlock.of(ch);
         return (!Character.isISOControl(ch)) && ch != KeyEvent.CHAR_UNDEFINED
@@ -466,7 +502,7 @@ public final class StringUtil {
         return text + seperator + suffix;
     }
 
-    public static int getLeadingNumber(String s, int defaultValue) {
+    public static int getLeadingInteger(String s, int defaultValue) {
         int numberEnd = StringUtils.lastIndexOfAny(s, "123456789");
         if (numberEnd == StringUtils.INDEX_NOT_FOUND) {
             return defaultValue;
@@ -474,12 +510,43 @@ public final class StringUtil {
         return NumberUtils.toInt(s.substring(0, numberEnd), defaultValue);
     }
 
-    public static int getTailingNumber(String s, int defaultValue) {
+    public static int getTailingInteger(String s, int defaultValue) {
         int numberStart = StringUtils.indexOfAny(s, "123456789");
         if (numberStart == StringUtils.INDEX_NOT_FOUND) {
             return defaultValue;
         }
         return NumberUtils.toInt(s.substring(numberStart), defaultValue);
+    }
+
+    public static int getFirstInteger(String s, int defaultValue) {
+        int numberStart = StringUtils.indexOfAny(s, "123456789");
+        if (numberStart == StringUtils.INDEX_NOT_FOUND) {
+            return defaultValue;
+        }
+
+        StringBuilder sb = new StringBuilder(s.length() - numberStart);
+        int j = 0;
+        for (int i = numberStart; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if (Character.isDigit(c)) {
+                sb.append(c);
+            } else {
+                break;
+            }
+        }
+
+        return NumberUtils.toInt(sb.toString(), defaultValue);
+    }
+
+    public static float getFirstFloatNumber(String s, float defaultValue) {
+        Pattern floatNumberPattern = Pattern.compile("[-]?[0-9]*\\.?,?[0-9]+");
+
+        Matcher m = floatNumberPattern.matcher(s);
+        if (m.find()) {
+            return NumberUtils.toFloat(m.group());
+        }
+
+        return defaultValue;
     }
 
     public static boolean contains(String text, CharSequence... searchCharSequences) {
@@ -543,12 +610,6 @@ public final class StringUtil {
      * */
     public static Map<String, String> parseKvs(String line, String delimiter) {
         return SParser.wrap(line).getKvs(delimiter);
-//    String[] kvs = line.split("\\s+");
-//    return Stream.of(kvs)
-//        .filter(kv -> StringUtils.countMatches(kv, delimiter) == 1)
-//        .map(kv -> StringUtils.split(kv, delimiter))
-//        .filter(kv -> !kv[0].isEmpty() && !kv[1].isEmpty())
-//        .collect(Collectors.toMap(kv -> kv[0], kv -> kv[1], (kv1, kv2) -> kv2));
     }
 
     /**
@@ -612,6 +673,33 @@ public final class StringUtil {
         return lines;
     }
 
+    public static int getLongestCommonSubstring(String a, String b){
+        int m = a.length();
+        int n = b.length();
+
+        int max = 0;
+
+        int[][] dp = new int[m][n];
+
+        for(int i=0; i<m; i++){
+            for(int j=0; j<n; j++){
+                if(a.charAt(i) == b.charAt(j)){
+                    if(i==0 || j==0){
+                        dp[i][j]=1;
+                    }else{
+                        dp[i][j] = dp[i-1][j-1]+1;
+                    }
+
+                    if(max < dp[i][j])
+                        max = dp[i][j];
+                }
+
+            }
+        }
+
+        return max;
+    }
+
     /**
      * Not completely tested
      * */
@@ -622,5 +710,25 @@ public final class StringUtil {
         }
 
         return html;
+    }
+
+    public static boolean hasHTMLTags(String text) {
+        Matcher matcher = HTML_TAG_PATTERN.matcher(text);
+        return matcher.find();
+    }
+
+    public static boolean isFloat(String text) {
+        return FLOAT_PATTERN.matcher(text).matches();
+    }
+
+    public static boolean isNumericLike(String text) {
+        return NUMERIC_LIKE_PATTERN.matcher(text).matches();
+    }
+
+    /**
+     * https://www.regextester.com/97725
+     * */
+    public static boolean isMoneyLike(String text) {
+        return MONEY_LIKE_PATTERN.matcher(text).matches();
     }
 }

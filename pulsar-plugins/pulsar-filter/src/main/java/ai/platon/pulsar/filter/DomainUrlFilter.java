@@ -87,7 +87,7 @@ public class DomainUrlFilter implements UrlFilter {
         String stringResource = conf.get(PARAM_URLFILTER_DOMAIN_RULES);
         String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
         String fileResource = conf.get(PARAM_URLFILTER_DOMAIN_FILE, "domain-urlfilter.txt");
-        domainSet.addAll(new ResourceLoader().readAllLines(stringResource, fileResource, resourcePrefix));
+        domainSet.addAll(ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix));
 
         tlds = DomainSuffixes.getInstance();
 

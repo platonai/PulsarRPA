@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarContext
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.crawl.fetch.TaskStatusTracker.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.persist.WebPageFormatter
@@ -10,6 +10,8 @@ import org.junit.Test
 import java.util.concurrent.TimeUnit
 
 class TestExtractCases : TestBase() {
+
+    private val pc = PulsarContext.getOrCreate()
 
     @Test
     fun testSavePages() {
@@ -28,14 +30,14 @@ class TestExtractCases : TestBase() {
     fun testAccumulateVividLinks() {
         val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=detail]"
         execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl --expires=1s', '$expr')")
-        val session = PulsarContext.createSession()
+        val session = pc.createSession()
         println(WebPageFormatter(session.getOrNil(productIndexUrl)))
     }
 
     @Test
     @Ignore
     fun testBackgroundLoading() {
-        val session = PulsarContext.createSession()
+        val session = pc.createSession()
 
         val page = session.getOrNil(productIndexUrl)
         page.vividLinks.keys.map { it.toString() }
@@ -44,7 +46,7 @@ class TestExtractCases : TestBase() {
                 .map { session.delete(it.url) }
         session.flush()
 
-        System.out.println("Loading " + page.vividLinks.size + " out links")
+        println("Loading " + page.vividLinks.size + " out links")
         session.loadAll(page.vividLinks.keys.map { it -> it.toString() })
 
         var page2 = session.getOrNil(URL_TRACKER_HOME_URL)
@@ -61,7 +63,7 @@ class TestExtractCases : TestBase() {
     fun testLoadOutPagesForMia() {
         val url = urlGroups["mia"]!![0]
         val limit = 20
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30 LIMIT $limit")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1d') WHERE SIBLING > 30 LIMIT $limit")
 
         execute("CALL SET_PAGE_EXPIRES('1d', 1)")
         val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"

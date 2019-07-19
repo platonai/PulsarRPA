@@ -29,8 +29,9 @@ public abstract class Node implements Cloneable {
 
     Attributes attributes = new Attributes();
 
-    Node ownerDocument = null;
+    Node ownerDocumentNode = null;
     Node ownerBody = null;
+    String immutableText = null;
     RealVector features = EMPTY_FEATURE;
     Map<String, Object> variables = new HashMap<>();
     Map<String, List<Object>> tuples = new HashMap<>();
@@ -169,11 +170,11 @@ public abstract class Node implements Cloneable {
      * Document is a frequently used element so need a short cut to access it
      * */
     @Nonnull
-    public Node getOwnerDocument() {
-        if (ownerDocument == null) {
-            ownerDocument = ownerDocument();
+    public Node getOwnerDocumentNode() {
+        if (ownerDocumentNode == null) {
+            ownerDocumentNode = ownerDocument();
         }
-        return ownerDocument;
+        return ownerDocumentNode;
     }
 
     /**
@@ -186,6 +187,19 @@ public abstract class Node implements Cloneable {
             ownerBody = ownerDocument().body();
         }
         return ownerBody;
+    }
+
+    public String getImmutableText() {
+        if (immutableText == null) {
+            if (this instanceof TextNode) {
+                immutableText = ((TextNode) this).text();
+            }
+        }
+        return immutableText;
+    }
+
+    public void setImmutableText(String immutableText) {
+        this.immutableText = immutableText;
     }
 
     @Nonnull

@@ -1,17 +1,22 @@
 package ai.platon.pulsar.dom
 
-import ai.platon.pulsar.common.PulsarFiles
-import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.select
+import ai.platon.pulsar.dom.select.select2
+import com.google.common.net.InternetDomainName
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
+import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
@@ -20,9 +25,10 @@ import java.nio.file.Path
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
-        val nodeFeatureCalculator: NodeVisitor by lazy { loadFeatureCalculator() }
+        private val nodeFeatureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
+        val nodeFeatureCalculator: NodeVisitor get() = nodeFeatureCalculatorClass.newInstance()
 
-        val NIL: FeaturedDocument = FeaturedDocument.createShell(NIL_PAGE_URL)
+        val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 
@@ -30,19 +36,23 @@ open class FeaturedDocument(val document: Document) {
             val document = Document.createShell(baseUri)
             return FeaturedDocument(document)
         }
-
         /**
-         * An element is Nil, if it's owner document is nil
+         * An node is Nil, if it's owner document is nil
          * */
-        fun isNil(node: Node): Boolean {
-            return node == NIL || node.baseUri() == NIL.baseUri
+        fun isNil(doc: FeaturedDocument): Boolean {
+            return doc == NIL || doc.location == NIL.location
+        }
+        fun getExportFilename(uri: String): String {
+            return PulsarPaths.fromUri(uri, ".htm")
+        }
+        fun getExportPath(url: String, ident: String): Path {
+            return PulsarPaths.get(PulsarPaths.webCacheDir, ident, getExportFilename(url))
         }
 
-        private fun loadFeatureCalculator(): NodeVisitor {
+        private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
             val className = System.getProperty(NODE_FEATURE_CALCULATOR, defaultClassName)
-            val clazz = ResourceLoader.loadUserClass<NodeVisitor>(className)
-            return clazz.newInstance()
+            return ResourceLoader.loadUserClass(className)
         }
     }
 
@@ -53,21 +63,16 @@ open class FeaturedDocument(val document: Document) {
     constructor(other: FeaturedDocument): this(other.unbox().clone())
 
     init {
-        if (document.features.isEmpty) {
+        if (features.isEmpty) {
             NodeTraversor.traverse(nodeFeatureCalculator, document)
         }
     }
-
-    var baseUri: String
-        get() = document.baseUri()
-        set(value) = document.setBaseUri(value)
 
     var title: String
         get() = document.title()
         set(value) = document.title(value)
 
-    val location: String
-        get() = document.location()
+    val location: String get() = document.location()
 
     val head: Element
         get() = document.head() ?: throw RuntimeException("Bad document, head tag is missing")
@@ -75,20 +80,17 @@ open class FeaturedDocument(val document: Document) {
     val body: Element
         get() = document.body() ?: throw RuntimeException("Bad document, body tag is missing")
 
-    val text: String
-        get() = document.text()
+    val text: String get() = document.text()
 
-    val html: String
-        get() = document.html()
+    val html: String get() = document.html()
 
     val prettyHtml: String
         get() {
-            val str = document.html()
+            document.outputSettings().prettyPrint()
+            return document.html()
                     .replace("s-features", "\n\t\t\ts-features")
                     .replace("s-named-features", "\n\t\t\ts-named-features")
                     .replace("s-caption", "\n\t\t\ts-caption")
-
-            return str
         }
 
     var features: RealVector
@@ -102,7 +104,7 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun isNil(): Boolean {
-        return baseUri == NIL.baseUri
+        return location == NIL.location
     }
 
     fun createElement(tagName: String): Element {
@@ -120,16 +122,12 @@ open class FeaturedDocument(val document: Document) {
     }
 
     @JvmOverloads
-    fun select2(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        return document.select2(query, offset, limit)
-    }
-
     fun select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
         return document.select2(query, offset, limit)
     }
 
-    fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, extractor: (Element) -> T): List<T> {
-        return document.select2(query, offset, limit).map { extractor(it) }
+    fun <T> select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> T): List<T> {
+        return document.select(query, offset, limit, transformer = transformer)
     }
 
     fun first(query: String): Element? {
@@ -169,8 +167,8 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun export(): Path {
-        val filename = PulsarPaths.fromUri(baseUri, ".html")
-        val path = PulsarPaths.get("analysis", filename)
+        val filename = PulsarPaths.fromUri(location, ".html")
+        val path = PulsarPaths.get(PulsarPaths.webCacheDir, "featured", filename)
         return exportTo(path)
     }
 
@@ -179,11 +177,11 @@ open class FeaturedDocument(val document: Document) {
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is FeaturedDocument && baseUri == other.baseUri
+        return other is FeaturedDocument && location == other.location
     }
 
     override fun hashCode(): Int {
-        return baseUri.hashCode()
+        return location.hashCode()
     }
 
     override fun toString(): String {

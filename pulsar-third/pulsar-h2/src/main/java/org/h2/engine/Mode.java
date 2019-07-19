@@ -25,6 +25,9 @@ public class Mode {
      */
     public static final String REGULAR = "REGULAR";
 
+    /**
+     * X-SQL support by platon.ai
+     * */
     public static final String SIGMA = "SIGMA";
 
     private static final HashMap<String, Mode> MODES = New.hashMap();

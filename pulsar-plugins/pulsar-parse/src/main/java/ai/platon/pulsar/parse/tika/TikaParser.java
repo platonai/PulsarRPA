@@ -133,7 +133,7 @@ public class TikaParser implements ai.platon.pulsar.crawl.parse.Parser {
 
     @Override
     public ParseResult parse(WebPage page) {
-        String baseUrl = page.getBaseUrl();
+        String baseUrl = page.getLocation();
         URL base;
         try {
             base = new URL(baseUrl);

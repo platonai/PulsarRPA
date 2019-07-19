@@ -2,7 +2,7 @@ package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
-import ai.platon.pulsar.ql.QueryEngine
+import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.QuerySession
 import org.h2.engine.ConnectionInfo
 import org.h2.engine.Mode
@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory
 
 object H2SessionFactory : org.h2.engine.SessionFactory {
 
-    private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)
+    private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
+
+    private val sqlContext = SQLContext.getOrCreate()
 
     init {
         H2Config.config()
@@ -48,8 +50,8 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
             h2session.trace.setLevel(TraceSystem.ADAPTER)
         }
 
-        val querySession = QueryEngine.createQuerySession(DbSession(h2session.id, h2session))
-        require(querySession.id == h2session.id)
+        val querySession = sqlContext.createSession(DbSession(h2session.serialId, h2session))
+        require(querySession.id == h2session.serialId)
 
         log.info("QuerySession {} is created for h2session <{}>, connection: <{}>",
                 querySession, h2session, ci.url)
@@ -58,13 +60,13 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     @Synchronized
-    fun getSession(sessionId: Int): QuerySession {
-        return QueryEngine.getSession(sessionId)
+    fun getSession(serialId: Int): QuerySession {
+        return sqlContext.getSession(serialId)
     }
 
     @Synchronized
-    override fun closeSession(sessionId: Int) {
-        QueryEngine.closeSession(sessionId)
+    override fun closeSession(serialId: Int) {
+        sqlContext.closeSession(serialId)
     }
 }
 

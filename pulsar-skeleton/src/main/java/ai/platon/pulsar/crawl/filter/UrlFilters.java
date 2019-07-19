@@ -66,10 +66,7 @@ public class UrlFilters {
             urlString = urlFilter.filter(urlString);
 
             if (urlString == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Url is filtered by {}, url: {}", urlFilter.getClass(), initialString);
-                }
-
+                LOG.debug("Url is set to null by {} | {}", urlFilter.getClass().getSimpleName(), initialString);
                 break;
             }
         }

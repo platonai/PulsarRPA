@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.scoring;
 
+import ai.platon.pulsar.common.ScoreVector;
 import org.junit.Before;
 import org.junit.Test;
 

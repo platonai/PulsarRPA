@@ -89,33 +89,6 @@ if [ "$PULSAR_DB_PASSWORD" = "" ]; then
   export PULSAR_DB_PASSWORD="pulsar"
 fi
 
-# The primary config dir
-if [ "$PULSAR_PRIME_CONF_DIR" = "" ]; then
-  export PULSAR_PRIME_CONF_DIR="$PULSAR_HOME/conf/default"
-fi
-
-# The extra config dir
-if [[ "$PULSAR_EXTRA_CONF_DIR" = "" ]]; then
-  export PULSAR_EXTRA_CONF_DIR="$PULSAR_HOME/conf/alternatives/information/local"
-fi
-
-# The final config directory, all config files are merged into this directory
-if [[ "$PULSAR_CONF_DIR" = "" ]]; then
-  PULSAR_CONF_DIR="$PULSAR_TMP_DIR/conf"
-  if [[ -d "$PULSAR_CONF_DIR" ]]; then
-    rm -r $PULSAR_CONF_DIR
-  fi
-
-  mkdir -p $PULSAR_CONF_DIR
-  find $PULSAR_PRIME_CONF_DIR -maxdepth 1 -type f | xargs -I {} cp {} $PULSAR_CONF_DIR
-  export PULSAR_CONF_DIR="$PULSAR_CONF_DIR"
-fi
-
-# Log4j configuration directory
-if [[ "$LOG4J_CONFIGURATION" = "" ]]; then
-  export LOG4J_CONFIGURATION="$PULSAR_CONF_DIR/log4j.properties"
-fi
-
 # REST JMX opts
 if [[ -n "$PULSAR_JMX_OPTS" && -z "$PULSAR_REST_JMX_OPTS" ]]; then
   PULSAR_REST_JMX_OPTS="$PULSAR_JMX_OPTS -Dcom.sun.management.jmxremote.port=10105"

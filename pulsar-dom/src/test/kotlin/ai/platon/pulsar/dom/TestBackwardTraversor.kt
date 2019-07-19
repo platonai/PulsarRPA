@@ -17,7 +17,7 @@ class TestBackwardTraversor {
 
     @Test
     fun visitPathCompatible() {
-        val page = ResourceLoader().getResourceAsStream("webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html")!!
+        val page = ResourceLoader.getResourceAsStream("webpages/mia.com/00f3a63c4898d201df95d6015244dd63.html")!!
         val doc = Documents.parse(page, "UTF-8", "00f3a63c4898d201df95d6015244dd63.html")
 
         val id = "#item_price"

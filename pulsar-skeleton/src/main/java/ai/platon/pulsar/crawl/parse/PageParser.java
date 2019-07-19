@@ -347,7 +347,7 @@ public final class PageParser implements ReloadableParameterized {
         String url = page.getUrl();
         int inHeaderSize = page.getHeaders().getContentLength();
         if (inHeaderSize < 0) {
-            LOG.debug("HttpHeaders.CONTENT_LENGTH is not available, url: " + url);
+            LOG.debug("HttpHeaders.CONTENT_LENGTH is not available | " + url);
             return false;
         }
 

@@ -1,18 +1,29 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.PulsarContext
-import org.jsoup.Jsoup
+import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.ql.annotation.UDFunction
+import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
+import com.beust.jcommander.Parameter
+import org.h2.ext.pulsar.annotation.H2Context
+import org.h2.tools.SimpleResultSet
 import org.junit.Assert
 import org.junit.Test
+import java.sql.Types
 import java.util.*
+import kotlin.reflect.KParameter
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.javaType
 
 /**
  * Created by vincent on 17-7-29.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class TestAnything {
-
-    val session = PulsarContext.createSession()
 
     @Test
     fun testURL() {
@@ -35,22 +46,45 @@ class TestAnything {
         Assert.assertTrue(11 == urls.size)
         Assert.assertTrue(urls[0].length > urls[1].length)
 
-        val domains = urls.map { ai.platon.pulsar.common.URLUtil.getHostName(it) }.filter { Objects.nonNull(it) }.toList()
+        val domains = urls.map { URLUtil.getHostName(it) }.filter { Objects.nonNull(it) }.toList()
         Assert.assertTrue(11 == domains.size)
     }
 
     @Test
-    fun test() {
-        val str = "<div>hello</div><div> world</div>"
-        val doc = Jsoup.parseBodyFragment(str)
-        println(doc.outerHtml())
-        println(doc.body().attr("baseuri"))
+    fun testResultSetFormatter() {
+        val rs = SimpleResultSet()
+        rs.addColumn("A", Types.DOUBLE, 6, 4)
+        rs.addColumn("B")
+        val a = arrayOf(0.8056499951626754, 0.5259673975756397, 0.869188405723, 0.4140625)
+        val b = arrayOf("a", "b", "c", "d")
+        a.zip(b).map { arrayOf(it.first, it.second) }.forEach { rs.addRow(*it) }
+        val fmt = ResultSetFormatter(rs)
+        println(fmt.format())
     }
 
     @Test
     fun testNormalize() {
+        val session = PulsarContext.createSession()
         var url = "http://shop.mogujie.com/detail/1llurfa?acm=3.ms.1_4_1llurfa.15.1331-68998.tPlDtqPaugJED.sd_117_116-swt_15-imt_6-t_tPlDtqPaugJED-lc_3-fcid_10059513-bid_15-dit_17-idx_39-dm1_5002"
         val url2 = session.normalize(url)
         println(url2)
+    }
+
+    @Test
+    fun testShowLoadOptions() {
+        LoadOptions.helpList.forEach {
+            println(it)
+        }
+    }
+
+    @Test
+    fun testFunctionParameters() {
+        CommonFunctions::class.declaredMemberFunctions
+                .filter { it.visibility == KVisibility.PUBLIC }.map { it.parameters }.forEach {
+            it.filter { it.kind == KParameter.Kind.VALUE }.filter { !it.annotations.any { it is H2Context } }.forEach {
+                println("${it.name}: ${it.type.javaType.typeName}")
+            }
+            println()
+        }
     }
 }

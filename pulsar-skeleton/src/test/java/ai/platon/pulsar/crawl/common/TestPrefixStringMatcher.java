@@ -113,5 +113,4 @@ public class TestPrefixStringMatcher {
         System.out.println("got " + numMatches + " matches out of "
                 + numInputsTested + " tests");
     }
-
 }

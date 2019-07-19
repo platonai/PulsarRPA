@@ -70,7 +70,7 @@ public class DateUrlFilter implements UrlFilter {
     private void load() {
         String resourceFile = configFile != null ? configFile : conf.get(URLFILTER_DATE_FILE, "date-urlfilter.txt");
         String stringResource = conf.get(URLFILTER_DATE_RULES);
-        new ResourceLoader().readAllLines(stringResource, resourceFile);
+        ResourceLoader.readAllLines(stringResource, resourceFile);
     }
 
     @Override

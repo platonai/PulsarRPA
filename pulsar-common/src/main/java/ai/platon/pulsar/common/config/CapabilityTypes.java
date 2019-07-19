@@ -164,14 +164,11 @@ public interface CapabilityTypes {
      * Load parameters
      */
     String LOAD_HARD_REDIRECT = "load.hard.redirect";
-    String LOAD_IGNORE_FAILED_IN_BATCH = "load.ignore.failed.in.batch";
     /**
      * Fetch parameters
      */
     String FETCH_MODE = "fetch.fetch.mode";
-    String FETCH_PREFER_PARALLEL = "fetch.prefer.parallel";
     String FETCH_EAGER_FETCH_LIMIT = "fetch.eager.fetch.limit";
-    String FETCH_BACKGROUND = "fetch.background";
 
     String FETCH_THREADS_FETCH = "fetch.threads.fetch";
     String FETCH_CRAWL_PATH_STRATEGY = "fetch.crawl.path.strategy";
@@ -198,17 +195,22 @@ public interface CapabilityTypes {
     String FETCH_STORE_CONTENT = "fetch.store.content";
     String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
 
+    /**
+     * Browser
+     * */
     String FETCH_PAGE_LOAD_TIMEOUT = "fetch.page.load.timeout";
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_DOM_WAIT_FOR_TIMEOUT = "fetch.dom.wait.for.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
     String FETCH_SCROLL_DOWN_WAIT = "fetch.scroll.down.wait";
-    String FETCH_CLIENT_JS = "fetch.client.js";
-    String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.client.js.computed.styles";
+    String FETCH_CLIENT_JS = "fetch.browser.client.js";
+    String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
+    String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.required.property.names";
     /**
      * Selenium
      */
     String SELENIUM_BROWSER = "selenium.browser";
+    String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
     String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
     String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
     String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
@@ -263,8 +265,8 @@ public interface CapabilityTypes {
     String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
+    // TODO: not used, may be caused by a git merge problem
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
-
 
     /**
      * DbUpdater parameters

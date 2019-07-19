@@ -107,7 +107,7 @@ public class WebPage {
 
         // the url of a page might be normalized, but the baseUrl always keeps be the original
         if (page.getBaseUrl() == null) {
-            setBaseUrl(url);
+            setLocation(url);
         }
     }
 
@@ -118,7 +118,7 @@ public class WebPage {
 
         // BaseUrl is the last working address, it might redirect to url, or it might have random parameters
         if (page.getBaseUrl() == null) {
-            setBaseUrl(url);
+            setLocation(url);
         }
     }
 
@@ -130,7 +130,7 @@ public class WebPage {
     @Nonnull
     public static WebPage newWebPage(String originalUrl, boolean ignoreQuery) {
         Objects.requireNonNull(originalUrl);
-        String url = ignoreQuery ? Urls.normalizeUrl(originalUrl, ignoreQuery) : originalUrl;
+        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
@@ -138,7 +138,7 @@ public class WebPage {
     public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, MutableConfig mutableConfig) {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(mutableConfig);
-        String url = ignoreQuery ? Urls.normalizeUrl(originalUrl, ignoreQuery) : originalUrl;
+        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
         return newWebPageInternal(url, mutableConfig);
     }
 
@@ -147,7 +147,7 @@ public class WebPage {
 
         WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
 
-        page.setBaseUrl(url);
+        page.setLocation(url);
         page.setMutableConfig(mutableConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(impreciseNow);
@@ -175,7 +175,7 @@ public class WebPage {
 
         WebPage page = WebPage.newWebPage(url, false);
 
-        page.setBaseUrl(url);
+        page.setLocation(url);
         page.setModifiedTime(impreciseNow);
         page.setFetchTime(Instant.parse("3000-01-01T00:00:00Z"));
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());
@@ -488,24 +488,34 @@ public class WebPage {
     }
 
     /**
-     * The url is the permanent internal address, it might not still available to access the target.
-     *
-     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
-     *
-     * BaseUrl may be different from url, it's generally normalized.
+     * WebPage.url is the permanent internal address, it might not still available to access the target.
+     * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
+     * or it might have additional random parameters.
+     * WebPage.location may be different from url, it's generally normalized.
      */
-    public String getBaseUrl() {
+    public String getLocation() {
         return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
+    }
+
+    /**
+     * The baseUrl is as the same as Location
+     *
+     * A baseUrl has the same semantic with Jsoup.parse:
+     * @link {https://jsoup.org/apidocs/org/jsoup/Jsoup.html#parse-java.io.File-java.lang.String-java.lang.String-}
+     * @see WebPage#getLocation
+     * */
+    public String getBaseUrl() {
+        return getLocation();
     }
 
     /**
      * The url is the permanent internal address, it might not still available to access the target.
      *
-     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
+     * Location is the last working address, it might redirect to url, or it might have additional random parameters.
      *
-     * BaseUrl may be different from url, it's generally normalized.
+     * Location may be different from url, it's generally normalized.
      */
-    public void setBaseUrl(String value) {
+    public void setLocation(String value) {
         page.setBaseUrl(value);
     }
 
@@ -903,7 +913,7 @@ public class WebPage {
             title = getPageTitle();
         }
         if (title.isEmpty()) {
-            title = getBaseUrl();
+            title = getLocation();
         }
         if (title.isEmpty()) {
             title = url;

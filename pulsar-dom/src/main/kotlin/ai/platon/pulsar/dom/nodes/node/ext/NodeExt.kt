@@ -1,11 +1,14 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
 import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_HIDDEN
+import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
-import ai.platon.pulsar.dom.data.BrowserControl
 import ai.platon.pulsar.dom.features.FeatureEntry
 import ai.platon.pulsar.dom.features.FeatureFormatter
 import ai.platon.pulsar.dom.features.NodeFeature
@@ -13,118 +16,254 @@ import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.model.createImage
 import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
-import ai.platon.pulsar.dom.select.MathematicalSelector
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.math3.linear.ArrayRealVector
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
-import org.jsoup.nodes.TextNode
-import org.jsoup.select.Elements
-import org.jsoup.select.NodeFilter
+import org.jsoup.nodes.*
 import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
+import kotlin.reflect.KProperty
 
-val Node.viewPort: Dimension
-    get() {
-        return computeDocVariableIfAbsent(V_VIEW_PORT, ownerDocument.calculateViewPort())
+class DoubleFeature(val name: Int) {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): Double = thisRef.features[name]
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: Double) {
+        thisRef.features[name] = value
     }
+}
 
-// basic info
-val Node.uri: String get() = baseUri()
+class IntFeature(val name: Int) {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): Int = thisRef.features[name].toInt()
 
-var Node.depth: Int
-    get() = getFeature(DEP).toInt()
-    set(value) = setFeature(DEP, value.toDouble())
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: Int) {
+        thisRef.features[name] = value.toDouble()
+    }
+}
 
-val Node.sequence: Int get() = getFeature(SEQ).toInt()
+class MapField<T>(val initializer: (Node) -> T) {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T =
+            thisRef.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: T): T {
+        thisRef.variables[property.name] = value
+        return value
+    }
+}
+
+class NullableMapField<T> {
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T? =
+            thisRef.variables[property.name] as T?
+
+    operator fun setValue(thisRef: Node, property: KProperty<*>, value: T?) {
+        thisRef.variables[property.name] = value
+    }
+}
+
+fun <T> field(initializer: (Node) -> T): MapField<T> {
+    return MapField(initializer)
+}
+
+inline fun <reified T> nullableField(): NullableMapField<T> {
+    return NullableMapField()
+}
+
+val nilNode = Element("div") as Node
+
+val nilElement = Element("div")
+
+val nilDocument = Document.createShell("")
+
+val Document.isNil get() = this === nilDocument
+
+val Document.pulsarMetaElement get() = getElementById("#${PulsarConstants.PULSAR_META_INFORMATION_ID}")
+
+val Document.pulsarScriptElement get() = getElementById("#${PulsarConstants.PULSAR_SCRIPT_SECTION_ID}")
+
+val Document.pulsarScript get() = ownerDocument.pulsarScriptElement.text()
+
+//var Document.originalExportPath by field {
+//    PulsarPaths.get(PulsarPaths.webCacheDir, "original", getExportFilename(it.baseUri()))
+//}
+
+// TODO: check if this override Node.isNil or not?
+val Element.isNil get() = this === nilElement
+
+fun Element.addClasses(vararg classNames: String): Element {
+    classNames.forEach { addClass(it) }
+    return this
+}
+
+fun Element.qualifiedClassNames(): Set<String> {
+    val classNames = className().split("\\s+".toRegex()).toMutableSet()
+    return getQualifiedClassNames(classNames)
+}
+
+fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
+    this.attr(attributeKey, attributeValue.toString())
+    return this
+}
+
+fun Element.parseStyle(): Array<String> {
+    return StringUtil.stripNonChar(attr("style"), ":;")
+            .split(";".toRegex())
+            .dropLastWhile { it.isEmpty() }
+            .toTypedArray()
+}
+
+fun Element.getStyle(styleKey: String): String {
+    return getStyle(parseStyle(), styleKey)
+}
+
+val Node.isNil get() = this === nilNode
+
+val Node.ownerDocument get() = ownerDocumentNode as Document
+
+/**
+ * Get the URL this Document was parsed from. If the starting URL is a redirect,
+ * this will return the final URL from which the document was served from.
+ *
+ * Note: In most cases the base URL is simply the location of the document, but it can be affected by many factors,
+ * including the <base> element in HTML and the xml:base attribute in XML.
+ *
+ * The base URL of a document is used to resolve relative URLs when the browser needs to obtain an absolute URL,
+ * for example when processing the HTML <img> element's src attribute or XML xlink:href attribute.
+ *
+ * @return location
+ */
+val Node.location: String get() = ownerDocument.location()
+
+var Node.depth by IntFeature(DEP)
+
+val Node.sequence by IntFeature(SEQ)
 
 /*********************************************************************
  * Geometric information
  * *******************************************************************/
 
-var Node.left
-    get() = getFeature(LEFT).toInt()
-    set(value) = setFeature(LEFT, value.toDouble())
+var Node.left by IntFeature(LEFT)
 
-var Node.top
-    get() = getFeature(TOP).toInt()
-    set(value) = setFeature(TOP, value.toDouble())
+var Node.top by IntFeature(TOP)
 
-var Node.width: Int
-    get() = getFeature(WIDTH).toInt()
-    set(value) = setFeature(WIDTH, value.toDouble())
+var Node.width: Int by IntFeature(WIDTH)
 
-var Node.height: Int
-    get() = getFeature(HEIGHT).toInt()
-    set(value) = setFeature(HEIGHT, value.toDouble())
+var Node.height: Int by IntFeature(HEIGHT)
 
-val Node.right: Int
-    get() = left + width
+val Node.right: Int get() = left + width
 
-val Node.bottom: Int
-    get() = top + height
+val Node.bottom: Int get() = top + height
 
-val Node.x
-    get() = left
+val Node.x get() = left
 
-val Node.y
-    get() = top
+val Node.y get() = top
 
-val Node.x2
-    get() = right
+val Node.x2 get() = right
 
-val Node.y2
-    get() = bottom
+val Node.y2 get() = bottom
 
-val Node.centerX
-    get() = (x + x2) / 2
+val Node.centerX get() = (x + x2) / 2
 
-val Node.centerY
-    get() = (y + y2) / 2
+val Node.centerY get() = (y + y2) / 2
 
-val Node.location: Point
-    get() = Point(x, y)
+val Node.geoLocation get() = Point(x, y)
 
-val Node.dimension: Dimension
-    get() = Dimension(width, height)
+val Node.dimension get() = Dimension(width, height)
 
-val Node.rectangle: Rectangle
-    get() = Rectangle(x, y, width, height)
+val Node.rectangle get() = Rectangle(x, y, width, height)
 
-val Node.area: Int
-    get() = width * height
+val Node.area get() = width * height
+
+/** Hidden flag set by browser */
+val Node.hasHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_HIDDEN)
+/** Overflow hidden flag set by browser */
+val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HIDDEN)
+/** Check if the node is visible or not */
+val Node.isVisible: Boolean get() {
+    return when {
+        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have a empty rectangle?
+        else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
+    }
+}
+
+/** Check if the node is visible or not */
+val Node.isHidden: Boolean get() = !this.isVisible
+/** Whether the element is floating */
+// val Node.isAbsolute: Boolean get() = hasAttr("_absolute")
+// val Node.isFixed: Boolean get() = hasAttr("_fixed")
+
+val Node.isText: Boolean get() = this is TextNode
+
+val Node.isBlankText: Boolean get() { return this is TextNode && this.isBlank }
+
+val Node.isNonBlankText: Boolean get() { return this is TextNode && !this.isBlank }
+
+val Node.isRegularText: Boolean get() { return isVisible && isNonBlankText }
+
+val Node.isImage: Boolean get() = this.nodeName() == "img"
+
+val Node.isRegularImage: Boolean get() { return isImage && isVisible && hasAttr("src") }
+
+/**
+ * A <img> tag can contain any tag
+ * */
+val Node.isAnchorImage: Boolean get() = isImage && this.hasAncestor { it.isAnchor }
+
+val Node.isAnchor: Boolean get() = this.nodeName() == "a"
+
+val Node.isRegularAnchor: Boolean get() = isVisible && this.nodeName() == "a"
+
+val Node.isImageAnchor: Boolean get() = isAnchor && this.numImages == 1
+
+val Node.isRegularImageAnchor: Boolean get() = isRegularAnchor && this.numImages == 1
+
+val Node.isTable: Boolean get() = this.nodeName() == "table"
+
+val Node.isList: Boolean get() = this.nodeName() in arrayOf("ul", "ol")
+
+/**
+ * If the text is short
+ * */
+val Node.isShortText get() = isRegularText && cleanText.length in 1..9
+
+val Node.isMediumText get() = isRegularText && cleanText.length in 1..20
+
+val Node.isLongText get() = isRegularText && cleanText.length > 20
+
+val Node.isCurrencyUnit get() = isShortText && cleanText in arrayOf("¥", "$")
+
+val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
+
+// TODO: "isShortText" should be in -2147483648 to 2147483647, it's mapped to java.lang.Integer.
+// TODO: detect all SQL types
+val Node.isInt get() = isShortText && StringUtils.isNumeric(cleanText)
+
+val Node.isFloat get() = isShortText && StringUtil.isFloat(cleanText)
+
+/**
+ * If the text is numeric and have non-numeric surroundings
+ * */
+val Node.isNumericLike get() = isMediumText && StringUtil.isNumericLike(cleanText)
+
+val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
+
+val Node.intValue by field { SParser(it.cleanText).getInt(Int.MIN_VALUE) }
+
+val Node.doubleValue by field { SParser(it.cleanText).getDouble(Double.NaN) }
 
 /*********************************************************************
  * Distinguished features
  * *******************************************************************/
-/**
- * The number of element siblings
- * features\[SIB] = features\[C]
- * TODO: keep SIB feature be consistent with Node.siblingNodes.size
- * */
-val Node.numSiblings
-    get() = getFeature(SIB).toInt()
-val Node.numChildren
-    get() = getFeature(C).toInt()
-
+var Node.numChars by IntFeature(CH)
+var Node.numSiblings by IntFeature(SIB)
+var Node.numChildren by IntFeature(C)
 /** Number of descend text nodes */
-var Node.numTextNodes
-    get() = getFeature(TN).toInt()
-    set(value) = setFeature(TN, value.toDouble())
+var Node.numTextNodes by IntFeature(TN)
 
 /** Number of descend images */
-var Node.numImages
-    get() = getFeature(IMG).toInt()
-    set(value) = setFeature(IMG, value.toDouble())
+var Node.numImages by IntFeature(IMG)
 
 /** Number of descend anchors */
-var Node.numAnchors
-    get() = getFeature(A).toInt()
-    set(value) = setFeature(A, value.toDouble())
+var Node.numAnchors by IntFeature(A)
 
 // semantics
 val Node.selectorOrName: String
@@ -145,26 +284,119 @@ val Node.captionOrSelector: String
         else -> selectorOrName
     }
 
-val Node.textOrNull: String?
-    get() = when {
-        this.hasAttr("src") -> this.attr("abs:src")
-        this.hasAttr("href") -> this.attr("abs:href")
-        this is TextNode -> this.text().trim()
-        this is Element -> this.text().trim()
-        else -> null
+/**
+ * TextNodes' clean texts are calculated and stored in advance while Elements' clean texts are calculated when required
+ * This is a balance of space and time
+ * */
+val Node.cleanText: String
+    get() {
+        val text = when (this) {
+            is TextNode -> immutableText
+            is Element -> accumulateText(this)
+            else -> null
+        }
+
+        return text?:""
     }
 
-val Node.textOrEmpty: String get() = textOrNull?:""
+val Node.textRepresentation: String get() {
+    return when {
+        isImage -> attr("abs:src")
+        isAnchor -> attr("abs:href")
+        this is TextNode -> cleanText
+        this is Element -> cleanText
+        else -> ""
+    }
+}
 
-val Node.textOrName: String get() = textOrNull?:name
+val Node.slimHtml by field {
+    when {
+        it.isImage -> createImage(it as Element, keepMetadata = false, lazy = true).toString()
+        it.isAnchor -> createLink(it as Element, keepMetadata = false, lazy = true).toString()
+        it.isNumericLike || it.isMoneyLike -> "<em>${it.cleanText}</em>"
+        it is TextNode -> String.format("<span>%s</span>", it.cleanText)
+        it is Element -> String.format("<div>%s</div>", it.cleanText)
+        else -> String.format("<b>%s</b>", it.name)
+    }
+}
 
-val Node.slimHtml: String
-    get() = when {
-        this.nodeName() == "img" -> createImage(this as Element, keepMetadata = false, lazy = true).toString()
-        this.nodeName() == "a" -> createLink(this as Element, keepMetadata = false, lazy = true).toString()
-        this is TextNode -> String.format("<span>%s</span>", this.text())
-        this is Element -> String.format("<div>%s</div>", this.text())
-        else -> String.format("<b>%s</b>", name)
+val Node.key: String get() = "$location#$sequence"
+
+val Node.name: String
+    get() {
+        return when(this) {
+            is Document -> ":root"
+            is Element -> {
+                val id = id()
+                if (id.isNotEmpty()) {
+                    return "#$id"
+                }
+
+                val cls = qualifiedClassNames()
+                if (cls.isNotEmpty()) {
+                    return cls.joinToString(".", ".") { it }
+                }
+
+                nodeName()
+            }
+            is TextNode -> {
+                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                return bestElement.name + postfix
+            }
+            else -> nodeName()
+        }
+    }
+
+val Node.canonicalName: String
+    get() {
+        when(this) {
+            is Document -> {
+                return location
+            }
+            is Element -> {
+                var id = id().trim()
+                if (!id.isEmpty()) {
+                    id = "#$id"
+                }
+
+                var classes = ""
+                if (id.isEmpty()) {
+                    val cls = qualifiedClassNames()
+                    if (cls.isNotEmpty()) {
+                        classes = cls.joinToString(".", ".") { it }
+                    }
+                }
+
+                return "${nodeName()}$id$classes"
+            }
+            is TextNode -> {
+                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                return bestElement.canonicalName + postfix
+            }
+            else -> return nodeName()
+        }
+    }
+
+val Node.uniqueName: String get() = "$sequence-$canonicalName"
+
+val Node.namedRect: String get() = "$name-${rectangle.str}"
+
+val Node.namedRect2: String get() = "$name-${rectangle.str2}"
+
+/**
+ * Get the parent element of this node, an exception is thrown if it's root
+ * */
+val Node.parentElement get() = this.parent() as Element
+
+/**
+ * Returns a best element to represent this node: if the node itself is an element, returns itself
+ * otherwise, returns it's parent
+ * */
+val Node.bestElement: Element
+    get() {
+        return if (this is Element) {
+            this
+        } else this.parentElement
     }
 
 /**
@@ -205,7 +437,6 @@ fun Node.clearFeatures(): Node {
 
 /**
  * Temporary node variables
- * TODO: we may need a fast variable holder which uses int as the key
  * */
 inline fun <reified T> Node.getVariable(name: String): T? {
     val v = variables[name]
@@ -217,17 +448,23 @@ inline fun <reified T> Node.getVariable(name: String, defaultValue: T): T {
     return if (v is T) v else defaultValue
 }
 
-inline fun <reified T> Node.computeVariableIfAbsent(name: String, defaultValue: T): T {
+inline fun <reified T> Node.computeVariableIfAbsent(name: String, mappingFunction: (String) -> T): T {
     var v = variables[name]
     if (v !is T) {
-        variables[name] = defaultValue
-        v = defaultValue
+        v = mappingFunction(name)
+        variables[name] = v
     }
     return v
 }
 
 fun Node.setVariable(name: String, value: Any) {
     variables[name] = value
+}
+
+fun Node.setVariableIfNotNull(name: String, value: Any?) {
+    if (value != null) {
+        variables[name] = value
+    }
 }
 
 fun Node.hasVariable(name: String): Boolean {
@@ -239,30 +476,27 @@ fun Node.removeVariable(name: String): Any? {
 }
 
 /**
- * Temporary document variables
+ * Set attribute [attributeKey] to [attributeValue]
  * */
-inline fun <reified T> Node.getDocVariable(name: String): T? {
-    return ownerDocument.getVariable(name)
+fun Node.anyAttr(attributeKey: String, attributeValue: Any): Node {
+    this.attr(attributeKey, attributeValue.toString())
+    return this
 }
 
-inline fun <reified T> Node.getDocVariable(name: String, defaultValue: T): T {
-    return ownerDocument.getVariable(name, defaultValue)
+/**
+ * Set attribute [attributeKey] to [attributeValue] and return [attributeValue]
+ * */
+fun Node.rAttr(attributeKey: String, attributeValue: String): String {
+    this.attr(attributeKey, attributeValue)
+    return attributeValue
 }
 
-inline fun <reified T> Node.computeDocVariableIfAbsent(name: String, defaultValue: T): T {
-    return ownerDocument.computeVariableIfAbsent(name, defaultValue)
-}
-
-fun Node.setDocVariable(name: String, value: Any) {
-    ownerDocument.setVariable(name, value)
-}
-
-fun Node.hasDocVariable(name: String): Boolean {
-    return ownerDocument.hasVariable(name)
-}
-
-fun Node.removeDocVariable(name: String): Any? {
-    return ownerDocument.removeVariable(name)
+/**
+ * Set attribute [attributeKey] to [attributeValue] and return [attributeValue]
+ * */
+fun Node.rAnyAttr(attributeKey: String, attributeValue: Any): Any {
+    this.attr(attributeKey, attributeValue.toString())
+    return attributeValue
 }
 
 /**
@@ -385,17 +619,26 @@ fun Node.removeAttrs(vararg attributeKeys: String) {
     attributeKeys.forEach { this.removeAttr(it) }
 }
 
+fun Node.removeAttrs(attributeKeys: Iterable<String>) {
+    attributeKeys.forEach { this.removeAttr(it) }
+}
+
+fun Node.removeAttrsIf(filter: (Attribute) -> Boolean) {
+    val keys = attributes().mapNotNull { it.takeIf { filter(it) }?.key }
+    removeAttrs(keys)
+}
+
 fun Node.formatEachFeatures(vararg featureKeys: Int): String {
     val sb = StringBuilder()
     NodeTraversor.traverse({ node, _ ->
-        FeatureFormatter.format(node.features, featureKeys = *featureKeys, sb = sb)
+        FeatureFormatter.format(node.features, featureKeys.asIterable(), sb = sb)
         sb.append('\n')
     }, this)
     return sb.toString()
 }
 
 fun Node.formatFeatures(vararg featureKeys: Int): String {
-    return FeatureFormatter.format(features, featureKeys = *featureKeys).toString()
+    return FeatureFormatter.format(features, featureKeys.asIterable()).toString()
 }
 
 fun Node.formatVariables(): String {
@@ -409,118 +652,11 @@ fun Node.formatVariables(): String {
     return sb.toString()
 }
 
-val Node.key: String get() = "${baseUri()}#$sequence"
-
-val Node.name: String
-    get() {
-        return when(this) {
-            is Document -> ":root"
-            is Element -> {
-                val id = id()
-                if (id.isNotEmpty()) {
-                    return "#$id"
-                }
-
-                val cls = className()
-                if (cls.isNotEmpty()) {
-                    return "." + cls.replace("\\s+".toRegex(), ".")
-                }
-
-                nodeName()
-            }
-            is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
-                return bestElement.name + postfix
-            }
-            else -> nodeName()
-        }
-    }
-
-val Node.canonicalName: String
-    get() {
-        when(this) {
-            is Document -> {
-                var baseUri = baseUri()
-                if (baseUri.isEmpty()) {
-                    baseUri = ownerBody.attr("baseUri")
-                }
-                return ":root@$baseUri"
-            }
-            is Element -> {
-                var id = id().trim()
-                if (!id.isEmpty()) {
-                    id = "#$id"
-                }
-
-                var cls = ""
-                if (id.isEmpty()) {
-                    cls = className().trim()
-                    if (!cls.isEmpty()) {
-                        cls = "." + cls.replace("\\s+".toRegex(), ".")
-                    }
-                }
-
-                return "${nodeName()}$id$cls"
-            }
-            is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
-                return bestElement.canonicalName + postfix
-            }
-            else -> return nodeName()
-        }
-    }
-
-val Node.uniqueName: String get() = "$sequence-$canonicalName"
-
-val Node.namedRect: String get() = "$name-${rectangle.str}"
-
-val Node.namedRect2: String get() = "$name-${rectangle.str2}"
-
-/**
- * Returns a best element to represent this node: if the node itself is an element, return itself
- * otherwise, returns it's parent
- * */
-val Node.bestElement: Element get() = (this as? Element ?: this.parent() as Element)
-
-/*********************************************************************
- * Actions
- * *******************************************************************/
-
-fun Node.forEachAncestor(action: (Element) -> Unit) {
-    var p = this.parent()
-    while (p != null) {
-        action(p as Element)
-        p = p.parent()
-    }
-}
-
-fun Node.forEachAncestorIf(filter: (Element) -> Boolean, action: (Element) -> Unit) {
-    var p = this.parent() as Element?
-
-    while (p != null && filter(p)) {
-        action(p)
-        p = p.parent()
-    }
-}
-
-/**
- * Find first ancestor matches the predication
- * */
-fun Node.findFirstAncestor(predicate: (Element) -> Boolean): Element? {
-    var p = this.parent() as Element?
-    var match = false
-
-    while (p != null && !match) {
-        match = predicate(p)
-        if (!match) {
-            p = p.parent()
-        }
-    }
-
-    return if (match) p else null
-}
-
 fun Node.hasAncestor(predicate: (Element) -> Boolean): Boolean {
+    return findFirstAncestor(predicate) != null
+}
+
+fun Node.hasAncestor(stop: (Node) -> Boolean, predicate: (Element) -> Boolean): Boolean {
     return findFirstAncestor(predicate) != null
 }
 
@@ -528,105 +664,8 @@ fun Node.isAncestorOf(other: Node): Boolean {
     return other.findFirstAncestor { it == this} != null
 }
 
-/**
- * For each posterity
- * */
-fun Node.forEach(includeRoot: Boolean = false, action: (Node) -> Unit) {
-    NodeTraversor.traverse({ node, _-> if (includeRoot || node != this) { action(node) } }, this)
-}
-
-fun Node.forEachMatching(predicate: (Node) -> Boolean, action: (Node) -> Unit) {
-    NodeTraversor.traverse({ node, _-> if (predicate(node)) { action(node) } }, this)
-}
-
-fun Node.forEachElement(includeRoot: Boolean = false, action: (Element) -> Unit) {
-    NodeTraversor.traverse({ node, _->
-        if ((includeRoot || node != this) && node is Element) { action(node) }
-    }, this)
-}
-
-/**
- * Find posterity matches the condition
- * */
-fun Node.find(predicate: (Node) -> Boolean): List<Node> {
-    return collectIf(predicate)
-}
-
-fun Node.findFirst(predicate: (Node) -> Boolean): Node? {
-    val root = this
-    var result: Node? = null
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            return if (predicate(node)) {
-                result = node
-                NodeFilter.FilterResult.STOP
-            }
-            else NodeFilter.FilterResult.CONTINUE
-        }
-    }, root)
-
-    return result
-}
-
-inline fun Node.collectIf(crossinline filter: (Node) -> Boolean): List<Node> {
-    return collectIfTo(mutableListOf(), filter)
-}
-
-inline fun <C : MutableCollection<Node>> Node.collectIfTo(destination: C, crossinline filter: (Node) -> Boolean): C {
-    NodeTraversor.traverse({ node, _-> if (filter(node)) { destination.add(node) } }, this)
-    return destination
-}
-
-inline fun <O: Node> Node.collect(crossinline transform: (Node) -> O?): List<O> {
-    return collectTo(mutableListOf(), transform)
-}
-
-inline fun <O: Node, C : MutableCollection<O>> Node.collectTo(destination: C, crossinline transform: (Node) -> O?): C {
-    NodeTraversor.traverse({ node, _-> transform(node)?.also { destination.add(it) } }, this)
-    return destination
-}
-
-inline fun Node.filter(crossinline predicate: (Node) -> TraverseState): List<Node> {
-    return filterTo(mutableListOf(), predicate)
-}
-
-inline fun <C : MutableCollection<Node>> Node.filterTo(destination: C, crossinline predicate: (Node) -> TraverseState): C {
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            val result = predicate(node)
-            if (result.match) {
-                destination.add(node)
-            }
-            return result.state
-        }
-    }, this)
-    return destination
-}
-
-fun Node.filter(seq: Int): Node? {
-    var result: Node? = null
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            return when {
-                sequence < seq -> NodeFilter.FilterResult.CONTINUE
-                sequence == seq -> {
-                    result = node
-                    NodeFilter.FilterResult.SKIP_ENTIRELY
-                }
-                else -> NodeFilter.FilterResult.SKIP_ENTIRELY
-            }
-        }
-    }, this)
-
-    return result
-}
-
-fun Node.isAncestor(node: Node): Boolean {
-    var p = this.parent()
-    while (p != null && p.depth < node.depth && p != node) {
-        p = p.parent()
-    }
-    return p == node
+fun Node.isAncestorOf(other: Node, stop: (Node) -> Boolean): Boolean {
+    return other.findFirstAncestor(stop) { it == this} != null
 }
 
 fun Node.ancestors(): List<Element> {
@@ -640,180 +679,32 @@ fun Node.ancestors(): List<Element> {
     return ancestors
 }
 
-fun Node.findBySequence(seq: Int): Node? {
-    var result: Node? = null
-    NodeTraversor.filter(object: NodeFilter {
-        override fun head(node: Node, depth: Int): NodeFilter.FilterResult {
-            return when {
-                sequence < seq -> NodeFilter.FilterResult.CONTINUE
-                sequence == seq -> {
-                    result = node
-                    NodeFilter.FilterResult.SKIP_ENTIRELY
-                }
-                else -> NodeFilter.FilterResult.SKIP_ENTIRELY
+private fun accumulateText(root: Element): String {
+    val sb = StringBuilder()
+    NodeTraversor.traverse({ node, depth ->
+        if (node is TextNode) {
+            if (node.immutableText.isNotBlank()) {
+                sb.append(node.immutableText)
             }
+        } else if (node is Element) {
+            if (sb.isNotEmpty() && (node.isBlock || node.tagName() == "br")
+                    && !(sb.isNotEmpty() && sb[sb.length - 1] == ' '))
+                sb.append(" ")
         }
-    }, this)
+    }, root)
 
-    return result
+    return sb.toString()
 }
 
-fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true): Double {
-    return accumulate(featureKey, includeRoot) { true }
-}
-
-fun Node.accumulate(featureKey: Int, includeRoot: Boolean = true, filter: (Node) -> Boolean): Double {
-    var sum = 0.0
-    forEach(includeRoot = includeRoot) {
-        if (filter(it)) {
-            sum += it.features[featureKey]
-        }
-    }
-    return sum
-}
-
-fun Node.minmax(featureKey: Int): Pair<Double, Double> {
-    var min = Double.MAX_VALUE
-    var max = Double.MIN_VALUE
-    forEach {
-        val v = it.features[featureKey]
-        if (v > max) {
-            max = v
-        }
-        if (v < min) {
-            min = v
+private fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<String> {
+    classNames.remove("")
+    if (classNames.isEmpty()) return classNames
+    arrayOf("clearfix", "left", "right", "l", "r").forEach {
+        classNames.remove(it)
+        if (classNames.isEmpty()) {
+            classNames.add(it)
+            return@forEach
         }
     }
-    return min to max
-}
-
-fun Node.minByDouble(transform: (Node) -> Double): Node? {
-    var min = Double.MAX_VALUE
-    var node: Node? = null
-    forEach {
-        val v = transform(it)
-        if (v < min) {
-            min = v
-            node = it
-        }
-    }
-    return node
-}
-
-fun Node.maxByDouble(transform: (Node) -> Double): Node? {
-    var max = Double.MIN_VALUE
-    var node: Node? = null
-    forEach {
-        val v = transform(it)
-        if (v > max) {
-            max = v
-            node = it
-        }
-    }
-    return node
-}
-
-fun Node.countMatches(predicate: (Node) -> Boolean = {true}): Int {
-    var count = 0
-    forEach { if (predicate(it)) ++count }
-    return count
-}
-
-@JvmOverloads
-fun Element.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset == 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    // TODO: do the filtering inside [MathematicalSelector#select]
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
-            .toCollection(Elements())
-}
-
-@JvmOverloads
-fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset == 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
-            .toCollection(Elements())
-}
-
-@Deprecated("Use first instead", ReplaceWith("MathematicalSelector.selectFirst(cssQuery, this)"))
-fun Element.selectFirst2(cssQuery: String): Element? {
-    return MathematicalSelector.selectFirst(cssQuery, this)
-}
-
-fun <O> Element.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                       transformer: (Element) -> O): List<O> {
-    return select2(query, offset, limit).map { transformer(it) }
-}
-
-fun Element.first(cssQuery: String): Element? {
-    return MathematicalSelector.selectFirst(cssQuery, this)
-}
-
-fun <O> Element.first(cssQuery: String, transformer: (Element) -> O): O? {
-    return first(cssQuery)?.let { transformer(it) }
-}
-
-fun Element.parseStyle(): Array<String> {
-    return ai.platon.pulsar.common.StringUtil.stripNonChar(attr("style"), ":;")
-            .split(";".toRegex())
-            .dropLastWhile { it.isEmpty() }
-            .toTypedArray()
-}
-
-fun Element.getStyle(styleKey: String): String {
-    return getStyle(parseStyle(), styleKey)
-}
-
-fun Element.pixelatedValue(value: String, defaultValue: Double): Double {
-    // TODO : we currently handle only px
-    val units = arrayOf("in", "%", "cm", "mm", "ex", "pt", "pc", "px")
-    return NumberUtils.toDouble(StringUtils.removeEnd(value, "px"), defaultValue)
-}
-
-fun getStyle(styles: Array<String>, styleKey: String): String {
-    val styleValue = ""
-
-    val search = "$styleKey:"
-    for (style in styles) {
-        if (style.startsWith(search)) {
-            return style.substring(search.length)
-        }
-    }
-
-    return styleValue
-}
-
-fun convertBox(box: String): String {
-    val box2 = box.replace(" ", "")
-    val matcher = BOX_SYNTAX_PATTERN.matcher(box2)
-    if (matcher.find()) {
-        return box2.split(",")
-                .map { it.split('x', 'X') }
-                .map { "*:in-box(${it[0]}, ${it[1]})" }
-                .joinToString()
-    } else if (BOX_CSS_PATTERN.matcher(box2).matches()) {
-        return box2
-    }
-
-    // Bad syntax, no element should find
-    return "non:in-box(0, 0, 0, 0)"
-}
-
-private fun Node.calculateViewPort(): Dimension {
-    val viewPort = BrowserControl.viewPort
-    val parts = ownerBody.attr("view-port").split("x".toRegex())
-    if (parts.size != 2) return viewPort
-
-    val w = SParser(parts[0]).getInt(viewPort.width)
-    val h = SParser(parts[1]).getInt(viewPort.height)
-    return Dimension(w, h)
+    return classNames
 }

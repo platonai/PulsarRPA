@@ -19,7 +19,7 @@ package ai.platon.pulsar.rest.service;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.table.TableUtils;
 import ai.platon.pulsar.persist.rdb.model.ServerInstance;
-import ai.platon.pulsar.persist.rdb.model.dao.OrmliteDaoFactory;
+import ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
@@ -30,11 +30,19 @@ public class ServerInstanceService {
 
   private Dao<ServerInstance, Long> serverInstanceDao;
 
+  public ServerInstanceService(OrmliteDaoFactory daoFactory) {
+    this(daoFactory, false);
+  }
+
   public ServerInstanceService(OrmliteDaoFactory daoFactory, boolean autoTruncate) {
     serverInstanceDao = daoFactory.createDao(ServerInstance.class);
     if (autoTruncate) {
       truncate();
     }
+  }
+
+  public Dao<ServerInstance, Long> db() {
+    return serverInstanceDao;
   }
 
   public ServerInstance register(ServerInstance serverInstance) {

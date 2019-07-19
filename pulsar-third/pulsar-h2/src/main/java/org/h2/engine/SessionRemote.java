@@ -89,7 +89,7 @@ public class SessionRemote extends SessionWithState implements DataHandler {
 
     private CompareMode compareMode = CompareMode.getInstance(null, 0);
 
-    private static Class<?> getEngineImplementation() {
+    public static Class<?> getEngineImplementation() {
         String className = Utils.getProperty("h2.sessionFactory", "org.h2.engine.Engine");
         return JdbcUtils.loadUserClass(className);
     }
@@ -103,8 +103,11 @@ public class SessionRemote extends SessionWithState implements DataHandler {
         return sessionFactory.createSession(ci);
     }
 
+    /**
+     * Do the external cleansing jobs, for example, release pulsar resources
+     * */
     public static void closeSession(Session session) throws Exception {
-        sessionFactory.closeSession(session.getId());
+        sessionFactory.closeSession(session.getSerialId());
     }
 
     public SessionRemote(ConnectionInfo ci) {

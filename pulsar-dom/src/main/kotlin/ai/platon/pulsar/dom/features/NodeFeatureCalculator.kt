@@ -7,6 +7,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.DOMRect
 import ai.platon.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
+import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -56,12 +57,12 @@ class NodeFeatureCalculator : NodeVisitor {
         if (node is TextNode) {
             // Trim: remove all surrounding unicode white spaces, including all HT, VT, LF, FF, CR, ASCII space, etc
             // @see https://en.wikipedia.org/wiki/Whitespace_character
-            val text = node.text().trim()
+            node.immutableText = node.text()
+            val text = node.immutableText
             val ch = text.length.toDouble()
 
             if (ch > 0) {
-                accumulateFeatures(node,
-                        FeatureEntry(CH, ch)
+                accumulateFeatures(node, FeatureEntry(CH, ch)
                 )
             }
         }
