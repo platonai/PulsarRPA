@@ -111,7 +111,7 @@ object DomFunctionTables {
                      restrictCss: String = ":root",
                      offset: Int = 1,
                      limit: Int = Integer.MAX_VALUE,
-                     normalize: Boolean = true): ResultSet {
+                     normalize: Boolean = false): ResultSet {
         return loadOutPagesAsRsInternal(h2session, configuredPortal, restrictCss, offset, limit, normalize = normalize)
     }
 
@@ -124,9 +124,47 @@ object DomFunctionTables {
                                    restrictCss: String = ":root",
                                    offset: Int = 1,
                                    limit: Int = Int.MAX_VALUE,
-                                   normalize: Boolean = true): ResultSet {
+                                   normalize: Boolean = false): ResultSet {
         return loadOutPagesAsRsInternal(h2session,
                 configuredPortal, restrictCss, offset, limit, normalize = normalize, ignoreQuery = true)
+    }
+
+    /**
+     * Load configuredPortal page(s) and follow all links
+     *
+     * @param configuredPortal The configuredPortal page(s) to fetch,
+     * a configuredPortal can be
+     * 1) a configured urls, or
+     * 2) a String[]
+     * 3) a List
+     * @return The [ResultSet]
+     */
+    @InterfaceStability.Stable
+    @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, and select the specified element")
+    @JvmOverloads
+    @JvmStatic
+    fun loadOutPagesAndSelect(
+            @H2Context h2session: Session,
+            configuredPortal: Value,
+            restrictCss: String = ":root",
+            offset: Int = 1,
+            limit: Int = Integer.MAX_VALUE,
+            targetCss: String = ":root",
+            normalize: Boolean = false,
+            ignoreQuery: Boolean = false): ResultSet {
+        val session = H2SessionFactory.getSession(h2session.serialId)
+
+        val docs =
+                Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
+                        .map { session.parse(it) }
+
+        val elements = if (targetCss == ":root") {
+            docs.map { it.document }
+        } else {
+            docs.flatMap { it.select(targetCss) }
+        }
+
+        return toResultSet("DOM", elements.filterNotNull().map { domValue(it) })
     }
 
     /**
@@ -150,9 +188,10 @@ object DomFunctionTables {
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE,
             targetCss: String = ":root",
-            normalize: Boolean = true): ResultSet {
+            normalize: Boolean = false,
+            ignoreQuery: Boolean = false): ResultSet {
         return loadOutPagesAsRsInternal(h2session,
-                configuredPortal, restrictCss, offset, limit, targetCss = targetCss, normalize = normalize)
+                configuredPortal, restrictCss, offset, limit, targetCss = targetCss, normalize = normalize, ignoreQuery = ignoreQuery)
     }
 
     private fun loadOutPagesAsRsInternal(
@@ -162,7 +201,7 @@ object DomFunctionTables {
             offset: Int = 1,
             limit: Int = Int.MAX_VALUE,
             targetCss: String = ":root",
-            normalize: Boolean = true,
+            normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(h2session.serialId)
 

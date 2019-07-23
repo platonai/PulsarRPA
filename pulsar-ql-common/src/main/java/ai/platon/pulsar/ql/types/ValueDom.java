@@ -219,8 +219,12 @@ public class ValueDom extends Value {
 
     @Override
     public String toString() {
-        if (element != null && isNotNil()) {
-            return NodeExtKt.getName(element);
+        if (element != null) {
+            if (isNotNil()) {
+                return NodeExtKt.getName(element);
+            } else {
+                return "(nil)";
+            }
         }
         return "(dom)";
     }

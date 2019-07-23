@@ -17,13 +17,13 @@ object BoxFunctions {
     @JvmStatic
     @UDFunction
     fun all(dom: ValueDom, box: String): ValueArray {
-        return DomSelectFunctions.inlineSelect(dom, convertBox(box))
+        return DomInlineSelectFunctions.inlineSelect(dom, convertBox(box))
     }
 
     @JvmStatic
     @UDFunction
     fun all(dom: ValueDom, box: String, offset: Int, limit: Int): ValueArray {
-        return DomSelectFunctions.inlineSelect(dom, convertBox(box), offset, limit)
+        return DomInlineSelectFunctions.inlineSelect(dom, convertBox(box), offset, limit)
     }
 
     @JvmStatic

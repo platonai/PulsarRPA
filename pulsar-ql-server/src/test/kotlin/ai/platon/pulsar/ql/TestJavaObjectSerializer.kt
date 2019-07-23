@@ -1,42 +1,18 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
-import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.SysProperties
+import org.h2.util.JdbcUtils
 import org.jsoup.Jsoup
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
+import java.sql.ResultSet
 import java.sql.Types
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TestJavaObjectSerializer : TestBase() {
-
-    private lateinit var baseDom: ValueDom
-
-    @Before
-    override fun setup() {
-        db.config.traceTest = false
-        db.config.memory = true
-        db.config.networked = true
-        SysProperties.serializeJavaObject = true
-
-        super.setup()
-
-        // val doc = Jsoup.connect("http://www.baidu.com/").get()
-        val doc = FeaturedDocument.createShell("http://example.com/")
-        doc.body.append("<div>Hello World</div>")
-        baseDom = domValue(doc)
-    }
-
-    @After
-    override fun teardown() {
-        super.teardown()
-        // SysProperties.serializeJavaObject = false
-    }
 
     @Test
     fun testLocalSerialization() {
@@ -44,8 +20,8 @@ class TestJavaObjectSerializer : TestBase() {
 
         val baseUri = "http://example.com/"
         val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseUri)
+        val baseDom = ValueDom.get(doc.body().selectFirst("div"))
 
-        baseDom = ValueDom.get(doc.body().selectFirst("div"))
         val bytes = serializer.serialize(baseDom)
         val obj = serializer.deserialize(bytes)
         assertTrue(obj is ValueDom)
@@ -66,19 +42,22 @@ class TestJavaObjectSerializer : TestBase() {
 
     @Test
     fun testNetworkSerialization() {
-        assertTrue(stat is org.h2.jdbc.JdbcStatement)
-
+        val conn = remoteDB.getConnection("testNetworkSerialization")
+        val stat = conn.createStatement()
         stat.execute("create table t(id int, val other)")
 
-        val ins = conn.prepareStatement("insert into t(id, val) values(?, ?)")
+        val baseUri = "http://example.com/"
+        val doc = Jsoup.parseBodyFragment("<div>Hello World</div>", baseUri)
+        val baseDom = ValueDom.get(doc.body().selectFirst("div"))
 
+        val ins = conn.prepareStatement("insert into t(id, val) values(?, ?)")
         ins.setInt(1, 2)
         ins.setObject(2, baseDom, Types.JAVA_OBJECT)
         assertEquals(1, ins.executeUpdate())
 
-        val s = conn.createStatement()
+        val stat2 = conn.createStatement()
         // val rs = s.executeQuery("select val from t")
-        val rs = s.executeQuery("select val, id from t")
+        val rs = stat2.executeQuery("select val, id from t")
 
         assertTrue(rs.next())
         assertTrue(rs.getObject(1) is ValueDom)
@@ -87,7 +66,8 @@ class TestJavaObjectSerializer : TestBase() {
 
     @Test
     fun testNetworkSerialization2() {
-        assertTrue(stat is org.h2.jdbc.JdbcStatement)
+        val conn = remoteDB.getConnection("testNetworkSerialization2")
+        val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
 
         val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         val sql = """SELECT
@@ -100,5 +80,33 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue(rs.getObject(1) is ValueDom)
         val dom = rs.getObject(1) as ValueDom
         assertTrue { dom.element.uniqueName.contains("nfItem") }
+
+        rs.beforeFirst()
+        println(ResultSetFormatter(rs).format())
+
+        println(sql)
+        println(SysProperties.serializeJavaObject)
+        println(JdbcUtils.serializer.javaClass.name)
+
+        println(dom.element.uniqueName)
+    }
+
+    @Test
+    fun testNetworkSerialization3() {
+        val conn = remoteDB.getConnection("testNetworkSerialization3")
+        val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
+
+        val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
+        val sql = """SELECT
+            DOM, DOM_FIRST_HREF(DOM), _TOP, _LEFT, WIDTH, HEIGHT, _CHAR, IMG, A, SIBLING, DOM_TEXT(DOM)
+            FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)')
+            ORDER BY SIBLING DESC, _CHAR DESC LIMIT 30"""
+        val rs = stat.executeQuery(sql)
+
+        println(ResultSetFormatter(rs).format())
+
+        println(sql)
+        println(SysProperties.serializeJavaObject)
+        println(JdbcUtils.serializer.javaClass.name)
     }
 }

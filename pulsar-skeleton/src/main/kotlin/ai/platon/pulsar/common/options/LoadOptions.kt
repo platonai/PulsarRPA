@@ -17,25 +17,25 @@ import java.time.Duration
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
 open class LoadOptions : CommonOptions {
+    /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires: Duration = Duration.ofDays(36500)
-    @Parameter(names = ["-shortenKey", "--shorten-key"],
-            description = "Remove the query parameters when generate the page's key (reversed url)")
-    var shortenKey = false
-    @Parameter(names = ["-persist", "--persist"], arity = 1,
-            description = "Persist fetched pages as soon as possible")
-    var persist = true
+    // reserved
+    @Parameter(names = ["-requireNotBlank"],
+            description = "Keep the pages only if the required text is not blank")
+    var requireNotBlank: String = ""
 
-    @Parameter(names = ["-retry", "--retry"],
-            description = "Retry fetching the page if it's failed last time")
-    var retry = false
-    @Parameter(names = ["-lazyFlush", "--lazy-flush"],
-            description = "If false, flush persisted pages into database as soon as possible")
-    var lazyFlush = false
-    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
-            description = "Parallel fetch pages whenever applicable")
-    var preferParallel = true
+    /** Arrange links */
+    @Parameter(names = ["-topLinks", "--top-links"], description = "Top N links")
+    var topLinks = 20
+    @Parameter(names = ["-outlink", "-outlinks", "-outlinkSelector", "--outlink-selector"],
+            description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
+                    "Out pages will be detected automatically if the selector is empty")
+    var outlinkSelector = ""
+    @Parameter(names = ["-topAnchorGroups", "--top-anchor-groups"], description = "Try the top anchor groups")
+    var topAnchorGroups = 3
+
     @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
     var fetchMode = FetchMode.SELENIUM
@@ -54,6 +54,50 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to be finished by selenium")
     var pageLoadTimeout: Duration = Duration.ofSeconds(60)
+
+    // itemXXX should be available for all index-item pattern pages
+    @Parameter(names = ["-itemBrowser"], converter = BrowserTypeConverter::class,
+            description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
+    var itemBrowser: BrowserType = BrowserType.CHROME
+    @Parameter(names = ["-itemExtractor"], converter = BrowserTypeConverter::class,
+            description = "The extract used to extract item pages, use BOILERPIPE for news and DEFAULT for others")
+    var itemExtractor: ItemExtractor = ItemExtractor.DEFAULT
+    @Parameter(names = ["-itemExpires"], converter = DurationConverter::class,
+            description = "The same as expires, but only works for item pages in harvest tasks")
+    var itemExpires: Duration = Duration.ofDays(36500)
+    /** Note: if scroll too many times, the page may fail to calculate the vision information */
+    @Parameter(names = ["-itemScrollCount"],
+            description = "The same as scrollCount, but only works for item pages in harvest tasks")
+    var itemScrollCount = 5
+    @Parameter(names = ["-itemScrollInterval"], converter = DurationConverter::class,
+            description = "The same as scrollInterval, but only works for item pages in harvest tasks")
+    var itemScrollInterval: Duration = Duration.ofMillis(500)
+    @Parameter(names = ["-itemScriptTimeout"], converter = DurationConverter::class,
+            description = "The same as scriptTimeout, but only works for item pages in harvest tasks")
+    var itemScriptTimeout: Duration = Duration.ofSeconds(60)
+    @Parameter(names = ["-itemPageLoadTimeout"], converter = DurationConverter::class,
+            description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
+    var itemPageLoadTimeout: Duration = Duration.ofSeconds(60)
+    @Parameter(names = ["-itemRequireNotBlank"],
+            description = "Keep the item pages only if the required text is not blank")
+    var itemRequireNotBlank: String = ""
+
+    @Parameter(names = ["-shortenKey", "--shorten-key"],
+            description = "Remove the query parameters when generate the page's key (reversed url)")
+    var shortenKey = false
+    @Parameter(names = ["-persist", "--persist"], arity = 1,
+            description = "Persist fetched pages as soon as possible")
+    var persist = true
+
+    @Parameter(names = ["-retry", "--retry"],
+            description = "Retry fetching the page if it's failed last time")
+    var retry = false
+    @Parameter(names = ["-lazyFlush", "--lazy-flush"],
+            description = "If false, flush persisted pages into database as soon as possible")
+    var lazyFlush = false
+    @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
+            description = "Parallel fetch pages whenever applicable")
+    var preferParallel = true
 
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false

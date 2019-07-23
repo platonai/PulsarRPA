@@ -70,18 +70,18 @@ object Queries {
      */
     @InterfaceStability.Evolving
     fun <O> loadAll(session: QuerySession,
-                    configuredUrls: Value, cssQuery: String, offset: Int, limit: Int,
+                    configuredUrls: Value, restrictCss: String, offset: Int, limit: Int,
                     transformer: (Element, String, Int, Int) -> Collection<O>) : Collection<O> {
         val collection: Collection<O>
 
         if (configuredUrls is ValueString) {
             val doc = loadAndParse(session, configuredUrls.getString())
-            collection = transformer(doc.document, cssQuery, offset, limit)
+            collection = transformer(doc.document, restrictCss, offset, limit)
         } else if (configuredUrls is ValueArray) {
             collection = ArrayList()
             for (configuredUrl in configuredUrls.list) {
                 val doc = loadAndParse(session, configuredUrl.string)
-                collection.addAll(transformer(doc.document, cssQuery, offset, limit))
+                collection.addAll(transformer(doc.document, restrictCss, offset, limit))
             }
         } else {
             throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
@@ -109,11 +109,11 @@ object Queries {
 
         if (ignoreQuery) {
             links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
-                ele, rc, os, lt -> getLinks(ele, rc, os, lt)
+                ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt)
             }
         } else {
             links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
-                ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt)
+                ele, rc, os, lt -> getLinks(ele, rc, os, lt)
             }
         }
 

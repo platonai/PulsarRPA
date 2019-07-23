@@ -24,20 +24,6 @@ import org.jsoup.nodes.Element
 @UDFGroup(namespace = "DOM")
 object DomSelectFunctions {
 
-    @UDFunction(description = "Select all match elements by the given css query from a DOM and return the result as an array of DOMs")
-    @JvmStatic
-    fun inlineSelect(dom: ValueDom, cssQuery: String): ValueArray {
-        val elements = dom.element.select2(cssQuery)
-        return Queries.toValueArray(elements)
-    }
-
-    @UDFunction(description = "Select all match elements by the given css query from a DOM and return the result as an array of DOMs")
-    @JvmStatic
-    fun inlineSelect(dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ValueArray {
-        val elements = dom.element.select2(cssQuery, offset, limit)
-        return Queries.toValueArray(elements)
-    }
-
     @UDFunction(description = "Select the first element from a DOM by the given css query and return a DOM")
     @JvmStatic
     fun selectFirst(dom: ValueDom, cssQuery: String): ValueDom {
@@ -55,7 +41,6 @@ object DomSelectFunctions {
         return if (dom.isNil) {
             dom
         } else ValueDom.getOrNil(nthElement(dom.element, cssQuery, n))
-
     }
 
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")

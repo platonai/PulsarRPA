@@ -122,21 +122,29 @@ object MathematicalSelector {
      */
     fun select(cssQuery: String, roots: Iterable<Element>): Elements {
         Validate.notEmpty(cssQuery)
-        val evaluator = MathematicalQueryParser.parse(cssQuery)
-        val elements = ArrayList<Element>()
-        val seenElements = IdentityHashMap<Element, Boolean>()
-        // dedupe elements by identity, not equality
 
-        for (root in roots) {
-            val found = select(evaluator, root)
-            for (el in found) {
-                if (!seenElements.containsKey(el)) {
-                    elements.add(el)
-                    seenElements[el] = java.lang.Boolean.TRUE
+        try {
+            val evaluator = MathematicalQueryParser.parse(cssQuery)
+            val elements = ArrayList<Element>()
+            val seenElements = IdentityHashMap<Element, Boolean>()
+            // dedupe elements by identity, not equality
+
+            for (root in roots) {
+                val found = select(evaluator, root)
+                for (el in found) {
+                    if (!seenElements.containsKey(el)) {
+                        elements.add(el)
+                        seenElements[el] = java.lang.Boolean.TRUE
+                    }
                 }
             }
+
+            return Elements(elements)
+        } catch (e: SelectorParseException) {
+            println(e.message)
         }
-        return Elements(elements)
+
+        return Elements()
     }
 
     /**

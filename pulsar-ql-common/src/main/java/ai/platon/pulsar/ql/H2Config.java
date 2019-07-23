@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql;
 
-import ai.platon.pulsar.ql.PulsarDataTypesHandler;
 import org.h2.engine.SysProperties;
 import org.h2.util.JdbcUtils;
 

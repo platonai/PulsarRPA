@@ -7,6 +7,7 @@ import com.beust.jcommander.IStringConverter
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.tuple.Pair
+import java.awt.Dimension
 import java.time.Duration
 import java.time.Instant
 import java.util.HashMap
@@ -46,6 +47,35 @@ class FetchModeConverter: IStringConverter<FetchMode> {
     }
 }
 
+enum class ItemExtractor {
+    DEFAULT, BOILERPIPE;
+
+    override fun toString(): String {
+        return name.toLowerCase()
+    }
+
+    companion object {
+        fun fromString(s: String?): ItemExtractor {
+            if (s == null || s.isEmpty()) {
+                return DEFAULT
+            }
+
+            try {
+                return valueOf(s.toUpperCase())
+            } catch (e: Throwable) {
+                return DEFAULT
+            }
+
+        }
+    }
+}
+
+class ItemExtractorConverter: IStringConverter<ItemExtractor> {
+    override fun convert(value: String): ItemExtractor {
+        return ItemExtractor.fromString(value)
+    }
+}
+
 /**
  * Created by vincent on 17-4-7.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
@@ -70,5 +100,19 @@ class WeightedKeywordsConverter : IStringConverter<Map<String, Double>> {
         }
 
         return keywords
+    }
+}
+
+class IntRangeConverter : IStringConverter<IntRange> {
+    override fun convert(value: String): IntRange {
+        val (a, b) = value.toLowerCase().split("..".toRegex())
+        return IntRange(a.toInt(), b.toInt())
+    }
+}
+
+class DimensionConverter : IStringConverter<Dimension> {
+    override fun convert(value: String): Dimension {
+        val (a, b) = value.toLowerCase().split("x".toRegex())
+        return Dimension(a.toInt(), b.toInt())
     }
 }
