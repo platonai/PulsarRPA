@@ -99,8 +99,6 @@ class PulsarContext: AutoCloseable {
      * */
     val fetchComponent: FetchComponent
 
-//    val taskTracker = PulsarEnv.
-
     val taskStatusTracker: TaskStatusTracker
 
     val pageCache: ConcurrentLRUCache<String, WebPage>

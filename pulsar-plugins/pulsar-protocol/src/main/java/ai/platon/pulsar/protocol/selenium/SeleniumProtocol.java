@@ -19,7 +19,7 @@ package ai.platon.pulsar.protocol.selenium;
 import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
-import ai.platon.pulsar.net.browser.SeleniumEngine;
+import ai.platon.pulsar.crawl.component.SeleniumFetchComponent;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
@@ -50,14 +50,14 @@ public class SeleniumProtocol extends ForwardingProtocol {
 
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, MutableConfig mutableConfig) {
-        SeleniumEngine engine = PulsarEnv.Companion.getSeleniumEngine();
-        return engine.parallelFetchAllPages(pages, mutableConfig);
+        SeleniumFetchComponent fetchComponent = PulsarEnv.Companion.getSeleniumFetchComponent();
+        return fetchComponent.parallelFetchAllPages(pages, mutableConfig);
     }
 
     @Override
     public Response getResponse(String url, WebPage page, boolean followRedirects) {
         Response response = super.getResponse(url, page, followRedirects);
-        SeleniumEngine engine = PulsarEnv.Companion.getSeleniumEngine();
-        return response != null ? response : engine.fetchContent(page);
+        SeleniumFetchComponent fetchComponent = PulsarEnv.Companion.getSeleniumFetchComponent();
+        return response != null ? response : fetchComponent.fetchContent(page);
     }
 }

@@ -132,7 +132,7 @@ open class LoadOptions : CommonOptions {
         set(value) {
             if (value != null) {
                 value.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-                value.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_WAIT, scrollInterval)
+                value.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
                 value.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
                 value.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
             }

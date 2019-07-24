@@ -2,26 +2,17 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.GlobalExecutor
-import ai.platon.pulsar.common.config.*
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
-import ai.platon.pulsar.common.config.PulsarConstants.CLIENT_JS_PROPERTY_NAMES
-import ai.platon.pulsar.common.getMemoryMax
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyUpdateThread
 import ai.platon.pulsar.common.setPropertyIfAbsent
-import ai.platon.pulsar.crawl.component.BatchFetchComponent
-import ai.platon.pulsar.crawl.component.InjectComponent
-import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.ParseComponent
-import ai.platon.pulsar.crawl.filter.UrlNormalizers
-import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.features.defined.N
-import ai.platon.pulsar.net.browser.SeleniumEngine
+import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
 import ai.platon.pulsar.net.browser.WebDriverQueues
 import ai.platon.pulsar.persist.AutoDetectedStorageService
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.GoraStorage
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
 import java.util.*
@@ -63,7 +54,7 @@ class PulsarEnv {
 
         val webDrivers: WebDriverQueues
 
-        val seleniumEngine: SeleniumEngine
+        val seleniumFetchComponent: SeleniumFetchComponent
 
         private val env = AtomicReference<PulsarEnv>()
 
@@ -91,7 +82,7 @@ class PulsarEnv {
             proxyUpdateThread = applicationContext.getBean(ProxyUpdateThread::class.java)
             browserControl = applicationContext.getBean(BrowserControl::class.java)
             webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
-            seleniumEngine = applicationContext.getBean(SeleniumEngine::class.java)
+            seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
             // proxyUpdateThread.start()
         }

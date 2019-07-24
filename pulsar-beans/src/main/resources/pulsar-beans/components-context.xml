@@ -42,6 +42,12 @@
         <constructor-arg ref="fetchStatusTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
+    <bean id="seleniumFetchComponent" class="ai.platon.pulsar.crawl.component.SeleniumFetchComponent" destroy-method="close">
+        <constructor-arg ref="globalExecutor"/>
+        <constructor-arg ref="seleniumEngine"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
     <bean id="parseComponent" class="ai.platon.pulsar.crawl.component.ParseComponent">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="pageParser"/>

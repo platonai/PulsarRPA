@@ -79,14 +79,15 @@ class TestExtractCases : TestBase() {
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1d') WHERE SIBLING > 30 LIMIT $limit")
 
         execute("CALL SET_PAGE_EXPIRES('1d', 1)")
-        val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"
+        // val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"
+        val expr = "a[href~=item]"
         val sql = """
 SELECT
   DOM_BASE_URI(DOM) AS BaseUri,
   DOM_FIRST_TEXT(DOM, '.brand') AS Title,
   DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
-  DOMWIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
-  DOMHEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
+  DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
+  DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
   DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
 FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
 """
@@ -100,7 +101,8 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
-        val expr = "*:expr(width>=210 && width<=230 && height>=380 && height<=420 && sibling>30 ) a[href~=detail]"
+        // val expr = "*:expr(width>=210 && width<=230 && height>=380 && height<=420 && sibling>30 ) a[href~=detail]"
+        val expr = "a[href~=detail]"
         val sql = """
 SELECT
   DOM_BASE_URI(DOM) AS Uri,
@@ -139,9 +141,9 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
-        val restrictCss = "*:expr(IMG>0 && WIDTH>200 && HEIGHT>200 && SIBLING>30)"
+//        val restrictCss = "*:expr(IMG>0 && WIDTH>200 && HEIGHT>200 && SIBLING>30)"
 //        val restrictCss = "*:expr(WIDTH>=200 && WIDTH<=250 && HEIGHT>=350 && HEIGHT<=500 && _img>0 ) a[href~=item]"
-//        val restrictCss = "li.gl-item a[href~=item]"
+        val restrictCss = "a[href~=item]"
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, '.sku-name') AS NAME,

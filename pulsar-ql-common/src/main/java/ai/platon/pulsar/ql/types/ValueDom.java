@@ -32,7 +32,7 @@ import java.util.Objects;
  */
 public class ValueDom extends Value {
 
-    public static final Document NIL_DOC = Document.createShell(PulsarConstants.NIL_PAGE_URL);
+    public static final Document NIL_DOC = FeaturedDocument.Companion.getNIL().getDocument();
     public static final ValueDom NIL = new ValueDom(NIL_DOC);
 
     public static int type = PulsarDataTypesHandler.DOM_DATA_TYPE_ID;

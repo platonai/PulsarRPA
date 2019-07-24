@@ -6,8 +6,8 @@ collection, extraction, analysis, storage and BI, etc.
 
 [中文文档](README.zh.md)
 
-![product-screenshot](docs/res/pulsar-product-screenshot-1.png)
-![product-screenshot](docs/res/pulsar-product-screenshot-2.png)
+![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
+![product-screenshot](docs/images/pulsar-product-screenshot-2.png)
 
 # Features
 - X-SQL: eXtended SQL to do all data jobs: collection, extraction, preparation, processing, storage, BI, etc

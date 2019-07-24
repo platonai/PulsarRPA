@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
@@ -251,15 +250,15 @@ object CommonFunctions {
     fun setScrollInterval(@H2Context h2session: Session, duration: String, ttl: Int): String? {
         val d = getDuration(duration)
         val value = d?.toString()
-        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_WAIT, value, ttl)
+        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_INTERVAL, value, ttl)
     }
 
     @UDFunction(description = "Unset the config property of the calling session, " +
             "so it fallback to the process's initial config")
     @JvmStatic
-    fun unsetScrollDownWait(@H2Context h2session: Session): String? {
+    fun setScrollInterval(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_SCROLL_DOWN_WAIT)
+        return session.config.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
     }
 
     /**
