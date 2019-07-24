@@ -1,7 +1,5 @@
 package ai.platon.pulsar.ql
 
-import org.junit.AfterClass
-import org.junit.BeforeClass
 import org.junit.Test
 
 class TestCases: TestBase() {
@@ -77,5 +75,32 @@ class TestCases: TestBase() {
         """.trimIndent()
 
         execute(sql, remote = true)
+    }
+
+    @Test
+    fun loadAndGetLinksCityflower() {
+        val sql = """
+select * 
+from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.recommend a');
+        """.trimIndent()
+
+        execute(sql, remote = true)
+    }
+
+    @Test
+    fun loadOutPagesAndSelectCityflower() {
+        val sql = """
+select
+    dom_text(dom)
+from 
+    load_out_pages_and_select('https://www.cityflower.net/attribute/21.html -i 1s', '.recommend a[href~=detail]', 1, 40, '.product_detail');
+        """.trimIndent()
+
+        execute(sql, remote = true)
+    }
+
+    @Test
+    fun tokenizer() {
+        execute("SELECT STR_CHINESE_TOKENIZE('目标公司为香港懋宏唯一股东')")
     }
 }

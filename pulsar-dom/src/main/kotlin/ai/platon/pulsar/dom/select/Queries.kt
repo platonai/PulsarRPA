@@ -146,35 +146,36 @@ fun Node.all(predicate: (Node) -> Boolean): Boolean {
     return r
 }
 
+/**
+ * Notice: do not provide default value for offset, it overrides the default version in Node
+ * */
 @JvmOverloads
-fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elements {
     if (this !is Element) {
         return Elements()
     }
 
-    if (offset == 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    // TODO: do the filtering inside [MathematicalSelector#select]
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
-            .toCollection(Elements())
-}
-
-@Deprecated("Use first instead", ReplaceWith("MathematicalSelector.selectFirst(cssQuery, this)"))
-fun Node.selectFirst2(cssQuery: String): Element? {
-    return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
+    return MathematicalSelector.select(cssQuery, this, offset, limit)
 }
 
 fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
                     transformer: (Element) -> O): List<O> {
     return if (this is Element) {
-        select2(query, offset, limit).map { transformer(it) }
+        select(query, offset, limit).map { transformer(it) }
     } else listOf()
+}
+
+@Deprecated("Use select instead", ReplaceWith("Node.select(cssQuery)"))
+@JvmOverloads
+fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+    return select(cssQuery, offset, limit)
+}
+
+@Deprecated("Use first instead", ReplaceWith("Node.first(cssQuery)"))
+fun Node.selectFirst2(cssQuery: String): Element? {
+    return if (this is Element) {
+        MathematicalSelector.selectFirst(cssQuery, this)
+    } else null
 }
 
 fun Node.first(cssQuery: String): Element? {

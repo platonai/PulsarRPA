@@ -15,22 +15,35 @@ class TestExtractCases : TestBase() {
 
     @Test
     fun testSavePages() {
-        execute("SELECT ADMIN_SAVE('$productIndexUrl', 'product.index.html')")
-        execute("SELECT ADMIN_SAVE('$productDetailUrl', 'product.detail.html')")
-        execute("SELECT ADMIN_SAVE('$newsIndexUrl', 'news.index.html')")
-        execute("SELECT ADMIN_SAVE('$newsDetailUrl', 'news.detail.html')")
+        execute("CALL ADMIN_SAVE('$productIndexUrl', 'product.index.html')")
+        execute("CALL ADMIN_SAVE('$productDetailUrl', 'product.detail.html')")
+        execute("CALL ADMIN_SAVE('$newsIndexUrl', 'news.index.html')")
+        execute("CALL ADMIN_SAVE('$newsDetailUrl', 'news.detail.html')")
     }
 
     @Test
     fun testLoadAndGetFeatures() {
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl --expires=1s') LIMIT 20")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl -expires 1d') LIMIT 20")
+    }
+
+    @Test
+    fun testLoadAndGetLinks() {
+        // val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=item]"
+        val expr = "a[href~=item]"
+        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl -expires 1d', '$expr')")
+    }
+
+    @Test
+    fun testLoadAndGetAnchors() {
+        // val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=item]"
+        val expr = "a[href~=item]"
+        execute("SELECT * FROM LOAD_AND_GET_ANCHORS('$productIndexUrl -expires 1d', '$expr')")
     }
 
     @Test
     fun testAccumulateVividLinks() {
-        val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=detail]"
-        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl --expires=1s', '$expr')")
         val session = pc.createSession()
+        session.load("$productIndexUrl -i 1d")
         println(WebPageFormatter(session.getOrNil(productIndexUrl)))
     }
 

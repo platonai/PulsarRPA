@@ -3,7 +3,9 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
+import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
+import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -13,8 +15,10 @@ import ai.platon.pulsar.ql.h2.Queries.toResultSet
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.hadoop.classification.InterfaceStability
+import org.h2.engine.Constants
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
+import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
@@ -36,8 +40,11 @@ object DomFunctionTables {
     @InterfaceStability.Evolving
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
-    fun loadAll(@H2Context h2session: Session, configuredUrls: ValueArray): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+    fun loadAll(@H2Context conn: JdbcConnection, configuredUrls: ValueArray): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
 
         val pages = Queries.loadAll(session, configuredUrls)
         val doms = pages.map { session.parseToValue(it) }
@@ -50,8 +57,13 @@ object DomFunctionTables {
     @JvmStatic
     @JvmOverloads
     fun loadAndSelect(
-            @H2Context h2session: Session, configuredPortal: Value, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+            @H2Context conn: JdbcConnection,
+            configuredPortal: Value, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
+
         val elements = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::select)
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
@@ -59,16 +71,21 @@ object DomFunctionTables {
     @InterfaceStability.Stable
     @JvmStatic
     @UDFunction(description = "Select all elements by cssQuery")
-    fun select(dom: ValueDom, cssQuery: String): ResultSet {
-        Objects.requireNonNull(dom)
-        return select(dom, cssQuery, 0, Integer.MAX_VALUE)
+    fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        return select(conn, dom, cssQuery, 1, Integer.MAX_VALUE)
     }
 
     @InterfaceStability.Stable
     @JvmStatic
     @UDFunction(description = "Select all elements by cssQuery")
-    fun select(dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ResultSet {
-        val elements = dom.element.select2(cssQuery, offset, limit)
+    fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
+
+        val elements = dom.element.select(cssQuery, offset, limit)
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
 
@@ -77,10 +94,14 @@ object DomFunctionTables {
     @JvmOverloads
     @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside all the selected elements")
     fun loadAndGetLinks(
-            @H2Context h2session: Session,
-            configuredPortal: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
-        val links = Queries.loadAll(session, configuredPortal, restrictCss, offset, limit, Queries::getLinks)
+            @H2Context conn: JdbcConnection,
+            configuredPortal: Value, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
+
+        val links = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::getLinks)
         return toResultSet("LINK", links)
     }
 
@@ -88,8 +109,30 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     @UDFunction(description = "Get all links inside the all selected elements")
-    fun links(dom: ValueDom, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
-        return toResultSet("LINK", Queries.getLinks(dom.element, restrictCss, offset, limit))
+    fun links(@H2Context conn: JdbcConnection, 
+              dom: ValueDom, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
+
+        return toResultSet("LINK", Queries.getLinks(dom.element, cssQuery, offset, limit))
+    }
+
+    @InterfaceStability.Stable
+    @JvmStatic
+    @JvmOverloads
+    @UDFunction(hasShortcut = true, description = "Load a page and find all anchors specified by cssQuery")
+    fun loadAndGetAnchors(
+            @H2Context conn: JdbcConnection,
+            configuredPortal: Value, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet(listOf<Anchor>())
+        }
+
+        val anchors = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::getAnchors)
+        return toResultSet(anchors)
     }
 
     /**
@@ -106,26 +149,26 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
-    fun loadOutPages(@H2Context h2session: Session,
+    fun loadOutPages(@H2Context conn: JdbcConnection,
                      configuredPortal: Value,
                      restrictCss: String = ":root",
                      offset: Int = 1,
                      limit: Int = Integer.MAX_VALUE,
                      normalize: Boolean = false): ResultSet {
-        return loadOutPagesAsRsInternal(h2session, configuredPortal, restrictCss, offset, limit, normalize = normalize)
+        return loadOutPagesAsRsInternal(conn, configuredPortal, restrictCss, offset, limit, normalize = normalize)
     }
 
     @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, ignore url queries in the target url")
     @JvmOverloads
     @JvmStatic
-    fun loadOutPagesIgnoreUrlQuery(@H2Context h2session: Session,
+    fun loadOutPagesIgnoreUrlQuery(@H2Context conn: JdbcConnection,
                                    configuredPortal: Value,
                                    restrictCss: String = ":root",
                                    offset: Int = 1,
                                    limit: Int = Int.MAX_VALUE,
                                    normalize: Boolean = false): ResultSet {
-        return loadOutPagesAsRsInternal(h2session,
+        return loadOutPagesAsRsInternal(conn,
                 configuredPortal, restrictCss, offset, limit, normalize = normalize, ignoreQuery = true)
     }
 
@@ -144,7 +187,7 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     fun loadOutPagesAndSelect(
-            @H2Context h2session: Session,
+            @H2Context conn: JdbcConnection,
             configuredPortal: Value,
             restrictCss: String = ":root",
             offset: Int = 1,
@@ -152,7 +195,10 @@ object DomFunctionTables {
             targetCss: String = ":root",
             normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
 
         val docs =
                 Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
@@ -182,7 +228,7 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     fun loadOutPagesAndSelectFirst(
-            @H2Context h2session: Session,
+            @H2Context conn: JdbcConnection,
             configuredPortal: Value,
             restrictCss: String = ":root",
             offset: Int = 1,
@@ -190,12 +236,12 @@ object DomFunctionTables {
             targetCss: String = ":root",
             normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
-        return loadOutPagesAsRsInternal(h2session,
+        return loadOutPagesAsRsInternal(conn,
                 configuredPortal, restrictCss, offset, limit, targetCss = targetCss, normalize = normalize, ignoreQuery = ignoreQuery)
     }
 
     private fun loadOutPagesAsRsInternal(
-            @H2Context h2session: Session,
+            @H2Context conn: JdbcConnection,
             configuredPortal: Value,
             restrictCss: String = ":root",
             offset: Int = 1,
@@ -203,7 +249,10 @@ object DomFunctionTables {
             targetCss: String = ":root",
             normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+        val session = H2SessionFactory.getSession(conn)
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return toResultSet("DOM", listOf<Element>())
+        }
 
         val docs =
                 Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
@@ -229,15 +278,15 @@ object DomFunctionTables {
     @JvmStatic
     @JvmOverloads
     fun loadAndGetFeatures(
-            @H2Context h2session: Session,
+            @H2Context conn: JdbcConnection,
             configuredUrl: String,
             cssQuery: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD,H1,H2,H3",
             offset: Int = 1,
             limit: Int = 100): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+        val session = H2SessionFactory.getSession(conn)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
-        return features(h2session, dom, cssQuery, offset, limit)
+        return features(conn, dom, cssQuery, offset, limit)
     }
 
     /**
@@ -251,12 +300,15 @@ object DomFunctionTables {
     @UDFunction(description = "Get the features of the given element")
     @JvmOverloads
     @JvmStatic
-    fun features(@H2Context h2session: Session,
+    fun features(@H2Context conn: JdbcConnection,
                  dom: ValueDom,
                  cssSelector: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
                  offset: Int = 1,
                  limit: Int = 100): ResultSet {
         val rs = createFeatureResultSet()
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return rs
+        }
 
         if (dom.isNil) {
             return rs
@@ -265,8 +317,7 @@ object DomFunctionTables {
         /**
          * Notice: be careful use rs.addRow(*it) to make sure a vararg is passed into rs.addRow
          */
-        dom.element.select2(cssSelector, offset, limit)
-                .map { Queries.getFeatureRow(it) }
+        dom.element.select(cssSelector, offset, limit) { Queries.getFeatureRow(it) }
                 .forEach { rs.addRow(*it) }
 
         return rs
@@ -283,15 +334,15 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     fun loadAndGetElementsWithMostSibling(
-            @H2Context h2session: Session,
+            @H2Context conn: JdbcConnection,
             configuredUrl: String,
             restrictCss: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE): ResultSet {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+        val session = H2SessionFactory.getSession(conn)
         val page = session.load(configuredUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
-        return getElementsWithMostSibling(h2session, dom, restrictCss, offset, limit)
+        return getElementsWithMostSibling(conn, dom, restrictCss, offset, limit)
     }
 
     /**
@@ -306,12 +357,16 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     fun getElementsWithMostSibling(
-            @H2Context h2session: Session,
+            @H2Context conn: JdbcConnection,
             dom: ValueDom,
             restrictCss: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
         val rs = createFeatureResultSet()
+        if (H2SessionFactory.isColumnRetrieval(conn)) {
+            return rs
+        }
 
         if (dom.isNil) {
             return rs

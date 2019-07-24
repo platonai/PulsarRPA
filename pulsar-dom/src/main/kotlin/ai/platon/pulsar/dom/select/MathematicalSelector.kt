@@ -2,9 +2,11 @@ package ai.platon.pulsar.dom.select
 
 import org.apache.commons.lang3.Validate
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.Node
 import org.jsoup.select.Collector
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
+import org.slf4j.LoggerFactory
 import java.util.*
 
 /**
@@ -77,6 +79,8 @@ import java.util.*
  */
 object MathematicalSelector {
 
+    private val log = LoggerFactory.getLogger(MathematicalSelector::class.java)
+
     /**
      * Find elements matching selector.
      *
@@ -91,15 +95,24 @@ object MathematicalSelector {
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        if (offset == 1 && limit == Int.MAX_VALUE) {
+        if (limit == 0) {
+            return Elements()
+        }
+
+        if (offset < 1 && limit > 100_000) {
             return select(cssQuery, root)
         }
 
         // TODO: do the filter inside Collector.collect
         var i = 1
-        return select(cssQuery, root)
+        return select(cssQuery, root).asSequence()
                 .takeWhile { i++ >= offset && i <= limit }
                 .toCollection(Elements())
+    }
+
+    fun <O> select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+                        transformer: (Element) -> O): List<O> {
+        return select(cssQuery, root, offset, limit).map { transformer(it) }
     }
 
     /**
@@ -141,7 +154,7 @@ object MathematicalSelector {
 
             return Elements(elements)
         } catch (e: SelectorParseException) {
-            println(e.message)
+            log.warn(e.message)
         }
 
         return Elements()

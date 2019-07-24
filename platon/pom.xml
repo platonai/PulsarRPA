@@ -661,6 +661,24 @@
                 <version>${gson.version}</version>
             </dependency>
 
+            <!-- NLP -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-common</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers-smartcn -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-smartcn</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+
             <!-- WebGraph computing, required by WebGraph -->
             <dependency>
                 <groupId>org.jgrapht</groupId>
@@ -849,6 +867,7 @@
         <!--  Google core libraries for Java, include Multimaps, etc -->
         <guava.version>27.0.1-jre</guava.version>
         <gson.version>2.6.2</gson.version>
+        <lucene.version>8.1.1</lucene.version>
 
         <!-- Logging, metrics analyze -->
         <codahale.metrics.version>3.1.5</codahale.metrics.version>

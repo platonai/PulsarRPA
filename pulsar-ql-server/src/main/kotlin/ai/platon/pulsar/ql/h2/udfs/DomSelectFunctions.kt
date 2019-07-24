@@ -9,9 +9,6 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.types.ValueDom
-import com.google.common.base.Strings
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.math.NumberUtils
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
 import org.jsoup.nodes.Element

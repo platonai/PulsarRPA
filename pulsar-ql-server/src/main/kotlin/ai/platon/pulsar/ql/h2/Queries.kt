@@ -1,15 +1,16 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL_LENGTH
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
-import ai.platon.pulsar.dom.nodes.node.ext.name
+import ai.platon.pulsar.dom.nodes.Anchor
+import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.first
-import ai.platon.pulsar.dom.select.select2
+import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
 import ai.platon.pulsar.ql.QuerySession
@@ -27,7 +28,12 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
 import java.util.*
+import kotlin.collections.HashSet
 import kotlin.math.pow
+import kotlin.math.roundToInt
+import kotlin.reflect.full.getExtensionDelegate
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
 object Queries {
 
@@ -74,30 +80,22 @@ object Queries {
                     transformer: (Element, String, Int, Int) -> Collection<O>) : Collection<O> {
         val collection: Collection<O>
 
-        if (configuredUrls is ValueString) {
-            val doc = loadAndParse(session, configuredUrls.getString())
-            collection = transformer(doc.document, restrictCss, offset, limit)
-        } else if (configuredUrls is ValueArray) {
-            collection = ArrayList()
-            for (configuredUrl in configuredUrls.list) {
-                val doc = loadAndParse(session, configuredUrl.string)
-                collection.addAll(transformer(doc.document, restrictCss, offset, limit))
+        when (configuredUrls) {
+            is ValueString -> {
+                val doc = loadAndParse(session, configuredUrls.getString())
+                collection = transformer(doc.document, restrictCss, offset, limit)
             }
-        } else {
-            throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
+            is ValueArray -> {
+                collection = ArrayList()
+                for (configuredUrl in configuredUrls.list) {
+                    val doc = loadAndParse(session, configuredUrl.string)
+                    collection.addAll(transformer(doc.document, restrictCss, offset, limit))
+                }
+            }
+            else -> throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
         }
 
         return collection
-    }
-
-    fun loadOutPages(
-            session: QuerySession, configuredPortal: Value, restrictCss: String): Collection<WebPage> {
-        return loadOutPages(session, configuredPortal, restrictCss, 0, Int.MAX_VALUE, true, false)
-    }
-
-    fun loadOutPages(
-            session: QuerySession, configuredPortal: Value, restrictCss: String, offset: Int, limit: Int): Collection<WebPage> {
-        return loadOutPages(session, configuredPortal, restrictCss, offset, limit, true, false)
     }
 
     fun loadOutPages(
@@ -128,14 +126,17 @@ object Queries {
         return session.parse(session.load(configuredUrl))
     }
 
+    fun <O> loadAndParse(session: QuerySession, configuredUrl: String, transform: (FeaturedDocument) -> O): O {
+        val document = session.parse(session.load(configuredUrl))
+        return transform(document)
+    }
+
     fun select(ele: Element, cssQuery: String, offset: Int, limit: Int): Collection<Element> {
-        return ele.select2(cssQuery, offset, limit)
+        return ele.select(cssQuery, offset, limit)
     }
 
     fun <O> select(dom: ValueDom, cssQuery: String, transform: (Element) -> O): ValueArray {
-        val values = dom.element.select2(cssQuery)
-                .map { transform(it) }
-                .map { ValueString.get(it.toString()) }
+        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }
                 .toTypedArray()
 
         return ValueArray.get(values)
@@ -146,58 +147,52 @@ object Queries {
     }
 
     fun <O> selectNth(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {
-        require(n > 0)
-        val elements = dom.element.select2(cssQuery)
-        return if (elements.size >= n) {
-            transform(elements[n - 1])
-        } else null
+        return dom.element.select(cssQuery, n, 1) { transform(it) }.firstOrNull()
     }
 
     fun <O> selectIgnoreEmpty(dom: ValueDom, cssQuery: String, transform: (Element) -> O): ValueArray {
-        val values = dom.element.select2(cssQuery)
-                .map { transform(it).toString() }
-                .filter { it.isNotEmpty() }
-                .map { ValueString.get(it) }
+        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }
                 .toTypedArray()
 
         return ValueArray.get(values)
     }
 
     fun getTexts(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        return select(ele, restrictCss, offset, limit)
-                .map { it.text() }
-                .toSet()
+        return ele.select(restrictCss, offset, limit) { it.text() }
     }
 
     fun getLinks(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val css = appendIfMissingIgnoreCase(restrictCss, "a")
-        var i = 1
-        return select(ele, css, 1, Integer.MAX_VALUE)
-                .map { e -> e.absUrl("href") }
-                .takeWhile { i++ >= offset && i <= limit }
-                .filterNotNull()
-                .filter { it.length >= SHORTEST_VALID_URL_LENGTH }
+        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "a")
+        return ele.select(cssQuery, offset, limit) {
+            it.absUrl("href")
+        }.filterNotNull()
     }
 
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val css = appendIfMissingIgnoreCase(restrictCss, "a")
-        return select(ele, css, offset, limit)
-                .map { it.absUrl("href") }
-                .filterNotNull()
-                .filter { it.length >= SHORTEST_VALID_URL_LENGTH }
-                .map { it.substringBefore("?") }
+        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "a")
+        return ele.select(cssQuery, offset, limit) {
+            it.absUrl("href").takeIf { Urls.isValidUrl(it) }?.substringBefore("?")
+        }.filterNotNull()
+    }
+
+    fun getAnchors(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<Anchor> {
+        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "a")
+        return ele.select(cssQuery, offset, limit).mapNotNull {
+            it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
+                    ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(),
+                            it.left, it.top, it.width, it.height) }
+        }
     }
 
     fun getImages(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val cs = appendIfMissingIgnoreCase(restrictCss, "img")
-        return select(ele, cs, offset, limit)
-                .map { it.absUrl("src") }
-                .filterNotNull()
-                .filter { it.length >= SHORTEST_VALID_URL_LENGTH }
+        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "img")
+        return ele.select(cssQuery, offset, limit) {
+            it.absUrl("src").takeIf { Urls.isValidUrl(it) }
+        }.filterNotNull()
     }
 
     fun getFeatures(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<RealVector> {
-        return select(ele, restrictCss, offset, limit).map { it.features }
+        return ele.select(restrictCss, offset, limit) { it.features }
     }
 
     fun toValueArray(elements: Elements): ValueArray {
@@ -223,6 +218,54 @@ object Queries {
             collection.forEach { rs.addRow(it) }
         } else {
             collection.forEach { e -> rs.addRow(ValueString.get(e.toString())) }
+        }
+
+        return rs
+    }
+
+    /**
+     * Get result set for each field in Web page
+     */
+    fun toResultSet(anchors: Collection<Anchor>): ResultSet {
+        val rs = SimpleResultSet()
+        rs.addColumn("URL")
+        rs.addColumn("TEXT")
+        rs.addColumn("PATH")
+        rs.addColumn("LEFT")
+        rs.addColumn("TOP")
+        rs.addColumn("WIDTH")
+        rs.addColumn("HEIGHT")
+
+        anchors.forEach {
+            rs.addRow(it.url, it.text, it.path, it.left, it.top, it.width, it.height)
+        }
+
+        return rs
+    }
+
+    /**
+     * Get result set of a data class
+     * TODO: test is required
+     */
+    fun toResultSet(objects: Iterable<Any>): ResultSet {
+        val rs = SimpleResultSet()
+        val first = objects.firstOrNull()?:return rs
+        val primaryConstructor = first::class.primaryConstructor ?: return rs
+
+        val propertyNames = primaryConstructor.parameters.mapIndexed { i, kParameter ->
+            kParameter.name?:"C${1 + i}"
+        }
+        propertyNames.forEach {
+            rs.addColumn(it.toUpperCase())
+        }
+
+        val memberProperties = first::class.memberProperties.filter { it.name in propertyNames }
+        objects.forEach { obj ->
+            val values = memberProperties
+                    .filter { it.name in propertyNames }
+                    .map { it.getter.call(obj).toString() }
+                    .toTypedArray()
+            rs.addRow(*values)
         }
 
         return rs
@@ -264,7 +307,7 @@ object Queries {
             val v = features[key]
 
             if (isFloating(key)) {
-                values[j] = 1.0 * Math.round(factor * v) / factor
+                values[j] = 1.0 * (factor * v).roundToInt() / factor
             } else {
                 values[j] = v.toInt()
             }
@@ -274,14 +317,15 @@ object Queries {
     }
 
     fun appendIfMissingIgnoreCase(cssQuery: String, appendix: String): String {
-        var cssQuery = cssQuery.toLowerCase().replace("\\s+".toRegex(), " ").trim()
-        val appendix = appendix.trim()
+        var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
+        val ap = appendix.trim()
 
-        val parts = cssQuery.split(" ")
-        if (!parts[parts.size - 1].startsWith(appendix)) {
-            cssQuery += " $appendix"
+        val parts = q.split(" ")
+        // consider: body > div:nth-child(10) > ul > li:nth-child(3) > a:nth-child(2)
+        if (!parts[parts.size - 1].startsWith(ap, ignoreCase = true)) {
+            q += " $ap"
         }
 
-        return cssQuery
+        return q
     }
 }
