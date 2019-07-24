@@ -16,6 +16,7 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.net.InternetDomainName
+import com.google.gson.GsonBuilder
 import org.apache.commons.codec.digest.DigestUtils
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
@@ -34,30 +35,52 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
 
-data class PulsarJsStatus(
-        val n: Int = 0,
-        val scroll: Int = 0,
-        val st: String = "",
-        val r: String = "",
-        val idl: String = ""
-)
-
-data class PulsarJsStat(
-        val ni: Int = 0,
-        val na: Int = 0,
-        val nnm: Int = 0,
-        val nst: Int = 0,
-        val w: Int = 0,
-        val h: Int = 0
-)
-
 data class PulsarJsData(
-        val status: PulsarJsStatus = PulsarJsStatus(),
-        val initStat: PulsarJsStat = PulsarJsStat(),
-        val lastStat: PulsarJsStat = PulsarJsStat(),
-        val initD: PulsarJsStat = PulsarJsStat(),
-        val lastD: PulsarJsStat = PulsarJsStat()
-)
+        val status: Status = Status(),
+        val initStat: Stat = Stat(),
+        val lastStat: Stat = Stat(),
+        val initD: Stat = Stat(),
+        val lastD: Stat = Stat()
+) {
+    data class Status(
+            val n: Int = 0,
+            val scroll: Int = 0,
+            val st: String = "",
+            val r: String = "",
+            val idl: String = ""
+    )
+
+    data class Stat(
+            val ni: Int = 0,
+            val na: Int = 0,
+            val nnm: Int = 0,
+            val nst: Int = 0,
+            val w: Int = 0,
+            val h: Int = 0
+    )
+
+    override fun toString(): String {
+        val s1 = initStat
+        val s2 = lastStat
+        val s3 = initD
+        val s4 = lastD
+
+        val s = String.format(
+                "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
+                        "w: %s/%s/%s/%s, h: %s/%s/%s/%s",
+                s1.ni,  s2.ni,  s3.ni,  s4.ni,
+                s1.na,  s2.na,  s3.na,  s4.na,
+                s1.nnm, s2.nnm, s3.nnm, s4.nnm,
+                s1.nst, s2.nst, s3.nst, s4.nst,
+                s1.w,   s2.w,   s3.w,   s4.w,
+                s1.h,   s2.h,   s3.h,   s4.h
+        )
+        val st = status
+        val m = String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
+                st.n, st.scroll, st.st, st.r, st.idl, s)
+        return m
+    }
+}
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -273,7 +296,7 @@ class SeleniumEngine(
     }
 
     private fun visit(batchId: Int, taskId: Int, url: String, page: WebPage,
-            driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
+                      driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
                 taskId, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
@@ -299,7 +322,7 @@ class SeleniumEngine(
     }
 
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
-        val jsExecutor = driver as? JavascriptExecutor?: return ProtocolStatus.STATUS_CANCELED
+        val jsExecutor = driver as? JavascriptExecutor ?: return ProtocolStatus.STATUS_CANCELED
 
         var status = ProtocolStatus.STATUS_SUCCESS
         val pageLoadTimeout = driverConfig.pageLoadTimeout.seconds
@@ -352,33 +375,15 @@ class SeleniumEngine(
 
         val data = jsExecutor.executeScript(clientJs)
         if (log.isDebugEnabled) {
-            if (data is MutableMap<*, *>) {
-                log.debug("{} | {}", formatPulsarData(data), url)
+            if (data is String) {
+                // TODO: remove serialization code, it's for test only
+                val gson = GsonBuilder().create()
+                val pulsarJsData = gson.fromJson(data, PulsarJsData::class.java)
+                log.debug("{} | {}", pulsarJsData, url)
             }
         }
 
         return status
-    }
-
-    private fun formatPulsarData(data: MutableMap<*, *>): String {
-        val s1 = data["initStat"] as? Map<*, *>
-        val s2 = data["lastStat"] as? Map<*, *>
-        val s3 = data["initD"] as? Map<*, *>
-        val s4 = data["lastD"] as? Map<*, *>
-        val s = String.format(
-                "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
-                        "w: %s/%s/%s/%s, h: %s/%s/%s/%s",
-                s1?.get("ni"),  s2?.get("ni"),  s3?.get("ni"),  s4?.get("ni"),
-                s1?.get("na"),  s2?.get("na"),  s3?.get("na"),  s4?.get("na"),
-                s1?.get("nnm"), s2?.get("nnm"), s3?.get("nnm"), s4?.get("nnm"),
-                s1?.get("nst"), s2?.get("nst"), s3?.get("nst"), s4?.get("nst"),
-                s1?.get("w"),   s2?.get("w"),   s3?.get("w"),   s4?.get("w"),
-                s1?.get("h"),   s2?.get("h"),   s3?.get("h"),   s4?.get("h")
-        )
-        val st = data["status"] as? Map<*, *>
-        val m = String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
-                st?.get("n"), st?.get("scroll"), st?.get("st"), st?.get("r"), st?.get("idl"), s)
-        return m
     }
 
     private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {

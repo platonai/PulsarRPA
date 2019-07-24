@@ -155,8 +155,8 @@ object WebAccess {
     }
 
     fun run() {
-        load()
-        // loadOutPages()
+        // load()
+        loadOutPages()
         // loadAllProducts()
         // parallelLoadAll()
         // parallelLoadAllProducts()

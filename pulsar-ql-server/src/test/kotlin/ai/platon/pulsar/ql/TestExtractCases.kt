@@ -78,7 +78,7 @@ class TestExtractCases : TestBase() {
         val limit = 20
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1d') WHERE SIBLING > 30 LIMIT $limit")
 
-        execute("CALL SET_PAGE_EXPIRES('1d', 1)")
+        execute("CALL SET_PAGE_EXPIRES('1s', 10)")
         // val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"
         val expr = "a[href~=item]"
         val sql = """
@@ -89,7 +89,7 @@ SELECT
   DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
   DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
   DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
+FROM LOAD_OUT_PAGES('$url -i 1s', '$expr', 1, $limit)
 """
         execute(sql)
     }

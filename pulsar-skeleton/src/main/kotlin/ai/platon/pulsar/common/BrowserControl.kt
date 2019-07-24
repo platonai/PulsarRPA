@@ -136,7 +136,7 @@ open class BrowserControl(
         if (reload || mainJs.isEmpty()) {
             val sb = StringBuilder(parseLibJs(reload))
             sb.append(";\n__utils__.visualizeHumanize();")
-            sb.append(";\nreturn document.pulsarData;")
+            sb.append(";\nreturn JSON.stringify(document.pulsarData);")
             mainJs = sb.toString()
         }
 

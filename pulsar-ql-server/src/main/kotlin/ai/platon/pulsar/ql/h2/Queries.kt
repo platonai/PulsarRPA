@@ -119,6 +119,7 @@ object Queries {
             links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
+        // TODO: inherit options
         return session.loadAll(links, LoadOptions.create())
     }
 
