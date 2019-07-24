@@ -16,6 +16,7 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.net.InternetDomainName
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import org.apache.commons.codec.digest.DigestUtils
 import org.openqa.selenium.*
@@ -35,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
 
-data class PulsarJsData(
+data class BrowserJsData(
         val status: Status = Status(),
         val initStat: Stat = Stat(),
         val lastStat: Stat = Stat(),
@@ -79,6 +80,10 @@ data class PulsarJsData(
         val m = String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
                 st.n, st.scroll, st.st, st.r, st.idl, s)
         return m
+    }
+
+    companion object {
+        val default = BrowserJsData()
     }
 }
 
@@ -176,6 +181,7 @@ class SeleniumEngine(
         }
         val driverConfig = getDriverConfig(priority, page, config)
         var status: ProtocolStatus
+        var jsData = BrowserJsData.default
         val headers = MultiMetadata()
         val startTime = System.currentTimeMillis()
         headers.put(Q_REQUEST_TIME, startTime.toString())
@@ -183,7 +189,9 @@ class SeleniumEngine(
         var pageSource = ""
 
         try {
-            status = visit(batchId, taskId, location, page, driver, driverConfig)
+            val result = visit(batchId, taskId, location, page, driver, driverConfig)
+            status = result.protocolStatus
+            jsData = result.jsData
             // TODO: handle with frames
             // driver.switchTo().frame(1);
         } catch (e: TimeoutException) {
@@ -223,6 +231,9 @@ class SeleniumEngine(
         }
 
         handleFetchFinish(page, driver, headers)
+        if (jsData !== BrowserJsData.default) {
+            page.metadata.set(Name.BROWSER_JS_DATA, Gson().toJson(jsData, BrowserJsData::class.java))
+        }
         pageSource = handlePageSource(pageSource, status, page, driver)
         headers.put(CONTENT_LENGTH, pageSource.length.toString())
         if (status.isSuccess) {
@@ -295,8 +306,17 @@ class SeleniumEngine(
         return ForwardingResponse(url, "", status, headers)
     }
 
+    data class VisitResult(
+            val protocolStatus: ProtocolStatus,
+            val jsData: BrowserJsData
+    ) {
+        companion object {
+            val canceled = VisitResult(ProtocolStatus.STATUS_CANCELED, BrowserJsData.default)
+        }
+    }
+
     private fun visit(batchId: Int, taskId: Int, url: String, page: WebPage,
-                      driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
+                      driver: WebDriver, driverConfig: DriverConfig): VisitResult {
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
                 taskId, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
@@ -311,18 +331,16 @@ class SeleniumEngine(
         driver.manage().window().maximize()
         driver.get(url)
 
-        var status = ProtocolStatus.STATUS_SUCCESS
-
         // Block and wait for the document is ready: all css and resources are OK
-        if (JavascriptExecutor::class.java.isAssignableFrom(driver.javaClass)) {
-            status = executeJs(url, driver, driverConfig)
+        if (!JavascriptExecutor::class.java.isAssignableFrom(driver.javaClass)) {
+            return VisitResult.canceled
         }
 
-        return status
+        return executeJs(url, driver, driverConfig)
     }
 
-    private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): ProtocolStatus {
-        val jsExecutor = driver as? JavascriptExecutor ?: return ProtocolStatus.STATUS_CANCELED
+    private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
+        val jsExecutor = driver as? JavascriptExecutor?: return VisitResult.canceled
 
         var status = ProtocolStatus.STATUS_SUCCESS
         val pageLoadTimeout = driverConfig.pageLoadTimeout.seconds
@@ -373,17 +391,13 @@ class SeleniumEngine(
             throw e
         }
 
-        val data = jsExecutor.executeScript(clientJs)
+        val data = jsExecutor.executeScript(clientJs) as String
+        val pulsarJsData = GsonBuilder().create().fromJson(data, BrowserJsData::class.java)
         if (log.isDebugEnabled) {
-            if (data is String) {
-                // TODO: remove serialization code, it's for test only
-                val gson = GsonBuilder().create()
-                val pulsarJsData = gson.fromJson(data, PulsarJsData::class.java)
-                log.debug("{} | {}", pulsarJsData, url)
-            }
+            log.debug("{} | {}", pulsarJsData, url)
         }
 
-        return status
+        return VisitResult(status, pulsarJsData)
     }
 
     private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {

@@ -35,6 +35,7 @@ public enum Name {
     REDIRECT_DISCOVERED("F_RD"),
     RESPONSE_TIME("F_RT"),
     BROWSER("F_BR"),
+    BROWSER_JS_DATA("F_JD"),
 
     /**
      * parse
