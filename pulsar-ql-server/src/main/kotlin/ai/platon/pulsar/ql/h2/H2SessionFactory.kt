@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
 import ai.platon.pulsar.ql.SQLContext
@@ -82,6 +83,11 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @Synchronized
     override fun closeSession(serialId: Int) {
         sqlContext.closeSession(serialId)
+    }
+
+    @Synchronized
+    fun shutdownNow() {
+        PulsarEnv.applicationContext.close()
     }
 }
 
