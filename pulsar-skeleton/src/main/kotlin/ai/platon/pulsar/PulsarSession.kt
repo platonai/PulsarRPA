@@ -192,7 +192,7 @@ open class PulsarSession(
     fun loadOutPages(portal: String, restrictCss: String, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         val links = parse(load(portal)).document.selectNotNull(cssQuery, 1, options.topLinks) {
-            getLink(it, !options.noNorm, options.ignoreQuery)
+            getLink(it, !options.noNorm, options.ignoreUrlQuery)
         }
 
         return loadAll(links, options)

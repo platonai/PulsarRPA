@@ -98,9 +98,25 @@ class TestJavaObjectSerializer : TestBase() {
 
         val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         val sql = """SELECT
-            DOM, DOM_FIRST_HREF(DOM), _TOP, _LEFT, WIDTH, HEIGHT, _CHAR, IMG, A, SIBLING, DOM_TEXT(DOM)
+            DOM_FIRST_HREF(DOM), DOM_TEXT(DOM)
             FROM LOAD_OUT_PAGES('$productIndexUrl', '*:expr($expr)')
-            ORDER BY SIBLING DESC, _CHAR DESC LIMIT 30"""
+            LIMIT 30"""
+        val rs = stat.executeQuery(sql)
+
+        println(ResultSetFormatter(rs).format())
+
+        println(sql)
+        println(SysProperties.serializeJavaObject)
+        println(JdbcUtils.serializer.javaClass.name)
+    }
+
+    @Test
+    fun testNetworkSerialization4() {
+        val conn = remoteDB.getConnection("testNetworkSerialization4")
+        val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
+
+        val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
+        val sql = """SELECT DOM_DOC_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome');"""
         val rs = stat.executeQuery(sql)
 
         println(ResultSetFormatter(rs).format())

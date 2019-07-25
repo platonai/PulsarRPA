@@ -22,63 +22,63 @@ open class LoadOptions: CommonOptions {
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = Duration.ofDays(36500)
     // reserved
-    @Parameter(names = ["-requireNotBlank"],
+    @Parameter(names = ["-rnb", "-requireNotBlank"],
             description = "Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
 
     /** Arrange links */
-    @Parameter(names = ["-topLinks", "--top-links"], description = "Top N links")
-    var topLinks = 20
-    @Parameter(names = ["-outlink", "-outlinks", "-outlinkSelector", "--outlink-selector"],
+    @Parameter(names = ["-ol", "-outlink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
     var outlinkSelector = ""
-    @Parameter(names = ["-topAnchorGroups", "--top-anchor-groups"], description = "Try the top anchor groups")
+    @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
+    var topLinks = 20
+    @Parameter(names = ["-tg", "-topAnchorGroups", "--top-anchor-groups"], description = "Try the top anchor groups")
     var topAnchorGroups = 3
 
-    @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
+    @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
     var fetchMode = FetchMode.SELENIUM
-    @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class,
+    @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
     var browser = BrowserType.CHROME
-    @Parameter(names = ["-scrollCount", "--scroll-count"],
+    @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
     var scrollCount = 5
-    @Parameter(names = ["-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
+    @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
     var scrollInterval = Duration.ofMillis(500)
-    @Parameter(names = ["-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
+    @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
     var scriptTimeout = Duration.ofSeconds(60)
-    @Parameter(names = ["-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
+    @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to be finished by selenium")
     var pageLoadTimeout = Duration.ofSeconds(60)
 
     // itemXXX should be available for all index-item pattern pages
-    @Parameter(names = ["-itemBrowser"], converter = BrowserTypeConverter::class,
+    @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
             description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
     var itemBrowser = BrowserType.CHROME
-    @Parameter(names = ["-itemExtractor"], converter = BrowserTypeConverter::class,
+    @Parameter(names = ["-ie", "-itemExtractor", "--item-extractor"], converter = BrowserTypeConverter::class,
             description = "The extract used to extract item pages, use BOILERPIPE for news and DEFAULT for others")
     var itemExtractor = ItemExtractor.DEFAULT
-    @Parameter(names = ["-itemExpires"], converter = DurationConverter::class,
+    @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
     var itemExpires = Duration.ofDays(36500)
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
-    @Parameter(names = ["-itemScrollCount"],
+    @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
             description = "The same as scrollCount, but only works for item pages in harvest tasks")
     var itemScrollCount = scrollCount
-    @Parameter(names = ["-itemScrollInterval"], converter = DurationConverter::class,
+    @Parameter(names = ["-isi", "-itemScrollInterval", "--item-scroll-interval"], converter = DurationConverter::class,
             description = "The same as scrollInterval, but only works for item pages in harvest tasks")
     var itemScrollInterval = scrollInterval
-    @Parameter(names = ["-itemScriptTimeout"], converter = DurationConverter::class,
+    @Parameter(names = ["-ist", "-itemScriptTimeout", "--item-script-timeout"], converter = DurationConverter::class,
             description = "The same as scriptTimeout, but only works for item pages in harvest tasks")
     var itemScriptTimeout = scriptTimeout
-    @Parameter(names = ["-itemPageLoadTimeout"], converter = DurationConverter::class,
+    @Parameter(names = ["-iplt", "-itemPageLoadTimeout", "--item-page-load-timeout"], converter = DurationConverter::class,
             description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
     var itemPageLoadTimeout = pageLoadTimeout
-    @Parameter(names = ["-itemRequireNotBlank"],
+    @Parameter(names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
             description = "Keep the item pages only if the required text is not blank")
     var itemRequireNotBlank = ""
 
@@ -113,8 +113,8 @@ open class LoadOptions: CommonOptions {
     var parse = false
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
-    @Parameter(names = ["-ignoreQuery", "--ignore-query"], description = "Remove the query parameters when parse links")
-    var ignoreQuery = false
+    @Parameter(names = ["-ignoreUrlQuery", "--ignore-url-query"], description = "Remove the query parameters of urls")
+    var ignoreUrlQuery = false
     @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
     var noNorm = false
     @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
