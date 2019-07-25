@@ -74,7 +74,6 @@
 
     <bean id="seleniumEngine" class="ai.platon.pulsar.net.browser.SeleniumEngine" destroy-method="close">
         <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="globalExecutor"/>
         <constructor-arg ref="webDriverQueues"/>
         <constructor-arg ref="conf"/>
     </bean>

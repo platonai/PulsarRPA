@@ -9,6 +9,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.persist.WebPage
@@ -28,10 +29,8 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
 import java.util.*
-import kotlin.collections.HashSet
 import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.reflect.full.getExtensionDelegate
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -47,19 +46,30 @@ object Queries {
      */
     @InterfaceStability.Evolving
     fun loadAll(session: QuerySession, configuredUrls: Value): Collection<WebPage> {
-        val pages = ArrayList<WebPage>()
+        var pages: Collection<WebPage> = listOf()
 
-        if (configuredUrls is ValueString) {
-            pages.add(session.load(configuredUrls.getString()))
-        } else if (configuredUrls is ValueArray) {
-            for (configuredUrl in configuredUrls.list) {
-                pages.add(session.load(configuredUrl.string))
+        when (configuredUrls) {
+            is ValueString -> {
+                pages = ArrayList()
+                pages.add(session.load(configuredUrls.getString()))
             }
-        } else {
-            throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
+            is ValueArray ->
+                for (configuredUrl in configuredUrls.list) {
+                    pages = session.loadAll(configuredUrls.list.map { configuredUrl.string })
+                }
+            else -> throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
         }
 
         return pages
+    }
+
+    @InterfaceStability.Evolving
+    fun <O> loadAll(session: QuerySession, portalUrl: String,
+                    transformer: (Element, String, Int, Int) -> Collection<O>) : Collection<O> {
+        val normUrl = session.normalize(portalUrl)
+        val restrictCss = normUrl.options.outlinkSelector
+        val limit = normUrl.options.topLinks
+        return loadAll(session, ValueString.get(normUrl.url), restrictCss, 1, limit, transformer)
     }
 
     /**
@@ -72,7 +82,7 @@ object Queries {
      * @param offset         The offset
      * @param limit          The limit
      * @param transformer    The transformer used to translate a Web page into something else
-     * @return A collection of {@link WebPage}s
+     * @return A collection of O
      */
     @InterfaceStability.Evolving
     fun <O> loadAll(session: QuerySession,
@@ -103,23 +113,14 @@ object Queries {
             configuredPortal: Value, restrictCss: String,
             offset: Int, limit: Int,
             normalize: Boolean, ignoreQuery: Boolean): Collection<WebPage> {
-        var links: Collection<String>
-
-        if (ignoreQuery) {
-            links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
-                ele, rc, os, lt -> getLinksIgnoreQuery(ele, rc, os, lt)
-            }
-        } else {
-            links = loadAll(session, configuredPortal, restrictCss, offset, limit) {
-                ele, rc, os, lt -> getLinks(ele, rc, os, lt)
-            }
-        }
+        val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
+        var links = loadAll(session, configuredPortal).map { session.parse(it).document }
+                .flatMap { transformer(it, restrictCss, offset, limit) }
 
         if (normalize) {
             links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
-        // TODO: inherit options
         return session.loadAll(links, LoadOptions.create())
     }
 
@@ -127,15 +128,13 @@ object Queries {
         return session.parse(session.load(configuredUrl))
     }
 
-    fun <O> loadAndParse(session: QuerySession, configuredUrl: String, transform: (FeaturedDocument) -> O): O {
-        val document = session.parse(session.load(configuredUrl))
-        return transform(document)
-    }
-
     fun select(ele: Element, cssQuery: String, offset: Int, limit: Int): Collection<Element> {
         return ele.select(cssQuery, offset, limit)
     }
 
+    /**
+     * TODO: any type support
+     * */
     fun <O> select(dom: ValueDom, cssQuery: String, transform: (Element) -> O): ValueArray {
         val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }
                 .toTypedArray()
@@ -151,33 +150,26 @@ object Queries {
         return dom.element.select(cssQuery, n, 1) { transform(it) }.firstOrNull()
     }
 
-    fun <O> selectIgnoreEmpty(dom: ValueDom, cssQuery: String, transform: (Element) -> O): ValueArray {
-        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }
-                .toTypedArray()
-
-        return ValueArray.get(values)
-    }
-
     fun getTexts(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         return ele.select(restrictCss, offset, limit) { it.text() }
     }
 
     fun getLinks(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "a")
+        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit) {
             it.absUrl("href")
         }.filterNotNull()
     }
 
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "a")
+        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit) {
             it.absUrl("href").takeIf { Urls.isValidUrl(it) }?.substringBefore("?")
         }.filterNotNull()
     }
 
     fun getAnchors(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<Anchor> {
-        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "a")
+        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit).mapNotNull {
             it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
                     ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(),
@@ -186,7 +178,7 @@ object Queries {
     }
 
     fun getImages(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val cssQuery = appendIfMissingIgnoreCase(restrictCss, "img")
+        val cssQuery = appendSelectorIfMissing(restrictCss, "img")
         return ele.select(cssQuery, offset, limit) {
             it.absUrl("src").takeIf { Urls.isValidUrl(it) }
         }.filterNotNull()
@@ -315,18 +307,5 @@ object Queries {
         }
 
         return values
-    }
-
-    fun appendIfMissingIgnoreCase(cssQuery: String, appendix: String): String {
-        var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
-        val ap = appendix.trim()
-
-        val parts = q.split(" ")
-        // consider: body > div:nth-child(10) > ul > li:nth-child(3) > a:nth-child(2)
-        if (!parts[parts.size - 1].startsWith(ap, ignoreCase = true)) {
-            q += " $ap"
-        }
-
-        return q
     }
 }

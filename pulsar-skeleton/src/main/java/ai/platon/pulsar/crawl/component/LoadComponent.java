@@ -335,7 +335,7 @@ public class LoadComponent {
         return url;
     }
 
-    private int getFetchReason(WebPage page, Duration expires, boolean retry) {
+    private int getFetchReason(WebPage page, Duration expires, boolean retryIfFailed) {
         Objects.requireNonNull(page);
         Objects.requireNonNull(expires);
 
@@ -355,7 +355,7 @@ public class LoadComponent {
         } else if (protocolStatus.isFailed()) {
             // Page is fetched last time, but failed, if retry is not allowed, just return the failed page
 
-            if (!retry) {
+            if (!retryIfFailed) {
                 LOG.warn("Ignore failed page, last status: " + page.getProtocolStatus() + ", options: " + page.getOptions());
                 return FETCH_REASON_DO_NOT_FETCH;
             }

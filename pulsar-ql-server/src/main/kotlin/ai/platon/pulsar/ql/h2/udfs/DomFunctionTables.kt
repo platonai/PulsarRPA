@@ -42,7 +42,7 @@ object DomFunctionTables {
     @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
     fun loadAll(@H2Context conn: JdbcConnection, configuredUrls: ValueArray): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
@@ -60,7 +60,7 @@ object DomFunctionTables {
             @H2Context conn: JdbcConnection,
             configuredPortal: Value, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
@@ -72,7 +72,6 @@ object DomFunctionTables {
     @JvmStatic
     @UDFunction(description = "Select all elements by cssQuery")
     fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String): ResultSet {
-        val session = H2SessionFactory.getSession(conn)
         return select(conn, dom, cssQuery, 1, Integer.MAX_VALUE)
     }
 
@@ -81,7 +80,7 @@ object DomFunctionTables {
     @UDFunction(description = "Select all elements by cssQuery")
     fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
@@ -95,13 +94,13 @@ object DomFunctionTables {
     @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside all the selected elements")
     fun loadAndGetLinks(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+            configuredPortal: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val links = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::getLinks)
+        val links = Queries.loadAll(session, configuredPortal, restrictCss, offset, limit, Queries::getLinks)
         return toResultSet("LINK", links)
     }
 
@@ -112,7 +111,7 @@ object DomFunctionTables {
     fun links(@H2Context conn: JdbcConnection, 
               dom: ValueDom, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
@@ -127,7 +126,7 @@ object DomFunctionTables {
             @H2Context conn: JdbcConnection,
             configuredPortal: Value, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet(listOf<Anchor>())
         }
 
@@ -196,7 +195,7 @@ object DomFunctionTables {
             normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
@@ -250,7 +249,7 @@ object DomFunctionTables {
             normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
@@ -305,8 +304,10 @@ object DomFunctionTables {
                  cssSelector: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
                  offset: Int = 1,
                  limit: Int = 100): ResultSet {
+        val session = H2SessionFactory.getSession(conn)
+
         val rs = createFeatureResultSet()
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return rs
         }
 
@@ -364,7 +365,7 @@ object DomFunctionTables {
             limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         val rs = createFeatureResultSet()
-        if (H2SessionFactory.isColumnRetrieval(conn)) {
+        if (session.isColumnRetrieval(conn)) {
             return rs
         }
 

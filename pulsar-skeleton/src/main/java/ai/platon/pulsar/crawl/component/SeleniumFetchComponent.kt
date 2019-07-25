@@ -82,7 +82,7 @@ class SeleniumFetchComponent(
         return parallelFetchAllPages(nextBatchId, pages, mutableConfig)
     }
 
-    fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, mutableConfig: MutableConfig): Collection<Response> {
+    private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, mutableConfig: MutableConfig): Collection<Response> {
         val startTime = Instant.now()
         val size = Iterables.size(pages)
 
@@ -176,6 +176,7 @@ class SeleniumFetchComponent(
 
             idleSeconds = if (numTaskDone == 0) 1 + idleSeconds else 0
 
+            // TODO: Use reactor, coroutine or signal instead of sleep
             try {
                 TimeUnit.SECONDS.sleep(interval.seconds)
             } catch (e: InterruptedException) {

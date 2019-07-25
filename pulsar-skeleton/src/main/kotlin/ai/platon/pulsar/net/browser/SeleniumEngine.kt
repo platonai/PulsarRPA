@@ -17,7 +17,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.net.InternetDomainName
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import org.apache.commons.codec.digest.DigestUtils
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
@@ -76,10 +75,10 @@ data class BrowserJsData(
                 s1.w,   s2.w,   s3.w,   s4.w,
                 s1.h,   s2.h,   s3.h,   s4.h
         )
+
         val st = status
-        val m = String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
+        return String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
                 st.n, st.scroll, st.st, st.r, st.idl, s)
-        return m
     }
 
     companion object {
@@ -110,7 +109,6 @@ data class DriverConfig(
  */
 class SeleniumEngine(
         browserControl: BrowserControl,
-        private val executor: GlobalExecutor,
         private val drivers: WebDriverQueues,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
@@ -126,6 +124,8 @@ class SeleniumEngine(
     private val monthDay = DateTimeUtil.now("MMdd")
 
     private val isClosed = AtomicBoolean(false)
+
+    private val browserDataGson = Gson()
 
     init {
         instanceCount.incrementAndGet()
@@ -232,7 +232,7 @@ class SeleniumEngine(
 
         handleFetchFinish(page, driver, headers)
         if (jsData !== BrowserJsData.default) {
-            page.metadata.set(Name.BROWSER_JS_DATA, Gson().toJson(jsData, BrowserJsData::class.java))
+            page.metadata.set(Name.BROWSER_JS_DATA, browserDataGson.toJson(jsData, BrowserJsData::class.java))
         }
         pageSource = handlePageSource(pageSource, status, page, driver)
         headers.put(CONTENT_LENGTH, pageSource.length.toString())
@@ -354,12 +354,13 @@ class SeleniumEngine(
             try {
                 // make sure the document is ready
                 val initialScroll = 2
-                val maxRound = pageLoadTimeout - 10 //leave 10 seconds to wait for script finish
+                val maxRound = pageLoadTimeout - 10 // leave 10 seconds to wait for script finish
+                // TODO: wait for expected ni, na, nnum, nst, etc; required element
                 val js = ";$libJs;return __utils__.waitForReady($maxRound, $initialScroll);"
                 val r = documentWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
 
                 if (r == "timeout") {
-                    log.debug("Hit max round $maxRound to wait document | {}", url)
+                    log.debug("Hit max round $maxRound to wait for document | {}", url)
                 } else {
                     log.trace("Document is ready. {} | {}", r, url)
                 }
@@ -391,13 +392,17 @@ class SeleniumEngine(
             throw e
         }
 
-        val data = jsExecutor.executeScript(clientJs) as String
-        val pulsarJsData = GsonBuilder().create().fromJson(data, BrowserJsData::class.java)
-        if (log.isDebugEnabled) {
-            log.debug("{} | {}", pulsarJsData, url)
+        val result = jsExecutor.executeScript(clientJs)
+        if (result is String) {
+            val jsData = browserDataGson.fromJson(result, BrowserJsData::class.java)
+            if (log.isDebugEnabled) {
+                log.debug("{} | {}", jsData, url)
+            }
+
+            return VisitResult(status, jsData)
         }
 
-        return VisitResult(status, pulsarJsData)
+        return VisitResult(status, BrowserJsData.default)
     }
 
     private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {

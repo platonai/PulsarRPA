@@ -11,11 +11,11 @@ import ai.platon.pulsar.ql.h2.udas.GroupFetch
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
-import org.apache.commons.lang3.StringUtils
+import org.h2.engine.Constants
 import org.h2.engine.SessionInterface
+import java.sql.Connection
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
-import kotlin.reflect.full.memberFunctions
 
 open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSession, config: SessionConfig)
     : PulsarSession(pulsarContext, config, dbSession.id) {
@@ -42,6 +42,10 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
 
     fun parseToValue(page: WebPage): ValueDom {
         return ValueDom.get(parse(page))
+    }
+
+    fun isColumnRetrieval(conn: Connection): Boolean {
+        return Constants.CONN_URL_COLUMNLIST in conn.metaData.url
     }
 
     /**

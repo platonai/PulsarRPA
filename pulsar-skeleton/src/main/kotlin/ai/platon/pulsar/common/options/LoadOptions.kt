@@ -16,11 +16,11 @@ import java.time.Duration
  * ISO-8601 standard : PnDTnHnMn.nS
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
-open class LoadOptions : CommonOptions {
+open class LoadOptions: CommonOptions {
     /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var expires: Duration = Duration.ofDays(36500)
+    var expires = Duration.ofDays(36500)
     // reserved
     @Parameter(names = ["-requireNotBlank"],
             description = "Keep the pages only if the required text is not blank")
@@ -47,40 +47,40 @@ open class LoadOptions : CommonOptions {
     var scrollCount = 5
     @Parameter(names = ["-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
-    var scrollInterval: Duration = Duration.ofMillis(1000)
+    var scrollInterval = Duration.ofMillis(500)
     @Parameter(names = ["-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
-    var scriptTimeout: Duration = Duration.ofSeconds(60)
+    var scriptTimeout = Duration.ofSeconds(60)
     @Parameter(names = ["-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to be finished by selenium")
-    var pageLoadTimeout: Duration = Duration.ofSeconds(60)
+    var pageLoadTimeout = Duration.ofSeconds(60)
 
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-itemBrowser"], converter = BrowserTypeConverter::class,
             description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
-    var itemBrowser: BrowserType = BrowserType.CHROME
+    var itemBrowser = BrowserType.CHROME
     @Parameter(names = ["-itemExtractor"], converter = BrowserTypeConverter::class,
             description = "The extract used to extract item pages, use BOILERPIPE for news and DEFAULT for others")
-    var itemExtractor: ItemExtractor = ItemExtractor.DEFAULT
+    var itemExtractor = ItemExtractor.DEFAULT
     @Parameter(names = ["-itemExpires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
-    var itemExpires: Duration = Duration.ofDays(36500)
+    var itemExpires = Duration.ofDays(36500)
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-itemScrollCount"],
             description = "The same as scrollCount, but only works for item pages in harvest tasks")
-    var itemScrollCount = 5
+    var itemScrollCount = scrollCount
     @Parameter(names = ["-itemScrollInterval"], converter = DurationConverter::class,
             description = "The same as scrollInterval, but only works for item pages in harvest tasks")
-    var itemScrollInterval: Duration = Duration.ofMillis(500)
+    var itemScrollInterval = scrollInterval
     @Parameter(names = ["-itemScriptTimeout"], converter = DurationConverter::class,
             description = "The same as scriptTimeout, but only works for item pages in harvest tasks")
-    var itemScriptTimeout: Duration = Duration.ofSeconds(60)
+    var itemScriptTimeout = scriptTimeout
     @Parameter(names = ["-itemPageLoadTimeout"], converter = DurationConverter::class,
             description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
-    var itemPageLoadTimeout: Duration = Duration.ofSeconds(60)
+    var itemPageLoadTimeout = pageLoadTimeout
     @Parameter(names = ["-itemRequireNotBlank"],
             description = "Keep the item pages only if the required text is not blank")
-    var itemRequireNotBlank: String = ""
+    var itemRequireNotBlank = ""
 
     @Parameter(names = ["-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
@@ -113,9 +113,11 @@ open class LoadOptions : CommonOptions {
     var parse = false
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
-    @Parameter(names = ["-noNorm", "--no-link-normalizer"], arity = 1, description = "No normalizer is applied to parse links")
+    @Parameter(names = ["-ignoreQuery", "--ignore-query"], description = "Remove the query parameters when parse links")
+    var ignoreQuery = false
+    @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
     var noNorm = false
-    @Parameter(names = ["-noFilter", "--no-link-filter"], arity = 1, description = "No filter is applied to parse links")
+    @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
     var noFilter = false
 
     @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
@@ -188,6 +190,13 @@ open class LoadOptions : CommonOptions {
     override fun toString(): String {
         return modifiedParams.withCmdLineStyle(true).withKVDelimiter(" ")
                 .formatAsLine().replace("\\s+".toRegex(), " ")
+    }
+
+    /**
+     * Create a new LoadOptions
+     * */
+    fun clone(): LoadOptions {
+        return LoadOptions.parse(toString(), volatileConfig)
     }
 
     /**

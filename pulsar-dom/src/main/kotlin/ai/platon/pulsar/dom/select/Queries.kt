@@ -165,6 +165,29 @@ fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
     } else listOf()
 }
 
+inline fun <R : Any, C : MutableCollection<in R>> Node.selectTo(destination: C,
+        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+        transformer: (Element) -> R) {
+    if (this is Element) {
+        select(query, offset, limit).mapTo(destination) { transformer(it) }
+    }
+}
+
+inline fun <R : Any> Node.selectNotNull(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+                                  transformer: (Element) -> R?): List<R> {
+    return if (this is Element) {
+        select(query, offset, limit).mapNotNull { transformer(it) }
+    } else listOf()
+}
+
+inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destination: C,
+        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+        transformer: (Element) -> R?) {
+    if (this is Element) {
+        select(query, offset, limit).mapNotNullTo(destination) { transformer(it) }
+    }
+}
+
 @Deprecated("Use select instead", ReplaceWith("Node.select(cssQuery)"))
 @JvmOverloads
 fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
@@ -209,4 +232,17 @@ fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VAL
 inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, crossinline filter: (Element) -> Boolean): C {
     ElementTraversor.traverse(this) { if (filter(it)) { destination.add(it) } }
     return destination
+}
+
+fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
+    var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
+    val ap = appendix.trim()
+
+    val parts = q.split(" ")
+    // consider: body > div:nth-child(10) > ul > li:nth-child(3) > a:nth-child(2)
+    if (!parts[parts.size - 1].startsWith(ap, ignoreCase = true)) {
+        q += " $ap"
+    }
+
+    return q
 }

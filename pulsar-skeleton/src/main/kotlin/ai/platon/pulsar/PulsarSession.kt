@@ -1,23 +1,20 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.BeanFactory
-import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.PulsarPaths.webCacheDir
-import ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.APP_CONTEXT_CONFIG_LOCATION
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.select.appendSelectorIfMissing
+import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
 import org.h2.util.Utils
+import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
@@ -71,7 +68,9 @@ open class PulsarSession(
 
     fun normalize(url: String): NormUrl {
         ensureRunning()
-        return context.normalize(url)
+        val normUrl = context.normalize(url)
+        initOptions(normUrl.options)
+        return normUrl
     }
 
     fun normalize(url: String, options: LoadOptions): NormUrl {
@@ -81,7 +80,7 @@ open class PulsarSession(
 
     fun normalize(urls: Iterable<String>): List<NormUrl> {
         ensureRunning()
-        return context.normalize(urls)
+        return context.normalize(urls).onEach { initOptions(it.options) }
     }
 
     fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
@@ -181,6 +180,22 @@ open class PulsarSession(
         } else {
             context.loadAll(normUrls, options)
         }
+    }
+
+    /**
+     * Load all out pages in a portal page
+     *
+     * @param urls    The urls to load
+     * @param options The load options
+     * @return The web pages
+     */
+    fun loadOutPages(portal: String, restrictCss: String, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
+        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+        val links = parse(load(portal)).document.selectNotNull(cssQuery, 1, options.topLinks) {
+            getLink(it, !options.noNorm, options.ignoreQuery)
+        }
+
+        return loadAll(links, options)
     }
 
     /**
@@ -338,6 +353,13 @@ open class PulsarSession(
 
         String.format("Pulsar session $this is closed. Used memory: %,dKB, free memory: %,dKB",
                 Utils.getMemoryUsed(), Utils.getMemoryFree()).also { log.info(it) }
+    }
+
+    fun getLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
+        var link = ele.attr("abs:href")
+        if (normalize) link = normalize(link).takeIf { it.isValid }?.url
+        if (link != null && ignoreQuery) link = Urls.getUrlWithoutParameters(link)
+        return link
     }
 
     private fun initOptions(options: LoadOptions): LoadOptions {

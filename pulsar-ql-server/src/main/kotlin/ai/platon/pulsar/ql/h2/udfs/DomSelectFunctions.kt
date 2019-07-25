@@ -3,6 +3,7 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.dom.nodes.A_LABELS
+import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -120,7 +121,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun allImgs(dom: ValueDom, cssQuery: String = ":root"): ValueArray {
-        val q = Queries.appendIfMissingIgnoreCase(cssQuery, "img")
+        val q = appendSelectorIfMissing(cssQuery, "img")
         return Queries.select(dom, q) { it.attr("abs:src") }
     }
 
@@ -129,7 +130,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun firstImg(dom: ValueDom, cssQuery: String = ":root"): String {
-        val q = Queries.appendIfMissingIgnoreCase(cssQuery, "img")
+        val q = appendSelectorIfMissing(cssQuery, "img")
         return Queries.selectFirst(dom, q) { it.attr("abs:src") } ?: ""
     }
 
@@ -137,7 +138,7 @@ object DomSelectFunctions {
             "and return the src of it")
     @JvmStatic
     fun nthImg(dom: ValueDom, cssQuery: String, n: Int): String {
-        val q = Queries.appendIfMissingIgnoreCase(cssQuery, "img")
+        val q = appendSelectorIfMissing(cssQuery, "img")
         return Queries.selectNth(dom, q, n) { it.attr("abs:src") } ?: ""
     }
 
@@ -145,7 +146,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun allHrefs(dom: ValueDom, cssQuery: String = ":root"): ValueArray {
-        val q = Queries.appendIfMissingIgnoreCase(cssQuery, "a")
+        val q = appendSelectorIfMissing(cssQuery, "a")
         return Queries.select(dom, q) { ele -> ele.attr("abs:href") }
     }
 
@@ -154,7 +155,7 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun firstHref(dom: ValueDom, cssQuery: String = ":root"): String {
-        val q = Queries.appendIfMissingIgnoreCase(cssQuery, "a")
+        val q = appendSelectorIfMissing(cssQuery, "a")
         return Queries.selectFirst(dom, q) { it.attr("abs:href") } ?: ""
     }
 
@@ -162,7 +163,7 @@ object DomSelectFunctions {
             "and return the href of it")
     @JvmStatic
     fun nthHref(dom: ValueDom, cssQuery: String, n: Int): String {
-        val q = Queries.appendIfMissingIgnoreCase(cssQuery, "a")
+        val q = appendSelectorIfMissing(cssQuery, "a")
         return Queries.selectNth(dom, q, n) { it.attr("abs:href") } ?: ""
     }
 
