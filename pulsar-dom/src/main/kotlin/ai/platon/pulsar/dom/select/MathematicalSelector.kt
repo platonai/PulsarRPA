@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.dom.nodes.node.ext.namedRect2
 import org.apache.commons.lang3.Validate
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -8,6 +9,7 @@ import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
 import java.util.*
+import kotlin.math.max
 
 /**
  * CSS element selector, that finds elements matching a query.
@@ -95,24 +97,36 @@ object MathematicalSelector {
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        if (limit == 0) {
+        if (limit <= 0) {
             return Elements()
         }
 
+        // all items match cssQuery are fine
         if (offset < 1 && limit > 100_000) {
             return select(cssQuery, root)
         }
 
         // TODO: do the filter inside Collector.collect
-        var i = 1
-        return select(cssQuery, root).asSequence()
-                .takeWhile { i++ >= offset && i <= limit }
+        val drop = max(offset - 1, 0)
+        return select(cssQuery, root).asSequence().drop(drop).take(limit)
                 .toCollection(Elements())
     }
 
     fun <O> select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE,
                         transformer: (Element) -> O): List<O> {
-        return select(cssQuery, root, offset, limit).map { transformer(it) }
+        if (limit <= 0) {
+            return listOf()
+        }
+
+        // take all
+        if (offset <= 1 && limit > 100_000) {
+            return select(cssQuery, root).map { transformer(it) }
+        }
+
+        // TODO: do the filter inside Collector.collect
+        val drop = max(offset - 1, 0)
+        return select(cssQuery, root).asSequence().drop(drop).take(limit)
+                .map { transformer(it) }.toList()
     }
 
     /**

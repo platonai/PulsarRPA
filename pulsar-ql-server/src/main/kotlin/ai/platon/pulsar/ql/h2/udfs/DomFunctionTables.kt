@@ -27,6 +27,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
 import java.util.*
+import kotlin.math.max
 
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
@@ -383,9 +384,9 @@ object DomFunctionTables {
             }
         }
 
-        var i = 1
-        result.sortedByDescending { it.getFeature(SIB) }
-                .takeWhile { ++i > offset && i <= limit }
+        val drop = max(offset - 1, 0)
+        result.sortedByDescending { it.getFeature(SIB) }.asSequence()
+                .drop(drop).take(limit)
                 .map { Queries.getFeatureRow(it) }
                 .forEach { rs.addRow(it) }
 

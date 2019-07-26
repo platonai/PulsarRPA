@@ -11,7 +11,7 @@ class TestCases: TestBase() {
 
     @Test
     fun projectFields() {
-        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')")
+        execute("SELECT 'welcome', DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')", remote = true)
         execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")
         execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic img', 0, 5)")
 
@@ -33,18 +33,18 @@ class TestCases: TestBase() {
         // execute("select dom, dom_css_selector(dom), dom_text(dom), dom_text_length(dom) from dom_load_and_select('$url', 'tbody > tr');", remote = true)
         val sql = """
         select
-            dom, 
-            dom_css_selector(dom), 
-            dom_nth_text(dom, 'td', 1) as code, 
-            dom_nth_text(dom, 'td', 2) as short_name, 
-            dom_nth_text(dom, 'td', 3) as category, 
-            dom_nth_text(dom, 'td', 4) as industry, 
+            dom,
+            dom_css_selector(dom),
+            dom_nth_text(dom, 'td', 1) as code,
+            dom_nth_text(dom, 'td', 2) as short_name,
+            dom_nth_text(dom, 'td', 3) as category,
+            dom_nth_text(dom, 'td', 4) as industry,
             dom_nth_text(dom, 'td', 5) as trader,
             dom_nth_text(dom, 'td', 6) as city,
             dom_nth_text(dom, 'td', 7) as links
         from load_and_select('$url', 'tbody:not(:first-child) > tr');
         """.trimIndent()
-        execute(sql, remote = true)
+        execute(sql, remote = false)
     }
 
     @Test

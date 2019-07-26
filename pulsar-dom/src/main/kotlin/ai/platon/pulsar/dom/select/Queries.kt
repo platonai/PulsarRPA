@@ -2,12 +2,14 @@ package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.nodes.TraverseState
 import ai.platon.pulsar.dom.nodes.forEach
+import ai.platon.pulsar.dom.nodes.node.ext.name
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
+import kotlin.math.max
 
 /**
  * In-box syntax, cases:
@@ -158,10 +160,10 @@ fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elem
     return MathematicalSelector.select(cssQuery, this, offset, limit)
 }
 
-fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+fun <O> Node.select(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
                     transformer: (Element) -> O): List<O> {
     return if (this is Element) {
-        select(query, offset, limit).map { transformer(it) }
+        MathematicalSelector.select(cssQuery, this, offset, limit, transformer)
     } else listOf()
 }
 
@@ -215,13 +217,12 @@ fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
 
 @JvmOverloads
 fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset == 1 && limit == Int.MAX_VALUE) {
+    if (offset <= 1 && limit == Int.MAX_VALUE) {
         return MathematicalSelector.select(cssQuery, this)
     }
 
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
+    val drop = max(offset - 1, 0)
+    return MathematicalSelector.select(cssQuery, this).asSequence().drop(drop).take(limit)
             .toCollection(Elements())
 }
 
