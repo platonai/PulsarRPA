@@ -10,6 +10,17 @@ class TestCases: TestBase() {
     }
 
     @Test
+    fun projectFields1() {
+        val sql = """
+            SELECT
+                DOM_HEIGHT(DOM), DOM_TEXT(DOM), DOM_BASE_URI(DOM), DOM_CSS_SELECTOR(DOM) 
+            FROM
+                DOM_SELECT(DOM_LOAD('https://www.mia.com/formulas.html'), '.welcome');
+        """.trimIndent()
+        execute(sql, remote = true)
+    }
+
+    @Test
     fun projectFields() {
         execute("SELECT 'welcome', DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')", remote = true)
         execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")

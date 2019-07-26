@@ -71,22 +71,16 @@ object DomFunctionTables {
 
     @InterfaceStability.Stable
     @JvmStatic
+    @JvmOverloads
     @UDFunction(description = "Select all elements by cssQuery")
-    fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String): ResultSet {
-        return select(conn, dom, cssQuery, 1, Integer.MAX_VALUE)
-    }
-
-    @InterfaceStability.Stable
-    @JvmStatic
-    @UDFunction(description = "Select all elements by cssQuery")
-    fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String, offset: Int, limit: Int): ResultSet {
+    fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val elements = dom.element.select(cssQuery, offset, limit)
-        return toResultSet("DOM", elements.map { ValueDom.get(it) })
+        val doms = dom.element.select(cssQuery, offset, limit) { ValueDom.get(it) }
+        return toResultSet("DOM", doms)
     }
 
     @InterfaceStability.Stable
