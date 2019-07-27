@@ -89,14 +89,22 @@ object MathematicalSelector {
      * @param query CSS selector
      * @param root  root element to descend into
      * @return matching elements, empty if none
-     * @throws MathematicalSelector.SelectorParseException (unchecked) on an invalid CSS query.
      */
     fun select(cssQuery: String, root: Element): Elements {
         Validate.notEmpty(cssQuery)
-        return select(MathematicalQueryParser.parse(cssQuery), root)
+
+        try {
+            return select(MathematicalQueryParser.parse(cssQuery), root)
+        } catch (e: SelectorParseException) {
+            log.warn(e.message)
+        }
+
+        return Elements()
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+        Validate.notEmpty(cssQuery)
+
         if (limit <= 0) {
             return Elements()
         }
@@ -114,6 +122,8 @@ object MathematicalSelector {
 
     fun <O> select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE,
                         transformer: (Element) -> O): List<O> {
+        Validate.notEmpty(cssQuery)
+
         if (limit <= 0) {
             return listOf()
         }
@@ -182,7 +192,13 @@ object MathematicalSelector {
      */
     fun selectFirst(cssQuery: String, root: Element): Element? {
         Validate.notEmpty(cssQuery)
-        return Collector.findFirst(MathematicalQueryParser.parse(cssQuery), root)
+        try {
+            return Collector.findFirst(MathematicalQueryParser.parse(cssQuery), root)
+        } catch (e: SelectorParseException) {
+            log.warn(e.message)
+        }
+
+        return null
     }
 
     // exclude set. package open so that Elements can implement .not() selector.
