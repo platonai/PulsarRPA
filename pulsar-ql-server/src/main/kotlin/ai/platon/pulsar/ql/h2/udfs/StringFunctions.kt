@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import org.apache.commons.lang3.StringUtils
@@ -12,6 +13,18 @@ import java.io.IOException
 object StringFunctions {
 
     private val log = LoggerFactory.getLogger(StringFunctions::class.java)
+
+    @UDFunction(description = "Get the first integer in the given string")
+    @JvmStatic
+    fun getFirstInteger(str: String?, defaultValue: Int): Int {
+        return StringUtil.getFirstInteger(str, defaultValue)
+    }
+
+    @UDFunction(description = "Get the first float number in the given string")
+    @JvmStatic
+    fun getFirstFloatNumber(str: String?, defaultValue: Float): Float {
+        return StringUtil.getFirstFloatNumber(str, defaultValue)
+    }
 
     @UDFunction(description = "Chinese tokenizer")
     @JvmStatic

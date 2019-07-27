@@ -10,7 +10,17 @@ class TestCases: TestBase() {
     }
 
     @Test
-    fun projectFields1() {
+    fun projectFields() {
+        execute("SELECT 'welcome', DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')", remote = true)
+        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")
+        execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic img', 0, 5)")
+
+        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
+        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), 'a[href~=item]', 0, 5)")
+    }
+
+    @Test
+    fun projectFields2() {
         val sql = """
             SELECT
                 DOM_HEIGHT(DOM), DOM_TEXT(DOM), DOM_BASE_URI(DOM), DOM_CSS_SELECTOR(DOM) 
@@ -21,13 +31,10 @@ class TestCases: TestBase() {
     }
 
     @Test
-    fun projectFields() {
-        execute("SELECT 'welcome', DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')", remote = true)
-        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")
-        execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic img', 0, 5)")
-
-        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
-        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), 'a[href~=item]', 0, 5)")
+    fun testCondition() {
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfItem');")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', 'div', 1, 10000) " +
+                "WHERE WIDTH BETWEEN 200 AND 400 AND HEIGHT BETWEEN 200 AND 400 AND TXT_ND > 0;")
     }
 
     @Test

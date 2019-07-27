@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import java.util.ArrayList
 import java.util.HashSet
 import java.util.regex.Pattern
+import kotlin.system.exitProcess
 
 /**
  * Created by vincent on 17-4-12.
@@ -74,11 +75,11 @@ open class PulsarOptions : Parameterized {
 
             if (isHelp) {
                 jc.usage()
-                System.exit(0)
+                exitProcess(0)
             }
         } catch (e: ParameterException) {
             println(e.toString())
-            System.exit(0)
+            exitProcess(0)
         }
     }
 

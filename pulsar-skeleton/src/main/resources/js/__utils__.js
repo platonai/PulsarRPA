@@ -45,6 +45,19 @@ __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     return JSON.stringify(document.pulsarData.status)
 };
 
+/**
+ * @param selector The selector to click
+ * @param sourceLocation The source location
+ * @param maxRound The maximum round to check ready
+ * */
+__utils__.navigateTo = function(selector, sourceLocation, maxRound = 30) {
+    if (window.location !== sourceLocation) {
+        window.stop();
+        return window.location
+    }
+    return false
+};
+
 __utils__.createPulsarDataIfAbsent = function() {
     if (!document.pulsarData) {
         document.pulsarData = {

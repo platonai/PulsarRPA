@@ -50,6 +50,11 @@ public enum Name {
     ANCHORS("P_AS"),
 
     /**
+     * harvest
+     */
+    HARVEST_STATUS("H_S"),
+
+    /**
      * storage
      */
     ORIGINAL_EXPORT_PATH("S_OEP"),

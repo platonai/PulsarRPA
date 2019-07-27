@@ -97,11 +97,13 @@ abstract class TestBase {
             remoteDB.config.networked = true
             val config = remoteDB.config
             val args = if (config.ssl)
-                arrayOf("-tcpSSL", "-tcpPort", config.port.toString())
+                mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
             else
-                arrayOf("-tcpPort", config.port.toString())
+                mutableListOf("-tcpPort", config.port.toString())
 
-            server = Server.createTcpServer(*args)
+            args.add("-trace")
+
+            server = Server.createTcpServer(*args.toTypedArray())
             try {
                 server?.start()
                 server?.let { println("H2 Server status: " + it.status) }
@@ -287,8 +289,8 @@ abstract class TestBase {
         try {
             // TODO: different values are required in client and server side
             // this variable is shared between client and server in embed WebApp mode, but different values are required
-            val lastSerializeJavaObject = SysProperties.serializeJavaObject
-            SysProperties.serializeJavaObject = false
+//            val lastSerializeJavaObject = SysProperties.serializeJavaObject
+//            SysProperties.serializeJavaObject = false
 
             val stat = if (remote) remoteStat else localStat
 
@@ -304,7 +306,7 @@ abstract class TestBase {
                     println(r)
                 }
             }
-            SysProperties.serializeJavaObject = lastSerializeJavaObject
+//            SysProperties.serializeJavaObject = lastSerializeJavaObject
             history.add("${sql.trim { it.isWhitespace() }};")
         } catch (e: Throwable) {
             e.printStackTrace()

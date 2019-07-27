@@ -21,20 +21,25 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = Duration.ofDays(36500)
-    // reserved
-    @Parameter(names = ["-rnb", "-requireNotBlank"],
-            description = "Keep the pages only if the required text is not blank")
-    var requireNotBlank: String = ""
 
     /** Arrange links */
     @Parameter(names = ["-ol", "-outlink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
     var outlinkSelector = ""
+    @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
+            description = "[TODO] The css selector of next page anchor")
+    var nextPageSelector = ""
     @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
     var topLinks = 20
     @Parameter(names = ["-tg", "-topAnchorGroups", "--top-anchor-groups"], description = "Try the top anchor groups")
     var topAnchorGroups = 3
+    @Parameter(names = ["-wnb", "-waitNonBlank"],
+            description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
+    var waitNonBlank: String = ""
+    @Parameter(names = ["-rnb", "-requireNotBlank"],
+            description = "[TODO] Keep the pages only if the required text is not blank")
+    var requireNotBlank: String = ""
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
@@ -167,7 +172,7 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
-    protected constructor(args: String) : super(args.trim { it <= ' ' }.replace("=".toRegex(), " ")) {
+    protected constructor(args: String) : super(args) {
         addObjects(this)
     }
 
@@ -196,7 +201,7 @@ open class LoadOptions: CommonOptions {
      * Create a new LoadOptions
      * */
     fun clone(): LoadOptions {
-        return LoadOptions.parse(toString(), volatileConfig)
+        return parse(toString(), volatileConfig)
     }
 
     /**

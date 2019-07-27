@@ -112,17 +112,24 @@ class TestJavaObjectSerializer : TestBase() {
 
     @Test
     fun testNetworkSerialization4() {
-        val conn = remoteDB.getConnection("testNetworkSerialization4")
-        val stat = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)
-
-        val expr = "sibling > 20 && char > 40 && char < 100 && width > 200"
         val sql = """SELECT DOM_DOC_TITLE(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome');"""
+
+        IntRange(1, 50).toList().parallelStream().forEach {
+            runNetworkSerialization(sql)
+        }
+    }
+
+    private fun runNetworkSerialization(sql: String) {
+        val conn = remoteDB.getRandomConnection()
+        val stat = conn.createStatement()
+
         val rs = stat.executeQuery(sql)
 
-        println(ResultSetFormatter(rs).format())
-
-        println(sql)
-        println(SysProperties.serializeJavaObject)
-        println(JdbcUtils.serializer.javaClass.name)
+        assertTrue(rs.next())
+        val value = rs.getString(1)
+        println(value)
+        assertTrue(value.length > 1)
+        assertTrue(SysProperties.serializeJavaObject)
+        assertEquals("ai.platon.pulsar.ql.PulsarObjectSerializer", JdbcUtils.serializer.javaClass.name)
     }
 }

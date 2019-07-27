@@ -189,13 +189,16 @@ open class PulsarSession(
      * @param options The load options
      * @return The web pages
      */
-    fun loadOutPages(portal: String, restrictCss: String, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
+    fun loadOutPages(portalUrl: String, restrictCss: String, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-        val links = parse(load(portal)).document.selectNotNull(cssQuery, 1, options.topLinks) {
-            getLink(it, !options.noNorm, options.ignoreUrlQuery)
+        val normUrl = normalize(portalUrl, options)
+        val op = normUrl.options
+        val links = parse(load(normUrl)).document.selectNotNull(cssQuery, 1, op.topLinks) {
+            getLink(it, !op.noNorm, op.ignoreUrlQuery)
         }
 
-        return loadAll(links, options)
+        // TODO: use item- serial options
+        return loadAll(links, op)
     }
 
     /**
@@ -220,6 +223,12 @@ open class PulsarSession(
         }
 
         return document
+    }
+
+    fun loadAndParse(url: String, options: LoadOptions = LoadOptions.create()): FeaturedDocument {
+        ensureRunning()
+        val normUrl = normalize(url, options)
+        return parse(load(normUrl))
     }
 
     private fun getCachedOrGet(url: String): WebPage? {

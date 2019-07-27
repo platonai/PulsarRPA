@@ -63,15 +63,6 @@ object Queries {
         return pages
     }
 
-    @InterfaceStability.Evolving
-    fun <O> loadAll(session: QuerySession, portalUrl: String,
-                    transformer: (Element, String, Int, Int) -> Collection<O>) : Collection<O> {
-        val normUrl = session.normalize(portalUrl)
-        val restrictCss = normUrl.options.outlinkSelector
-        val limit = normUrl.options.topLinks
-        return loadAll(session, ValueString.get(normUrl.url), restrictCss, 1, limit, transformer)
-    }
-
     /**
      * Load all Web pages, and translate Web pages to targets using the given transformer
      *
@@ -92,13 +83,13 @@ object Queries {
 
         when (configuredUrls) {
             is ValueString -> {
-                val doc = loadAndParse(session, configuredUrls.getString())
+                val doc = session.loadAndParse(configuredUrls.getString())
                 collection = transformer(doc.document, restrictCss, offset, limit)
             }
             is ValueArray -> {
                 collection = ArrayList()
                 for (configuredUrl in configuredUrls.list) {
-                    val doc = loadAndParse(session, configuredUrl.string)
+                    val doc = session.loadAndParse(configuredUrl.string)
                     collection.addAll(transformer(doc.document, restrictCss, offset, limit))
                 }
             }
@@ -122,14 +113,6 @@ object Queries {
         }
 
         return session.loadAll(links, LoadOptions.create())
-    }
-
-    fun loadAndParse(session: QuerySession, configuredUrl: String): FeaturedDocument {
-        return session.parse(session.load(configuredUrl))
-    }
-
-    fun select(ele: Element, cssQuery: String, offset: Int, limit: Int): Collection<Element> {
-        return ele.select(cssQuery, offset, limit)
     }
 
     /**

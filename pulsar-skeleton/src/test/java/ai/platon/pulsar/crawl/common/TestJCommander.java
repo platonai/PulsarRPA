@@ -23,10 +23,10 @@ public class TestJCommander {
     private ImmutableConfig conf = new ImmutableConfig();
 
     @Test
-    public void quoted() {
+    public void testQuotedOptions() {
         class Cmd {
             @Parameter(names = {"-instance", "-ins"}, required = true, description = "Instance ID")
-            private List<String> instances = new LinkedList<>();
+            List<String> instances = new LinkedList<>();
         }
 
         Cmd cmd = new Cmd();
@@ -36,12 +36,13 @@ public class TestJCommander {
 
         assertEquals(cmd.instances.size(), 2);
 
-        String args = "-ins \"string one\" -ins \"string two\"";
+        String args = "-ins \"string one\" -ins \"ul li > a[href~=item]\"";
         String[] argv = PulsarOptions.Companion.split(args);
 
         Cmd cmd2 = new Cmd();
         JCommander.newBuilder().addObject(cmd2).args(argv).build();
         assertEquals(cmd2.instances.size(), 2);
+        assertEquals("ul li > a[href~=item]", cmd2.instances.get(1));
 
         // System.out.println(String.join(" | ", argv));
     }

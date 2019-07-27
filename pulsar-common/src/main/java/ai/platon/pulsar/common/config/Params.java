@@ -396,21 +396,28 @@ public class Params {
 
             String key = arg.getKey();
             if (arg.getValue() == null) {
+                sb.append(key);
                 if (!cmdLineStyle) {
-                    sb.append(key);
                     sb.append(kvDelimiter);
                     sb.append("null");
                 }
             } else if (cmdLineStyle && key.startsWith("-") && "true".equals(arg.getValue().toString())) {
                 sb.append(arg.getKey());
             } else if (cmdLineStyle && key.startsWith("-") && "false".equals(arg.getValue().toString())) {
+                // TODO: still not handle cases when arity > 1
                 // nothing
             } else {
                 sb.append(key);
-                String value = arg.getValue().toString().replaceAll(kvDelimiter, "");
+                String value = arg.getValue().toString();
                 if (!value.isEmpty()) {
                     sb.append(kvDelimiter);
-                    sb.append(value);
+
+                    // quoted
+                    if (value.contains(kvDelimiter)) {
+                        sb.append('\"').append(value).append('\"');
+                    } else {
+                        sb.append(value);
+                    }
                 }
             }
         }

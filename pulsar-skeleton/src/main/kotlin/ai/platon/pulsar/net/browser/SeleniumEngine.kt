@@ -423,6 +423,30 @@ class SeleniumEngine(
         }
     }
 
+    /**
+     * Perform click on the selected element and wait for the new page location
+     * */
+    private fun performJsClick(selector: String, driver: WebDriver, driverConfig: DriverConfig): String {
+        val timeout = driverConfig.pageLoadTimeout
+        val scrollWait = FluentWait<WebDriver>(driver)
+                .withTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
+                .pollingEvery(1000, TimeUnit.MILLISECONDS)
+                .ignoring(org.openqa.selenium.TimeoutException::class.java)
+
+        try {
+            // TODO: which one is the better? browser side timer or selenium side timer?
+            val js = ";$libJs;return __utils__.navigateTo($selector);"
+            val location = scrollWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
+            if (location is String) {
+                return location
+            }
+        } catch (e: org.openqa.selenium.TimeoutException) {
+            // ignore
+        }
+
+        return ""
+    }
+
     private fun getPageSourceSilently(driver: WebDriver): String {
         return try { driver.pageSource } catch (e: Throwable) { "" }
     }

@@ -3,9 +3,7 @@ package ai.platon.pulsar.ql.h2
 import org.h2.engine.Constants
 
 /**
- * The main test application. JUnit is not used because loops are easier to
- * write in regular java applications (most tests are ran multiple times using
- * different settings).
+ * The h2 db config
  */
 class H2DbConfig {
 

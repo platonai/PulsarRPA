@@ -5,7 +5,6 @@
  */
 package ai.platon.pulsar.ql.types;
 
-import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.dom.nodes.node.ext.NodeExtKt;
 import ai.platon.pulsar.ql.PulsarDataTypesHandler;
@@ -17,6 +16,7 @@ import org.h2.value.CompareMode;
 import org.h2.value.Value;
 import org.h2.value.ValueBytes;
 import org.h2.value.ValueString;
+import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * Implementation of the DOM data type.
  */
-public class ValueDom extends Value {
+public class ValueDom extends Value implements Comparable<ValueDom> {
 
     public static final Document NIL_DOC = FeaturedDocument.Companion.getNIL().getDocument();
     public static final ValueDom NIL = new ValueDom(NIL_DOC);
@@ -39,6 +39,7 @@ public class ValueDom extends Value {
 
     private final Document document;
     private final Element element;
+    private String outerHtml = null;
 
     private ValueDom(Element element) {
         Objects.requireNonNull(element);
@@ -67,8 +68,9 @@ public class ValueDom extends Value {
         return element == document;
     }
 
-    public String getOutHtml() {
-        return element.outerHtml();
+    public String getOuterHtml() {
+        if (outerHtml == null) outerHtml = element.outerHtml();
+        return outerHtml;
     }
 
     /**
@@ -139,12 +141,12 @@ public class ValueDom extends Value {
 
     @Override
     public long getPrecision() {
-        return getOutHtml().length();
+        return 128;
     }
 
     @Override
     public int getDisplaySize() {
-        return getOutHtml().length();
+        return 128;
     }
 
     @Override
@@ -164,7 +166,7 @@ public class ValueDom extends Value {
     @Override
     protected int compareSecure(Value o, CompareMode mode) {
         ValueDom v = (ValueDom) o;
-        return mode.compareString(getOutHtml(), v.getOutHtml(), false);
+        return mode.compareString(getOuterHtml(), v.getOuterHtml(), false);
     }
 
     /**
@@ -180,7 +182,7 @@ public class ValueDom extends Value {
         }
 
         ValueDom dom = (ValueDom) other;
-        return dom.element.equals(this.element) || dom.getOutHtml().equals(this.getOutHtml());
+        return dom.element.equals(this.element) || dom.getOuterHtml().equals(this.getOuterHtml());
     }
 
     @Override
@@ -201,7 +203,7 @@ public class ValueDom extends Value {
 
     @Override
     public byte[] getBytes() {
-        return getOutHtml().getBytes();
+        return getOuterHtml().getBytes();
     }
 
     /**
@@ -209,12 +211,12 @@ public class ValueDom extends Value {
      * */
     @Override
     public byte[] getBytesNoCopy() {
-        return getOutHtml().getBytes();
+        return getOuterHtml().getBytes();
     }
 
     @Override
     public int hashCode() {
-        return getOutHtml().hashCode();
+        return getOuterHtml().hashCode();
     }
 
     @Override
@@ -227,5 +229,10 @@ public class ValueDom extends Value {
             }
         }
         return "(dom)";
+    }
+
+    @Override
+    public int compareTo(@NotNull ValueDom o) {
+        return document.baseUri().compareTo(o.document.baseUri());
     }
 }

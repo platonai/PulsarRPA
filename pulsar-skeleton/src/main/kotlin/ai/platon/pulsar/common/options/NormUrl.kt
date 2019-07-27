@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.PulsarConstants
 import java.net.URL
 
-class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
+open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
     constructor(u: URL, options: LoadOptions): this(u.toString(), options)
 
     private val u by lazy { Urls.getURLOrNull(url) }

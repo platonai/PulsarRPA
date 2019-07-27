@@ -59,13 +59,15 @@ object DomFunctionTables {
     @JvmOverloads
     fun loadAndSelect(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+            url: String, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val elements = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::select)
+        val normUrl = session.normalize(url)
+        val elements = session.parse(session.load(normUrl)).select(cssQuery, offset, limit)
+
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
 
@@ -119,13 +121,15 @@ object DomFunctionTables {
     @UDFunction(hasShortcut = true, description = "Load a page and find all anchors specified by cssQuery")
     fun loadAndGetAnchors(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+            portalUrl: String, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet(listOf<Anchor>())
+            return toResultSet(listOf())
         }
 
-        val anchors = Queries.loadAll(session, configuredPortal, cssQuery, offset, limit, Queries::getAnchors)
+        val doc = session.loadAndParse(portalUrl)
+        val anchors = Queries.getAnchors(doc.document, restrictCss, offset, limit)
+
         return toResultSet(anchors)
     }
 
