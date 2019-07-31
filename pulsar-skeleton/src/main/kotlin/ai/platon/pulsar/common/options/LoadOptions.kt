@@ -200,7 +200,7 @@ open class LoadOptions: CommonOptions {
     /**
      * Create a new LoadOptions
      * */
-    fun clone(): LoadOptions {
+    open fun clone(): LoadOptions {
         return parse(toString(), volatileConfig)
     }
 

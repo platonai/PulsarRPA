@@ -84,7 +84,7 @@ class PulsarEnv {
             webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            // proxyUpdateThread.start()
+            proxyUpdateThread.start()
         }
 
         fun getOrCreate(): PulsarEnv {

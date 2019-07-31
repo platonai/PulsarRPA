@@ -176,9 +176,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.timeout = conf.getDuration(HTTP_TIMEOUT, Duration.ofSeconds(10));
         this.fetchMaxRetry = conf.getInt(HTTP_FETCH_MAX_RETRY, 3);
         this.maxContent = conf.getInt("http.content.limit", 1024 * 1024);
-//    this.userAgent = getAgentString(conf.get("http.agent.name"),
-//        conf.get("http.agent.version"), conf.get("http.agent.description"),
-//        conf.get("http.agent.url"), conf.get("http.agent.email"));
+//      this.userAgent = getAgentString(conf.get("http.agent.name"),
+//      conf.get("http.agent.version"), conf.get("http.agent.description"),
+//      conf.get("http.agent.url"), conf.get("http.agent.email"));
         this.userAgent = NetUtil.getAgentString(conf.get("http.agent.name"));
 
         this.acceptLanguage = conf.get("http.accept.language", acceptLanguage);

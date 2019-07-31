@@ -40,8 +40,6 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
     val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
 
     companion object {
-        // TODO: Web Drivers should grouped by conf, and free we the context with this config is not available
-        private val pulsarContext = PulsarContext.getOrCreate()
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
         private val totalDriverCount = AtomicInteger(0)

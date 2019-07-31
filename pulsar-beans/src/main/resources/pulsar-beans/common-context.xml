@@ -48,7 +48,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyUpdateThread" class="ai.platon.pulsar.common.proxy.ProxyUpdateThread">
+    <bean id="proxyUpdateThread" class="ai.platon.pulsar.common.proxy.ProxyUpdateThread" destroy-method="close">
         <constructor-arg ref="conf"/>
         <constructor-arg ref="proxyPool"/>
     </bean>

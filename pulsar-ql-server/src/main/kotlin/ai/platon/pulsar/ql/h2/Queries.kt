@@ -78,7 +78,7 @@ object Queries {
     @InterfaceStability.Evolving
     fun <O> loadAll(session: QuerySession,
                     configuredUrls: Value, restrictCss: String, offset: Int, limit: Int,
-                    transformer: (Element, String, Int, Int) -> Collection<O>) : Collection<O> {
+                    transformer: (Element, String, Int, Int) -> Collection<O>): Collection<O> {
         val collection: Collection<O>
 
         when (configuredUrls) {
@@ -97,6 +97,23 @@ object Queries {
         }
 
         return collection
+    }
+
+    fun loadOutPages(
+            session: QuerySession,
+            portalUrl: String, restrictCss: String,
+            offset: Int, limit: Int,
+            normalize: Boolean, ignoreQuery: Boolean): Collection<WebPage> {
+        val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
+
+        val document = session.parse(session.load(portalUrl)).document
+        var links = transformer(document, restrictCss, offset, limit)
+
+        if (normalize) {
+            links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
+        }
+
+        return session.loadAll(links, LoadOptions.create())
     }
 
     fun loadOutPages(
