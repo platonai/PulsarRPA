@@ -46,6 +46,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-dom</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-proxyee</artifactId>
+        </dependency>
 
         <!-- org.apache.hadoop.classification.InterfaceStability, etc -->
         <dependency>

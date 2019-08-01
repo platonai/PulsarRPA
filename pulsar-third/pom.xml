@@ -36,6 +36,7 @@
                 <module>pulsar-boilerpipe</module>
                 <module>pulsar-jsoup</module>
                 <module>pulsar-h2</module>
+                <module>pulsar-proxyee</module>
             </modules>
         </profile>
     </profiles>
@@ -55,6 +56,11 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-h2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-proxyee</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

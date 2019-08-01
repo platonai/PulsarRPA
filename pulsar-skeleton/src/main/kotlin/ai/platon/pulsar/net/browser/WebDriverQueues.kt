@@ -37,7 +37,7 @@ import java.util.logging.Level
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
-    val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
+    private val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
 
     companion object {
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()

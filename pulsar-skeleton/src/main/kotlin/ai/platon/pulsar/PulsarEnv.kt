@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyUpdateThread
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
 import ai.platon.pulsar.net.browser.WebDriverQueues
@@ -48,7 +48,7 @@ class PulsarEnv {
 
         val proxyPool: ProxyPool
 
-        val proxyUpdateThread: ProxyUpdateThread
+        val PROXY_SERVER: ProxyManager
 
         val browserControl: BrowserControl
 
@@ -79,12 +79,12 @@ class PulsarEnv {
 
             proxyPool = applicationContext.getBean(ProxyPool::class.java)
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
-            proxyUpdateThread = applicationContext.getBean(ProxyUpdateThread::class.java)
+            PROXY_SERVER = applicationContext.getBean(ProxyManager::class.java)
             browserControl = applicationContext.getBean(BrowserControl::class.java)
             webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            proxyUpdateThread.start()
+            PROXY_SERVER.start()
         }
 
         fun getOrCreate(): PulsarEnv {

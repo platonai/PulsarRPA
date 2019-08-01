@@ -14,19 +14,28 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ProxyUpdateThread(private val proxyPool: ProxyPool, private val conf: ImmutableConfig) : Thread(), AutoCloseable {
-    private var updatePeriod = conf.getDuration("http.proxy.pool.update.period", Duration.ofSeconds(20))
+class ProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
+    private val HTTP_PROXY_POOL_UPDATE_PERIOD = "http.proxy.pool.update.period"
+    private var updatePeriod = conf.getDuration(HTTP_PROXY_POOL_UPDATE_PERIOD, Duration.ofSeconds(20))
+    private var updateThread: Thread? = null
+
     private val isClosed = AtomicBoolean()
+
+    fun start() {
+        updateThread = Thread(this::update)
+    }
 
     override fun close() {
         isClosed.set(true)
+        updateThread?.join()
+
+        val entry = proxyPool.poll()
+        if (entry != null) {
+            // SimpleProxyServer.runServer(entry.host, entry.port, PROXY_SERVER_LOCAL_PORT)
+        }
     }
 
-    init {
-        this.isDaemon = true
-    }
-
-    override fun run() {
+    private fun update() {
         try {
             var tick = 0
             while (!isClosed.get()) {
@@ -89,19 +98,18 @@ class ProxyUpdateThread(private val proxyPool: ProxyPool, private val conf: Immu
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyUpdateThread::class.java)
+        private val log = LoggerFactory.getLogger(ProxyManager::class.java)
+        const val PROXY_SERVER_LOCAL_PORT = 8382
     }
 }
 
 fun main() {
-    val log = LoggerFactory.getLogger(ProxyUpdateThread::class.java)
+    val log = LoggerFactory.getLogger(ProxyManager::class.java)
 
     val conf = ImmutableConfig()
-
     val proxyPool = ProxyPool(conf)
-
-    val updateThread = ProxyUpdateThread(proxyPool, conf)
-    updateThread.start()
+    val proxyServer = ProxyManager(proxyPool, conf)
+    proxyServer.start()
 
     while (true) {
         val proxy = proxyPool.poll()
@@ -109,9 +117,16 @@ fun main() {
         if (proxy != null) {
             if (proxy.testNetwork()) {
                 log.info("Proxy is available | {} ", proxy)
+
+                System.setProperty("java.net.useSystemProxies", "true")
+                System.setProperty("http.proxyHost", proxy.host)
+                System.setProperty("http.proxyPort", proxy.port.toString())
+
             } else {
                 log.info("Proxy is unavailable | {}", proxy)
             }
+
+            // Do something
 
             proxyPool.offer(proxy)
         }

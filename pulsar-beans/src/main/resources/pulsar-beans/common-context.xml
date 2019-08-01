@@ -48,9 +48,12 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyUpdateThread" class="ai.platon.pulsar.common.proxy.ProxyUpdateThread" destroy-method="close">
+    <bean id="proxyManager" class="ai.platon.pulsar.common.proxy.ProxyManager" destroy-method="close">
         <constructor-arg ref="conf"/>
         <constructor-arg ref="proxyPool"/>
+    </bean>
+
+    <bean id="internalProxyServer" class="ai.platon.pulsar.InternalProxyServer" init-method="start" destroy-method="close">
     </bean>
 
     <bean id="fetchStatusTracker" class="ai.platon.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">

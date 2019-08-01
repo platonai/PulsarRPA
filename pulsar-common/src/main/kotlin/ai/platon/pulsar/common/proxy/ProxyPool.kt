@@ -86,7 +86,7 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
      * This might take a long time, so it should be run in a separate thread
      */
     @JvmOverloads
-    fun recover(limit: Int = Integer.MAX_VALUE): Int {
+    fun recover(limit: Int = 100): Int {
         var n = limit
         var recovered = 0
 
