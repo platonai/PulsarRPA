@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class NetUtil {
@@ -22,16 +24,28 @@ public class NetUtil {
     }
 
     public static boolean testHttpNetwork(URL url) {
+        return testHttpNetwork(url, null);
+    }
+
+    public static boolean testHttpNetwork(URL url, Proxy proxy) {
         boolean reachable = false;
 
         try {
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            HttpURLConnection con;
+            if (proxy != null) {
+                con = (HttpURLConnection) url.openConnection(proxy);
+            } else {
+                con = (HttpURLConnection) url.openConnection();
+            }
             con.setConnectTimeout(ProxyConnectionTimeout);
             con.connect();
-            // logger.info("available proxy server {} : {}", ip, port);
+
+            // log.debug("Proxy is available {} for {}", proxy, url);
+
             reachable = true;
             con.disconnect();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return reachable;
     }

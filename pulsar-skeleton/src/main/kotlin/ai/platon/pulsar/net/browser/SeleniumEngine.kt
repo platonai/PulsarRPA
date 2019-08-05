@@ -15,6 +15,7 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.net.InternetDomainName
 import com.google.gson.Gson
 import org.apache.commons.codec.digest.DigestUtils
@@ -110,6 +111,7 @@ data class DriverConfig(
 class SeleniumEngine(
         browserControl: BrowserControl,
         private val drivers: WebDriverQueues,
+        private val internalProxyServer: InternalProxyServer,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
@@ -179,6 +181,7 @@ class SeleniumEngine(
         if (location.isBlank()) {
             location = page.url
         }
+
         val driverConfig = getDriverConfig(priority, page, config)
         var status: ProtocolStatus
         var jsData = BrowserJsData.default
@@ -186,6 +189,11 @@ class SeleniumEngine(
         val startTime = System.currentTimeMillis()
         headers.put(Q_REQUEST_TIME, startTime.toString())
 
+        if (!waitProxyReady()) {
+            return ForwardingResponse(location, "", ProtocolStatus.STATUS_CANCELED, headers)
+        }
+
+        var proxy = internalProxyServer.proxyEntry
         var pageSource = ""
 
         try {
@@ -234,6 +242,9 @@ class SeleniumEngine(
         if (jsData !== BrowserJsData.default) {
             page.metadata.set(Name.BROWSER_JS_DATA, browserDataGson.toJson(jsData, BrowserJsData::class.java))
         }
+        if (proxy != null) {
+            page.metadata.set(Name.PROXY, proxy.toString())
+        }
         pageSource = handlePageSource(pageSource, status, page, driver)
         headers.put(CONTENT_LENGTH, pageSource.length.toString())
         if (status.isSuccess) {
@@ -246,6 +257,14 @@ class SeleniumEngine(
         // TODO: ignore timeout and get the page source
 
         return ForwardingResponse(page.url, pageSource, status, headers)
+    }
+
+    private fun waitProxyReady(): Boolean {
+        if (isClosed.get()) {
+            return false
+        }
+
+        return internalProxyServer.waitUntilReady()
     }
 
     private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
@@ -373,10 +392,10 @@ class SeleniumEngine(
         } catch (e: InterruptedException) {
             log.warn("Waiting for document interrupted | {}", url)
             Thread.currentThread().interrupt()
-            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+            status = ProtocolStatus.STATUS_CANCELED
         } catch (e: UnreachableBrowserException) {
             log.warn("Browser unreachable | {}", url)
-            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+            status = ProtocolStatus.STATUS_CANCELED
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 // Web driver closed
@@ -385,7 +404,7 @@ class SeleniumEngine(
             } else {
                 log.warn("Web driver exception | {} \n>>>\n{}\n<<<", url, e.message)
             }
-            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+            status = ProtocolStatus.STATUS_CANCELED
         } catch (e: Exception) {
             log.warn("Unexpected exception | {}", url)
             log.warn(StringUtil.stringifyException(e))

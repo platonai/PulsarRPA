@@ -17,30 +17,34 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
     private val HTTP_PROXY_POOL_UPDATE_PERIOD = "http.proxy.pool.update.period"
     private var updatePeriod = conf.getDuration(HTTP_PROXY_POOL_UPDATE_PERIOD, Duration.ofSeconds(20))
-    private var updateThread: Thread? = null
+    private var updateThread = Thread(this::update)
 
-    private val isClosed = AtomicBoolean()
+    private val closed = AtomicBoolean()
+    val isClosed get() = closed.get()
 
     fun start() {
-        updateThread = Thread(this::update)
+        updateThread.start()
+    }
+
+    fun startAsDaemon() {
+        updateThread.isDaemon = true
+        updateThread.start()
     }
 
     override fun close() {
-        isClosed.set(true)
-        updateThread?.join()
-
-        val entry = proxyPool.poll()
-        if (entry != null) {
-            // SimpleProxyServer.runServer(entry.host, entry.port, PROXY_SERVER_LOCAL_PORT)
+        if (closed.getAndSet(true)) {
+            return
         }
+
+        updateThread.join()
     }
 
     private fun update() {
         try {
             var tick = 0
-            while (!isClosed.get()) {
+            while (!isClosed) {
                 if (tick % 20 == 0) {
-                    log.debug("Updating proxy pool...")
+                    log.info("Updating proxy pool, status: {}", proxyPool)
                 }
 
                 if (tick % 20 == 0) {
@@ -48,10 +52,10 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
                 }
 
                 val start = Instant.now()
-                proxyPool.recover(100)
+                // proxyPool.recover(10)
                 val elapsed = Duration.between(start, Instant.now())
 
-                // too often, enlarge review period
+                // Too often, enlarge review period
                 if (elapsed > updatePeriod) {
                     log.info("It costs {} to check all retired proxy servers, enlarge the check interval", elapsed)
                     updatePeriod.plus(elapsed)

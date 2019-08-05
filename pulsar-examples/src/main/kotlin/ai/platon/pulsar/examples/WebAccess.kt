@@ -2,11 +2,14 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
+import java.net.URL
 
 object WebAccess {
     private val env = PulsarEnv.getOrCreate()
@@ -48,15 +51,46 @@ object WebAccess {
 
     private val loadOptions = "-expires 1d"
 
-    fun load() {
+    fun collectLinks() {
         // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
         // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
         // val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
-        val url = "http://v.youku.com/v_show/id_XNDI3MzA5Nzk4OA==.html"
+        val url = "https://www.hao123.com/ -i 1d"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
+
+        doc.select("a") { it.attr("abs:href") }
+                .filter { Urls.isValidUrl(it) }
+                .mapTo(HashSet()) { URL(it).let { it.protocol + "://" + it.host } }
+                .filter { NetUtil.testHttpNetwork(URL(it)) }
+                .joinToString("\n") { it }
+                .also { println(it) }
+
+        val path = i.export(doc)
+        log.info("Export to: file://{}", path)
+    }
+
+    fun load() {
+        // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
+        // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
+        // val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
+        val url = "https://www.hao123.com/ -i 1d"
+        val page = i.load(url)
+        val doc = i.parse(page)
+        doc.absoluteLinks()
+        doc.stripScripts()
+
+        doc.select("a") { it.attr("abs:href") }
+                .filter { Urls.isValidUrl(it) }
+                .mapTo(HashSet()) { it.substringBefore(".com")  }
+                .filter { !it.isBlank() }
+                .mapTo(HashSet()) { "$it.com" }
+                .filter { NetUtil.testHttpNetwork(URL(it)) }
+                .joinToString("\n") { it }
+                .also { println(it) }
+
         val path = i.export(doc)
         log.info("Export to: file://{}", path)
     }
@@ -65,7 +99,7 @@ object WebAccess {
         // val url = seeds[0]?:return
         val url = "https://list.mogujie.com/book/magic/51894"
 
-        val args = "-ps -expires 1s"
+        val args = "-ps -i 1s -ii 1s"
         val outlink = ".goods_list_mod a"
 
         val page = i.load("$url $args")
@@ -73,9 +107,9 @@ object WebAccess {
         val path = i.export(page)
         println("Export to: file://$path")
 
-//        val links = document.select(outlink) { it.attr("abs:href") }
-//        i.loadAll(links, LoadOptions.parse("-expires 1s"))
-        // page.links.stream().parallel().forEach { i.load("$it") }
+        val links = document.select(outlink) { it.attr("abs:href") }
+        i.loadAll(links, LoadOptions.parse("-expires 1s -preferParallel false"))
+        // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
         // println(WebPageFormatter(page).withLinks())
     }
 
@@ -156,6 +190,7 @@ object WebAccess {
 
     fun run() {
         // load()
+        // collectLinks()
         loadOutPages()
         // loadAllProducts()
         // parallelLoadAll()

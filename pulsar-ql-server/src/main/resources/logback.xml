@@ -25,6 +25,7 @@
 
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.ql" level="INFO"/>
+    <logger name="ai.platon.pulsar.proxy" level="DEBUG"/>
     <logger name="ai.platon.pulsar.parse.html" level="INFO"/>
     <logger name="ai.platon.pulsar.crawl.protocol" level="INFO"/>
     <logger name="ai.platon.pulsar.cli.shell" level="INFO"/>

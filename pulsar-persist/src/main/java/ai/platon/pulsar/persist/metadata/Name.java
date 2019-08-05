@@ -36,6 +36,7 @@ public enum Name {
     RESPONSE_TIME("F_RT"),
     BROWSER("F_BR"),
     BROWSER_JS_DATA("F_JD"),
+    PROXY("F_PX"),
 
     /**
      * parse

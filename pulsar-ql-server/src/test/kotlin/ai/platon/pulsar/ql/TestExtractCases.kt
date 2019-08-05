@@ -30,7 +30,7 @@ class TestExtractCases : TestBase() {
     fun testLoadAndGetLinks() {
         // val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=item]"
         val expr = "a[href~=item]"
-        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl -expires 1d', '$expr')")
+        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl -expires 1s', '$expr')")
     }
 
     @Test

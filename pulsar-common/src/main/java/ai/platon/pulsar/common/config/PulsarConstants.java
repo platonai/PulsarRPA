@@ -132,10 +132,9 @@ public interface PulsarConstants {
     int DEFAULT_PULSAR_MASTER_PORT = 8182;
 
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
-    int DEFAULT_INDEX_SERVER_PORT = 8983;
+    int DEFAULT_INDEX_SERVER_PORT = 8183;
 
     String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
-
 
     /**
      * Other notable properties:
@@ -158,4 +157,9 @@ public interface PulsarConstants {
     String PULSAR_ATTR_HIDDEN = "_h";
     String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
+
+    /**
+     * Proxy
+     * */
+    int INTERNAL_PROXY_SERVER_PORT = 8184;
 }

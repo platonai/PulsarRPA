@@ -1,14 +1,15 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.PulsarConstants.INTERNAL_PROXY_SERVER_PORT
 import ai.platon.pulsar.persist.metadata.BrowserType
 import com.gargoylesoftware.htmlunit.WebClient
 import org.apache.http.conn.ssl.SSLContextBuilder
@@ -218,7 +219,10 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
      * 2. Get a proxy from the proxy poll
      */
     private fun getProxy(conf: ImmutableConfig): org.openqa.selenium.Proxy? {
-        var ipPort: String? = conf.get(PROXY_IP_PORT)
+        var ipPort = if (NetUtil.testNetwork("127.0.0.1", INTERNAL_PROXY_SERVER_PORT)) {
+            "127.0.0.1:$INTERNAL_PROXY_SERVER_PORT"
+        } else conf.get(PROXY_IP_PORT)
+
         if (ipPort == null) {
             val proxyEntry = proxyPool.poll()
             if (proxyEntry != null) {

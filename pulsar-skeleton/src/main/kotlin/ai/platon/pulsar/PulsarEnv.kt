@@ -6,13 +6,15 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
 import ai.platon.pulsar.net.browser.WebDriverQueues
 import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
+import ai.platon.pulsar.proxy.InternalProxyServer
+import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
 import java.util.*
@@ -25,6 +27,8 @@ import java.util.concurrent.atomic.AtomicReference
  */
 class PulsarEnv {
     companion object {
+        private val log = LoggerFactory.getLogger(PulsarEnv::class.java)
+
         // TODO: read form config file
         val clientJsVersion = "0.2.3"
 
@@ -48,7 +52,9 @@ class PulsarEnv {
 
         val proxyPool: ProxyPool
 
-        val PROXY_SERVER: ProxyManager
+        val proxyManager: ProxyManager
+
+        val internalProxyServer: InternalProxyServer
 
         val browserControl: BrowserControl
 
@@ -77,14 +83,23 @@ class PulsarEnv {
             // the primary configuration, keep unchanged with the configuration files
             unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
 
-            proxyPool = applicationContext.getBean(ProxyPool::class.java)
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
-            PROXY_SERVER = applicationContext.getBean(ProxyManager::class.java)
+
+            proxyPool = applicationContext.getBean(ProxyPool::class.java)
+            proxyManager = applicationContext.getBean(ProxyManager::class.java)
+            internalProxyServer = applicationContext.getBean(InternalProxyServer::class.java)
+
             browserControl = applicationContext.getBean(BrowserControl::class.java)
             webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            PROXY_SERVER.start()
+            proxyManager.startAsDaemon()
+            val internalProxyServerEnabled = unmodifiedConfig.getBoolean(CapabilityTypes.PROXY_ENABLE_INTERNAL_PROXY_SERVER, true)
+            if (internalProxyServerEnabled) {
+                internalProxyServer.startAsDaemon()
+            }
+
+            log.info("Pulsar env is initialized")
         }
 
         fun getOrCreate(): PulsarEnv {

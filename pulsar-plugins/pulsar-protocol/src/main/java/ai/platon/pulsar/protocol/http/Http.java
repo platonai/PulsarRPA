@@ -19,7 +19,6 @@ package ai.platon.pulsar.protocol.http;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.proxy.NoProxyException;
 import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
@@ -29,8 +28,7 @@ import java.net.URL;
 
 public class Http extends AbstractHttpProtocol {
 
-    public Http() {
-    }
+    public Http() {}
 
     public Http(ImmutableConfig conf) {
         setConf(conf);

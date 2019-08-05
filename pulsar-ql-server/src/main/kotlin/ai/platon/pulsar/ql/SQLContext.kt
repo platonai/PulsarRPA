@@ -154,8 +154,6 @@ class SQLContext: AutoCloseable {
                 fetchSeeds()
             }
 
-            maintainProxyPool()
-
             try {
                 TimeUnit.SECONDS.sleep(10)
             } catch (e: InterruptedException) {}
@@ -194,11 +192,6 @@ class SQLContext: AutoCloseable {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
         }
-    }
-
-    private fun maintainProxyPool() {
-        ensureRunning()
-        PulsarEnv.proxyPool.recover(100)
     }
 
     private fun loadAll(urls: Iterable<String>, batchSize: Int, mode: FetchMode) {

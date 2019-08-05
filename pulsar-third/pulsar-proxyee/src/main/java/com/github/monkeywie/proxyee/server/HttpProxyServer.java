@@ -22,8 +22,10 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
-public class HttpProxyServer {
+public class HttpProxyServer implements AutoCloseable {
 
   //http代理隧道握手成功
   public final static HttpResponseStatus SUCCESS = new HttpResponseStatus(200,
@@ -139,10 +141,32 @@ public class HttpProxyServer {
     }
   }
 
+  @Override
   public void close() {
     serverConfig.getProxyLoopGroup().shutdownGracefully();
     bossGroup.shutdownGracefully();
     workerGroup.shutdownGracefully();
+
+    try {
+      TimeUnit.SECONDS.sleep(3);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    if (!serverConfig.getProxyLoopGroup().isShutdown()) {
+      serverConfig.getProxyLoopGroup().shutdownNow();
+    }
+
+    if (!bossGroup.isShutdown()) {
+      System.out.println("Force shutdown boss group");
+      bossGroup.shutdownNow();
+    }
+
+    if (!workerGroup.isShutdown()) {
+      System.out.println("Force shutdown worker group");
+      workerGroup.shutdownNow();
+    }
+
     CertPool.clear();
   }
 }

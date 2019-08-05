@@ -435,12 +435,6 @@ object CommonFunctions {
         return count
     }
 
-    @UDFunction(description = "Recover proxies in proxy pool")
-    @JvmStatic
-    fun recoverProxyPool(n: Int): Int {
-        return proxyPool.recover(n)
-    }
-
     @UDFunction(description = "Test if the given string is a number")
     @JvmStatic
     fun isNumeric(str: String): Boolean {

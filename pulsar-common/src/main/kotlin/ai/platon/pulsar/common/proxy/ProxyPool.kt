@@ -30,7 +30,8 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
     private val freeProxies = LinkedBlockingDeque<ProxyEntry>()
     private val workingProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
     private val unavailableProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
-    private val closed = AtomicBoolean(false)
+    private val closed = AtomicBoolean()
+    val isClosed get() = closed.get()
 
     val availableDir: Path = PulsarPaths.get("proxy", "available-proxies")
     val enabledDir: Path = PulsarPaths.get("proxy", "enabled-proxies")
@@ -63,7 +64,7 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
     override fun poll(): ProxyEntry? {
         var proxy: ProxyEntry? = null
 
-        while (proxy == null && !freeProxies.isEmpty()) {
+        while (!isClosed && proxy == null && !freeProxies.isEmpty()) {
             proxy = pollOne()
         }
 
@@ -85,13 +86,12 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
      * Check n unavailable proxies, recover them if possible.
      * This might take a long time, so it should be run in a separate thread
      */
-    @JvmOverloads
-    fun recover(limit: Int = 100): Int {
+    fun recover(limit: Int = 10): Int {
         var n = limit
         var recovered = 0
 
         val it = unavailableProxies.iterator()
-        while (n-- > 0 && it.hasNext()) {
+        while (!isClosed && n-- > 0 && it.hasNext()) {
             val proxy = it.next()
 
             if (proxy.isGone) {
@@ -116,7 +116,7 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
             Thread.currentThread().interrupt()
         }
 
-        if (proxy == null) {
+        if (isClosed || proxy == null) {
             return null
         }
 
@@ -182,6 +182,8 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
                     .map { it.trim() }
                     .filter { !it.startsWith("#") }
                     .distinct().shuffled().toList()
+
+            log.info("Loaded {} proxies from {}", lines.size, path)
 
             lines.mapNotNull { ProxyEntry.parse(it) }
                     .forEach { proxyEntry ->

@@ -1,23 +1,34 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.ResourceLoader
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.URL
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
 
-data class ProxyEntry(val host: String, val port: Int) : Comparable<ProxyEntry> {
-    val targetHost: String = ""
+data class ProxyEntry(val host: String, val port: Int, val targetHost: String = "") : Comparable<ProxyEntry> {
     var availableTime: Instant = Instant.EPOCH
-    var failedTimes: Int = 0
+    var failedCount: Int = 0
+    var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
+    val testCount = AtomicInteger()
+    val testkTime = AtomicLong()
 
     val isExpired: Boolean
         get() = availableTime.plus(PROXY_EXPIRED).isBefore(Instant.now())
 
     val isGone: Boolean
-        get() = failedTimes >= 3
+        get() = failedCount >= 3
+
+    val speed: Long
+        get() = testkTime.get() / 1000 / testCount.get()
 
     fun refresh() {
         availableTime = Instant.now()
@@ -28,22 +39,36 @@ data class ProxyEntry(val host: String, val port: Int) : Comparable<ProxyEntry> 
     }
 
     fun testNetwork(): Boolean {
-        if (targetHost.isNotBlank()) {
-            // TODO:
+        val target = if (targetHost.isNotBlank()) {
+            URL(targetHost)
+        } else testWebsites.random()
+
+        var available = false
+        if (NetUtil.testTcpNetwork(host, port)) {
+            val addr = InetSocketAddress(host, port)
+            val proxy = Proxy(Proxy.Type.HTTP, addr)
+
+            val start = System.currentTimeMillis()
+
+            available = networkTester(target, proxy)
+
+            val end = System.currentTimeMillis()
+            testCount.incrementAndGet()
+            testkTime.addAndGet(end - start)
         }
 
-        val available = NetUtil.testNetwork(host, port)
         if (!available) {
-            ++failedTimes
+            ++failedCount
         } else {
-            failedTimes = 0
+            // test if the proxy is expired
+            failedCount = 0
         }
 
         return available
     }
 
     override fun toString(): String {
-        return "$host:$port${META_DELIMITER}at:$availableTime"
+        return "$host:$port${META_DELIMITER}at:$availableTime${META_DELIMITER}speed:$speed"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -62,6 +87,13 @@ data class ProxyEntry(val host: String, val port: Int) : Comparable<ProxyEntry> 
 
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
+
+        val testWebsites = mutableSetOf(URL("https://www.baidu.com"))
+        init {
+            ResourceLoader.readAllLines("proxy.test.web.sites.txt")
+                    .mapTo(testWebsites) { URL(it) }
+        }
+
         private const val META_DELIMITER = " - "
         private const val IP_PORT_REGEX = "^((25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1?\\d?\\d)(:[0-9]{2,5})"
         private val IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX)
@@ -95,10 +127,6 @@ data class ProxyEntry(val host: String, val port: Int) : Comparable<ProxyEntry> 
             }
 
             return null
-        }
-
-        fun validateIpPort(ipPort: String): Boolean {
-            return IP_PORT_PATTERN.matcher(ipPort).matches()
         }
     }
 }

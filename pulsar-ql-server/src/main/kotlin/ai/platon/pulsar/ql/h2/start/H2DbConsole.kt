@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2.start
 
 import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import com.google.common.collect.Lists
 import org.h2.tools.Console
@@ -38,6 +39,8 @@ open class H2DbConsole {
         @JvmStatic
         fun main(args: Array<String>) {
             setPropertyIfAbsent("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2SessionFactory::class.java.name)
+            // setPropertyIfAbsent(CapabilityTypes.PROXY_ENABLE_INTERNAL_PROXY_SERVER, "true")
+
             SpringApplication.run(H2DbConsole::class.java, *args)
         }
     }
