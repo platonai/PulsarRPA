@@ -218,11 +218,13 @@ public interface CapabilityTypes {
     /**
      * Proxy
      */
-    String PROXY_ENABLE_INTERNAL_PROXY_SERVER = "proxy.enable.internal.server";
     String PROXY_DISABLED = "proxy.disabled";
+    String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
+    String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.enable.internal.server";
+    String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.enable.internal.server";
     String PROXY_IP_PORT = "proxy.ip.port";
     String PROXY_POOL_SIZE = "proxy.pool.size";
-    String PROXY_POOL_POLLING_WAIT = "proxy.pool.polling.wait";
+    String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
 
     /**
      * Network

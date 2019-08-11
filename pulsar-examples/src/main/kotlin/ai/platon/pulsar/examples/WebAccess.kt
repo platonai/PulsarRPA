@@ -76,18 +76,19 @@ object WebAccess {
         // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
         // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
         // val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
-        val url = "https://www.hao123.com/ -i 1d"
+        val url = "https://www.hao123.com/ -i 1s"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select("a") { it.attr("abs:href") }
+        doc.select("a") { it.attr("abs:href") }.asSequence()
                 .filter { Urls.isValidUrl(it) }
                 .mapTo(HashSet()) { it.substringBefore(".com")  }
                 .filter { !it.isBlank() }
                 .mapTo(HashSet()) { "$it.com" }
                 .filter { NetUtil.testHttpNetwork(URL(it)) }
+                .take(10)
                 .joinToString("\n") { it }
                 .also { println(it) }
 
@@ -96,11 +97,16 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        // val url = seeds[0]?:return
-        val url = "https://list.mogujie.com/book/magic/51894"
+        val url = seeds[0]?:return
+        // val url = "http://blog.zhaojie.me/"
 
-        val args = "-ps -i 1s -ii 1s"
-        val outlink = ".goods_list_mod a"
+        var args = "-ps -i 1d -ii 1s -preferParallel true"
+        // val outlink = ".goods_list_mod a"
+        val outlink = when {
+            "mia" in url -> "a[href~=item]"
+            "mogu" in url -> "a[href~=detail]"
+            else -> "a"
+        }
 
         val page = i.load("$url $args")
         val document = i.parse(page)
@@ -108,7 +114,11 @@ object WebAccess {
         println("Export to: file://$path")
 
         val links = document.select(outlink) { it.attr("abs:href") }
-        i.loadAll(links, LoadOptions.parse("-expires 1s -preferParallel false"))
+        i.loadAll(links)
+
+        println("All done.")
+
+        PulsarEnv.getOrCreate().exit()
         // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
         // println(WebPageFormatter(page).withLinks())
     }

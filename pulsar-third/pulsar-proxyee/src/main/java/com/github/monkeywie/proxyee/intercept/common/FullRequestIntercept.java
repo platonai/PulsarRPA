@@ -3,6 +3,7 @@ package com.github.monkeywie.proxyee.intercept.common;
 import com.github.monkeywie.proxyee.intercept.HttpProxyIntercept;
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.*;
 
 public abstract class FullRequestIntercept extends HttpProxyIntercept {
@@ -50,9 +51,14 @@ public abstract class FullRequestIntercept extends HttpProxyIntercept {
   @Override
   public void afterResponse(Channel clientChannel, Channel proxyChannel, HttpResponse httpResponse, HttpProxyInterceptPipeline pipeline) throws Exception {
     //如果是FullHttpRequest
-    if(pipeline.getHttpRequest() instanceof FullHttpRequest){
-      clientChannel.pipeline().remove("decompress");
-      clientChannel.pipeline().remove("aggregator");
+    if(pipeline.getHttpRequest() instanceof FullHttpRequest) {
+      ChannelPipeline pl = clientChannel.pipeline();
+      if (pl.get("decompress") != null) {
+        pl.remove("decompress");
+      }
+      if (pl.get("aggregator") != null) {
+        pl.remove("aggregator");
+      }
       FullHttpRequest httpRequest = (FullHttpRequest) pipeline.getHttpRequest();
       httpRequest.content().resetReaderIndex();
     }

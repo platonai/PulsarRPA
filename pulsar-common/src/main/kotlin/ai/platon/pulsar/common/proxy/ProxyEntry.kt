@@ -90,8 +90,8 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
 
         val testWebsites = mutableSetOf(URL("https://www.baidu.com"))
         init {
-            ResourceLoader.readAllLines("proxy.test.web.sites.txt")
-                    .mapTo(testWebsites) { URL(it) }
+//            ResourceLoader.readAllLines("proxy.test.web.sites.txt")
+//                    .mapTo(testWebsites) { URL(it) }
         }
 
         private const val META_DELIMITER = " - "

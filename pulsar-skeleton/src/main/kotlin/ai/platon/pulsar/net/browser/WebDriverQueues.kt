@@ -4,13 +4,12 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
-import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.PulsarConstants.INTERNAL_PROXY_SERVER_PORT
 import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.proxy.InternalProxyServer
 import com.gargoylesoftware.htmlunit.WebClient
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
@@ -37,7 +36,11 @@ import java.util.logging.Level
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableConfig): Parameterized, AutoCloseable {
+class WebDriverQueues(
+        private val browserControl: BrowserControl,
+        private val internalProxyServer: InternalProxyServer,
+        private val conf: ImmutableConfig
+): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
 
     companion object {
@@ -219,8 +222,8 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
      * 2. Get a proxy from the proxy poll
      */
     private fun getProxy(conf: ImmutableConfig): org.openqa.selenium.Proxy? {
-        var ipPort = if (NetUtil.testNetwork("127.0.0.1", INTERNAL_PROXY_SERVER_PORT)) {
-            "127.0.0.1:$INTERNAL_PROXY_SERVER_PORT"
+        var ipPort = if (isInternalProxyServerRunning()) {
+            internalProxyServer.ipPort
         } else conf.get(PROXY_IP_PORT)
 
         if (ipPort == null) {
@@ -236,10 +239,22 @@ class WebDriverQueues(val browserControl: BrowserControl, val conf: ImmutableCon
 
         val proxy = org.openqa.selenium.Proxy()
         proxy.httpProxy = ipPort
-        proxy.ftpProxy = ipPort
         proxy.sslProxy = ipPort
+        proxy.ftpProxy = ipPort
 
         return proxy
+    }
+
+    private fun isInternalProxyServerRunning(): Boolean {
+        if (internalProxyServer.disabled) {
+            return false
+        }
+
+        if (isClosed) {
+            return false
+        }
+
+        return internalProxyServer.waitUntilRunning()
     }
 
     /**

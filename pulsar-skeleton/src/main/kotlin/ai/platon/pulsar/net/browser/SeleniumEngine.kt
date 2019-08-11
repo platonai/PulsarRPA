@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.Documents
@@ -189,11 +190,14 @@ class SeleniumEngine(
         val startTime = System.currentTimeMillis()
         headers.put(Q_REQUEST_TIME, startTime.toString())
 
-        if (!waitProxyReady()) {
-            return ForwardingResponse(location, "", ProtocolStatus.STATUS_CANCELED, headers)
+        var proxy: ProxyEntry? = null
+        if (internalProxyServer.enabled) {
+            if (!waitProxyReady()) {
+                return ForwardingResponse(location, "", ProtocolStatus.STATUS_CANCELED, headers)
+            }
+            proxy = internalProxyServer.proxyEntry
         }
 
-        var proxy = internalProxyServer.proxyEntry
         var pageSource = ""
 
         try {
@@ -243,7 +247,7 @@ class SeleniumEngine(
             page.metadata.set(Name.BROWSER_JS_DATA, browserDataGson.toJson(jsData, BrowserJsData::class.java))
         }
         if (proxy != null) {
-            page.metadata.set(Name.PROXY, proxy.toString())
+            page.metadata.set(Name.PROXY, proxy.ipPort())
         }
         pageSource = handlePageSource(pageSource, status, page, driver)
         headers.put(CONTENT_LENGTH, pageSource.length.toString())
@@ -264,7 +268,7 @@ class SeleniumEngine(
             return false
         }
 
-        return internalProxyServer.waitUntilReady()
+        return internalProxyServer.waitUntilRunning()
     }
 
     private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
@@ -304,7 +308,7 @@ class SeleniumEngine(
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
             headers.put("EXCEPTION", e.toString())
 
-            log.warn("Fetch resource timeout, $e")
+            log.warn("Fetch resource timeout, {}", e)
         } catch (e: java.util.concurrent.ExecutionException) {
             status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
             headers.put("EXCEPTION", e.toString())
@@ -591,6 +595,8 @@ class SeleniumEngine(
         if (scrollDownWait > pageLoadTimeout) {
             scrollDownWait = pageLoadTimeout
         }
+
+        // TODO: handle proxy
 
         return DriverConfig(pageLoadTimeout, scriptTimeout, scrollDownCount, scrollDownWait)
     }

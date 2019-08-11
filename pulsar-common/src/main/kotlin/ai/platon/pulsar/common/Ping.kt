@@ -6,6 +6,7 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.net.InetAddress
+import java.time.Duration
 import java.util.regex.Pattern
 
 object Ping {
@@ -29,17 +30,17 @@ object Ping {
         }
     }
 
-    fun ping(ipAddress: String, pingTimes: Int, timeOut: Int): Boolean {
+    fun ping(ipAddress: String, pingTimes: Int, timeout: Duration): Boolean {
         var reader: BufferedReader? = null
         val r = Runtime.getRuntime()  // 将要执行的ping命令,此命令是windows格式的命令
 
         val pingCommand = when {
-            SystemUtils.IS_OS_WINDOWS -> "ping $ipAddress -n $pingTimes -w $timeOut"
-            else -> "ping -c $pingTimes -w ${timeOut/1000} $ipAddress"
+            SystemUtils.IS_OS_WINDOWS -> "ping $ipAddress /n $pingTimes /w ${timeout.toMillis()}"
+            else -> "ping -c $pingTimes -w ${timeout.seconds} $ipAddress"
         }
         try {
             // 执行命令并获取输出
-            // println(pingCommand)
+            println(pingCommand)
             val p = r.exec(pingCommand) ?: return false
             reader = BufferedReader(InputStreamReader(p.inputStream))   // 逐行检查输出,计算类似出现=23ms TTL=62字样的次数
             var connectedCount = 0

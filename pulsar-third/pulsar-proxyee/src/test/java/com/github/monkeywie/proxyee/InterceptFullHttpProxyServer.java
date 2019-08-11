@@ -17,7 +17,7 @@ public class InterceptFullHttpProxyServer {
 
   public static void main(String[] args) throws Exception {
     HttpProxyServerConfig config = new HttpProxyServerConfig();
-    config.setHandleSsl(true);
+    config.setHandleSsl(false);
     new HttpProxyServer()
             .serverConfig(config)
             .proxyInterceptInitializer(new HttpProxyInterceptInitializer() {
@@ -61,9 +61,8 @@ public class InterceptFullHttpProxyServer {
                     httpResponse.content().writeBytes("<script>alert('hello proxyee')</script>".getBytes());
                   }
                 });
-
               }
             })
-            .start(9999);
+            .start(8184);
   }
 }

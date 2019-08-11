@@ -28,12 +28,15 @@
     <logger name="ai.platon.pulsar.ql" level="DEBUG" />
     <logger name="ai.platon.pulsar.net" level="DEBUG" />
     <logger name="ai.platon.pulsar.net.browser" level="TRACE" />
+    <logger name="ai.platon.pulsar.proxy" level="TRACE" />
     <logger name="ai.platon.pulsar.crawl" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.component" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG" />
 
     <logger name="ai.platon.pulsar.parse.html" level="INFO" />
     <logger name="ai.platon.pulsar.cli.shell" level="DEBUG" />
+
+    <logger name="com.ning.http.client" level="DEBUG"/>
 
     <logger name="org.apache.gora" level="ERROR" />
     <logger name="org.apache.hadoop.mapreduce.Job" level="INFO" />

@@ -6,15 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import java.util.regex.Pattern;
 
 public class NetUtil {
 
     private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
-    public static int ProxyConnectionTimeout = 5 * 1000;
+    public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
 
     public static final Pattern ipPortPattern = // Pattern for matching ip[:port]
             Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
@@ -37,7 +36,7 @@ public class NetUtil {
             } else {
                 con = (HttpURLConnection) url.openConnection();
             }
-            con.setConnectTimeout(ProxyConnectionTimeout);
+            con.setConnectTimeout((int)PROXY_CONNECTION_TIMEOUT.toMillis());
             con.connect();
 
             // log.debug("Proxy is available {} for {}", proxy, url);
@@ -64,7 +63,7 @@ public class NetUtil {
         Socket con = new Socket();
 
         try {
-            con.connect(new InetSocketAddress(ip, port), ProxyConnectionTimeout);
+            con.connect(new InetSocketAddress(ip, port), (int)PROXY_CONNECTION_TIMEOUT.toMillis());
             reachable = true;
             con.close();
         } catch (Exception ignored) {

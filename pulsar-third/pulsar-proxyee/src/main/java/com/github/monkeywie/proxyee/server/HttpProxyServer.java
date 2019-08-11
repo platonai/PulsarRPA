@@ -122,7 +122,6 @@ public class HttpProxyServer implements AutoCloseable {
 //          .option(ChannelOption.SO_BACKLOG, 100)
           .handler(new LoggingHandler(LogLevel.DEBUG))
           .childHandler(new ChannelInitializer<Channel>() {
-
             @Override
             protected void initChannel(Channel ch) throws Exception {
               ch.pipeline().addLast("httpCodec", new HttpServerCodec());
@@ -146,27 +145,6 @@ public class HttpProxyServer implements AutoCloseable {
     serverConfig.getProxyLoopGroup().shutdownGracefully();
     bossGroup.shutdownGracefully();
     workerGroup.shutdownGracefully();
-
-    try {
-      TimeUnit.SECONDS.sleep(3);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
-
-    if (!serverConfig.getProxyLoopGroup().isShutdown()) {
-      serverConfig.getProxyLoopGroup().shutdownNow();
-    }
-
-    if (!bossGroup.isShutdown()) {
-      System.out.println("Force shutdown boss group");
-      bossGroup.shutdownNow();
-    }
-
-    if (!workerGroup.isShutdown()) {
-      System.out.println("Force shutdown worker group");
-      workerGroup.shutdownNow();
-    }
-
     CertPool.clear();
   }
 }

@@ -146,7 +146,7 @@ open class LoadOptions: CommonOptions {
             field = value
         }
 
-    val modifiedParams: Params get() {
+    open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
         val fields = this.javaClass.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
@@ -156,7 +156,7 @@ open class LoadOptions: CommonOptions {
                 .let { Params.of(it).withRowFormat(rowFormat) }
     }
 
-    val modifiedOptions: Map<String, Any> get() {
+    open val modifiedOptions: Map<String, Any> get() {
         val fields = this.javaClass.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
                 .onEach { it.isAccessible = true }

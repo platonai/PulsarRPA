@@ -3,6 +3,7 @@ package ai.platon.pulsar
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
@@ -66,12 +67,12 @@ class PulsarEnv {
 
         init {
             // prerequisite system properties
-            setPropertyIfAbsent(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
-            setPropertyIfAbsent(CapabilityTypes.PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
-            setPropertyIfAbsent(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION)
+            setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
+            setPropertyIfAbsent(PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
+            setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION)
 
             // the spring application context
-            applicationContext = ClassPathXmlApplicationContext(System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION))
+            applicationContext = ClassPathXmlApplicationContext(System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION))
             // shut down application context before progress exit
             applicationContext.registerShutdownHook()
             // gora properties
@@ -93,10 +94,10 @@ class PulsarEnv {
             webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            proxyManager.startAsDaemon()
-            val internalProxyServerEnabled = unmodifiedConfig.getBoolean(CapabilityTypes.PROXY_ENABLE_INTERNAL_PROXY_SERVER, true)
-            if (internalProxyServerEnabled) {
-                internalProxyServer.startAsDaemon()
+            proxyManager.start()
+
+            if (internalProxyServer.enabled) {
+                internalProxyServer.start()
             }
 
             log.info("Pulsar env is initialized")
@@ -113,15 +114,17 @@ class PulsarEnv {
         }
     }
 
-    val isStopped = AtomicBoolean()
+    val isQuit = AtomicBoolean()
 
     // other possible environment scope objects
     // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
     // serializers, etc
 
-    fun stop() {
-        if (isStopped.getAndSet(true)) {
+    fun exit() {
+        if (isQuit.getAndSet(true)) {
             return
         }
+
+        internalProxyServer.close()
     }
 }

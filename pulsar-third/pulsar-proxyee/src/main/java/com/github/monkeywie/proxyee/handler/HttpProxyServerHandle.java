@@ -20,14 +20,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.proxy.ProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -35,6 +28,7 @@ import io.netty.resolver.NoopAddressResolverGroup;
 import io.netty.util.ReferenceCountUtil;
 import java.net.InetSocketAddress;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -90,8 +84,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
         this.port = requestProto.getPort();
         if ("CONNECT".equalsIgnoreCase(request.method().name())) {//建立代理握手
           status = 2;
-          HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-              HttpProxyServer.SUCCESS);
+          HttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpProxyServer.SUCCESS);
           ctx.writeAndFlush(response);
           ctx.channel().pipeline().remove("httpCodec");
           //fix issue #42
@@ -99,6 +92,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
           return;
         }
       }
+
       interceptPipeline = buildPipeline();
       interceptPipeline.setRequestProto(new RequestProto(host, port, isSsl));
       //fix issue #27
@@ -151,8 +145,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
     exceptionHandle.beforeCatch(ctx.channel(), cause);
   }
 
-  private void handleProxyData(Channel channel, Object msg, boolean isHttp)
-      throws Exception {
+  private void handleProxyData(Channel channel, Object msg, boolean isHttp) throws Exception {
     if (cf == null) {
       //connection异常 还有HttpContent进来，不转发
       if (isHttp && !(msg instanceof HttpRequest)) {
@@ -178,6 +171,9 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
       }
       requestList = new LinkedList();
       cf = bootstrap.connect(host, port);
+
+      // System.out.println(String.format("%s - connected to %s:%d", LocalDateTime.now(), host, port));
+
       cf.addListener((ChannelFutureListener) future -> {
         if (future.isSuccess()) {
           future.channel().writeAndFlush(msg);
@@ -225,7 +221,7 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
             clientChannel.writeAndFlush(httpResponse);
             if (HttpHeaderValues.WEBSOCKET.toString()
                 .equals(httpResponse.headers().get(HttpHeaderNames.UPGRADE))) {
-              //websocket转发原始报文
+              // websocket转发原始报文
               proxyChannel.pipeline().remove("httpCodec");
               clientChannel.pipeline().remove("httpCodec");
             }

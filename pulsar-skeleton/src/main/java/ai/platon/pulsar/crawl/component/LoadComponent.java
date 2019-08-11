@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
+import static ai.platon.pulsar.persist.metadata.Name.PROXY;
 import static ai.platon.pulsar.persist.metadata.Name.RESPONSE_TIME;
 import static org.apache.commons.collections4.CollectionUtils.addIgnoreNull;
 
@@ -428,10 +429,13 @@ public class LoadComponent {
         if (LOG.isDebugEnabled()) {
             int bytes = page.getContentBytes();
             if (bytes > 0) {
-                LOG.debug("Fetched{}{} bytes in {} with {} | {}",
+                String responseTime = page.getMetadata().get(RESPONSE_TIME);
+                String proxy = page.getMetadata().get(PROXY);
+                LOG.debug("Fetched{}{} bytes in {}{} | {}",
                         bytes < 2000 ? " only " : " ", String.format("%,7d", page.getContentBytes()),
-                        page.getMetadata().get(RESPONSE_TIME),
-                        page.getLastBrowser(), page.getConfiguredUrl()
+                        responseTime,
+                        proxy == null ? "" : " via " + proxy,
+                        page.getConfiguredUrl()
                 );
             }
         }

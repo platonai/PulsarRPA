@@ -1,28 +1,30 @@
 package com.github.monkeywie.proxyee;
 
+import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle;
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptInitializer;
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
 import com.github.monkeywie.proxyee.intercept.common.CertDownIntercept;
 import com.github.monkeywie.proxyee.intercept.common.FullRequestIntercept;
 import com.github.monkeywie.proxyee.intercept.common.FullResponseIntercept;
-import com.github.monkeywie.proxyee.proxy.ProxyConfig;
-import com.github.monkeywie.proxyee.proxy.ProxyType;
 import com.github.monkeywie.proxyee.server.HttpProxyServer;
 import com.github.monkeywie.proxyee.server.HttpProxyServerConfig;
 import com.github.monkeywie.proxyee.util.HttpUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;
 
+import java.nio.channels.Channel;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 
 public class InterceptFRFRProxyServer {
 
     public static void main(String[] args) throws Exception {
         HttpProxyServerConfig config = new HttpProxyServerConfig();
-        config.setHandleSsl(true);
-        new HttpProxyServer()
-                .serverConfig(config)
-                .proxyInterceptInitializer(new HttpProxyInterceptInitializer() {
+        config.setHandleSsl(false);
+
+        HttpProxyServer server = new HttpProxyServer();
+        server.serverConfig(config);
+        server.proxyInterceptInitializer(new HttpProxyInterceptInitializer() {
                     @Override
                     public void init(HttpProxyInterceptPipeline pipeline) {
                         pipeline.addLast(new CertDownIntercept());
@@ -30,10 +32,10 @@ public class InterceptFRFRProxyServer {
 
                             @Override
                             public boolean match(HttpRequest httpRequest, HttpProxyInterceptPipeline pipeline) {
-                                //如果是json报文
-                                System.out.println("InterceptFullRequestProxyServer");
+                                System.out.println("\n\n" + LocalDateTime.now());
                                 System.out.println(httpRequest.toString());
 
+                                //如果是json报文
                                 if (HttpUtil.checkHeader(httpRequest.headers(), HttpHeaderNames.CONTENT_TYPE, "^(?i)application/json.*$")) {
                                     return true;
                                 }
@@ -78,7 +80,18 @@ public class InterceptFRFRProxyServer {
                             }
                         });
                     }
-                })
-                .start(9999);
+                });
+
+        server.httpProxyExceptionHandle(new HttpProxyExceptionHandle() {
+            void beforeCatch(Channel clientChannel, Throwable cause) {
+                // log.warn("Internal proxy error - {}", StringUtil.stringifyException(cause))
+            }
+
+            void afterCatch(Channel clientChannel, Channel proxyChannel, Throwable cause) {
+                System.out.println("Internal proxy error - " + cause);
+            }
+        });
+
+        server.start(8184);
     }
 }
