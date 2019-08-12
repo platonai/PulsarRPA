@@ -1,16 +1,16 @@
-package ai.platon.pulsar.jobs.fetch.indexer;
+package ai.platon.pulsar.crawl.fetch.indexer;
 
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
+import ai.platon.pulsar.crawl.fetch.FetchMonitor;
 import ai.platon.pulsar.crawl.fetch.FetchTask;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexWriters;
 import ai.platon.pulsar.crawl.index.IndexingFilters;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
-import ai.platon.pulsar.jobs.fetch.FetchMonitor;
 import ai.platon.pulsar.persist.ParseStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes;

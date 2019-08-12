@@ -1,4 +1,4 @@
-package ai.platon.pulsar.jobs.fetch.data;
+package ai.platon.pulsar.crawl.fetch.data;
 
 import java.net.URL;
 import java.util.Objects;
@@ -29,7 +29,7 @@ public class PoolId implements Comparable<PoolId> {
     return priority;
   }
 
-  public String getProtocal() {
+  public String getProtocol() {
     return protocol;
   }
 
@@ -43,7 +43,7 @@ public class PoolId implements Comparable<PoolId> {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null || !(obj instanceof PoolId)) return false;
+    if (!(obj instanceof PoolId)) return false;
 
     PoolId other = (PoolId) obj;
     return priority == other.priority

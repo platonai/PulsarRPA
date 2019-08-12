@@ -91,7 +91,9 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, root: Element): Elements {
-        Validate.notEmpty(cssQuery)
+        if (cssQuery.isBlank()) {
+            return Elements()
+        }
 
         try {
             return select(MathematicalQueryParser.parse(cssQuery), root)
@@ -103,7 +105,9 @@ object MathematicalSelector {
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        Validate.notEmpty(cssQuery)
+        if (cssQuery.isBlank()) {
+            return Elements()
+        }
 
         if (limit <= 0) {
             return Elements()

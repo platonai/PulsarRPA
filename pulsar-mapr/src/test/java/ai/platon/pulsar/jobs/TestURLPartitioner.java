@@ -17,6 +17,7 @@
 package ai.platon.pulsar.jobs;
 
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.hadoop.conf.Configuration;
@@ -50,7 +51,7 @@ public class TestURLPartitioner {
     @Test
     public void testOneReducer() {
         URLPartitioner partitioner = new URLPartitioner();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
         partitioner.setConf(conf);
 
         int numReduceTasks = 1;
@@ -65,7 +66,7 @@ public class TestURLPartitioner {
     @Test
     public void testModeHost() {
         URLPartitioner partitioner = new URLPartitioner();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
         partitioner.setConf(conf);
 
         int numReduceTasks = 100;
@@ -85,7 +86,7 @@ public class TestURLPartitioner {
     @Test
     public void testModeDomain() {
         URLPartitioner partitioner = new URLPartitioner();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_DOMAIN);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_DOMAIN);
         partitioner.setConf(conf);
 
         int numReduceTasks = 100;
@@ -105,7 +106,7 @@ public class TestURLPartitioner {
     @Test
     public void testModeIP() {
         URLPartitioner partitioner = new URLPartitioner();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_IP);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_IP);
         partitioner.setConf(conf);
 
         int numReduceTasks = 100;
@@ -127,13 +128,13 @@ public class TestURLPartitioner {
     @Test
     public void testSeed() {
         URLPartitioner partitioner = new URLPartitioner();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
         partitioner.setConf(conf);
 
         int numReduceTasks = 100;
         int partitionNoSeed = partitioner.getPartition("http://example.org/", numReduceTasks);
 
-        conf.setInt(URLPartitioner.PARTITION_URL_SEED, 1);
+        conf.setInt(CapabilityTypes.PARTITION_URL_SEED, 1);
         partitioner.setConf(conf);
 
         int partitionWithSeed = partitioner.getPartition("http://example.org/", numReduceTasks);
@@ -153,7 +154,7 @@ public class TestURLPartitioner {
         URLPartitioner.SelectorEntryPartitioner sigPartitioner = new URLPartitioner.SelectorEntryPartitioner();
 
         Configuration conf = new MutableConfig().unbox();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
 
         refPartitioner.setConf(conf);
         sigPartitioner.setConf(conf);
@@ -191,14 +192,14 @@ public class TestURLPartitioner {
         };
 
         Configuration conf = new MutableConfig().unbox();
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
         URLPartitioner partitioner = new URLPartitioner(conf);
         for (String url : urls) {
             int partition = partitioner.getPartition(url, numReduceTasks);
             System.out.println(partition + " <- " + url);
         }
 
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_DOMAIN);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_DOMAIN);
         URLPartitioner partitioner2 = new URLPartitioner(conf);
         for (String url : urls) {
             int partition = partitioner2.getPartition(url, numReduceTasks);
@@ -219,7 +220,7 @@ public class TestURLPartitioner {
         // The to be tested partitioner with specific text
         URLPartitioner.FetchEntryPartitioner sigPartitioner = new URLPartitioner.FetchEntryPartitioner();
 
-        conf.setEnum(URLPartitioner.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
+        conf.setEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
 
         refPartitioner.setConf(conf);
         sigPartitioner.setConf(conf);

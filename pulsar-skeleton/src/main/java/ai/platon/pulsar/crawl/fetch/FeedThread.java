@@ -1,21 +1,22 @@
-package ai.platon.pulsar.jobs.fetch;
+package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.ReducerContext;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.jobs.common.FetchEntryWritable;
+import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static ai.platon.pulsar.common.Urls.unreverseUrl;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 
 /**
@@ -40,7 +41,7 @@ public class FeedThread extends Thread implements Comparable<FeedThread>, Reload
   private int initBatchSize;
   private AtomicBoolean completed = new AtomicBoolean(false);
 
-  private Iterator<FetchEntryWritable> currentIter;
+  private Iterator<?> currentIter;
   private int totalTaskCount = 0;
 
   @SuppressWarnings("rawtypes")
@@ -88,17 +89,16 @@ public class FeedThread extends Thread implements Comparable<FeedThread>, Reload
     );
   }
 
-  public void exitAndJoin() {
-    completed.set(true);
-    try {
-      join();
-    } catch (InterruptedException e) {
-      LOG.error(e.toString());
+  /**
+   * Override this method to get a WebPage object to gain better performance if entry is not a WebPage instance
+   * */
+  public WebPage getWebPage(Object entry) throws Exception {
+    if (entry instanceof WebPage) {
+      return (WebPage) entry;
     }
-  }
 
-  public boolean isCompleted() {
-    return completed.get();
+    Method method = entry.getClass().getMethod("getWebPage");
+    return (WebPage) method.invoke(entry);
   }
 
   @SuppressWarnings("unchecked")
@@ -120,9 +120,12 @@ public class FeedThread extends Thread implements Comparable<FeedThread>, Reload
 
         int taskCount = 0;
         while (taskCount < batchSize && currentIter.hasNext() && hasMore) {
-          FetchEntryWritable entry = currentIter.next();
-          String url = unreverseUrl(entry.getReservedUrl());
-          tasksMonitor.produce(context.getJobId(), url, entry.getWebPage());
+          Object entry = currentIter.next();
+          WebPage page = getWebPage(entry);
+          if (page == null) continue;
+
+          String url = page.getUrl();
+          tasksMonitor.produce(context.getJobId(), url, page);
 
           ++totalTaskCount;
           ++taskCount;
@@ -156,13 +159,25 @@ public class FeedThread extends Thread implements Comparable<FeedThread>, Reload
       tasksMonitor.setFeederCompleted();
     } catch (Throwable e) {
       LOG.error("Feeder error reading input, record " + totalTaskCount, e);
-    }
-    finally {
+    } finally {
       fetchMonitor.unregisterFeedThread(this);
     }
 
-    LOG.info("Feeder finished. Feeded " + round + " rounds, Last feed batch size : "
+    LOG.info("Feeder finished. Feed " + round + " rounds, Last feed batch size : "
         + batchSize + ", feed total " + totalTaskCount + " records. ");
+  }
+
+  public void exitAndJoin() {
+    completed.set(true);
+    try {
+      join();
+    } catch (InterruptedException e) {
+      LOG.error(e.toString());
+    }
+  }
+
+  public boolean isCompleted() {
+    return completed.get();
   }
 
   private float adjustFeedBatchSize(float batchSize) {
@@ -183,8 +198,7 @@ public class FeedThread extends Thread implements Comparable<FeedThread>, Reload
     else if (readyTasks <= 2 * fetchThreads) {
       // Too many ready tasks, decrease batch size
       batchSize -= batchSize * 0.2;
-    }
-    else {
+    } else {
       // Ready task number is OK, do not feed this time
       batchSize = 0;
     }

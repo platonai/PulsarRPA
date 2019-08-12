@@ -10,13 +10,10 @@ import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
-import com.google.common.net.InternetDomainName
-import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
-import org.jsoup.nodes.TextNode
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
@@ -46,7 +43,7 @@ open class FeaturedDocument(val document: Document) {
             return PulsarPaths.fromUri(uri, ".htm")
         }
         fun getExportPath(url: String, ident: String): Path {
-            return PulsarPaths.get(PulsarPaths.webCacheDir, ident, getExportFilename(url))
+            return PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
         }
 
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
@@ -168,7 +165,7 @@ open class FeaturedDocument(val document: Document) {
 
     fun export(): Path {
         val filename = PulsarPaths.fromUri(location, ".html")
-        val path = PulsarPaths.get(PulsarPaths.webCacheDir, "featured", filename)
+        val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR, "featured", filename)
         return exportTo(path)
     }
 

@@ -21,7 +21,7 @@ import kotlin.reflect.jvm.isAccessible
 class ToyFileStore<K, T: PersistentBase>: MemStore<K, T>() {
     val LOG = LoggerFactory.getLogger(ToyFileStore::class.java)
 
-    private val baseDir = PulsarPaths.dataDir
+    private val baseDir = PulsarPaths.DATA_DIR
     private val isClosed = AtomicBoolean()
     private lateinit var inputFile: Path
     private lateinit var outputFile: Path

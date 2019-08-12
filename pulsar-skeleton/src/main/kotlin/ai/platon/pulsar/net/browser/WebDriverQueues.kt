@@ -192,6 +192,8 @@ class WebDriverQueues(
             }
         }
 
+        driver.manage().window().maximize()
+
         return driver
     }
 
@@ -222,6 +224,7 @@ class WebDriverQueues(
         } else conf.get(PROXY_IP_PORT)
 
         if (ipPort == null) {
+            // internal proxy server is not available, set proxy to the browser directly
             val proxyEntry = proxyPool.poll()
             if (proxyEntry != null) {
                 ipPort = proxyEntry.ipPort()

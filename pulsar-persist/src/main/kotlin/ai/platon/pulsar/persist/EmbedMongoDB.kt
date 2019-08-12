@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.PulsarPaths.dataDir
+import ai.platon.pulsar.common.PulsarPaths.DATA_DIR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_EMBED_MONGO_SERVER
 import de.flapdoodle.embed.mongo.Command
 import de.flapdoodle.embed.mongo.MongodExecutable
@@ -21,7 +21,7 @@ class EmbedMongoDB(val server: String = DEFAULT_EMBED_MONGO_SERVER) {
     private val log = LoggerFactory.getLogger(EmbedMongoDB::class.java)
 
     val version: Version.Main = Version.Main.DEVELOPMENT
-    val dataDirectory = PulsarPaths.get(dataDir, "mongo")
+    val dataDirectory = PulsarPaths.get(DATA_DIR, "mongo")
     val ip = server.substringBefore(':')
     val port = server.substringAfter(':').toInt()
 

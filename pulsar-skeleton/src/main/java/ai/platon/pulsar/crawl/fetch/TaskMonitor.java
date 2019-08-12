@@ -1,4 +1,4 @@
-package ai.platon.pulsar.jobs.fetch;
+package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.MetricsSystem;
 import ai.platon.pulsar.common.URLUtil;
@@ -6,11 +6,9 @@ import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.crawl.fetch.FetchTask;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
-import ai.platon.pulsar.jobs.fetch.data.PoolId;
-import ai.platon.pulsar.jobs.fetch.data.PoolQueue;
-import ai.platon.pulsar.jobs.fetch.data.TaskPool;
+import ai.platon.pulsar.crawl.fetch.data.PoolId;
+import ai.platon.pulsar.crawl.fetch.data.PoolQueue;
+import ai.platon.pulsar.crawl.fetch.data.TaskPool;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import com.google.common.collect.Multimap;
@@ -85,7 +83,7 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   /**
    * Track the status of each host
    * */
-  private TaskStatusTracker statusTracker;
+  private FetchTaskTracker taskTracker;
 
   /**
    * Once timeout, the pending items should be put to the ready pool again.
@@ -95,8 +93,8 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   public TaskMonitor() {
   }
 
-  public TaskMonitor(TaskStatusTracker statusTracker, MetricsSystem metrics, ImmutableConfig conf) {
-    this.statusTracker = statusTracker;
+  public TaskMonitor(FetchTaskTracker taskTracker, MetricsSystem metrics, ImmutableConfig conf) {
+    this.taskTracker = taskTracker;
     reload(conf);
   }
 
@@ -130,6 +128,10 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
     poolPendingTimeout = conf.getDuration("fetcher.pending.timeout", Duration.ofMinutes(3));
 
     LOG.info(getParams().format());
+  }
+
+  public FetchTaskTracker getTaskTracker() {
+    return taskTracker;
   }
 
   synchronized public void produce(int jobID, String url, WebPage page) {
@@ -204,13 +206,12 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
 
   public void setFeederCompleted() { feederCompleted.set(true); }
   /**
-   * @see FetchMonitor#isFeederAlive
    * @return Return true if the feeder is completed
    * */
   public boolean isFeederCompleted() { return feederCompleted.get(); }
 
   private boolean isConsumable(TaskPool pool) {
-    return pool.isActive() && pool.hasReadyTasks() && statusTracker.isReachable(pool.getHost());
+    return pool.isActive() && pool.hasReadyTasks() && taskTracker.isReachable(pool.getHost());
   }
 
   private void maintain() {
@@ -220,7 +221,7 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   /** Maintain pool life time, return true if the life time status is changed, false otherwise */
   private TaskPool maintain(TaskPool pool) {
     TaskPool.Status lastStatus = pool.status();
-    if (statusTracker.isGone(pool.getHost())) {
+    if (taskTracker.isGone(pool.getHost())) {
       retire(pool);
       LOG.info("Retire pool with unreachable host " + pool.getId());
     } else if (isFeederCompleted() && !pool.hasTasks()) {
@@ -255,12 +256,12 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   }
 
   private void doProduce(FetchTask task) {
-    if (statusTracker.isGone(task.getHost())) {
+    if (taskTracker.isGone(task.getHost())) {
       return;
     }
 
     String url = task.getUrl();
-    if (statusTracker.isGone(URLUtil.getHostName(url)) || statusTracker.isGone(url)) {
+    if (taskTracker.isGone(URLUtil.getHostName(url)) || taskTracker.isGone(url)) {
       LOG.warn("Ignore unreachable url (indicate task.getHost() failed) " + url);
       return;
     }
@@ -272,8 +273,7 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
       pool = fetchPools.findExtend(poolId);
       if (pool != null) {
         fetchPools.enable(pool);
-      }
-      else {
+      } else {
         pool = createFetchQueue(poolId);
         fetchPools.add(pool);
       }
@@ -288,13 +288,13 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
     TaskPool pool = fetchPools.findExtend(poolId);
 
     if (pool == null) {
-      LOG.warn("Attemp to finish item from unknown pool " + poolId);
+      LOG.warn("Attempt to finish item from unknown pool " + poolId);
       return;
     }
 
     if (!pool.pendingTaskExists(itemId)) {
       if (!fetchPools.isEmpty()) {
-        LOG.warn("Attemp to finish unknown item: <{}, {}>", poolId, itemId);
+        LOG.warn("Attempt to finish unknown item: <{}, {}>", poolId, itemId);
       }
 
       return;
@@ -317,19 +317,19 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
   public synchronized void report() {
     dump(FETCH_TASK_REMAINDER_NUMBER);
 
-    statusTracker.report();
+    taskTracker.report();
 
     reportCost();
 
     reportServedThreads();
   }
 
-  public void logSuccessHost(WebPage page) {
-    statusTracker.logSuccessHost(page, groupMode);
+  public void trackSuccess(WebPage page) {
+    taskTracker.trackSuccess(page);
   }
 
-  public void logFailureHost(String url) {
-    boolean isGone = statusTracker.logFailureHost(url, groupMode);
+  public void trackHostGone(String url) {
+    boolean isGone = taskTracker.trackHostGone(url);
     if (isGone) {
       retune(true);
     }
@@ -345,7 +345,7 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
    * */
   synchronized void retune(boolean force) {
     List<TaskPool> unreachablePools = fetchPools.stream()
-        .filter(pool -> statusTracker.isGone(pool.getHost())).collect(toList());
+        .filter(pool -> taskTracker.isGone(pool.getHost())).collect(toList());
 
     unreachablePools.forEach(this::retire);
     fetchPools.forEach(pool -> pool.retune(force));
@@ -374,7 +374,6 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
     fetchPools.dump(limit);
     calculateTaskCounter();
   }
-
 
   synchronized int tryClearSlowestQueue() {
     TaskPool pool = getSlowestQueue();
@@ -428,7 +427,7 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
     readyTaskCount.set(0);
   }
 
-  synchronized int clearReadyTasks() {
+  public synchronized int clearReadyTasks() {
     int count = 0;
 
     Map<Double, String> costRecorder = new TreeMap<>(Comparator.reverseOrder());
@@ -464,17 +463,17 @@ public class TaskMonitor implements ReloadableParameterized, AutoCloseable {
     return deleted;
   }
 
-  synchronized int getQueueCount() {
+  public synchronized int getQueueCount() {
     return fetchPools.size();
   }
 
-  int taskCount() { return readyTaskCount.get() + pendingTaskCount(); }
+  public int taskCount() { return readyTaskCount.get() + pendingTaskCount(); }
 
-  int readyTaskCount() { return readyTaskCount.get(); }
+  public int readyTaskCount() { return readyTaskCount.get(); }
 
-  int pendingTaskCount() { return pendingTaskCount.get(); }
+  public int pendingTaskCount() { return pendingTaskCount.get(); }
 
-  int getFinishedTaskCount() {return finishedTaskCount.get(); }
+  public int getFinishedTaskCount() {return finishedTaskCount.get(); }
 
   private void calculateTaskCounter() {
     int[] counter = {0, 0};

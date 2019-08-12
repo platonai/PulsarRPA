@@ -3,7 +3,7 @@ package ai.platon.pulsar
 import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.PulsarPaths.webCacheDir
+import ai.platon.pulsar.common.PulsarPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -323,13 +323,13 @@ open class PulsarSession(
 
     fun export(page: WebPage, ident: String = ""): Path {
         ensureRunning()
-        val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(page.url, ".htm"))
+        val path = PulsarPaths.get(WEB_CACHE_DIR, "export", ident, PulsarPaths.fromUri(page.url, ".htm"))
         return PulsarFiles.saveTo(page.contentAsString, path, true)
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
         ensureRunning()
-        val path = PulsarPaths.get(webCacheDir, "export", ident, PulsarPaths.fromUri(doc.location, ".htm"))
+        val path = PulsarPaths.get(WEB_CACHE_DIR, "export", ident, PulsarPaths.fromUri(doc.location, ".htm"))
         return PulsarFiles.saveTo(doc.prettyHtml, path, true)
     }
 

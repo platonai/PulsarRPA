@@ -1,8 +1,7 @@
-package ai.platon.pulsar.jobs.fetch;
+package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.fetch.FetchTask;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;

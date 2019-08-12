@@ -32,13 +32,14 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Random;
 
+import static ai.platon.pulsar.common.config.CapabilityTypes.PARTITION_MODE_KEY;
+import static ai.platon.pulsar.common.config.CapabilityTypes.PARTITION_URL_SEED;
+
 /**
  * Partition urls by host, domain name or IP depending on the value of the
  * parameter 'partition.url.mode' which can be 'BY_HOST', 'byDomain' or 'byIP'
  */
 public class URLPartitioner implements Configurable {
-    public static final String PARTITION_MODE_KEY = "partition.url.mode";
-    public static final String PARTITION_URL_SEED = "partition.url.seed";
     private static final Logger LOG = LoggerFactory.getLogger(URLPartitioner.class);
     private Configuration conf;
 

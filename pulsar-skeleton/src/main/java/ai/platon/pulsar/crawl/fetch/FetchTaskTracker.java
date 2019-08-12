@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.*;
+import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
@@ -24,30 +26,20 @@ import static ai.platon.pulsar.common.config.PulsarConstants.SEED_HOME_URL;
 import static ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL;
 import static java.util.stream.Collectors.joining;
 
-public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable {
-    public static final Logger LOG = LoggerFactory.getLogger(TaskStatusTracker.class);
+public class FetchTaskTracker implements ReloadableParameterized, AutoCloseable {
+    public static final Logger LOG = LoggerFactory.getLogger(FetchTaskTracker.class);
     public static final int LAZY_FETCH_URLS_PAGE_BASE = 100;
     public static final int TIMEOUT_URLS_PAGE = 1000;
     public static final int FAILED_URLS_PAGE = 1001;
     public static final int DEAD_URLS_PAGE = 1002;
-    private static final Logger REPORT_LOG = MetricsSystem.REPORT_LOG;
-    /**
-     * Tracking statistics for each host
-     */
-    private final Map<String, FetchStatus> hostStatistics = new TreeMap<>();
-    /**
-     * Tracking unreachable hosts
-     */
-    private final Set<String> unreachableHosts = new TreeSet<>();
-    /**
-     * Tracking hosts who is failed to fetch tasks.
-     * A host is considered to be a unreachable host if there are too many failure
-     */
-    private final Multiset<String> failureHostsTracker = TreeMultiset.create();
     /**
      * The configuration
      */
     private ImmutableConfig conf;
+    /**
+     * The mode to group URLs
+     */
+    private URLUtil.GroupMode groupMode;
     /**
      * The WebDb
      */
@@ -68,16 +60,30 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
      * The limitation of url length
      */
     private int maxUrlLength;
-
+    /**
+     * Tracking statistics for each host
+     */
+    private final Map<String, FetchStatus> hostStatistics = Collections.synchronizedMap(new HashMap<>());
+    /**
+     * Tracking unreachable hosts
+     */
+    private final Set<String> unreachableHosts = Collections.synchronizedSet(new HashSet<>());
+    /**
+     * Tracking hosts who is failed to fetch tasks.
+     * A host is considered to be a unreachable host if there are too many failure
+     */
+    private final Multiset<String> failedHostTracker = TreeMultiset.create();
     private Set<CharSequence> timeoutUrls = Collections.synchronizedSet(new HashSet<>());
     private Set<CharSequence> failedUrls = Collections.synchronizedSet(new HashSet<>());
     private Set<CharSequence> deadUrls = Collections.synchronizedSet(new HashSet<>());
 
-    private boolean isClosed = false;
+    private AtomicBoolean isClosed = new AtomicBoolean();
+    private AtomicBoolean isReported = new AtomicBoolean();
 
-    public TaskStatusTracker(WebDb webDb, MetricsSystem metrics, ImmutableConfig conf) {
+    public FetchTaskTracker(WebDb webDb, MetricsSystem metrics, ImmutableConfig conf) {
         this.metrics = metrics;
 
+        this.groupMode = conf.getEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST);
         this.webDb = webDb;
         this.seedIndexer = new WeakPageIndexer(SEED_HOME_URL, webDb);
         this.urlTrackerIndexer = new WeakPageIndexer(URL_TRACKER_HOME_URL, webDb);
@@ -111,7 +117,7 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
                 "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
                 "timeoutUrls", timeoutUrls.size(),
                 "failedUrls", failedUrls.size(),
-                "deadUrls", deadUrls
+                "deadUrls", deadUrls.size()
         );
     }
 
@@ -141,6 +147,97 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     public void trackTimeout(String url) {
         timeoutUrls.add(url);
+    }
+
+    /**
+     * @param url The url
+     * @return True if the host is gone
+     */
+    public boolean trackHostGone(String url) {
+        String host = URLUtil.getHost(url, groupMode);
+        if (host.isEmpty()) {
+            LOG.warn("Malformed url | <{}>", url);
+            return false;
+        }
+
+        if (unreachableHosts.contains(host)) {
+            return false;
+        }
+
+        failedHostTracker.add(host);
+        // Only the exception occurs for unknownHostEventCount, it's really add to the black list
+        final int failureHostEventCount = 3;
+        if (failedHostTracker.count(host) > failureHostEventCount) {
+            LOG.info("Host unreachable : " + host);
+            unreachableHosts.add(host);
+            // retune(true);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Available hosts statistics
+     */
+    public void trackSuccess(WebPage page) {
+        String url = page.getUrl();
+        String host = URLUtil.getHost(url, groupMode);
+
+        if (host.isEmpty()) {
+            LOG.warn("Bad host in url : " + url);
+            return;
+        }
+
+        FetchStatus fetchStatus = hostStatistics.computeIfAbsent(host, FetchStatus::new);
+
+        ++fetchStatus.urls;
+
+        // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
+        PageCategory pageCategory = page.getPageCategory();
+        if (pageCategory.isIndex()) {
+            ++fetchStatus.indexUrls;
+        } else if (pageCategory.isDetail()) {
+            ++fetchStatus.detailUrls;
+        } else if (pageCategory.isMedia()) {
+            ++fetchStatus.mediaUrls;
+        } else if (pageCategory.isSearch()) {
+            ++fetchStatus.searchUrls;
+        } else if (pageCategory.isBBS()) {
+            ++fetchStatus.bbsUrls;
+        } else if (pageCategory.isTieBa()) {
+            ++fetchStatus.tiebaUrls;
+        } else if (pageCategory.isBlog()) {
+            ++fetchStatus.blogUrls;
+        } else if (pageCategory.isUnknown()) {
+            ++fetchStatus.unknownUrls;
+        }
+
+        int depth = page.getDistance();
+        if (depth == 1) {
+            ++fetchStatus.urlsFromSeed;
+        }
+
+        if (url.length() > maxUrlLength) {
+            ++fetchStatus.urlsTooLong;
+            metrics.debugLongUrls(url);
+        }
+
+        hostStatistics.put(host, fetchStatus);
+
+        // The host is reachable
+        unreachableHosts.remove(host);
+
+        failedHostTracker.remove(host);
+    }
+
+    public int countHostTasks(String host) {
+        int failedTasks = failedHostTracker.count(host);
+
+        FetchStatus status = hostStatistics.get(host);
+        if (status == null) return failedTasks;
+
+        return status.urls + failedTasks;
     }
 
     public Set<String> getSeeds(FetchMode mode, int limit) {
@@ -185,46 +282,20 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
 
     private void lazyFetch(WebPage page, FetchMode mode) {
         page.setFetchMode(mode);
-
         webDb.put(page);
     }
 
     public void report() {
+        if (isReported.getAndSet(true)) {
+            return;
+        }
+
         reportAndLogUnreachableHosts();
         reportAndLogAvailableHosts();
     }
 
-    /**
-     * @param url       The url
-     * @param groupMode The group mode
-     * @return True if the host is gone
-     */
-    public boolean logFailureHost(String url, URLUtil.GroupMode groupMode) {
-        String host = URLUtil.getHost(url, groupMode);
-        if (host.isEmpty()) {
-            LOG.warn("Invald unreachable host format, url : " + url);
-            return false;
-        }
-
-        if (unreachableHosts.contains(host)) {
-            return false;
-        }
-
-        failureHostsTracker.add(host);
-        // Only the exception occurs for unknownHostEventCount, it's really add to the black list
-        final int failureHostEventCount = 3;
-        if (failureHostsTracker.count(host) > failureHostEventCount) {
-            LOG.info("Host unreachable : " + host);
-            unreachableHosts.add(host);
-            // retune(true);
-            return true;
-        }
-
-        return false;
-    }
-
     public void reportAndLogUnreachableHosts() {
-        REPORT_LOG.info("There are " + unreachableHosts.size() + " unreachable hosts");
+        LOG.info("There are " + unreachableHosts.size() + " unreachable hosts");
         PulsarFiles.INSTANCE.logUnreachableHosts(this.unreachableHosts);
     }
 
@@ -249,89 +320,34 @@ public class TaskStatusTracker implements ReloadableParameterized, AutoCloseable
         report += hostsReport;
         report += "\n";
 
-        REPORT_LOG.info(report);
-    }
-
-    /**
-     * Available hosts statistics
-     */
-    public void logSuccessHost(WebPage page, URLUtil.GroupMode groupMode) {
-        String url = page.getUrl();
-        String host = URLUtil.getHost(url, groupMode);
-
-        if (host.isEmpty()) {
-            LOG.warn("Bad host in url : " + url);
-            return;
-        }
-
-        FetchStatus fetchStatus = hostStatistics.get(host);
-        if (fetchStatus == null) {
-            fetchStatus = new FetchStatus(host);
-        }
-
-        ++fetchStatus.urls;
-
-        // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
-        PageCategory pageCategory = page.getPageCategory();
-        if (pageCategory.isIndex()) {
-            ++fetchStatus.indexUrls;
-        } else if (pageCategory.isDetail()) {
-            ++fetchStatus.detailUrls;
-        } else if (pageCategory.isMedia()) {
-            ++fetchStatus.mediaUrls;
-        } else if (pageCategory.isSearch()) {
-            ++fetchStatus.searchUrls;
-        } else if (pageCategory.isBBS()) {
-            ++fetchStatus.bbsUrls;
-        } else if (pageCategory.isTieBa()) {
-            ++fetchStatus.tiebaUrls;
-        } else if (pageCategory.isBlog()) {
-            ++fetchStatus.blogUrls;
-        } else if (pageCategory.isUnknown()) {
-            ++fetchStatus.unknownUrls;
-        }
-
-        int depth = page.getDistance();
-        if (depth == 1) {
-            ++fetchStatus.urlsFromSeed;
-        }
-
-        if (url.length() > maxUrlLength) {
-            ++fetchStatus.urlsTooLong;
-            metrics.debugLongUrls(url);
-        }
-
-        hostStatistics.put(host, fetchStatus);
-
-        // The host is reachable
-        unreachableHosts.remove(host);
-
-        failureHostsTracker.remove(host);
+        LOG.info(report);
     }
 
     @Override
     public void close() {
-        if (!isClosed) {
-            LOG.info("[Destruction] Destructing TaskStatusTracker ...");
-            LOG.info("Archive total {} timeout urls, {} failed urls and {} dead urls",
-                    timeoutUrls.size(), failedUrls.size(), deadUrls.size());
-
-            // Trace failed tasks for further fetch as a background tasks
-            if (!timeoutUrls.isEmpty()) {
-                urlTrackerIndexer.indexAll(TIMEOUT_URLS_PAGE, timeoutUrls);
-            }
-
-            if (!failedUrls.isEmpty()) {
-                urlTrackerIndexer.indexAll(FAILED_URLS_PAGE, failedUrls);
-            }
-
-            if (!deadUrls.isEmpty()) {
-                urlTrackerIndexer.indexAll(DEAD_URLS_PAGE, deadUrls);
-            }
-
-            urlTrackerIndexer.commit();
-
-            isClosed = true;
+        if (isClosed.getAndSet(true)) {
+            return;
         }
+
+        LOG.debug("[Destruction] Destructing TaskStatusTracker ...");
+        LOG.info("Archive total {} timeout urls, {} failed urls and {} dead urls",
+                timeoutUrls.size(), failedUrls.size(), deadUrls.size());
+
+        report();
+
+        // Trace failed tasks for further fetch as a background tasks
+        if (!timeoutUrls.isEmpty()) {
+            urlTrackerIndexer.indexAll(TIMEOUT_URLS_PAGE, timeoutUrls);
+        }
+
+        if (!failedUrls.isEmpty()) {
+            urlTrackerIndexer.indexAll(FAILED_URLS_PAGE, failedUrls);
+        }
+
+        if (!deadUrls.isEmpty()) {
+            urlTrackerIndexer.indexAll(DEAD_URLS_PAGE, deadUrls);
+        }
+
+        urlTrackerIndexer.commit();
     }
 }

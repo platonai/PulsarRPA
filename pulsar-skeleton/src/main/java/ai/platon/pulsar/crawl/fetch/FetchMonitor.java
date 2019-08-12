@@ -1,11 +1,12 @@
-package ai.platon.pulsar.jobs.fetch;
+package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.jobs.fetch.indexer.IndexThread;
-import ai.platon.pulsar.jobs.fetch.indexer.JITIndexer;
+import ai.platon.pulsar.crawl.component.FetchComponent;
+import ai.platon.pulsar.crawl.fetch.indexer.IndexThread;
+import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
   /**
    * Monitors
    */
+  private FetchComponent fetchComponent;
   private TaskSchedulers taskSchedulers;
   private TaskMonitor taskMonitor;
   private TaskScheduler taskScheduler;
@@ -67,8 +69,7 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
   /**
    * Feeder threads
    */
-  private final Set<FeedThread> feedThreads = new ConcurrentSkipListSet<>();
-  // private final ScheduledExecutorService feederExecutor;
+   private final Set<FeedThread> feedThreads = new ConcurrentSkipListSet<>();
 
   /**
    * Index server
@@ -109,7 +110,7 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
 
   private boolean halt = false;
 
-  public FetchMonitor(TaskMonitor tasksMonitor, TaskSchedulers taskSchedulers, ImmutableConfig immutableConfig) {
+  public FetchMonitor(FetchComponent fetchComponent, TaskMonitor tasksMonitor, TaskSchedulers taskSchedulers, ImmutableConfig immutableConfig) {
     this.taskSchedulers = taskSchedulers;
     this.taskScheduler = taskSchedulers.getFirst();
     this.taskMonitor = tasksMonitor;
@@ -286,8 +287,8 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
    * Non-Blocking
    * */
   private void startFeedThread(ReducerContext context) throws IOException, InterruptedException {
-    FeedThread feedThread = new FeedThread(this, taskScheduler, taskScheduler.getTasksMonitor(), context, immutableConfig);
-    feedThread.start();
+//    FeedThread feedThread = new FeedThread(this, taskScheduler, taskScheduler.getTasksMonitor(), context, immutableConfig);
+//    feedThread.start();
   }
 
   /**
@@ -308,7 +309,7 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
 
   private void startFetchThreads(int threadCount, ReducerContext context) {
     for (int i = 0; i < threadCount; i++) {
-      FetchThread fetchThread = new FetchThread(this, taskScheduler, immutableConfig, context);
+      FetchThread fetchThread = new FetchThread(fetchComponent, this, taskScheduler, immutableConfig, context);
       fetchThread.start();
     }
   }
@@ -358,7 +359,7 @@ public class FetchMonitor implements ReloadableParameterized, AutoCloseable {
       /*
        * Dump the remainder fetch items if feeder thread is no available and fetch item is few
        * */
-      if (!isFeederAlive() && taskMonitor.taskCount() <= FETCH_TASK_REMAINDER_NUMBER) {
+      if (taskMonitor.taskCount() <= FETCH_TASK_REMAINDER_NUMBER) {
         LOG.info("Totally remains only " + taskMonitor.taskCount() + " tasks");
         handleFewFetchItems();
       }

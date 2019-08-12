@@ -2,12 +2,11 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.GlobalExecutor
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ExternalProxyManager
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
@@ -53,7 +52,7 @@ class PulsarEnv {
 
         val proxyPool: ProxyPool
 
-        val proxyManager: ProxyManager
+        val proxyManager: ExternalProxyManager
 
         val internalProxyServer: InternalProxyServer
 
@@ -87,7 +86,7 @@ class PulsarEnv {
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
 
             proxyPool = applicationContext.getBean(ProxyPool::class.java)
-            proxyManager = applicationContext.getBean(ProxyManager::class.java)
+            proxyManager = applicationContext.getBean(ExternalProxyManager::class.java)
             internalProxyServer = applicationContext.getBean(InternalProxyServer::class.java)
 
             browserControl = applicationContext.getBean(BrowserControl::class.java)

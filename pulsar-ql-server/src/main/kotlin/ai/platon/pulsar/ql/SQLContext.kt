@@ -2,13 +2,10 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.IteratorUtils
@@ -170,7 +167,7 @@ class SQLContext: AutoCloseable {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = pulsarContext.taskStatusTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
+            val urls = pulsarContext.fetchTaskTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
             if (!urls.isEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
@@ -187,7 +184,7 @@ class SQLContext: AutoCloseable {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = pulsarContext.taskStatusTracker.getSeeds(mode, 1000)
+            val urls = pulsarContext.fetchTaskTracker.getSeeds(mode, 1000)
             if (urls.isNotEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }

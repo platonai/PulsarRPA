@@ -1,14 +1,14 @@
-package ai.platon.pulsar.jobs.fetch.data;
+package ai.platon.pulsar.crawl.fetch.data;
 
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.config.Parameterized;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.fetch.FetchTask;
-import ai.platon.pulsar.jobs.fetch.FetchMonitor;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  */
 public class TaskPool implements Comparable<TaskPool>, Parameterized {
 
-  private static final Logger LOG = FetchMonitor.LOG;
+  public static final Logger LOG = LoggerFactory.getLogger(TaskPool.class);
 
   private final int RECENT_TASKS_COUNT_LIMIT = 100;
 
@@ -103,7 +103,7 @@ public class TaskPool implements Comparable<TaskPool>, Parameterized {
 
   public int getPriority() { return id.getPriority(); }
 
-  public String getProtocol() { return id.getProtocal(); }
+  public String getProtocol() { return id.getProtocol(); }
 
   public String getHost() { return id.getHost(); }
 

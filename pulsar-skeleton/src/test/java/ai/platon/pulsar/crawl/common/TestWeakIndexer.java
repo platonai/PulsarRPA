@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.MetricsSystem;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.WeakPageIndexer;
 import ai.platon.pulsar.common.config.MutableConfig;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
@@ -41,7 +41,7 @@ public class TestWeakIndexer {
     private WebDb webDb;
     private MetricsSystem metricsSystem;
     private WeakPageIndexer urlTrackerIndexer;
-    private TaskStatusTracker taskStatusTracker;
+    private FetchTaskTracker fetchTaskTracker;
     private DataStore<String, GWebPage> store;
 
     private List<CharSequence> exampleUrls = IntStream.range(10000, 10050)
@@ -56,7 +56,7 @@ public class TestWeakIndexer {
 
         webDb = new WebDb(conf);
         metricsSystem = new MetricsSystem(webDb, conf);
-        taskStatusTracker = new TaskStatusTracker(webDb, metricsSystem, conf);
+        fetchTaskTracker = new FetchTaskTracker(webDb, metricsSystem, conf);
         urlTrackerIndexer = new WeakPageIndexer(URL_TRACKER_HOME_URL, webDb);
         store = webDb.getStore();
     }

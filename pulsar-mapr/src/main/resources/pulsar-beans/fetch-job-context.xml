@@ -8,7 +8,7 @@
     <import resource="classpath:/pulsar-beans/components-context.xml"/>
 
     <bean id="taskMonitor" class="ai.platon.pulsar.jobs.fetch.TaskMonitor" destroy-method="close">
-        <constructor-arg ref="fetchStatusTracker"/>
+        <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="pulsarMetrics"/>
         <constructor-arg ref="conf"/>
     </bean>

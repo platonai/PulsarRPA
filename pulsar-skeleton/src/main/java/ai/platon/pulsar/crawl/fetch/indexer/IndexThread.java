@@ -1,8 +1,8 @@
-package ai.platon.pulsar.jobs.fetch.indexer;
+package ai.platon.pulsar.crawl.fetch.indexer;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.crawl.fetch.FetchMonitor;
 import ai.platon.pulsar.crawl.fetch.FetchTask;
-import ai.platon.pulsar.jobs.fetch.FetchMonitor;
 import org.slf4j.Logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,9 +20,9 @@ public class IndexThread extends Thread implements Comparable<IndexThread> {
   private final ImmutableConfig conf;
   private final int id;
   private AtomicBoolean halt = new AtomicBoolean(false);
-  private ai.platon.pulsar.jobs.fetch.indexer.JITIndexer JITIndexer;
+  private JITIndexer JITIndexer;
 
-  public IndexThread(ai.platon.pulsar.jobs.fetch.indexer.JITIndexer JITIndexer, ImmutableConfig conf) {
+  public IndexThread(JITIndexer JITIndexer, ImmutableConfig conf) {
     this.conf = conf;
     this.JITIndexer = JITIndexer;
     this.id = instanceSequence.incrementAndGet();

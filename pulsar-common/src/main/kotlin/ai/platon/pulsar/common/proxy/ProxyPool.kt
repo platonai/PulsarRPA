@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import com.ibm.icu.impl.PluralRulesLoader.loader
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
@@ -23,7 +24,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Check all unavailable proxies, recover them if possible.
  * This might take a long time, so it should be run in a separate thread
 */
-class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoCloseable {
+class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoCloseable {
+    enum class ResourceType { PROVIDER, PROXY }
+
     private val pollingWait: Duration = conf.getDuration(CapabilityTypes.PROXY_POOL_POLLING_INTERVAL, Duration.ofSeconds(10))
     private val maxPoolSize: Int = conf.getInt(CapabilityTypes.PROXY_POOL_SIZE, 10000)
     private val lastModifiedTimes = mutableMapOf<Path, Instant>()
@@ -35,25 +38,6 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
 
     val isClosed get() = closed.get()
     val providers = mutableSetOf<String>()
-
-    val baseDir = PulsarPaths.get("proxy")
-    val providerFile = PulsarPaths.get(baseDir, "proxy.providers.txt")
-
-    val availableDir = PulsarPaths.get(baseDir, "available-proxies")
-    val enabledDir  = PulsarPaths.get(baseDir, "enabled-proxies")
-    val archiveDir = PulsarPaths.get(baseDir, "archived-proxies")
-
-    init {
-        Files.createDirectories(availableDir)
-        Files.createDirectories(enabledDir)
-        Files.createDirectories(archiveDir)
-        if (!Files.exists(providerFile)) {
-            Files.createFile(providerFile)
-        }
-
-        reloadIfModified()
-        log.info(toString())
-    }
 
     override operator fun contains(proxy: ProxyEntry): Boolean {
         return freeProxies.contains(proxy)
@@ -149,27 +133,35 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
         return proxy
     }
 
-    fun reloadIfModified() {
+    fun updateProviders() {
         try {
-            // load providers
-            reloadIfModified(providerFile, lastModifiedTimes.getOrDefault(providerFile, Instant.EPOCH)) {
-                Files.readAllLines(it).takeWhile { Urls.isValidUrl(it) }.toCollection(providers)
+            Files.list(PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach {
+                val lastModified = lastModifiedTimes.getOrDefault(it, Instant.EPOCH)
+                reloadIfModified(it, lastModified, RELOAD_PERIOD) { load(it, ResourceType.PROVIDER ) }
             }
-
-            // load enabled proxies
-            Files.list(enabledDir).filter { Files.isRegularFile(it) }
-                    .forEach { reloadIfModified(it, lastModifiedTimes.getOrDefault(it, Instant.EPOCH)) { load(it) } }
         } catch (e: IOException) {
             log.info(toString())
         }
     }
 
-    private fun reloadIfModified(path: Path, lastModified: Instant, loader: (Path) -> Unit) {
+    fun updateProxies() {
+        try {
+            // load enabled proxies
+            Files.list(ENABLED_DIR).filter { Files.isRegularFile(it) }.forEach {
+                val lastModified = lastModifiedTimes.getOrDefault(it, Instant.EPOCH)
+                reloadIfModified(it, lastModified, RELOAD_PERIOD) { load(it, ResourceType.PROXY) }
+            }
+        } catch (e: IOException) {
+            log.info(toString())
+        }
+    }
+
+    private fun reloadIfModified(path: Path, lastModified: Instant, expires: Duration, loader: (Path) -> Unit) {
         val modified = Instant.ofEpochMilli(path.toFile().lastModified())
         val elapsed = Duration.between(lastModified, modified)
 
-        if (elapsed > RELOAD_PERIOD) {
-            log.debug("Reload from file, last modified: {}, elapsed: {}s", lastModified, elapsed)
+        if (elapsed > expires) {
+            log.info("Reload from file, last modified: {}, elapsed: {}s", lastModified, elapsed)
             loader(path)
         }
 
@@ -181,20 +173,22 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
                 proxyEntries.size, freeProxies.size, workingProxies.size, unavailableProxies.size)
     }
 
-    private fun load(path: Path) {
+    private fun load(path: Path, type: ResourceType) {
         try {
             val lines = Files.readAllLines(path)
                     .map { it.trim() }
-                    .filter { !it.startsWith("#") }
+                    .filter { it.isNotBlank() && !it.startsWith("#") }
                     .distinct().shuffled().toList()
 
-            log.info("Loaded {} proxies from {}", lines.size, path)
-
-            lines.mapNotNull { ProxyEntry.parse(it) }
-                    .forEach { proxyEntry ->
-                        proxyEntries.add(proxyEntry)
-                        freeProxies.add(proxyEntry)
-                    }
+            if (type == ResourceType.PROXY) {
+                log.info("Loaded {} proxies from {}", lines.size, path)
+                lines.mapNotNull { ProxyEntry.parse(it) }.forEach {
+                    proxyEntries.add(it)
+                    freeProxies.add(it)
+                }
+            } else if (type == ResourceType.PROVIDER) {
+                lines.takeWhile { Urls.isValidUrl(it) }.toCollection(providers)
+            }
         } catch (e: IOException) {
             log.warn(toString())
         }
@@ -218,7 +212,7 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
         val now = DateTimeUtil.now("MMdd.HHmm")
 
         try {
-            val currentArchiveDir = Paths.get(archiveDir.toString(), now)
+            val currentArchiveDir = Paths.get(ARCHIVE_DIR.toString(), now)
             if (!Files.exists(currentArchiveDir)) {
                 Files.createDirectories(currentArchiveDir)
             }
@@ -239,7 +233,22 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
     }
 
     companion object {
-        val RELOAD_PERIOD = Duration.ofMinutes(2)
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
+
+        val RELOAD_PERIOD = Duration.ofMinutes(2)
+        val BASE_DIR = PulsarPaths.get("proxy")
+        val PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers")
+        val AVAILABLE_DIR = PulsarPaths.get(BASE_DIR, "available-proxies")
+        val ENABLED_DIR  = PulsarPaths.get(BASE_DIR, "enabled-proxies")
+        val ARCHIVE_DIR = PulsarPaths.get(BASE_DIR, "archived-proxies")
+
+        init {
+            Files.createDirectories(PROVIDER_DIR)
+            Files.createDirectories(AVAILABLE_DIR)
+            Files.createDirectories(ENABLED_DIR)
+            Files.createDirectories(ARCHIVE_DIR)
+
+            log.info(toString())
+        }
     }
 }

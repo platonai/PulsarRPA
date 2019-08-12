@@ -2,10 +2,8 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.URLUtil
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
@@ -24,13 +22,14 @@ object WebAccess {
             3 to "https://list.mogujie.com/book/magic/51894",
             4 to "https://category.vip.com/search-1-0-1.html?q=3|49738||&rp=26600|48483&ff=|0|2|1&adidx=2&f=ad&adp=130610&adid=632686",
             5 to "https://category.vip.com/search-5-0-1.html?q=3|142346||&rp=26600|103675&ff=|0|6|9&adidx=1&f=ad&adp=130612&adid=632821",
-            6 to "https://list.jd.com/list.html?cat=6728,6742,13246",
-            7 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
-            8 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
-            9 to "https://music.163.com/",
-            10 to "https://news.sogou.com/ent.shtml",
-            11 to "http://shop.boqii.com/brand/",
-            12 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163"
+            6 to "https://category.vip.com/search-5-0-1.html?q=3|320726||&rp=30068|320513",
+            7 to "https://list.jd.com/list.html?cat=6728,6742,13246",
+            8 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
+            9 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
+            10 to "https://music.163.com/",
+            11 to "https://news.sogou.com/ent.shtml",
+            12 to "http://shop.boqii.com/brand/",
+            13 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163"
     )
 
     private val trivialUrls = listOf(
@@ -98,7 +97,7 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[5]?:return
+        val url = seeds[6]?:return
         // val url = "http://blog.zhaojie.me/"
 
         var args = "-i 1s -ii 1s"
@@ -106,17 +105,19 @@ object WebAccess {
         val outlink = when {
             "mia" in url -> "a[href~=item]"
             "mogu" in url -> "a[href~=detail]"
-            "vip" in url -> "a[href~=detail]"
+            "vip" in url -> "a[href~=detail-]"
             else -> "a"
         }
 
         val page = i.load("$url $args")
         val document = i.parse(page)
-        val path = i.export(page)
+        document.absoluteLinks()
+        val path = i.export(document)
         println("Export to: file://$path")
 
         val links = document.select(outlink) { it.attr("abs:href") }
-        i.loadAll(links)
+        // links.forEach { println(it) }
+        i.loadAll(links, LoadOptions.parse(args))
 
         println("All done.")
 

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.Documents
@@ -20,7 +21,6 @@ import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.net.InternetDomainName
 import com.google.gson.Gson
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
@@ -123,22 +123,22 @@ class SeleniumEngine(
         browserControl: BrowserControl,
         private val drivers: WebDriverQueues,
         private val internalProxyServer: InternalProxyServer,
+        private val fetchTaskTracker: FetchTaskTracker,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
+    private var groupMode = immutableConfig.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
+    private val browserDataGson = Gson()
+    private val monthDay = DateTimeUtil.now("MMdd")
+
     private val libJs = browserControl.parseLibJs(false)
     private val clientJs = browserControl.parseJs(false)
-
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
     private val defaultDriverConfig = DriverConfig(immutableConfig)
-
-    private val monthDay = DateTimeUtil.now("MMdd")
-
+    private val maxPagesPerHost = 40
     private val isClosed = AtomicBoolean(false)
-
-    private val browserDataGson = Gson()
 
     init {
         instanceCount.incrementAndGet()
@@ -172,14 +172,16 @@ class SeleniumEngine(
         totalTaskCount.getAndIncrement()
         batchTaskCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
 
+        // driver.manage().deleteAllCookies()
+
         try {
-            return fetchContentInternal1(driver, batchId, taskId, priority, page, config)
+            return visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
         } finally {
             drivers.put(priority, driver)
         }
     }
 
-    private fun fetchContentInternal1(
+    private fun visitPageAndRetrieveContent(
             driver: WebDriver,
             batchId: Int,
             taskId: Int,
@@ -188,9 +190,13 @@ class SeleniumEngine(
             config: ImmutableConfig
     ): Response {
         // page.baseUrl is the last working address, and page.url is the permanent internal address
+        val url = page.url
         var location = page.location
         if (location.isBlank()) {
-            location = page.url
+            location = url
+        }
+        if (url != location) {
+            log.warn("Page location does't match url | {} - {}", url, location)
         }
 
         val driverConfig = getDriverConfig(priority, page, config)
@@ -360,7 +366,6 @@ class SeleniumEngine(
         val timeouts = driver.manage().timeouts()
         timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
         timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
-        driver.manage().window().maximize()
         driver.get(url)
 
         // Block and wait for the document is ready: all css and resources are OK
@@ -498,6 +503,14 @@ class SeleniumEngine(
                 page.lastBrowser = BrowserType.NATIVE
             }
         }
+
+        val url = page.url
+        val host = URLUtil.getHost(url)
+        val count = fetchTaskTracker.countHostTasks(host)
+        if (count > maxPagesPerHost) {
+            log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), count)
+            driver.manage().deleteAllCookies()
+        }
     }
 
     private fun handleFetchSuccess(batchId: Int) {
@@ -612,10 +625,10 @@ class SeleniumEngine(
 
     private fun export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
         val browser = page.lastBrowser.name.toLowerCase()
-        val u = Urls.getURLOrNull(page.url)?: return PulsarPaths.tmpDir
+        val u = Urls.getURLOrNull(page.url)?: return PulsarPaths.TMP_DIR
         val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
         val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
-        val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), "original", browser, domain, filename)
+        val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR.toString(), "original", browser, domain, filename)
         PulsarFiles.saveTo(content, path, true)
         return path
     }

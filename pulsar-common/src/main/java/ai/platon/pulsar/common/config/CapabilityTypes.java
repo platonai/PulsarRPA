@@ -234,6 +234,9 @@ public interface CapabilityTypes {
     /**
      * Generator parameters
      */
+    String PARTITION_MODE_KEY = "partition.url.mode";
+    String PARTITION_URL_SEED = "partition.url.seed";
+
     String GENERATE_TIME = "generate.generate.time";
     String GENERATE_UPDATE_CRAWLDB = "generate.update.crawldb";
     String GENERATE_MIN_SCORE = "generate.min.score";

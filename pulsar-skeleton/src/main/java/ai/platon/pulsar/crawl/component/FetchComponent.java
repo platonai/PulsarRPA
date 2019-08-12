@@ -17,20 +17,22 @@
 
 package ai.platon.pulsar.crawl.component;
 
+import ai.platon.pulsar.common.ReducerContext;
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
+import ai.platon.pulsar.crawl.fetch.FetchItem;
+import ai.platon.pulsar.crawl.fetch.FetchStatus;
+import ai.platon.pulsar.crawl.fetch.FetchTask;
+import ai.platon.pulsar.crawl.fetch.data.PoolId;
+import ai.platon.pulsar.crawl.protocol.*;
 import ai.platon.pulsar.persist.CrawlStatus;
 import ai.platon.pulsar.persist.ProtocolHeaders;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
-import ai.platon.pulsar.crawl.protocol.Content;
-import ai.platon.pulsar.crawl.protocol.Protocol;
-import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
-import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -54,7 +56,7 @@ import static ai.platon.pulsar.persist.metadata.Mark.GENERATE;
 public class FetchComponent implements AutoCloseable {
 
     public static final Logger LOG = LoggerFactory.getLogger(FetchComponent.class);
-    protected final TaskStatusTracker taskStatusTracker;
+    protected final FetchTaskTracker fetchTaskTracker;
     /**
      * The config, load from config files and unmodified
      */
@@ -65,19 +67,19 @@ public class FetchComponent implements AutoCloseable {
     private final ProtocolFactory protocolFactory;
 
     public FetchComponent(ProtocolFactory protocolFactory,
-                          TaskStatusTracker taskStatusTracker,
+                          FetchTaskTracker fetchTaskTracker,
                           MutableConfig mutableConfig) {
         this.immutableConfig = mutableConfig;
         this.protocolFactory = protocolFactory;
-        this.taskStatusTracker = taskStatusTracker;
+        this.fetchTaskTracker = fetchTaskTracker;
     }
 
     public FetchComponent(ProtocolFactory protocolFactory,
-                          TaskStatusTracker taskStatusTracker,
+                          FetchTaskTracker fetchTaskTracker,
                           ImmutableConfig immutableConfig) {
         this.immutableConfig = immutableConfig;
         this.protocolFactory = protocolFactory;
-        this.taskStatusTracker = taskStatusTracker;
+        this.fetchTaskTracker = fetchTaskTracker;
     }
 
     public static void updateStatus(WebPage page, CrawlStatus crawlStatus, ProtocolStatus protocolStatus) {
@@ -136,8 +138,8 @@ public class FetchComponent implements AutoCloseable {
         return immutableConfig;
     }
 
-    public TaskStatusTracker getTaskStatusTracker() {
-        return taskStatusTracker;
+    public FetchTaskTracker getFetchTaskTracker() {
+        return fetchTaskTracker;
     }
 
     /**
@@ -209,9 +211,9 @@ public class FetchComponent implements AutoCloseable {
 
     protected boolean shouldFetch(String url) {
         int code = 0;
-        if (taskStatusTracker.isFailed(url)) {
+        if (fetchTaskTracker.isFailed(url)) {
             code = 2;
-        } else if (taskStatusTracker.isTimeout(url)) {
+        } else if (fetchTaskTracker.isTimeout(url)) {
             code = 3;
         }
 
@@ -223,6 +225,7 @@ public class FetchComponent implements AutoCloseable {
     }
 
     protected WebPage processProtocolOutput(WebPage page, ProtocolOutput output) {
+        String url = page.getUrl();
         Content content = output.getContent();
         if (content == null) {
             LOG.warn("No content for " + page.getConfiguredUrl());
@@ -240,6 +243,7 @@ public class FetchComponent implements AutoCloseable {
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_NOTMODIFIED);
             } else {
                 updatePage(page, content, protocolStatus, CrawlStatus.STATUS_FETCHED);
+                fetchTaskTracker.trackSuccess(page);
             }
 
             return page;
@@ -250,63 +254,71 @@ public class FetchComponent implements AutoCloseable {
         }
 
         switch (minorCode) {
-            case ProtocolStatus.WOULDBLOCK:
-                taskStatusTracker.trackFailed(page.getUrl());
-                break;
-
             case ProtocolStatus.MOVED:         // redirect
             case ProtocolStatus.TEMP_MOVED:
-                CrawlStatus crawlStatus;
-                boolean temp;
-                if (minorCode == ProtocolStatus.MOVED) {
-                    crawlStatus = CrawlStatus.STATUS_REDIR_PERM;
-                    temp = false;
-                } else {
-                    crawlStatus = CrawlStatus.STATUS_REDIR_TEMP;
-                    temp = true;
-                }
-
-                final String newUrl = protocolStatus.getArgOrDefault(ARG_REDIRECT_TO_URL, "");
-                if (!newUrl.isEmpty()) {
-                    String reprUrl = URLUtil.chooseRepr(page.getUrl(), newUrl, temp);
-                    if (reprUrl.length() >= SHORTEST_VALID_URL_LENGTH) {
-                        page.setReprUrl(reprUrl);
-                    }
-                }
+                CrawlStatus crawlStatus = handleTmpMove(page, protocolStatus);
                 updatePage(page, content, protocolStatus, crawlStatus);
                 break;
-
-            case ProtocolStatus.REQUEST_TIMEOUT:
-            case ProtocolStatus.UNKNOWN_HOST:
-                taskStatusTracker.trackTimeout(page.getUrl());
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_GONE);
-                break;
-            case ProtocolStatus.EXCEPTION:
-                taskStatusTracker.trackFailed(page.getUrl());
-                LOG.warn("Fetch failed, protocol status: {}", protocolStatus);
-                /* FALL THROUGH **/
             case ProtocolStatus.RETRY:          // retry
             case ProtocolStatus.BLOCKED:
             case ProtocolStatus.CANCELED:       // canceled
+                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY);
+                break;
+            case ProtocolStatus.REQUEST_TIMEOUT:
             case ProtocolStatus.THREAD_TIMEOUT:
             case ProtocolStatus.WEB_DRIVER_TIMEOUT:
             case ProtocolStatus.DOCUMENT_READY_TIMEOUT:
+                fetchTaskTracker.trackTimeout(url);
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY);
                 break;
-            case ProtocolStatus.GONE:           // gone
+            case ProtocolStatus.UNKNOWN_HOST:
+            case ProtocolStatus.GONE:
             case ProtocolStatus.NOTFOUND:
+                fetchTaskTracker.trackHostGone(url);
             case ProtocolStatus.ACCESS_DENIED:
             case ProtocolStatus.ROBOTS_DENIED:
-                taskStatusTracker.trackFailed(page.getUrl());
+                fetchTaskTracker.trackFailed(url);
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_GONE);
                 break;
+            case ProtocolStatus.WOULDBLOCK:
+                fetchTaskTracker.trackFailed(url);
+                break;
+            case ProtocolStatus.EXCEPTION:
+                fetchTaskTracker.trackFailed(url);
+                LOG.warn("Fetch failed, protocol status: {}", protocolStatus);
+                /* FALL THROUGH **/
             default:
-                taskStatusTracker.trackFailed(page.getUrl());
+                fetchTaskTracker.trackFailed(url);
                 LOG.warn("Unknown ProtocolStatus: " + protocolStatus);
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY);
         }
 
         return page;
+    }
+
+    private CrawlStatus handleTmpMove(WebPage page, ProtocolStatus protocolStatus) {
+        CrawlStatus crawlStatus;
+        String url = page.getUrl();
+        int minorCode = protocolStatus.getMinorCode();
+        boolean temp;
+        if (minorCode == ProtocolStatus.MOVED) {
+            crawlStatus = CrawlStatus.STATUS_REDIR_PERM;
+            temp = false;
+        } else {
+            crawlStatus = CrawlStatus.STATUS_REDIR_TEMP;
+            temp = true;
+        }
+
+        final String newUrl = protocolStatus.getArgOrDefault(ARG_REDIRECT_TO_URL, "");
+        if (!newUrl.isEmpty()) {
+            // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
+            String reprUrl = URLUtil.chooseRepr(url, newUrl, temp);
+            if (reprUrl.length() >= SHORTEST_VALID_URL_LENGTH) {
+                page.setReprUrl(reprUrl);
+            }
+        }
+
+        return crawlStatus;
     }
 
     public WebPage createFetchEntry(String originalUrl, LoadOptions options) {

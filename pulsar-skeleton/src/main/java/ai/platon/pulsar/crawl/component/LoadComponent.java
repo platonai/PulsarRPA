@@ -7,10 +7,12 @@ import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.common.options.NormUrl;
 import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
 import ai.platon.pulsar.crawl.parse.ParseResult;
+import com.google.common.collect.Iterators;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +62,7 @@ public class LoadComponent {
     private final BatchFetchComponent fetchComponent;
     private final ParseComponent parseComponent;
     private final UpdateComponent updateComponent;
-    private final TaskStatusTracker taskStatusTracker;
+    private final FetchTaskTracker fetchTaskTracker;
 
     public LoadComponent(
             WebDb webDb,
@@ -72,7 +74,7 @@ public class LoadComponent {
         this.fetchComponent = fetchComponent;
         this.parseComponent = parseComponent;
         this.updateComponent = updateComponent;
-        this.taskStatusTracker = fetchComponent.getTaskStatusTracker();
+        this.fetchTaskTracker = fetchComponent.getFetchTaskTracker();
     }
 
     public BatchFetchComponent getFetchComponent() {
@@ -319,11 +321,11 @@ public class LoadComponent {
             return null;
         }
 
-        if (taskStatusTracker.isFailed(url)) {
-
+        if (fetchTaskTracker.isFailed(url)) {
+            return null;
         }
 
-        if (taskStatusTracker.isTimeout(url)) {
+        if (fetchTaskTracker.isTimeout(url)) {
 
         }
 

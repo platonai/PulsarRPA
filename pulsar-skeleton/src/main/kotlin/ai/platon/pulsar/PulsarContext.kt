@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -99,7 +99,7 @@ class PulsarContext: AutoCloseable {
      * */
     val fetchComponent: FetchComponent
 
-    val taskStatusTracker: TaskStatusTracker
+    val fetchTaskTracker: FetchTaskTracker
 
     val pageCache: ConcurrentLRUCache<String, WebPage>
     val documentCache: ConcurrentLRUCache<String, FeaturedDocument>
@@ -117,7 +117,7 @@ class PulsarContext: AutoCloseable {
         fetchComponent = applicationContext.getBean(BatchFetchComponent::class.java)
         parseComponent = applicationContext.getBean(ParseComponent::class.java)
         urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)
-        taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
+        fetchTaskTracker = applicationContext.getBean(FetchTaskTracker::class.java)
     }
 
     fun createSession(): PulsarSession {

@@ -3,7 +3,6 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -55,7 +54,7 @@ object AdminFunctions {
     fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
         checkPrivilege(h2session)
         val page = H2SessionFactory.getSession(h2session.serialId).load(url)
-        val path = PulsarPaths.get(PulsarPaths.webCacheDir.toString(), PulsarPaths.fromUri(page.url, ".htm"))
+        val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR.toString(), PulsarPaths.fromUri(page.url, ".htm"))
         return PulsarFiles.saveTo(page, path).toString()
     }
 

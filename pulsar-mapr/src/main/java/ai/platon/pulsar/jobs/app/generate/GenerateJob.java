@@ -41,7 +41,6 @@ import java.util.Set;
 import static ai.platon.pulsar.common.PulsarParams.*;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
-import static ai.platon.pulsar.jobs.common.URLPartitioner.PARTITION_MODE_KEY;
 
 public final class GenerateJob extends AppContextAwareJob {
 

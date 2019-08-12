@@ -1,7 +1,7 @@
-package ai.platon.pulsar.jobs.fetch.data;
+package ai.platon.pulsar.crawl.fetch.data;
 
-import ai.platon.pulsar.jobs.fetch.FetchMonitor;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -12,7 +12,7 @@ import java.util.function.Predicate;
  */
 public class PoolQueue extends AbstractQueue<TaskPool> {
 
-  public final Logger LOG = FetchMonitor.LOG;
+  public static final Logger LOG = LoggerFactory.getLogger(PoolQueue.class);
 
   /** All fetch queues, indexed by priority, item with bigger priority comes first. */
   private final PriorityQueue<TaskPool> priorityActiveQueues = new PriorityQueue<>(Comparator.reverseOrder());

@@ -1,20 +1,14 @@
-package ai.platon.pulsar.jobs.fetch;
+package ai.platon.pulsar.crawl.fetch;
 
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.crawl.component.FetchComponent;
-import ai.platon.pulsar.crawl.fetch.FetchJobForwardingResponse;
-import ai.platon.pulsar.crawl.fetch.FetchTask;
-import ai.platon.pulsar.crawl.filter.UrlFilterException;
+import ai.platon.pulsar.crawl.fetch.data.PoolId;
+import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer;
 import ai.platon.pulsar.crawl.filter.UrlNormalizers;
 import ai.platon.pulsar.crawl.parse.PageParser;
 import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.protocol.Content;
-import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
-import ai.platon.pulsar.jobs.fetch.data.PoolId;
-import ai.platon.pulsar.jobs.fetch.indexer.JITIndexer;
 import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.metadata.Mark;
 import ai.platon.pulsar.persist.metadata.Name;
@@ -23,7 +17,6 @@ import com.google.common.util.concurrent.AtomicDouble;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -48,7 +41,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
     public static final Logger REPORT_LOG = MetricsSystem.REPORT_LOG;
     public static final String PROTOCOL_REDIR = "protocol";
 
-    public class Status {
+    public static class Status {
         Status(float pagesThoRate, float bytesThoRate, int readyFetchItems, int pendingFetchItems) {
             this.pagesThoRate = pagesThoRate;
             this.bytesThoRate = bytesThoRate;
@@ -84,6 +77,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
     private final int id;
     private MetricsCounters metricsCounters = new MetricsCounters();
     private TaskMonitor tasksMonitor;
+    private FetchTaskTracker tasksTracker;
 
     private final Queue<FetchJobForwardingResponse> fetchResultQueue = new ConcurrentLinkedQueue<>();
 
@@ -144,6 +138,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
         this.id = objectSequence.incrementAndGet();
         this.pageParser = pageParser;
         this.tasksMonitor = tasksMonitor;
+        this.tasksTracker = tasksMonitor.getTaskTracker();
         this.metricsSystem = metricsSystem;
 
         reload(conf);
@@ -176,7 +171,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
         this.skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true);
         this.storingContent = conf.getBoolean(FETCH_STORE_CONTENT, false);
 
-        this.outputDir = PulsarPaths.INSTANCE.getReportDir();
+        this.outputDir = PulsarPaths.INSTANCE.getREPORT_DIR();
 
         LOG.info(getParams().format());
     }
@@ -277,19 +272,19 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
      * Consume a fetch item and try to download the target web page
      */
     public List<FetchTask> schedule(PoolId queueId, int number) {
-        List<FetchTask> fetchTasks = Lists.newArrayList();
         if (number <= 0) {
             LOG.warn("Required no fetch item");
-            return fetchTasks;
+            return new ArrayList<>();
         }
 
+        List<FetchTask> fetchTasks = new ArrayList<>(number);
         if (tasksMonitor.pendingTaskCount() * averagePageSize.get() * 8 > 30 * this.getBandwidth()) {
             LOG.info("Bandwidth exhausted, slows down the scheduling");
             return fetchTasks;
         }
 
         while (number-- > 0) {
-            FetchTask fetchTask = queueId == null ? tasksMonitor.consume() : tasksMonitor.consume(queueId);
+            FetchTask fetchTask = queueId == null? tasksMonitor.consume(): tasksMonitor.consume(queueId);
             if (fetchTask != null) {
                 fetchTasks.add(fetchTask);
             }
@@ -316,20 +311,26 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
      * <p>
      * Multiple threaded, non-synchronized class member variables are not allowed inside this method.
      */
-    public void finish(PoolId queueId, int itemId, ProtocolOutput output, ReducerContext context) {
-        Objects.requireNonNull(context);
-
+    public void finish(PoolId queueId, int itemId) {
         FetchTask fetchTask = tasksMonitor.findPendingTask(queueId, itemId);
 
         if (fetchTask == null) {
             // Can not find task to finish, The queue might be retuned or cleared up
             LOG.info("Can not find task to finish <{}, {}>", queueId, itemId);
-
             return;
         }
 
+        WebPage page = fetchTask.getPage();
+        ProtocolStatus protocolStatus = page.getProtocolStatus();
         try {
-            doFinishFetchTask(fetchTask, output, context);
+            // un-block queue
+            tasksMonitor.finish(fetchTask);
+
+            handleResult(fetchTask, CrawlStatus.STATUS_FETCHED);
+
+            if (protocolStatus == ProtocolStatus.STATUS_RETRY) {
+                tasksMonitor.produce(fetchTask);
+            }
         } catch (final Throwable t) {
             LOG.error("Unexpected error for " + fetchTask.getUrl() + StringUtil.stringifyException(t));
 
@@ -338,8 +339,8 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
             metricsCounters.increase(CommonCounter.errors);
 
             try {
-                handleResult(fetchTask, null, ProtocolStatus.STATUS_FAILED, CrawlStatus.STATUS_RETRY, context);
-            } catch (IOException | InterruptedException e) {
+                handleResult(fetchTask, CrawlStatus.STATUS_RETRY);
+            } catch (IOException e) {
                 LOG.error("Unexpected fetcher exception, " + StringUtil.stringifyException(e));
             } finally {
                 tasksMonitor.finish(fetchTask);
@@ -357,7 +358,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         LOG.info("[Destruction] Closing TaskScheduler #" + id);
 
         String border = StringUtils.repeat('.', 40);
@@ -376,7 +377,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
      * @param reportInterval Report interval
      * @return Status
      */
-    public Status waitAndReport(Duration reportInterval) throws IOException {
+    public Status waitAndReport(Duration reportInterval) {
         float pagesLastSec = totalPages.get();
         long bytesLastSec = totalBytes.get();
 
@@ -440,86 +441,54 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
         return status.toString();
     }
 
-    /**
-     * Thread safe
-     */
-    private void doFinishFetchTask(FetchTask fetchTask, ProtocolOutput output, ReducerContext context)
-            throws IOException, InterruptedException, UrlFilterException {
-        // un-block queue
-        tasksMonitor.finish(fetchTask);
-
+    @SuppressWarnings("unchecked")
+    private void handleResult(FetchTask fetchTask, CrawlStatus crawlStatus) throws IOException {
         String url = fetchTask.getUrl();
-        Content content = output.getContent();
-        if (content == null) {
-            LOG.warn("No content for " + url);
-        }
+        WebPage page = fetchTask.getPage();
 
-        ProtocolHeaders headers = fetchTask.getPage().getHeaders();
-        output.getHeaders().asMultimap().entries().forEach(e -> headers.put(e.getKey(), e.getValue()));
+        metricsSystem.debugFetchHistory(page, crawlStatus);
 
-        ProtocolStatus protocolStatus = output.getStatus();
-        int minorCode = protocolStatus.getMinorCode();
+        if (parse && crawlStatus.isFetched()) {
+            ParseResult parseResult = pageParser.parse(page);
 
-        if (protocolStatus.isSuccess()) {
-            if (ProtocolStatus.NOTMODIFIED == minorCode) {
-                handleResult(fetchTask, null, protocolStatus, CrawlStatus.STATUS_NOTMODIFIED, context);
-            } else if (ProtocolStatus.SUCCESS_OK == minorCode) {
-                handleResult(fetchTask, content, protocolStatus, CrawlStatus.STATUS_FETCHED, context);
-                tasksMonitor.logSuccessHost(fetchTask.getPage());
+            if (!parseResult.isSuccess()) {
+                metricsCounters.increase(Counter.rParseFailed);
+                page.getPageCounters().increase(PageCounters.Self.parseErr);
             }
 
-            return;
+            // Double check success
+            if (!page.hasMark(Mark.PARSE)) {
+                metricsCounters.increase(Counter.rNoParse);
+            }
+
+            if (parseResult.getMinorCode() != SUCCESS_OK) {
+                metricsSystem.reportFlawyParsedPage(page, true);
+            }
+
+            if (parseResult.isSuccess() && jitIndexer != null) {
+                // JIT Index
+                jitIndexer.produce(fetchTask);
+            }
         }
 
-        switch (minorCode) {
-            case ProtocolStatus.WOULDBLOCK:
-                // retry ?
-                tasksMonitor.produce(fetchTask);
-                break;
+        // Remove content if storingContent is false. Content is added to page earlier
+        // so PageParser is able to parse it, now, we can clear it
+        if (page.getContent() != null) {
+            page.setContentBytes(page.getContent().array().length);
 
-            case ProtocolStatus.MOVED:         // redirect
-            case ProtocolStatus.TEMP_MOVED:
-                boolean temp = (minorCode == ProtocolStatus.TEMP_MOVED);
-
-                final String newUrl = protocolStatus.getArgOrDefault("location", "");
-                if (!newUrl.isEmpty()) {
-                    handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
+            if (!storingContent) {
+                if (!page.isSeed()) {
+                    page.setContent(new byte[0]);
+                } else if (page.getFetchCount() > 2) {
+                    page.setContent(new byte[0]);
                 }
-
-                CrawlStatus crawlStatus = temp ? CrawlStatus.STATUS_REDIR_TEMP : CrawlStatus.STATUS_REDIR_PERM;
-                handleResult(fetchTask, content, protocolStatus, crawlStatus, context);
-                break;
-
-            case ProtocolStatus.THREAD_TIMEOUT:
-            case ProtocolStatus.WEB_DRIVER_TIMEOUT:
-            case ProtocolStatus.REQUEST_TIMEOUT:
-            case ProtocolStatus.UNKNOWN_HOST:
-                handleResult(fetchTask, null, protocolStatus, CrawlStatus.STATUS_GONE, context);
-                tasksMonitor.logFailureHost(url);
-                break;
-            case ProtocolStatus.EXCEPTION:
-                logFetchFailure(protocolStatus.toString());
-
-      /* FALL THROUGH **/
-            case ProtocolStatus.RETRY:          // retry
-            case ProtocolStatus.BLOCKED:
-                handleResult(fetchTask, null, protocolStatus, CrawlStatus.STATUS_RETRY, context);
-                break;
-
-            case ProtocolStatus.GONE:           // gone
-            case ProtocolStatus.NOTFOUND:
-            case ProtocolStatus.ACCESS_DENIED:
-            case ProtocolStatus.ROBOTS_DENIED:
-                handleResult(fetchTask, null, protocolStatus, CrawlStatus.STATUS_GONE, context);
-                break;
-            default:
-                LOG.warn("Unknown ProtocolStatus : " + protocolStatus.toString());
-                handleResult(fetchTask, null, protocolStatus, CrawlStatus.STATUS_RETRY, context);
+            }
         }
+
+        updateStatus(page);
     }
 
-    private void handleRedirect(String url, String newUrl, boolean temp, String redirType, WebPage page)
-            throws UrlFilterException, IOException, InterruptedException {
+    private void handleRedirect(String url, String newUrl, boolean temp, String redirType, WebPage page) {
         newUrl = pageParser.getCrawlFilters().normalizeToEmpty(newUrl, UrlNormalizers.SCOPE_FETCHER);
         if (newUrl.isEmpty() || newUrl.equals(url)) {
             return;
@@ -563,83 +532,7 @@ public class TaskScheduler implements ReloadableParameterized, AutoCloseable {
         return reprUrl;
     }
 
-    @SuppressWarnings("unchecked")
-    private void handleResult(
-            FetchTask fetchTask, @Nullable Content content, ProtocolStatus protocolStatus, CrawlStatus crawlStatus, ReducerContext context)
-            throws IOException, InterruptedException {
-        Objects.requireNonNull(fetchTask);
-        Objects.requireNonNull(protocolStatus);
-        Objects.requireNonNull(crawlStatus);
-        Objects.requireNonNull(context);
-
-        String url = fetchTask.getUrl();
-        WebPage page = fetchTask.getPage();
-
-        FetchComponent.updateContent(page, content);
-        FetchComponent.updateStatus(page, crawlStatus, protocolStatus);
-        FetchComponent.updateFetchTime(page);
-        FetchComponent.updateMarks(page);
-
-        metricsSystem.debugFetchHistory(page, crawlStatus);
-
-        String reversedUrl = Urls.reverseUrl(url);
-
-        if (parse && crawlStatus.isFetched()) {
-            ParseResult parseResult = pageParser.parse(page);
-
-            if (!parseResult.isSuccess()) {
-                metricsCounters.increase(Counter.rParseFailed);
-                page.getPageCounters().increase(PageCounters.Self.parseErr);
-            }
-
-            // Double check success
-            if (!page.hasMark(Mark.PARSE)) {
-                metricsCounters.increase(Counter.rNoParse);
-            }
-
-            if (parseResult.getMinorCode() != SUCCESS_OK) {
-                metricsSystem.reportFlawyParsedPage(page, true);
-            }
-
-            if (parseResult.isSuccess() && jitIndexer != null) {
-                // JIT Index
-                jitIndexer.produce(fetchTask);
-            }
-        }
-
-        // Remove content if storingContent is false. Content is added to page earlier
-        // so PageParser is able to parse it, now, we can clear it
-        if (page.getContent() != null) {
-            page.setContentBytes(page.getContent().array().length);
-
-            if (!storingContent) {
-                if (!page.isSeed()) {
-                    page.setContent(new byte[0]);
-                } else if (page.getFetchCount() > 2) {
-                    page.setContent(new byte[0]);
-                }
-            }
-        }
-
-        output(reversedUrl, page, context);
-
-        updateStatus(page);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void output(String reversedUrl, WebPage page, ReducerContext context) {
-        Objects.requireNonNull(context);
-
-        try {
-            context.write(reversedUrl, page.unbox());
-        } catch (IOException | InterruptedException e) {
-            LOG.error("Failed to write to hdfs" + StringUtil.stringifyException(e));
-        } catch (Throwable e) {
-            LOG.error(StringUtil.stringifyException(e));
-        }
-    }
-
-    private void updateStatus(WebPage page) throws IOException {
+    private void updateStatus(WebPage page) {
         metricsCounters.increase(rPersist);
         metricsCounters.increase(rLinks, page.getImpreciseLinkCount());
 

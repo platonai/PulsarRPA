@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
@@ -18,7 +16,7 @@ import kotlin.math.min
 
 const val HTTP_PROXY_POOL_RECOVER_PERIOD = "http.proxy.pool.recover.period"
 
-class ProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
+class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
     private var recoverPeriod = conf.getDuration(HTTP_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
     private var updateThread = Thread(this::update)
     private var recoverThread = Thread(this::recover)
@@ -27,6 +25,8 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
     val isClosed get() = closed.get()
 
     fun start() {
+        updateProxies()
+
         updateThread.isDaemon = true
         updateThread.start()
 
@@ -49,25 +49,18 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
     private fun update() {
         var tick = 0
         var idle = 0
-        while (!isClosed && !proxyPool.isClosed) {
-            if (tick % 5 == 0) {
-                proxyPool.reloadIfModified()
-            }
-
-            idle = if (proxyPool.isEmpty()) 0 else idle + 1
-
-            val mod = min(30 + 2 * idle, 60 * 60)
-            if (tick % mod == 0) {
-                log.info("Proxy pool status - {}", proxyPool)
-            }
-
+        while (!isClosed) {
+            // try to update external proxy IP every 10 seconds
             if (tick % 10 == 0) {
-                tryUpdateProxyFromMaster()
+                updateProxies()
+            }
 
-                if (proxyPool.isEmpty()) {
-                    proxyPool.providers.forEach {
-                        tryUpdateProxy(URL(it))
-                    }
+            // report proxy pool status periodically
+            if (log.isInfoEnabled) {
+                idle = if (proxyPool.isEmpty()) idle + 1 else 0
+                val mod = min(30 + 2 * idle, 60 * 60)
+                if (tick % mod == 0) {
+                    log.info("Proxy pool status - {}", proxyPool)
                 }
             }
 
@@ -78,6 +71,37 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
             }
 
             ++tick
+        }
+    }
+
+    private fun updateProxies() {
+        proxyPool.updateProviders()
+
+        if (proxyPool.isEmpty()) {
+            proxyPool.providers.forEach {
+                syncProxyFromProvider(URL(it))
+            }
+        }
+
+        proxyPool.updateProxies()
+    }
+
+    private fun syncProxyFromProvider(providerUrl: URL) {
+        try {
+            val filename = "proxies." + PulsarPaths.fromUri(providerUrl.toString()) + ".txt"
+            val target = Paths.get(ProxyPool.AVAILABLE_DIR.toString(), filename)
+            val symbolLink = Paths.get(ProxyPool.ENABLED_DIR.toString(), filename)
+
+            Files.deleteIfExists(target)
+            Files.deleteIfExists(symbolLink)
+
+            FileUtils.copyURLToFile(providerUrl, target.toFile())
+            Files.createSymbolicLink(symbolLink, target)
+
+            val proxies = Files.readAllLines(target)
+            log.info("Saved {} proxies to {} from provider {}", proxies.size, target, providerUrl)
+        } catch (e: IOException) {
+            log.error(e.toString())
         }
     }
 
@@ -111,54 +135,17 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
         }
     }
 
-    private fun tryUpdateProxyFromMaster() {
-        val host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost")
-        val port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8081)
-
-        val thisHost = NetUtil.getHostname()
-        if (host == thisHost) {
-            return
-        }
-
-        val url = URL("http://$host:$port/proxy/download")
-        if (!NetUtil.testHttpNetwork(url)) {
-            return
-        }
-
-        tryUpdateProxy(url)
-    }
-
-    private fun tryUpdateProxy(url: URL) {
-        try {
-            val filename = "proxies." + PulsarPaths.fromUri(url.toString()) + ".txt"
-            val target = Paths.get(proxyPool.availableDir.toString(), filename)
-            val symbolLink = Paths.get(proxyPool.enabledDir.toString(), filename)
-
-            Files.deleteIfExists(target)
-            Files.deleteIfExists(symbolLink)
-
-            FileUtils.copyURLToFile(url, target.toFile())
-            Files.createSymbolicLink(symbolLink, target)
-
-            val proxies = Files.readAllLines(target)
-            log.info("Saved {} proxies to {} from {}", proxies.size, target, url)
-        } catch (e: IOException) {
-            log.error(e.toString())
-        }
-    }
-
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyManager::class.java)
-        const val PROXY_SERVER_LOCAL_PORT = 8382
+        private val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
     }
 }
 
 fun main() {
-    val log = LoggerFactory.getLogger(ProxyManager::class.java)
+    val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
 
     val conf = ImmutableConfig()
     val proxyPool = ProxyPool(conf)
-    val proxyServer = ProxyManager(proxyPool, conf)
+    val proxyServer = ExternalProxyManager(proxyPool, conf)
     proxyServer.start()
 
     while (true) {

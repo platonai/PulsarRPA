@@ -30,6 +30,7 @@ open class H2DbConsole {
                 log.info("Defined beans: {}", s)
             }
             Console().runTool(*args)
+            env.exit()
         }
     }
 

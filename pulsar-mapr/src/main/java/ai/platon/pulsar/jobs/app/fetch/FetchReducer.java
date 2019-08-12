@@ -17,10 +17,10 @@
 package ai.platon.pulsar.jobs.app.fetch;
 
 import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.crawl.fetch.FetchMonitor;
 import ai.platon.pulsar.jobs.common.FetchEntryWritable;
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraReducer;
 import ai.platon.pulsar.jobs.core.HadoopReducerContext;
-import ai.platon.pulsar.jobs.fetch.FetchMonitor;
 import ai.platon.pulsar.jobs.fetch.service.FetchServer;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import org.apache.hadoop.io.IntWritable;

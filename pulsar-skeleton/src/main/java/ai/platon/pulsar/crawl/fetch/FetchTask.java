@@ -110,7 +110,6 @@ public class FetchTask implements Comparable<FetchTask> {
     }
 
     public class Key implements Comparable<Key> {
-
         public int jobID;
         public int priority;
         public String protocol;

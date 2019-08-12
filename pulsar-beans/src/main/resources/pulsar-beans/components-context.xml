@@ -33,13 +33,13 @@
     </bean>
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
-        <constructor-arg ref="fetchStatusTracker"/>
+        <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
-        <constructor-arg ref="fetchStatusTracker"/>
+        <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="seleniumFetchComponent" class="ai.platon.pulsar.crawl.component.SeleniumFetchComponent" destroy-method="close">

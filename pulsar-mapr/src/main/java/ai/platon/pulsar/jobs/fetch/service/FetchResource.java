@@ -18,8 +18,8 @@ package ai.platon.pulsar.jobs.fetch.service;
 
 import ai.platon.pulsar.crawl.fetch.FetchJobForwardingResponse;
 import ai.platon.pulsar.crawl.fetch.FetchTask;
-import ai.platon.pulsar.jobs.fetch.TaskScheduler;
-import ai.platon.pulsar.jobs.fetch.TaskSchedulers;
+import ai.platon.pulsar.crawl.fetch.TaskScheduler;
+import ai.platon.pulsar.crawl.fetch.TaskSchedulers;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
 import com.google.common.collect.Lists;
