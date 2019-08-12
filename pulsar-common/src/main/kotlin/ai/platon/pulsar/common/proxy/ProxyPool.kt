@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Manager all proxy servers, for every request, we choose a proxy server from a proxy server list
+ * Manager all external proxies
  * Check all unavailable proxies, recover them if possible.
  * This might take a long time, so it should be run in a separate thread
 */
@@ -47,7 +47,12 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
         Files.createDirectories(availableDir)
         Files.createDirectories(enabledDir)
         Files.createDirectories(archiveDir)
-        loadAll()
+        if (!Files.exists(providerFile)) {
+            Files.createFile(providerFile)
+        }
+
+        reloadIfModified()
+        log.info(toString())
     }
 
     override operator fun contains(proxy: ProxyEntry): Boolean {
@@ -146,12 +151,12 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
 
     fun reloadIfModified() {
         try {
-            // provider
+            // load providers
             reloadIfModified(providerFile, lastModifiedTimes.getOrDefault(providerFile, Instant.EPOCH)) {
                 Files.readAllLines(it).takeWhile { Urls.isValidUrl(it) }.toCollection(providers)
             }
 
-            // enabled proxies
+            // load enabled proxies
             Files.list(enabledDir).filter { Files.isRegularFile(it) }
                     .forEach { reloadIfModified(it, lastModifiedTimes.getOrDefault(it, Instant.EPOCH)) { load(it) } }
         } catch (e: IOException) {
@@ -176,20 +181,6 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
                 proxyEntries.size, freeProxies.size, workingProxies.size, unavailableProxies.size)
     }
 
-    private fun loadAll() {
-        try {
-            if (!Files.exists(enabledDir)) {
-                Files.createDirectories(enabledDir)
-            }
-
-            Files.list(enabledDir).filter { Files.isRegularFile(it) }.forEach { load(it) }
-
-            log.info(toString())
-        } catch (e: IOException) {
-            log.warn(e.toString())
-        }
-    }
-
     private fun load(path: Path) {
         try {
             val lines = Files.readAllLines(path)
@@ -205,7 +196,7 @@ class ProxyPool(private val conf: ImmutableConfig) : AbstractQueue<ProxyEntry>()
                         freeProxies.add(proxyEntry)
                     }
         } catch (e: IOException) {
-            log.info(toString())
+            log.warn(toString())
         }
     }
 

@@ -16,11 +16,9 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
-const val HTTP_PROXY_POOL_UPDATE_PERIOD = "http.proxy.pool.update.period"
 const val HTTP_PROXY_POOL_RECOVER_PERIOD = "http.proxy.pool.recover.period"
 
 class ProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
-    private var updatePeriod = conf.getDuration(HTTP_PROXY_POOL_UPDATE_PERIOD, Duration.ofSeconds(20))
     private var recoverPeriod = conf.getDuration(HTTP_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
     private var updateThread = Thread(this::update)
     private var recoverThread = Thread(this::recover)
@@ -52,6 +50,10 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
         var tick = 0
         var idle = 0
         while (!isClosed && !proxyPool.isClosed) {
+            if (tick % 5 == 0) {
+                proxyPool.reloadIfModified()
+            }
+
             idle = if (proxyPool.isEmpty()) 0 else idle + 1
 
             val mod = min(30 + 2 * idle, 60 * 60)
@@ -68,8 +70,6 @@ class ProxyManager(private val proxyPool: ProxyPool, private val conf: Immutable
                     }
                 }
             }
-
-            proxyPool.reloadIfModified()
 
             try {
                 TimeUnit.SECONDS.sleep(1)

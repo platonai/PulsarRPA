@@ -161,12 +161,7 @@ class WebDriverQueues(
     private fun doCreateWebDriver(conf: ImmutableConfig): WebDriver {
         val browser = getBrowser(conf)
 
-        val capabilities = browserControl.generalOptions
-        val chromeOptions = browserControl.chromeOptions
-
-        // Reset proxy
-        capabilities.setCapability(CapabilityType.PROXY, null as Any?)
-        chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
+        val capabilities = BrowserControl.createGeneralOptions()
 
         // Proxy is enabled by default
         val disableProxy = conf.getBoolean(PROXY_DISABLED, false)
@@ -174,7 +169,6 @@ class WebDriverQueues(
             val proxy = getProxy(conf)
             if (proxy != null) {
                 capabilities.setCapability(CapabilityType.PROXY, proxy)
-                chromeOptions.setCapability(CapabilityType.PROXY, proxy)
 
                 if (log.isDebugEnabled) {
                     log.debug("Use proxy $proxy")
@@ -185,6 +179,7 @@ class WebDriverQueues(
         // Choose the WebDriver
         val driver: WebDriver
         if (browser == BrowserType.CHROME) {
+            val chromeOptions = BrowserControl.createChromeOptions(capabilities)
             driver = ChromeDriver(chromeOptions)
         } else if (browser == BrowserType.HTMLUNIT) {
             capabilities.setCapability("browserName", "htmlunit")

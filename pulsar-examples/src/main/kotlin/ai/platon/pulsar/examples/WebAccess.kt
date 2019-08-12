@@ -23,9 +23,10 @@ object WebAccess {
             2 to "http://category.dangdang.com/cid4002590.html",
             3 to "https://list.mogujie.com/book/magic/51894",
             4 to "https://category.vip.com/search-1-0-1.html?q=3|49738||&rp=26600|48483&ff=|0|2|1&adidx=2&f=ad&adp=130610&adid=632686",
-            5 to "https://list.jd.com/list.html?cat=6728,6742,13246",
-            6 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
-            7 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
+            5 to "https://category.vip.com/search-5-0-1.html?q=3|142346||&rp=26600|103675&ff=|0|6|9&adidx=1&f=ad&adp=130612&adid=632821",
+            6 to "https://list.jd.com/list.html?cat=6728,6742,13246",
+            7 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
+            8 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
             9 to "https://music.163.com/",
             10 to "https://news.sogou.com/ent.shtml",
             11 to "http://shop.boqii.com/brand/",
@@ -97,14 +98,15 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[0]?:return
+        val url = seeds[5]?:return
         // val url = "http://blog.zhaojie.me/"
 
-        var args = "-ps -i 1d -ii 1s -preferParallel true"
+        var args = "-i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
         val outlink = when {
             "mia" in url -> "a[href~=item]"
             "mogu" in url -> "a[href~=detail]"
+            "vip" in url -> "a[href~=detail]"
             else -> "a"
         }
 

@@ -24,13 +24,15 @@ class TestSelenium {
 
     @Test
     fun testCapabilities() {
-        browserControl.generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        browserControl.generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        var driver: WebDriver = ChromeDriver(browserControl.generalOptions)
+        val generalOptions = BrowserControl.createGeneralOptions()
+        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
+        generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
+        var driver: WebDriver = ChromeDriver(generalOptions)
 
-        browserControl.chromeOptions.addArguments("--blink-settings=imagesEnabled=false")
-        browserControl.chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        browserControl.chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
-        driver = ChromeDriver(browserControl.chromeOptions)
+        val chromeOptions = BrowserControl.createChromeOptions()
+        chromeOptions.addArguments("--blink-settings=imagesEnabled=false")
+        chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
+        chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
+        driver = ChromeDriver(chromeOptions)
     }
 }

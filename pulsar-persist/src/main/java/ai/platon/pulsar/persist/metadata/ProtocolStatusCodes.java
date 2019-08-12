@@ -101,6 +101,14 @@ public interface ProtocolStatusCodes {
      */
     int DOCUMENT_READY_TIMEOUT = 1469;
     /**
+     * Selenium web driver is timeout.
+     */
+    int PROXY_ERROR = 1470;
+    /**
+     * Selenium web driver is timeout.
+     */
+    int IP_BANNED = 1470;
+    /**
      * This protocol was not found. Application may attempt to retry later.
      */
     int PROTO_NOT_FOUND = 1600;

@@ -20,6 +20,7 @@ import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.net.InternetDomainName
 import com.google.gson.Gson
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
@@ -101,6 +102,15 @@ data class DriverConfig(
             config.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
             config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
     )
+}
+
+data class VisitResult(
+        val protocolStatus: ProtocolStatus,
+        val jsData: BrowserJsData
+) {
+    companion object {
+        val canceled = VisitResult(ProtocolStatus.STATUS_CANCELED, BrowserJsData.default)
+    }
 }
 
 /**
@@ -223,6 +233,14 @@ class SeleniumEngine(
         }
 
         pageSource = getPageSourceSilently(driver)
+
+        val proxyError = pageSource.length == 76
+                && pageSource.indexOf("<html>") != -1
+                && pageSource.lastIndexOf("</html>") != -1
+        if (proxyError) {
+            status = ProtocolStatus.STATUS_RETRY
+        }
+
         if (status.minorCode == ProtocolStatusCodes.WEB_DRIVER_TIMEOUT
                 || status.minorCode == ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT) {
             // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
@@ -327,15 +345,6 @@ class SeleniumEngine(
         }
 
         return ForwardingResponse(url, "", status, headers)
-    }
-
-    data class VisitResult(
-            val protocolStatus: ProtocolStatus,
-            val jsData: BrowserJsData
-    ) {
-        companion object {
-            val canceled = VisitResult(ProtocolStatus.STATUS_CANCELED, BrowserJsData.default)
-        }
     }
 
     private fun visit(batchId: Int, taskId: Int, url: String, page: WebPage,
