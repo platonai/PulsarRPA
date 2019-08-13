@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.common.config;
 
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;

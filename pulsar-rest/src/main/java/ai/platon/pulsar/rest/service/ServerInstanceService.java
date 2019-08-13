@@ -16,10 +16,10 @@
  */
 package ai.platon.pulsar.rest.service;
 
+import ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory;
+import ai.platon.pulsar.persist.rdb.model.ServerInstance;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.table.TableUtils;
-import ai.platon.pulsar.persist.rdb.model.ServerInstance;
-import ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;

@@ -19,11 +19,10 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 public class HttpProxyServer implements AutoCloseable {
 

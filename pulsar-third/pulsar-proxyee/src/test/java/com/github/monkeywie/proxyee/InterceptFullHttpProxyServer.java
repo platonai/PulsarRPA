@@ -8,7 +8,6 @@ import com.github.monkeywie.proxyee.intercept.common.FullResponseIntercept;
 import com.github.monkeywie.proxyee.server.HttpProxyServer;
 import com.github.monkeywie.proxyee.server.HttpProxyServerConfig;
 import com.github.monkeywie.proxyee.util.HttpUtil;
-import io.netty.channel.Channel;
 import io.netty.handler.codec.http.*;
 
 import java.nio.charset.Charset;

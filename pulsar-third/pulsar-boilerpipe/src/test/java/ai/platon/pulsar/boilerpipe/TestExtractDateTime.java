@@ -1,10 +1,10 @@
 package ai.platon.pulsar.boilerpipe;
 
-import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
+import ai.platon.pulsar.common.DateTimeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.sql.ResultSetFormatter
 import com.google.common.collect.TreeMultimap
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
@@ -9,11 +8,9 @@ import org.apache.commons.math3.util.Precision
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
-import java.awt.SystemColor.text
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import java.sql.Types
 import java.time.Duration
 import java.time.Instant
 import java.util.*

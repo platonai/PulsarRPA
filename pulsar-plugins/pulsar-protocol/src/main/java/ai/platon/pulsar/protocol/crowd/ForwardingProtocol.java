@@ -16,9 +16,9 @@
  */
 package ai.platon.pulsar.protocol.crowd;
 
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.persist.WebPage;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;

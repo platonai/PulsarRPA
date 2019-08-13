@@ -1,9 +1,7 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.dom.nodes.node.ext.namedRect2
 import org.apache.commons.lang3.Validate
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
 import org.jsoup.select.Collector
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator

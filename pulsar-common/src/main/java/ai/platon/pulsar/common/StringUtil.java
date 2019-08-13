@@ -17,19 +17,13 @@
 
 package ai.platon.pulsar.common;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.util.*;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

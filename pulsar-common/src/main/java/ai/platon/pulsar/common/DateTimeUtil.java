@@ -19,7 +19,6 @@ package ai.platon.pulsar.common;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;

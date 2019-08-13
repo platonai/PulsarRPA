@@ -1,10 +1,10 @@
 package ai.platon.pulsar.boilerpipe.utils;
 
+import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 
 import java.util.Map;
 import java.util.Set;

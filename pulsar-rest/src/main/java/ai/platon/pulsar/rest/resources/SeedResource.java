@@ -16,10 +16,6 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.resources;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import ai.platon.pulsar.rest.model.response.LinkDatum;
-import ai.platon.pulsar.rest.service.JobConfigurations;
 import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.common.options.LinkOptions;
 import ai.platon.pulsar.common.options.LoadOptions;
@@ -28,6 +24,10 @@ import ai.platon.pulsar.crawl.schedule.FetchSchedule;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.WebPageFormatter;
+import ai.platon.pulsar.rest.model.response.LinkDatum;
+import ai.platon.pulsar.rest.service.JobConfigurations;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

@@ -17,13 +17,13 @@
 
 package ai.platon.pulsar.parse.html;
 
+import ai.platon.pulsar.crawl.parse.ParseException;
+import ai.platon.pulsar.crawl.parse.ParseResult;
+import ai.platon.pulsar.crawl.parse.html.JsoupUtils;
 import ai.platon.pulsar.persist.FieldGroup;
 import ai.platon.pulsar.persist.FieldGroupFormatter;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup;
-import ai.platon.pulsar.crawl.parse.ParseException;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.parse.html.JsoupUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;

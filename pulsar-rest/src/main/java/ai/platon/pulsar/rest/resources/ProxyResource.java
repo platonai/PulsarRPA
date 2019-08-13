@@ -16,11 +16,11 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.resources;
 
-import com.google.gson.Gson;
-import ai.platon.pulsar.rest.model.request.ProxyConfig;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
+import ai.platon.pulsar.rest.model.request.ProxyConfig;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

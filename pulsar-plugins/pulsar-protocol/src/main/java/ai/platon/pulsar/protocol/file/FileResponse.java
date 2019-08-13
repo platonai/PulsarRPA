@@ -21,9 +21,9 @@ import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.MimeUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.crawl.protocol.Content;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
-import ai.platon.pulsar.crawl.protocol.Content;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

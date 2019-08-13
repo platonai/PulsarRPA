@@ -16,11 +16,11 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.resources;
 
+import ai.platon.pulsar.persist.rdb.model.ServerInstance;
+import ai.platon.pulsar.rest.service.PortManager;
 import com.google.common.collect.Maps;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import ai.platon.pulsar.rest.service.PortManager;
-import ai.platon.pulsar.persist.rdb.model.ServerInstance;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Singleton;

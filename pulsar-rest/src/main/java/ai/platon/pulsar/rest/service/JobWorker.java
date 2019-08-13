@@ -16,11 +16,11 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.service;
 
-import ai.platon.pulsar.rest.model.request.JobConfig;
-import ai.platon.pulsar.rest.model.response.JobInfo;
 import ai.platon.pulsar.common.PulsarJobBase;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.rest.model.request.JobConfig;
+import ai.platon.pulsar.rest.model.response.JobInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

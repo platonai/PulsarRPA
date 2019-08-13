@@ -17,10 +17,10 @@ package ai.platon.pulsar.filter; /**
 
 import ai.platon.pulsar.common.ResourceLoader;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import dk.brics.automaton.RegExp;
-import dk.brics.automaton.RunAutomaton;
 import ai.platon.pulsar.filter.common.RegexRule;
 import ai.platon.pulsar.filter.common.RegexUrlFilterBase;
+import dk.brics.automaton.RegExp;
+import dk.brics.automaton.RunAutomaton;
 
 import java.io.IOException;
 import java.io.Reader;

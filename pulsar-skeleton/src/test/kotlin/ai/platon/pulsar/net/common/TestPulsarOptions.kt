@@ -2,7 +2,6 @@ package ai.platon.pulsar.net.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.*
-import com.beust.jcommander.Parameter
 import com.google.common.collect.Lists
 import junit.framework.Assert.assertTrue
 import org.apache.commons.collections4.CollectionUtils
@@ -10,13 +9,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test
 import java.time.Duration
-import java.util.ArrayList
-import java.util.HashMap
-import java.util.stream.Collectors
+import java.util.*
 import java.util.stream.Stream
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
 
 /**
  * Created by vincent on 16-7-20.

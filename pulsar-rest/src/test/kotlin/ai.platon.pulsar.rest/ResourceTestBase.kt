@@ -1,7 +1,6 @@
 package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.rest.rpc.PageResourceReference
 import org.glassfish.jersey.test.JerseyTest
 import org.junit.After
 import org.junit.Before

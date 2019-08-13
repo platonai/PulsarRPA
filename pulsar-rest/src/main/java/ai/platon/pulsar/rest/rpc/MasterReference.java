@@ -1,9 +1,9 @@
 package ai.platon.pulsar.rest.rpc;
 
+import ai.platon.pulsar.rest.model.response.LinkDatum;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import ai.platon.pulsar.rest.model.response.LinkDatum;
 import org.apache.hadoop.conf.Configuration;
 import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;

@@ -207,6 +207,26 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -791,6 +811,11 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
     </dependencies>
 
     <properties>
@@ -883,8 +908,7 @@
         <javac.target.version>1.8</javac.target.version>
 
         <!-- Kotlin -->
-        <kotlin.version>1.3.20</kotlin.version>
-        <!--<kotlin.version>1.2.70</kotlin.version>-->
+        <kotlin.version>1.3.41</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <!-- OSGI -->

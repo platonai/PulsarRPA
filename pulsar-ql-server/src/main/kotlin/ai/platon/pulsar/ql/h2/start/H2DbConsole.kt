@@ -1,7 +1,6 @@
 package ai.platon.pulsar.ql.h2.start
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import com.google.common.collect.Lists
 import org.h2.tools.Console

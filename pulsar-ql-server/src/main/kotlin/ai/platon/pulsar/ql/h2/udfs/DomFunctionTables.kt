@@ -3,7 +3,6 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
-import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
@@ -15,8 +14,6 @@ import ai.platon.pulsar.ql.h2.Queries.toResultSet
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.hadoop.classification.InterfaceStability
-import org.h2.engine.Constants
-import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
 import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
@@ -26,7 +23,6 @@ import org.h2.value.ValueArray
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.ResultSet
-import java.util.*
 import kotlin.math.max
 
 @Suppress("unused")

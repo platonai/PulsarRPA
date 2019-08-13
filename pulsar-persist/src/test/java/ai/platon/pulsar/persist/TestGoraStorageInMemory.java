@@ -16,12 +16,12 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
+import ai.platon.pulsar.common.PulsarPaths;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.gora.GoraStorage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.Mark;
 import ai.platon.pulsar.persist.metadata.Name;
-import ai.platon.pulsar.common.PulsarPaths;
 import org.apache.avro.util.Utf8;
 import org.apache.gora.query.Result;
 import org.apache.gora.store.DataStore;

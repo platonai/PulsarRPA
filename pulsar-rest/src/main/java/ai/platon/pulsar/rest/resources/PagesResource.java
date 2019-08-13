@@ -16,9 +16,6 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.resources;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import ai.platon.pulsar.rest.model.response.LinkDatum;
 import ai.platon.pulsar.common.MetricsCounters;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.options.LinkOptions;
@@ -32,6 +29,9 @@ import ai.platon.pulsar.crawl.parse.html.JsoupUtils;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.WebPageFormatter;
+import ai.platon.pulsar.rest.model.response.LinkDatum;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;

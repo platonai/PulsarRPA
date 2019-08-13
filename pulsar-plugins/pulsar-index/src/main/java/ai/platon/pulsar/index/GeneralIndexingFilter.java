@@ -19,10 +19,10 @@ package ai.platon.pulsar.index;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexingException;
 import ai.platon.pulsar.crawl.index.IndexingFilter;
+import ai.platon.pulsar.persist.WebPage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 

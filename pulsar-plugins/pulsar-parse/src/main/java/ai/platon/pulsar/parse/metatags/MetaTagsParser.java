@@ -17,12 +17,12 @@
 package ai.platon.pulsar.parse.metatags;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.Metadata;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.crawl.parse.ParseFilter;
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags;
 import ai.platon.pulsar.crawl.parse.html.ParseContext;
+import ai.platon.pulsar.persist.Metadata;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

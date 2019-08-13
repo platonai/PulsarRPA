@@ -21,16 +21,16 @@ import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.persist.WebDb;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.FetchMode;
-import ai.platon.pulsar.persist.metadata.Mark;
 import ai.platon.pulsar.crawl.filter.CrawlFilter;
 import ai.platon.pulsar.crawl.filter.CrawlFilters;
 import ai.platon.pulsar.crawl.filter.UrlFilters;
 import ai.platon.pulsar.crawl.filter.UrlNormalizers;
 import ai.platon.pulsar.crawl.schedule.FetchSchedule;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
+import ai.platon.pulsar.persist.WebDb;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.FetchMode;
+import ai.platon.pulsar.persist.metadata.Mark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,11 +41,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
+import static ai.platon.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
+import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static ai.platon.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;
-import static ai.platon.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
-import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports

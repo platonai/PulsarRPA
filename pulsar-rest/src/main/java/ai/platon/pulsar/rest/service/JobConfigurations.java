@@ -16,10 +16,10 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.service;
 
-import ai.platon.pulsar.rest.model.request.FetchConfig;
-import com.google.common.collect.Maps;
 import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.rest.model.request.FetchConfig;
+import com.google.common.collect.Maps;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;

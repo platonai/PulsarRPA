@@ -3,7 +3,6 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import org.apache.commons.lang3.StringUtils
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.slf4j.LoggerFactory

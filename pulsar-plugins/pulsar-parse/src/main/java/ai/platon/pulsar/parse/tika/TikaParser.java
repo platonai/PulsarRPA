@@ -17,16 +17,16 @@
 package ai.platon.pulsar.parse.tika;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.ParseStatus;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes;
 import ai.platon.pulsar.crawl.filter.CrawlFilters;
 import ai.platon.pulsar.crawl.parse.ParseFilters;
 import ai.platon.pulsar.crawl.parse.ParseResult;
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags;
 import ai.platon.pulsar.crawl.parse.html.ParseContext;
 import ai.platon.pulsar.crawl.parse.html.PrimerParser;
+import ai.platon.pulsar.persist.HypeLink;
+import ai.platon.pulsar.persist.ParseStatus;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.apache.tika.metadata.Metadata;

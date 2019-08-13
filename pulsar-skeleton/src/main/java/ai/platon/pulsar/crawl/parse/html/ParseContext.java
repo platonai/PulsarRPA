@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.parse.html;
 
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.parse.ParseResult;
+import ai.platon.pulsar.persist.WebPage;
 import org.w3c.dom.DocumentFragment;
 
 /**

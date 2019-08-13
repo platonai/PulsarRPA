@@ -2,7 +2,9 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists

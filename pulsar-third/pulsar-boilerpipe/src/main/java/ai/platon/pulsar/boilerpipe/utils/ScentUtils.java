@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static ai.platon.pulsar.boilerpipe.utils.Scent.BAD_PHRASE_IN_NAME;
-
 /**
  * Created by vincent on 16-10-27.
  * Copyright @ 2013-2016 Platon AI. All rights reserved

@@ -20,10 +20,10 @@ package ai.platon.pulsar.crawl.scoring;
 import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.graph.WebEdge;
 import ai.platon.pulsar.persist.graph.WebGraph;
-import ai.platon.pulsar.crawl.index.IndexDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

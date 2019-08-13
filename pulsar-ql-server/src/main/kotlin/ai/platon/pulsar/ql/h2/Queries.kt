@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.nodes.Anchor

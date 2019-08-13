@@ -1,9 +1,9 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.persist.WebPageFormatter
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.persist.WebPageFormatter
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
 

@@ -1,11 +1,11 @@
 package ai.platon.pulsar.ql.io;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import ai.platon.pulsar.dom.Documents;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.ql.types.ValueDom;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.hadoop.io.Writable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

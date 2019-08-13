@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair
 import java.awt.Dimension
 import java.time.Duration
 import java.time.Instant
-import java.util.HashMap
+import java.util.*
 
 /**
  * Created by vincent on 17-4-7.

@@ -1,8 +1,6 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.nodes.TraverseState
-import ai.platon.pulsar.dom.nodes.forEach
-import ai.platon.pulsar.dom.nodes.node.ext.name
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node

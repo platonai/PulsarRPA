@@ -20,7 +20,6 @@ import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 
 import javax.annotation.Nullable;
-import java.time.Instant;
 import java.util.Objects;
 
 /**

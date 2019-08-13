@@ -18,11 +18,11 @@ package ai.platon.pulsar.protocol.httpclient;
 
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HttpHeaders;
+import ai.platon.pulsar.crawl.protocol.Response;
+import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
-import ai.platon.pulsar.crawl.protocol.Response;
-import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpVersion;

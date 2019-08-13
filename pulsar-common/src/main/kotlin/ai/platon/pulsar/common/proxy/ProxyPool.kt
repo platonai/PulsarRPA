@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import com.ibm.icu.impl.PluralRulesLoader.loader
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files

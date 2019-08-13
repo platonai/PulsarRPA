@@ -1,7 +1,6 @@
 package ai.platon.pulsar.proxy
 
 import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.PulsarFiles.appendLog
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.SimpleLogger
 import ai.platon.pulsar.common.StringUtil
@@ -25,13 +24,7 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
 import org.slf4j.LoggerFactory
-import java.io.BufferedWriter
-import java.io.IOException
-import java.io.PrintWriter
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger

@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import org.h2.engine.SysProperties
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
 import org.h2.tools.Server
@@ -17,7 +16,6 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException

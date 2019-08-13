@@ -3,12 +3,12 @@ package ai.platon.pulsar.parse.html;
 import ai.platon.pulsar.common.MetricsCounters;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.options.EntityOptions;
-import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.crawl.parse.ParseFilter;
 import ai.platon.pulsar.crawl.parse.ParseResult;
 import ai.platon.pulsar.crawl.parse.html.FieldCollection;
 import ai.platon.pulsar.crawl.parse.html.JsoupParser;
 import ai.platon.pulsar.crawl.parse.html.ParseContext;
+import ai.platon.pulsar.persist.*;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;

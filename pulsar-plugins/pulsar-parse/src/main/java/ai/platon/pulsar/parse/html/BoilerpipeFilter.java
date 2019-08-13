@@ -16,17 +16,17 @@
  */
 package ai.platon.pulsar.parse.html;
 
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.PageCategory;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.SAXInput;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
+import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.parse.ParseFilter;
 import ai.platon.pulsar.crawl.parse.ParseResult;
 import ai.platon.pulsar.crawl.parse.html.ParseContext;
 import ai.platon.pulsar.crawl.parse.html.PrimerParser;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.PageCategory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.InputSource;

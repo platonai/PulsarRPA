@@ -16,8 +16,8 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.service;
 
-import com.google.common.collect.Maps;
 import ai.platon.pulsar.common.PulsarJobBase;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 

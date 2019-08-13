@@ -1,20 +1,12 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.dom.nodes.A_LABELS
-import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.types.ValueDom
-import com.google.common.base.Strings
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.math.NumberUtils
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
-import org.jsoup.nodes.Element
 
 /**
  * Created by vincent on 17-11-1.

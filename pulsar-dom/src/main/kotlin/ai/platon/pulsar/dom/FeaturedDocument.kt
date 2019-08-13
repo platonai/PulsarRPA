@@ -1,6 +1,8 @@
 package ai.platon.pulsar.dom
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.PulsarFiles
+import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL

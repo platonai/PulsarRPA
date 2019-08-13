@@ -1,17 +1,10 @@
 package ai.platon.pulsar.common;
 
-import com.beust.jcommander.internal.Lists;
-import com.google.common.collect.Iterables;
-import com.google.common.math.IntMath;
 import com.google.common.primitives.Ints;
-import org.apache.commons.collections4.IteratorUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.analysis.function.Sigmoid;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-4-20.

@@ -3,8 +3,8 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
-import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.SQLContext
 import org.h2.engine.*
 import org.h2.jdbc.JdbcConnection
 import org.h2.message.TraceSystem

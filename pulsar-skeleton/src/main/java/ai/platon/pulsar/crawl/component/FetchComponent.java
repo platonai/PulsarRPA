@@ -17,22 +17,20 @@
 
 package ai.platon.pulsar.crawl.component;
 
-import ai.platon.pulsar.common.ReducerContext;
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
-import ai.platon.pulsar.crawl.fetch.FetchItem;
-import ai.platon.pulsar.crawl.fetch.FetchStatus;
-import ai.platon.pulsar.crawl.fetch.FetchTask;
-import ai.platon.pulsar.crawl.fetch.data.PoolId;
-import ai.platon.pulsar.crawl.protocol.*;
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
+import ai.platon.pulsar.crawl.protocol.Content;
+import ai.platon.pulsar.crawl.protocol.Protocol;
+import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
+import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
 import ai.platon.pulsar.persist.CrawlStatus;
 import ai.platon.pulsar.persist.ProtocolHeaders;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

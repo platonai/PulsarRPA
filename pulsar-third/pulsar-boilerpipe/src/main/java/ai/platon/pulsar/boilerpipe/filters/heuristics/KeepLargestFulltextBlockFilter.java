@@ -1,11 +1,9 @@
 package ai.platon.pulsar.boilerpipe.filters.heuristics;
 
-import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import ai.platon.pulsar.boilerpipe.document.BlockLabels;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
-import ai.platon.pulsar.boilerpipe.filters.heuristics.KeepLargestBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 
 import java.util.List;

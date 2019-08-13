@@ -20,8 +20,8 @@ package ai.platon.pulsar.crawl.parse;
 // Hadoop imports
 
 import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.protocol.Protocol;
+import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

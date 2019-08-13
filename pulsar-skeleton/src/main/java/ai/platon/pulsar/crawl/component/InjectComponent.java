@@ -8,11 +8,11 @@ import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
 import ai.platon.pulsar.common.options.CommonOptions;
+import ai.platon.pulsar.crawl.inject.SeedBuilder;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.Mark;
 import com.beust.jcommander.Parameter;
-import ai.platon.pulsar.crawl.inject.SeedBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static ai.platon.pulsar.common.PulsarParams.*;
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import static ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
 
 /**

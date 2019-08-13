@@ -16,10 +16,10 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.model.request;
 
+import ai.platon.pulsar.rest.service.JobManager;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ai.platon.pulsar.rest.service.JobManager;
 
 import java.util.Map;
 

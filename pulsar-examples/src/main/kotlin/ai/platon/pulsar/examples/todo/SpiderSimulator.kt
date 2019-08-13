@@ -18,13 +18,13 @@
  */
 
 import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.IndexComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
-import ai.platon.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage

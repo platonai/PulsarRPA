@@ -4,14 +4,11 @@ import ai.platon.pulsar.persist.rdb.model.ServerInstance
 import ai.platon.pulsar.rest.service.PortManager
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import org.glassfish.jersey.test.JerseyTest
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
-import org.springframework.context.support.ClassPathXmlApplicationContext
-import java.util.ArrayList
+import java.util.*
 import javax.ws.rs.client.Entity
-import javax.ws.rs.core.Application
 import javax.ws.rs.core.GenericType
 import javax.ws.rs.core.MediaType
 import kotlin.test.assertTrue

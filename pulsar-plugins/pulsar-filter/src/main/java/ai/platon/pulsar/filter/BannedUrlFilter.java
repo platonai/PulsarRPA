@@ -25,7 +25,6 @@ import ai.platon.pulsar.crawl.filter.UrlFilter;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
 import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;

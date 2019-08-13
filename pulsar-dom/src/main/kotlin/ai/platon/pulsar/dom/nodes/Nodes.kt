@@ -1,6 +1,5 @@
 package ai.platon.pulsar.dom.nodes
 
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.left

@@ -1,9 +1,9 @@
 package ai.platon.pulsar.rest.service;
 
+import ai.platon.pulsar.common.config.Params;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import ai.platon.pulsar.common.config.Params;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

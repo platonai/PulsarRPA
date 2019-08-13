@@ -16,6 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.app.fetch;
 
+import ai.platon.pulsar.common.ReducerContext;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.crawl.fetch.FetchMonitor;
 import ai.platon.pulsar.jobs.common.FetchEntryWritable;
@@ -35,16 +36,19 @@ public class FetchReducer extends AppContextAwareGoraReducer<IntWritable, FetchE
   @Override
   protected void setup(Context context) throws IOException, InterruptedException {
     super.setup(context);
-    fetchMonitor = applicationContext.getBean(FetchMonitor.class);
+    // TODO: The mapper can change the Configuration will might affect components of reducer
+    // Configuration conf = context.getConfiguration(); // the conf can be different from the one loaded by application context
 
+    fetchMonitor = applicationContext.getBean(FetchMonitor.class);
     fetchServer = applicationContext.getBean("fetchServer", FetchServer.class);
     fetchServer.initialize(applicationContext);
   }
 
   @Override
-  protected void doRun(Context context) throws IOException, InterruptedException {
+  protected void doRun(Context context) {
     fetchServer.startAsDaemon();
-    fetchMonitor.start(new HadoopReducerContext<>(context));
+    ReducerContext<IntWritable, FetchEntryWritable, String, GWebPage> rc = new HadoopReducerContext<>(context);
+    fetchMonitor.start(rc);
   }
 
   @Override

@@ -142,25 +142,25 @@ public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
         data.put(name, value);
     }
 
-    public int getInt(Name name, int defaultValue) {
-        String s = get(name.text());
+    public int getInt(String name, int defaultValue) {
+        String s = get(name);
         return NumberUtils.toInt(s, defaultValue);
     }
 
-    public long getLong(Name name, long defaultValue) {
-        String s = get(name.text());
+    public long getLong(String name, long defaultValue) {
+        String s = get(name);
         return NumberUtils.toLong(s, defaultValue);
     }
 
-    public boolean getBoolean(Name name, Boolean defaultValue) {
+    public boolean getBoolean(String name, Boolean defaultValue) {
         String s = get(name);
         if (s == null) {
             return defaultValue;
         }
-        return Boolean.valueOf(s);
+        return Boolean.parseBoolean(s);
     }
 
-    public Instant getInstant(Name name, Instant defaultValue) {
+    public Instant getInstant(String name, Instant defaultValue) {
         return DateTimeUtil.parseInstant(get(name), defaultValue);
     }
 

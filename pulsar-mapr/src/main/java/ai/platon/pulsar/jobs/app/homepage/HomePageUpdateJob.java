@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 import static ai.platon.pulsar.common.config.PulsarConstants.YES_STRING;
 
 /**

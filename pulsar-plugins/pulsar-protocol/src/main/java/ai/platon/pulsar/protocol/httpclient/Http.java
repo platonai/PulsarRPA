@@ -17,10 +17,10 @@
 package ai.platon.pulsar.protocol.httpclient;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.persist.WebPage;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;

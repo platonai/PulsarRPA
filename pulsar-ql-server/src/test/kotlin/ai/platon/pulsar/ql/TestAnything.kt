@@ -4,9 +4,7 @@ import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
-import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
-import com.beust.jcommander.Parameter
 import org.h2.ext.pulsar.annotation.H2Context
 import org.h2.tools.SimpleResultSet
 import org.junit.Assert
@@ -16,7 +14,6 @@ import java.util.*
 import kotlin.reflect.KParameter
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberFunctions
-import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
 /**

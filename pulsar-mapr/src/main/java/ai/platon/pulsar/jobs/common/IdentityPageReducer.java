@@ -16,8 +16,8 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.common;
 
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.jobs.core.GoraReducer;
+import ai.platon.pulsar.persist.gora.generated.GWebPage;
 
 import java.io.IOException;
 

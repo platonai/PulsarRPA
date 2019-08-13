@@ -1,11 +1,10 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
-import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
-import com.google.common.collect.ListMultimap;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
+import com.google.common.collect.ListMultimap;
 
 /**
  * Marks all blocks that contain a given label as "content".

@@ -16,13 +16,13 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.resources;
 
-import com.google.common.collect.Lists;
-import ai.platon.pulsar.rest.service.BrowserInstanceService;
-import ai.platon.pulsar.rest.service.JobConfigurations;
-import ai.platon.pulsar.rest.service.ServerInstanceService;
 import ai.platon.pulsar.common.NetUtil;
 import ai.platon.pulsar.persist.rdb.model.BrowserInstance;
 import ai.platon.pulsar.persist.rdb.model.ServerInstance;
+import ai.platon.pulsar.rest.service.BrowserInstanceService;
+import ai.platon.pulsar.rest.service.JobConfigurations;
+import ai.platon.pulsar.rest.service.ServerInstanceService;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

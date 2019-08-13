@@ -19,14 +19,14 @@ package ai.platon.pulsar.jobs;
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.jobs.common.FetchEntryWritable;
+import ai.platon.pulsar.jobs.common.SelectorEntry;
+import ai.platon.pulsar.jobs.common.URLPartitioner;
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.junit.Before;
 import org.junit.Test;
-import ai.platon.pulsar.jobs.common.FetchEntryWritable;
-import ai.platon.pulsar.jobs.common.SelectorEntry;
-import ai.platon.pulsar.jobs.common.URLPartitioner;
 
 import java.net.MalformedURLException;
 

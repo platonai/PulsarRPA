@@ -1,6 +1,7 @@
 package com.github.monkeywie.proxyee.util;
 
 import io.netty.buffer.ByteBuf;
+
 import java.nio.charset.Charset;
 
 public class ByteUtil {

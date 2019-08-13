@@ -1,10 +1,10 @@
 package ai.platon.pulsar.boilerpipe;
 
-import com.google.common.collect.Lists;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 

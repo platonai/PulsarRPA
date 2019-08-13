@@ -20,8 +20,8 @@ import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.protocol.Response;
+import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
 
 import java.util.Collection;

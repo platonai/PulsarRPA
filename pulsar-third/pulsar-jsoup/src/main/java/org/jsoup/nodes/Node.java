@@ -11,7 +11,6 @@ import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 

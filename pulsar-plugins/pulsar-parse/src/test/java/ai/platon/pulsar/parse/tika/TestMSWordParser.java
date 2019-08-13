@@ -19,10 +19,10 @@ package ai.platon.pulsar.parse.tika;
 
 import ai.platon.pulsar.common.MimeUtil;
 import ai.platon.pulsar.common.config.MutableConfig;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.parse.PageParser;
 import ai.platon.pulsar.crawl.parse.ParseException;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
+import ai.platon.pulsar.persist.WebPage;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

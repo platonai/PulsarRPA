@@ -17,10 +17,10 @@
 package ai.platon.pulsar.jobs.app.generate;
 
 import ai.platon.pulsar.common.CounterUtils;
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.component.GenerateComponent;
 import ai.platon.pulsar.crawl.filter.CrawlFilter;
-import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
 import ai.platon.pulsar.jobs.common.SelectorEntry;
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper;

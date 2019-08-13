@@ -16,9 +16,9 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.model.response;
 
-import com.google.common.collect.Maps;
 import ai.platon.pulsar.rest.model.request.JobConfig;
 import ai.platon.pulsar.rest.service.JobManager;
+import com.google.common.collect.Maps;
 
 import java.util.Map;
 
