@@ -725,4 +725,9 @@ public final class StringUtil {
     public static boolean isMoneyLike(String text) {
         return MONEY_LIKE_PATTERN.matcher(text).matches();
     }
+
+    // TODO: employ a ip address library
+    public static boolean isIpLike(String text) {
+        return text.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    }
 }

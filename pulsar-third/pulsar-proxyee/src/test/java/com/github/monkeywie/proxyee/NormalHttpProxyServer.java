@@ -14,6 +14,6 @@ public class NormalHttpProxyServer {
     config.setProxyGroupThreads(1);
     new HttpProxyServer()
         .serverConfig(config)
-        .start(8184);
+        .start(9999);
   }
 }

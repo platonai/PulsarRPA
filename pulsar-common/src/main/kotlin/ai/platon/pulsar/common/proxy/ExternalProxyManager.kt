@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
@@ -19,19 +20,15 @@ const val HTTP_PROXY_POOL_RECOVER_PERIOD = "http.proxy.pool.recover.period"
 class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
     private var recoverPeriod = conf.getDuration(HTTP_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
     private var updateThread = Thread(this::update)
+    // no recover thread, the proxy provider should do the job
     private var recoverThread = Thread(this::recover)
 
     private val closed = AtomicBoolean()
     val isClosed get() = closed.get()
 
     fun start() {
-        updateProxies()
-
         updateThread.isDaemon = true
         updateThread.start()
-
-        recoverThread.isDaemon = true
-        recoverThread.start()
     }
 
     override fun close() {
@@ -39,29 +36,18 @@ class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: I
             return
         }
 
-        updateThread.interrupt()
         updateThread.join()
-
-        recoverThread.interrupt()
-        recoverThread.join()
     }
 
     private fun update() {
         var tick = 0
         var idle = 0
         while (!isClosed) {
-            // try to update external proxy IP every 10 seconds
-            if (tick % 10 == 0) {
-                updateProxies()
-            }
-
             // report proxy pool status periodically
-            if (log.isInfoEnabled) {
-                idle = if (proxyPool.isEmpty()) idle + 1 else 0
-                val mod = min(30 + 2 * idle, 60 * 60)
-                if (tick % mod == 0) {
-                    log.info("Proxy pool status - {}", proxyPool)
-                }
+            idle = if (proxyPool.numWorkingProxies == 0) idle + 1 else 0
+            val mod = min(30 + 2 * idle, 60)
+            if (tick % mod == 0) {
+                log.info("Proxy pool status - {}", proxyPool)
             }
 
             try {
@@ -74,35 +60,15 @@ class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: I
         }
     }
 
-    private fun updateProxies() {
-        proxyPool.updateProviders()
-
-        if (proxyPool.isEmpty()) {
-            proxyPool.providers.forEach {
-                syncProxyFromProvider(URL(it))
+    private fun testTestWebSites() {
+        val removal = mutableSetOf<URL>()
+        ProxyEntry.TEST_WEB_SITES.forEach {
+            if (!NetUtil.testHttpNetwork(it)) {
+                removal.add(it)
             }
         }
-
-        proxyPool.updateProxies()
-    }
-
-    private fun syncProxyFromProvider(providerUrl: URL) {
-        try {
-            val filename = "proxies." + PulsarPaths.fromUri(providerUrl.toString()) + ".txt"
-            val target = Paths.get(ProxyPool.AVAILABLE_DIR.toString(), filename)
-            val symbolLink = Paths.get(ProxyPool.ENABLED_DIR.toString(), filename)
-
-            Files.deleteIfExists(target)
-            Files.deleteIfExists(symbolLink)
-
-            FileUtils.copyURLToFile(providerUrl, target.toFile())
-            Files.createSymbolicLink(symbolLink, target)
-
-            val proxies = Files.readAllLines(target)
-            log.info("Saved {} proxies to {} from provider {}", proxies.size, target, providerUrl)
-        } catch (e: IOException) {
-            log.error(e.toString())
-        }
+        ProxyEntry.TEST_WEB_SITES.removeAll(removal)
+        log.warn("Unreachable test sites: {}", removal.joinToString(", ") { it.toString() })
     }
 
     private fun recover() {

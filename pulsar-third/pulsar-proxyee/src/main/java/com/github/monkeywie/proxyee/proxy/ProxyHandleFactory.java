@@ -13,13 +13,11 @@ public class ProxyHandleFactory {
     ProxyHandler proxyHandler = null;
     if (config != null) {
       boolean isAuth = config.getUser() != null && config.getPwd() != null;
-      InetSocketAddress inetSocketAddress = new InetSocketAddress(config.getHost(),
-          config.getPort());
+      InetSocketAddress inetSocketAddress = new InetSocketAddress(config.getHost(), config.getPort());
       switch (config.getProxyType()) {
         case HTTP:
           if (isAuth) {
-            proxyHandler = new HttpProxyHandler(inetSocketAddress,
-                config.getUser(), config.getPwd());
+            proxyHandler = new HttpProxyHandler(inetSocketAddress, config.getUser(), config.getPwd());
           } else {
             proxyHandler = new HttpProxyHandler(inetSocketAddress);
           }
@@ -29,8 +27,7 @@ public class ProxyHandleFactory {
           break;
         case SOCKS5:
           if (isAuth) {
-            proxyHandler = new Socks5ProxyHandler(inetSocketAddress,
-                config.getUser(), config.getPwd());
+            proxyHandler = new Socks5ProxyHandler(inetSocketAddress, config.getUser(), config.getPwd());
           } else {
             proxyHandler = new Socks5ProxyHandler(inetSocketAddress);
           }

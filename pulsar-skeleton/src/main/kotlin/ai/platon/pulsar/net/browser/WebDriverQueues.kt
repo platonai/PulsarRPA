@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.gargoylesoftware.htmlunit.WebClient
@@ -220,7 +221,7 @@ class WebDriverQueues(
      */
     private fun getProxy(conf: ImmutableConfig): org.openqa.selenium.Proxy? {
         var ipPort = if (isInternalProxyServerRunning()) {
-            internalProxyServer.ipPort
+            "127.0.0.1:${internalProxyServer.port}"
         } else conf.get(PROXY_IP_PORT)
 
         if (ipPort == null) {
@@ -244,11 +245,7 @@ class WebDriverQueues(
     }
 
     private fun isInternalProxyServerRunning(): Boolean {
-        if (internalProxyServer.disabled) {
-            return false
-        }
-
-        if (isClosed) {
+        if (internalProxyServer.disabled || isClosed) {
             return false
         }
 

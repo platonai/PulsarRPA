@@ -30,8 +30,6 @@ public class DateTimeUtil {
 
     public static SimpleDateFormat FilesystemSafeDateFormat = new SimpleDateFormat("MMdd.HHmmss");
 
-    public static long[] TIME_FACTOR = {60 * 60 * 1000, 60 * 1000, 1000};
-
     public static String format(long time) {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(time));
     }

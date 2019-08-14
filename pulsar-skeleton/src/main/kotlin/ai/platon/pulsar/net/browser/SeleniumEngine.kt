@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -137,8 +139,9 @@ class SeleniumEngine(
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
     private val defaultDriverConfig = DriverConfig(immutableConfig)
-    private val maxPagesPerHost = 40
-    private val isClosed = AtomicBoolean(false)
+    private val maxCookieView = 40
+    private val closed = AtomicBoolean(false)
+    private val isClosed get() = closed.get()
 
     init {
         instanceCount.incrementAndGet()
@@ -163,7 +166,7 @@ class SeleniumEngine(
     }
 
     internal fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
-        if (isClosed.get()) {
+        if (isClosed) {
             return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
         }
 
@@ -175,7 +178,26 @@ class SeleniumEngine(
         // driver.manage().deleteAllCookies()
 
         try {
-            return visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
+            var proxy: ProxyEntry? = null
+            if (internalProxyServer.enabled) {
+                internalProxyServer.numRunningThreads.incrementAndGet()
+                if (!waitProxyReady()) {
+                    return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
+                }
+                proxy = internalProxyServer.proxyEntry
+            }
+
+            val response = visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
+
+            if (internalProxyServer.enabled) {
+                internalProxyServer.lastActiveTime = Instant.now()
+                if (proxy != null) {
+                    page.metadata.set(Name.PROXY, proxy.ipPort())
+                }
+                internalProxyServer.numRunningThreads.decrementAndGet()
+            }
+
+            return response
         } finally {
             drivers.put(priority, driver)
         }
@@ -205,14 +227,6 @@ class SeleniumEngine(
         val headers = MultiMetadata()
         val startTime = System.currentTimeMillis()
         headers.put(Q_REQUEST_TIME, startTime.toString())
-
-        var proxy: ProxyEntry? = null
-        if (internalProxyServer.enabled) {
-            if (!waitProxyReady()) {
-                return ForwardingResponse(location, "", ProtocolStatus.STATUS_CANCELED, headers)
-            }
-            proxy = internalProxyServer.proxyEntry
-        }
 
         var pageSource = ""
 
@@ -270,9 +284,6 @@ class SeleniumEngine(
         if (jsData !== BrowserJsData.default) {
             page.metadata.set(Name.BROWSER_JS_DATA, browserDataGson.toJson(jsData, BrowserJsData::class.java))
         }
-        if (proxy != null) {
-            page.metadata.set(Name.PROXY, proxy.ipPort())
-        }
         pageSource = handlePageSource(pageSource, status, page, driver)
         headers.put(CONTENT_LENGTH, pageSource.length.toString())
         if (status.isSuccess) {
@@ -288,11 +299,7 @@ class SeleniumEngine(
     }
 
     private fun waitProxyReady(): Boolean {
-        if (isClosed.get()) {
-            return false
-        }
-
-        return internalProxyServer.waitUntilRunning()
+        return !isClosed && internalProxyServer.waitUntilRunning()
     }
 
     private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
@@ -504,12 +511,17 @@ class SeleniumEngine(
             }
         }
 
+        tryRefreshCookie(page, driver)
+    }
+
+    private fun tryRefreshCookie(page: WebPage, driver: WebDriver) {
         val url = page.url
         val host = URLUtil.getHost(url)
-        val count = fetchTaskTracker.countHostTasks(host)
-        if (count > maxPagesPerHost) {
-            log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), count)
+        val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStatus(it) }
+        if (stat.cookieView > maxCookieView) {
+            log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), stat.cookieView)
             driver.manage().deleteAllCookies()
+            stat.cookieView = 0
         }
     }
 
@@ -634,7 +646,7 @@ class SeleniumEngine(
     }
 
     override fun close() {
-        if (isClosed.getAndSet(true)) {
+        if (closed.getAndSet(true)) {
             return
         }
     }

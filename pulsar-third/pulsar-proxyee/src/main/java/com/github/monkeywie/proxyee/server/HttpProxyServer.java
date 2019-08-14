@@ -27,8 +27,7 @@ import java.security.cert.X509Certificate;
 public class HttpProxyServer implements AutoCloseable {
 
   //http代理隧道握手成功
-  public final static HttpResponseStatus SUCCESS = new HttpResponseStatus(200,
-      "Connection established");
+  public final static HttpResponseStatus SUCCESS = new HttpResponseStatus(200, "Connection established");
 
   private HttpProxyCACertFactory caCertFactory;
   private HttpProxyServerConfig serverConfig;
@@ -88,14 +87,12 @@ public class HttpProxyServer implements AutoCloseable {
     return this;
   }
 
-  public HttpProxyServer proxyInterceptInitializer(
-      HttpProxyInterceptInitializer proxyInterceptInitializer) {
+  public HttpProxyServer proxyInterceptInitializer(HttpProxyInterceptInitializer proxyInterceptInitializer) {
     this.proxyInterceptInitializer = proxyInterceptInitializer;
     return this;
   }
 
-  public HttpProxyServer httpProxyExceptionHandle(
-      HttpProxyExceptionHandle httpProxyExceptionHandle) {
+  public HttpProxyServer httpProxyExceptionHandle(HttpProxyExceptionHandle httpProxyExceptionHandle) {
     this.httpProxyExceptionHandle = httpProxyExceptionHandle;
     return this;
   }

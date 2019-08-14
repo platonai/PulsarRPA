@@ -58,11 +58,13 @@ object PulsarPaths {
 
     fun fromUri(url: String, suffix: String = ""): String {
         val u = Urls.getURLOrNull(url)
-        val path = if (u == null) {
-            "unknown-" + UUID.randomUUID().toString()
-        } else {
-            val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
-            domain.replace('.', '-') + "-" + DigestUtils.md5Hex(url)
+        val path = when {
+            u == null -> "unknown-" + UUID.randomUUID().toString()
+            StringUtil.isIpLike(u.host) -> u.host.replace('.', '-') + "-" + DigestUtils.md5Hex(url)
+            else -> {
+                val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
+                domain.replace('.', '-') + "-" + DigestUtils.md5Hex(url)
+            }
         }
 
         return if (suffix.isNotEmpty()) path + suffix else path

@@ -36,7 +36,7 @@ public class NetUtil {
             } else {
                 con = (HttpURLConnection) url.openConnection();
             }
-            con.setConnectTimeout((int)PROXY_CONNECTION_TIMEOUT.toMillis());
+            con.setConnectTimeout((int) PROXY_CONNECTION_TIMEOUT.toMillis());
             con.connect();
 
             // log.debug("Proxy is available {} for {}", proxy, url);
@@ -53,17 +53,22 @@ public class NetUtil {
         try {
             URL url = new URL("http", host, port, "/");
             return testHttpNetwork(url);
-        } catch (MalformedURLException ignored) {}
+        } catch (MalformedURLException ignored) {
+        }
 
         return false;
     }
 
     public static boolean testTcpNetwork(String ip, int port) {
+        return testTcpNetwork(ip, port, PROXY_CONNECTION_TIMEOUT);
+    }
+
+    public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
         boolean reachable = false;
         Socket con = new Socket();
 
         try {
-            con.connect(new InetSocketAddress(ip, port), (int)PROXY_CONNECTION_TIMEOUT.toMillis());
+            con.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
             reachable = true;
             con.close();
         } catch (Exception ignored) {

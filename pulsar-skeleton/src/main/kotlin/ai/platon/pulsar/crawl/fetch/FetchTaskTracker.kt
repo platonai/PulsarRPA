@@ -32,19 +32,19 @@ class FetchTaskTracker(
     /**
      * Tracking statistics for each host
      */
-    private val hostStatistics = Collections.synchronizedMap(HashMap<String, FetchStatus>())
+    val hostStatistics = Collections.synchronizedMap(HashMap<String, FetchStatus>())
     /**
      * Tracking unreachable hosts
      */
-    private val unreachableHosts = Collections.synchronizedSet(HashSet<String>())
+    val unreachableHosts = Collections.synchronizedSet(HashSet<String>())
     /**
      * Tracking hosts who is failed to fetch tasks.
      * A host is considered to be a unreachable host if there are too many failure
      */
-    private val failedHostTracker = TreeMultiset.create<String>()
-    private val timeoutUrls = Collections.synchronizedSet(HashSet<CharSequence>())
-    private val failedUrls = Collections.synchronizedSet(HashSet<CharSequence>())
-    private val deadUrls = Collections.synchronizedSet(HashSet<CharSequence>())
+    val failedHostTracker = TreeMultiset.create<String>()
+    val timeoutUrls = Collections.synchronizedSet(HashSet<CharSequence>())
+    val failedUrls = Collections.synchronizedSet(HashSet<CharSequence>())
+    val deadUrls = Collections.synchronizedSet(HashSet<CharSequence>())
 
     private val isClosed = AtomicBoolean()
     private val isReported = AtomicBoolean()
@@ -172,6 +172,8 @@ class FetchTaskTracker(
             metrics.debugLongUrls(url)
         }
 
+        ++fetchStatus.cookieView
+
         hostStatistics[host] = fetchStatus
 
         // The host is reachable
@@ -182,10 +184,8 @@ class FetchTaskTracker(
 
     fun countHostTasks(host: String): Int {
         val failedTasks = failedHostTracker.count(host)
-
-        val (_, urls) = hostStatistics[host] ?: return failedTasks
-
-        return urls + failedTasks
+        val (_, numUrls) = hostStatistics[host] ?: return failedTasks
+        return numUrls + failedTasks
     }
 
     fun getSeeds(mode: FetchMode, limit: Int): Set<String> {
@@ -245,10 +245,10 @@ class FetchTaskTracker(
     }
 
     private fun reportAndLogAvailableHosts() {
-        var report = "# Total " + hostStatistics.size + " available hosts"
-        report += "\n"
+        val report = StringBuilder("# Total " + hostStatistics.size + " available hosts")
+        report.append('\n')
 
-        val hostsReport = hostStatistics.values.sorted()
+        hostStatistics.values.sorted()
                 .map { (hostName, urls, indexUrls, detailUrls, searchUrls, mediaUrls,
                                bbsUrls, blogUrls, tiebaUrls, _, urlsTooLong) ->
                     String.format("%40s -> %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s",
@@ -262,12 +262,9 @@ class FetchTaskTracker(
                             "tieba : $tiebaUrls",
                             "blog : $blogUrls",
                             "long : $urlsTooLong")
-                }
+                }.joinTo(report, "\n") { it }
 
-        report += hostsReport
-        report += "\n"
-
-        LOG.info(report)
+        LOG.info(report.toString())
     }
 
     override fun close() {

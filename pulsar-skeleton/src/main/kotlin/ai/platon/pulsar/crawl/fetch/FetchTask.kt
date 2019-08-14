@@ -104,7 +104,8 @@ data class FetchStatus(
         var tiebaUrls: Int = 0,
         var unknownUrls: Int = 0,
         var urlsTooLong: Int = 0,
-        var urlsFromSeed: Int = 0
+        var urlsFromSeed: Int = 0,
+        var cookieView: Int = 0
 ) : Comparable<FetchStatus> {
 
     override fun compareTo(other: FetchStatus): Int {

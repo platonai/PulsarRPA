@@ -4,7 +4,6 @@ http://news.jxcn.cn
 http://auto.sohu.com
 http://sports.163.com
 http://www.lottery.gov.cn
-http://auto.qq.com
 http://www.iqiyi.com
 http://www.7k7k.com
 https://toutiao.china.com
@@ -57,10 +56,8 @@ https://www.alipay.com
 http://www.4399.com
 http://u.ctrip.com
 http://www.xcar.com.cn
-http://mail.qq.com
 http://finance.ifeng.com
 http://www.okooo.com
-http://www.qq.com
 http://baijiahao.baidu.com
 http://www.ccb.com
 http://www.china.com.cn
@@ -74,7 +71,6 @@ http://music.baidu.com
 http://www.p5w.net
 http://v.baidu.com
 http://www.zhihu.com
-http://qzone.qq.com
 https://b.faloo.com
 http://www.xiami.com
 http://www.ithome.com
@@ -87,12 +83,10 @@ http://map.baidu.com
 http://www.beian.gov.cn
 https://music.163.com
 http://v.hao123.com
-http://sports.qq.com
 https://pan.baidu.com
 https://www.aliyun.com
 https://shouji.baidu.com
 http://www.eastmoney.com
-https://mail.qq.com
 http://caipiao.hao123.com
 http://www.icbc.com.cn
 http://book.hao123.com
@@ -106,7 +100,6 @@ https://www.ximalaya.com
 https://www.wandoujia.com
 http://mail.126.com
 http://tieba.baidu.com
-http://sj.qq.com
 http://music.163.com
 http://sports.ifeng.com
 http://caipiao.163.com
@@ -141,7 +134,6 @@ http://www.pcauto.com.cn
 http://sempage.guazi.com
 https://www.yicai.com
 http://top.baidu.com
-https://egame.qq.com
 http://www.zol.com.cn
 http://www.37.com
 https://www.cib.com.cn

@@ -6,6 +6,8 @@ import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
 import com.github.monkeywie.proxyee.intercept.common.CertDownIntercept;
 import com.github.monkeywie.proxyee.intercept.common.FullRequestIntercept;
 import com.github.monkeywie.proxyee.intercept.common.FullResponseIntercept;
+import com.github.monkeywie.proxyee.proxy.ProxyConfig;
+import com.github.monkeywie.proxyee.proxy.ProxyType;
 import com.github.monkeywie.proxyee.server.HttpProxyServer;
 import com.github.monkeywie.proxyee.server.HttpProxyServerConfig;
 import com.github.monkeywie.proxyee.util.HttpUtil;
@@ -20,7 +22,7 @@ public class InterceptFRFRProxyServer {
 
     public static void main(String[] args) throws Exception {
         HttpProxyServerConfig config = new HttpProxyServerConfig();
-        config.setHandleSsl(false);
+        config.setHandleSsl(true);
 
         HttpProxyServer server = new HttpProxyServer();
         server.serverConfig(config);
@@ -91,6 +93,9 @@ public class InterceptFRFRProxyServer {
                 System.out.println("Internal proxy error - " + cause);
             }
         });
+
+        ProxyConfig proxyConfig = new ProxyConfig(ProxyType.HTTP, "127.0.0.1", 9999);
+        server.proxyConfig(proxyConfig);
 
         server.start(8184);
     }
