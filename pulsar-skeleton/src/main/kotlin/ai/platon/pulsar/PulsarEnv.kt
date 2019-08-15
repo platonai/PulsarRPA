@@ -48,17 +48,13 @@ class PulsarEnv {
          * */
         val unmodifiedConfig: ImmutableConfig
 
+        val useProxy = System.getProperty(PROXY_USE_PROXY, "yes") == "yes"
+
         val globalExecutor: GlobalExecutor
 
-        val proxyPool: ProxyPool
-
-        val proxyManager: ExternalProxyManager
+        val externalProxyManager: ExternalProxyManager
 
         val internalProxyServer: InternalProxyServer
-
-        val browserControl: BrowserControl
-
-        val webDrivers: WebDriverQueues
 
         val seleniumFetchComponent: SeleniumFetchComponent
 
@@ -85,18 +81,17 @@ class PulsarEnv {
 
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
 
-            proxyPool = applicationContext.getBean(ProxyPool::class.java)
-            proxyManager = applicationContext.getBean(ExternalProxyManager::class.java)
+            externalProxyManager = applicationContext.getBean(ExternalProxyManager::class.java)
             internalProxyServer = applicationContext.getBean(InternalProxyServer::class.java)
 
-            browserControl = applicationContext.getBean(BrowserControl::class.java)
-            webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            proxyManager.start()
+            if (useProxy) {
+                externalProxyManager.start()
 
-            if (internalProxyServer.enabled) {
-                internalProxyServer.start()
+                if (internalProxyServer.enabled) {
+                    internalProxyServer.start()
+                }
             }
 
             log.info("Pulsar env is initialized")
@@ -124,6 +119,7 @@ class PulsarEnv {
             return
         }
 
+        // Internal proxy server blocks can not be closed by spring, the reason should be investigated
         internalProxyServer.close()
     }
 }

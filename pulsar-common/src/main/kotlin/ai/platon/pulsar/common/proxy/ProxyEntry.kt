@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
-import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -118,6 +118,11 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
         }
 
         fun parse(str: String): ProxyEntry? {
+            if (!StringUtil.isIpPortLike(str)) {
+                log.warn("Malformed ip port | {}", str)
+                return null
+            }
+
             val ipPort = str.substringBefore(META_DELIMITER)
             val pos = ipPort.lastIndexOf(':')
             if (pos != -1) {

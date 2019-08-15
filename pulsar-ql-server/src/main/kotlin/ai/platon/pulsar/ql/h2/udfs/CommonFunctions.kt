@@ -33,7 +33,7 @@ object CommonFunctions {
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
     private val sqlContext = SQLContext.getOrCreate()
-    private val proxyPool = PulsarEnv.proxyPool
+    private val proxyPool = PulsarEnv.externalProxyManager.proxyPool
     private val unmodifiedConfig = sqlContext.unmodifiedConfig
 
     @UDFunction(description = "Get the proxy pool status")

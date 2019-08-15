@@ -15,7 +15,6 @@ class TestSelenium {
 
     internal var conf = MutableConfig()
     internal var productIndexUrl = "https://www.mia.com/formulas.html"
-    val browserControl = PulsarEnv.browserControl
 
     @Before
     fun setup() {

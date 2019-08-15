@@ -2,6 +2,8 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.PulsarConstants
+import com.google.common.net.HostAndPort
+import com.google.common.net.InetAddresses
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
@@ -67,6 +69,17 @@ object PulsarPaths {
             }
         }
 
+        return if (suffix.isNotEmpty()) path + suffix else path
+    }
+
+    // use this version when tested
+    fun fromUri2(url: String, suffix: String = ""): String {
+        val u = Urls.getURLOrNull(url)?:return "unknown-" + UUID.randomUUID().toString()
+        var path = when {
+            InetAddresses.isInetAddress(u.host) -> u.host
+            else -> InternetDomainName.from(u.host).topPrivateDomain()
+        }
+        path = path.toString().replace('.', '-') + "-" + DigestUtils.md5Hex(url)
         return if (suffix.isNotEmpty()) path + suffix else path
     }
 

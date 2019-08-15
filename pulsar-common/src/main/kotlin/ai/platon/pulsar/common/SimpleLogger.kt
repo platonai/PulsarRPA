@@ -15,7 +15,7 @@ class SimpleLogger(val path: Path, var level: Int = DEFAULT_LOG_LEVEL): AutoClos
 
     private var systemOutLevel = DEFAULT_LOG_LEVEL_SYSTEM_OUT
     var sysOut = System.out
-    private var levelMax: Int = 0
+    private var levelMax: Int = INFO
     private var maxFileSize = DEFAULT_MAX_FILE_SIZE
     private var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss ")
     private var fileWriter: Writer? = null

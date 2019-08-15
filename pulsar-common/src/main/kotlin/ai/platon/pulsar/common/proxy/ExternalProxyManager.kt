@@ -1,24 +1,21 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_PROXY_POOL_RECOVER_PERIOD
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
-const val HTTP_PROXY_POOL_RECOVER_PERIOD = "http.proxy.pool.recover.period"
-
-class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
-    private var recoverPeriod = conf.getDuration(HTTP_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
+class ExternalProxyManager(
+        val proxyPool: ProxyPool,
+        private val conf: ImmutableConfig
+): AutoCloseable {
+    private var recoverPeriod = conf.getDuration(PROXY_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
     private var updateThread = Thread(this::update)
     // no recover thread, the proxy provider should do the job
     private var recoverThread = Thread(this::recover)

@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.time.Duration
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -130,7 +129,6 @@ class SeleniumEngine(
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-    private var groupMode = immutableConfig.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     private val browserDataGson = Gson()
     private val monthDay = DateTimeUtil.now("MMdd")
 
@@ -177,28 +175,21 @@ class SeleniumEngine(
 
         // driver.manage().deleteAllCookies()
 
-        try {
-            var proxy: ProxyEntry? = null
+        return try {
             if (internalProxyServer.enabled) {
-                internalProxyServer.numRunningThreads.incrementAndGet()
-                if (!waitProxyReady()) {
-                    return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
+                internalProxyServer.run {
+                    visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
                 }
-                proxy = internalProxyServer.proxyEntry
+            } else {
+                visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
             }
-
-            val response = visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
-
-            if (internalProxyServer.enabled) {
-                internalProxyServer.lastActiveTime = Instant.now()
-                if (proxy != null) {
-                    page.metadata.set(Name.PROXY, proxy.ipPort())
-                }
-                internalProxyServer.numRunningThreads.decrementAndGet()
-            }
-
-            return response
+        } catch (e: NoProxyException) {
+            log.warn("No proxy. {}", e)
+            ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
         } finally {
+            if (internalProxyServer.enabled) {
+                page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.ipPort())
+            }
             drivers.put(priority, driver)
         }
     }

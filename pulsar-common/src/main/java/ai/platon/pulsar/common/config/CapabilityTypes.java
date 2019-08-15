@@ -218,19 +218,21 @@ public interface CapabilityTypes {
     /**
      * Proxy
      */
-    String PROXY_DISABLED = "proxy.disabled";
-    String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
-    String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.enable.internal.server";
-    String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.enable.internal.server";
-    String PROXY_IP_PORT = "proxy.ip.port";
+    String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
+    String PROXY_HTTP_PROXY = "http_proxy"; // keep consist with linux's proxy environment variable
     String PROXY_POOL_SIZE = "proxy.pool.size";
     String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
+    String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
+    String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
+    String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";
+    String PROXY_PROXY_POOL_RECOVER_PERIOD = "proxy.proxy.pool.recover.period";
 
     /**
      * Network
      */
     String HTTP_TIMEOUT = "http.timeout";
     String HTTP_FETCH_MAX_RETRY = "http.fetch.max.retry";
+
     /**
      * Generator parameters
      */

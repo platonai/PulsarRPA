@@ -125,6 +125,10 @@ class SeleniumFetchComponent(
                         batchId, i, pendingTasks.size, finishedTasks.size, numFailedTasks, idleSeconds, idleTimeout)
             }
 
+            if (i >= 60 && pendingTasks.size == 1 && numTotalTasks > 10) {
+                // only one very slow task
+            }
+
             // loop and wait for all parallel tasks return
             var numTaskDone = 0
             val removal = mutableListOf<String>()

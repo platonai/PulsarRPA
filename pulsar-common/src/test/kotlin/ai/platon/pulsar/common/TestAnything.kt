@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import com.google.common.collect.TreeMultimap
+import com.google.common.net.InetAddresses
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -375,5 +376,13 @@ class TestAnything {
             val uuid = UUID.randomUUID()
             assertEquals(36, uuid.toString().length)
         }
+    }
+
+    @Test
+    fun testInetAddresses() {
+        assertTrue(InetAddresses.isInetAddress("12.3.3.4"))
+        assertTrue(InetAddresses.isInetAddress("::1"))
+        assertFalse(InetAddresses.isInetAddress("12.3.3.4:80"))
+        assertFalse(InetAddresses.isInetAddress(".3.3.4:80"))
     }
 }

@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.gargoylesoftware.htmlunit.WebClient
@@ -39,6 +39,7 @@ import java.util.logging.Level
  */
 class WebDriverQueues(
         private val browserControl: BrowserControl,
+        private val proxyPool: ProxyPool,
         private val internalProxyServer: InternalProxyServer,
         private val conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
@@ -54,7 +55,6 @@ class WebDriverQueues(
 
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-    private val proxyPool = PulsarEnv.proxyPool
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
     private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(60))
     private val closed = AtomicBoolean(false)
@@ -165,8 +165,7 @@ class WebDriverQueues(
         val capabilities = BrowserControl.createGeneralOptions()
 
         // Proxy is enabled by default
-        val disableProxy = conf.getBoolean(PROXY_DISABLED, false)
-        if (!disableProxy) {
+        if (PulsarEnv.useProxy) {
             val proxy = getProxy(conf)
             if (proxy != null) {
                 capabilities.setCapability(CapabilityType.PROXY, proxy)
@@ -214,15 +213,11 @@ class WebDriverQueues(
         return level
     }
 
-    /**
-     * Get a proxy from the proxy pool
-     * 1. Get a proxy from config, it is usually set in session scope
-     * 2. Get a proxy from the proxy poll
-     */
     private fun getProxy(conf: ImmutableConfig): org.openqa.selenium.Proxy? {
         var ipPort = if (isInternalProxyServerRunning()) {
+            // TODO: internal proxy server can be run at another host
             "127.0.0.1:${internalProxyServer.port}"
-        } else conf.get(PROXY_IP_PORT)
+        } else conf.get(PROXY_HTTP_PROXY)
 
         if (ipPort == null) {
             // internal proxy server is not available, set proxy to the browser directly
