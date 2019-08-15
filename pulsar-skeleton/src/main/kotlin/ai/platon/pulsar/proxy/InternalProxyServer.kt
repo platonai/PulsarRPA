@@ -141,17 +141,26 @@ class InternalProxyServer(
                 }
             }
 
-            val isIdle = isIdle()
-            if (isIdle) {
-                if (isConnected) {
-                    log.info("The internal proxy server is idle, disconnect connected proxy.")
-                    disconnect(notifyAll = true)
-                }
-            } else {
-                if (!proxyStillAlive || !isConnected) {
-                    // close old no working running forward proxy server and quit the thread
-                    disconnect()
-                    connect()
+            if (!proxyStillAlive || !isConnected) {
+                // close old no working running forward proxy server and quit the thread
+                disconnect()
+                connect()
+            }
+
+            // always false, feature disabled
+            if (System.currentTimeMillis() < 0) {
+                val isIdle = isIdle()
+                if (isIdle) {
+                    if (isConnected) {
+                        log.info("The internal proxy server is idle, disconnect connected proxy.")
+                        disconnect(notifyAll = true)
+                    }
+                } else {
+                    if (!proxyStillAlive || !isConnected) {
+                        // close old no working running forward proxy server and quit the thread
+                        disconnect()
+                        connect()
+                    }
                 }
             }
 
