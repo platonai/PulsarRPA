@@ -121,5 +121,6 @@ class PulsarEnv {
 
         // Internal proxy server blocks can not be closed by spring, the reason should be investigated
         internalProxyServer.close()
+        applicationContext.close()
     }
 }
