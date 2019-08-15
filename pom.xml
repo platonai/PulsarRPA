@@ -31,6 +31,7 @@
     <modules>
         <module>platon</module>
         <module>pulsar-common</module>
+        <module>pulsar-proxy</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>
         <module>pulsar-dom</module>
@@ -126,6 +127,11 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-proxy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

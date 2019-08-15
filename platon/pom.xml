@@ -881,6 +881,8 @@
         <!-- TODO: according to github's warning, jetty version should be the following to avoid security issues. -->
         <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
 
+        <netty.version>4.1.25.Final</netty.version>
+
         <!-- Misc Dependencies -->
         <commons-lang.version>2.6</commons-lang.version>
         <commons-io.version>2.4</commons-io.version>
