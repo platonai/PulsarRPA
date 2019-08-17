@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_POLLING_INTERVAL
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_SIZE
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -14,7 +13,6 @@ import java.io.IOException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.Instant
@@ -149,41 +147,61 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
         reloadProviders(Duration.ofSeconds(30))
 
         if (numFreeProxies < 3) {
-            var updatedCount = 0
-
             providers.forEach {
-                updatedCount += syncProxyFromProvider(URL(it))
+                syncProxiesFromProvider(URL(it))
             }
 
-            if (updatedCount > 0) {
-                reloadProxies(Duration.ofSeconds(1))
-            }
+            reloadProxies(Duration.ofSeconds(10))
         }
     }
 
-    fun syncProxyFromProvider(providerUrl: URL): Int {
+    fun syncProxiesFromProvider(providerUrl: URL): Int {
         var updatedCount = 0
 
         try {
             val filename = "proxies." + PulsarPaths.fromUri(providerUrl.toString()) + ".txt"
-            val target = Paths.get(ProxyPool.AVAILABLE_DIR.toString(), filename)
-            val symbolLink = Paths.get(ProxyPool.ENABLED_DIR.toString(), filename)
+            val target = PulsarPaths.get(ARCHIVE_DIR, filename)
 
             Files.deleteIfExists(target)
-            Files.deleteIfExists(symbolLink)
-
             FileUtils.copyURLToFile(providerUrl, target.toFile())
-            Files.createSymbolicLink(symbolLink, target)
 
-            val proxies = Files.readAllLines(target)
-            updatedCount = proxies.size
+            updatedCount = load(target, ResourceType.PROXY)
 
-            log.info("Saved {} proxies to {} from provider {}", updatedCount, target.fileName, providerUrl.host)
+            log.info("Added {} proxies from provider {}", updatedCount, providerUrl.host)
         } catch (e: IOException) {
             log.error(e.toString())
         }
 
         return updatedCount
+    }
+
+    fun dump() {
+        val now = DateTimeUtil.now("MMdd.HHmm")
+
+        val currentArchiveDir = PulsarPaths.get(ARCHIVE_DIR, now)
+        Files.createDirectories(currentArchiveDir)
+
+        val archiveDestinations = HashMap<Collection<ProxyEntry>, String>()
+        archiveDestinations[proxyEntries] = "proxies.all.txt"
+        archiveDestinations[workingProxies] = "proxies.working.txt"
+        archiveDestinations[freeProxies] = "proxies.free.txt"
+        archiveDestinations[unavailableProxies] = "proxies.unavailable.txt"
+
+        archiveDestinations.forEach { (proxies, destination) ->
+            val path = PulsarPaths.get(currentArchiveDir, destination)
+            dump(path, proxies)
+        }
+
+        log.info("Proxy pool dumped. {} | file://{}", this, currentArchiveDir)
+    }
+
+    override fun toString(): String {
+        return String.format("Total %d, free: %d, working: %d, gone: %d",
+                proxyEntries.size,
+                freeProxies.size,
+                workingProxies.size,
+                unavailableProxies.size
+        )
     }
 
     private fun reloadProviders(expires: Duration) {
@@ -200,7 +218,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     private fun reloadProxies(expires: Duration) {
         try {
             // load enabled proxies
-            Files.list(ENABLED_DIR).filter { Files.isRegularFile(it) }.forEach {
+            Files.list(AVAILABLE_DIR).filter { Files.isRegularFile(it) }.forEach {
                 val lastModified = lastModifiedTimes.getOrDefault(it, Instant.EPOCH)
                 reloadIfModified(it, lastModified, expires) { load(it, ResourceType.PROXY) }
             }
@@ -221,12 +239,9 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
         lastModifiedTimes[path] = modified
     }
 
-    override fun toString(): String {
-        return String.format("Total %d, free: %d, working: %d, gone: %d",
-                proxyEntries.size, freeProxies.size, workingProxies.size, unavailableProxies.size)
-    }
+    private fun load(path: Path, type: ResourceType): Int {
+        var count = 0
 
-    private fun load(path: Path, type: ResourceType) {
         try {
             val lines = Files.readAllLines(path)
                     .map { it.trim() }
@@ -237,16 +252,21 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
                 log.info("Loaded {} proxies from {}", lines.size, path)
                 lines.mapNotNull { ProxyEntry.parse(it) }.forEach {
                     offer(it)
+                    ++count
                 }
             } else if (type == ResourceType.PROVIDER) {
-                lines.takeWhile { Urls.isValidUrl(it) }.toCollection(providers)
+                val urls = lines.takeWhile { Urls.isValidUrl(it) }
+                providers.addAll(urls)
+                count += urls.size
             }
         } catch (e: IOException) {
             log.info(e.toString())
         }
+
+        return count
     }
 
-    private fun archive(path: Path, proxyEntries: Collection<ProxyEntry>) {
+    private fun dump(path: Path, proxyEntries: Collection<ProxyEntry>) {
         val content = proxyEntries.joinToString("\n") { it.toString() }
         try {
             Files.deleteIfExists(path)
@@ -262,21 +282,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
         }
 
         try {
-            val now = DateTimeUtil.now("MMdd.HHmm")
-
-            val currentArchiveDir = Paths.get(ARCHIVE_DIR.toString(), now)
-            Files.createDirectories(currentArchiveDir)
-
-            val archiveDestinations = HashMap<Collection<ProxyEntry>, String>()
-            archiveDestinations[proxyEntries] = "proxies.all.txt"
-            archiveDestinations[workingProxies] = "proxies.working.txt"
-            archiveDestinations[freeProxies] = "proxies.free.txt"
-            archiveDestinations[unavailableProxies] = "proxies.unavailable.txt"
-
-            archiveDestinations.forEach { (proxies, destination) ->
-                val path = Paths.get(currentArchiveDir.toString(), destination)
-                archive(path, proxies)
-            }
+            dump()
         } catch (e: Throwable) {
             log.warn(StringUtil.stringifyException(e))
         }
@@ -285,17 +291,14 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
 
-        val RELOAD_PERIOD = Duration.ofSeconds(10)
         val BASE_DIR = PulsarPaths.get("proxy")
         val PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers")
         val AVAILABLE_DIR = PulsarPaths.get(BASE_DIR, "available-proxies")
-        val ENABLED_DIR  = PulsarPaths.get(BASE_DIR, "enabled-proxies")
         val ARCHIVE_DIR = PulsarPaths.get(BASE_DIR, "archived-proxies")
 
         init {
             Files.createDirectories(PROVIDER_DIR)
             Files.createDirectories(AVAILABLE_DIR)
-            Files.createDirectories(ENABLED_DIR)
             Files.createDirectories(ARCHIVE_DIR)
 
             log.info(toString())

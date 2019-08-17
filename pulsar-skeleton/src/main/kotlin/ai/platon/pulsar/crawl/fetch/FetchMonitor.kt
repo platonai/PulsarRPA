@@ -99,7 +99,6 @@ class FetchMonitor(
      * Scripts
      */
     private var finishScript: Path = PulsarPaths.get("scripts", "finish_$jobName.sh")
-    private var commandFile: Path = PulsarPaths.PATH_LOCAL_COMMAND
 
     var isHalt = false
         private set
@@ -145,12 +144,12 @@ class FetchMonitor(
     }
 
     private fun generateFinishCommand() {
-        val cmd = "#bin\necho finish $jobName >> $commandFile"
+        val cmd = "#bin\necho finish-job $jobName >> " + PulsarPaths.PATH_LOCAL_COMMAND
 
         try {
-            Files.createDirectories(finishScript!!.parent)
+            Files.createDirectories(finishScript.parent)
             Files.write(finishScript, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-            Files.setPosixFilePermissions(finishScript!!, PosixFilePermissions.fromString("rwxrw-r--"))
+            Files.setPosixFilePermissions(finishScript, PosixFilePermissions.fromString("rwxrw-r--"))
         } catch (e: IOException) {
             LOG.error(e.toString())
         }
@@ -326,18 +325,18 @@ class FetchMonitor(
             }
 
             /*
-       * Read local filesystem for control commands
-       * */
-            if (RuntimeUtils.hasLocalFileCommand(commandFile!!.toString(), "finish " + jobName!!)) {
+           * Read local filesystem for control commands
+           * */
+            if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
                 handleFinishJobCommand()
-                LOG.info("Find finish-job command in $commandFile, exit the job ...")
+                LOG.info("Find finish-job command, exit the job ...")
                 halt()
                 break
             }
 
             /*
-       * All fetch tasks are finished
-       * */
+               * All fetch tasks are finished
+               * */
             if (isMissionComplete) {
                 LOG.info("All done, exit the job ...")
                 break

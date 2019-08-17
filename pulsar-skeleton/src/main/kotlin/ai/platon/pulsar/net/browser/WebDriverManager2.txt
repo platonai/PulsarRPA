@@ -4,11 +4,12 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
+import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.gargoylesoftware.htmlunit.WebClient
@@ -37,19 +38,20 @@ import java.util.logging.Level
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class WebDriverQueues(
+class WebDriverManager2(
         private val browserControl: BrowserControl,
         private val internalProxyServer: InternalProxyServer,
         private val conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
-    private val log = LoggerFactory.getLogger(WebDriverQueues::class.java)
+    private val log = LoggerFactory.getLogger(WebDriverManager2::class.java)
 
     companion object {
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
-        private val totalDriverCount = AtomicInteger(0)
-        private val freeDriverCount = AtomicInteger(0)
-        private val workingDriverCount = AtomicInteger(0)
+        private val pageViews = Collections.synchronizedMap(HashMap<WebDriver, AtomicInteger>())
+        private val totalDriverCount = AtomicInteger()
+        private val freeDriverCount = AtomicInteger()
+        private val workingDriverCount = AtomicInteger()
     }
 
     private val defaultWebDriverClass = conf.getClass(
@@ -62,6 +64,7 @@ class WebDriverQueues(
     val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
 
     val freeSize get() = freeDriverCount.get()
+    val workingSize get() = workingDriverCount.get()
     val totalSize get() = totalDriverCount.get()
 
     internal inner class PulsarHtmlUnitDriver(capabilities: Capabilities) : HtmlUnitDriver() {
@@ -75,21 +78,31 @@ class WebDriverQueues(
 
     fun put(priority: Int, driver: WebDriver) {
         try {
-            val queue = freeDrivers[priority]
-            if (queue != null) {
-                queue.put(driver)
+            workingDriverCount.decrementAndGet()
+            val queue = freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }
 
-                workingDriverCount.decrementAndGet()
+            val pageView = pageViews.computeIfAbsent(driver) { AtomicInteger() }.incrementAndGet()
+            if (pageView > 50) {
+                // quit the driver so it has a change to release useless resources
+                queue.remove(driver)
+                quit(driver)
+            } else {
+                queue.put(driver)
                 freeDriverCount.incrementAndGet()
             }
         } catch (e: InterruptedException) {
-            log.warn("Failed to put a WebDriver into pool, $e")
+            log.warn("Failed to put a WebDriver into pool, {}", e)
         }
     }
 
     fun poll(priority: Int, conf: ImmutableConfig): WebDriver? {
         if (isClosed) {
             return null
+        }
+
+        // TODO: move to a common monitor thread
+        if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
+            closeAll()
         }
 
         val queue = getOrCreateWebDriverQueue(priority)
@@ -138,7 +151,7 @@ class WebDriverQueues(
             val driver = doCreateWebDriver(conf)
             val level = setLogLevel(driver)
 
-            synchronized(WebDriverQueues::class.java) {
+            synchronized(WebDriverManager2::class.java) {
                 totalDriverCount.incrementAndGet()
                 freeDriverCount.incrementAndGet()
                 allDrivers.add(driver)
@@ -274,29 +287,16 @@ class WebDriverQueues(
             return
         }
 
-        freeDrivers.values.forEach { it.clear() }
-        freeDrivers.clear()
+        closeAll()
+    }
 
-        if (!isHeadless) {
-            // should close the browsers by hand
-            return
-        }
-
-        // wait for all drivers are recycled
-        var maxWait = 5
-        while (maxWait-- > 0 && workingDriverCount.get() > 0) {
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {}
-        }
-
-        val it = allDrivers.iterator()
-        while (it.hasNext()) {
-            val driver = it.next()
-            it.remove()
-
+    private fun quit(driver: WebDriver) {
+        synchronized(WebDriverManager2::class.java) {
             try {
                 log.info("Closing web driver {}", driver)
+                totalDriverCount.decrementAndGet()
+                allDrivers.remove(driver)
+
                 driver.quit()
             } catch (e: org.openqa.selenium.WebDriverException) {
                 if (e.cause is org.apache.http.conn.HttpHostConnectException) {
@@ -308,6 +308,38 @@ class WebDriverQueues(
             } catch (e: Exception) {
                 log.error("Unexpected exception: {}", e)
             }
+        }
+    }
+
+    private fun closeAll() {
+        synchronized(WebDriverManager2::class.java) {
+            doCloseAll()
+        }
+    }
+
+    private fun doCloseAll() {
+        freeDrivers.values.forEach { it.clear() }
+        freeDrivers.clear()
+        freeDriverCount.set(0)
+
+        if (!isHeadless) {
+            // should close the browsers by hand
+            return
+        }
+
+        // wait for all drivers are recycled
+        var maxWait = 10
+        while (maxWait-- > 0 && workingDriverCount.get() > 0) {
+            try {
+                TimeUnit.SECONDS.sleep(1)
+            } catch (e: InterruptedException) {}
+        }
+
+        val it = allDrivers.iterator()
+        while (it.hasNext()) {
+            val driver = it.next()
+            it.remove()
+            quit(driver)
         }
     }
 }

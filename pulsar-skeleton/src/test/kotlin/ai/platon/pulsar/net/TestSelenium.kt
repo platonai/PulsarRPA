@@ -1,6 +1,5 @@
 package ai.platon.pulsar.net
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
 import ai.platon.pulsar.common.config.MutableConfig
@@ -15,7 +14,6 @@ class TestSelenium {
 
     internal var conf = MutableConfig()
     internal var productIndexUrl = "https://www.mia.com/formulas.html"
-    val browserControl = PulsarEnv.browserControl
 
     @Before
     fun setup() {

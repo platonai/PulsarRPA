@@ -49,7 +49,7 @@ class SeleniumFetchComponent(
      * Fetch page content
      * */
     fun fetchContent(page: WebPage): Response {
-        val conf = page.mutableConfig ?: immutableConfig
+        val conf = page.mutableConfig ?: immutableConfig.toMutableConfig()
         val priority = conf.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
         return seleniumEngine.fetchContentInternal(nextBatchId, priority, page, conf)
     }

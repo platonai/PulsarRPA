@@ -1,12 +1,10 @@
 package ai.platon.pulsar.proxy
 
-import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.SimpleLogger
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.NetUtil.PROXY_CONNECTION_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.INTERNAL_PROXY_SERVER_PORT
+import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle
@@ -24,6 +22,9 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
 import org.slf4j.LoggerFactory
+import java.net.HttpURLConnection
+import java.net.Proxy
+import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -34,6 +35,9 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * TODO: never close the listening TCP port, just choose the external proxy
+ * */
 class InternalProxyServer(
         private val proxyPool: ProxyPool,
         private val conf: ImmutableConfig
@@ -52,6 +56,7 @@ class InternalProxyServer(
     private val lock: Lock = ReentrantLock()
     private val connectedCond: Condition = lock.newCondition()
     private var readyTimeout = Duration.ofSeconds(45)
+    private var idleTime = Duration.ZERO
 
     private val bossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 5)
     private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)
@@ -61,6 +66,7 @@ class InternalProxyServer(
     val disabled get() = !enabled
     var proxyEntry: ProxyEntry? = null
         private set
+    private var heartBeat: HttpURLConnection? = null
     val port = INTERNAL_PROXY_SERVER_PORT
     val totalConnects = AtomicInteger()
     val numRunningThreads = AtomicInteger()
@@ -68,7 +74,6 @@ class InternalProxyServer(
     val isClosed get() = closed.get()
 
     var lastActiveTime = Instant.now()
-    private var idleTime = Duration.ZERO
 
     init {
         httpProxyServerConfig.bossGroupThreads = bossGroupThreads
@@ -95,7 +100,7 @@ class InternalProxyServer(
             return true
         }
 
-        log.info("Waiting for proxy server to connect ...")
+        log.info("Waiting for a proxy server to connect ...")
 
         lastActiveTime = Instant.now()
         idleTime = Duration.ZERO
@@ -110,59 +115,67 @@ class InternalProxyServer(
         return !isClosed && isConnected
     }
 
-    private fun isIdle(): Boolean {
-        var isIdle = false
-        if (numRunningThreads.get() == 0) {
-            idleTime = Duration.between(lastActiveTime, Instant.now())
-            if (idleTime.toMinutes() > 20) {
-                // do not waste the proxy resource, they are costly!
-                isIdle = true
-            }
-        }
-        return isIdle
-    }
-
     private fun startLoop() {
         var tick = 0
         while (!isClosed) {
-            // Wait for 5 seconds
-            if (tick++ % 5 != 0) {
-                continue
-            }
-
-            // TODO: use a connected connection for the testing
-            val proxyStillAlive = proxyEntry?.testNetwork()?:false
-            if (!proxyStillAlive) {
-                val proxy = proxyEntry
-                if (proxy != null) {
-                    log.info("Proxy <{}> is unavailable, mark it retired", proxy)
-                    proxyPool.retire(proxy)
-                    proxyEntry = null
-                }
-            }
-
-            val isIdle = isIdle()
-            if (isIdle) {
-                if (isConnected) {
-                    log.info("The internal proxy server is idle, disconnect connected proxy.")
-                    disconnect(notifyAll = true)
-                }
-            } else {
-                if (!proxyStillAlive || !isConnected) {
-                    // close old no working running forward proxy server and quit the thread
-                    disconnect()
-                    connect()
-                }
-            }
-
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
             }
+
+            // Wait for 5 seconds
+            if (tick++ % 5 != 0) {
+                continue
+            }
+
+            // TODO: use heart beat
+            val proxyStillAlive = proxyEntry?.testNetwork()?:false
+            if (!proxyStillAlive && proxyEntry != null) {
+                retireCurrentProxy()
+            }
+
+            var shouldReconnect = false
+            if (tick % 10 == 0) {
+                if (RuntimeUtils.hasLocalFileCommand(CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
+                    log.info("Execute local file command {}", CMD_INTERNAL_PROXY_SERVER_RECONNECT)
+                    shouldReconnect = true
+                }
+            }
+
+            val isIdle = isIdle()
+            if (isIdle) {
+                log.info("Run internal proxy server in idle mode without external proxy")
+                disconnect()
+                connectTo(null)
+            } else {
+                if (!proxyStillAlive || !isConnected) {
+                    shouldReconnect = true
+                }
+
+                if (shouldReconnect) {
+                    reconnect()
+                }
+            }
         }
 
         log.info("Quit internal proxy server")
+    }
+
+    private fun retireCurrentProxy() {
+        val proxy = proxyEntry
+        if (proxy != null) {
+            log.info("Proxy <{}> is unavailable, mark it retired", proxy)
+            proxyPool.retire(proxy)
+            proxyEntry = null
+        }
+    }
+
+    private fun reconnect() {
+        log.info("Internal proxy server is connecting to a new external proxy ...")
+
+        disconnect()
+        connect()
     }
 
     @Synchronized
@@ -214,6 +227,7 @@ class InternalProxyServer(
             }
         }
 
+        heartBeat?.disconnect()
         forwardServer?.use { it.close() }
         forwardServerThread?.interrupt()
         forwardServerThread?.join()
@@ -235,6 +249,38 @@ class InternalProxyServer(
         proxyLog.use { it.close() }
     }
 
+    private fun isIdle(): Boolean {
+        var isIdle = false
+        if (numRunningThreads.get() == 0) {
+            idleTime = Duration.between(lastActiveTime, Instant.now())
+            if (idleTime.toMinutes() > 20) {
+                // do not waste the proxy resource, they are costly!
+                isIdle = true
+            }
+        }
+
+        if (RuntimeUtils.hasLocalFileCommand(CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE)) {
+            log.info("Execute local file command {}", CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE)
+            isIdle = true
+        }
+
+        return isIdle
+    }
+
+    fun establishHeartBeat(url: URL, proxy: Proxy) {
+        try {
+            heartBeat?.disconnect()
+
+            val conn = url.openConnection(proxy) as HttpURLConnection
+            conn.connectTimeout = PROXY_CONNECTION_TIMEOUT.toMillis().toInt()
+            conn.connect()
+
+            heartBeat = conn
+        } catch (e: Exception) {
+            log.warn("Failed to establish a heart beat to {} through proxy {}", url, proxy)
+        }
+    }
+
     private fun initForwardProxyServer(proxy: ProxyEntry?): HttpProxyServer {
         val server = HttpProxyServer()
         server.serverConfig(httpProxyServerConfig)
@@ -253,7 +299,7 @@ class InternalProxyServer(
                     }
 
                     override fun handelRequest(httpRequest: FullHttpRequest, pipeline: HttpProxyInterceptPipeline) {
-                        log.debug("Ready to download {}", httpRequest.headers())
+                        // log.debug("Ready to download {}", httpRequest.headers())
                     }
                 })
 
@@ -264,7 +310,7 @@ class InternalProxyServer(
                     }
 
                     override fun handelResponse(httpRequest: HttpRequest, httpResponse: FullHttpResponse, pipeline: HttpProxyInterceptPipeline) {
-                        log.debug("Got resource {}, {}", httpResponse.status(), httpResponse.headers())
+                        // log.debug("Got resource {}, {}", httpResponse.status(), httpResponse.headers())
                     }
                 })
             }
@@ -276,22 +322,9 @@ class InternalProxyServer(
             }
 
             override fun afterCatch(clientChannel: Channel, proxyChannel: Channel, cause: Throwable) {
-                val message = cause.message
-                if (message == null) {
-                    log.warn(StringUtil.stringifyException(cause))
-                    return
-                }
-
-                if (message.endsWith("Connection reset by peer")) {
-                    log.warn(StringUtil.stringifyException(cause))
-                    return
-                }
-
-                if (message.endsWith("disconnected") || message.endsWith("timeout")) {
-                    proxyLog.write(SimpleLogger.INFO, "proxy", message)
-                } else {
-                    log.warn(message)
-                }
+                proxyLog.write(SimpleLogger.INFO, "proxy", StringUtil.stringifyException(cause))
+                val message = cause.message?:return
+                log.warn(message.split("\n").first())
             }
         })
 

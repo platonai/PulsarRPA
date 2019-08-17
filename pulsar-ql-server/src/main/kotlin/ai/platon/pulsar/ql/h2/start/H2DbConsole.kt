@@ -29,7 +29,6 @@ open class H2DbConsole {
                 log.info("Defined beans: {}", s)
             }
             Console().runTool(*args)
-            env.exit()
         }
     }
 
@@ -39,8 +38,6 @@ open class H2DbConsole {
         @JvmStatic
         fun main(args: Array<String>) {
             setPropertyIfAbsent("h2.sessionFactory", ai.platon.pulsar.ql.h2.H2SessionFactory::class.java.name)
-            // setPropertyIfAbsent(CapabilityTypes.PROXY_ENABLE_INTERNAL_SERVER, "true")
-
             SpringApplication.run(H2DbConsole::class.java, *args)
         }
     }

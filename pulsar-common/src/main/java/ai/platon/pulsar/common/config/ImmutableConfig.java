@@ -20,4 +20,8 @@ public class ImmutableConfig extends AbstractConfiguration {
     public ImmutableConfig(Configuration conf) {
         super(conf);
     }
+
+    public MutableConfig toMutableConfig() {
+        return new MutableConfig(this);
+    }
 }

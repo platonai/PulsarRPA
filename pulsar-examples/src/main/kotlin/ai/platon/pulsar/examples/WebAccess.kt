@@ -3,8 +3,10 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists
@@ -118,7 +120,7 @@ object WebAccess {
         val path = i.export(document)
         println("Export to: file://$path")
 
-        val links = document.select(outlink) { it.attr("abs:href") }
+        val links = document.select(outlink) { it.attr("abs:href") }.take(1)
         // links.forEach { println(it) }
         i.loadAll(links, LoadOptions.parse(args))
 
@@ -215,5 +217,13 @@ object WebAccess {
 }
 
 fun main() {
-    WebAccess.run()
+    while (true) {
+        if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
+            println("Execute local file command: " + PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
+        }
+
+        Thread.sleep(5000)
+    }
+//    WebAccess.run()
+//    System.`in`.read()
 }

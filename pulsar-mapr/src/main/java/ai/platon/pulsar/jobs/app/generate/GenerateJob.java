@@ -91,7 +91,7 @@ public final class GenerateJob extends AppContextAwareJob {
     int maxDistance = conf.getUint(CRAWL_MAX_DISTANCE, DISTANCE_INFINITE);
     int lastGeneratedRows = PulsarFiles.INSTANCE.readLastGeneratedRows();
     if (!reGenerateSeeds) {
-      reGenerateSeeds = RuntimeUtils.hasLocalFileCommand(PulsarPaths.PATH_LOCAL_COMMAND.toString(), CMD_FORCE_GENERATE_SEEDS);
+      reGenerateSeeds = RuntimeUtils.hasLocalFileCommand(CMD_FORCE_GENERATE_SEEDS);
     }
 
     conf.set(STORAGE_CRAWL_ID, crawlId);

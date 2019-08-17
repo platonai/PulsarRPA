@@ -214,6 +214,7 @@ public interface CapabilityTypes {
     String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
     String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
     String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
+    String SELENIUM_WEB_DRIVER_DELETE_ALL_COOKIES = "selenium.web.driver.delete.all.cookies";
 
     /**
      * Proxy

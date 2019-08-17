@@ -95,19 +95,23 @@ public interface ProtocolStatusCodes {
     /**
      * Selenium web driver is timeout.
      */
-    int WEB_DRIVER_TIMEOUT = 1468;
+    int WEB_DRIVER_TIMEOUT = 1470;
     /**
      * Selenium web driver is timeout.
      */
-    int DOCUMENT_READY_TIMEOUT = 1469;
+    int WEB_DRIVER_GONE = 1471;
     /**
      * Selenium web driver is timeout.
      */
-    int PROXY_ERROR = 1470;
+    int DOCUMENT_READY_TIMEOUT = 1472;
     /**
      * Selenium web driver is timeout.
      */
-    int IP_BANNED = 1470;
+    int PROXY_ERROR = 1480;
+    /**
+     * Selenium web driver is timeout.
+     */
+    int IP_BANNED = 1481;
     /**
      * This protocol was not found. Application may attempt to retry later.
      */

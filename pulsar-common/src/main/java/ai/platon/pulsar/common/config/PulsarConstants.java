@@ -117,6 +117,13 @@ public interface PulsarConstants {
     int MAX_LINK_PER_PAGE = 4000;
 
     String CMD_FORCE_GENERATE_SEEDS = "force-generate-seeds";
+    String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
+
+    String CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE = "force-IPS-idle";
+    String CMD_INTERNAL_PROXY_SERVER_RECONNECT = "IPS-reconnect";
+
+    String CMD_WEB_DRIVER_CLOSE_ALL = "close-all-web-drivers";
+    String CMD_WEB_DRIVER_DELETE_ALL_COOKIES = "delete-all-cookies";
 
     int BANDWIDTH_INFINITE = 10000; // bandwidth in mbytes
 

@@ -6,11 +6,11 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.proxy.ExternalProxyManager
+import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
-import ai.platon.pulsar.net.browser.WebDriverQueues
+import ai.platon.pulsar.net.browser.WebDriverManager
 import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.proxy.InternalProxyServer
@@ -52,13 +52,9 @@ class PulsarEnv {
 
         val proxyPool: ProxyPool
 
-        val proxyManager: ExternalProxyManager
+        val proxyPoolMonitor: ProxyPoolMonitor
 
         val internalProxyServer: InternalProxyServer
-
-        val browserControl: BrowserControl
-
-        val webDrivers: WebDriverQueues
 
         val seleniumFetchComponent: SeleniumFetchComponent
 
@@ -86,14 +82,12 @@ class PulsarEnv {
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
 
             proxyPool = applicationContext.getBean(ProxyPool::class.java)
-            proxyManager = applicationContext.getBean(ExternalProxyManager::class.java)
+            proxyPoolMonitor = applicationContext.getBean(ProxyPoolMonitor::class.java)
             internalProxyServer = applicationContext.getBean(InternalProxyServer::class.java)
 
-            browserControl = applicationContext.getBean(BrowserControl::class.java)
-            webDrivers = applicationContext.getBean(WebDriverQueues::class.java)
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            proxyManager.start()
+            proxyPoolMonitor.start()
 
             if (internalProxyServer.enabled) {
                 internalProxyServer.start()

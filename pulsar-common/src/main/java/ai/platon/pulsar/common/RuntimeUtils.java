@@ -8,12 +8,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 
 public class RuntimeUtils {
 
     protected static final Logger LOG = LoggerFactory.getLogger(RuntimeUtils.class);
+
+    private static final Object commandFileLocker = new Object();
+    private static final Path commandFile = PulsarPaths.PATH_LOCAL_COMMAND;
+    private static long commandFileLastModified = 0;
+    private static final Duration commandFileMinCheckInterval = Duration.ofSeconds(5);
 
     public static boolean checkIfProcessRunning(String regex) {
         try {
@@ -35,16 +40,24 @@ public class RuntimeUtils {
     /**
      * Check local command file
      */
-    public static boolean hasLocalFileCommand(String commandFile, String command) {
+    public static boolean hasLocalFileCommand(String command) {
         boolean exist = false;
 
-        Path path = Paths.get(commandFile);
-        if (Files.exists(path)) {
+        if (Files.exists(commandFile)) {
             try {
-                List<String> lines = Files.readAllLines(path);
-                exist = lines.stream().anyMatch(line -> line.equals(command));
-                lines.remove(command);
-                Files.write(path, lines);
+                synchronized (commandFileLocker) {
+                    long modified = commandFile.toFile().lastModified();
+                    if (modified - commandFileLastModified > commandFileMinCheckInterval.toMillis()) {
+                        commandFileLastModified = modified;
+
+                        List<String> lines = Files.readAllLines(commandFile);
+                        exist = lines.stream().anyMatch(line -> line.equals(command));
+                        if (exist) {
+                            lines.remove(command);
+                            Files.write(commandFile, lines);
+                        }
+                    }
+                }
             } catch (IOException e) {
                 LOG.error(e.toString());
             }

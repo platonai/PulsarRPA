@@ -2,13 +2,11 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.apache.commons.io.FileUtils
+import ai.platon.pulsar.common.config.PulsarConstants.CMD_PROXY_POOL_DUMP
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -17,7 +15,7 @@ import kotlin.math.min
 
 const val HTTP_PROXY_POOL_RECOVER_PERIOD = "http.proxy.pool.recover.period"
 
-class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
+class ProxyPoolMonitor(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
     private var recoverPeriod = conf.getDuration(HTTP_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
     private var updateThread = Thread(this::update)
     // no recover thread, the proxy provider should do the job
@@ -48,6 +46,12 @@ class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: I
             val mod = min(30 + 2 * idle, 60)
             if (tick % mod == 0) {
                 log.info("Proxy pool status - {}", proxyPool)
+            }
+
+            if (tick % 20 == 0) {
+                if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
+                    proxyPool.dump()
+                }
             }
 
             try {
@@ -102,16 +106,16 @@ class ExternalProxyManager(private val proxyPool: ProxyPool, private val conf: I
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
+        private val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
     }
 }
 
 fun main() {
-    val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
+    val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
 
     val conf = ImmutableConfig()
     val proxyPool = ProxyPool(conf)
-    val proxyServer = ExternalProxyManager(proxyPool, conf)
+    val proxyServer = ProxyPoolMonitor(proxyPool, conf)
     proxyServer.start()
 
     while (true) {

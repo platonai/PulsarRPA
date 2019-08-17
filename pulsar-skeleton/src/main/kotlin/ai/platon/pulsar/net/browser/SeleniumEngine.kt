@@ -2,10 +2,8 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
+import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
@@ -123,14 +121,13 @@ data class VisitResult(
  */
 class SeleniumEngine(
         browserControl: BrowserControl,
-        private val drivers: WebDriverQueues,
+        private val drivers: WebDriverManager,
         private val internalProxyServer: InternalProxyServer,
         private val fetchTaskTracker: FetchTaskTracker,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-    private var groupMode = immutableConfig.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     private val browserDataGson = Gson()
     private val monthDay = DateTimeUtil.now("MMdd")
 
@@ -161,11 +158,11 @@ class SeleniumEngine(
         )
     }
 
-    internal fun fetchContentInternal(batchId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
+    internal fun fetchContentInternal(batchId: Int, priority: Int, page: WebPage, config: MutableConfig): Response {
         return fetchContentInternal(batchId, 0, priority, page, config)
     }
 
-    internal fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
+    internal fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: MutableConfig): Response {
         if (isClosed) {
             return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
         }
@@ -174,8 +171,6 @@ class SeleniumEngine(
                 ?: return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_RETRY, MultiMetadata())
         totalTaskCount.getAndIncrement()
         batchTaskCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
-
-        // driver.manage().deleteAllCookies()
 
         try {
             var proxy: ProxyEntry? = null
@@ -188,6 +183,14 @@ class SeleniumEngine(
             }
 
             val response = visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
+
+            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES)) {
+                driver.manage().deleteAllCookies()
+            }
+
+            if (config.getBoolean(SELENIUM_WEB_DRIVER_DELETE_ALL_COOKIES, false)) {
+                driver.manage().deleteAllCookies()
+            }
 
             if (internalProxyServer.enabled) {
                 internalProxyServer.lastActiveTime = Instant.now()
@@ -362,10 +365,10 @@ class SeleniumEngine(
 
     private fun visit(batchId: Int, taskId: Int, url: String, page: WebPage,
                       driver: WebDriver, driverConfig: DriverConfig): VisitResult {
-        log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{} | {} | timeouts: {}/{}/{}",
+        log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
                 taskId, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
-                drivers.freeSize, drivers.totalSize,
+                drivers.workingSize, drivers.freeSize, drivers.totalSize,
                 page.configuredUrl,
                 driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
         )
@@ -424,6 +427,7 @@ class SeleniumEngine(
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 // Web driver closed
+                // status = ProtocolStatus.failed(ProtocolStatus.WEB_DRIVER_GONE, e)
             } else if (e.cause is InterruptedException) {
                 // Web driver closed
             } else {
@@ -519,8 +523,8 @@ class SeleniumEngine(
         val host = URLUtil.getHost(url)
         val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStatus(it) }
         if (stat.cookieView > maxCookieView) {
-            log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), stat.cookieView)
-            driver.manage().deleteAllCookies()
+            // log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), stat.cookieView)
+            // driver.manage().deleteAllCookies()
             stat.cookieView = 0
         }
     }
