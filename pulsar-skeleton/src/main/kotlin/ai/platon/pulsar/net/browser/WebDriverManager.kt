@@ -39,6 +39,7 @@ import java.util.logging.Level
  */
 class WebDriverManager(
         private val browserControl: BrowserControl,
+        private val proxyPool: ProxyPool,
         private val internalProxyServer: InternalProxyServer,
         private val conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
@@ -60,6 +61,7 @@ class WebDriverManager(
     private val isClosed = closed.get()
     val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
 
+    val workingSize get() = workingDriverCount.get()
     val freeSize get() = freeDriverCount.get()
     val totalSize get() = totalDriverCount.get()
 

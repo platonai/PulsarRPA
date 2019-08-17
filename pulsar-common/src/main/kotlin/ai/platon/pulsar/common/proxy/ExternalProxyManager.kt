@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_PROXY_POOL_RECOVER_PERIOD
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.PulsarConstants.CMD_PROXY_POOL_DUMP
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration

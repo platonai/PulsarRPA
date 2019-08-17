@@ -48,7 +48,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyPoolMonitor" class="ai.platon.pulsar.common.proxy.ProxyPoolMonitor" destroy-method="close">
+    <bean id="externalProxyManager" class="ai.platon.pulsar.common.proxy.ExternalProxyManager" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>
