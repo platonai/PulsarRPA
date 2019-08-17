@@ -146,6 +146,8 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
       if (isHttp && !(msg instanceof HttpRequest)) {
         return;
       }
+
+      // TODO: choose a external proxy from proxy pool here
       ProxyHandler proxyHandler = ProxyHandleFactory.build(proxyConfig);
       /*
         添加SSL client hello的Server Name Indication extension(SNI扩展)
@@ -165,9 +167,10 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
         bootstrap.resolver(NoopAddressResolverGroup.INSTANCE);
       }
       requestList = new LinkedList();
+
       cf = bootstrap.connect(host, port);
 
-      // System.out.println(String.format("%s - connected to %s:%d", LocalDateTime.now(), host, port));
+      // System.out.println("Connected to " + host + ":" + port);
 
       cf.addListener((ChannelFutureListener) future -> {
         if (future.isSuccess()) {

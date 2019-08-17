@@ -34,7 +34,8 @@ object WebAccess {
             11 to "https://news.sogou.com/ent.shtml",
             12 to "http://shop.boqii.com/brand/",
             13 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163",
-            14 to "http://dzhcg.sinopr.org/channel/304"
+            14 to "http://dzhcg.sinopr.org/channel/304",
+            15 to "http://blog.zhaojie.me/"
     )
 
     private val trivialUrls = listOf(
@@ -102,8 +103,7 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[14]?:return
-        // val url = "http://blog.zhaojie.me/"
+        val url = seeds[15]?:return
 
         var args = "-i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"

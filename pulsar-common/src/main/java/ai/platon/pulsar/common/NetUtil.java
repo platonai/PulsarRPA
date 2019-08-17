@@ -15,8 +15,8 @@ public class NetUtil {
 
     public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
 
-    public static final Pattern ipPortPattern = // Pattern for matching ip[:port]
-            Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
+    // Pattern for matching ip[:port]
+    public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
     public static boolean testNetwork(String ip, int port) {
         return testTcpNetwork(ip, port);
@@ -138,7 +138,7 @@ public class NetUtil {
      * @return Host name or null if the name can not be determined
      */
     public static String getHostNameOfIP(String ipPort) {
-        if (null == ipPort || !ipPortPattern.matcher(ipPort).matches()) {
+        if (null == ipPort || !IP_PORT_PATTERN.matcher(ipPort).matches()) {
             return null;
         }
 

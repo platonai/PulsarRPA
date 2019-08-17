@@ -2,8 +2,10 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
-import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
@@ -128,6 +130,7 @@ class SeleniumEngine(
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
+    private var groupMode = immutableConfig.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     private val browserDataGson = Gson()
     private val monthDay = DateTimeUtil.now("MMdd")
 
@@ -158,11 +161,11 @@ class SeleniumEngine(
         )
     }
 
-    internal fun fetchContentInternal(batchId: Int, priority: Int, page: WebPage, config: MutableConfig): Response {
+    internal fun fetchContentInternal(batchId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
         return fetchContentInternal(batchId, 0, priority, page, config)
     }
 
-    internal fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: MutableConfig): Response {
+    internal fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
         if (isClosed) {
             return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
         }
@@ -172,36 +175,23 @@ class SeleniumEngine(
         totalTaskCount.getAndIncrement()
         batchTaskCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
 
-        try {
-            var proxy: ProxyEntry? = null
+        // driver.manage().deleteAllCookies()
+
+        return try {
             if (internalProxyServer.enabled) {
-                internalProxyServer.numRunningThreads.incrementAndGet()
-                if (!waitProxyReady()) {
-                    return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
+                internalProxyServer.run {
+                    visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
                 }
-                proxy = internalProxyServer.proxyEntry
+            } else {
+                visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
             }
-
-            val response = visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
-
-            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES)) {
-                driver.manage().deleteAllCookies()
-            }
-
-            if (config.getBoolean(SELENIUM_WEB_DRIVER_DELETE_ALL_COOKIES, false)) {
-                driver.manage().deleteAllCookies()
-            }
-
-            if (internalProxyServer.enabled) {
-                internalProxyServer.lastActiveTime = Instant.now()
-                if (proxy != null) {
-                    page.metadata.set(Name.PROXY, proxy.ipPort())
-                }
-                internalProxyServer.numRunningThreads.decrementAndGet()
-            }
-
-            return response
+        } catch (e: NoProxyException) {
+            log.warn("No proxy. {}", e)
+            ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
         } finally {
+            if (internalProxyServer.enabled) {
+                page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.ipPort())
+            }
             drivers.put(priority, driver)
         }
     }

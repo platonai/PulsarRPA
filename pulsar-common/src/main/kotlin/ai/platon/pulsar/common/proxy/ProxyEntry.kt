@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -9,12 +10,12 @@ import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
-import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
+import kotlin.math.roundToInt
 
 data class ProxyEntry(val host: String, val port: Int, val targetHost: String = "") : Comparable<ProxyEntry> {
     var availableTime: Instant = Instant.EPOCH
@@ -27,7 +28,7 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
 
     val isGone: Boolean get() = failedCount >= 3
 
-    val speed: Double get() = testkTime.get() / 1000 / (1.0 + testCount.get())
+    val speed: Double get() = (100 * testkTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 100.0
 
     fun refresh() {
         availableTime = Instant.now()
@@ -118,6 +119,11 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
         }
 
         fun parse(str: String): ProxyEntry? {
+            if (!StringUtil.isIpPortLike(str)) {
+                log.warn("Malformed ip port | {}", str)
+                return null
+            }
+
             val ipPort = str.substringBefore(META_DELIMITER)
             val pos = ipPort.lastIndexOf(':')
             if (pos != -1) {

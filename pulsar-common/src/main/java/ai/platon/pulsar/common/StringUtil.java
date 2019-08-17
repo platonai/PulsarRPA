@@ -62,6 +62,17 @@ public final class StringUtil {
 
     public static Pattern CHINESE_PHONE_NUMBER_LIKE_PATTERN = Pattern.compile(CHINESE_PHONE_NUMBER_LIKE_REGEX);
 
+    public static final String IP_PORT_REGEX = "^"
+            + "(((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}" // Domain name
+            + "|"
+            + "localhost" // localhost
+            + "|"
+            + "(([0-9]{1,3}\\.){3})[0-9]{1,3})" // Ip
+            + ":"
+            + "[0-9]{1,5}$"; // Port
+
+    public static final Pattern IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX); // Port
+
     public static final int CODE_KEYBOARD_WHITESPACE = 32;
     public static final int CODE_NBSP = 160;
 
@@ -726,7 +737,10 @@ public final class StringUtil {
         return MONEY_LIKE_PATTERN.matcher(text).matches();
     }
 
-    // TODO: employ a ip address library
+    public static boolean isIpPortLike(String text) {
+        return IP_PORT_PATTERN.matcher(text).matches();
+    }
+
     public static boolean isIpLike(String text) {
         return text.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }

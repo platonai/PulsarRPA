@@ -169,7 +169,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.proxyPort = conf.getInt("http.proxy.port", 8080);
         this.useProxyPool = conf.getBoolean("http.proxy.pool", false);
         if (this.useProxyPool) {
-            this.proxyPool = PulsarEnv.Companion.getProxyPool();
+            this.proxyPool = PulsarEnv.Companion.getExternalProxyManager().getProxyPool();
         }
         this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
 

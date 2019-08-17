@@ -1,10 +1,9 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_PROXY_POOL_RECOVER_PERIOD
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.CMD_PROXY_POOL_DUMP
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -13,10 +12,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
-const val HTTP_PROXY_POOL_RECOVER_PERIOD = "http.proxy.pool.recover.period"
-
-class ProxyPoolMonitor(private val proxyPool: ProxyPool, private val conf: ImmutableConfig): AutoCloseable {
-    private var recoverPeriod = conf.getDuration(HTTP_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
+class ExternalProxyManager(
+        val proxyPool: ProxyPool,
+        private val conf: ImmutableConfig
+): AutoCloseable {
+    private var recoverPeriod = conf.getDuration(PROXY_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
     private var updateThread = Thread(this::update)
     // no recover thread, the proxy provider should do the job
     private var recoverThread = Thread(this::recover)
@@ -106,16 +106,16 @@ class ProxyPoolMonitor(private val proxyPool: ProxyPool, private val conf: Immut
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
+        private val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
     }
 }
 
 fun main() {
-    val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
+    val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
 
     val conf = ImmutableConfig()
     val proxyPool = ProxyPool(conf)
-    val proxyServer = ProxyPoolMonitor(proxyPool, conf)
+    val proxyServer = ExternalProxyManager(proxyPool, conf)
     proxyServer.start()
 
     while (true) {

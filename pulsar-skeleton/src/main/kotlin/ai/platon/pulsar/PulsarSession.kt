@@ -204,10 +204,15 @@ open class PulsarSession(
     /**
      * Parse the Web page into DOM.
      * If the Web page is not changed since last parse, use the last result if available
+     *
+     * TODO: harvest task can not use the previous parsed document
      */
     fun parse(page: WebPage): FeaturedDocument {
         ensureRunning()
         val key = page.key + "\t" + page.fetchTime
+        if (!enableCache) {
+            return context.parse(page)
+        }
 
         var document = context.documentCache.get(key)
         if (document == null) {
@@ -386,11 +391,11 @@ open class PulsarSession(
     }
 
     companion object {
-        val SESSION_PAGE_CACHE_TTL = Duration.ofSeconds(20)
-        val SESSION_PAGE_CACHE_CAPACITY = 100
+        val SESSION_PAGE_CACHE_TTL = Duration.ofSeconds(20)!!
+        const val SESSION_PAGE_CACHE_CAPACITY = 100
 
-        val SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1)
-        val SESSION_DOCUMENT_CACHE_CAPACITY = 100
+        val SESSION_DOCUMENT_CACHE_TTL = Duration.ofHours(1)!!
+        const val SESSION_DOCUMENT_CACHE_CAPACITY = 100
         private val idGen = AtomicInteger()
     }
 }

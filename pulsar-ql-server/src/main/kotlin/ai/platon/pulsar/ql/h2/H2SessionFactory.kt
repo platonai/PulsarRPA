@@ -87,7 +87,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun shutdownNow() {
-        PulsarEnv.applicationContext.close()
+        PulsarEnv.getOrCreate().exit()
     }
 }
 

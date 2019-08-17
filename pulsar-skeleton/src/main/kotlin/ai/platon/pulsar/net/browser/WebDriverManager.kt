@@ -4,12 +4,11 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
-import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.gargoylesoftware.htmlunit.WebClient
@@ -55,14 +54,12 @@ class WebDriverManager(
 
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-    private val proxyPool = PulsarEnv.proxyPool
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
     private val pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(60))
     private val closed = AtomicBoolean(false)
     private val isClosed = closed.get()
     val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
 
-    val workingSize get() = workingDriverCount.get()
     val freeSize get() = freeDriverCount.get()
     val totalSize get() = totalDriverCount.get()
 
@@ -167,8 +164,7 @@ class WebDriverManager(
         val capabilities = BrowserControl.createGeneralOptions()
 
         // Proxy is enabled by default
-        val disableProxy = conf.getBoolean(PROXY_DISABLED, false)
-        if (!disableProxy) {
+        if (PulsarEnv.useProxy) {
             val proxy = getProxy(conf)
             if (proxy != null) {
                 capabilities.setCapability(CapabilityType.PROXY, proxy)
@@ -216,15 +212,11 @@ class WebDriverManager(
         return level
     }
 
-    /**
-     * Get a proxy from the proxy pool
-     * 1. Get a proxy from config, it is usually set in session scope
-     * 2. Get a proxy from the proxy poll
-     */
     private fun getProxy(conf: ImmutableConfig): org.openqa.selenium.Proxy? {
         var ipPort = if (isInternalProxyServerRunning()) {
+            // TODO: internal proxy server can be run at another host
             "127.0.0.1:${internalProxyServer.port}"
-        } else conf.get(PROXY_IP_PORT)
+        } else conf.get(PROXY_HTTP_PROXY)
 
         if (ipPort == null) {
             // internal proxy server is not available, set proxy to the browser directly

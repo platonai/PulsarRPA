@@ -74,6 +74,7 @@
 
     <bean id="webDriverManager" class="ai.platon.pulsar.net.browser.WebDriverManager" destroy-method="close">
         <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="internalProxyServer"/>
         <constructor-arg ref="conf"/>
     </bean>
