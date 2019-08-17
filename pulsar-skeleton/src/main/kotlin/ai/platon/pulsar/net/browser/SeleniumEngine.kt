@@ -511,7 +511,8 @@ class SeleniumEngine(
         val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStatus(it) }
         if (stat.cookieView > maxCookieView) {
             log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), stat.cookieView)
-            driver.manage().deleteAllCookies()
+            // TODO: seems cause the website do not send normal data
+            // driver.manage().deleteAllCookies()
             stat.cookieView = 0
         }
     }

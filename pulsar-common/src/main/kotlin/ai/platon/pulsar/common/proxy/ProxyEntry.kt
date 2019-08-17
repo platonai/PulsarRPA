@@ -15,6 +15,7 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
+import kotlin.math.roundToInt
 
 data class ProxyEntry(val host: String, val port: Int, val targetHost: String = "") : Comparable<ProxyEntry> {
     var availableTime: Instant = Instant.EPOCH
@@ -27,7 +28,7 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
 
     val isGone: Boolean get() = failedCount >= 3
 
-    val speed: Double get() = testkTime.get() / 1000 / (1.0 + testCount.get())
+    val speed: Double get() = (100 * testkTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 100.0
 
     fun refresh() {
         availableTime = Instant.now()
