@@ -1,13 +1,11 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.proxy.ExternalProxyManager
-import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
 import ai.platon.pulsar.persist.AutoDetectedStorageService
@@ -47,11 +45,9 @@ class PulsarEnv {
          * */
         val unmodifiedConfig: ImmutableConfig
 
-        val useProxy = System.getProperty(PROXY_USE_PROXY, "yes") == "yes"
-
         val globalExecutor: GlobalExecutor
 
-        val externalProxyManager: ExternalProxyManager
+        val proxyManager: ProxyManager
 
         val internalProxyServer: InternalProxyServer
 
@@ -69,26 +65,25 @@ class PulsarEnv {
             applicationContext = ClassPathXmlApplicationContext(System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION))
             // shut down application context before progress exit
             applicationContext.registerShutdownHook()
+            // the primary configuration, keep unchanged with the configuration files
+            unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
             // gora properties
             goraProperties = GoraStorage.properties
             // storage service must be initialized in advance to ensure prerequisites
             // TODO: use spring boot
             storageService = applicationContext.getBean(AutoDetectedStorageService::class.java)
 
-            // the primary configuration, keep unchanged with the configuration files
-            unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
-
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
 
-            externalProxyManager = applicationContext.getBean(ExternalProxyManager::class.java)
+            proxyManager = applicationContext.getBean(ProxyManager::class.java)
             internalProxyServer = applicationContext.getBean(InternalProxyServer::class.java)
 
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            if (useProxy) {
-                externalProxyManager.start()
+            if (PulsarConstants.USE_PROXY) {
+                proxyManager.start()
 
-                if (internalProxyServer.enabled) {
+                if (internalProxyServer.isEnabled) {
                     internalProxyServer.start()
                 }
             }

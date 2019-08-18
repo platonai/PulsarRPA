@@ -24,4 +24,8 @@ public class ImmutableConfig extends AbstractConfiguration {
     public MutableConfig toMutableConfig() {
         return new MutableConfig(this);
     }
+
+    public VolatileConfig toVolatileConfig() {
+        return new VolatileConfig(this);
+    }
 }

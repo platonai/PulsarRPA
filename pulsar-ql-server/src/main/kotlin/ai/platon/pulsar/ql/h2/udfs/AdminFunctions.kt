@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 object AdminFunctions {
     val log = LoggerFactory.getLogger(AdminFunctions::class.java)
     private val sqlContext = SQLContext.getOrCreate()
-    private val proxyPool = PulsarEnv.externalProxyManager.proxyPool
+    private val proxyPool = PulsarEnv.proxyManager.proxyPool
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context h2session: Session, message: String): String {

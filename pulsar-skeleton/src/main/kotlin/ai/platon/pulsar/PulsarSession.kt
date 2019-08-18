@@ -32,9 +32,9 @@ open class PulsarSession(
          * */
         val context: PulsarContext,
         /**
-         * The session scope volatile config, every item is supposed to be changed at any time and any place
+         * The session scope volatile volatileConfig, every item is supposed to be changed at any time and any place
          * */
-        val config: VolatileConfig,
+        val volatileConfig: VolatileConfig,
         /**
          * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
@@ -42,13 +42,13 @@ open class PulsarSession(
 ) : AutoCloseable {
     val log = LoggerFactory.getLogger(PulsarSession::class.java)
     /**
-     * The scoped bean factory: for each config object, there is a bean factory
+     * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * TODO: session scoped?
      * */
-    val beanFactory = BeanFactory(config)
+    val beanFactory = BeanFactory(volatileConfig)
+    private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
     private var enableCache = true
     // Session variables
-    private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
     public val isClosed = closed.get()
@@ -91,7 +91,7 @@ open class PulsarSession(
     /**
      * Inject a url
      *
-     * @param configuredUrl The url followed by config options
+     * @param configuredUrl The url followed by volatileConfig options
      * @return The web page created
      */
     fun inject(configuredUrl: String): WebPage {
@@ -107,7 +107,7 @@ open class PulsarSession(
     /**
      * Load a url with default options
      *
-     * @param url The url followed by config options
+     * @param url The url followed by volatileConfig options
      * @return The Web page
      */
     fun load(url: String): WebPage {
@@ -378,7 +378,7 @@ open class PulsarSession(
 
     private fun initOptions(options: LoadOptions): LoadOptions {
         if (options.volatileConfig == null) {
-            options.volatileConfig = config
+            options.volatileConfig = volatileConfig
         }
         return options
     }

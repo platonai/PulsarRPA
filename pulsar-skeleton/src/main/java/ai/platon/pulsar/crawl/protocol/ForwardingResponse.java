@@ -32,15 +32,16 @@ public class ForwardingResponse implements Response {
     private ProtocolStatus status;
     private MultiMetadata headers;
 
-    public ForwardingResponse(String url, String content, ProtocolStatus status, MultiMetadata headers) {
-        Objects.requireNonNull(url);
-        Objects.requireNonNull(content);
-        Objects.requireNonNull(headers);
+    public ForwardingResponse(String url, ProtocolStatus status) {
+        this(url, "", status, new MultiMetadata());
+    }
 
-        this.url = url;
-        this.content = content.getBytes();
-        this.status = status;
-        this.headers = headers;
+    public ForwardingResponse(String url, ProtocolStatus status, MultiMetadata headers) {
+        this(url, "", status, headers);
+    }
+
+    public ForwardingResponse(String url, String content, ProtocolStatus status, MultiMetadata headers) {
+        this(url, content.getBytes(), status, headers);
     }
 
     public ForwardingResponse(String url, byte[] content, ProtocolStatus status, MultiMetadata headers) {

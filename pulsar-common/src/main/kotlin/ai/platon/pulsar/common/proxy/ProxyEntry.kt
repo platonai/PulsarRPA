@@ -17,35 +17,40 @@ import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
-data class ProxyEntry(val host: String, val port: Int, val targetHost: String = "") : Comparable<ProxyEntry> {
-    var availableTime: Instant = Instant.EPOCH
-    var failedCount: Int = 0
+enum class ProxyType {
+    HTTP, SOCKS4, SOCKS5
+}
+
+data class ProxyEntry(
+        var host: String,
+        var port: Int = 0,
+        var proxyType: ProxyType = ProxyType.HTTP, // reserved
+        var user: String? = null,
+        var pwd: String? = null,
+        val targetHost: String = ""
+) : Comparable<ProxyEntry> {
+    val hostPort = "$host:$port"
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val testCount = AtomicInteger()
-    val testkTime = AtomicLong()
-
+    val testTime = AtomicLong()
+    var failedCount: Int = 0
+    val speed: Double get() = (1000 * testTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 1000.0
+    var availableTime: Instant = Instant.EPOCH
     val isExpired: Boolean get() = availableTime.plus(PROXY_EXPIRED).isBefore(Instant.now())
-
     val isGone: Boolean get() = failedCount >= 3
-
-    val speed: Double get() = (100 * testkTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 100.0
 
     fun refresh() {
         availableTime = Instant.now()
     }
 
-    fun ipPort(): String {
-        return "$host:$port"
-    }
-
-    fun testNetwork(): Boolean {
+    fun test(): Boolean {
         val target = if (targetHost.isNotBlank()) {
             URL(targetHost)
         } else TEST_WEB_SITES.random()
 
-        var available = testNetwork(target)
+        var available = test(target)
         if (!available && target != DEFAULT_TEST_WEB_SITE) {
-            available = testNetwork(DEFAULT_TEST_WEB_SITE)
+            available = test(DEFAULT_TEST_WEB_SITE)
             if (available) {
                 log.warn("Test web site is unreachable | <{}> - {}", this, target)
             }
@@ -54,8 +59,8 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
         return available
     }
 
-    fun testNetwork(target: URL): Boolean {
-        // first, TCP network is reachable, this is fast
+    fun test(target: URL): Boolean {
+        // first, check TCP network is reachable, this is fast
         var available = NetUtil.testTcpNetwork(host, port, Duration.ofSeconds(5))
         if (available) {
             // second, the destination web site is reachable through this proxy
@@ -67,7 +72,7 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
             val end = System.currentTimeMillis()
 
             testCount.incrementAndGet()
-            testkTime.addAndGet(end - start)
+            testTime.addAndGet(end - start)
         }
 
         if (!available) {
@@ -82,26 +87,16 @@ data class ProxyEntry(val host: String, val port: Int, val targetHost: String = 
     }
 
     override fun toString(): String {
-        return "$host:$port${META_DELIMITER}at:$availableTime${META_DELIMITER}speed:$speed"
+        return "$host:$port${META_DELIMITER}at:$availableTime${META_DELIMITER}spd:$speed"
     }
 
-    override fun equals(other: Any?): Boolean {
-        return other is ProxyEntry && host == other.host && port == other.port
-    }
-
-    override fun compareTo(proxyEntry: ProxyEntry): Int {
-        return ipPort().compareTo(proxyEntry.ipPort())
-    }
-
-    override fun hashCode(): Int {
-        var result = host.hashCode()
-        result = 31 * result + port
-        return result
+    override fun compareTo(other: ProxyEntry): Int {
+        return hostPort.compareTo(other.hostPort)
     }
 
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
-        
+
         private const val META_DELIMITER = " - "
         private const val IP_PORT_REGEX = "^((25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1?\\d?\\d)(:[0-9]{2,5})"
         private val IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX)

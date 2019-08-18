@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
@@ -78,8 +79,8 @@ public class WebPage {
 
     public static WebPage NIL = newInternalPage(NIL_PAGE_URL, "nil", "nil");
     /**
-     * The url of the web page
-     */
+     * The url is the permanent internal address, and the location is the last working address
+     * */
     private String url = "";
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this object
@@ -92,7 +93,7 @@ public class WebPage {
     /**
      * Object scope configuration
      */
-    private MutableConfig mutableConfig;
+    private VolatileConfig volatileConfig;
     /**
      * Object scope variables
      */
@@ -135,20 +136,20 @@ public class WebPage {
     }
 
     @Nonnull
-    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, MutableConfig mutableConfig) {
+    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
-        Objects.requireNonNull(mutableConfig);
+        Objects.requireNonNull(volatileConfig);
         String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
-        return newWebPageInternal(url, mutableConfig);
+        return newWebPageInternal(url, volatileConfig);
     }
 
-    private static WebPage newWebPageInternal(String url, @Nullable MutableConfig mutableConfig) {
+    private static WebPage newWebPageInternal(String url, VolatileConfig volatileConfig) {
         Objects.requireNonNull(url);
 
         WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
 
         page.setLocation(url);
-        page.setMutableConfig(mutableConfig);
+        page.setVolatileConfig(volatileConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(impreciseNow);
         page.setScore(0);
@@ -245,6 +246,9 @@ public class WebPage {
         return new Utf8(value);
     }
 
+    /**
+     * page.location is the last working address, and page.url is the permanent internal address
+     * */
     public String getUrl() {
         return url != null ? url : "";
     }
@@ -286,18 +290,18 @@ public class WebPage {
     }
 
     @Nullable
-    public MutableConfig getMutableConfig() {
-        return mutableConfig;
+    public VolatileConfig getVolatileConfig() {
+        return volatileConfig;
     }
 
-    public void setMutableConfig(MutableConfig mutableConfig) {
-        this.mutableConfig = mutableConfig;
+    public void setVolatileConfig(VolatileConfig volatileConfig) {
+        this.volatileConfig = volatileConfig;
     }
 
     @Nonnull
     public MutableConfig getMutableConfigOrElse(MutableConfig fallbackConfig) {
         Objects.requireNonNull(fallbackConfig);
-        return mutableConfig != null ? mutableConfig : fallbackConfig;
+        return volatileConfig != null ? volatileConfig : fallbackConfig;
     }
 
     public Metadata getMetadata() {

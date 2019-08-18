@@ -237,11 +237,10 @@ public class HttpResponse implements Response {
             if (http.useProxyPool() && proxy != null) {
                 // put back the proxy resource, this is essential important!
                 if (fetchSuccess) {
-                    Http.LOG.debug("put back proxy {}", proxy.ipPort());
-
-                    http.proxyPool().add(proxy);
+                    Http.LOG.debug("put back proxy {}", proxy);
+                    http.proxyPool().offer(proxy);
                 } else {
-                    Http.LOG.debug("retire proxy {}", proxy.ipPort());
+                    Http.LOG.debug("retire proxy {}", proxy);
                     http.proxyPool().retire(proxy);
                 }
             }

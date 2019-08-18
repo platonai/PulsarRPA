@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_PROXY_POOL_RECOVER_PERIOD
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.CMD_PROXY_POOL_DUMP
@@ -13,7 +14,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 
-class ExternalProxyManager(
+class ProxyManager(
         val proxyPool: ProxyPool,
         private val conf: ImmutableConfig
 ): AutoCloseable {
@@ -23,6 +24,7 @@ class ExternalProxyManager(
     private var recoverThread = Thread(this::recover)
 
     private val closed = AtomicBoolean()
+
     val isClosed get() = closed.get()
 
     fun start() {
@@ -107,29 +109,28 @@ class ExternalProxyManager(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
+        private val log = LoggerFactory.getLogger(ProxyManager::class.java)
     }
 }
 
 fun main() {
-    val log = LoggerFactory.getLogger(ExternalProxyManager::class.java)
+    val log = LoggerFactory.getLogger(ProxyManager::class.java)
 
     val conf = ImmutableConfig()
     val proxyPool = ProxyPool(conf)
-    val proxyServer = ExternalProxyManager(proxyPool, conf)
+    val proxyServer = ProxyManager(proxyPool, conf)
     proxyServer.start()
 
     while (true) {
         val proxy = proxyPool.poll()
 
         if (proxy != null) {
-            if (proxy.testNetwork()) {
+            if (proxy.test()) {
                 log.info("Proxy is available | {} ", proxy)
 
                 System.setProperty("java.net.useSystemProxies", "true")
                 System.setProperty("http.proxyHost", proxy.host)
                 System.setProperty("http.proxyPort", proxy.port.toString())
-
             } else {
                 log.info("Proxy is unavailable | {}", proxy)
             }

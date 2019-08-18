@@ -220,8 +220,7 @@ public interface CapabilityTypes {
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
-    String PROXY_HTTP_PROXY = "http_proxy"; // keep consist with linux's proxy environment variable
-    String PROXY_POOL_SIZE = "proxy.pool.size";
+    String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
     String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
     String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";

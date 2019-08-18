@@ -120,7 +120,7 @@ object WebAccess {
         val path = i.export(document)
         println("Export to: file://$path")
 
-        val links = document.select(outlink) { it.attr("abs:href") }.take(1)
+        val links = document.select(outlink) { it.attr("abs:href") }.take(2)
         // links.forEach { println(it) }
         i.loadAll(links, LoadOptions.parse(args))
 
@@ -206,6 +206,15 @@ object WebAccess {
         pc.webDb.truncate()
     }
 
+    fun localFileCommand() {
+        while (true) {
+            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
+                println("Execute local file command: " + PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
+            }
+            Thread.sleep(5000)
+        }
+    }
+
     fun run() {
         // load()
         // collectLinks()
@@ -217,13 +226,5 @@ object WebAccess {
 }
 
 fun main() {
-    while (true) {
-        if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
-            println("Execute local file command: " + PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
-        }
-
-        Thread.sleep(5000)
-    }
-//    WebAccess.run()
-//    System.`in`.read()
+    WebAccess.run()
 }

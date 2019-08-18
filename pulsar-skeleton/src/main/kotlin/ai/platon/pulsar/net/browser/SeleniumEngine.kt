@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
@@ -22,7 +23,10 @@ import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.net.InternetDomainName
 import com.google.gson.Gson
 import org.apache.commons.codec.digest.DigestUtils
-import org.openqa.selenium.*
+import org.openqa.selenium.JavascriptExecutor
+import org.openqa.selenium.OutputType
+import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -105,6 +109,17 @@ data class DriverConfig(
     )
 }
 
+class FetchTaskContext(
+        val batchId: Int,
+        val taskId: Int,
+        val priority: Int,
+        val page: WebPage,
+        val volatileConfig: VolatileConfig
+) {
+    val url get() = page.url
+    var response: Response? = null
+}
+
 data class VisitResult(
         val protocolStatus: ProtocolStatus,
         val jsData: BrowserJsData
@@ -122,14 +137,13 @@ data class VisitResult(
  */
 class SeleniumEngine(
         browserControl: BrowserControl,
-        private val drivers: WebDriverManager,
+        private val driverManager: WebDriverManager,
         private val internalProxyServer: InternalProxyServer,
         private val fetchTaskTracker: FetchTaskTracker,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-    private var groupMode = immutableConfig.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     private val browserDataGson = Gson()
     private val monthDay = DateTimeUtil.now("MMdd")
 
@@ -137,6 +151,7 @@ class SeleniumEngine(
     private val clientJs = browserControl.parseJs(false)
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
+    private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val defaultDriverConfig = DriverConfig(immutableConfig)
     private val maxCookieView = 40
     private val closed = AtomicBoolean(false)
@@ -156,54 +171,78 @@ class SeleniumEngine(
                 "scrollDownCount", defaultDriverConfig.scrollDownCount,
                 "scrollInterval", defaultDriverConfig.scrollInterval,
                 "clientJsLength", clientJs.length,
-                "maxWebDrivers", drivers.capacity
+                "maxWebDrivers", driverManager.capacity
         )
     }
 
-    internal fun fetchContentInternal(batchId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
-        return fetchContentInternal(batchId, 0, priority, page, config)
-    }
-
-    internal fun fetchContentInternal(batchId: Int, taskId: Int, priority: Int, page: WebPage, config: ImmutableConfig): Response {
+    internal fun fetchContentInternal(fetchTask: FetchTaskContext): Response {
         if (isClosed) {
-            return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
+            return ForwardingResponse(fetchTask.page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
         }
 
-        val driver = drivers.poll(priority, config)
-                ?: return ForwardingResponse(page.url, "", ProtocolStatus.STATUS_RETRY, MultiMetadata())
         totalTaskCount.getAndIncrement()
-        batchTaskCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
+        batchTaskCounters.computeIfAbsent(fetchTask.batchId) { AtomicInteger() }.incrementAndGet()
 
         // driver.manage().deleteAllCookies()
 
-        return try {
-            if (internalProxyServer.enabled) {
-                internalProxyServer.run {
-                    visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
-                }
-            } else {
-                visitPageAndRetrieveContent(driver, batchId, taskId, priority, page, config)
-            }
-        } catch (e: NoProxyException) {
-            log.warn("No proxy. {}", e)
-            ForwardingResponse(page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
-        } finally {
-            if (internalProxyServer.enabled) {
-                page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.ipPort())
-            }
-            drivers.put(priority, driver)
-        }
+        return visitPageAndRetrieveContentWithRetry(fetchTask)
     }
 
-    private fun visitPageAndRetrieveContent(
-            driver: WebDriver,
-            batchId: Int,
-            taskId: Int,
-            priority: Int,
-            page: WebPage,
-            config: ImmutableConfig
-    ): Response {
-        // page.baseUrl is the last working address, and page.url is the permanent internal address
+    private fun visitPageAndRetrieveContentWithRetry(fetchTask: FetchTaskContext): Response {
+        var maxRetry = fetchTask.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
+        var response: Response? = null
+
+        while (maxRetry-- > 0 && response == null) {
+            val driver = driverManager.poll(fetchTask.priority, fetchTask.volatileConfig)
+                    ?: return ForwardingResponse(fetchTask.page.url, ProtocolStatus.STATUS_RETRY)
+            var driverCrashed = false
+            var exception: Exception? = null
+
+            try {
+                response = if (internalProxyServer.isEnabled) {
+                    internalProxyServer.run {
+                        visitPageAndRetrieveContent(driver, fetchTask)
+                    }
+                } else {
+                    visitPageAndRetrieveContent(driver, fetchTask)
+                }
+            } catch (e: NoProxyException) {
+                log.warn("No proxy, request is canceled | {}", fetchTask.url)
+                response = ForwardingResponse(fetchTask.url, ProtocolStatus.STATUS_CANCELED)
+            } catch (e: org.openqa.selenium.NoSuchSessionException) {
+                log.warn("Driver is crashed, {}", e.message)
+
+                response = null
+                exception = e
+                driverCrashed = true
+            } catch (e: org.apache.http.conn.HttpHostConnectException) {
+                log.warn("Driver is crashed, {}", e.message)
+
+                response = null
+                exception = e
+                driverCrashed = true
+            } finally {
+                if (internalProxyServer.isEnabled) {
+                    fetchTask.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
+                }
+
+                if (driverCrashed) {
+                    // close current window
+                    driver.close()
+                    driverManager.put(fetchTask.priority, driver)
+                } else {
+                    driverManager.retire(fetchTask.priority, driver, exception)
+                }
+            }
+        }
+
+        return response?:ForwardingResponse(fetchTask.url, ProtocolStatus.STATUS_FAILED)
+    }
+
+    private fun visitPageAndRetrieveContent(driver: WebDriver, fetchTask: FetchTaskContext): Response {
+        val batchId = fetchTask.batchId
+        val page = fetchTask.page
+        // page.location is the last working address, and page.url is the permanent internal address
         val url = page.url
         var location = page.location
         if (location.isBlank()) {
@@ -213,7 +252,7 @@ class SeleniumEngine(
             log.warn("Page location does't match url | {} - {}", url, location)
         }
 
-        val driverConfig = getDriverConfig(priority, page, config)
+        val driverConfig = getDriverConfig(fetchTask.priority, fetchTask.page, fetchTask.volatileConfig)
         var status: ProtocolStatus
         var jsData = BrowserJsData.default
         val headers = MultiMetadata()
@@ -223,19 +262,27 @@ class SeleniumEngine(
         var pageSource = ""
 
         try {
-            val result = visit(batchId, taskId, location, page, driver, driverConfig)
+            val result = visit(fetchTask, driver, driverConfig)
             status = result.protocolStatus
             jsData = result.jsData
             // TODO: handle with frames
             // driver.switchTo().frame(1);
-        } catch (e: TimeoutException) {
+        } catch (e: org.openqa.selenium.TimeoutException) {
             // log.warn(e.toString())
             status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_RETRY
             log.warn(e.toString())
+        } catch (e: org.openqa.selenium.NoSuchSessionException) {
+            // failed to wait for body
+            status = ProtocolStatus.STATUS_BROWSER_RETRY
+            log.warn("Web driver crashed, {}", e.toString())
+            throw e
         } catch (e: org.openqa.selenium.WebDriverException) {
+            // 1. session deleted because of page crash
+            // 2. org.openqa.selenium.NoSuchSessionException: invalid session id
+
             status = ProtocolStatus.STATUS_RETRY
             log.warn(e.toString())
         } catch (e: Throwable) {
@@ -288,10 +335,6 @@ class SeleniumEngine(
         // TODO: ignore timeout and get the page source
 
         return ForwardingResponse(page.url, pageSource, status, headers)
-    }
-
-    private fun waitProxyReady(): Boolean {
-        return !isClosed && internalProxyServer.waitUntilRunning()
     }
 
     private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
@@ -352,12 +395,16 @@ class SeleniumEngine(
         return ForwardingResponse(url, "", status, headers)
     }
 
-    private fun visit(batchId: Int, taskId: Int, url: String, page: WebPage,
-                      driver: WebDriver, driverConfig: DriverConfig): VisitResult {
+    private fun visit(fetchTask: FetchTaskContext, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
+        val batchId = fetchTask.batchId
+        val taskId = fetchTask.taskId
+        val url = fetchTask.url
+        val page = fetchTask.page
+
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
                 taskId, batchTaskCounters[batchId], totalTaskCount,
                 Thread.currentThread().id,
-                drivers.workingSize, drivers.freeSize, drivers.totalSize,
+                driverManager.workingSize, driverManager.freeSize, driverManager.totalSize,
                 page.configuredUrl,
                 driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
         )
@@ -375,6 +422,7 @@ class SeleniumEngine(
         return executeJs(url, driver, driverConfig)
     }
 
+    @Throws(WebDriverException::class)
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
         val jsExecutor = driver as? JavascriptExecutor?: return VisitResult.canceled
 
@@ -422,7 +470,7 @@ class SeleniumEngine(
             } else {
                 log.warn("Web driver exception | {} \n>>>\n{}\n<<<", url, e.message)
             }
-            status = ProtocolStatus.STATUS_CANCELED
+            throw e
         } catch (e: Exception) {
             log.warn("Unexpected exception | {}", url)
             log.warn(StringUtil.stringifyException(e))
@@ -599,7 +647,7 @@ class SeleniumEngine(
         if (log.isDebugEnabled) {
             log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{} timeouts: {}/{}/{} | {}",
                     elapsed, String.format("%,7d", pageSource.length),
-                    drivers.freeSize, drivers.totalSize,
+                    driverManager.freeSize, driverManager.totalSize,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     url
             )

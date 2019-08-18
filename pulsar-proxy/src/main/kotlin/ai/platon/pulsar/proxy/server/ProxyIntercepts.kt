@@ -4,13 +4,16 @@ import ai.platon.pulsar.proxy.common.ProtoUtil
 import io.netty.channel.Channel
 import io.netty.handler.codec.http.*
 import io.netty.util.ReferenceCountUtil
-import java.util.*
 
 private const val DEFAULT_MAX_CONTENT_LENGTH = 1024 * 1024 * 8
 
+open class HttpProxyInterceptInitializer {
+    open fun init(pipeline: HttpProxyInterceptPipeline) {}
+}
+
 abstract class FullRequestIntercept(
         private val maxContentLength: Int = DEFAULT_MAX_CONTENT_LENGTH
-) : HttpProxyIntercept() {
+): HttpProxyIntercept() {
 
     override fun beforeRequest(clientChannel: Channel, httpRequest: HttpRequest, pipeline: HttpProxyInterceptPipeline) {
         if (httpRequest is FullHttpRequest) {
@@ -26,7 +29,7 @@ abstract class FullRequestIntercept(
             //添加gzip解压处理
             clientChannel.pipeline().addAfter("httpCodec", "decompress", HttpContentDecompressor())
             //添加Full request解码器
-            clientChannel.pipeline().addAfter("decompress", "aggregator", HttpObjectAggregator(DEFAULT_MAX_CONTENT_LENGTH))
+            clientChannel.pipeline().addAfter("decompress", "aggregator", HttpObjectAggregator(maxContentLength))
             //重新过一遍处理器链
             clientChannel.pipeline().fireChannelRead(httpRequest)
             return
@@ -113,8 +116,8 @@ abstract class FullResponseIntercept(
     /**
      * 拦截并处理响应
      */
-    open fun handelResponse(httpRequest: HttpRequest,
-                            httpResponse: FullHttpResponse, pipeline: HttpProxyInterceptPipeline) {}
+    open fun handelResponse(
+            httpRequest: HttpRequest, httpResponse: FullHttpResponse, pipeline: HttpProxyInterceptPipeline) {}
 }
 
 open class HttpProxyIntercept {
@@ -150,9 +153,8 @@ open class HttpProxyIntercept {
     }
 }
 
-open class HttpProxyInterceptPipeline(val default: HttpProxyIntercept) : Iterable<HttpProxyIntercept> {
-
-    private val intercepts: MutableList<HttpProxyIntercept>
+open class HttpProxyInterceptPipeline(defaultIntercept: HttpProxyIntercept) : Iterable<HttpProxyIntercept> {
+    private val intercepts = mutableListOf(defaultIntercept)
 
     private var posBeforeHead = 0
     private var posBeforeContent = 0
@@ -164,11 +166,6 @@ open class HttpProxyInterceptPipeline(val default: HttpProxyIntercept) : Iterabl
         private set
     lateinit var httpResponse: HttpResponse
         private set
-
-    init {
-        this.intercepts = LinkedList()
-        this.intercepts.add(default)
-    }
 
     fun addLast(intercept: HttpProxyIntercept) {
         this.intercepts.add(this.intercepts.size - 1, intercept)

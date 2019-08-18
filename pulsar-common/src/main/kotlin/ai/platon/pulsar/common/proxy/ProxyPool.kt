@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_POLLING_INTERVAL
-import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_SIZE
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_CAPACITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
@@ -27,13 +27,13 @@ import java.util.concurrent.atomic.AtomicBoolean
  * This might take a long time, so it should be run in a separate thread
 */
 class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoCloseable {
-    enum class ResourceType { PROVIDER, PROXY }
+    private enum class ResourceType { PROVIDER, PROXY }
 
     private val pollingInterval: Duration = conf.getDuration(PROXY_POOL_POLLING_INTERVAL, Duration.ofSeconds(10))
-    private val maxPoolSize: Int = conf.getInt(PROXY_POOL_SIZE, 1000)
+    private val capacity: Int = conf.getInt(PROXY_POOL_CAPACITY, 1000)
     private val lastModifiedTimes = mutableMapOf<Path, Instant>()
     private val proxyEntries = mutableSetOf<ProxyEntry>()
-    private val freeProxies = LinkedBlockingDeque<ProxyEntry>(maxPoolSize)
+    private val freeProxies = LinkedBlockingDeque<ProxyEntry>(capacity)
     private val workingProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
     private val unavailableProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
     private val closed = AtomicBoolean()
@@ -63,12 +63,12 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     }
 
     override fun poll(): ProxyEntry? {
-        if (numFreeProxies == 0) {
+        if (freeProxies.isEmpty()) {
             updateProxies()
         }
 
         var proxy: ProxyEntry? = null
-        while (!isClosed && proxy == null && !freeProxies.isEmpty()) {
+        while (!isClosed && proxy == null && freeProxies.isNotEmpty()) {
             proxy = pollOne()
         }
 
@@ -102,7 +102,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
 
                 if (proxy.isGone) {
                     it.remove()
-                } else if (proxy.testNetwork()) {
+                } else if (proxy.test()) {
                     it.remove()
                     proxy.refresh()
                     offer(proxy)
@@ -116,19 +116,20 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
 
     // Block until timeout or an available proxy entry returns
     private fun pollOne(): ProxyEntry? {
-        var proxy: ProxyEntry? = null
+        var proxyEntry: ProxyEntry? = null
         try {
-            proxy = freeProxies.poll(pollingInterval.seconds, TimeUnit.SECONDS)
+            proxyEntry = freeProxies.poll(pollingInterval.seconds, TimeUnit.SECONDS)
         } catch (ignored: InterruptedException) {
             Thread.currentThread().interrupt()
         }
 
+        var proxy = proxyEntry
         if (isClosed || proxy == null) {
             return null
         }
 
         if (proxy.isExpired) {
-            if (proxy.testNetwork()) {
+            if (proxy.test()) {
                 proxy.refresh()
             }
         }
@@ -196,12 +197,19 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     }
 
     override fun toString(): String {
-        return String.format("Total %d, free: %d, working: %d, gone: %d",
+        val sb = StringBuilder();
+        String.format("Total %d, free: %d, working: %d, gone: %d",
                 proxyEntries.size,
                 freeProxies.size,
                 workingProxies.size,
                 unavailableProxies.size
-        )
+        ).also { sb.append(it) }
+
+        if (workingProxies.isNotEmpty()) {
+            sb.append(" | ").append('<').append(workingProxies.first()).append('>')
+        }
+
+        return sb.toString()
     }
 
     private fun reloadProviders(expires: Duration) {

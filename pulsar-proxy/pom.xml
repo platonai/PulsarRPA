@@ -14,6 +14,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>ai.platon.pulsar</groupId>
+      <artifactId>pulsar-common</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-buffer</artifactId>
       <version>${netty.version}</version>

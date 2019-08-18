@@ -1,5 +1,6 @@
 package ai.platon.pulsar.proxy.server
 
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelInitializer
@@ -10,103 +11,42 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
-import java.io.Serializable
-
-class HttpProxyExceptionHandle {
-
-    @Throws(Exception::class)
-    fun beforeCatch(clientChannel: Channel, cause: Throwable) {
-        throw Exception(cause)
-    }
-
-    @Throws(Exception::class)
-    fun afterCatch(clientChannel: Channel, proxyChannel: Channel, cause: Throwable) {
-        throw Exception(cause)
-    }
-}
-
-class HttpProxyInterceptInitializer {
-    fun init(pipeline: HttpProxyInterceptPipeline) {}
-}
-
-class ProxyConfig(
-        var proxyType: ProxyType,
-        var host: String,
-        var port: Int = 0,
-        var user: String? = null,
-        var pwd: String? = null
-) : Serializable {
-
-    override fun toString(): String {
-        return "{" +
-                "proxyType=" + proxyType +
-                ", host='" + host + '\''.toString() +
-                ", port=" + port +
-                ", user='" + user + '\''.toString() +
-                ", pwd='" + pwd + '\''.toString() +
-                '}'.toString()
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        }
-        return other is ProxyConfig &&
-                other.proxyType == proxyType &&
-                other.host == host &&
-                other.port == port &&
-                other.user == user &&
-                other.pwd == pwd
-    }
-
-    override fun hashCode(): Int {
-        var result = proxyType.hashCode()
-        result = 31 * result + host.hashCode()
-        result = 31 * result + port
-        result = 31 * result + if (user != null) user!!.hashCode() else 0
-        result = 31 * result + if (pwd != null) pwd!!.hashCode() else 0
-        return result
-    }
-}
 
 class HttpProxyServerConfig(
         var bossGroupThreads: Int = 0,
         var workerGroupThreads: Int = 0,
         var proxyGroupThreads: Int = 0,
-        var proxyLoopGroup: EventLoopGroup? = null
+        var proxyLoopGroup: EventLoopGroup = NioEventLoopGroup(proxyGroupThreads)
 )
 
 class HttpProxyServer(
         private var serverConfig: HttpProxyServerConfig = HttpProxyServerConfig(),
         private var proxyInterceptInitializer: HttpProxyInterceptInitializer = HttpProxyInterceptInitializer(),
         private var httpProxyExceptionHandle: HttpProxyExceptionHandle = HttpProxyExceptionHandle(),
-        private var proxyConfig: ProxyConfig? = null
+        private var proxyEntry: ProxyEntry? = null
 ): AutoCloseable {
     private lateinit var bossGroup: EventLoopGroup
     private lateinit var workerGroup: EventLoopGroup
+    private val channelInitializer = object: ChannelInitializer<Channel>() {
+        override fun initChannel(ch: Channel) {
+            ch.pipeline().addLast("httpCodec", HttpServerCodec())
 
-    private fun init() {
+            val serverHandle = HttpProxyServerHandle(serverConfig, proxyInterceptInitializer, proxyEntry, httpProxyExceptionHandle)
+            ch.pipeline().addLast("serverHandle", serverHandle)
+        }
     }
 
     fun start(port: Int) {
-        init()
         bossGroup = NioEventLoopGroup(serverConfig.bossGroupThreads)
         workerGroup = NioEventLoopGroup(serverConfig.workerGroupThreads)
         try {
             val b = ServerBootstrap()
+
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel::class.java)
-                    //          .option(ChannelOption.SO_BACKLOG, 100)
+                    // .option(ChannelOption.SO_BACKLOG, 100)
                     .handler(LoggingHandler(LogLevel.DEBUG))
-                    .childHandler(object : ChannelInitializer<Channel>() {
-                        @Throws(Exception::class)
-                        override fun initChannel(ch: Channel) {
-                            ch.pipeline().addLast("httpCodec", HttpServerCodec())
-                            ch.pipeline().addLast("serverHandle",
-                                    HttpProxyServerHandle(serverConfig, proxyInterceptInitializer, proxyConfig,
-                                            httpProxyExceptionHandle))
-                        }
-                    })
+                    .childHandler(channelInitializer)
             val f = b.bind(port).sync()
             f.channel().closeFuture().sync()
         } catch (e: Exception) {
@@ -118,13 +58,13 @@ class HttpProxyServer(
     }
 
     override fun close() {
-        serverConfig.proxyLoopGroup?.shutdownGracefully()
+        serverConfig.proxyLoopGroup.shutdownGracefully()
         bossGroup.shutdownGracefully()
         workerGroup.shutdownGracefully()
     }
 
     companion object {
-        //http代理隧道握手成功
+        // http代理隧道握手成功
         val SUCCESS = HttpResponseStatus(200, "Connection established")
     }
 }

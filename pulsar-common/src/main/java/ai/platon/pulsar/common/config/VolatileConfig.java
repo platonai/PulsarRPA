@@ -13,20 +13,22 @@ import java.util.Objects;
  */
 public class VolatileConfig extends MutableConfig {
 
-    private MutableConfig fallbackConfig;
+    private ImmutableConfig fallbackConfig;
     private Map<String, Integer> ttls = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, Object> variables = new HashMap<>();
 
     public VolatileConfig() {
-        super(false);
+        super();
     }
 
     public VolatileConfig(ImmutableConfig fallbackConfig) {
-        this(new MutableConfig(fallbackConfig));
+        this.fallbackConfig = fallbackConfig;
     }
 
-    public VolatileConfig(MutableConfig fallbackConfig) {
-        super(false);
-        this.fallbackConfig = Objects.requireNonNull(fallbackConfig);
+    public void reset() {
+        ttls.clear();
+        variables.clear();
+        super.clear();
     }
 
     @Nonnull
@@ -105,15 +107,35 @@ public class VolatileConfig extends MutableConfig {
         }
     }
 
+    public Object getVariable(String name) {
+        return variables.get(name);
+    }
+
+    public <T> Object putBean(T bean) {
+        return variables.put(bean.getClass().getName(), bean);
+    }
+
+    public <T> T getBean(Class<T> bean) {
+        Object obj = variables.get(bean.getName());
+        if (obj != null && bean.isAssignableFrom(obj.getClass())) {
+            return (T)obj;
+        }
+        return null;
+    }
+
+    public void setVariable(String name, Object value) {
+        variables.put(name, value);
+    }
+
     public boolean isExpired(String key) {
         return false;
     }
 
-    public MutableConfig getFallbackConfig() {
+    public ImmutableConfig getFallbackConfig() {
         return fallbackConfig;
     }
 
-    public void setFallbackConfig(MutableConfig fallbackConfig) {
+    public void setFallbackConfig(ImmutableConfig fallbackConfig) {
         this.fallbackConfig = fallbackConfig;
     }
 }

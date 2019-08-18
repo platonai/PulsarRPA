@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
@@ -15,7 +16,9 @@ import com.gargoylesoftware.htmlunit.WebClient
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
 import org.openqa.selenium.Capabilities
+import org.openqa.selenium.SessionNotCreatedException
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.CapabilityType
@@ -30,7 +33,6 @@ import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Level
 
 /**
@@ -46,11 +48,17 @@ class WebDriverManager(
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
     companion object {
-        private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
-        private val totalDriverCount = AtomicInteger(0)
-        private val freeDriverCount = AtomicInteger(0)
-        private val workingDriverCount = AtomicInteger(0)
+        private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
+        private val workingDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
+        private val retiredDrivers = Collections.synchronizedSet(HashSet<String>())
+        private val crashedDrivers = Collections.synchronizedSet(HashSet<String>())
+
+        private val totalDriverCount get() = allDrivers.size
+        private val freeDriverCount get() = freeDrivers.size
+        private val workingDriverCount get() = workingDrivers.size
+        private val crashedDriverCount get() = crashedDrivers.size
+        private val retiredDriverCount get() = retiredDrivers.size
     }
 
     private val defaultWebDriverClass = conf.getClass(
@@ -61,9 +69,9 @@ class WebDriverManager(
     private val isClosed = closed.get()
     val capacity = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
 
-    val workingSize get() = workingDriverCount.get()
-    val freeSize get() = freeDriverCount.get()
-    val totalSize get() = totalDriverCount.get()
+    val workingSize get() = workingDriverCount
+    val freeSize get() = freeDriverCount
+    val totalSize get() = totalDriverCount
 
     internal inner class PulsarHtmlUnitDriver(capabilities: Capabilities) : HtmlUnitDriver() {
         private val throwExceptionOnScriptError: Boolean = capabilities.`is`("throwExceptionOnScriptError")
@@ -76,13 +84,8 @@ class WebDriverManager(
 
     fun put(priority: Int, driver: WebDriver) {
         try {
-            val queue = freeDrivers[priority]
-            if (queue != null) {
-                queue.put(driver)
-
-                workingDriverCount.decrementAndGet()
-                freeDriverCount.incrementAndGet()
-            }
+            workingDrivers.remove(driver)
+            freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.put(driver)
         } catch (e: InterruptedException) {
             log.warn("Failed to put a WebDriver into pool, $e")
         }
@@ -93,28 +96,43 @@ class WebDriverManager(
             return null
         }
 
-        val queue = getOrCreateWebDriverQueue(priority)
-        val timeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-
-        try {
-            val driver = queue.poll(2 * timeout.seconds, TimeUnit.SECONDS)
-            workingDriverCount.incrementAndGet()
-            freeDriverCount.decrementAndGet()
-            return driver
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            log.info("Interrupted, no web driver should return")
-        }
-
-        return null
-    }
-
-    private fun getOrCreateWebDriverQueue(priority: Int): ArrayBlockingQueue<WebDriver> {
         val queue = freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }
         if (queue.isEmpty()) {
-            allocateWebDriver(queue, conf)
+            allocateWebDriver(priority, conf)
         }
-        return queue
+
+        val driverPollingTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        var driver: WebDriver?
+        try {
+            driver = queue.poll(2 * driverPollingTimeout.seconds, TimeUnit.SECONDS)
+            driver?.also { workingDrivers.add(it) }
+        } catch (e: InterruptedException) {
+            log.info("Interrupted, no web driver should return")
+            driver = null
+        }
+
+        return if (isClosed) null else driver
+    }
+
+    fun retire(priority: Int, driver: WebDriver, e: Exception?) {
+        freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.remove(driver)
+        workingDrivers.remove(driver)
+        retiredDrivers.add(driver.toString())
+
+        try {
+            // Quits this driver, closing every associated window.
+            driver.quit()
+        } catch(e: WebDriverException) {
+            log.error("Failed to close WebDriver {} - {}", driver, StringUtil.stringifyException(e))
+        } catch(e: Throwable) {
+            log.error("Unknown error - {}", StringUtil.stringifyException(e))
+        } finally {
+        }
+
+        when (e) {
+            is org.openqa.selenium.NoSuchSessionException -> crashedDrivers.add(driver.toString())
+            is org.apache.http.conn.HttpHostConnectException -> crashedDrivers.add(driver.toString())
+        }
     }
 
     @Throws(KeyStoreException::class, NoSuchAlgorithmException::class, KeyManagementException::class)
@@ -124,26 +142,24 @@ class WebDriverManager(
         // SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, new NoopHostnameVerifier());
     }
 
-    private fun allocateWebDriver(queue: ArrayBlockingQueue<WebDriver>, conf: ImmutableConfig) {
+    private fun allocateWebDriver(priority: Int, conf: ImmutableConfig) {
         if (isClosed) {
             return
         }
 
-        if (totalSize >= capacity) {
-            log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/total: {}/{}",
-                    PulsarEnv.NCPU, capacity, freeSize, totalSize)
+        if (freeSize + workingSize >= capacity) {
+            log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/working/total: {}/{}",
+                    PulsarEnv.NCPU, capacity, freeSize, workingSize, totalSize)
             return
         }
 
         try {
-            val driver = doCreateWebDriver(conf)
+            val driver = createWebDriver(conf)
             val level = setLogLevel(driver)
 
             synchronized(WebDriverManager::class.java) {
-                totalDriverCount.incrementAndGet()
-                freeDriverCount.incrementAndGet()
                 allDrivers.add(driver)
-                queue.put(driver)
+                freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.put(driver)
 
                 log.info("The {}th web driver is online, " +
                         "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
@@ -160,37 +176,31 @@ class WebDriverManager(
      * Use reflection so we can make the dependency level to be "provided" rather than "source"
      */
     @Throws(NoSuchMethodException::class, IllegalAccessException::class, InvocationTargetException::class, InstantiationException::class)
-    private fun doCreateWebDriver(conf: ImmutableConfig): WebDriver {
-        val browser = getBrowser(conf)
-
+    private fun createWebDriver(conf: ImmutableConfig): WebDriver {
         val capabilities = BrowserControl.createGeneralOptions()
 
         // Proxy is enabled by default
-        if (PulsarEnv.useProxy) {
-            val proxy = getProxy(conf)
+        if (PulsarConstants.USE_PROXY) {
+            val proxy = getProxy()
             if (proxy != null) {
                 capabilities.setCapability(CapabilityType.PROXY, proxy)
-
-                if (log.isDebugEnabled) {
-                    log.debug("Use proxy $proxy")
-                }
+                log.info("Use proxy {}", proxy)
             }
         }
 
         // Choose the WebDriver
-        val driver: WebDriver
-        if (browser == BrowserType.CHROME) {
-            val chromeOptions = BrowserControl.createChromeOptions(capabilities)
-            driver = ChromeDriver(chromeOptions)
-        } else if (browser == BrowserType.HTMLUNIT) {
-            capabilities.setCapability("browserName", "htmlunit")
-            driver = PulsarHtmlUnitDriver(capabilities)
-        } else {
-            if (RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass)) {
-                driver = defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
-            } else {
-                driver = defaultWebDriverClass.getConstructor().newInstance()
+        val browserType = getBrowserType(conf)
+        val driver: WebDriver = when {
+            browserType == BrowserType.CHROME -> {
+                ChromeDriver(BrowserControl.createChromeOptions(capabilities))
             }
+            browserType == BrowserType.HTMLUNIT -> {
+                PulsarHtmlUnitDriver(capabilities.also { it.setCapability("browserName", "htmlunit") })
+            }
+            RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
+                defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
+            }
+            else -> defaultWebDriverClass.getConstructor().newInstance()
         }
 
         driver.manage().window().maximize()
@@ -214,34 +224,35 @@ class WebDriverManager(
         return level
     }
 
-    private fun getProxy(conf: ImmutableConfig): org.openqa.selenium.Proxy? {
-        var ipPort = if (isInternalProxyServerRunning()) {
+    private fun getProxy(): org.openqa.selenium.Proxy? {
+        var hostPort: String? = null
+        if (isInternalProxyServerRunning()) {
             // TODO: internal proxy server can be run at another host
-            "127.0.0.1:${internalProxyServer.port}"
-        } else conf.get(PROXY_HTTP_PROXY)
+            hostPort = "127.0.0.1:${internalProxyServer.port}"
+        }
 
-        if (ipPort == null) {
+        if (hostPort == null) {
             // internal proxy server is not available, set proxy to the browser directly
             val proxyEntry = proxyPool.poll()
             if (proxyEntry != null) {
-                ipPort = proxyEntry.ipPort()
+                hostPort = proxyEntry.hostPort
             }
         }
 
-        if (ipPort == null) {
+        if (hostPort == null) {
             return null
         }
 
         val proxy = org.openqa.selenium.Proxy()
-        proxy.httpProxy = ipPort
-        proxy.sslProxy = ipPort
-        proxy.ftpProxy = ipPort
+        proxy.httpProxy = hostPort
+        proxy.sslProxy = hostPort
+        proxy.ftpProxy = hostPort
 
         return proxy
     }
 
     private fun isInternalProxyServerRunning(): Boolean {
-        if (internalProxyServer.disabled || isClosed) {
+        if (internalProxyServer.isDisabled || isClosed) {
             return false
         }
 
@@ -253,16 +264,12 @@ class WebDriverManager(
      * Speed: native > htmlunit > chrome
      * Quality: chrome > htmlunit > native
      */
-    private fun getBrowser(mutableConfig: ImmutableConfig?): BrowserType {
-        val browser: BrowserType
-
-        if (mutableConfig != null) {
-            browser = mutableConfig.getEnum(SELENIUM_BROWSER, BrowserType.CHROME)
+    private fun getBrowserType(mutableConfig: ImmutableConfig?): BrowserType {
+        return if (mutableConfig != null) {
+            mutableConfig.getEnum(SELENIUM_BROWSER, BrowserType.CHROME)
         } else {
-            browser = conf.getEnum(SELENIUM_BROWSER, BrowserType.CHROME)
+            conf.getEnum(SELENIUM_BROWSER, BrowserType.CHROME)
         }
-
-        return browser
     }
 
     override fun close() {
@@ -280,7 +287,7 @@ class WebDriverManager(
 
         // wait for all drivers are recycled
         var maxWait = 5
-        while (maxWait-- > 0 && workingDriverCount.get() > 0) {
+        while (maxWait-- > 0 && workingDriverCount > 0) {
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {}
@@ -297,7 +304,7 @@ class WebDriverManager(
             } catch (e: org.openqa.selenium.WebDriverException) {
                 if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                     // already closed, nothing to do
-                    log.trace("Web driver is already closed: {}", e.message)
+                    log.warn("Web driver is already closed: {}", e.message)
                 } else {
                     log.error("Unexpected exception: {}", e)
                 }

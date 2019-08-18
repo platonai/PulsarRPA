@@ -13,7 +13,7 @@ import java.util.regex.Pattern
 object ProtoUtil {
 
     fun getRequestProto(httpRequest: HttpRequest): RequestProto? {
-        val requestProto = RequestProto()
+        var host = ""
         var port = -1
         var hostStr: String? = httpRequest.headers().get(HttpHeaderNames.HOST)
         if (hostStr == null) {
@@ -31,7 +31,7 @@ object ProtoUtil {
         //先从host上取端口号没取到再从uri上取端口号 issues#4
         var portTemp: String? = null
         if (matcher.find()) {
-            requestProto.host = matcher.group("host")
+            host = matcher.group("host")
             portTemp = matcher.group("port")
             if (portTemp == null) {
                 matcher = pattern.matcher(uriStr)
@@ -51,26 +51,17 @@ object ProtoUtil {
                 port = 80
             }
         }
-        requestProto.port = port
-        requestProto.ssl = isSsl
-        return requestProto
+
+        return RequestProto(host, port, isSsl)
     }
 
-    class RequestProto : Serializable {
-        var host: String? = null
-        var port: Int = 0
-        var ssl: Boolean = false
-
-        constructor() {}
-
-        constructor(host: String, port: Int, ssl: Boolean) {
-            this.host = host
-            this.port = port
-            this.ssl = ssl
-        }
+    class RequestProto(
+            var host: String,
+            var port: Int,
+            var ssl: Boolean = false
+    ) : Serializable {
 
         companion object {
-
             private const val serialVersionUID = -6471051659605127698L
         }
     }
@@ -78,7 +69,6 @@ object ProtoUtil {
 
 
 object ByteUtil {
-
 
     fun findText(byteBuf: ByteBuf, str: String): Int {
         val text = str.toByteArray()

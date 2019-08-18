@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
  * Created by vincent on 17-1-14.
  */
 public class TestSParser {
-    private MutableConfig conf = new MutableConfig(false);
+    private MutableConfig conf = new MutableConfig();
 
     private SParser parser = new SParser();
 

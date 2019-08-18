@@ -19,8 +19,8 @@ package ai.platon.pulsar.crawl.protocol.http;
 import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.proxy.ProxyPool;
 import ai.platon.pulsar.crawl.protocol.Content;
 import ai.platon.pulsar.crawl.protocol.Protocol;
@@ -169,7 +169,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.proxyPort = conf.getInt("http.proxy.port", 8080);
         this.useProxyPool = conf.getBoolean("http.proxy.pool", false);
         if (this.useProxyPool) {
-            this.proxyPool = PulsarEnv.Companion.getExternalProxyManager().getProxyPool();
+            this.proxyPool = PulsarEnv.Companion.getProxyManager().getProxyPool();
         }
         this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
 
@@ -253,7 +253,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     @Override
-    public Collection<Response> getResponses(Collection<WebPage> pages, MutableConfig conf) {
+    public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         return pages.stream()
                 .map(page -> getResponseOrNull(page.getUrl(), page, false))
                 .collect(Collectors.toList());

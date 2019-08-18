@@ -1,12 +1,13 @@
 package ai.platon.pulsar.proxy
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.config.PulsarConstants.INTERNAL_PROXY_SERVER_PORT
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.common.proxy.ProxyPool
 import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptInitializer
@@ -34,13 +35,14 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 class InternalProxyServer(
-        private val proxyPool: ProxyPool,
+        private val proxyManager: ProxyManager,
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(InternalProxyServer::class.java)
     private val now = DateTimeUtil.now("yyyyMMdd")
     private val path = PulsarPaths.get("proxy", "logs", "proxy-$now.log")
     private val proxyLog = SimpleLogger(path, SimpleLogger.INFO)
+    private val proxyPool = proxyManager.proxyPool
 
     private var runningWithoutProxy = false
     private var forwardServer: HttpProxyServer? = null
@@ -50,24 +52,24 @@ class InternalProxyServer(
     private val connected = AtomicBoolean()
     private val lock: Lock = ReentrantLock()
     private val connectedCond: Condition = lock.newCondition()
-    private var readyTimeout = Duration.ofSeconds(45)
+    private var readyTimeout = Duration.ofSeconds(60)
 
     private val bossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 5)
     private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)
     private val httpProxyServerConfig = HttpProxyServerConfig()
 
-    val enabled = conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
-    val disabled get() = !enabled
-    var proxyEntry: ProxyEntry? = null
-        private set
+    val isEnabled = PulsarConstants.USE_PROXY && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
+    val isDisabled get() = !isEnabled
     val port = INTERNAL_PROXY_SERVER_PORT
     val totalConnects = AtomicInteger()
     val numRunningTasks = AtomicInteger()
+    var lastActiveTime = Instant.now()
+    private var idleTime = Duration.ZERO
     val isConnected get() = connected.get()
     val isClosed get() = closed.get()
 
-    var lastActiveTime = Instant.now()
-    private var idleTime = Duration.ZERO
+    var proxyEntry: ProxyEntry? = null
+        private set
 
     init {
         httpProxyServerConfig.bossGroupThreads = bossGroupThreads
@@ -76,7 +78,7 @@ class InternalProxyServer(
     }
 
     fun start() {
-        if (disabled) {
+        if (isDisabled) {
             log.warn("Internal proxy server is disabled")
             return
         }
@@ -86,7 +88,7 @@ class InternalProxyServer(
     }
 
     inline fun <R> run(block: () -> R): R {
-        if (isClosed || disabled) {
+        if (isClosed || isDisabled) {
             throw NoProxyException("Internal proxy server is " + if (isClosed) "closed" else "disabled")
         }
 
@@ -106,7 +108,7 @@ class InternalProxyServer(
     }
 
     fun waitUntilRunning(): Boolean {
-        if (disabled || isClosed) {
+        if (isDisabled || isClosed) {
             return false
         }
 
@@ -150,8 +152,8 @@ class InternalProxyServer(
             }
 
             // TODO: use a connected connection for the testing
-            val proxyStillAlive = proxyEntry?.testNetwork()?:false
-            if (!proxyStillAlive) {
+            val proxyAlive = proxyEntry?.test()?:false
+            if (!proxyAlive) {
                 val proxy = proxyEntry
                 if (proxy != null) {
                     log.info("Proxy <{}> is unavailable, mark it retired", proxy)
@@ -160,7 +162,7 @@ class InternalProxyServer(
                 }
             }
 
-            if (!proxyStillAlive || !isConnected) {
+            if (!proxyAlive || !isConnected) {
                 // close old no working running forward proxy server and quit the thread
                 disconnect()
                 connect()
@@ -176,7 +178,7 @@ class InternalProxyServer(
                         connectTo(null)
                     }
                 } else {
-                    if (!proxyStillAlive || !isConnected) {
+                    if (!proxyAlive || !isConnected) {
                         // close old no working running forward proxy server and quit the thread
                         disconnect()
                         connect()
@@ -253,6 +255,7 @@ class InternalProxyServer(
             }
         }
 
+        // TODO: only disconnect the proxy
         forwardServer?.use { it.close() }
         forwardServerThread?.interrupt()
         forwardServerThread?.join()
@@ -262,7 +265,7 @@ class InternalProxyServer(
 
     @Synchronized
     override fun close() {
-        if (disabled || closed.getAndSet(true)) {
+        if (isDisabled || closed.getAndSet(true)) {
             return
         }
 
@@ -336,7 +339,7 @@ class InternalProxyServer(
 
 fun main() {
     val conf = ImmutableConfig()
-    val proxyPool = ProxyPool(conf)
-    val server = InternalProxyServer(proxyPool, conf)
+    val proxyManager = ProxyManager(ProxyPool(conf), conf)
+    val server = InternalProxyServer(proxyManager, conf)
     server.start()
 }

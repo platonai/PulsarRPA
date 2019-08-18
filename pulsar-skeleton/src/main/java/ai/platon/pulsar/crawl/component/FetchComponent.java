@@ -334,7 +334,7 @@ public class FetchComponent implements AutoCloseable {
         Objects.requireNonNull(page);
         Objects.requireNonNull(options);
 
-        page.setMutableConfig(options.getVolatileConfig());
+        page.setVolatileConfig(options.getVolatileConfig());
         page.setFetchMode(options.getFetchMode());
         page.setOptions(options.toString());
 
