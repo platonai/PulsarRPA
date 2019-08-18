@@ -122,6 +122,15 @@ public class Params {
         paramsList.add(Pair.of(name, value));
     }
 
+    public boolean remove(String key) {
+        List<Pair<String, Object>> list = paramsList.stream().filter(entry -> !entry.getKey().equals(key)).collect(Collectors.toList());
+        boolean removed = list.size() < paramsList.size();
+        if (removed) {
+            this.paramsList = list;
+        }
+        return removed;
+    }
+
     public Object get(String name) {
         Pair<String, Object> entry = CollectionUtils.find(paramsList, e -> e.getKey().equals(name));
         return entry == null ? null : entry.getValue();
