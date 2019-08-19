@@ -2,6 +2,7 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -14,6 +15,8 @@ import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.persist.metadata.FetchMode
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
@@ -148,7 +151,33 @@ class PulsarContext: AutoCloseable {
         closableObjects.add(closable)
     }
 
-    fun normalize(url: String): NormUrl {
+    private fun initOptions(options: LoadOptions, isItemOption: Boolean = false): LoadOptions {
+        if (options.volatileConfig == null) {
+            options.volatileConfig = VolatileConfig(PulsarEnv.unmodifiedConfig)
+        }
+
+        return if (isItemOption) getItemOption(options) else options
+    }
+
+    fun getItemOption(options: LoadOptions): LoadOptions {
+        val itemOptions = options.clone()
+
+        itemOptions.expires = options.itemExpires
+        itemOptions.scrollCount = options.itemScrollCount
+        itemOptions.scriptTimeout = options.itemScriptTimeout
+        itemOptions.scrollInterval = options.itemScrollInterval
+        itemOptions.pageLoadTimeout = options.itemPageLoadTimeout
+
+        itemOptions.browser = options.itemBrowser
+        if (itemOptions.browser == BrowserType.NATIVE) {
+            // TODO: merge browser and fetch mode
+            itemOptions.fetchMode = FetchMode.NATIVE
+        }
+
+        return itemOptions
+    }
+
+    fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
         val parts = Urls.splitUrlArgs(url)
         val options = initOptions(LoadOptions.parse(parts.second))
@@ -159,7 +188,7 @@ class PulsarContext: AutoCloseable {
         return NormUrl(normalizedUrl, initOptions(options))
     }
 
-    fun normalize(url: String, options: LoadOptions): NormUrl {
+    fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
         val parts = Urls.splitUrlArgs(url)
         var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
@@ -175,12 +204,12 @@ class PulsarContext: AutoCloseable {
         return NormUrl(normalizedUrl, initOptions(options2))
     }
 
-    fun normalize(urls: Iterable<String>): List<NormUrl> {
+    fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
         return urls.mapNotNull { normalize(it).takeIf { it.isNotNil } }
     }
 
-    fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
+    fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
         return urls.mapNotNull { normalize(it, options).takeIf { it.isNotNil } }
     }
@@ -383,12 +412,5 @@ class PulsarContext: AutoCloseable {
 //            throw IllegalStateException(
 //                    """Cannot call methods on a stopped PulsarContext.""")
         }
-    }
-
-    private fun initOptions(options: LoadOptions): LoadOptions {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = VolatileConfig(PulsarEnv.unmodifiedConfig)
-        }
-        return options
     }
 }

@@ -15,10 +15,7 @@ import ai.platon.pulsar.proxy.InternalProxyServer
 import com.gargoylesoftware.htmlunit.WebClient
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
-import org.openqa.selenium.Capabilities
-import org.openqa.selenium.SessionNotCreatedException
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebDriverException
+import org.openqa.selenium.*
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.CapabilityType
@@ -48,11 +45,14 @@ class WebDriverManager(
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
     companion object {
+        data class DriverStatus(var pageViews: Int = 0)
+
         private val allDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
         private val freeDrivers = HashMap<Int, ArrayBlockingQueue<WebDriver>>()
         private val workingDrivers = Collections.synchronizedSet(HashSet<WebDriver>())
         private val retiredDrivers = Collections.synchronizedSet(HashSet<String>())
         private val crashedDrivers = Collections.synchronizedSet(HashSet<String>())
+        private val driversStatusTracker = Collections.synchronizedMap(HashMap<String, DriverStatus>())
 
         private val totalDriverCount get() = allDrivers.size
         private val freeDriverCount get() = freeDrivers.size
@@ -84,10 +84,40 @@ class WebDriverManager(
 
     fun put(priority: Int, driver: WebDriver) {
         try {
-            workingDrivers.remove(driver)
+            val handles = driver.windowHandles.size
+            if (handles > 1) {
+                driver.close()
+            }
+
             freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.put(driver)
-        } catch (e: InterruptedException) {
-            log.warn("Failed to put a WebDriver into pool, $e")
+            getStatus(driver).pageViews++
+        } catch (e: Exception) {
+            log.warn("Failed to recycle a WebDriver - {}", e)
+        } finally {
+            workingDrivers.remove(driver)
+        }
+    }
+
+    fun retire(priority: Int, driver: WebDriver, e: Exception?) {
+        freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.remove(driver)
+        workingDrivers.remove(driver)
+        retiredDrivers.add(driver.toString())
+
+        when (e) {
+            is org.openqa.selenium.NoSuchSessionException -> crashedDrivers.add(driver.toString())
+            is org.apache.http.conn.HttpHostConnectException -> crashedDrivers.add(driver.toString())
+        }
+
+        try {
+            // Quits this driver, closing every associated window.
+            driver.quit()
+        } catch(e: org.openqa.selenium.NoSuchSessionException) {
+            log.info("WebDriver is already quit {} - {}", driver, e.message?.splitToSequence("\n")?.firstOrNull())
+        } catch(e: WebDriverException) {
+            log.warn("Quit WebDriver {} - {}", driver, StringUtil.stringifyException(e))
+        } catch(e: Throwable) {
+            log.error("Unknown error - {}", StringUtil.stringifyException(e))
+        } finally {
         }
     }
 
@@ -114,25 +144,8 @@ class WebDriverManager(
         return if (isClosed) null else driver
     }
 
-    fun retire(priority: Int, driver: WebDriver, e: Exception?) {
-        freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.remove(driver)
-        workingDrivers.remove(driver)
-        retiredDrivers.add(driver.toString())
-
-        try {
-            // Quits this driver, closing every associated window.
-            driver.quit()
-        } catch(e: WebDriverException) {
-            log.error("Failed to close WebDriver {} - {}", driver, StringUtil.stringifyException(e))
-        } catch(e: Throwable) {
-            log.error("Unknown error - {}", StringUtil.stringifyException(e))
-        } finally {
-        }
-
-        when (e) {
-            is org.openqa.selenium.NoSuchSessionException -> crashedDrivers.add(driver.toString())
-            is org.apache.http.conn.HttpHostConnectException -> crashedDrivers.add(driver.toString())
-        }
+    fun getStatus(driver: WebDriver): DriverStatus {
+        return driversStatusTracker.computeIfAbsent(driver.toString()) { DriverStatus() }
     }
 
     @Throws(KeyStoreException::class, NoSuchAlgorithmException::class, KeyManagementException::class)
@@ -148,8 +161,9 @@ class WebDriverManager(
         }
 
         if (freeSize + workingSize >= capacity) {
-            log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/working/total: {}/{}",
-                    PulsarEnv.NCPU, capacity, freeSize, workingSize, totalSize)
+            log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/working/total/crashed/retired: {}/{}/{}/{}/{}",
+                    PulsarEnv.NCPU, capacity,
+                    freeSize, workingSize, totalSize, crashedDriverCount, retiredDriverCount)
             return
         }
 
@@ -160,12 +174,12 @@ class WebDriverManager(
             synchronized(WebDriverManager::class.java) {
                 allDrivers.add(driver)
                 freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.put(driver)
-
-                log.info("The {}th web driver is online, " +
-                        "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
-                        totalDriverCount, driver.javaClass.simpleName.toLowerCase(),
-                        imagesEnabled, pageLoadStrategy, capacity, level)
             }
+
+            log.info("The {}th web driver is online, " +
+                    "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
+                    totalDriverCount, driver.javaClass.simpleName.toLowerCase(),
+                    imagesEnabled, pageLoadStrategy, capacity, level)
         } catch (e: Throwable) {
             log.error(StringUtil.stringifyException(e))
         }
@@ -226,17 +240,14 @@ class WebDriverManager(
 
     private fun getProxy(): org.openqa.selenium.Proxy? {
         var hostPort: String? = null
-        if (isInternalProxyServerRunning()) {
+        if (internalProxyServer.waitUntilRunning()) {
             // TODO: internal proxy server can be run at another host
             hostPort = "127.0.0.1:${internalProxyServer.port}"
         }
 
         if (hostPort == null) {
             // internal proxy server is not available, set proxy to the browser directly
-            val proxyEntry = proxyPool.poll()
-            if (proxyEntry != null) {
-                hostPort = proxyEntry.hostPort
-            }
+            hostPort = proxyPool.poll()?.hostPort
         }
 
         if (hostPort == null) {
@@ -249,14 +260,6 @@ class WebDriverManager(
         proxy.ftpProxy = hostPort
 
         return proxy
-    }
-
-    private fun isInternalProxyServerRunning(): Boolean {
-        if (internalProxyServer.isDisabled || isClosed) {
-            return false
-        }
-
-        return internalProxyServer.waitUntilRunning()
     }
 
     /**
@@ -299,12 +302,14 @@ class WebDriverManager(
             it.remove()
 
             try {
-                log.info("Closing web driver {}", driver)
+                log.info("Quit {}", driver)
                 driver.quit()
             } catch (e: org.openqa.selenium.WebDriverException) {
                 if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                     // already closed, nothing to do
-                    log.warn("Web driver is already closed: {}", e.message)
+                    log.warn("Web driver is already closed: {}", e.toString().splitToSequence("\n").firstOrNull())
+                } else if (e is org.openqa.selenium.NoSuchSessionException) {
+                    log.warn("Web driver is already closed: {}", e.toString().splitToSequence("\n").firstOrNull())
                 } else {
                     log.error("Unexpected exception: {}", e)
                 }

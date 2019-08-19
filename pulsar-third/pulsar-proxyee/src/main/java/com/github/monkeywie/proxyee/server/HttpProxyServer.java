@@ -38,6 +38,10 @@ public class HttpProxyServer implements AutoCloseable {
   private EventLoopGroup bossGroup;
   private EventLoopGroup workerGroup;
 
+  public ProxyConfig getProxyConfig() {
+    return proxyConfig;
+  }
+
   private void init() {
     if (serverConfig == null) {
       serverConfig = new HttpProxyServerConfig();
@@ -128,6 +132,8 @@ public class HttpProxyServer implements AutoCloseable {
           });
       ChannelFuture f = b.bind(port).sync();
       f.channel().closeFuture().sync();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     } catch (Exception e) {
       e.printStackTrace();
     } finally {

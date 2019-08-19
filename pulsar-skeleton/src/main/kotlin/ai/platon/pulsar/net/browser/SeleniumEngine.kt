@@ -37,7 +37,6 @@ import java.nio.charset.Charset
 import java.nio.file.Path
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -109,7 +108,7 @@ data class DriverConfig(
     )
 }
 
-class FetchTaskContext(
+class FetchTask(
         val batchId: Int,
         val taskId: Int,
         val priority: Int,
@@ -117,8 +116,17 @@ class FetchTaskContext(
         val volatileConfig: VolatileConfig
 ) {
     val url get() = page.url
-    var response: Response? = null
+    lateinit var response: Response
+
+    companion object {
+        val NIL = FetchTask(0, 0, 0, WebPage.NIL, VolatileConfig.EMPTY)
+    }
 }
+
+class FetchResult(
+        val task: FetchTask,
+        val response: Response
+)
 
 data class VisitResult(
         val protocolStatus: ProtocolStatus,
@@ -127,6 +135,16 @@ data class VisitResult(
     companion object {
         val canceled = VisitResult(ProtocolStatus.STATUS_CANCELED, BrowserJsData.default)
     }
+}
+
+class IncompleteContentException: Exception {
+    constructor() : super() {}
+
+    constructor(message: String) : super(message) {}
+
+    constructor(message: String, cause: Throwable) : super(message, cause) {}
+
+    constructor(cause: Throwable) : super(cause) {}
 }
 
 /**
@@ -175,73 +193,78 @@ class SeleniumEngine(
         )
     }
 
-    internal fun fetchContentInternal(fetchTask: FetchTaskContext): Response {
+    internal fun fetchContentInternal(task: FetchTask): FetchResult {
+        val response: Response
         if (isClosed) {
-            return ForwardingResponse(fetchTask.page.url, "", ProtocolStatus.STATUS_CANCELED, MultiMetadata())
+            response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
+        } else {
+            totalTaskCount.getAndIncrement()
+            batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
+            response = visitPageAndRetrieveContentWithRetry(task)
         }
 
-        totalTaskCount.getAndIncrement()
-        batchTaskCounters.computeIfAbsent(fetchTask.batchId) { AtomicInteger() }.incrementAndGet()
-
-        // driver.manage().deleteAllCookies()
-
-        return visitPageAndRetrieveContentWithRetry(fetchTask)
+        return FetchResult(task, response)
     }
 
-    private fun visitPageAndRetrieveContentWithRetry(fetchTask: FetchTaskContext): Response {
-        var maxRetry = fetchTask.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
+    private fun visitPageAndRetrieveContentWithRetry(task: FetchTask): Response {
+        var maxRetry = task.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
         var response: Response? = null
 
         while (maxRetry-- > 0 && response == null) {
-            val driver = driverManager.poll(fetchTask.priority, fetchTask.volatileConfig)
-                    ?: return ForwardingResponse(fetchTask.page.url, ProtocolStatus.STATUS_RETRY)
+            val driver = driverManager.poll(task.priority, task.volatileConfig)
+                    ?: return ForwardingResponse(task.page.url, ProtocolStatus.STATUS_RETRY)
             var driverCrashed = false
             var exception: Exception? = null
 
             try {
                 response = if (internalProxyServer.isEnabled) {
                     internalProxyServer.run {
-                        visitPageAndRetrieveContent(driver, fetchTask)
+                        visitPageAndRetrieveContent(driver, task)
                     }
                 } else {
-                    visitPageAndRetrieveContent(driver, fetchTask)
+                    visitPageAndRetrieveContent(driver, task)
                 }
             } catch (e: NoProxyException) {
-                log.warn("No proxy, request is canceled | {}", fetchTask.url)
-                response = ForwardingResponse(fetchTask.url, ProtocolStatus.STATUS_CANCELED)
+                log.warn("No proxy, request is canceled - {}", task.url)
+                response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
             } catch (e: org.openqa.selenium.NoSuchSessionException) {
-                log.warn("Driver is crashed, {}", e.message)
+                log.warn("WebDriver is crashed - {}", e.message)
 
                 response = null
                 exception = e
                 driverCrashed = true
             } catch (e: org.apache.http.conn.HttpHostConnectException) {
-                log.warn("Driver is crashed, {}", e.message)
+                log.warn("WebDriver is crashed - {}", e.message)
+
+                response = null
+                exception = e
+                driverCrashed = true
+            } catch (e: IncompleteContentException) {
+                log.warn("WebDriver fetched nothing - {}", e.message)
 
                 response = null
                 exception = e
                 driverCrashed = true
             } finally {
                 if (internalProxyServer.isEnabled) {
-                    fetchTask.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
+                    task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
                 }
 
                 if (driverCrashed) {
-                    // close current window
-                    driver.close()
-                    driverManager.put(fetchTask.priority, driver)
+                    driverManager.retire(task.priority, driver, exception)
                 } else {
-                    driverManager.retire(fetchTask.priority, driver, exception)
+                    // close current window
+                    driverManager.put(task.priority, driver)
                 }
             }
         }
 
-        return response?:ForwardingResponse(fetchTask.url, ProtocolStatus.STATUS_FAILED)
+        return response?:ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED)
     }
 
-    private fun visitPageAndRetrieveContent(driver: WebDriver, fetchTask: FetchTaskContext): Response {
-        val batchId = fetchTask.batchId
-        val page = fetchTask.page
+    private fun visitPageAndRetrieveContent(driver: WebDriver, task: FetchTask): Response {
+        val batchId = task.batchId
+        val page = task.page
         // page.location is the last working address, and page.url is the permanent internal address
         val url = page.url
         var location = page.location
@@ -252,7 +275,7 @@ class SeleniumEngine(
             log.warn("Page location does't match url | {} - {}", url, location)
         }
 
-        val driverConfig = getDriverConfig(fetchTask.priority, fetchTask.page, fetchTask.volatileConfig)
+        val driverConfig = getDriverConfig(task.priority, task.page, task.volatileConfig)
         var status: ProtocolStatus
         var jsData = BrowserJsData.default
         val headers = MultiMetadata()
@@ -262,7 +285,7 @@ class SeleniumEngine(
         var pageSource = ""
 
         try {
-            val result = visit(fetchTask, driver, driverConfig)
+            val result = visit(task, driver, driverConfig)
             status = result.protocolStatus
             jsData = result.jsData
             // TODO: handle with frames
@@ -273,22 +296,25 @@ class SeleniumEngine(
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_RETRY
-            log.warn(e.toString())
+            log.warn(e.message)
+        } catch (e: org.openqa.selenium.UnhandledAlertException) {
+            // failed to wait for body
+            status = ProtocolStatus.STATUS_RETRY
+            log.warn(e.message?.split("\n")?.firstOrNull()?:"UnhandledAlertException")
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_BROWSER_RETRY
-            log.warn("Web driver crashed, {}", e.toString())
-            throw e
+            log.warn("Web driver crashed", e)
         } catch (e: org.openqa.selenium.WebDriverException) {
             // 1. session deleted because of page crash
             // 2. org.openqa.selenium.NoSuchSessionException: invalid session id
 
             status = ProtocolStatus.STATUS_RETRY
-            log.warn(e.toString())
+            log.warn("Unexpected WebDriver exception", e)
         } catch (e: Throwable) {
             // must not throw again
             status = ProtocolStatus.STATUS_EXCEPTION
-            log.warn("Unexpected exception: {}", e)
+            log.warn("Unexpected exception", e)
         }
 
         pageSource = getPageSourceSilently(driver)
@@ -297,7 +323,7 @@ class SeleniumEngine(
                 && pageSource.indexOf("<html>") != -1
                 && pageSource.lastIndexOf("</html>") != -1
         if (proxyError) {
-            status = ProtocolStatus.STATUS_RETRY
+            throw IncompleteContentException("Retrieved only 76 bytes, browser fetched nothing")
         }
 
         if (status.minorCode == ProtocolStatusCodes.WEB_DRIVER_TIMEOUT
@@ -356,50 +382,11 @@ class SeleniumEngine(
         return true to "OK"
     }
 
-    fun getResponse(url: String, future: Future<Response>, timeout: Duration): Response {
-        // used only for failure
-        val status: ProtocolStatus
-        val headers = MultiMetadata()
-
-        try {
-            // Waits if necessary for at most the given time for the computation
-            // to complete, and then retrieves its result, if available.
-            return future.get(timeout.seconds, TimeUnit.SECONDS)
-        } catch (e: java.util.concurrent.CancellationException) {
-            // if the computation was cancelled
-            // TODO: this should never happen
-            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
-            headers.put("EXCEPTION", e.toString())
-        } catch (e: java.util.concurrent.TimeoutException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
-            headers.put("EXCEPTION", e.toString())
-
-            log.warn("Fetch resource timeout, {}", e)
-        } catch (e: java.util.concurrent.ExecutionException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
-            headers.put("EXCEPTION", e.toString())
-
-            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
-        } catch (e: InterruptedException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
-            headers.put("EXCEPTION", e.toString())
-
-            log.warn("Interrupted when fetch resource {}", e)
-        } catch (e: Exception) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
-            headers.put("EXCEPTION", e.toString())
-
-            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
-        }
-
-        return ForwardingResponse(url, "", status, headers)
-    }
-
-    private fun visit(fetchTask: FetchTaskContext, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
-        val batchId = fetchTask.batchId
-        val taskId = fetchTask.taskId
-        val url = fetchTask.url
-        val page = fetchTask.page
+    private fun visit(task: FetchTask, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
+        val batchId = task.batchId
+        val taskId = task.taskId
+        val url = task.url
+        val page = task.page
 
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
                 taskId, batchTaskCounters[batchId], totalTaskCount,
@@ -458,9 +445,6 @@ class SeleniumEngine(
             log.warn("Waiting for document interrupted | {}", url)
             Thread.currentThread().interrupt()
             status = ProtocolStatus.STATUS_CANCELED
-        } catch (e: UnreachableBrowserException) {
-            log.warn("Browser unreachable | {}", url)
-            status = ProtocolStatus.STATUS_CANCELED
         } catch (e: WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 // Web driver closed
@@ -468,7 +452,7 @@ class SeleniumEngine(
             } else if (e.cause is InterruptedException) {
                 // Web driver closed
             } else {
-                log.warn("Web driver exception | {} \n>>>\n{}\n<<<", url, e.message)
+                // log.warn("Web driver exception | {} \n>>>\n{}\n<<<", url, e.message)
             }
             throw e
         } catch (e: Exception) {

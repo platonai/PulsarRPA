@@ -103,12 +103,13 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[15]?:return
+        val url = seeds[13]?:return
 
         var args = "-i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
         val outlink = when {
             "mia" in url -> "a[href~=item]"
+            "gome" in url -> "a[href~=item]"
             "mogu" in url -> "a[href~=detail]"
             "vip" in url -> "a[href~=detail-]"
             else -> "a"
@@ -125,8 +126,6 @@ object WebAccess {
         i.loadAll(links, LoadOptions.parse(args))
 
         println("All done.")
-
-        PulsarEnv.getOrCreate().exit()
         // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
         // println(WebPageFormatter(page).withLinks())
     }
@@ -227,4 +226,5 @@ object WebAccess {
 
 fun main() {
     WebAccess.run()
+    PulsarEnv.getOrCreate().exit()
 }

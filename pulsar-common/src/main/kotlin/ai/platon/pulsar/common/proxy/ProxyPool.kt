@@ -44,8 +44,8 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     val numWorkingProxies get() = workingProxies.size
     val numUnavailableProxies get() = unavailableProxies.size
 
-    override operator fun contains(proxy: ProxyEntry): Boolean {
-        return freeProxies.contains(proxy)
+    override operator fun contains(element: ProxyEntry): Boolean {
+        return freeProxies.contains(element)
     }
 
     override operator fun iterator(): MutableIterator<ProxyEntry> {
@@ -59,16 +59,18 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     override fun offer(proxyEntry: ProxyEntry): Boolean {
         proxyEntry.refresh()
         proxyEntries.add(proxyEntry)
+        workingProxies.remove(proxyEntry)
         return freeProxies.offer(proxyEntry)
     }
 
     override fun poll(): ProxyEntry? {
-        if (freeProxies.isEmpty()) {
-            updateProxies()
-        }
-
         var proxy: ProxyEntry? = null
-        while (!isClosed && proxy == null && freeProxies.isNotEmpty()) {
+        var maxRetry = 5
+        while (!isClosed && proxy == null && maxRetry-- > 0) {
+            if (freeProxies.isEmpty()) {
+                updateProxies()
+            }
+
             proxy = pollOne()
         }
 
@@ -145,7 +147,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     }
 
     fun updateProxies() {
-        reloadProviders(Duration.ofSeconds(30))
+        reloadProviders(Duration.ofSeconds(10))
 
         if (numFreeProxies < 3) {
             providers.forEach {
@@ -214,7 +216,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
 
     private fun reloadProviders(expires: Duration) {
         try {
-            Files.list(PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach {
+            Files.list(ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach {
                 val lastModified = lastModifiedTimes.getOrDefault(it, Instant.EPOCH)
                 reloadIfModified(it, lastModified, expires) { load(it, ResourceType.PROVIDER ) }
             }
@@ -226,7 +228,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
     private fun reloadProxies(expires: Duration) {
         try {
             // load enabled proxies
-            Files.list(AVAILABLE_DIR).filter { Files.isRegularFile(it) }.forEach {
+            Files.list(ENABLED_PROXY_DIR).filter { Files.isRegularFile(it) }.forEach {
                 val lastModified = lastModifiedTimes.getOrDefault(it, Instant.EPOCH)
                 reloadIfModified(it, lastModified, expires) { load(it, ResourceType.PROXY) }
             }
@@ -240,7 +242,7 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
         val elapsed = Duration.between(lastModified, modified)
 
         if (elapsed > expires) {
-            log.info("Reload from file, last modified: {}, elapsed: {}s", lastModified, elapsed)
+            log.info("Reload from file, last modified: {}, elapsed: {}", lastModified, elapsed)
             loader(path)
         }
 
@@ -300,13 +302,17 @@ class ProxyPool(conf: ImmutableConfig) : AbstractQueue<ProxyEntry>(), AutoClosea
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
 
         val BASE_DIR = PulsarPaths.get("proxy")
-        val PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers")
-        val AVAILABLE_DIR = PulsarPaths.get(BASE_DIR, "available-proxies")
-        val ARCHIVE_DIR = PulsarPaths.get(BASE_DIR, "archived-proxies")
+        val ENABLED_PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers-enabled")
+        val AVAILABLE_PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers-available")
+        val ENABLED_PROXY_DIR = PulsarPaths.get(BASE_DIR, "proxies-enabled")
+        val AVAILABLE_PROXY_DIR = PulsarPaths.get(BASE_DIR, "proxies-available")
+        val ARCHIVE_DIR = PulsarPaths.get(BASE_DIR, "proxies-archived")
 
         init {
-            Files.createDirectories(PROVIDER_DIR)
-            Files.createDirectories(AVAILABLE_DIR)
+            Files.createDirectories(ENABLED_PROVIDER_DIR)
+            Files.createDirectories(AVAILABLE_PROVIDER_DIR)
+            Files.createDirectories(AVAILABLE_PROXY_DIR)
+            Files.createDirectories(ENABLED_PROXY_DIR)
             Files.createDirectories(ARCHIVE_DIR)
 
             log.info(toString())

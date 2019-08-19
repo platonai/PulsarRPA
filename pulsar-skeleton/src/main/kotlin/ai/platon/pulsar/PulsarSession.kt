@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
 import ai.platon.pulsar.common.PulsarPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
@@ -12,6 +13,8 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.persist.metadata.FetchMode
 import org.h2.util.Utils
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
@@ -66,26 +69,24 @@ open class PulsarSession(
         enableCache = false
     }
 
-    fun normalize(url: String): NormUrl {
+    fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
-        val normUrl = context.normalize(url)
-        initOptions(normUrl.options)
-        return normUrl
+        return context.normalize(url, isItemOption)
     }
 
-    fun normalize(url: String, options: LoadOptions): NormUrl {
+    fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
-        return context.normalize(url, initOptions(options))
+        return context.normalize(url, initOptions(options), isItemOption)
     }
 
-    fun normalize(urls: Iterable<String>): List<NormUrl> {
+    fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
-        return context.normalize(urls).onEach { initOptions(it.options) }
+        return context.normalize(urls, isItemOption).onEach { initOptions(it.options) }
     }
 
-    fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
+    fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
-        return context.normalize(urls, initOptions(options))
+        return context.normalize(urls, initOptions(options), isItemOption)
     }
 
     /**
@@ -152,7 +153,6 @@ open class PulsarSession(
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
-        initOptions(options)
         val normUrls = normalize(urls, options)
 
         return if (enableCache) {
@@ -171,7 +171,6 @@ open class PulsarSession(
      */
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         ensureRunning()
-        initOptions(options)
         options.preferParallel = true
         val normUrls = normalize(urls, options)
 
@@ -185,7 +184,7 @@ open class PulsarSession(
     /**
      * Load all out pages in a portal page
      *
-     * @param urls    The urls to load
+     * @param portalUrl    The portal url from where to load pages
      * @param options The load options
      * @return The web pages
      */
@@ -197,8 +196,7 @@ open class PulsarSession(
             getLink(it, !op.noNorm, op.ignoreUrlQuery)
         }
 
-        // TODO: use item- serial options
-        return loadAll(links, op)
+        return loadAll(links, context.getItemOption(normUrl.options))
     }
 
     /**

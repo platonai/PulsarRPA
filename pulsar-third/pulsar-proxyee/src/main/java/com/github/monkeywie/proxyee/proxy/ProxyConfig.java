@@ -53,6 +53,10 @@ public class ProxyConfig implements Serializable {
     this.port = port;
   }
 
+  public String getHostPort() {
+    return host + ":" + port;
+  }
+
   public String getUser() {
     return user;
   }

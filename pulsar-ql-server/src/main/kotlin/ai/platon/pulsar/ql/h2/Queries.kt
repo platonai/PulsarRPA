@@ -112,23 +112,8 @@ object Queries {
             links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
-        return session.loadAll(links, LoadOptions.create())
-    }
-
-    fun loadOutPages(
-            session: QuerySession,
-            configuredPortal: Value, restrictCss: String,
-            offset: Int, limit: Int,
-            normalize: Boolean, ignoreQuery: Boolean): Collection<WebPage> {
-        val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
-        var links = loadAll(session, configuredPortal).map { session.parse(it).document }
-                .flatMap { transformer(it, restrictCss, offset, limit) }
-
-        if (normalize) {
-            links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
-        }
-
-        return session.loadAll(links, LoadOptions.create())
+        val normUrl = session.normalize(portalUrl, isItemOption = true)
+        return session.loadAll(links, normUrl.options)
     }
 
     /**

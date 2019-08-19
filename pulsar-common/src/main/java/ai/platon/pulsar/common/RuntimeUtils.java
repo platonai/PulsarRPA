@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +16,10 @@ public class RuntimeUtils {
 
     protected static final Logger LOG = LoggerFactory.getLogger(RuntimeUtils.class);
 
-    private static final Object commandFileLocker = new Object();
-    private static final Path commandFile = PulsarPaths.PATH_LOCAL_COMMAND;
+    private static final Object COMMAND_FILE_LOCKER = new Object();
+    private static final Path COMMAND_FILE = PulsarPaths.PATH_LOCAL_COMMAND;
+    private static final Duration DEFAULT_COMMAND_FILE_CHECK_INTERVAL = Duration.ofSeconds(5);
     private static long commandFileLastModified = 0;
-    private static final Duration commandFileMinCheckInterval = Duration.ofSeconds(5);
 
     public static boolean checkIfProcessRunning(String regex) {
         try {
@@ -41,20 +42,26 @@ public class RuntimeUtils {
      * Check local command file
      */
     public static boolean hasLocalFileCommand(String command) {
+        return hasLocalFileCommand(command, DEFAULT_COMMAND_FILE_CHECK_INTERVAL);
+    }
+
+    public static boolean hasLocalFileCommand(String command, Duration checkInterval) {
         boolean exist = false;
 
-        if (Files.exists(commandFile)) {
+        if (Files.exists(COMMAND_FILE)) {
             try {
-                synchronized (commandFileLocker) {
-                    long modified = commandFile.toFile().lastModified();
-                    if (modified - commandFileLastModified > commandFileMinCheckInterval.toMillis()) {
+                synchronized (COMMAND_FILE_LOCKER) {
+                    long modified = COMMAND_FILE.toFile().lastModified();
+                    if (modified - commandFileLastModified >= checkInterval.toMillis()) {
                         commandFileLastModified = modified;
 
-                        List<String> lines = Files.readAllLines(commandFile);
-                        exist = lines.stream().anyMatch(line -> line.equals(command));
+                        List<String> lines = Files.readAllLines(COMMAND_FILE);
+                        exist = lines.stream().anyMatch(line -> line.startsWith(command));
                         if (exist) {
-                            lines.remove(command);
-                            Files.write(commandFile, lines);
+                            if (!StringUtils.containsIgnoreCase(command, " -keep")) {
+                                lines.remove(command);
+                                Files.write(COMMAND_FILE, lines);
+                            }
                         }
                     }
                 }

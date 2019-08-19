@@ -129,17 +129,24 @@ public class WebPage {
     }
 
     @Nonnull
-    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery) {
+    public static WebPage newWebPage(String originalUrl, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
-        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
+        Objects.requireNonNull(volatileConfig);
+        return newWebPageInternal(originalUrl, volatileConfig);
+    }
+
+    @Nonnull
+    public static WebPage newWebPage(String originalUrl, boolean shortenKey) {
+        Objects.requireNonNull(originalUrl);
+        String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
     @Nonnull
-    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, VolatileConfig volatileConfig) {
+    public static WebPage newWebPage(String originalUrl, boolean shortenKey, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(volatileConfig);
-        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
+        String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
         return newWebPageInternal(url, volatileConfig);
     }
 

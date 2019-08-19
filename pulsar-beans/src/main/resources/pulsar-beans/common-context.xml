@@ -54,7 +54,7 @@
     </bean>
 
     <bean id="internalProxyServer" class="ai.platon.pulsar.proxy.InternalProxyServer" destroy-method="close">
-        <constructor-arg ref="proxyManager"/>
+        <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>
 

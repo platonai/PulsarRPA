@@ -11,7 +11,7 @@ import kotlin.math.max
 /**
  * A simple log system
  */
-class SimpleLogger(val path: Path, var level: Int = DEFAULT_LOG_LEVEL): AutoCloseable {
+class SimpleLogger(val path: Path, var levelFile: Int = DEFAULT_LOG_LEVEL): AutoCloseable {
 
     private var systemOutLevel = DEFAULT_LOG_LEVEL_SYSTEM_OUT
     var sysOut = System.out
@@ -29,7 +29,7 @@ class SimpleLogger(val path: Path, var level: Int = DEFAULT_LOG_LEVEL): AutoClos
     }
 
     fun write(level: Int, module: String, s: String, t: Throwable? = null) {
-        if (level <= systemOutLevel || level > this.levelMax) {
+        if (level <= systemOutLevel) {
             // level <= levelSystemOut: the system out level is set higher
             // level > this.level: the level for this module is set higher
             sysOut.println(format(module, s))
@@ -38,13 +38,13 @@ class SimpleLogger(val path: Path, var level: Int = DEFAULT_LOG_LEVEL): AutoClos
             }
         }
 
-        if (level <= this.level) {
+        if (level <= this.levelFile) {
             writeFile(format(module, s), t)
         }
     }
 
     private fun updateLevel() {
-        levelMax = max(systemOutLevel, this.level)
+        levelMax = max(systemOutLevel, this.levelFile)
     }
 
     @Synchronized

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
@@ -37,13 +38,13 @@ object DomFunctionTables {
     @InterfaceStability.Evolving
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
-    fun loadAll(@H2Context conn: JdbcConnection, configuredUrls: ValueArray): ResultSet {
+    fun loadAll(@H2Context conn: JdbcConnection, portalUrls: ValueArray): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val pages = Queries.loadAll(session, configuredUrls)
+        val pages = Queries.loadAll(session, portalUrls)
         val doms = pages.map { session.parseToValue(it) }
 
         return toResultSet("DOM", doms)
@@ -87,13 +88,13 @@ object DomFunctionTables {
     @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside all the selected elements")
     fun loadAndGetLinks(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
+            portalUrl: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val links = Queries.loadAll(session, configuredPortal, restrictCss, offset, limit, Queries::getLinks)
+        val links = Queries.loadAll(session, portalUrl, restrictCss, offset, limit, Queries::getLinks)
         return toResultSet("LINK", links)
     }
 
@@ -101,7 +102,7 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     @UDFunction(description = "Get all links inside the all selected elements")
-    fun links(@H2Context conn: JdbcConnection, 
+    fun links(@H2Context conn: JdbcConnection,
               dom: ValueDom, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
@@ -130,10 +131,10 @@ object DomFunctionTables {
     }
 
     /**
-     * Load configuredPortal page(s) and follow all links
+     * Load portalUrl page(s) and follow all links
      *
-     * @param configuredPortal The configuredPortal page(s) to fetch,
-     * a configuredPortal can be
+     * @param portalUrl The portalUrl page(s) to fetch,
+     * a portalUrl can be
      * 1) a configured urls, or
      * 2) a String[]
      * 3) a List
@@ -144,12 +145,12 @@ object DomFunctionTables {
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
     fun loadOutPages(@H2Context conn: JdbcConnection,
-                     configuredPortal: Value,
+                     portalUrl: String,
                      restrictCss: String = ":root",
                      offset: Int = 1,
                      limit: Int = Integer.MAX_VALUE,
                      normalize: Boolean = false): ResultSet {
-        return loadOutPagesAsRsInternal(conn, configuredPortal, restrictCss, offset, limit, normalize = normalize)
+        return loadOutPagesAsRsInternal(conn, portalUrl, restrictCss, offset, limit, normalize = normalize)
     }
 
     @InterfaceStability.Stable
@@ -157,20 +158,20 @@ object DomFunctionTables {
     @JvmOverloads
     @JvmStatic
     fun loadOutPagesIgnoreUrlQuery(@H2Context conn: JdbcConnection,
-                                   configuredPortal: Value,
+                                   portalUrl: String,
                                    restrictCss: String = ":root",
                                    offset: Int = 1,
                                    limit: Int = Int.MAX_VALUE,
                                    normalize: Boolean = false): ResultSet {
         return loadOutPagesAsRsInternal(conn,
-                configuredPortal, restrictCss, offset, limit, normalize = normalize, ignoreQuery = true)
+                portalUrl, restrictCss, offset, limit, normalize = normalize, ignoreQuery = true)
     }
 
     /**
-     * Load configuredPortal page(s) and follow all links
+     * Load portalUrl page(s) and follow all links
      *
-     * @param configuredPortal The configuredPortal page(s) to fetch,
-     * a configuredPortal can be
+     * @param portalUrl The portalUrl page(s) to fetch,
+     * a portalUrl can be
      * 1) a configured urls, or
      * 2) a String[]
      * 3) a List
@@ -182,7 +183,7 @@ object DomFunctionTables {
     @JvmStatic
     fun loadOutPagesAndSelect(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value,
+            portal: String,
             restrictCss: String = ":root",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE,
@@ -194,9 +195,9 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val docs =
-                Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
-                        .map { session.parse(it) }
+        val docs = Queries.loadOutPages(session,
+                portal, restrictCss, offset, limit, normalize, ignoreQuery)
+                .map(session::parse)
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
@@ -208,10 +209,10 @@ object DomFunctionTables {
     }
 
     /**
-     * Load configuredPortal page(s) and follow all links
+     * Load portalUrl page(s) and follow all links
      *
-     * @param configuredPortal The configuredPortal page(s) to fetch,
-     * a configuredPortal can be
+     * @param portalUrl The portalUrl page(s) to fetch,
+     * a portalUrl can be
      * 1) a configured urls, or
      * 2) a String[]
      * 3) a List
@@ -223,7 +224,7 @@ object DomFunctionTables {
     @JvmStatic
     fun loadOutPagesAndSelectFirst(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value,
+            portalUrl: String,
             restrictCss: String = ":root",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE,
@@ -231,12 +232,12 @@ object DomFunctionTables {
             normalize: Boolean = false,
             ignoreQuery: Boolean = false): ResultSet {
         return loadOutPagesAsRsInternal(conn,
-                configuredPortal, restrictCss, offset, limit, targetCss = targetCss, normalize = normalize, ignoreQuery = ignoreQuery)
+                portalUrl, restrictCss, offset, limit, targetCss = targetCss, normalize = normalize, ignoreQuery = ignoreQuery)
     }
 
     private fun loadOutPagesAsRsInternal(
             @H2Context conn: JdbcConnection,
-            configuredPortal: Value,
+            portalUrl: String,
             restrictCss: String = ":root",
             offset: Int = 1,
             limit: Int = Int.MAX_VALUE,
@@ -249,8 +250,8 @@ object DomFunctionTables {
         }
 
         val docs =
-                Queries.loadOutPages(session, configuredPortal, restrictCss, offset, limit, normalize, ignoreQuery)
-                .map { session.parse(it) }
+                Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
+                .map(session::parse)
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
@@ -264,7 +265,7 @@ object DomFunctionTables {
     /**
      * Get the feature
      *
-     * @param configuredUrl The configured url
+     * @param portalUrl The configured url
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
@@ -273,12 +274,12 @@ object DomFunctionTables {
     @JvmOverloads
     fun loadAndGetFeatures(
             @H2Context conn: JdbcConnection,
-            configuredUrl: String,
+            portalUrl: String,
             cssQuery: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD,H1,H2,H3",
             offset: Int = 1,
             limit: Int = 100): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        val page = session.load(configuredUrl)
+        val page = session.load(portalUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
         return features(conn, dom, cssQuery, offset, limit)
     }
@@ -322,7 +323,7 @@ object DomFunctionTables {
     /**
      * Get the feature
      *
-     * @param configuredUrl The configured url
+     * @param portalUrl The configured url
      * @return The [ResultSet] with element features for all match elements
      */
     @InterfaceStability.Stable
@@ -331,12 +332,12 @@ object DomFunctionTables {
     @JvmStatic
     fun loadAndGetElementsWithMostSibling(
             @H2Context conn: JdbcConnection,
-            configuredUrl: String,
+            portalUrl: String,
             restrictCss: String = "DIV,P,UL,OL,LI,DL,DT,DD,TABLE,TR,TD",
             offset: Int = 1,
             limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
-        val page = session.load(configuredUrl)
+        val page = session.load(portalUrl)
         val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
         return getElementsWithMostSibling(conn, dom, restrictCss, offset, limit)
     }

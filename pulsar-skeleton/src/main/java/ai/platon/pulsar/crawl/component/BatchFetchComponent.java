@@ -30,7 +30,11 @@ public class BatchFetchComponent extends FetchComponent {
     private ProtocolFactory protocolFactory;
 
     public BatchFetchComponent(
-            WebDb webDb, FetchTaskTracker statusTracker, ProtocolFactory protocolFactory, ImmutableConfig immutableConfig) {
+            WebDb webDb,
+            FetchTaskTracker statusTracker,
+            ProtocolFactory protocolFactory,
+            ImmutableConfig immutableConfig
+    ) {
         super(protocolFactory, statusTracker, immutableConfig);
         this.protocolFactory = protocolFactory;
         this.webDb = webDb;

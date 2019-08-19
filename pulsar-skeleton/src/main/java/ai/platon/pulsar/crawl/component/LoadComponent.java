@@ -11,6 +11,7 @@ import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -431,9 +432,9 @@ public class LoadComponent {
             if (bytes > 0) {
                 String responseTime = page.getMetadata().get(RESPONSE_TIME);
                 String proxy = page.getMetadata().get(PROXY);
-                LOG.debug("Fetched{}{} bytes in {}{} | {}",
-                        bytes < 2000 ? " only " : " ", String.format("%,7d", page.getContentBytes()),
-                        responseTime,
+                LOG.debug("Fetched{}{}kb in {}{} | {}",
+                        bytes < 2000 ? " only " : " ", String.format("%,7.2f", page.getContentBytes() / 1024.0),
+                        StringUtils.removeStart(responseTime, "PT"),
                         proxy == null ? "" : " via " + proxy,
                         page.getConfiguredUrl()
                 );

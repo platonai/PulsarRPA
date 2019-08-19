@@ -13,15 +13,18 @@ import java.util.Objects;
  */
 public class VolatileConfig extends MutableConfig {
 
+    public static final VolatileConfig EMPTY = new VolatileConfig();
+
     private ImmutableConfig fallbackConfig;
     private Map<String, Integer> ttls = Collections.synchronizedMap(new HashMap<>());
     private Map<String, Object> variables = new HashMap<>();
 
     public VolatileConfig() {
-        super();
+        super(false);
     }
 
     public VolatileConfig(ImmutableConfig fallbackConfig) {
+        super(false);
         this.fallbackConfig = fallbackConfig;
     }
 
@@ -112,11 +115,21 @@ public class VolatileConfig extends MutableConfig {
     }
 
     public <T> Object putBean(T bean) {
-        return variables.put(bean.getClass().getName(), bean);
+        return putBean(bean.getClass().getName(), bean);
     }
 
+    public <T> Object putBean(String name, T bean) {
+        return variables.put(name, bean);
+    }
+
+    @Nullable
     public <T> T getBean(Class<T> bean) {
-        Object obj = variables.get(bean.getName());
+        return getBean(bean.getName(), bean);
+    }
+
+    @Nullable
+    public <T> T getBean(String name, Class<T> bean) {
+        Object obj = variables.get(name);
         if (obj != null && bean.isAssignableFrom(obj.getClass())) {
             return (T)obj;
         }
@@ -131,6 +144,7 @@ public class VolatileConfig extends MutableConfig {
         return false;
     }
 
+    @Nullable
     public ImmutableConfig getFallbackConfig() {
         return fallbackConfig;
     }

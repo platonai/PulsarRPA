@@ -7,11 +7,14 @@ import ai.platon.pulsar.common.config.CapabilityTypes.SELENIUM_WEB_DRIVER_PRIORI
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.net.browser.FetchTaskContext
+import ai.platon.pulsar.net.browser.FetchResult
+import ai.platon.pulsar.net.browser.FetchTask
 import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
@@ -23,46 +26,73 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
+const val BEFORE_FETCH_HANDLER_KEY = "onBeforeFetch"
+const val AFTER_FETCH_HANDLER_KEY = "onAfterFetch"
+const val AFTER_FETCH_N_HANDLER_KEY = "onAfterFetchN"
+const val BEFORE_FETCH_ALL_HANDLER_KEY = "onBeforeFetchAll"
+const val AFTER_FETCH_ALL_HANDLER_KEY = "onAfterFetchAll"
+
+abstract class TaskHandler: (WebPage) -> Unit {
+    abstract override operator fun invoke(page: WebPage)
+}
+
+abstract class BatchHandler: (Iterable<WebPage>) -> Unit {
+    abstract override operator fun invoke(pages: Iterable<WebPage>)
+}
+
 internal class BatchFetchContext(
         val batchId: Int,
         val pages: Iterable<WebPage>,
         val volatileConfig: VolatileConfig
 ) {
     val startTime = Instant.now()
-    val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)!!
+    val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
     val interval = Duration.ofSeconds(1)
-    val idleTimeout = Duration.ofMinutes(2).seconds
+    val idleTimeout = Duration.ofMinutes(2)
     val numTotalTasks = Iterables.size(pages)
     val numAllowedFailures = max(10, numTotalTasks / 3)
 
     // All submitted tasks
-    val pendingTasks = mutableMapOf<String, Future<Response>>()
-    val finishedTasks = mutableMapOf<String, Response>()
+    val pendingTasks = mutableMapOf<String, Future<FetchResult>>()
+    val finishedTasks = mutableMapOf<String, FetchResult>()
+    val successPages = mutableListOf<WebPage>()
 
     val numFinishedTasks get() = finishedTasks.size
     val numPendingTasks get() = pendingTasks.size
 
     // Submit all tasks
-    var i: Int = 0
+    var round: Int = 0
     var numTaskDone = 0
     var numFailedTasks = 0
     var idleSeconds = 0
     var totalBytes = 0
 
+    var beforeFetchHandler = volatileConfig.getBean(BEFORE_FETCH_HANDLER_KEY, TaskHandler::class.java)
+    var afterFetchHandler = volatileConfig.getBean(AFTER_FETCH_HANDLER_KEY, TaskHandler::class.java)
+    var afterFetchNHandler = volatileConfig.getBean(AFTER_FETCH_N_HANDLER_KEY, BatchHandler::class.java)
+    var beforeFetchAllHandler = volatileConfig.getBean(BEFORE_FETCH_ALL_HANDLER_KEY, BatchHandler::class.java)
+    var afterFetchAllHandler = volatileConfig.getBean(AFTER_FETCH_ALL_HANDLER_KEY, BatchHandler::class.java)
+
     fun beforeFetch(page: WebPage) {
+        beforeFetchHandler?.invoke(page)
     }
 
     fun afterFetch(page: WebPage) {
-//        val onFetchComplete = volatileConfig.getBean(Function0::class.java)
-//        onFetchComplete.reflect()
+        afterFetchHandler?.invoke(page)
     }
 
-    fun beforeBatch(pages: Iterable<WebPage>) {
+    fun afterFetchN(pages: Iterable<WebPage>) {
+        afterFetchNHandler?.invoke(pages)
     }
 
-    fun afterBatch(pages: Iterable<WebPage>) {
+    fun beforeFetchAll(pages: Iterable<WebPage>) {
+        beforeFetchAllHandler?.invoke(pages)
+    }
+
+    fun afterFetchAll(pages: Iterable<WebPage>) {
+        afterFetchAllHandler?.invoke(pages)
     }
 }
 
@@ -76,224 +106,259 @@ class SeleniumFetchComponent(
         private val executor: GlobalExecutor,
         private val seleniumEngine: SeleniumEngine,
         private val immutableConfig: ImmutableConfig
-): Parameterized, AutoCloseable {
+): AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumFetchComponent::class.java)!!
 
-    private val isClosed = AtomicBoolean(false)
+    private val isClosed = AtomicBoolean()
 
     fun fetch(url: String): Response {
-        return fetchContent(WebPage.newWebPage(url, false))
+        val volatileConfig = VolatileConfig(immutableConfig)
+        return fetchContent(WebPage.newWebPage(url, volatileConfig))
     }
 
     fun fetch(url: String, volatileConfig: VolatileConfig): Response {
-        return fetchContent(WebPage.newWebPage(url, false, volatileConfig))
+        return fetchContent(WebPage.newWebPage(url, volatileConfig))
     }
 
     /**
      * Fetch page content
      * */
     fun fetchContent(page: WebPage): Response {
-        val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
+        val volatileConfig = page.volatileConfig ?: VolatileConfig(immutableConfig)
         val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
-        return seleniumEngine.fetchContentInternal(FetchTaskContext(0, nextTaskId, priority, page, volatileConfig))
+        val task = FetchTask(0, nextTaskId, priority, page, volatileConfig)
+        return seleniumEngine.fetchContentInternal(task).response
     }
 
-    fun fetchAll(batchId: Int, urls: Iterable<String>): Collection<Response> {
-        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it) }, immutableConfig.toVolatileConfig())
+    fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
+        val volatileConfig = VolatileConfig(immutableConfig)
+        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
-    fun fetchAll(urls: Iterable<String>): Collection<Response> {
+    fun fetchAll(urls: Iterable<String>): List<Response> {
         return fetchAll(nextBatchId, urls)
     }
 
-    fun fetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): Collection<Response> {
-        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it) }, volatileConfig)
+    fun fetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
+        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
-    fun fetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): Collection<Response> {
+    fun fetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
         return fetchAll(nextBatchId, urls, volatileConfig)
     }
 
-    fun parallelFetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): Collection<Response> {
-        // return parallelFetchAllPages(urls.map { WebPage.newWebPage(it) }, volatileConfig)
-        return parallelFetchAllPages(nextBatchId, urls.map { WebPage.newWebPage(it) }, volatileConfig)
+    fun parallelFetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
+        return parallelFetchAllPages(nextBatchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
-    fun parallelFetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): Collection<Response> {
-        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it) }, volatileConfig)
+    fun parallelFetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
+        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
-    fun parallelFetchAllPages(pages: Iterable<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
+    fun parallelFetchAllPages(pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
+        pages.forEach { if (it.volatileConfig == null) it.volatileConfig = volatileConfig }
         return parallelFetchAllPages(nextBatchId, pages, volatileConfig)
     }
 
-    private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
-        val context = BatchFetchContext(batchId, pages, volatileConfig)
+    private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
+        val cx = BatchFetchContext(batchId, pages, volatileConfig)
 
-        log.info("Start batch task {} with {} pages in parallel", batchId, context.numTotalTasks)
+        log.info("Start batch task {} with {} pages in parallel", batchId, cx.numTotalTasks)
 
-        context.beforeBatch(pages)
+        cx.beforeFetchAll(pages)
 
         // Submit all tasks
-        var i = 0
-        pages.associateTo(context.pendingTasks) { it.url to executor.submit { doFetch(++i, it, context) } }
+        var taskId = 0
+        pages.associateTo(cx.pendingTasks) { it.url to executor.submit { doFetch(++taskId, it, cx) } }
+        val isLastTaskTimeout: (cx: BatchFetchContext) -> Boolean = {
+            it.pendingTasks.size == 1 && it.idleSeconds >= 30 && it.numTotalTasks > 10
+        }
 
-        // since the urls in the batch are usually from the same domain,
+        // Since the urls in the batch are usually from the same domain,
         // if there are too many failure, the rest tasks are very likely run to failure too
-        i = 0
-        while (context.numTaskDone < context.numTotalTasks
-                && context.numFailedTasks <= context.numAllowedFailures
-                && context.idleSeconds < context.idleTimeout
+        while (cx.numTaskDone < cx.numTotalTasks
+                && cx.numFailedTasks <= cx.numAllowedFailures
+                && cx.idleSeconds < cx.idleTimeout.seconds
+                && !isLastTaskTimeout(cx)
                 && !isClosed.get()
                 && !Thread.currentThread().isInterrupted) {
-            ++i
-
-            if (i >= 60 && i % 30 == 0) {
-                // report every 30 round if it takes long time
-                log.warn("Batch {} takes long time - round {} - {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}s",
-                        batchId, i, context.pendingTasks.size, context.finishedTasks.size, context.numFailedTasks, context.idleSeconds, context.idleTimeout)
-            }
-
-            if (context.pendingTasks.size == 1 && context.idleSeconds >= 30 && context.numTotalTasks > 10) {
-                // only one very slow task, cancel it
-            }
+            ++cx.round
 
             // loop and wait for all parallel tasks return
-            val removal = mutableListOf<String>()
-            context.pendingTasks.asSequence().filter { it.value.isDone }.forEach { (url, future) ->
-                handleTaskDone(i, url, future, context)
-                removal.add(url)
+            val done = mutableListOf<String>()
+            cx.pendingTasks.asSequence().filter { it.value.isDone }.forEach { (url, future) ->
+                val result = handleTaskDone(url, future, cx)
+                done.add(result.task.url)
             }
-            removal.forEach { context.pendingTasks.remove(it) }
+            done.forEach { cx.pendingTasks.remove(it) }
 
-            if (context.numFinishedTasks > 5) {
-                // We may do something eagerly
+            cx.idleSeconds = if (done.isEmpty()) 1 + cx.idleSeconds else 0
+
+            if (cx.round >= 60 && cx.round % 30 == 0) {
+                logLongTime(cx)
             }
 
-            context.idleSeconds = if (context.numTaskDone == 0) 1 + context.idleSeconds else 0
-
-            // TODO: Use reactor, coroutine or signal instead of sleep
             try {
-                TimeUnit.SECONDS.sleep(context.interval.seconds)
+                TimeUnit.SECONDS.sleep(cx.interval.seconds)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
-                log.warn("Selenium interrupted, {} pending tasks will be canceled", context.pendingTasks.size)
+                log.warn("Selenium interrupted, {} pending tasks will be canceled", cx.pendingTasks.size)
             }
         }
 
-        if (context.pendingTasks.isNotEmpty()) {
-            handleIncomplete(context)
+        if (cx.pendingTasks.isNotEmpty()) {
+            handleIncomplete(cx)
         }
 
-        logBatchFinished(context)
+        cx.afterFetchAll(pages)
 
-        context.afterBatch(pages)
+        logBatchFinished(cx)
 
-        return context.finishedTasks.values
+        return cx.finishedTasks.values.map { it.response }
     }
 
-    private fun doFetch(i: Int, page: WebPage, context: BatchFetchContext): Response {
-        context.beforeFetch(page)
-        val taskContext = FetchTaskContext(context.batchId, i, context.priority, page, context.volatileConfig)
-
-        return try {
-            seleniumEngine.fetchContentInternal(taskContext)
-        } finally {
-            context.afterFetch(page)
-        }
-    }
-
-    private fun handleTaskDone(i: Int, url: String, future: Future<Response>, context: BatchFetchContext): String {
-        if (isClosed.get() || Thread.currentThread().isInterrupted) {
-            return url
-        }
+    private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext): FetchResult {
+        cx.beforeFetch(page)
+        val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
 
         try {
-            val response = seleniumEngine.getResponse(url, future, context.threadTimeout)
-            context.totalBytes += response.size()
-            context.finishedTasks[url] = response
-
-            val elapsed = Duration.ofSeconds(i.toLong()) // response.headers
-            val isFailed = response.code !in arrayOf(ProtocolStatusCodes.SUCCESS_OK, ProtocolStatusCodes.CANCELED)
-            if (isFailed) {
-                ++context.numFailedTasks
-                logTaskFailed(context, url, response, elapsed)
-            } else {
-                logTaskSuccess(context, url, response, elapsed)
-            }
-
-            val onFetchComplete = context.volatileConfig.getBean(Function::class.java)
-            if (onFetchComplete != null) {
-                // do something
-            }
-        } catch (e: Throwable) {
-            log.error("Unexpected error {}", StringUtil.stringifyException(e))
+            return seleniumEngine.fetchContentInternal(task)
         } finally {
-            ++context.numTaskDone
-            // removal.add(key)
+            cx.afterFetch(page)
         }
-
-        return url
     }
 
-    private fun handleIncomplete(context: BatchFetchContext) {
-        logBatchIncomplete(context)
+    private fun handleTaskDone(url: String, future: Future<FetchResult>, cx: BatchFetchContext): FetchResult {
+        try {
+            val result = getFetchResult(url, future, cx.threadTimeout)
+            cx.finishedTasks[url] = result
+
+            val response = result.response
+            cx.totalBytes += response.size()
+
+            val elapsed = Duration.ofSeconds(cx.round.toLong())
+            when (response.code) {
+                ProtocolStatusCodes.SUCCESS_OK -> {
+                    cx.successPages.add(result.task.page)
+                    cx.afterFetchN(cx.successPages)
+                    logTaskSuccess(cx, url, response, elapsed)
+                }
+                ProtocolStatusCodes.CANCELED -> {
+                    // canceled
+                    // logTaskSuccess(cx, url, response, elapsed)
+                }
+                else -> {
+                    ++cx.numFailedTasks
+                    logTaskFailed(cx, url, response, elapsed)
+                }
+            }
+
+            return result
+        } finally {
+            ++cx.numTaskDone
+        }
+    }
+
+    private fun handleIncomplete(cx: BatchFetchContext) {
+        logBatchIncomplete(cx)
 
         // if there are still pending tasks, cancel them
-        context.pendingTasks.forEach { it.value.cancel(true) }
-        context.pendingTasks.forEach { (url, task) ->
+        cx.pendingTasks.forEach { it.value.cancel(true) }
+        cx.pendingTasks.forEach { (url, task) ->
             // Attempts to cancel execution of this task
             try {
-                val response = seleniumEngine.getResponse(url, task, context.threadTimeout)
-                context.finishedTasks[url] = response
+                val result = getFetchResult(url, task, cx.threadTimeout)
+                cx.finishedTasks[url] = result
             } catch (e: Throwable) {
                 log.error("Unexpected error {}", StringUtil.stringifyException(e))
             }
         }
     }
 
-    private fun logTaskFailed(context: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
-        if (!log.isInfoEnabled) {
-            return
+    private fun getFetchResult(url: String, future: Future<FetchResult>, timeout: Duration): FetchResult {
+        // used only for failure
+        val status: ProtocolStatus
+        val headers = MultiMetadata()
+
+        try {
+            // Waits if necessary for at most the given time for the computation
+            // to complete, and then retrieves its result, if available.
+            return future.get(timeout.seconds, TimeUnit.SECONDS)
+        } catch (e: java.util.concurrent.CancellationException) {
+            // if the computation was cancelled
+            // TODO: this should never happen
+            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+            headers.put("EXCEPTION", e.toString())
+        } catch (e: java.util.concurrent.TimeoutException) {
+            status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
+            headers.put("EXCEPTION", e.toString())
+
+            log.warn("Fetch resource timeout, {}", e)
+        } catch (e: java.util.concurrent.ExecutionException) {
+            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
+            headers.put("EXCEPTION", e.toString())
+
+            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
+        } catch (e: InterruptedException) {
+            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
+            headers.put("EXCEPTION", e.toString())
+
+            log.warn("Interrupted when fetch resource {}", e)
+        } catch (e: Exception) {
+            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+            headers.put("EXCEPTION", e.toString())
+
+            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         }
 
-        log.info("Batch {} round {} task failed, reason {}, {} bytes in {}, total {} failed | {}",
-                context.batchId, String.format("%2d", context.i),
-                ProtocolStatus.getMinorName(response.code), String.format("%,d", response.size()), elapsed,
-                context.numFailedTasks,
-                url
-        )
+        return FetchResult(FetchTask.NIL, ForwardingResponse(url, "", status, headers))
     }
 
-    private fun logTaskSuccess(context: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
-        if (!log.isInfoEnabled) {
-            return
+    private fun logLongTime(cx: BatchFetchContext) {
+        log.warn("Batch {} takes long time - round {} - {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}",
+                cx.batchId, cx.round,
+                cx.pendingTasks.size, cx.finishedTasks.size, cx.numFailedTasks,
+                cx.idleSeconds, cx.idleTimeout)
+    }
+
+    private fun logTaskFailed(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
+        if (log.isInfoEnabled) {
+            log.info("Batch {} round {} task failed, reason {}, {} bytes in {}, total {} failed | {}",
+                    cx.batchId, String.format("%2d", cx.round),
+                    ProtocolStatus.getMinorName(response.code), String.format("%,d", response.size()),
+                    elapsed.toString().removePrefix("PT"),
+                    cx.numFailedTasks,
+                    url
+            )
         }
-
-        log.info("Batch {} round {} fetched{}{}kb in {} with code {} | {}",
-                context.batchId, String.format("%2d", context.i),
-                if (context.totalBytes < 2000) " only " else " ", String.format("%,7.2f", response.size() / 1024.0),
-                elapsed,
-                response.code, url)
     }
 
-    private fun logBatchIncomplete(context: BatchFetchContext) {
+    private fun logTaskSuccess(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
+        if (log.isInfoEnabled) {
+            log.info("Batch {} round {} fetched{}{}kb in {} with code {} | {}",
+                    cx.batchId, String.format("%2d", cx.round),
+                    if (cx.totalBytes < 2000) " only " else " ", String.format("%,7.2f", response.size() / 1024.0),
+                    elapsed.toString().removePrefix("PT"),
+                    response.code, url)
+        }
+    }
+
+    private fun logBatchIncomplete(cx: BatchFetchContext) {
         log.warn("Batch task is incomplete, finished tasks {}, pending tasks {}, failed tasks: {}, idle: {}s",
-                context.numFinishedTasks, context.numPendingTasks, context.numFailedTasks, context.idleSeconds)
+                cx.numFinishedTasks, cx.numPendingTasks, cx.numFailedTasks, cx.idleSeconds)
     }
 
-    private fun logBatchFinished(context: BatchFetchContext) {
-        if (!log.isInfoEnabled) {
-            return
+    private fun logBatchFinished(cx: BatchFetchContext) {
+        if (log.isInfoEnabled) {
+            val elapsed = Duration.between(cx.startTime, Instant.now())
+            log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave bytes: {}, speed: {}bps",
+                    cx.batchId, cx.numTotalTasks,
+                    elapsed.toString().removePrefix("PT"),
+                    String.format("%,.3f", 1.0 * elapsed.seconds / cx.numTotalTasks),
+                    cx.totalBytes / cx.numTotalTasks,
+                    String.format("%,.3f", 1.0 * cx.totalBytes * 8 / elapsed.seconds)
+            )
         }
-
-        val elapsed = Duration.between(context.startTime, Instant.now())
-        log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave bytes: {}, speed: {}bps",
-                context.batchId, context.numTotalTasks, elapsed,
-                String.format("%,.3f", 1.0 * elapsed.seconds / context.numTotalTasks),
-                context.totalBytes / context.numTotalTasks,
-                String.format("%,.3f", 1.0 * context.totalBytes * 8 / elapsed.seconds)
-        )
     }
 
     override fun close() {

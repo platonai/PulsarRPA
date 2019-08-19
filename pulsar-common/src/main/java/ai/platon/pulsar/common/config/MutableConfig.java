@@ -13,6 +13,11 @@ import java.util.Objects;
 public class MutableConfig extends ImmutableConfig {
 
     public MutableConfig() {
+        this(true);
+    }
+
+    public MutableConfig(boolean loadDefaultDesource) {
+        super(loadDefaultDesource);
     }
 
     /**
