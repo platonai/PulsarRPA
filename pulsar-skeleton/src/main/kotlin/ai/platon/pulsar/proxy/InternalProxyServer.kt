@@ -52,7 +52,7 @@ class InternalProxyServer(
     private val lock: Lock = ReentrantLock()
     private val connectedCond: Condition = lock.newCondition()
     private var readyTimeout = Duration.ofSeconds(60)
-    private var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5))
+    private var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(2))
 
     private val bossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 5)
     private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)

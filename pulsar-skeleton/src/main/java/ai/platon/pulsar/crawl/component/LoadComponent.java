@@ -432,7 +432,7 @@ public class LoadComponent {
             if (bytes > 0) {
                 String responseTime = page.getMetadata().get(RESPONSE_TIME);
                 String proxy = page.getMetadata().get(PROXY);
-                LOG.debug("Fetched{}{}kb in {}{} | {}",
+                LOG.debug("Fetched{}{}kB in {}{} | {}",
                         bytes < 2000 ? " only " : " ", String.format("%,7.2f", page.getContentBytes() / 1024.0),
                         StringUtils.removeStart(responseTime, "PT"),
                         proxy == null ? "" : " via " + proxy,

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.SELENIUM_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -335,7 +334,7 @@ class SeleniumFetchComponent(
 
     private fun logTaskSuccess(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
-            log.info("Batch {} round {} fetched{}{}kb in {} with code {} | {}",
+            log.info("Batch {} round {} fetched{}{}kB in {} with code {} | {}",
                     cx.batchId, String.format("%2d", cx.round),
                     if (cx.totalBytes < 2000) " only " else " ", String.format("%,7.2f", response.size() / 1024.0),
                     elapsed.toString().removePrefix("PT"),

@@ -82,6 +82,7 @@ class WebDriverManager(
         }
     }
 
+    @Synchronized
     fun put(priority: Int, driver: WebDriver) {
         try {
             val handles = driver.windowHandles.size
@@ -98,6 +99,7 @@ class WebDriverManager(
         }
     }
 
+    @Synchronized
     fun retire(priority: Int, driver: WebDriver, e: Exception?) {
         freeDrivers.computeIfAbsent(priority) { ArrayBlockingQueue(capacity) }.remove(driver)
         workingDrivers.remove(driver)
@@ -109,18 +111,20 @@ class WebDriverManager(
         }
 
         try {
+            log.info("Quit web driver {}", driver)
             // Quits this driver, closing every associated window.
             driver.quit()
-        } catch(e: org.openqa.selenium.NoSuchSessionException) {
+        } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.info("WebDriver is already quit {} - {}", driver, e.message?.splitToSequence("\n")?.firstOrNull())
-        } catch(e: WebDriverException) {
+        } catch (e: WebDriverException) {
             log.warn("Quit WebDriver {} - {}", driver, StringUtil.stringifyException(e))
-        } catch(e: Throwable) {
+        } catch (e: Throwable) {
             log.error("Unknown error - {}", StringUtil.stringifyException(e))
         } finally {
         }
     }
 
+    @Synchronized
     fun poll(priority: Int, conf: ImmutableConfig): WebDriver? {
         if (isClosed) {
             return null
@@ -275,25 +279,29 @@ class WebDriverManager(
         }
     }
 
-    override fun close() {
-        if (closed.getAndSet(true)) {
-            return
-        }
-
-        freeDrivers.values.forEach { it.clear() }
-        freeDrivers.clear()
-
-        if (!isHeadless) {
-            // should close the browsers by hand
-            return
-        }
-
+    fun closeAll() {
         // wait for all drivers are recycled
-        var maxWait = 5
+        var maxWait = 60
         while (maxWait-- > 0 && workingDriverCount > 0) {
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {}
+        }
+
+        closeAllUnchecked()
+    }
+
+    @Synchronized
+    private fun closeAllUnchecked() {
+        log.info("Closing all web drivers ...")
+
+        freeDrivers.values.forEach { it.clear() }
+        freeDrivers.clear()
+        workingDrivers.clear()
+
+        if (!isHeadless) {
+            // should close the browsers by hand
+            return
         }
 
         val it = allDrivers.iterator()
@@ -317,5 +325,13 @@ class WebDriverManager(
                 log.error("Unexpected exception: {}", e)
             }
         }
+    }
+
+    override fun close() {
+        if (closed.getAndSet(true)) {
+            return
+        }
+
+        closeAll()
     }
 }

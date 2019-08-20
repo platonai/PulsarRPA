@@ -2,11 +2,8 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
+import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
@@ -194,6 +191,10 @@ class SeleniumEngine(
     }
 
     internal fun fetchContentInternal(task: FetchTask): FetchResult {
+        if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL)) {
+            driverManager.closeAll()
+        }
+
         val response: Response
         if (isClosed) {
             response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
@@ -248,6 +249,10 @@ class SeleniumEngine(
             } finally {
                 if (internalProxyServer.isEnabled) {
                     task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
+                }
+
+                if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
+                    driver.manage().deleteAllCookies()
                 }
 
                 if (driverCrashed) {
