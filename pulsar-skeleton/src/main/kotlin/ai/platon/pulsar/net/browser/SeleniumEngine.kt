@@ -216,7 +216,7 @@ class SeleniumEngine(
         var exception: Exception? = null
 
         var i = 0
-        while (i++ < maxRetry && response == null) {
+        while (i++ < maxRetry && response == null && !isClosed && !Thread.currentThread().isInterrupted) {
             if (i > 1) {
                 log.warn("Round {} retrying another Web driver ... | {}", i, task.url)
             }
@@ -238,19 +238,19 @@ class SeleniumEngine(
                 log.warn("No proxy, request is canceled - {}", task.url)
                 response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
             } catch (e: org.openqa.selenium.NoSuchSessionException) {
-                log.warn("WebDriver is crashed - {}", e.message)
+                log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
 
                 response = null
                 exception = e
                 driverCrashed = true
             } catch (e: org.apache.http.conn.HttpHostConnectException) {
-                log.warn("WebDriver is crashed - {}", e.message)
+                log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
 
                 response = null
                 exception = e
                 driverCrashed = true
             } catch (e: IncompleteContentException) {
-                log.warn("Content incomplete - {}", e.message)
+                log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
 
                 response = null
                 exception = e
@@ -322,7 +322,11 @@ class SeleniumEngine(
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_BROWSER_RETRY
-            log.warn("Web driver crashed", e)
+            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
+        } catch (e: org.apache.http.conn.HttpHostConnectException) {
+            // failed to wait for body
+            status = ProtocolStatus.STATUS_BROWSER_RETRY
+            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
         } catch (e: org.openqa.selenium.WebDriverException) {
             // 1. session deleted because of page crash
             // 2. org.openqa.selenium.NoSuchSessionException: invalid session id

@@ -1,6 +1,7 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.GlobalExecutor
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
@@ -97,6 +98,10 @@ class PulsarEnv {
                 return env.get()
             }
         }
+    }
+
+    val useProxy: Boolean get() {
+        return System.getProperty(PROXY_USE_PROXY, "yes") == "yes";
     }
 
     val isQuit = AtomicBoolean()

@@ -105,6 +105,7 @@ class WebDriverManager(
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
+    private val env = PulsarEnv.getOrCreate()
     private val closed = AtomicBoolean(false)
     private val isClosed = closed.get()
     val capacity: Int = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())
@@ -301,7 +302,7 @@ class WebDriverManager(
         val capabilities = BrowserControl.createGeneralOptions()
 
         // Proxy is enabled by default
-        if (PulsarConstants.USE_PROXY) {
+        if (env.useProxy) {
             val proxy = getProxy()
             if (proxy != null) {
                 capabilities.setCapability(CapabilityType.PROXY, proxy)

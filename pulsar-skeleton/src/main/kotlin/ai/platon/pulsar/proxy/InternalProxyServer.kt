@@ -1,5 +1,6 @@
 package ai.platon.pulsar.proxy
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -40,6 +41,7 @@ class InternalProxyServer(
     private val now = DateTimeUtil.now("yyyyMMdd")
     private val path = PulsarPaths.get("proxy", "logs", "proxy-$now.log")
     private val proxyLog = SimpleLogger(path, SimpleLogger.INFO)
+    private val env = PulsarEnv.getOrCreate()
 
     private var runningWithoutProxy = false
     private var forwardServer: HttpProxyServer? = null
@@ -56,7 +58,7 @@ class InternalProxyServer(
     private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)
     private val httpProxyServerConfig = HttpProxyServerConfig()
 
-    val isEnabled = USE_PROXY && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
+    val isEnabled get() = env.useProxy && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
     val isDisabled get() = !isEnabled
     val port = INTERNAL_PROXY_SERVER_PORT
     val totalConnects = AtomicInteger()

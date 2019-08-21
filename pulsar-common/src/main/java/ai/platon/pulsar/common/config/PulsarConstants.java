@@ -167,6 +167,5 @@ public interface PulsarConstants {
     /**
      * Proxy
      * */
-    boolean USE_PROXY = System.getProperty(CapabilityTypes.PROXY_USE_PROXY, "yes").equals("yes");
     int INTERNAL_PROXY_SERVER_PORT = 8184;
 }
