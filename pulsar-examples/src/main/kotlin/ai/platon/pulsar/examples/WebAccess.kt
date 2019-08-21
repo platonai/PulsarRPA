@@ -2,13 +2,15 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.RuntimeUtils
-import ai.platon.pulsar.common.URLUtil
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.crawl.component.BatchHandler
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
+import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -35,7 +37,8 @@ object WebAccess {
             12 to "http://shop.boqii.com/brand/",
             13 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163",
             14 to "http://dzhcg.sinopr.org/channel/304",
-            15 to "http://blog.zhaojie.me/"
+            15 to "http://blog.zhaojie.me/",
+            16 to "https://shopee.vn/search?keyword=qu%E1%BA%A7n%20l%C3%B3t%20na"
     )
 
     private val trivialUrls = listOf(
@@ -103,13 +106,14 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[13]?:return
+        val url = seeds[7]?:return
 
         var args = "-i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
         val outlink = when {
             "mia" in url -> "a[href~=item]"
             "gome" in url -> "a[href~=item]"
+            "jd.com" in url -> "a[href~=item.jd]"
             "mogu" in url -> "a[href~=detail]"
             "vip" in url -> "a[href~=detail-]"
             else -> "a"
@@ -121,8 +125,27 @@ object WebAccess {
         val path = i.export(document)
         println("Export to: file://$path")
 
-        val links = document.select(outlink) { it.attr("abs:href") }.take(2)
+        val links = document.select(outlink) { it.attr("abs:href") }.take(10)
         // links.forEach { println(it) }
+
+        class BeforeBatchHandler: BatchHandler() {
+            override fun invoke(pages: Iterable<WebPage>) {
+                val size = Iterables.size(pages)
+                println("Before fetching - $size pages")
+            }
+        }
+
+        class AfterBatchHandler: BatchHandler() {
+            override fun invoke(pages: Iterable<WebPage>) {
+                val size = Iterables.size(pages)
+                val length = pages.joinToString { StringUtil.readableByteCount(it.contentAsBytes.size.toLong()) }
+                println("After fetching - Fetched $size pages, length: $length")
+            }
+        }
+
+        i.volatileConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())
+        i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
+
         i.loadAll(links, LoadOptions.parse(args))
 
         println("All done.")

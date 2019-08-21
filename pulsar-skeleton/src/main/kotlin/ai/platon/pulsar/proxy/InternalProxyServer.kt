@@ -1,10 +1,8 @@
 package ai.platon.pulsar.proxy
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
@@ -159,6 +157,8 @@ class InternalProxyServer(
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
+                break
+                // throw InterruptedException()
             }
 
             // Wait for 5 seconds
@@ -301,8 +301,9 @@ class InternalProxyServer(
         log.info("Closing IPS ...")
 
         try {
-            disconnect(notifyAll = true)
+            loopThread.interrupt()
             loopThread.join()
+            disconnect(notifyAll = true)
         } catch (e: Throwable) {
             log.error("Failed to close IPS - {}", e)
         }
@@ -355,7 +356,7 @@ class InternalProxyServer(
                 when (cause) {
                     is io.netty.handler.proxy.ProxyConnectException -> {
                         // TODO: handle io.netty.handler.proxy.ProxyConnectException: http, none, /117.69.129.113:4248 => img59.ddimg.cn:80, disconnected
-                        message = cause.toString().split("\n").take(2).joinToString("\n") { it }
+                        message = StringUtil.simplifyException(cause)
                     }
                 }
 
@@ -364,7 +365,7 @@ class InternalProxyServer(
                     return
                 }
 
-                log.warn(message.split("\n".toRegex()).firstOrNull())
+                log.warn(StringUtil.simplifyException(cause))
                 proxyLog.write(SimpleLogger.WARN, "proxy", message)
             }
         })

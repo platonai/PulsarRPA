@@ -203,7 +203,6 @@ public class QueryParser {
             evals.add(new Evaluator.IsRoot());
         else // unhandled
             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
-
     }
 
     private void byId() {

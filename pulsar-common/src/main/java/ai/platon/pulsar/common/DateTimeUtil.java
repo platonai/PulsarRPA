@@ -54,6 +54,14 @@ public class DateTimeUtil {
         return format(Instant.ofEpochMilli(epochMilli), format);
     }
 
+    public static String readableDuration(Duration duration) {
+        return StringUtils.removeStart(duration.toString(), "PT").toLowerCase();
+    }
+
+    public static String readableDuration(String duration) {
+        return StringUtils.removeStart(duration, "PT").toLowerCase();
+    }
+
     public static String isoInstantFormat(long time) {
         return DateTimeFormatter.ISO_INSTANT.format(new Date(time).toInstant());
     }

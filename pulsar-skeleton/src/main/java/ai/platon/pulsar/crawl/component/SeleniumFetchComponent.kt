@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
-import ai.platon.pulsar.common.config.CapabilityTypes.SELENIUM_WEB_DRIVER_PRIORITY
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -24,12 +24,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
-
-const val BEFORE_FETCH_HANDLER_KEY = "onBeforeFetch"
-const val AFTER_FETCH_HANDLER_KEY = "onAfterFetch"
-const val AFTER_FETCH_N_HANDLER_KEY = "onAfterFetchN"
-const val BEFORE_FETCH_ALL_HANDLER_KEY = "onBeforeFetchAll"
-const val AFTER_FETCH_ALL_HANDLER_KEY = "onAfterFetchAll"
 
 abstract class TaskHandler: (WebPage) -> Unit {
     abstract override operator fun invoke(page: WebPage)
@@ -68,11 +62,11 @@ internal class BatchFetchContext(
     var idleSeconds = 0
     var totalBytes = 0
 
-    var beforeFetchHandler = volatileConfig.getBean(BEFORE_FETCH_HANDLER_KEY, TaskHandler::class.java)
-    var afterFetchHandler = volatileConfig.getBean(AFTER_FETCH_HANDLER_KEY, TaskHandler::class.java)
-    var afterFetchNHandler = volatileConfig.getBean(AFTER_FETCH_N_HANDLER_KEY, BatchHandler::class.java)
-    var beforeFetchAllHandler = volatileConfig.getBean(BEFORE_FETCH_ALL_HANDLER_KEY, BatchHandler::class.java)
-    var afterFetchAllHandler = volatileConfig.getBean(AFTER_FETCH_ALL_HANDLER_KEY, BatchHandler::class.java)
+    var beforeFetchHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
+    var afterFetchHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)
+    var afterFetchNHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_N_HANDLER, BatchHandler::class.java)
+    var beforeFetchAllHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BatchHandler::class.java)
+    var afterFetchAllHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_BATCH_HANDLER, BatchHandler::class.java)
 
     fun beforeFetch(page: WebPage) {
         beforeFetchHandler?.invoke(page)
@@ -233,7 +227,7 @@ class SeleniumFetchComponent(
             cx.finishedTasks[url] = result
 
             val response = result.response
-            cx.totalBytes += response.size()
+            cx.totalBytes += response.length()
 
             val elapsed = Duration.ofSeconds(cx.round.toLong())
             when (response.code) {
@@ -245,6 +239,7 @@ class SeleniumFetchComponent(
                 ProtocolStatusCodes.CANCELED -> {
                     // canceled
                     // logTaskSuccess(cx, url, response, elapsed)
+                    log.warn("Task is canceled {} | {}", result.response.status, url)
                 }
                 else -> {
                     ++cx.numFailedTasks
@@ -285,7 +280,6 @@ class SeleniumFetchComponent(
             return future.get(timeout.seconds, TimeUnit.SECONDS)
         } catch (e: java.util.concurrent.CancellationException) {
             // if the computation was cancelled
-            // TODO: this should never happen
             status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
             headers.put("EXCEPTION", e.toString())
         } catch (e: java.util.concurrent.TimeoutException) {
@@ -322,10 +316,10 @@ class SeleniumFetchComponent(
 
     private fun logTaskFailed(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
-            log.info("Batch {} round {} task failed, reason {}, {} bytes in {}, total {} failed | {}",
+            log.info("Batch {} round {} task failed, reason {}, {} in {}, total {} failed | {}",
                     cx.batchId, String.format("%2d", cx.round),
-                    ProtocolStatus.getMinorName(response.code), String.format("%,d", response.size()),
-                    elapsed.toString().removePrefix("PT"),
+                    ProtocolStatus.getMinorName(response.code),
+                    StringUtil.readableByteCount(response.length().toLong()), DateTimeUtil.readableDuration(elapsed),
                     cx.numFailedTasks,
                     url
             )
@@ -334,10 +328,11 @@ class SeleniumFetchComponent(
 
     private fun logTaskSuccess(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
-            log.info("Batch {} round {} fetched{}{}kB in {} with code {} | {}",
+            log.info("Batch {} round {} fetched{}{} in {} with code {} | {}",
                     cx.batchId, String.format("%2d", cx.round),
-                    if (cx.totalBytes < 2000) " only " else " ", String.format("%,7.2f", response.size() / 1024.0),
-                    elapsed.toString().removePrefix("PT"),
+                    if (cx.totalBytes < 2000) " only " else " ",
+                    StringUtil.readableByteCount(response.length().toLong()),
+                    format(elapsed),
                     response.code, url)
         }
     }
@@ -350,14 +345,18 @@ class SeleniumFetchComponent(
     private fun logBatchFinished(cx: BatchFetchContext) {
         if (log.isInfoEnabled) {
             val elapsed = Duration.between(cx.startTime, Instant.now())
-            log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave bytes: {}, speed: {}bps",
+            log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave size: {}kB, speed: {}bps",
                     cx.batchId, cx.numTotalTasks,
-                    elapsed.toString().removePrefix("PT"),
+                    format(elapsed),
                     String.format("%,.3f", 1.0 * elapsed.seconds / cx.numTotalTasks),
-                    cx.totalBytes / cx.numTotalTasks,
+                    String.format("%,.3f", 1.0 * cx.totalBytes / 1000 / cx.numTotalTasks),
                     String.format("%,.3f", 1.0 * cx.totalBytes * 8 / elapsed.seconds)
             )
         }
+    }
+
+    private fun format(duration: Duration): String {
+        return duration.toString().removePrefix("PT").toLowerCase()
     }
 
     override fun close() {

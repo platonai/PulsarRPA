@@ -1,5 +1,7 @@
 package ai.platon.pulsar.crawl.component;
 
+import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.common.options.LinkOptions;
@@ -429,12 +431,13 @@ public class LoadComponent {
 
         if (LOG.isDebugEnabled()) {
             int bytes = page.getContentBytes();
-            if (bytes > 0) {
+            if (bytes > -1) {
                 String responseTime = page.getMetadata().get(RESPONSE_TIME);
                 String proxy = page.getMetadata().get(PROXY);
-                LOG.debug("Fetched{}{}kB in {}{} | {}",
-                        bytes < 2000 ? " only " : " ", String.format("%,7.2f", page.getContentBytes() / 1024.0),
-                        StringUtils.removeStart(responseTime, "PT"),
+                LOG.debug("Fetched{}{} in {}{} | {}",
+                        bytes < 2000 ? " only " : " ",
+                        StringUtil.readableByteCount(bytes, 7, false),
+                        DateTimeUtil.readableDuration(responseTime),
                         proxy == null ? "" : " via " + proxy,
                         page.getConfiguredUrl()
                 );
@@ -448,7 +451,9 @@ public class LoadComponent {
                 flush();
             }
 
-            LOG.trace("Persisted {} bytes | {}", page.getContentBytes(), page.getUrl());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Persisted {} | {}", StringUtil.readableByteCount(page.getContentBytes()), page.getUrl());
+            }
         }
     }
 

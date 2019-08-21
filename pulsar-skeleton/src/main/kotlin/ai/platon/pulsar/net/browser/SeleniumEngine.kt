@@ -4,6 +4,8 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
+import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
@@ -27,7 +29,6 @@ import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.RemoteWebDriver
-import org.openqa.selenium.remote.UnreachableBrowserException
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
@@ -125,7 +126,7 @@ class FetchResult(
         val response: Response
 )
 
-data class VisitResult(
+private data class VisitResult(
         val protocolStatus: ProtocolStatus,
         val jsData: BrowserJsData
 ) {
@@ -186,21 +187,23 @@ class SeleniumEngine(
                 "scrollDownCount", defaultDriverConfig.scrollDownCount,
                 "scrollInterval", defaultDriverConfig.scrollInterval,
                 "clientJsLength", clientJs.length,
-                "maxWebDrivers", driverManager.capacity
+                "webDriverCapacity", driverManager.capacity
         )
     }
 
     internal fun fetchContentInternal(task: FetchTask): FetchResult {
-        if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL)) {
+        if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
+            log.info("Executing local file command {}", CMD_WEB_DRIVER_CLOSE_ALL)
             driverManager.closeAll()
         }
 
         val response: Response
         if (isClosed) {
+            log.info("System is closed, cancel the task | {}", task.url)
             response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
         } else {
-            totalTaskCount.getAndIncrement()
-            batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
+            fetchTaskTracker.totalTaskCount.getAndIncrement()
+            fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
             response = visitPageAndRetrieveContentWithRetry(task)
         }
 
@@ -208,14 +211,20 @@ class SeleniumEngine(
     }
 
     private fun visitPageAndRetrieveContentWithRetry(task: FetchTask): Response {
-        var maxRetry = task.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
+        val maxRetry = task.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
         var response: Response? = null
+        var exception: Exception? = null
 
-        while (maxRetry-- > 0 && response == null) {
+        var i = 0
+        while (i++ < maxRetry && response == null) {
+            if (i > 1) {
+                log.warn("Round {} retrying another Web driver ... | {}", i, task.url)
+            }
+
+            var driverCrashed = false
+            exception = null
             val driver = driverManager.poll(task.priority, task.volatileConfig)
                     ?: return ForwardingResponse(task.page.url, ProtocolStatus.STATUS_RETRY)
-            var driverCrashed = false
-            var exception: Exception? = null
 
             try {
                 response = if (internalProxyServer.isEnabled) {
@@ -241,7 +250,7 @@ class SeleniumEngine(
                 exception = e
                 driverCrashed = true
             } catch (e: IncompleteContentException) {
-                log.warn("WebDriver fetched nothing - {}", e.message)
+                log.warn("Content incomplete - {}", e.message)
 
                 response = null
                 exception = e
@@ -251,23 +260,27 @@ class SeleniumEngine(
                     task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
                 }
 
-                if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
-                    driver.manage().deleteAllCookies()
-                }
-
                 if (driverCrashed) {
-                    driverManager.retire(task.priority, driver, exception)
+                    driverManager.retire(driver, exception)
                 } else {
-                    // close current window
-                    driverManager.put(task.priority, driver)
+                    if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
+                        log.info("Executing local file command {}", CMD_WEB_DRIVER_DELETE_ALL_COOKIES)
+                        driver.driver.manage().deleteAllCookies()
+                    }
+
+                    driverManager.offer(driver)
                 }
             }
         }
 
-        return response?:ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED)
+        return when {
+            response != null -> response
+            exception != null -> ForwardingResponse(task.url, ProtocolStatus.failed(exception))
+            else -> ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED)
+        }
     }
 
-    private fun visitPageAndRetrieveContent(driver: WebDriver, task: FetchTask): Response {
+    private fun visitPageAndRetrieveContent(driver: ManagedWebDriver, task: FetchTask): Response {
         val batchId = task.batchId
         val page = task.page
         // page.location is the last working address, and page.url is the permanent internal address
@@ -290,7 +303,7 @@ class SeleniumEngine(
         var pageSource = ""
 
         try {
-            val result = visit(task, driver, driverConfig)
+            val result = visit(task, driver.driver, driverConfig)
             status = result.protocolStatus
             jsData = result.jsData
             // TODO: handle with frames
@@ -305,7 +318,7 @@ class SeleniumEngine(
         } catch (e: org.openqa.selenium.UnhandledAlertException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_RETRY
-            log.warn(e.message?.split("\n")?.firstOrNull()?:"UnhandledAlertException")
+            log.warn(StringUtil.simplifyException(e)?:"UnhandledAlertException")
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_BROWSER_RETRY
@@ -341,9 +354,9 @@ class SeleniumEngine(
             }
 
             if (status.isSuccess) {
-                log.info("Html is OK but timeout ({}) after {} with {} bytes | {}",
+                log.info("Html is OK but timeout ({}) after {} with {} | {}",
                         oldStatus.minorName, DateTimeUtil.elapsedTime(startTime),
-                        String.format("%,7d", pageSource.length), page.url)
+                        StringUtil.readableByteCount(pageSource.length.toLong()), page.url)
             } else {
                 log.info("Timeout with page source check {}", integrity.second)
                 handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
@@ -393,8 +406,9 @@ class SeleniumEngine(
         val url = task.url
         val page = task.page
 
+        val t = fetchTaskTracker
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
-                taskId, batchTaskCounters[batchId], totalTaskCount,
+                taskId, t.batchTaskCounters[batchId], t.totalTaskCount,
                 Thread.currentThread().id,
                 driverManager.workingSize, driverManager.freeSize, driverManager.totalSize,
                 page.configuredUrl,
@@ -408,6 +422,7 @@ class SeleniumEngine(
 
         // Block and wait for the document is ready: all css and resources are OK
         if (!JavascriptExecutor::class.java.isAssignableFrom(driver.javaClass)) {
+            log.warn("Web driver is not a JavascriptExecutor, cancel the task")
             return VisitResult.canceled
         }
 
@@ -500,9 +515,9 @@ class SeleniumEngine(
     /**
      * Perform click on the selected element and wait for the new page location
      * */
-    private fun performJsClick(selector: String, driver: WebDriver, driverConfig: DriverConfig): String {
+    private fun performJsClick(selector: String, driver: ManagedWebDriver, driverConfig: DriverConfig): String {
         val timeout = driverConfig.pageLoadTimeout
-        val scrollWait = FluentWait<WebDriver>(driver)
+        val scrollWait = FluentWait<WebDriver>(driver.driver)
                 .withTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
                 .pollingEvery(1000, TimeUnit.MILLISECONDS)
                 .ignoring(org.openqa.selenium.TimeoutException::class.java)
@@ -521,18 +536,18 @@ class SeleniumEngine(
         return ""
     }
 
-    private fun getPageSourceSilently(driver: WebDriver): String {
-        return try { driver.pageSource } catch (e: Throwable) { "" }
+    private fun getPageSourceSilently(driver: ManagedWebDriver): String {
+        return try { driver.driver.pageSource } catch (e: Throwable) { "" }
     }
 
-    private fun handleFetchFinish(page: WebPage, driver: WebDriver, headers: MultiMetadata) {
+    private fun handleFetchFinish(page: WebPage, driver: ManagedWebDriver, headers: MultiMetadata) {
         // The page content's encoding is already converted to UTF-8 by Web driver
         headers.put(CONTENT_ENCODING, "UTF-8")
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
         headers.put(Q_RESPONSE_TIME, System.currentTimeMillis().toString())
         headers.put(Q_WEB_DRIVER, driver.javaClass.name)
 
-        when (driver) {
+        when (driver.driver) {
             is ChromeDriver -> page.lastBrowser = BrowserType.CHROME
             is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
             else -> {
@@ -544,7 +559,7 @@ class SeleniumEngine(
         tryRefreshCookie(page, driver)
     }
 
-    private fun tryRefreshCookie(page: WebPage, driver: WebDriver) {
+    private fun tryRefreshCookie(page: WebPage, driver: ManagedWebDriver) {
         val url = page.url
         val host = URLUtil.getHost(url)
         val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStatus(it) }
@@ -556,13 +571,17 @@ class SeleniumEngine(
     }
 
     private fun handleFetchSuccess(batchId: Int) {
-        batchSuccessCounters[batchId]?.incrementAndGet()
-        totalSuccessCount.incrementAndGet()
+        val t = fetchTaskTracker
+        t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
+        t.totalSuccessCount.incrementAndGet()
 
         // TODO: A metrics system is required
-        if (totalTaskCount.get() % 20 == 0) {
+        if (t.totalTaskCount.get() % 20 == 0) {
             log.debug("Selenium task success: {}/{}, total task success: {}/{}",
-                    batchSuccessCounters[batchId], batchTaskCounters[batchId], totalSuccessCount, totalTaskCount)
+                    t.batchSuccessCounters[batchId], t.batchTaskCounters[batchId],
+                    t.totalSuccessCount,
+                    t.totalTaskCount
+            )
         }
     }
 
@@ -579,7 +598,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: WebDriver): String {
+    private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver): String {
         if (pageSource.isEmpty()) {
             return ""
         }
@@ -605,7 +624,7 @@ class SeleniumEngine(
             export(sb, status, content, page)
 
             if (log.isTraceEnabled) {
-                takeScreenshot(content.length, page, driver as RemoteWebDriver)
+                takeScreenshot(content.length, page, driver.driver as RemoteWebDriver)
             }
         }
 
@@ -634,9 +653,9 @@ class SeleniumEngine(
     private fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
         val elapsed = Duration.ofMillis(System.currentTimeMillis() - startTime)
         if (log.isDebugEnabled) {
-            log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{} timeouts: {}/{}/{} | {}",
+            log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{}/{} timeouts: {}/{}/{} | {}",
                     elapsed, String.format("%,7d", pageSource.length),
-                    driverManager.freeSize, driverManager.totalSize,
+                    driverManager.workingSize, driverManager.freeSize, driverManager.totalSize,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     url
             )
@@ -667,8 +686,9 @@ class SeleniumEngine(
 
     private fun export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
         val browser = page.lastBrowser.name.toLowerCase()
+
         val u = Urls.getURLOrNull(page.url)?: return PulsarPaths.TMP_DIR
-        val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
+        val domain = if (StringUtil.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
         val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
         val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR.toString(), "original", browser, domain, filename)
         PulsarFiles.saveTo(content, path, true)
@@ -690,11 +710,5 @@ class SeleniumEngine(
         // The set is big, can use a static cache to hold them if necessary
         val defaultCharsetPattern = defaultSupportedCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
         val systemAvailableCharsetPattern = systemAvailableCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
-
-        val totalTaskCount = AtomicInteger(0)
-        val totalSuccessCount = AtomicInteger(0)
-
-        val batchTaskCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
-        val batchSuccessCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
     }
 }

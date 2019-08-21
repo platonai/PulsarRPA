@@ -154,11 +154,15 @@ open class PulsarSession(
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
         val normUrls = normalize(urls, options)
+        if (normUrls.isEmpty()) {
+            return listOf()
+        }
+        val opt = initOptions(normUrls.first().options)
 
         return if (enableCache) {
-            getCachedOrLoadAll(normUrls, options)
+            getCachedOrLoadAll(normUrls, opt)
         } else {
-            context.loadAll(normUrls, options)
+            context.loadAll(normUrls, initOptions(opt))
         }
     }
 
@@ -173,11 +177,15 @@ open class PulsarSession(
         ensureRunning()
         options.preferParallel = true
         val normUrls = normalize(urls, options)
+        if (normUrls.isEmpty()) {
+            return listOf()
+        }
+        val opt = initOptions(normUrls.first().options)
 
         return if (enableCache) {
-            getCachedOrLoadAll(normUrls, options)
+            getCachedOrLoadAll(normUrls, opt)
         } else {
-            context.loadAll(normUrls, options)
+            context.loadAll(normUrls, opt)
         }
     }
 

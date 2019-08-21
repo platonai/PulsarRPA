@@ -200,18 +200,18 @@ class PulsarContext: AutoCloseable {
             return NormUrl(normalizedUrl, options)
         }
 
-        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(parts.second), options.volatileConfig)
+        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(parts.second))
         return NormUrl(normalizedUrl, initOptions(options2))
     }
 
     fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
-        return urls.mapNotNull { normalize(it).takeIf { it.isNotNil } }
+        return urls.mapNotNull { normalize(it, isItemOption).takeIf { it.isNotNil } }
     }
 
     fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
-        return urls.mapNotNull { normalize(it, options).takeIf { it.isNotNil } }
+        return urls.mapNotNull { normalize(it, options, isItemOption).takeIf { it.isNotNil } }
     }
 
     /**

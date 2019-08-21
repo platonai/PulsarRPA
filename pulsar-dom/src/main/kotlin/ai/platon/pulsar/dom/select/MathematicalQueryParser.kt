@@ -13,7 +13,7 @@ import java.util.regex.Pattern
 /**
  * Parses a CSS selector into an Evaluator tree.
  */
-open class MathematicalQueryParser constructor(private var query: String) {
+open class MathematicalQueryParser(private var query: String) {
     private var tq: TokenQueue = TokenQueue(query)
     private var evals = ArrayList<Evaluator>()
 

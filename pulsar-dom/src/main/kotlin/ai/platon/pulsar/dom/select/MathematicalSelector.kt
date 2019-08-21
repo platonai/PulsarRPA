@@ -94,7 +94,7 @@ object MathematicalSelector {
         }
 
         try {
-            return select(MathematicalQueryParser.parse(cssQuery), root)
+            return select(MathematicalQueryParser.parse(cssQuery.trim()), root)
         } catch (e: SelectorParseException) {
             log.warn(e.message)
         }
@@ -160,10 +160,12 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, roots: Iterable<Element>): Elements {
-        Validate.notEmpty(cssQuery)
+        if (cssQuery.isBlank()) {
+            return Elements()
+        }
 
         try {
-            val evaluator = MathematicalQueryParser.parse(cssQuery)
+            val evaluator = MathematicalQueryParser.parse(cssQuery.trim())
             val elements = ArrayList<Element>()
             val seenElements = IdentityHashMap<Element, Boolean>()
             // dedupe elements by identity, not equality
@@ -193,9 +195,9 @@ object MathematicalSelector {
      * @return the matching element, or **null** if none.
      */
     fun selectFirst(cssQuery: String, root: Element): Element? {
-        Validate.notEmpty(cssQuery)
+        if (cssQuery.isBlank()) return null
         try {
-            return Collector.findFirst(MathematicalQueryParser.parse(cssQuery), root)
+            return Collector.findFirst(MathematicalQueryParser.parse(cssQuery.trim()), root)
         } catch (e: SelectorParseException) {
             log.warn(e.message)
         }

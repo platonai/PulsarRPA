@@ -68,6 +68,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(BLOCKED, "blocked");
 
         minorCodes.put(RETRY, "retry");
+        minorCodes.put(CANCELED, "canceled");
         minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
         minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
         minorCodes.put(DOCUMENT_READY_TIMEOUT, "document_ready_timeout");

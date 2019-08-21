@@ -61,8 +61,8 @@ public class ForwardingResponse implements Response {
     }
 
     @Override
-    public int getStatus() {
-        return status.getMajorCode();
+    public ProtocolStatus getStatus() {
+        return status;
     }
 
     @Override

@@ -588,6 +588,23 @@ public final class StringUtil {
         return org.apache.hadoop.util.StringUtils.stringifyException(e);
     }
 
+    public static String simplifyException(Throwable e) {
+        String message = e.getMessage();
+        if (message == null) message = e.toString();
+
+        String[] lines = message.split("\n");
+        int n = lines.length;
+        if (n == 0) {
+            return "";
+        } else if (n == 1) {
+            return lines[0];
+        } else if (n == 2) {
+            return lines[0] + "\t" + lines[1];
+        } else {
+            return lines[0] + "\t" + lines[1] + " ...";
+        }
+    }
+
     public static String reverse(String s) {
         if (s == null || s.isEmpty()) {
             return s;
@@ -595,6 +612,23 @@ public final class StringUtil {
 
         StringBuilder sb = new StringBuilder(s);
         return sb.reverse().toString();
+    }
+
+    public static String readableByteCount(long bytes) {
+        return readableByteCount(bytes, -1, false);
+    }
+
+    public static String readableByteCount(long bytes, boolean si) {
+        return readableByteCount(bytes, -1, si);
+    }
+
+    public static String readableByteCount(long bytes, int scale, boolean si) {
+        int unit = si ? 1000 : 1024;
+        if (bytes < unit) return bytes + " B";
+        int exp = (int) (Math.log(bytes) / Math.log(unit));
+        String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp-1) + (si ? "" : "i");
+        String format = scale > 0 ? "%," + scale + ".2f %sB" : "%,.2f %sB";
+        return String.format(format, bytes / Math.pow(unit, exp), pre);
     }
 
     /**

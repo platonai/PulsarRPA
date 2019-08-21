@@ -195,6 +195,12 @@ public interface CapabilityTypes {
     String FETCH_STORE_CONTENT = "fetch.store.content";
     String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
 
+    String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
+    String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
+    String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
+    String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
+    String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
+
     /**
      * Browser
      * */

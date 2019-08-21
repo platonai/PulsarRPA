@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.HashSet
 
 class FetchTaskTracker(
@@ -45,6 +46,12 @@ class FetchTaskTracker(
     val timeoutUrls = Collections.synchronizedSet(HashSet<CharSequence>())
     val failedUrls = Collections.synchronizedSet(HashSet<CharSequence>())
     val deadUrls = Collections.synchronizedSet(HashSet<CharSequence>())
+
+    val totalTaskCount = AtomicInteger(0)
+    val totalSuccessCount = AtomicInteger(0)
+
+    val batchTaskCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
+    val batchSuccessCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
 
     private val isClosed = AtomicBoolean()
     private val isReported = AtomicBoolean()
