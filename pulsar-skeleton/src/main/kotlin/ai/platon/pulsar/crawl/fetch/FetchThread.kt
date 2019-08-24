@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.ReducerContext
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
@@ -13,7 +12,6 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.hadoop.io.IntWritable
 import java.io.IOException
-import java.lang.StringBuilder
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger

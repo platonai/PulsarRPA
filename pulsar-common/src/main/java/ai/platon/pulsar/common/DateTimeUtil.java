@@ -30,6 +30,8 @@ public class DateTimeUtil {
 
     public static SimpleDateFormat FilesystemSafeDateFormat = new SimpleDateFormat("MMdd.HHmmss");
 
+    public static Instant ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365));
+
     public static String format(long time) {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(time));
     }

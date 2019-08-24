@@ -1,12 +1,17 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.PulsarEnv.Companion.startTime
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
-import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
 import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.crawl.fetch.BatchStatus
 import ai.platon.pulsar.crawl.fetch.FetchStatus
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -34,7 +39,6 @@ import org.slf4j.LoggerFactory
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.time.Duration
-import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -111,7 +115,8 @@ class FetchTask(
         val taskId: Int,
         val priority: Int,
         val page: WebPage,
-        val volatileConfig: VolatileConfig
+        val volatileConfig: VolatileConfig,
+        val status: BatchStatus? = null
 ) {
     val url get() = page.url
     lateinit var response: Response
@@ -123,7 +128,7 @@ class FetchTask(
 
 class FetchResult(
         val task: FetchTask,
-        val response: Response
+        var response: Response
 )
 
 private data class VisitResult(
@@ -153,7 +158,7 @@ class IncompleteContentException: Exception {
  */
 class SeleniumEngine(
         browserControl: BrowserControl,
-        private val driverManager: WebDriverManager,
+        private val driverPool: WebDriverPool,
         private val internalProxyServer: InternalProxyServer,
         private val fetchTaskTracker: FetchTaskTracker,
         private val immutableConfig: ImmutableConfig
@@ -187,14 +192,14 @@ class SeleniumEngine(
                 "scrollDownCount", defaultDriverConfig.scrollDownCount,
                 "scrollInterval", defaultDriverConfig.scrollInterval,
                 "clientJsLength", clientJs.length,
-                "webDriverCapacity", driverManager.capacity
+                "webDriverCapacity", driverPool.capacity
         )
     }
 
     internal fun fetchContentInternal(task: FetchTask): FetchResult {
         if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
             log.info("Executing local file command {}", CMD_WEB_DRIVER_CLOSE_ALL)
-            driverManager.closeAll()
+            driverPool.closeAll()
         }
 
         val response: Response
@@ -221,18 +226,31 @@ class SeleniumEngine(
                 log.warn("Round {} retrying another Web driver ... | {}", i, task.url)
             }
 
-            var driverCrashed = false
+            var driverRetired = false
             exception = null
-            val driver = driverManager.poll(task.priority, task.volatileConfig)
+            val driver = driverPool.poll(task.priority, task.volatileConfig)
                     ?: return ForwardingResponse(task.page.url, ProtocolStatus.STATUS_RETRY)
 
             try {
-                response = if (internalProxyServer.isEnabled) {
-                    internalProxyServer.run {
+                if (internalProxyServer.isEnabled) {
+                    response = internalProxyServer.run {
                         visitPageAndRetrieveContent(driver, task)
                     }
+
+                    if (response.status.isSuccess) {
+                        internalProxyServer.proxyEntry?.targetHost = task.page.url
+                    }
                 } else {
-                    visitPageAndRetrieveContent(driver, task)
+                    response = visitPageAndRetrieveContent(driver, task)
+                }
+
+                if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
+                    log.info("Executing local file command {}", CMD_WEB_DRIVER_DELETE_ALL_COOKIES)
+                    driver.driver.manage().deleteAllCookies()
+                }
+
+                if (driver.stat.pageViews > 30) {
+                    driverRetired = true
                 }
             } catch (e: NoProxyException) {
                 log.warn("No proxy, request is canceled - {}", task.url)
@@ -242,33 +260,28 @@ class SeleniumEngine(
 
                 response = null
                 exception = e
-                driverCrashed = true
+                driverRetired = true
             } catch (e: org.apache.http.conn.HttpHostConnectException) {
                 log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
 
                 response = null
                 exception = e
-                driverCrashed = true
+                driverRetired = true
             } catch (e: IncompleteContentException) {
                 log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
 
                 response = null
                 exception = e
-                driverCrashed = true
+                driverRetired = true
             } finally {
-                if (internalProxyServer.isEnabled) {
-                    task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
+                if (driverRetired) {
+                    driverPool.retire(driver, exception)
+                } else {
+                    driverPool.offer(driver)
                 }
 
-                if (driverCrashed) {
-                    driverManager.retire(driver, exception)
-                } else {
-                    if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
-                        log.info("Executing local file command {}", CMD_WEB_DRIVER_DELETE_ALL_COOKIES)
-                        driver.driver.manage().deleteAllCookies()
-                    }
-
-                    driverManager.offer(driver)
+                if (internalProxyServer.isEnabled) {
+                    task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
                 }
             }
         }
@@ -308,6 +321,8 @@ class SeleniumEngine(
             jsData = result.jsData
             // TODO: handle with frames
             // driver.switchTo().frame(1);
+
+            pageSource = getPageSourceSilently(driver)
         } catch (e: org.openqa.selenium.TimeoutException) {
             // log.warn(e.toString())
             status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
@@ -339,32 +354,18 @@ class SeleniumEngine(
             log.warn("Unexpected exception", e)
         }
 
-        pageSource = getPageSourceSilently(driver)
-
-        val proxyError = pageSource.length == 76
-                && pageSource.indexOf("<html>") != -1
-                && pageSource.lastIndexOf("</html>") != -1
-        if (proxyError) {
-            throw IncompleteContentException("Retrieved only 76 bytes, browser fetched nothing")
+        if (pageSource.isEmpty()) {
         }
 
+        if (pageSource.isNotEmpty()) {
+            // throw an exception if content is incomplete
+            handleContentIntegrity(pageSource, page, status, task)
+        }
+
+        val length = pageSource.length
         if (status.minorCode == ProtocolStatusCodes.WEB_DRIVER_TIMEOUT
                 || status.minorCode == ProtocolStatusCodes.DOCUMENT_READY_TIMEOUT) {
-            // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
-            val oldStatus = status
-            val integrity = checkHtmlIntegrity(pageSource)
-            if (integrity.first) {
-                status = ProtocolStatus.STATUS_SUCCESS
-            }
-
-            if (status.isSuccess) {
-                log.info("Html is OK but timeout ({}) after {} with {} | {}",
-                        oldStatus.minorName, DateTimeUtil.elapsedTime(startTime),
-                        StringUtil.readableByteCount(pageSource.length.toLong()), page.url)
-            } else {
-                log.info("Timeout with page source check {}", integrity.second)
-                handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
-            }
+            status = handleTimeout(startTime, pageSource, status, page, driverConfig)
         }
 
         handleFetchFinish(page, driver, headers)
@@ -372,7 +373,7 @@ class SeleniumEngine(
             page.metadata.set(Name.BROWSER_JS_DATA, browserDataGson.toJson(jsData, BrowserJsData::class.java))
         }
         pageSource = handlePageSource(pageSource, status, page, driver)
-        headers.put(CONTENT_LENGTH, pageSource.length.toString())
+        headers.put(CONTENT_LENGTH, length.toString())
         if (status.isSuccess) {
             handleFetchSuccess(batchId)
         }
@@ -383,6 +384,58 @@ class SeleniumEngine(
         // TODO: ignore timeout and get the page source
 
         return ForwardingResponse(page.url, pageSource, status, headers)
+    }
+
+    private fun handleContentIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask) {
+        val length = pageSource.length
+        val aveLength = page.aveContentBytes
+
+        if (page.fetchCount > 0 && aveLength > 100_1000 && length < 0.1 * aveLength) {
+            val message = String.format("Retrieved only %d bytes, ave size is %d, might be a proxy error",
+                    length, aveLength)
+            throw IncompleteContentException(message)
+        }
+
+        val proxyError = length < 100
+                && pageSource.indexOf("<html>") != -1
+                && pageSource.lastIndexOf("</html>") != -1
+        if (proxyError) {
+            throw IncompleteContentException("Retrieved only 76 bytes, very likely be a proxy error")
+        }
+
+        val batchStatus = task.status
+        if (status.isSuccess && batchStatus != null) {
+            if (batchStatus.numSuccessTasks > 3 &&
+                    batchStatus.averagePageSize > 10_000 &&
+                    length < batchStatus.averagePageSize / 10) {
+                val message = String.format("Retrieved only %d bytes, ave size is %d, might be a proxy error",
+                        length, batchStatus.averagePageSize)
+                throw IncompleteContentException(message)
+            }
+        }
+    }
+
+    private fun handleTimeout(
+            startTime: Long, pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig
+    ): ProtocolStatus {
+        val length = pageSource.length
+        // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
+        var newStatus = status
+        val integrity = checkHtmlIntegrity(pageSource)
+        if (integrity.first) {
+            newStatus = ProtocolStatus.STATUS_SUCCESS
+        }
+
+        if (newStatus.isSuccess) {
+            log.info("Page is integral HTML but {} occurs after {} with {} | {}",
+                    status.minorName, DateTimeUtil.elapsedTime(startTime),
+                    StringUtil.readableByteCount(length.toLong()), page.url)
+        } else {
+            log.warn("Incomplete page {} {} | {}", status.minorName, integrity.second, page.url)
+            handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
+        }
+
+        return newStatus
     }
 
     private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
@@ -414,7 +467,7 @@ class SeleniumEngine(
         log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
                 taskId, t.batchTaskCounters[batchId], t.totalTaskCount,
                 Thread.currentThread().id,
-                driverManager.workingSize, driverManager.freeSize, driverManager.totalSize,
+                driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
                 page.configuredUrl,
                 driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
         )
@@ -659,7 +712,7 @@ class SeleniumEngine(
         if (log.isDebugEnabled) {
             log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{}/{} timeouts: {}/{}/{} | {}",
                     elapsed, String.format("%,7d", pageSource.length),
-                    driverManager.workingSize, driverManager.freeSize, driverManager.totalSize,
+                    driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     url
             )

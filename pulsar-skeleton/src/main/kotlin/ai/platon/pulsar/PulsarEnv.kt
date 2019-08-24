@@ -1,15 +1,15 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.GlobalExecutor
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ProxyMonitor
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
+import ai.platon.pulsar.net.browser.WebDriverMonitor
 import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.proxy.InternalProxyServer
@@ -51,9 +51,9 @@ class PulsarEnv {
 
         val proxyPool: ProxyPool
 
-        val internalProxyServer: InternalProxyServer
-
         val seleniumFetchComponent: SeleniumFetchComponent
+
+        val webDriverMonitor: WebDriverMonitor
 
         private val env = AtomicReference<PulsarEnv>()
 
@@ -78,13 +78,13 @@ class PulsarEnv {
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
 
             proxyPool = applicationContext.getBean(ProxyPool::class.java)
-            internalProxyServer = applicationContext.getBean(InternalProxyServer::class.java)
 
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            if (internalProxyServer.isEnabled) {
-                internalProxyServer.start()
-            }
+            webDriverMonitor = applicationContext.getBean(WebDriverMonitor::class.java)
+
+            // TODO: merge all monitors, e.g. merge to FetchMonitor
+            webDriverMonitor.start()
 
             log.info("Pulsar env is initialized")
         }
@@ -110,13 +110,13 @@ class PulsarEnv {
     // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
     // serializers, etc
 
-    fun exit() {
+    fun quit() {
         if (isQuit.getAndSet(true)) {
             return
         }
 
         // Internal proxy server blocks can not be closed by spring, the reason should be investigated
-        internalProxyServer.close()
-        applicationContext.close()
+        webDriverMonitor.use { it.close() }
+        applicationContext.use { it.close() }
     }
 }

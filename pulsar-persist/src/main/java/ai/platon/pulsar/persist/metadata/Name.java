@@ -78,6 +78,7 @@ public enum Name {
     CHAR_ENCODING_FOR_CONVERSION("C_CEFC"),
     ENCODING_CLUES("C_EC"),
     CONTENT_BYTES("C_CB"),
+    AVE_CONTENT_BYTES("C_ACB"),
 
     META_KEYWORDS("meta_keywords"),
     META_DESCRIPTION("meta_description"),

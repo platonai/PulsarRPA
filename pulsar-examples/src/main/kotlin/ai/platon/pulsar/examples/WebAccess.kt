@@ -249,5 +249,11 @@ object WebAccess {
 
 fun main() {
     WebAccess.run()
-    PulsarEnv.getOrCreate().exit()
+//    val proxyPool = PulsarEnv.proxyPool
+//    proxyPool.updateProxies()
+//    proxyPool.dump()
+//    proxyPool.forEach {
+//        println("$it" + ", exp:" + it.isExpired)
+//    }
+    PulsarEnv.getOrCreate().quit()
 }

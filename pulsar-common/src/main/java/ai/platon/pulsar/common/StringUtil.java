@@ -585,10 +585,13 @@ public final class StringUtil {
     }
 
     public static String stringifyException(Throwable e) {
+        Objects.requireNonNull(e);
         return org.apache.hadoop.util.StringUtils.stringifyException(e);
     }
 
     public static String simplifyException(Throwable e) {
+        Objects.requireNonNull(e);
+
         String message = e.getMessage();
         if (message == null) message = e.toString();
 

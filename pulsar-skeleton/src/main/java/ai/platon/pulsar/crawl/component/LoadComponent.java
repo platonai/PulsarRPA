@@ -444,7 +444,7 @@ public class LoadComponent {
             }
         }
 
-        if (options.getPersist()) {
+        if (!protocolStatus.isCanceled() && options.getPersist()) {
             webDb.put(page);
 
             if (!options.getLazyFlush()) {

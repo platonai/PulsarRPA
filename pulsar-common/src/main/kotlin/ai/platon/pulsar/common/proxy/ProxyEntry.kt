@@ -27,7 +27,8 @@ data class ProxyEntry(
         var proxyType: ProxyType = ProxyType.HTTP, // reserved
         var user: String? = null,
         var pwd: String? = null,
-        val targetHost: String = ""
+        val ttl: Instant? = null,
+        var targetHost: String? = null
 ) : Comparable<ProxyEntry> {
     val hostPort = "$host:$port"
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
@@ -36,7 +37,14 @@ data class ProxyEntry(
     var failedCount: Int = 0
     val speed: Double get() = (1000 * testTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 1000.0
     var availableTime: Instant = Instant.EPOCH
-    val isExpired: Boolean get() = availableTime.plus(PROXY_EXPIRED).isBefore(Instant.now())
+    val realTTL: Instant get() {
+        return when {
+            ttl == null -> availableTime + PROXY_EXPIRED
+            ttl < availableTime + PROXY_EXPIRED -> ttl
+            else -> availableTime + PROXY_EXPIRED
+        }
+    }
+    val isExpired: Boolean get() = realTTL.isBefore(Instant.now())
     val isGone: Boolean get() = failedCount >= 3
 
     fun refresh() {
@@ -44,7 +52,7 @@ data class ProxyEntry(
     }
 
     fun test(): Boolean {
-        val target = if (targetHost.isNotBlank()) {
+        val target = if (targetHost != null) {
             URL(targetHost)
         } else TEST_WEB_SITES.random()
 
@@ -86,8 +94,17 @@ data class ProxyEntry(
         return available
     }
 
+    override fun hashCode(): Int {
+        return 31 * proxyType.hashCode() + hostPort.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is ProxyEntry && other.proxyType == proxyType && other.host == host && other.port == port
+    }
+
     override fun toString(): String {
-        return "$host:$port${META_DELIMITER}at:$availableTime${META_DELIMITER}spd:$speed"
+        val ttlStr = if (ttl != null) ", ttl:$ttl" else ""
+        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed"
     }
 
     override fun compareTo(other: ProxyEntry): Int {
@@ -97,14 +114,14 @@ data class ProxyEntry(
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
 
-        private const val META_DELIMITER = " - "
+        private const val META_DELIMITER = StringUtils.SPACE
         private const val IP_PORT_REGEX = "^((25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1?\\d?\\d)(:[0-9]{2,5})"
         private val IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX)
         // Check if the proxy server is still available if it's not used for 30 seconds
         private val PROXY_EXPIRED = Duration.ofSeconds(30)
         // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
-        private const val DEFAULT_PROXY_SERVER_PORT = 19080
+        private const val DEFAULT_PROXY_SERVER_PORT = 80
         private const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
         val DEFAULT_TEST_WEB_SITE = URL("https://www.baidu.com")
         val TEST_WEB_SITES = mutableSetOf<URL>()
@@ -114,30 +131,33 @@ data class ProxyEntry(
         }
 
         fun parse(str: String): ProxyEntry? {
-            if (!StringUtil.isIpPortLike(str)) {
-                log.warn("Malformed ip port | {}", str)
+            val ipPort = str.substringBefore(META_DELIMITER)
+            if (!StringUtil.isIpPortLike(ipPort)) {
+                log.warn("Malformed ip port - {}", str)
                 return null
             }
 
-            val ipPort = str.substringBefore(META_DELIMITER)
             val pos = ipPort.lastIndexOf(':')
             if (pos != -1) {
                 val host = ipPort.substring(0, pos)
                 val port = NumberUtils.toInt(ipPort.substring(pos + 1), DEFAULT_PROXY_SERVER_PORT)
 
-                val proxyEntry = ProxyEntry(host, port)
-
-                try {
-                    var metadata = str.substringAfter(META_DELIMITER)
-                    if (!metadata.endsWith(",")) {
-                        metadata += ","
+                var availableTime: Instant? = null
+                var ttl: Instant? = null
+                val parts = str.substringAfter(META_DELIMITER).split(", ")
+                parts.forEach { item ->
+                    try {
+                        when {
+                            item.startsWith("at:") -> availableTime = Instant.parse(item.substring("at:".length))
+                            item.startsWith("ttl:") -> ttl = Instant.parse(item.substring("ttl:".length))
+                        }
+                    } catch (e: Throwable) {
+                        log.warn("Malformed proxy metadata {}", item)
                     }
-                    val instant = StringUtils.substringBetween(metadata, "at:", ",")
-                    if (instant.startsWith("PT")) {
-                        proxyEntry.availableTime = Instant.parse(instant)
-                    }
-                } catch (e: Throwable) {}
+                }
 
+                val proxyEntry = ProxyEntry(host, port, ttl = ttl)
+                availableTime?.let { proxyEntry.availableTime = it }
                 return proxyEntry
             }
 

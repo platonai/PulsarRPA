@@ -48,11 +48,6 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyManager" class="ai.platon.pulsar.common.proxy.ProxyManager" destroy-method="close">
-        <constructor-arg ref="proxyPool"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="internalProxyServer" class="ai.platon.pulsar.proxy.InternalProxyServer" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
@@ -72,8 +67,15 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDriverManager" class="ai.platon.pulsar.net.browser.WebDriverManager" destroy-method="close">
+    <bean id="webDriverPool" class="ai.platon.pulsar.net.browser.WebDriverPool" destroy-method="close">
         <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="proxyPool"/>
+        <constructor-arg ref="internalProxyServer"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="webDriverMonitor" class="ai.platon.pulsar.net.browser.WebDriverMonitor" destroy-method="close">
+        <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="internalProxyServer"/>
         <constructor-arg ref="conf"/>
@@ -81,7 +83,7 @@
 
     <bean id="seleniumEngine" class="ai.platon.pulsar.net.browser.SeleniumEngine" destroy-method="close">
         <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="webDriverManager"/>
+        <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="internalProxyServer"/>
         <constructor-arg ref="conf"/>
@@ -89,5 +91,4 @@
 
     <bean id="pulsarContext" class="ai.platon.pulsar.PulsarContext" scope="prototype" destroy-method="close"/>
 
-    <!--<bean id="h2Console" class="org.h2.tools.Console" destroy-method="shutdown"/>-->
 </beans>

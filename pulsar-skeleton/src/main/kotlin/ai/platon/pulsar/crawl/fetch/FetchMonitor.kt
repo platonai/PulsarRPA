@@ -211,11 +211,10 @@ class FetchMonitor(
             activeFetchThreads.forEach { it.exitAndJoin() }
             retiredFetchThreads.forEach { it.report() }
 
-            finishScript?.let { Files.deleteIfExists(it) }
+            Files.deleteIfExists(finishScript)
         } catch (e: Throwable) {
             LOG.error(StringUtil.stringifyException(e))
         }
-
     }
 
     fun halt() {
@@ -263,11 +262,6 @@ class FetchMonitor(
     @Throws(IOException::class)
     private fun startIndexThreads() {
         val JITIndexer = taskScheduler.jitIndexer
-        if (JITIndexer == null) {
-            LOG.error("Unexpected null JITIndexer")
-            return
-        }
-
         for (i in 0 until JITIndexer.indexThreadCount) {
             val indexThread = IndexThread(JITIndexer, immutableConfig)
             indexThread.start()
@@ -276,12 +270,12 @@ class FetchMonitor(
 
     @Throws(IOException::class)
     private fun startCheckAndReportLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        if (checkInterval!!.seconds < 5) {
+        if (checkInterval.seconds < 5) {
             LOG.warn("Check frequency is too high, it might cause a serious performance problem")
         }
 
         do {
-            val status = taskScheduler.waitAndReport(checkInterval!!)
+            val status = taskScheduler.waitAndReport(checkInterval)
 
             val statusString = taskScheduler.getStatusString(status)
 
@@ -296,37 +290,37 @@ class FetchMonitor(
             val idleTime = Duration.between(taskScheduler.getLastTaskFinishTime(), now)
 
             /*
-       * Check if any fetch tasks are hung
-       * */
+             * Check if any fetch tasks are hung
+             * */
             retuneFetchQueues(now, idleTime)
 
             /*
-       * Dump the remainder fetch items if feeder thread is no available and fetch item is few
-       * */
+             * Dump the remainder fetch items if feeder thread is no available and fetch item is few
+             * */
             if (taskMonitor.taskCount() <= FETCH_TASK_REMAINDER_NUMBER) {
                 LOG.info("Totally remains only " + taskMonitor.taskCount() + " tasks")
                 handleFewFetchItems()
             }
 
             /*
-       * Check throughput(fetch speed)
-       * */
-            if (now.isAfter(thoCheckTime!!) && status.pagesThoRate < minPageThoRate) {
+             * Check throughput(fetch speed)
+             * */
+            if (now.isAfter(thoCheckTime) && status.pagesThoRate < minPageThoRate) {
                 checkFetchThroughput()
-                thoCheckTime = thoCheckTime!!.plus(thoCheckInterval!!)
+                thoCheckTime = thoCheckTime.plus(thoCheckInterval)
             }
 
             /*
-       * Halt command is received
-       * */
+             * Halt command is received
+             * */
             if (isHalt) {
                 LOG.info("Received halt command, exit the job ...")
                 break
             }
 
             /*
-           * Read local filesystem for control commands
-           * */
+             * Read local filesystem for control commands
+             * */
             if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
                 handleFinishJobCommand()
                 LOG.info("Find finish-job command, exit the job ...")
@@ -342,16 +336,16 @@ class FetchMonitor(
                 break
             }
 
-            if (jobTime.seconds > fetchJobTimeout!!.seconds) {
+            if (jobTime.seconds > fetchJobTimeout.seconds) {
                 handleJobTimeout()
                 LOG.info("Hit fetch job timeout " + jobTime.seconds + "s, exit the job ...")
                 break
             }
 
             /*
-       * No new tasks for too long, some requests seem to hang. We exits the job.
-       * */
-            if (idleTime.seconds > fetchTaskTimeout!!.seconds) {
+             * No new tasks for too long, some requests seem to hang. We exits the job.
+             * */
+            if (idleTime.seconds > fetchTaskTimeout.seconds) {
                 handleFetchTaskTimeout()
                 LOG.info("Hit fetch task timeout " + idleTime.seconds + "s, exit the job ...")
                 break
@@ -418,10 +412,10 @@ class FetchMonitor(
         }
 
         // Do not check in every report loop
-        val nextCheckTime = poolRetuneTime!!.plus(checkInterval!!.multipliedBy(2))
+        val nextCheckTime = poolRetuneTime.plus(checkInterval.multipliedBy(2))
         if (now.isAfter(nextCheckTime)) {
-            val nextRetuneTime = poolRetuneTime!!.plus(poolRetuneInterval!!)
-            if (now.isAfter(nextRetuneTime) || idleTime.compareTo(poolPendingTimeout!!) > 0) {
+            val nextRetuneTime = poolRetuneTime.plus(poolRetuneInterval)
+            if (now.isAfter(nextRetuneTime) || idleTime > poolPendingTimeout) {
                 taskMonitor.retune(false)
                 poolRetuneTime = now
             }

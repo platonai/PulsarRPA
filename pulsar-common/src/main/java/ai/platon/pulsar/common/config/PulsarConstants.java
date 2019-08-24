@@ -125,7 +125,7 @@ public interface PulsarConstants {
     String CMD_WEB_DRIVER_CLOSE_ALL = "close-all-web-drivers";
     String CMD_WEB_DRIVER_DELETE_ALL_COOKIES = "delete-all-cookies";
 
-    int BANDWIDTH_INFINITE = 10000; // bandwidth in mbytes
+    int BANDWIDTH_INFINITE = 10000; // bandwidth in M bits
 
     /**
      * Index

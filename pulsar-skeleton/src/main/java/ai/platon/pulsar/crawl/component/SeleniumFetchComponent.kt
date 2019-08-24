@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.fetch.BatchStatus
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.net.browser.FetchResult
@@ -57,10 +58,9 @@ internal class BatchFetchContext(
 
     // Submit all tasks
     var round: Int = 0
-    var numTaskDone = 0
-    var numFailedTasks = 0
+
+    val status = BatchStatus()
     var idleSeconds = 0
-    var totalBytes = 0
 
     var beforeFetchHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
     var afterFetchHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)
@@ -102,6 +102,7 @@ class SeleniumFetchComponent(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumFetchComponent::class.java)!!
 
+    private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val isClosed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -153,6 +154,9 @@ class SeleniumFetchComponent(
         return parallelFetchAllPages(nextBatchId, pages, volatileConfig)
     }
 
+    /**
+     * TODO: use [ai.platon.pulsar.crawl.fetch.FetchThread]
+     * */
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
         val cx = BatchFetchContext(batchId, pages, volatileConfig)
 
@@ -169,8 +173,8 @@ class SeleniumFetchComponent(
 
         // Since the urls in the batch are usually from the same domain,
         // if there are too many failure, the rest tasks are very likely run to failure too
-        while (cx.numTaskDone < cx.numTotalTasks
-                && cx.numFailedTasks <= cx.numAllowedFailures
+        while (cx.status.numTaskDone < cx.numTotalTasks
+                && cx.status.numFailedTasks <= cx.numAllowedFailures
                 && cx.idleSeconds < cx.idleTimeout.seconds
                 && !isLastTaskTimeout(cx)
                 && !isClosed.get()
@@ -200,7 +204,7 @@ class SeleniumFetchComponent(
         }
 
         if (cx.pendingTasks.isNotEmpty()) {
-            handleIncomplete(cx)
+            handleBatchAbort(cx)
         }
 
         cx.afterFetchAll(pages)
@@ -213,7 +217,6 @@ class SeleniumFetchComponent(
     private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext): FetchResult {
         cx.beforeFetch(page)
         val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
-
         try {
             return seleniumEngine.fetchContentInternal(task)
         } finally {
@@ -225,36 +228,44 @@ class SeleniumFetchComponent(
         try {
             val result = getFetchResult(url, future, cx.threadTimeout)
             cx.finishedTasks[url] = result
+            ++cx.status.numTaskDone
 
             val response = result.response
-            cx.totalBytes += response.length()
 
             val elapsed = Duration.ofSeconds(cx.round.toLong())
             when (response.code) {
+                ProtocolStatus.DOCUMENT_INCOMPLETE -> {
+                    log.warn("May be incomplete content, received {} average {}, retry it",
+                            StringUtil.readableByteCount(response.length()), cx.status.averagePageSize)
+                    ++cx.status.numIncompletePages
+                }
                 ProtocolStatusCodes.SUCCESS_OK -> {
                     cx.successPages.add(result.task.page)
+                    cx.status.totalBytes += response.length()
+                    ++cx.status.numSuccessTasks
+
                     cx.afterFetchN(cx.successPages)
                     logTaskSuccess(cx, url, response, elapsed)
                 }
                 ProtocolStatusCodes.CANCELED -> {
-                    // canceled
+                    // canceled, status will not save
                     // logTaskSuccess(cx, url, response, elapsed)
                     log.warn("Task is canceled {} | {}", result.response.status, url)
                 }
                 else -> {
-                    ++cx.numFailedTasks
+                    ++cx.status.numFailedTasks
                     logTaskFailed(cx, url, response, elapsed)
                 }
             }
 
             return result
         } finally {
-            ++cx.numTaskDone
+            ++cx.status.numTaskDone
         }
     }
 
-    private fun handleIncomplete(cx: BatchFetchContext) {
-        logBatchIncomplete(cx)
+    private fun handleBatchAbort(cx: BatchFetchContext) {
+        logBatchAbort(cx)
 
         // if there are still pending tasks, cancel them
         cx.pendingTasks.forEach { it.value.cancel(true) }
@@ -310,7 +321,7 @@ class SeleniumFetchComponent(
     private fun logLongTime(cx: BatchFetchContext) {
         log.warn("Batch {} takes long time - round {} - {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}",
                 cx.batchId, cx.round,
-                cx.pendingTasks.size, cx.finishedTasks.size, cx.numFailedTasks,
+                cx.pendingTasks.size, cx.finishedTasks.size, cx.status.numFailedTasks,
                 cx.idleSeconds, cx.idleTimeout)
     }
 
@@ -319,8 +330,8 @@ class SeleniumFetchComponent(
             log.info("Batch {} round {} task failed, reason {}, {} in {}, total {} failed | {}",
                     cx.batchId, String.format("%2d", cx.round),
                     ProtocolStatus.getMinorName(response.code),
-                    StringUtil.readableByteCount(response.length().toLong()), DateTimeUtil.readableDuration(elapsed),
-                    cx.numFailedTasks,
+                    StringUtil.readableByteCount(response.length()), DateTimeUtil.readableDuration(elapsed),
+                    cx.status.numFailedTasks,
                     url
             )
         }
@@ -330,33 +341,29 @@ class SeleniumFetchComponent(
         if (log.isInfoEnabled) {
             log.info("Batch {} round {} fetched{}{} in {} with code {} | {}",
                     cx.batchId, String.format("%2d", cx.round),
-                    if (cx.totalBytes < 2000) " only " else " ",
-                    StringUtil.readableByteCount(response.length().toLong()),
-                    format(elapsed),
+                    if (cx.status.totalBytes < 2000) " only " else " ",
+                    StringUtil.readableByteCount(response.length()),
+                    DateTimeUtil.readableDuration(elapsed),
                     response.code, url)
         }
     }
 
-    private fun logBatchIncomplete(cx: BatchFetchContext) {
+    private fun logBatchAbort(cx: BatchFetchContext) {
         log.warn("Batch task is incomplete, finished tasks {}, pending tasks {}, failed tasks: {}, idle: {}s",
-                cx.numFinishedTasks, cx.numPendingTasks, cx.numFailedTasks, cx.idleSeconds)
+                cx.numFinishedTasks, cx.numPendingTasks, cx.status.numFailedTasks, cx.idleSeconds)
     }
 
     private fun logBatchFinished(cx: BatchFetchContext) {
         if (log.isInfoEnabled) {
             val elapsed = Duration.between(cx.startTime, Instant.now())
-            log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave size: {}kB, speed: {}bps",
+            log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave size: {}, speed: {}bps",
                     cx.batchId, cx.numTotalTasks,
-                    format(elapsed),
+                    DateTimeUtil.readableDuration(elapsed),
                     String.format("%,.3f", 1.0 * elapsed.seconds / cx.numTotalTasks),
-                    String.format("%,.3f", 1.0 * cx.totalBytes / 1000 / cx.numTotalTasks),
-                    String.format("%,.3f", 1.0 * cx.totalBytes * 8 / elapsed.seconds)
+                    StringUtil.readableByteCount(cx.status.totalBytes / cx.numTotalTasks),
+                    String.format("%,.3f", 1.0 * cx.status.totalBytes * 8 / elapsed.seconds)
             )
         }
-    }
-
-    private fun format(duration: Duration): String {
-        return duration.toString().removePrefix("PT").toLowerCase()
     }
 
     override fun close() {

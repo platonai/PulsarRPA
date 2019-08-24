@@ -356,8 +356,6 @@ class TaskScheduler(
         // Remove content if storingContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
         if (page.content != null) {
-            page.contentBytes = page.content!!.array().size
-
             if (!storingContent) {
                 if (!page.isSeed) {
                     page.setContent(ByteArray(0))

@@ -32,6 +32,7 @@ import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.math.min
 
 class InternalProxyServer(
         private val proxyPool: ProxyPool,
@@ -51,8 +52,8 @@ class InternalProxyServer(
     private val connected = AtomicBoolean()
     private val lock: Lock = ReentrantLock()
     private val connectedCond: Condition = lock.newCondition()
-    private var readyTimeout = Duration.ofSeconds(60)
-    private var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(2))
+    private var waitForReadyTimeout = Duration.ofMinutes(2)
+    private var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5))
 
     private val bossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 5)
     private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)
@@ -65,6 +66,7 @@ class InternalProxyServer(
     val numRunningTasks = AtomicInteger()
     var lastActiveTime = Instant.now()
     private var idleTime = Duration.ZERO
+    private var idleCount = 0
     val isConnected get() = connected.get()
     val isClosed get() = closed.get()
 
@@ -123,9 +125,9 @@ class InternalProxyServer(
 
         lock.withLock {
             try {
-                val success = connectedCond.await(readyTimeout.seconds, TimeUnit.SECONDS)
+                val success = connectedCond.await(waitForReadyTimeout.seconds, TimeUnit.SECONDS)
                 if (!success) {
-                    log.warn("Timeout to wait for a proxy")
+                    log.warn("Timeout to wait for IPS to be ready")
                 }
             } catch (e: InterruptedException) {
                 log.warn("Interrupted from waiting for IPS")
@@ -134,6 +136,84 @@ class InternalProxyServer(
         }
 
         return !isClosed && isConnected
+    }
+
+    private fun startLoop() {
+        var tick = 0
+        while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
+            try {
+                waitAndCheck(tick)
+            } catch (e: Throwable) {
+                log.error("Unexpected error - ", e)
+            }
+        }
+
+        if (isClosed) {
+            log.info("Quit IPS loop on close after {} rounds", tick)
+        } else {
+            log.error("Quit IPS loop abnormally after {} rounds", tick)
+        }
+    }
+
+    private fun waitAndCheck(tick: Int) {
+        try {
+            TimeUnit.SECONDS.sleep(1)
+        } catch (e: InterruptedException) {
+            log.info("IPS loop interrupted after {} rounds", tick)
+            Thread.currentThread().interrupt()
+            return
+        }
+
+        // Wait for 5 seconds
+        if (tick % 5 != 0) {
+            return
+        }
+
+        val lastProxy = proxyEntry
+        val proxyAlive = lastProxy?.test()?:false
+        if (!proxyAlive && lastProxy != null) {
+            log.info("Proxy <{}> is unavailable, mark it retired", lastProxy)
+            proxyPool.retire(lastProxy)
+            proxyEntry = null
+        }
+
+        // always false, feature disabled
+        val isIdle = isIdle()
+        if (isIdle) {
+            if (proxyAlive && lastProxy != null) {
+                proxyPool.retire(lastProxy)
+                // all free proxies are very likely be expired
+                proxyPool.clear()
+            }
+            proxyEntry = null
+            if (!runningWithoutProxy) {
+                log.info("The IPS is idle, run it without proxy")
+                reconnect(useProxy = false)
+            }
+        } else {
+            if (!proxyAlive || !isConnected) {
+                reconnect(useProxy = true)
+            }
+        }
+
+        idleCount = if (isIdle) idleCount++ else 0
+        val duration = min(20 + idleCount / 5, 120)
+        if (tick % duration == 0) {
+            report(isIdle, proxyAlive, lastProxy)
+        }
+    }
+
+    private fun report(isIdle: Boolean, proxyAlive: Boolean, lastProxy: ProxyEntry? = null) {
+        log.info("{}{} running tasks, {} proxy: {} | {}",
+                if (isIdle) "[Idle] " else "",
+                numRunningTasks.get(),
+                if (proxyAlive) "active" else "retired",
+                lastProxy?.hostPort,
+                proxyPool)
+
+        if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
+            proxyPool.dump()
+        }
     }
 
     private fun isIdle(): Boolean {
@@ -150,63 +230,6 @@ class InternalProxyServer(
             }
         }
         return isIdle
-    }
-
-    private fun startLoop() {
-        var tick = 0
-        while (!isClosed && tick++ < Int.MAX_VALUE) {
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-                break
-                // throw InterruptedException()
-            }
-
-            // Wait for 5 seconds
-            if (tick % 5 != 0) {
-                continue
-            }
-
-            val lastProxy = proxyEntry
-            // TODO: use a connected connection for the testing
-            val proxyAlive = lastProxy?.test()?:false
-            if (!proxyAlive && lastProxy != null) {
-                log.info("Proxy <{}> is unavailable, mark it retired", lastProxy)
-                proxyPool.retire(lastProxy)
-                proxyEntry = null
-            }
-
-            // always false, feature disabled
-            val isIdle = isIdle()
-            if (tick % 20 == 0) {
-                log.info("{}{} running tasks, {} proxy: {} | {}",
-                        if (isIdle) "[Idle] " else "",
-                        numRunningTasks.get(),
-                        if (proxyAlive) "Active" else "Retired",
-                        lastProxy?.hostPort,
-                        proxyPool)
-
-                if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
-                    proxyPool.dump()
-                }
-            }
-
-            if (isIdle) {
-                if (proxyAlive && lastProxy != null) {
-                    proxyPool.offer(lastProxy)
-                }
-                proxyEntry = null
-                if (!runningWithoutProxy) {
-                    log.info("The IPS is idle, run it without proxy")
-                    reconnect(useProxy = false)
-                }
-            } else {
-                if (!proxyAlive || !isConnected) {
-                    reconnect(useProxy = true)
-                }
-            }
-        }
     }
 
     @Synchronized

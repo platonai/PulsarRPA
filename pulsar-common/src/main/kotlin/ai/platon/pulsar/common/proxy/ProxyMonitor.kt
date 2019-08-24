@@ -11,9 +11,11 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.min
 
-class ProxyManager(
+/**
+ * TODO: merge all monitor threads
+ * */
+class ProxyMonitor(
         val proxyPool: ProxyPool,
         private val conf: ImmutableConfig
 ): AutoCloseable {
@@ -41,13 +43,12 @@ class ProxyManager(
 
     private fun update() {
         var tick = 0
-        var idle = 0
-        while (!isClosed) {
-            // report proxy pool status periodically
-            idle = if (proxyPool.numWorkingProxies == 0) idle + 1 else 0
-            val mod = min(30 + 2 * idle, 60)
-            if (tick % mod == 0) {
-                log.info("Proxy pool status - {}", proxyPool)
+        while (!isClosed && !Thread.currentThread().isInterrupted) {
+            if (!proxyPool.isIdle) {
+                when {
+                    proxyPool.numFreeProxies == 0 -> proxyPool.updateProxies(asap = true)
+                    proxyPool.numFreeProxies < 3 -> proxyPool.updateProxies()
+                }
             }
 
             if (tick % 20 == 0) {
@@ -56,13 +57,13 @@ class ProxyManager(
                 }
             }
 
+            ++tick
+
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
             }
-
-            ++tick
         }
     }
 
@@ -108,16 +109,16 @@ class ProxyManager(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyManager::class.java)
+        private val log = LoggerFactory.getLogger(ProxyMonitor::class.java)
     }
 }
 
 fun main() {
-    val log = LoggerFactory.getLogger(ProxyManager::class.java)
+    val log = LoggerFactory.getLogger(ProxyMonitor::class.java)
 
     val conf = ImmutableConfig()
     val proxyPool = ProxyPool(conf)
-    val proxyManager = ProxyManager(proxyPool, conf)
+    val proxyManager = ProxyMonitor(proxyPool, conf)
     proxyManager.start()
 
     while (true) {

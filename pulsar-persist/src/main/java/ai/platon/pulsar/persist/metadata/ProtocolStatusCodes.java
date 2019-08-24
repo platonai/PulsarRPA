@@ -88,22 +88,23 @@ public interface ProtocolStatusCodes {
      * Thread was blocked http.max.delays times during fetching.
      */
     int BLOCKED = 1466;
+    // 147x: Timeout
     /**
      * The fetch thread is timeout.
      */
-    int THREAD_TIMEOUT = 1467;
+    int THREAD_TIMEOUT = 1470;
     /**
      * Selenium web driver is timeout.
      */
-    int WEB_DRIVER_TIMEOUT = 1470;
-    /**
-     * Selenium web driver is timeout.
-     */
-    int WEB_DRIVER_GONE = 1471;
+    int WEB_DRIVER_TIMEOUT = 1471;
     /**
      * Selenium web driver is timeout.
      */
     int DOCUMENT_READY_TIMEOUT = 1472;
+    /**
+     * Selenium web driver is timeout.
+     */
+    int DOCUMENT_INCOMPLETE = 1473;
     /**
      * Selenium web driver is timeout.
      */
@@ -113,6 +114,10 @@ public interface ProtocolStatusCodes {
      */
     int IP_BANNED = 1481;
     /**
+     * Selenium web driver is timeout.
+     */
+    int WEB_DRIVER_GONE = 1482;
+    /**
      * This protocol was not found. Application may attempt to retry later.
      */
     int PROTO_NOT_FOUND = 1600;
@@ -121,7 +126,7 @@ public interface ProtocolStatusCodes {
      */
     int RETRY = 1601;
     /**
-     * The fetch task is canceled by the client
+     * The fetch task is canceled, the result is discarded despite success or error
      */
     int CANCELED = 1602;
 }

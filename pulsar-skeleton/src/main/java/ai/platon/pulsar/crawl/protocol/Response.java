@@ -47,7 +47,7 @@ public interface Response {
     @Nullable
     byte[] getContent();
 
-    default int length() {
+    default long length() {
         byte[] c = getContent();
         return c == null ? 0 : c.length;
     }

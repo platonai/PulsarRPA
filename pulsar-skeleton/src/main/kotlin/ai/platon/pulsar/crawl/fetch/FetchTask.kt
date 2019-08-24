@@ -115,3 +115,13 @@ data class FetchStatus(
         return reverseHost.compareTo(reverseHost2)
     }
 }
+
+data class BatchStatus(
+        var numTaskDone: Int = 0,
+        var numSuccessTasks: Int = 0,
+        var numIncompletePages: Int = 0,
+        var numFailedTasks: Int = 0,
+        var totalBytes: Long = 0L
+) {
+    val averagePageSize get() = 1.0 * totalBytes / (0.1 + numSuccessTasks)
+}

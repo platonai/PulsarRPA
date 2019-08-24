@@ -37,6 +37,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
     public static final ProtocolStatus STATUS_RETRY = ProtocolStatus.failed(RETRY);
+    public static final ProtocolStatus STATUS_INCOMPLETE_RETRY = ProtocolStatus.failed(DOCUMENT_INCOMPLETE);
     public static final ProtocolStatus STATUS_BROWSER_RETRY = ProtocolStatus.failed(WEB_DRIVER_GONE);
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
     public static final ProtocolStatus STATUS_EXCEPTION = ProtocolStatus.failed(EXCEPTION);
@@ -154,6 +155,10 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public boolean isFailed() {
         return getMajorCode() == FAILED;
+    }
+
+    public boolean isCanceled() {
+        return getMinorCode() == CANCELED;
     }
 
     public boolean isTempMoved() {

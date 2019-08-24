@@ -837,6 +837,7 @@ public class WebPage {
             setContentBytes(value.length);
         } else {
             page.setContent(null);
+            setContentBytes(0);
         }
     }
 
@@ -844,8 +845,29 @@ public class WebPage {
         return getMetadata().getInt(Name.CONTENT_BYTES, 0);
     }
 
-    public void setContentBytes(int bytes) {
+    private void setContentBytes(int bytes) {
+        if (bytes == 0) {
+            return;
+        }
+
         getMetadata().set(Name.CONTENT_BYTES, String.valueOf(bytes));
+
+        int count = getFetchCount();
+        int lastAveBytes = getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
+
+        int aveBytes;
+        if (count > 0 && lastAveBytes == 0) {
+            // old version, average bytes is not calculated
+            aveBytes = bytes;
+        } else {
+            aveBytes = (lastAveBytes * count + bytes) / (count + 1);
+        }
+
+        getMetadata().set(Name.AVE_CONTENT_BYTES, String.valueOf(aveBytes));
+    }
+
+    public int getAveContentBytes() {
+        return getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
     }
 
     public String getContentType() {
