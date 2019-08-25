@@ -1,6 +1,5 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.PulsarEnv.Companion.startTime
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -119,6 +118,7 @@ class FetchTask(
         val status: BatchStatus? = null
 ) {
     val url get() = page.url
+    val domain get() = URLUtil.getDomainName(url)
     lateinit var response: Response
 
     companion object {
@@ -175,6 +175,7 @@ class SeleniumEngine(
     private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val defaultDriverConfig = DriverConfig(immutableConfig)
     private val maxCookieView = 40
+    private val isISPEnabled get() = internalProxyServer.isEnabled
     private val closed = AtomicBoolean(false)
     private val isClosed get() = closed.get()
 
@@ -217,80 +218,117 @@ class SeleniumEngine(
 
     private fun visitPageAndRetrieveContentWithRetry(task: FetchTask): Response {
         val maxRetry = task.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
-        var response: Response? = null
-        var exception: Exception? = null
+        var result = RetrieveContentResult(null, null)
 
         var i = 0
-        while (i++ < maxRetry && response == null && !isClosed && !Thread.currentThread().isInterrupted) {
+        while (i++ < maxRetry && result.response == null && !isClosed && !Thread.currentThread().isInterrupted) {
             if (i > 1) {
                 log.warn("Round {} retrying another Web driver ... | {}", i, task.url)
             }
 
-            var driverRetired = false
-            exception = null
-            val driver = driverPool.poll(task.priority, task.volatileConfig)
-                    ?: return ForwardingResponse(task.page.url, ProtocolStatus.STATUS_RETRY)
+            result = visitPageAndRetrieveContent(task)
 
-            try {
-                if (internalProxyServer.isEnabled) {
-                    response = internalProxyServer.run {
-                        visitPageAndRetrieveContent(driver, task)
-                    }
-
-                    if (response.status.isSuccess) {
-                        internalProxyServer.proxyEntry?.targetHost = task.page.url
-                    }
-                } else {
-                    response = visitPageAndRetrieveContent(driver, task)
-                }
-
-                if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
-                    log.info("Executing local file command {}", CMD_WEB_DRIVER_DELETE_ALL_COOKIES)
-                    driver.driver.manage().deleteAllCookies()
-                }
-
-                if (driver.stat.pageViews > 30) {
-                    driverRetired = true
-                }
-            } catch (e: NoProxyException) {
-                log.warn("No proxy, request is canceled - {}", task.url)
-                response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
-            } catch (e: org.openqa.selenium.NoSuchSessionException) {
-                log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
-
-                response = null
-                exception = e
-                driverRetired = true
-            } catch (e: org.apache.http.conn.HttpHostConnectException) {
-                log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
-
-                response = null
-                exception = e
-                driverRetired = true
-            } catch (e: IncompleteContentException) {
-                log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
-
-                response = null
-                exception = e
-                driverRetired = true
-            } finally {
-                if (driverRetired) {
-                    driverPool.retire(driver, exception)
-                } else {
-                    driverPool.offer(driver)
-                }
-
-                if (internalProxyServer.isEnabled) {
-                    task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
-                }
+            val r = result.response
+            if (i > 1 && r != null && r.status.isSuccess && r.length() > 100_1000) {
+                log.info("Retried {} times and retrieved a good page with length {} | {}", i, r.length(), task.url)
             }
         }
 
+        val response = result.response
+        val exception = result.exception
         return when {
             response != null -> response
             exception != null -> ForwardingResponse(task.url, ProtocolStatus.failed(exception))
             else -> ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED)
         }
+    }
+
+    private class RetrieveContentResult(
+            var response: Response? = null,
+            var exception: Exception? = null
+    )
+
+    private fun visitPageAndRetrieveContent(task: FetchTask): RetrieveContentResult {
+        var driverRetired = false
+        var response: Response? = null
+        var exception: Exception? = null
+        val driver = driverPool.poll(task.priority, task.volatileConfig)
+        if (driver == null) {
+            response = ForwardingResponse(task.page.url, ProtocolStatus.STATUS_RETRY)
+            return RetrieveContentResult(response, exception)
+        }
+
+        try {
+            if (isISPEnabled) {
+                response = internalProxyServer.run {
+                    visitPageAndRetrieveContent(driver, task)
+                }
+                driver.proxyEntry = internalProxyServer.proxyEntry
+            } else {
+                response = visitPageAndRetrieveContent(driver, task)
+            }
+
+            val proxyEntry = driver.proxyEntry
+            if (proxyEntry != null) {
+                proxyEntry.servedDomains.add(task.domain)
+                if (response.status.isSuccess) {
+                    proxyEntry.targetHost = task.page.url
+                }
+            }
+        } catch (e: NoProxyException) {
+            log.warn("No proxy, request is canceled - {}", task.url)
+            response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
+        } catch (e: org.openqa.selenium.NoSuchSessionException) {
+            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
+
+            response = null
+            exception = e
+            driverRetired = true
+        } catch (e: org.apache.http.conn.HttpHostConnectException) {
+            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
+
+            response = null
+            exception = e
+            driverRetired = true
+        } catch (e: IncompleteContentException) {
+            val proxyEntry = driver.proxyEntry
+            if (proxyEntry != null) {
+                val domain = task.domain
+                val count = proxyEntry.servedDomains.count(task.domain)
+                log.warn("Content incomplete. driver: {} domain: {}({}) proxy: {} - {}",
+                        driver, domain, count, proxyEntry, StringUtil.simplifyException(e))
+            } else {
+                log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
+            }
+
+            driver.deleteAllCookiesSilently()
+
+            response = null
+            exception = e
+            if (isISPEnabled) {
+                log.info("Force change proxy {}", proxyEntry.toString())
+                internalProxyServer.forceChangeProxy()
+            } else {
+                driverRetired = true
+            }
+        } finally {
+            if (driverRetired) {
+                driverPool.retire(driver, exception)
+            } else {
+                driverPool.offer(driver)
+            }
+
+            if (isISPEnabled) {
+                task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
+            }
+
+            if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
+                log.info("Executing local file command {}", CMD_WEB_DRIVER_DELETE_ALL_COOKIES)
+                driver.driver.manage().deleteAllCookies()
+            }
+        }
+
+        return RetrieveContentResult(response, exception)
     }
 
     private fun visitPageAndRetrieveContent(driver: ManagedWebDriver, task: FetchTask): Response {
@@ -354,9 +392,6 @@ class SeleniumEngine(
             log.warn("Unexpected exception", e)
         }
 
-        if (pageSource.isEmpty()) {
-        }
-
         if (pageSource.isNotEmpty()) {
             // throw an exception if content is incomplete
             handleContentIntegrity(pageSource, page, status, task)
@@ -397,7 +432,7 @@ class SeleniumEngine(
         }
 
         val proxyError = length < 100
-                && pageSource.indexOf("<html>") != -1
+                && pageSource.indexOf("<html") != -1
                 && pageSource.lastIndexOf("</html>") != -1
         if (proxyError) {
             throw IncompleteContentException("Retrieved only 76 bytes, very likely be a proxy error")
@@ -427,7 +462,7 @@ class SeleniumEngine(
         }
 
         if (newStatus.isSuccess) {
-            log.info("Page is integral HTML but {} occurs after {} with {} | {}",
+            log.info("HTML page is integral but {} occurs after {} with {} | {}",
                     status.minorName, DateTimeUtil.elapsedTime(startTime),
                     StringUtil.readableByteCount(length.toLong()), page.url)
         } else {

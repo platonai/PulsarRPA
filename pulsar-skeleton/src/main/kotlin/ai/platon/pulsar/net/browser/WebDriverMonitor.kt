@@ -1,13 +1,16 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.proxy.InternalProxyServer
 import org.slf4j.LoggerFactory
+import org.slf4j.helpers.Util.report
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.min
 
 /**
  * TODO: merge all monitor threads
@@ -21,6 +24,8 @@ class WebDriverMonitor(
     private val log = LoggerFactory.getLogger(WebDriverMonitor::class.java)
 
     private var monitorThread = Thread(this::update)
+    private val isIdle get() = webDriverPool.isIdle
+    private var idleCount = 0
     private val closed = AtomicBoolean()
     val isClosed get() = closed.get()
 
@@ -63,20 +68,13 @@ class WebDriverMonitor(
         }
     }
 
-    private fun report() {
-        val p = webDriverPool
-        log.info("Web driver pool status - free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {}",
-                p.freeSize, p.workingSize, p.aliveSize,
-                WebDriverPool.numCrashed, WebDriverPool.numRetired, WebDriverPool.numQuit,
-                WebDriverPool.pageViews
-        )
-    }
-
     private fun updateAndReport(tick: Int) {
-        if (tick % 10 == 0) {
+        idleCount = if (isIdle) idleCount++ else 0
+        val duration = min(20 + idleCount / 5, 120)
+        if (tick % duration == 0) {
             report()
 
-            if (webDriverPool.isIdle) {
+            if (isIdle && !webDriverPool.isAllEmpty) {
                 log.info("The web driver pool is idle, closing all drivers ...")
                 webDriverPool.closeAll(maxWait = 0)
             }
@@ -93,6 +91,22 @@ class WebDriverMonitor(
             if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_PROXY_POOL_DUMP)) {
                 proxyPool.dump()
             }
+        }
+    }
+
+    private fun report() {
+        val p = webDriverPool
+        val idleTime = DateTimeUtil.readableDuration(p.idleTime)
+        log.info("WDP - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {}",
+                if (isIdle) "[Idle($idleTime)] " else "",
+                p.freeSize, p.workingSize, p.aliveSize,
+                WebDriverPool.numCrashed, WebDriverPool.numRetired, WebDriverPool.numQuit,
+                WebDriverPool.pageViews
+        )
+
+        val ipsReport = internalProxyServer.report
+        if (ipsReport.isNotBlank()) {
+            log.info(ipsReport)
         }
     }
 }

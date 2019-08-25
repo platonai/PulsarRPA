@@ -56,18 +56,11 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         return freeProxies.iterator()
     }
 
-    override val size: Int
-        get() {
-            return freeProxies.size
-        }
+    override val size get() = freeProxies.size
 
     override fun clear() {
-        log.info("Clear free proxies, they might be expired")
         freeProxies.clear()
-        if (workingProxies.isNotEmpty()) {
-            log.warn("Clearing non-empty working list, which is unexpected")
-            workingProxies.clear()
-        }
+        workingProxies.clear()
     }
 
     override fun offer(proxyEntry: ProxyEntry): Boolean {
@@ -171,14 +164,16 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         reloadProviders(Duration.ofSeconds(10))
 
         val minFreeProxies = 3
-        val checkInterval = Duration.ofSeconds(if (asap) 0 else 5)
 
-        if (numFreeProxies < minFreeProxies) {
+        val maxTry = 5
+        var i = 0
+        while (i++ < maxTry && numFreeProxies < minFreeProxies) {
             providers.forEach {
                 syncProxiesFromProvider(it)
             }
 
-            reloadProxies(checkInterval)
+            val seconds = if (asap || i > 0) 0L else 5L
+            reloadProxies(Duration.ofSeconds(seconds))
         }
     }
 
@@ -324,7 +319,8 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             val parser = ProxyVendorFactory.getProxyParser(vendor)
             val proxies = parser.parse(content, format)
 
-            proxies.forEach {
+            val minTTL = Duration.ofMinutes(3)
+            proxies.filterNot { it.willExpireAfter(minTTL) }.forEach {
                 offer(it)
                 ++count
             }

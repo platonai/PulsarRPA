@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_H
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.component.BatchHandler
+import ai.platon.pulsar.net.browser.ManagedWebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Iterables
@@ -36,7 +37,7 @@ object WebAccess {
             11 to "https://news.sogou.com/ent.shtml",
             12 to "http://shop.boqii.com/brand/",
             13 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163",
-            14 to "http://dzhcg.sinopr.org/channel/304",
+            14 to "http://dzhcg.sinopr.org/channel/103",
             15 to "http://blog.zhaojie.me/",
             16 to "https://shopee.vn/search?keyword=qu%E1%BA%A7n%20l%C3%B3t%20na"
     )
@@ -106,7 +107,7 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[7]?:return
+        val url = seeds[14]?:return
 
         var args = "-i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
@@ -116,6 +117,7 @@ object WebAccess {
             "jd.com" in url -> "a[href~=item.jd]"
             "mogu" in url -> "a[href~=detail]"
             "vip" in url -> "a[href~=detail-]"
+            "sinopr" in url -> "a[href~=p_id]"
             else -> "a"
         }
 
@@ -125,8 +127,10 @@ object WebAccess {
         val path = i.export(document)
         println("Export to: file://$path")
 
-        val links = document.select(outlink) { it.attr("abs:href") }.take(10)
-        // links.forEach { println(it) }
+        val links = document.select(outlink) { it.attr("abs:href") }
+                .toSet().filter { ".html?p_id" in it }
+                .take(20)
+        links.forEach { println(it) }
 
         class BeforeBatchHandler: BatchHandler() {
             override fun invoke(pages: Iterable<WebPage>) {
@@ -146,7 +150,11 @@ object WebAccess {
         i.volatileConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())
         i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
 
-        i.loadAll(links, LoadOptions.parse(args))
+        val pages = i.loadAll(links, LoadOptions.parse(args))
+
+        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
+            println(it?.text()?:"(null)")
+        }
 
         println("All done.")
         // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
@@ -249,11 +257,5 @@ object WebAccess {
 
 fun main() {
     WebAccess.run()
-//    val proxyPool = PulsarEnv.proxyPool
-//    proxyPool.updateProxies()
-//    proxyPool.dump()
-//    proxyPool.forEach {
-//        println("$it" + ", exp:" + it.isExpired)
-//    }
     PulsarEnv.getOrCreate().quit()
 }

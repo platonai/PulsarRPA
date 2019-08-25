@@ -1,9 +1,7 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.*
+import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -27,25 +25,30 @@ data class ProxyEntry(
         var proxyType: ProxyType = ProxyType.HTTP, // reserved
         var user: String? = null,
         var pwd: String? = null,
-        val ttl: Instant? = null,
+        val declaredTTL: Instant? = null,
         var targetHost: String? = null
 ) : Comparable<ProxyEntry> {
     val hostPort = "$host:$port"
+    val display get() = "$host:$port ttl:$ttlDuration"
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val testCount = AtomicInteger()
     val testTime = AtomicLong()
+    val servedDomains = ConcurrentHashMultiset.create<String>()
     var failedCount: Int = 0
     val speed: Double get() = (1000 * testTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 1000.0
-    var availableTime: Instant = Instant.EPOCH
-    val realTTL: Instant get() {
-        return when {
-            ttl == null -> availableTime + PROXY_EXPIRED
-            ttl < availableTime + PROXY_EXPIRED -> ttl
-            else -> availableTime + PROXY_EXPIRED
-        }
+    var availableTime: Instant = Instant.now()
+    val ttl: Instant get() = declaredTTL ?: availableTime + PROXY_EXPIRED
+    val ttlDuration: Duration? get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
+    val isExpired get() = willExpireAt(Instant.now())
+    val isGone get() = failedCount >= 3
+
+    fun willExpireAt(instant: Instant): Boolean {
+        return ttl < instant
     }
-    val isExpired: Boolean get() = realTTL.isBefore(Instant.now())
-    val isGone: Boolean get() = failedCount >= 3
+
+    fun willExpireAfter(duration: Duration): Boolean {
+        return ttl < Instant.now() + duration
+    }
 
     fun refresh() {
         availableTime = Instant.now()
@@ -103,7 +106,7 @@ data class ProxyEntry(
     }
 
     override fun toString(): String {
-        val ttlStr = if (ttl != null) ", ttl:$ttl" else ""
+        val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
         return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed"
     }
 
@@ -156,7 +159,7 @@ data class ProxyEntry(
                     }
                 }
 
-                val proxyEntry = ProxyEntry(host, port, ttl = ttl)
+                val proxyEntry = ProxyEntry(host, port, declaredTTL = ttl)
                 availableTime?.let { proxyEntry.availableTime = it }
                 return proxyEntry
             }

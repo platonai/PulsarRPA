@@ -3,7 +3,9 @@ package ai.platon.pulsar.common.proxy.vendor.zm
 import ai.platon.pulsar.common.DateTimeDetector
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.vendor.ProxyParser
+import ai.platon.pulsar.common.proxy.vendor.ProxyVendorException
 import com.google.gson.GsonBuilder
+import java.lang.RuntimeException
 import java.time.Instant
 
 private class ProxyItem(
@@ -30,7 +32,10 @@ class ZMProxyParser: ProxyParser() {
         if (format == "json") {
             val result = gson.fromJson(text, ProxyResult::class.java)
             if (result.success) {
-                return result.data.map { ProxyEntry(it.ip, it.port, ttl = parseInstant(it.expire_time)) }
+                return result.data.map { ProxyEntry(it.ip, it.port, declaredTTL = parseInstant(it.expire_time)) }
+            }
+            if (result.code != 0) {
+                throw ProxyVendorException("Proxy vendor exception - $text")
             }
         }
         return listOf()

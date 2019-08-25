@@ -67,6 +67,8 @@ class InternalProxyServer(
     var lastActiveTime = Instant.now()
     private var idleTime = Duration.ZERO
     private var idleCount = 0
+    private var forceChange = AtomicBoolean()
+    var report: String = ""
     val isConnected get() = connected.get()
     val isClosed get() = closed.get()
 
@@ -138,6 +140,11 @@ class InternalProxyServer(
         return !isClosed && isConnected
     }
 
+    fun forceChangeProxy(): Boolean {
+        forceChange.set(true)
+        return waitUntilRunning()
+    }
+
     private fun startLoop() {
         var tick = 0
         while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
@@ -170,7 +177,13 @@ class InternalProxyServer(
         }
 
         val lastProxy = proxyEntry
-        val proxyAlive = lastProxy?.test()?:false
+
+        var proxyAlive = true
+        if (lastProxy == null) proxyAlive = false
+        else if (forceChange.getAndSet(false)) proxyAlive = false
+        else if (lastProxy.willExpireAfter(Duration.ofMinutes(1))) proxyAlive = false
+        else if (!lastProxy.test()) proxyAlive = false
+
         if (!proxyAlive && lastProxy != null) {
             log.info("Proxy <{}> is unavailable, mark it retired", lastProxy)
             proxyPool.retire(lastProxy)
@@ -183,11 +196,12 @@ class InternalProxyServer(
             if (proxyAlive && lastProxy != null) {
                 proxyPool.retire(lastProxy)
                 // all free proxies are very likely be expired
+                log.info("IPS is idle, clear proxy pool")
                 proxyPool.clear()
             }
             proxyEntry = null
             if (!runningWithoutProxy) {
-                log.info("The IPS is idle, run it without proxy")
+                log.info("IPS is idle, run it without proxy")
                 reconnect(useProxy = false)
             }
         } else {
@@ -199,21 +213,44 @@ class InternalProxyServer(
         idleCount = if (isIdle) idleCount++ else 0
         val duration = min(20 + idleCount / 5, 120)
         if (tick % duration == 0) {
-            report(isIdle, proxyAlive, lastProxy)
+            generateReport(isIdle, proxyAlive, lastProxy)
+
+            if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
+                proxyPool.dump()
+            }
         }
     }
 
-    private fun report(isIdle: Boolean, proxyAlive: Boolean, lastProxy: ProxyEntry? = null) {
-        log.info("{}{} running tasks, {} proxy: {} | {}",
+    private fun generateReport(isIdle: Boolean, proxyAlive: Boolean, lastProxy: ProxyEntry? = null) {
+        report = String.format("IPS - %s%s running tasks, %s | %s",
                 if (isIdle) "[Idle] " else "",
-                numRunningTasks.get(),
-                if (proxyAlive) "active" else "retired",
-                lastProxy?.hostPort,
+                numRunningTasks,
+                formatProxy(proxyAlive, lastProxy),
                 proxyPool)
+    }
 
-        if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
-            proxyPool.dump()
+    private fun formatProxy(proxyAlive: Boolean, lastProxy: ProxyEntry?): String {
+        var ttl: Duration? = null
+        if (lastProxy != null) {
+            ttl = Duration.between(Instant.now(), lastProxy.ttl)
+            if (ttl.isNegative) {
+                ttl = null
+            }
         }
+        var proxy = "<none>"
+        if (lastProxy != null) {
+            proxy = lastProxy.hostPort
+            if (ttl != null) {
+                proxy += "(" + DateTimeUtil.readableDuration(ttl) + ")"
+            }
+        }
+        proxy = if (proxyAlive) {
+            "proxy: $proxy"
+        } else {
+            "retired proxy: $proxy"
+        }
+
+        return proxy
     }
 
     private fun isIdle(): Boolean {

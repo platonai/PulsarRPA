@@ -2,6 +2,17 @@ package ai.platon.pulsar.common.proxy.vendor
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
 
+class ProxyVendorException : Exception {
+
+    constructor() : super() {}
+
+    constructor(message: String) : super(message) {}
+
+    constructor(message: String, cause: Throwable) : super(message, cause) {}
+
+    constructor(cause: Throwable) : super(cause) {}
+}
+
 abstract class ProxyParser {
     abstract fun parse(text: String, format: String): List<ProxyEntry>
 }

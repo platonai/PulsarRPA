@@ -27,13 +27,13 @@ class TestProxy {
         val proxyEntries = parser.parse(json, "json")
 
         proxyEntries.forEach {
-            println("$it - ttl:${it.ttl}")
+            println("$it - ttl:${it.declaredTTL}")
         }
 
         assertEquals(3, proxyEntries.size)
-        assertEquals(toReadableLocalDateTime(proxyEntries[0].ttl!!), "2019-08-24T21:55:02")
-        assertEquals(toReadableLocalDateTime(proxyEntries[1].ttl!!), "2019-08-24T22:07:31")
-        assertEquals(toReadableLocalDateTime(proxyEntries[2].ttl!!), "2019-08-24T21:58:21")
+        assertEquals(toReadableLocalDateTime(proxyEntries[0].declaredTTL!!), "2019-08-24T21:55:02")
+        assertEquals(toReadableLocalDateTime(proxyEntries[1].declaredTTL!!), "2019-08-24T22:07:31")
+        assertEquals(toReadableLocalDateTime(proxyEntries[2].declaredTTL!!), "2019-08-24T21:58:21")
     }
 
     private fun toReadableLocalDateTime(instant: Instant): String {
