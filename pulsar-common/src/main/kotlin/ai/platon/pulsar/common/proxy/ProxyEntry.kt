@@ -29,7 +29,7 @@ data class ProxyEntry(
         var targetHost: String? = null
 ) : Comparable<ProxyEntry> {
     val hostPort = "$host:$port"
-    val display get() = "$host:$port ttl:$ttlDuration"
+    val display get() = "$host:$port" + ttlDuration?.let { "(${DateTimeUtil.readableDuration(it)})" }
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val testCount = AtomicInteger()
     val testTime = AtomicLong()

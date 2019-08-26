@@ -8,8 +8,12 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class HttpProxyClientHandle extends ChannelInboundHandlerAdapter {
+
+  private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpProxyClientHandle.class);
 
   private Channel clientChannel;
 
@@ -45,8 +49,11 @@ public class HttpProxyClientHandle extends ChannelInboundHandlerAdapter {
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     ctx.channel().close();
     clientChannel.close();
-    HttpProxyExceptionHandle exceptionHandle = ((HttpProxyServerHandle) clientChannel.pipeline()
-        .get("serverHandle")).getExceptionHandle();
-    exceptionHandle.afterCatch(clientChannel, ctx.channel(), cause);
+    logger.warn("{}", cause.getMessage());
+
+    // TODO: check if we should forward the exception to the nio runtime
+//    HttpProxyExceptionHandle exceptionHandle = ((HttpProxyServerHandle) clientChannel.pipeline()
+//        .get("serverHandle")).getExceptionHandle();
+    // exceptionHandle.afterCatch(clientChannel, ctx.channel(), cause);
   }
 }

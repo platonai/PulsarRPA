@@ -216,6 +216,7 @@ public interface CapabilityTypes {
      * Selenium
      */
     String SELENIUM_BROWSER = "selenium.browser";
+    String SELENIUM_BROWSER_INCOGNITO = "selenium.browser.incognito";
     String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
     String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
     String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";

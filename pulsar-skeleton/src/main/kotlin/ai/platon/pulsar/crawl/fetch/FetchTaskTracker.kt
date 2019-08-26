@@ -33,7 +33,7 @@ class FetchTaskTracker(
     /**
      * Tracking statistics for each host
      */
-    val hostStatistics = Collections.synchronizedMap(HashMap<String, FetchStatus>())
+    val hostStatistics = Collections.synchronizedMap(HashMap<String, FetchStat>())
     /**
      * Tracking unreachable hosts
      */
@@ -145,7 +145,7 @@ class FetchTaskTracker(
             return
         }
 
-        val fetchStatus = hostStatistics.computeIfAbsent(host) { FetchStatus(it) }
+        val fetchStatus = hostStatistics.computeIfAbsent(host) { FetchStat(it) }
 
         ++fetchStatus.urls
 

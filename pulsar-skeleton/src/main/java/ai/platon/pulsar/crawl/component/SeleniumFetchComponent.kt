@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.fetch.BatchStatus
+import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.net.browser.FetchResult
@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
+import kotlin.math.roundToLong
 
 abstract class TaskHandler: (WebPage) -> Unit {
     abstract override operator fun invoke(page: WebPage)
@@ -57,9 +58,9 @@ internal class BatchFetchContext(
     val numPendingTasks get() = pendingTasks.size
 
     // Submit all tasks
-    var round: Int = 0
+    var round: Long = 0
 
-    val status = BatchStatus()
+    val status = BatchStat()
     var idleSeconds = 0
 
     var beforeFetchHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
@@ -121,7 +122,12 @@ class SeleniumFetchComponent(
         val volatileConfig = page.volatileConfig ?: VolatileConfig(immutableConfig)
         val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
         val task = FetchTask(0, nextTaskId, priority, page, volatileConfig)
-        return seleniumEngine.fetchContentInternal(task).response
+        val incognito = volatileConfig.getBoolean(SELENIUM_BROWSER_INCOGNITO, false)
+        if (incognito) {
+            task.deleteAllCookies = true
+            task.closeBrowsers = true
+        }
+        return seleniumEngine.fetchTaskInternal(task).response
     }
 
     fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
@@ -158,6 +164,10 @@ class SeleniumFetchComponent(
      * TODO: use [ai.platon.pulsar.crawl.fetch.FetchThread]
      * */
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
+        if (Iterables.isEmpty(pages)) {
+            return listOf()
+        }
+
         val cx = BatchFetchContext(batchId, pages, volatileConfig)
 
         log.info("Start batch task {} with {} pages in parallel", batchId, cx.numTotalTasks)
@@ -167,6 +177,7 @@ class SeleniumFetchComponent(
         // Submit all tasks
         var taskId = 0
         pages.associateTo(cx.pendingTasks) { it.url to executor.submit { doFetch(++taskId, it, cx) } }
+
         val isLastTaskTimeout: (cx: BatchFetchContext) -> Boolean = {
             it.pendingTasks.size == 1 && it.idleSeconds >= 30 && it.numTotalTasks > 10
         }
@@ -191,7 +202,7 @@ class SeleniumFetchComponent(
 
             cx.idleSeconds = if (done.isEmpty()) 1 + cx.idleSeconds else 0
 
-            if (cx.round >= 60 && cx.round % 30 == 0) {
+            if (cx.round >= 60 && cx.round % 30 == 0L) {
                 logLongTime(cx)
             }
 
@@ -214,12 +225,18 @@ class SeleniumFetchComponent(
         return cx.finishedTasks.values.map { it.response }
     }
 
-    private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext): FetchResult {
-        cx.beforeFetch(page)
+    private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
         val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
+        if (incognito) {
+            task.deleteAllCookies = true
+            task.closeBrowsers = true
+        }
+
         try {
-            return seleniumEngine.fetchContentInternal(task)
+            cx.beforeFetch(page)
+            return seleniumEngine.fetchTaskInternal(task)
         } finally {
+            // TODO: page is not updated
             cx.afterFetch(page)
         }
     }
@@ -232,10 +249,10 @@ class SeleniumFetchComponent(
 
             val response = result.response
 
-            val elapsed = Duration.ofSeconds(cx.round.toLong())
+            val elapsed = Duration.ofSeconds(cx.round)
             when (response.code) {
                 ProtocolStatus.DOCUMENT_INCOMPLETE -> {
-                    log.warn("May be incomplete content, received {} average {}, retry it",
+                    log.warn("May be incomplete content, received {} average {}, should retry it later",
                             StringUtil.readableByteCount(response.length()), cx.status.averagePageSize)
                     ++cx.status.numIncompletePages
                 }
@@ -356,11 +373,12 @@ class SeleniumFetchComponent(
     private fun logBatchFinished(cx: BatchFetchContext) {
         if (log.isInfoEnabled) {
             val elapsed = Duration.between(cx.startTime, Instant.now())
-            log.info("Batch {} with {} tasks is finished in {}, ave time {}s, ave size: {}, speed: {}bps",
+            val aveTime = elapsed.dividedBy(cx.numTotalTasks.toLong())
+            log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}bps",
                     cx.batchId, cx.numTotalTasks,
                     DateTimeUtil.readableDuration(elapsed),
-                    String.format("%,.3f", 1.0 * elapsed.seconds / cx.numTotalTasks),
-                    StringUtil.readableByteCount(cx.status.totalBytes / cx.numTotalTasks),
+                    DateTimeUtil.readableDuration(aveTime),
+                    StringUtil.readableByteCount(cx.status.averagePageSize.roundToLong()),
                     String.format("%,.3f", 1.0 * cx.status.totalBytes * 8 / elapsed.seconds)
             )
         }

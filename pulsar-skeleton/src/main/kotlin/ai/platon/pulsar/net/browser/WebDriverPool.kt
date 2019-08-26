@@ -88,7 +88,6 @@ class ManagedWebDriver(
 
     fun deleteAllCookiesSilently(targetUrl: String) {
         try {
-            log.info("Deleting all cookies under {}", URLUtil.getDomainName(targetUrl))
             driver.get(targetUrl)
             driver.manage().deleteAllCookies()
         } catch (e: Throwable) {

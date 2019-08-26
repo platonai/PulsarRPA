@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.WebPage
 import java.net.URL
 import java.time.Instant
@@ -92,7 +91,7 @@ class FetchTask(
  * Created by vincent on 16-10-15.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-data class FetchStatus(
+data class FetchStat(
         var hostName: String,
         var urls: Int = 0,
         var indexUrls: Int = 0,
@@ -106,9 +105,9 @@ data class FetchStatus(
         var urlsTooLong: Int = 0,
         var urlsFromSeed: Int = 0,
         var cookieView: Int = 0
-) : Comparable<FetchStatus> {
+) : Comparable<FetchStat> {
 
-    override fun compareTo(other: FetchStatus): Int {
+    override fun compareTo(other: FetchStat): Int {
         val reverseHost = Urls.reverseHost(hostName)
         val reverseHost2 = Urls.reverseHost(other.hostName)
 
@@ -116,7 +115,7 @@ data class FetchStatus(
     }
 }
 
-data class BatchStatus(
+data class BatchStat(
         var numTaskDone: Int = 0,
         var numSuccessTasks: Int = 0,
         var numIncompletePages: Int = 0,

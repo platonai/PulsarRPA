@@ -67,7 +67,7 @@ class InternalProxyServer(
     var lastActiveTime = Instant.now()
     private var idleTime = Duration.ZERO
     private var idleCount = 0
-    private var forceChange = AtomicBoolean()
+    private var reconnectPending = AtomicBoolean()
     var report: String = ""
     val isConnected get() = connected.get()
     val isClosed get() = closed.get()
@@ -116,7 +116,7 @@ class InternalProxyServer(
             return false
         }
 
-        if (isConnected) {
+        if (!reconnectPending.get() && isConnected) {
             return true
         }
 
@@ -140,8 +140,8 @@ class InternalProxyServer(
         return !isClosed && isConnected
     }
 
-    fun forceChangeProxy(): Boolean {
-        forceChange.set(true)
+    fun proxyExpired(): Boolean {
+        reconnectPending.set(true)
         return waitUntilRunning()
     }
 
@@ -177,18 +177,7 @@ class InternalProxyServer(
         }
 
         val lastProxy = proxyEntry
-
-        var proxyAlive = true
-        if (lastProxy == null) proxyAlive = false
-        else if (forceChange.getAndSet(false)) proxyAlive = false
-        else if (lastProxy.willExpireAfter(Duration.ofMinutes(1))) proxyAlive = false
-        else if (!lastProxy.test()) proxyAlive = false
-
-        if (!proxyAlive && lastProxy != null) {
-            log.info("Proxy <{}> is unavailable, mark it retired", lastProxy)
-            proxyPool.retire(lastProxy)
-            proxyEntry = null
-        }
+        val proxyAlive = checkAndUpdateProxyStatus()
 
         // always false, feature disabled
         val isIdle = isIdle()
@@ -214,11 +203,30 @@ class InternalProxyServer(
         val duration = min(20 + idleCount / 5, 120)
         if (tick % duration == 0) {
             generateReport(isIdle, proxyAlive, lastProxy)
-
-            if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
-                proxyPool.dump()
-            }
         }
+    }
+
+    private fun checkAndUpdateProxyStatus(): Boolean {
+        val lastProxy = proxyEntry
+        val proxyAlive = when {
+            lastProxy == null -> false
+            reconnectPending.get() -> false
+            lastProxy.willExpireAfter(Duration.ofMinutes(1)) -> false
+            !lastProxy.test() -> false
+            else -> true
+        }
+
+        if (!proxyAlive && lastProxy != null) {
+            if (reconnectPending.get()) {
+                log.info("Proxy <{}> is unavailable, mark it retired", lastProxy.display)
+            } else {
+                log.info("Proxy <{}> is force retired", lastProxy.display)
+            }
+            proxyPool.retire(lastProxy)
+            proxyEntry = null
+        }
+
+        return proxyAlive
     }
 
     private fun generateReport(isIdle: Boolean, proxyAlive: Boolean, lastProxy: ProxyEntry? = null) {
@@ -230,27 +238,11 @@ class InternalProxyServer(
     }
 
     private fun formatProxy(proxyAlive: Boolean, lastProxy: ProxyEntry?): String {
-        var ttl: Duration? = null
         if (lastProxy != null) {
-            ttl = Duration.between(Instant.now(), lastProxy.ttl)
-            if (ttl.isNegative) {
-                ttl = null
-            }
-        }
-        var proxy = "<none>"
-        if (lastProxy != null) {
-            proxy = lastProxy.hostPort
-            if (ttl != null) {
-                proxy += "(" + DateTimeUtil.readableDuration(ttl) + ")"
-            }
-        }
-        proxy = if (proxyAlive) {
-            "proxy: $proxy"
-        } else {
-            "retired proxy: $proxy"
+            return "proxy: ${lastProxy.display}" + if (proxyAlive) "" else "(retired)"
         }
 
-        return proxy
+        return "proxy: <none>"
     }
 
     private fun isIdle(): Boolean {
@@ -278,6 +270,8 @@ class InternalProxyServer(
         } else {
             connectTo(null)
         }
+
+        reconnectPending.set(false)
     }
 
     private fun connect() {
@@ -301,7 +295,7 @@ class InternalProxyServer(
         if (log.isTraceEnabled) {
             log.trace("Ready to start IPS at {} with {}",
                     INTERNAL_PROXY_SERVER_PORT,
-                    if (proxy != null) " <$proxy>" else "no proxy")
+                    if (proxy != null) " <${proxy.display}>" else "no proxy")
         }
 
         val server = initForwardProxyServer(proxy)
@@ -329,7 +323,7 @@ class InternalProxyServer(
 
         log.info("IPS is started at {} with {}",
                 INTERNAL_PROXY_SERVER_PORT,
-                if (proxy != null) "external proxy <$proxy>" else "no proxy")
+                if (proxy != null) "external proxy <${proxy.display}>" else "no proxy")
     }
 
     private fun disconnect(notifyAll: Boolean = false) {

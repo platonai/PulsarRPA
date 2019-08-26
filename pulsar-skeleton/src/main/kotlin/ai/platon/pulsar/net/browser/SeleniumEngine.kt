@@ -7,11 +7,10 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
-import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_DELETE_ALL_COOKIES
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
-import ai.platon.pulsar.crawl.fetch.BatchStatus
-import ai.platon.pulsar.crawl.fetch.FetchStatus
+import ai.platon.pulsar.crawl.fetch.BatchStat
+import ai.platon.pulsar.crawl.fetch.FetchStat
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -42,6 +41,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
+import kotlin.math.roundToLong
 
 data class BrowserJsData(
         val status: Status = Status(),
@@ -115,7 +115,9 @@ class FetchTask(
         val priority: Int,
         val page: WebPage,
         val volatileConfig: VolatileConfig,
-        val status: BatchStatus? = null
+        val stat: BatchStat? = null,
+        var deleteAllCookies: Boolean = false,
+        var closeBrowsers: Boolean = false
 ) {
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
@@ -129,6 +131,12 @@ class FetchTask(
 class FetchResult(
         val task: FetchTask,
         var response: Response
+)
+
+private class RetrieveContentResult(
+        var response: Response? = null,
+        var exception: Exception? = null,
+        var driverRetired: Boolean = false
 )
 
 private data class VisitResult(
@@ -197,12 +205,7 @@ class SeleniumEngine(
         )
     }
 
-    internal fun fetchContentInternal(task: FetchTask): FetchResult {
-        if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
-            log.info("Executing local file command {}", CMD_WEB_DRIVER_CLOSE_ALL)
-            driverPool.closeAll()
-        }
-
+    internal fun fetchTaskInternal(task: FetchTask): FetchResult {
         val response: Response
         if (isClosed) {
             log.info("System is closed, cancel the task | {}", task.url)
@@ -210,13 +213,13 @@ class SeleniumEngine(
         } else {
             fetchTaskTracker.totalTaskCount.getAndIncrement()
             fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
-            response = visitPageAndRetrieveContentWithRetry(task)
+            response = fetchTaskWithRetry(task)
         }
 
         return FetchResult(task, response)
     }
 
-    private fun visitPageAndRetrieveContentWithRetry(task: FetchTask): Response {
+    private fun fetchTaskWithRetry(task: FetchTask): Response {
         val maxRetry = task.volatileConfig.getInt(HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
         var result = RetrieveContentResult(null, null)
 
@@ -226,7 +229,16 @@ class SeleniumEngine(
                 log.warn("Round {} retrying another Web driver ... | {}", i, task.url)
             }
 
-            result = visitPageAndRetrieveContent(task)
+            val driver = driverPool.poll(task.priority, task.volatileConfig)?: continue
+            try {
+                result = doFetchTask(driver, task)
+            } finally {
+                if (result.driverRetired) {
+                    driverPool.retire(driver, result.exception)
+                } else {
+                    driverPool.offer(driver)
+                }
+            }
 
             val r = result.response
             if (i > 1 && r != null && r.status.isSuccess && r.length() > 100_1000) {
@@ -243,20 +255,10 @@ class SeleniumEngine(
         }
     }
 
-    private class RetrieveContentResult(
-            var response: Response? = null,
-            var exception: Exception? = null
-    )
-
-    private fun visitPageAndRetrieveContent(task: FetchTask): RetrieveContentResult {
+    private fun doFetchTask(driver: ManagedWebDriver, task: FetchTask): RetrieveContentResult {
         var driverRetired = false
         var response: Response? = null
         var exception: Exception? = null
-        val driver = driverPool.poll(task.priority, task.volatileConfig)
-        if (driver == null) {
-            response = ForwardingResponse(task.page.url, ProtocolStatus.STATUS_RETRY)
-            return RetrieveContentResult(response, exception)
-        }
 
         try {
             if (isISPEnabled) {
@@ -292,43 +294,62 @@ class SeleniumEngine(
             driverRetired = true
         } catch (e: IncompleteContentException) {
             val proxyEntry = driver.proxyEntry
-            if (proxyEntry != null) {
-                val domain = task.domain
-                val count = proxyEntry.servedDomains.count(task.domain)
-                log.warn("Content incomplete. driver: {} domain: {}({}) proxy: {} - {}",
-                        driver, domain, count, proxyEntry, StringUtil.simplifyException(e))
-            } else {
-                log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
-            }
-
-            driver.deleteAllCookiesSilently()
+            handleIncompleteContent(task, driver, e)
 
             response = null
             exception = e
             if (isISPEnabled) {
-                log.info("Force change proxy {}", proxyEntry.toString())
-                internalProxyServer.forceChangeProxy()
+                log.info("Received an incomplete page, change proxy {} and try again | {}", proxyEntry?.display, task.url)
+                internalProxyServer.proxyExpired()
             } else {
                 driverRetired = true
             }
         } finally {
-            if (driverRetired) {
-                driverPool.retire(driver, exception)
-            } else {
-                driverPool.offer(driver)
-            }
-
-            if (isISPEnabled) {
-                task.page.metadata.set(Name.PROXY, internalProxyServer.proxyEntry?.hostPort)
-            }
-
-            if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_DELETE_ALL_COOKIES, Duration.ZERO)) {
-                log.info("Executing local file command {}", CMD_WEB_DRIVER_DELETE_ALL_COOKIES)
-                driver.driver.manage().deleteAllCookies()
-            }
+            afterRetrieveContent(task, driver)
         }
 
-        return RetrieveContentResult(response, exception)
+        return RetrieveContentResult(response, exception, driverRetired)
+    }
+
+    private fun handleIncompleteContent(task: FetchTask, driver: ManagedWebDriver, e: IncompleteContentException) {
+        val proxyEntry = driver.proxyEntry
+        val domain = task.domain
+        if (proxyEntry != null) {
+            val count = proxyEntry.servedDomains.count(domain)
+            log.warn("Content incomplete. driver: {} domain: {}({}) proxy: {} - {}",
+                    driver, domain, count, proxyEntry.display, StringUtil.simplifyException(e))
+        } else {
+            log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
+        }
+
+        // delete all cookie, change proxy, and retry
+        log.info("Deleting all cookies under {}", domain)
+        driver.deleteAllCookiesSilently()
+    }
+
+    private fun afterRetrieveContent(task: FetchTask, driver: ManagedWebDriver) {
+        if (isISPEnabled) {
+            driver.proxyEntry = internalProxyServer.proxyEntry
+        }
+
+        val proxyEntry = driver.proxyEntry
+        if (proxyEntry != null) {
+            task.page.metadata.set(Name.PROXY, proxyEntry.hostPort)
+        }
+
+        if (task.deleteAllCookies) {
+            log.info("Deleting all cookies under {}", task.domain)
+            driver.deleteAllCookiesSilently()
+        }
+
+        if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
+            log.info("Executing local file command {}", CMD_WEB_DRIVER_CLOSE_ALL)
+            driverPool.closeAll()
+        }
+
+        if (task.closeBrowsers) {
+            driverPool.closeAll()
+        }
     }
 
     private fun visitPageAndRetrieveContent(driver: ManagedWebDriver, task: FetchTask): Response {
@@ -381,9 +402,6 @@ class SeleniumEngine(
             status = ProtocolStatus.STATUS_BROWSER_RETRY
             log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
         } catch (e: org.openqa.selenium.WebDriverException) {
-            // 1. session deleted because of page crash
-            // 2. org.openqa.selenium.NoSuchSessionException: invalid session id
-
             status = ProtocolStatus.STATUS_RETRY
             log.warn("Unexpected WebDriver exception", e)
         } catch (e: Throwable) {
@@ -394,7 +412,7 @@ class SeleniumEngine(
 
         if (pageSource.isNotEmpty()) {
             // throw an exception if content is incomplete
-            handleContentIntegrity(pageSource, page, status, task)
+            checkContentIntegrity(pageSource, page, status, task)
         }
 
         val length = pageSource.length
@@ -421,30 +439,36 @@ class SeleniumEngine(
         return ForwardingResponse(page.url, pageSource, status, headers)
     }
 
-    private fun handleContentIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask) {
-        val length = pageSource.length
-        val aveLength = page.aveContentBytes
+    private fun checkContentIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask) {
+        val url = page.url
+        val length = pageSource.length.toLong()
+        val aveLength = page.aveContentBytes.toLong()
+        val readableLength = StringUtil.readableByteCount(length)
+        val readableAveLength = StringUtil.readableByteCount(aveLength)
 
-        if (page.fetchCount > 0 && aveLength > 100_1000 && length < 0.1 * aveLength) {
-            val message = String.format("Retrieved only %d bytes, ave size is %d, might be a proxy error",
-                    length, aveLength)
+        var message = "Retrieved: (only) $readableLength, " +
+                "history average: $readableAveLength, " +
+                "might be caused by network/proxy | $url"
+
+        if (length < 100 && pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1) {
             throw IncompleteContentException(message)
         }
 
-        val proxyError = length < 100
-                && pageSource.indexOf("<html") != -1
-                && pageSource.lastIndexOf("</html>") != -1
-        if (proxyError) {
-            throw IncompleteContentException("Retrieved only 76 bytes, very likely be a proxy error")
+        if (page.fetchCount > 0 && aveLength > 100_1000 && length < 0.1 * aveLength) {
+            throw IncompleteContentException(message)
         }
 
-        val batchStatus = task.status
-        if (status.isSuccess && batchStatus != null) {
-            if (batchStatus.numSuccessTasks > 3 &&
-                    batchStatus.averagePageSize > 10_000 &&
-                    length < batchStatus.averagePageSize / 10) {
-                val message = String.format("Retrieved only %d bytes, ave size is %d, might be a proxy error",
-                        length, batchStatus.averagePageSize)
+        val stat = task.stat
+        if (status.isSuccess && stat != null) {
+            val batchAveLength = stat.averagePageSize.roundToLong()
+            if (stat.numSuccessTasks > 3 && batchAveLength > 10_000 && length < batchAveLength / 10) {
+                val readableBatchAveLength = StringUtil.readableByteCount(batchAveLength)
+
+                message = "Retrieved: (only) $readableLength, " +
+                        "history average: $readableAveLength, " +
+                        "batch average: $readableBatchAveLength" +
+                        "might be caused by network/proxy | $url"
+
                 throw IncompleteContentException(message)
             }
         }
@@ -654,7 +678,7 @@ class SeleniumEngine(
     private fun tryRefreshCookie(page: WebPage, driver: ManagedWebDriver) {
         val url = page.url
         val host = URLUtil.getHost(url)
-        val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStatus(it) }
+        val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStat(it) }
         if (stat.cookieView > maxCookieView) {
             // log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), stat.cookieView)
             // driver.manage().deleteAllCookies()
