@@ -21,8 +21,7 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = Duration.ofDays(36500)
-    @Parameter(names = ["-ic", "-incognito", "--incognito"], converter = DurationConverter::class,
-            description = "Run browser in incognito mode, or delete all cookies after the first page view")
+    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Simulate browser as incognito mode")
     var incognito = false
 
     /** Arrange links */

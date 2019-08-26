@@ -116,6 +116,7 @@ class FetchTask(
         val page: WebPage,
         val volatileConfig: VolatileConfig,
         val stat: BatchStat? = null,
+        var incognito: Boolean = false,
         var deleteAllCookies: Boolean = false,
         var closeBrowsers: Boolean = false
 ) {
@@ -230,9 +231,11 @@ class SeleniumEngine(
             }
 
             val driver = driverPool.poll(task.priority, task.volatileConfig)?: continue
+            driver.incognito = task.incognito
             try {
                 result = doFetchTask(driver, task)
             } finally {
+                driver.incognito = false
                 if (result.driverRetired) {
                     driverPool.retire(driver, result.exception)
                 } else {
@@ -281,13 +284,13 @@ class SeleniumEngine(
             log.warn("No proxy, request is canceled - {}", task.url)
             response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
+            log.warn("Web driver is crashed, no session - {}", StringUtil.simplifyException(e))
 
             response = null
             exception = e
             driverRetired = true
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
-            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
+            log.warn("Web driver is crashed, disconnected - {}", StringUtil.simplifyException(e))
 
             response = null
             exception = e
@@ -338,7 +341,7 @@ class SeleniumEngine(
         }
 
         if (task.deleteAllCookies) {
-            log.info("Deleting all cookies under {}", task.domain)
+            log.info("Deleting all cookies after retrieval under {}", task.domain)
             driver.deleteAllCookiesSilently()
         }
 
@@ -474,9 +477,8 @@ class SeleniumEngine(
         }
     }
 
-    private fun handleTimeout(
-            startTime: Long, pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig
-    ): ProtocolStatus {
+    private fun handleTimeout(startTime: Long,
+            pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
         val length = pageSource.length
         // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
         var newStatus = status
@@ -486,7 +488,7 @@ class SeleniumEngine(
         }
 
         if (newStatus.isSuccess) {
-            log.info("HTML page is integral but {} occurs after {} with {} | {}",
+            log.info("HTML is integral but {} occurs after {} with {} | {}",
                     status.minorName, DateTimeUtil.elapsedTime(startTime),
                     StringUtil.readableByteCount(length.toLong()), page.url)
         } else {

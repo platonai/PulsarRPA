@@ -119,11 +119,11 @@ class SimpleLogger(val path: Path, var levelFile: Int = DEFAULT_LOG_LEVEL): Auto
     }
 
     companion object {
-        val OFF = 0
-        val ERROR = 1
-        val WARN = 2
-        val INFO = 3
-        val DEBUG = 4
+        const val OFF = 0
+        const val ERROR = 1
+        const val WARN = 2
+        const val INFO = 3
+        const val DEBUG = 4
 
         /**
          * The default level for system out log messages.

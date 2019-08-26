@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -60,7 +59,10 @@ class ManagedWebDriver(
     private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
     val stat = DriverStat()
     var status: DriverStatus = DriverStatus.UNKNOWN
-    val isQuit get() = status == DriverStatus.QUIT || sessionId == null
+        @Synchronized get
+        @Synchronized set
+    val isQuit: Boolean
+        get() = status == DriverStatus.QUIT || sessionId == null
     var proxy: ProxyEntry? = null
     var incognito = true
     val sessionId get() = StringUtils.substringBetween(driver.toString(), "(", ")")
@@ -71,18 +73,25 @@ class ManagedWebDriver(
         }
 
         if (incognito) {
-            driver.manage().deleteAllCookies()
+            deleteAllCookiesSilently()
         }
 
         status = DriverStatus.QUIT
         driver.quit()
     }
 
+    fun closeRedundantTabs() {
+        val handles = driver.windowHandles.size
+        if (handles > 1) {
+            driver.close()
+        }
+    }
+
     fun deleteAllCookiesSilently() {
         try {
             driver.manage().deleteAllCookies()
         } catch (e: Throwable) {
-            log.info("Can not delete cookies", e)
+            log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }
     }
 
@@ -91,7 +100,7 @@ class ManagedWebDriver(
             driver.get(targetUrl)
             driver.manage().deleteAllCookies()
         } catch (e: Throwable) {
-            log.info("Can not delete cookies", e)
+            log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }
     }
 
@@ -104,7 +113,7 @@ class ManagedWebDriver(
     }
 
     override fun toString(): String {
-        return "#$id-$sessionId"
+        return if (sessionId != null) "#$id-$sessionId" else "$id(closed)"
     }
 }
 
@@ -166,30 +175,35 @@ class WebDriverPool(
         try {
             lastActiveTime = Instant.now()
 
-            lock.withLock {
-                // it can be retired by close all
-                if (!driver.isQuit) {
-                    val handles = driver.driver.windowHandles.size
-                    if (handles > 1) {
-                        driver.driver.close()
-                    }
-                    driver.status = DriverStatus.FREE
-                    driver.stat.pageViews++
-                    pageViews.incrementAndGet()
+            // a driver is always hold by only one thread, so it's OK to use it without locks
+            driver.closeRedundantTabs()
+            driver.status = DriverStatus.FREE
+            driver.stat.pageViews++
+            pageViews.incrementAndGet()
+        } catch (e: Exception) {
+            log.warn("Failed to recycle a WebDriver, retire it - {}", StringUtil.simplifyException(e))
+            driver.status = DriverStatus.UNKNOWN
+            retire(driver, e)
+            return
+        }
 
-                    freeDrivers[driver.priority]?.add(driver)
-                }
-
-                workingDrivers.remove(driver.id)
-                notEmpty.signal()
-
-                if (workingDrivers.isEmpty()) {
-                    noWorker.signalAll()
+        lock.withLock {
+            // it can be retired by close all
+            if (driver.status == DriverStatus.FREE) {
+                val queue = freeDrivers[driver.priority]
+                if (queue != null) {
+                    queue.add(driver)
+                    // TODO: every queue should have a signal
+                    notEmpty.signal()
+                } else {
+                    log.warn("Unexpected driver priority {}, no queue exist - {}", driver.priority, driver)
                 }
             }
-        } catch (e: Exception) {
-            log.warn("Failed to recycle a WebDriver - {}", e)
-        } finally {
+
+            workingDrivers.remove(driver.id)
+            if (workingDrivers.isEmpty()) {
+                noWorker.signalAll()
+            }
         }
     }
 
@@ -236,7 +250,8 @@ class WebDriverPool(
     }
 
     fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
-        var driver: ManagedWebDriver?
+        var driver: ManagedWebDriver? = null
+        var exception: Exception? = null
         var nanos = pollingTimeout.toNanos()
 
         try {
@@ -251,14 +266,21 @@ class WebDriverPool(
             if (driver != null) {
                 driver.status = DriverStatus.WORKING
                 workingDrivers[driver.id] = driver
-                // log.debug("Poll driver {}", driver)
             }
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
             log.info("Interrupted, no web driver should return")
-            driver = null
+            exception = e
+        } catch (e: Exception) {
+            log.warn("Unexpected error - {}", StringUtil.simplifyException(e))
+            exception = e
         } finally {
             lock.unlock()
+        }
+
+        if (exception != null && driver != null) {
+            retire(driver, exception)
+            driver = null
         }
 
         return if (isClosed) null else driver

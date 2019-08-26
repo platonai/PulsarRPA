@@ -228,6 +228,7 @@ class SeleniumFetchComponent(
     private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
         val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
         if (incognito) {
+            task.incognito = incognito
             task.deleteAllCookies = true
             task.closeBrowsers = true
         }
@@ -356,12 +357,14 @@ class SeleniumFetchComponent(
 
     private fun logTaskSuccess(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
-            log.info("Batch {} round {} fetched{}{} in {} with code {} | {}",
+            val code = response.code
+            val codeMessage = if (code != 200) " with code $code" else ""
+            log.info("Batch {} round {} fetched{}{} in {}{} | {}",
                     cx.batchId, String.format("%2d", cx.round),
                     if (cx.status.totalBytes < 2000) " only " else " ",
                     StringUtil.readableByteCount(response.length()),
                     DateTimeUtil.readableDuration(elapsed),
-                    response.code, url)
+                    codeMessage, url)
         }
     }
 

@@ -22,6 +22,7 @@ import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
+import io.netty.util.ResourceLeakDetector
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -39,9 +40,6 @@ class InternalProxyServer(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(InternalProxyServer::class.java)
-    private val now = DateTimeUtil.now("yyyyMMdd")
-    private val path = PulsarPaths.get("proxy", "logs", "proxy-$now.log")
-    private val proxyLog = SimpleLogger(path, SimpleLogger.INFO)
     private val env = PulsarEnv.getOrCreate()
 
     private var runningWithoutProxy = false
@@ -363,8 +361,6 @@ class InternalProxyServer(
         } catch (e: Throwable) {
             log.error("Failed to close IPS - {}", e)
         }
-
-        proxyLog.use { it.close() }
     }
 
     private fun initForwardProxyServer(proxy: ProxyEntry?): HttpProxyServer {
@@ -385,7 +381,7 @@ class InternalProxyServer(
 
                     override fun handelRequest(httpRequest: FullHttpRequest, pipeline: HttpProxyInterceptPipeline) {
                         val message = String.format("Ready to download %s", httpRequest.headers())
-                        proxyLog.write(SimpleLogger.DEBUG, "[proxy]", message)
+                        PROXY_LOG.write(SimpleLogger.DEBUG, "[proxy]", message)
                     }
                 })
 
@@ -396,7 +392,7 @@ class InternalProxyServer(
 
                     override fun handelResponse(httpRequest: HttpRequest, httpResponse: FullHttpResponse, pipeline: HttpProxyInterceptPipeline) {
                         val message = String.format("Got resource %s, %s", httpResponse.status(), httpResponse.headers())
-                        proxyLog.write(SimpleLogger.DEBUG, "[proxy]", message)
+                        PROXY_LOG.write(SimpleLogger.DEBUG, "[proxy]", message)
                     }
                 })
             }
@@ -421,12 +417,19 @@ class InternalProxyServer(
                     return
                 }
 
-                log.warn(StringUtil.simplifyException(cause))
-                proxyLog.write(SimpleLogger.WARN, "proxy", message)
+                // log.warn(StringUtil.simplifyException(cause))
+                PROXY_LOG.write(SimpleLogger.WARN, "proxy", message)
             }
         })
 
+        // ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.ADVANCED)
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.SIMPLE)
+
         return server
+    }
+
+    companion object {
+        val PROXY_LOG = HttpProxyServer.LOG
     }
 }
 

@@ -1,7 +1,8 @@
 package com.github.monkeywie.proxyee.handler;
 
-import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle;
+import ai.platon.pulsar.common.SimpleLogger;
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
+import com.github.monkeywie.proxyee.server.HttpProxyServer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -13,7 +14,8 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class HttpProxyClientHandle extends ChannelInboundHandlerAdapter {
 
-  private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpProxyClientHandle.class);
+  // private static final InternalLogger logger = InternalLoggerFactory.getInstance(HttpProxyClientHandle.class);
+  public static SimpleLogger LOG = HttpProxyServer.LOG;
 
   private Channel clientChannel;
 
@@ -49,7 +51,7 @@ public class HttpProxyClientHandle extends ChannelInboundHandlerAdapter {
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     ctx.channel().close();
     clientChannel.close();
-    logger.warn("{}", cause.getMessage());
+    LOG.write(SimpleLogger.WARN, "proxy", cause.getMessage(), null);
 
     // TODO: check if we should forward the exception to the nio runtime
 //    HttpProxyExceptionHandle exceptionHandle = ((HttpProxyServerHandle) clientChannel.pipeline()

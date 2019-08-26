@@ -109,7 +109,7 @@ object WebAccess {
     fun loadOutPages() {
         val url = seeds[14]?:return
 
-        var args = "-i 1s -ii 1s"
+        var args = "-ic -i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
         val outlink = when {
             "mia" in url -> "a[href~=item]"
@@ -142,7 +142,7 @@ object WebAccess {
         class AfterBatchHandler: BatchHandler() {
             override fun invoke(pages: Iterable<WebPage>) {
                 val size = Iterables.size(pages)
-                val length = pages.joinToString { StringUtil.readableByteCount(it.contentAsBytes.size.toLong()) }
+                val length = pages.joinToString { StringUtil.readableByteCount(it.aveContentBytes.toLong()) }
                 println("After fetching - Fetched $size pages, length: $length")
             }
         }
@@ -159,6 +159,12 @@ object WebAccess {
         println("All done.")
         // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
         // println(WebPageFormatter(page).withLinks())
+    }
+
+    fun parallelLoadOutPages() {
+        IntRange(0, 10).toList().parallelStream().forEach {
+            loadOutPages()
+        }
     }
 
     fun parallelLoadAllOutPages() {
@@ -249,6 +255,9 @@ object WebAccess {
         // load()
         // collectLinks()
         loadOutPages()
+        repeat(10) {
+            parallelLoadOutPages()
+        }
         // loadAllProducts()
         // parallelLoadAll()
         // parallelLoadAllProducts()

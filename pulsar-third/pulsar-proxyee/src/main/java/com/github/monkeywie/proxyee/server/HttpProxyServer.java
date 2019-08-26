@@ -1,5 +1,8 @@
 package com.github.monkeywie.proxyee.server;
 
+import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.PulsarPaths;
+import ai.platon.pulsar.common.SimpleLogger;
 import com.github.monkeywie.proxyee.crt.CertPool;
 import com.github.monkeywie.proxyee.crt.CertUtil;
 import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle;
@@ -20,13 +23,19 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 
 public class HttpProxyServer implements AutoCloseable {
 
-  //http代理隧道握手成功
+  private static String now = DateTimeUtil.now("yyyyMMdd");
+  private static Path path = PulsarPaths.INSTANCE.get("proxy", "logs", "proxy-" + now + ".log");
+  // there are too many disconnect/timeout warnings, we write them into another file
+  public static SimpleLogger LOG = new SimpleLogger(path, SimpleLogger.INFO);
+
+  // http代理隧道握手成功
   public final static HttpResponseStatus SUCCESS = new HttpResponseStatus(200, "Connection established");
 
   private HttpProxyCACertFactory caCertFactory;
@@ -148,5 +157,6 @@ public class HttpProxyServer implements AutoCloseable {
     bossGroup.shutdownGracefully();
     workerGroup.shutdownGracefully();
     CertPool.clear();
+    LOG.close();
   }
 }
