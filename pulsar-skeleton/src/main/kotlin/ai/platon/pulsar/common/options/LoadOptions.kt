@@ -150,7 +150,7 @@ open class LoadOptions: CommonOptions {
 
     open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
-        val fields = this.javaClass.declaredFields
+        val fields = LoadOptions::class.java.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
                 .onEach { it.isAccessible = true }
                 .filter { it.get(this) != null }
@@ -159,7 +159,7 @@ open class LoadOptions: CommonOptions {
     }
 
     open val modifiedOptions: Map<String, Any> get() {
-        val fields = this.javaClass.declaredFields
+        val fields = LoadOptions::class.java.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
                 .onEach { it.isAccessible = true }
                 .filter { it.get(this) != null }
@@ -178,15 +178,15 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
-    open fun isDefault(optionName: String): Boolean {
-        val value = this.javaClass.declaredFields.find { it.name == optionName }
-                ?.also { it.isAccessible = true }?.get(this)
-        return value == defaultParams[optionName]
+    open fun isDefault(option: String): Boolean {
+        val value = LoadOptions::class.java.declaredFields.find { it.name == option }
+                ?.also { it.isAccessible = true }?.get(this)?:return false
+        return value == defaultParams[option]
     }
 
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
-        val fields = this.javaClass.declaredFields
+        val fields = LoadOptions::class.java.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } }
                 .onEach { it.isAccessible = true }
                 .associate { "-${it.name}" to it.get(this) }
@@ -209,11 +209,20 @@ open class LoadOptions: CommonOptions {
     /**
      * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
      * */
-    fun mergeModified(other: LoadOptions): LoadOptions {
+    open fun mergeModified(other: LoadOptions): LoadOptions {
         val modified = other.modifiedOptions
 
+        LoadOptions::class.java.declaredFields.forEach {
+            if (it.name in modified.keys) {
+                it.isAccessible = true
+                it.set(this, modified[it.name])
+            }
+        }
+
+        // the fields of sub classes
         this.javaClass.declaredFields.forEach {
             if (it.name in modified.keys) {
+                it.isAccessible = true
                 it.set(this, modified[it.name])
             }
         }
@@ -224,9 +233,9 @@ open class LoadOptions: CommonOptions {
     companion object {
 
         val default = LoadOptions()
-        val defaultParams = default.javaClass.declaredFields.associate { it.name to it.get(default) }
+        val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val optionNames: List<String> = default.javaClass.declaredFields
+        val optionNames: List<String> = LoadOptions::class.java.declaredFields
                 .filter { it.annotations.any { it is Parameter } }.map { it.name }
 
         val helpList: List<List<String>> get() =

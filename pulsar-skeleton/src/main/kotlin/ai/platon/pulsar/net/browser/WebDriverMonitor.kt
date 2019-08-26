@@ -32,10 +32,6 @@ class WebDriverMonitor(
     fun start() {
         proxyPool.updateProxies(asap = true)
 
-        if (internalProxyServer.isEnabled) {
-            internalProxyServer.start()
-        }
-
         monitorThread.isDaemon = true
         monitorThread.start()
     }

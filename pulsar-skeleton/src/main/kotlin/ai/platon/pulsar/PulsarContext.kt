@@ -182,20 +182,14 @@ class PulsarContext: AutoCloseable {
 
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
-        val parts = Urls.splitUrlArgs(url)
-        val options = initOptions(LoadOptions.parse(parts.second))
-        var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
-        if (!options.noFilter) {
-            normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
-        }
-        return NormUrl(normalizedUrl, initOptions(options))
+        return normalize(url, LoadOptions.create(), isItemOption)
     }
 
     fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
         val parts = Urls.splitUrlArgs(url)
         var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
-        if (!options.noFilter) {
+        if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
         }
 
@@ -203,8 +197,8 @@ class PulsarContext: AutoCloseable {
             return NormUrl(normalizedUrl, options)
         }
 
-        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(parts.second))
-        return NormUrl(normalizedUrl, initOptions(options2))
+        val options2 = LoadOptions.mergeModified(LoadOptions.parse(parts.second), options)
+        return NormUrl(normalizedUrl, initOptions(options2, isItemOption))
     }
 
     fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
@@ -257,7 +251,6 @@ class PulsarContext: AutoCloseable {
     fun load(url: String): WebPage {
         ensureRunning()
         val normUrl = normalize(url)
-        initOptions(normUrl.options)
         return loadComponent.load(normUrl)
     }
 
@@ -270,7 +263,7 @@ class PulsarContext: AutoCloseable {
      */
     fun load(url: String, options: LoadOptions): WebPage {
         ensureRunning()
-        val normUrl = normalize(url, initOptions(options))
+        val normUrl = normalize(url, options)
         return loadComponent.load(normUrl)
     }
 
@@ -282,7 +275,7 @@ class PulsarContext: AutoCloseable {
      */
     fun load(url: URL): WebPage {
         ensureRunning()
-        return loadComponent.load(url, initOptions(LoadOptions.create()))
+        return loadComponent.load(url, LoadOptions.create())
     }
 
     /**
@@ -325,7 +318,6 @@ class PulsarContext: AutoCloseable {
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
-        initOptions(options)
         return loadComponent.loadAll(normalize(urls, options), options)
     }
 
@@ -351,7 +343,6 @@ class PulsarContext: AutoCloseable {
     @JvmOverloads
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
-        initOptions(options)
         return loadComponent.parallelLoadAll(normalize(urls, options), options)
     }
 

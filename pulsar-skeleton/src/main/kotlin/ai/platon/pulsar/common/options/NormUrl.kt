@@ -15,6 +15,7 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
     val isNotNil get() = !isNil
     val isValid get() = u != null
     val isInvalid get() = !isValid
+    val configuredUrl get() = "$url $options"
 
     fun toURL(): URL? { return u }
 

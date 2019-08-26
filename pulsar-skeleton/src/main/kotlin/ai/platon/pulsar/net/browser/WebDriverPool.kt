@@ -136,9 +136,11 @@ class WebDriverPool(
         // Every value collection is a first in, first out queue
         private val freeDrivers = mutableMapOf<Int, LinkedList<ManagedWebDriver>>()
         private val workingDrivers = HashMap<Int, ManagedWebDriver>()
+        private val closingDrivers = AtomicBoolean()
         private val lock: Lock = ReentrantLock()
         private val notEmpty: Condition = lock.newCondition()
         private val noWorker: Condition = lock.newCondition()
+        private val driversClosed = lock.newCondition()
 
         val numCrashed = AtomicInteger()
         val numRetired = AtomicInteger()
@@ -158,20 +160,33 @@ class WebDriverPool(
     var idleTimeout = Duration.ofMinutes(5)
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isIdle get() = workingSize == 0 && idleTime > idleTimeout
-    val isAllEmpty get() = allDrivers.isEmpty() && freeDrivers.isEmpty() && workingDrivers.isEmpty()
+    val isAllEmpty: Boolean
+        get() {
+            lock.withLock {
+                return allDrivers.isEmpty() && freeDrivers.isEmpty() && workingDrivers.isEmpty()
+            }
+        }
 
-    val workingSize: Int get() {
-        lock.withLock { return workingDrivers.size }
-    }
-    val freeSize: Int get() {
-        lock.withLock { return freeDrivers.values.sumBy { it.size } }
-    }
-    val aliveSize: Int get() {
-        lock.withLock { return workingDrivers.size + freeDrivers.values.sumBy { it.size } }
-    }
+    val workingSize: Int
+        get() {
+            lock.withLock { return workingDrivers.size }
+        }
+    val freeSize: Int
+        get() {
+            lock.withLock { return freeDrivers.values.sumBy { it.size } }
+        }
+    val aliveSize: Int
+        get() {
+            lock.withLock { return workingDrivers.size + freeDrivers.values.sumBy { it.size } }
+        }
     val totalSize get() = allDrivers.size
 
     fun offer(driver: ManagedWebDriver) {
+        if (closingDrivers.get()) {
+            // closeAll is performing, the client can just throw away the driver
+            return
+        }
+
         try {
             lastActiveTime = Instant.now()
 
@@ -208,6 +223,15 @@ class WebDriverPool(
     }
 
     fun retire(driver: ManagedWebDriver, e: Exception?) {
+        return retire(driver, e, true)
+    }
+
+    private fun retire(driver: ManagedWebDriver, e: Exception?, external: Boolean = true) {
+        if (external && closingDrivers.get()) {
+            // closeAll is performing, the client can just throw away the driver
+            return
+        }
+
         driver.status = DriverStatus.RETIRED
 
         lock.withLock {
@@ -302,10 +326,12 @@ class WebDriverPool(
 
     fun closeAll(maxWait: Long = 60L) {
         lock.withLock {
+            closingDrivers.set(true)
             if (workingSize > 0) {
                 noWorker.await(maxWait, TimeUnit.SECONDS)
             }
             closeAllUnlocked()
+            closingDrivers.set(false)
         }
     }
 
@@ -460,11 +486,11 @@ class WebDriverPool(
 
         log.info("Closing all web drivers ...")
 
-        freeDrivers.flatMap { it.value }.forEach { retire(it, null) }
+        freeDrivers.flatMap { it.value }.forEach { retire(it, null, external = false) }
         freeDrivers.forEach { it.value.clear() }
         freeDrivers.clear()
 
-        workingDrivers.map { it.value }.forEach { retire(it, null) }
+        workingDrivers.map { it.value }.forEach { retire(it, null, external = false) }
         workingDrivers.clear()
 
         if (!isHeadless) {
