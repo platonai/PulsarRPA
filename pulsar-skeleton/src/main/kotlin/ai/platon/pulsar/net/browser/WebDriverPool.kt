@@ -62,11 +62,15 @@ class ManagedWebDriver(
         @Synchronized get
         @Synchronized set
     val isQuit: Boolean
+        @Synchronized
         get() = status == DriverStatus.QUIT || sessionId == null
     var proxy: ProxyEntry? = null
     var incognito = true
-    val sessionId get() = StringUtils.substringBetween(driver.toString(), "(", ")")
+    val sessionId
+        @Synchronized
+        get() = StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
 
+    @Synchronized
     fun quit() {
         if (isQuit) {
             return
@@ -80,6 +84,7 @@ class ManagedWebDriver(
         driver.quit()
     }
 
+    @Synchronized
     fun closeRedundantTabs() {
         val handles = driver.windowHandles.size
         if (handles > 1) {
@@ -87,6 +92,7 @@ class ManagedWebDriver(
         }
     }
 
+    @Synchronized
     fun deleteAllCookiesSilently() {
         try {
             driver.manage().deleteAllCookies()
@@ -95,6 +101,7 @@ class ManagedWebDriver(
         }
     }
 
+    @Synchronized
     fun deleteAllCookiesSilently(targetUrl: String) {
         try {
             driver.get(targetUrl)
@@ -112,6 +119,7 @@ class ManagedWebDriver(
         return id
     }
 
+    @Synchronized
     override fun toString(): String {
         return if (sessionId != null) "#$id-$sessionId" else "$id(closed)"
     }
