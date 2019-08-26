@@ -46,7 +46,6 @@ class InternalProxyServer(
     private var forwardServer: HttpProxyServer? = null
     private var forwardServerThread: Thread? = null
     private val loopThread = Thread(this::startLoop)
-    private val started = AtomicBoolean()
     private val closed = AtomicBoolean()
     private val connected = AtomicBoolean()
     private val lock: Lock = ReentrantLock()
@@ -113,11 +112,6 @@ class InternalProxyServer(
     fun waitUntilRunning(): Boolean {
         if (isDisabled || isClosed) {
             return false
-        }
-
-        if (!started.get()) {
-            // lazy start
-            start()
         }
 
         if (!reconnectPending.get() && isConnected) {

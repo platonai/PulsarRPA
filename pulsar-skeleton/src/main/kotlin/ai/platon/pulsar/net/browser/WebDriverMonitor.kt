@@ -30,7 +30,11 @@ class WebDriverMonitor(
     val isClosed get() = closed.get()
 
     fun start() {
+        // TODO: move to a better place to start proxy relative threads
         proxyPool.updateProxies(asap = true)
+        if (internalProxyServer.isEnabled) {
+            internalProxyServer.start()
+        }
 
         monitorThread.isDaemon = true
         monitorThread.start()
