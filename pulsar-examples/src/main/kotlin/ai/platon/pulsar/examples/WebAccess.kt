@@ -117,7 +117,7 @@ object WebAccess {
             "jd.com" in url -> "a[href~=item.jd]"
             "mogu" in url -> "a[href~=detail]"
             "vip" in url -> "a[href~=detail-]"
-            "sinopr" in url -> "a[href~=p_id]"
+            "sinopr" in url -> ".title a[href~=p_id]"
             else -> "a"
         }
 
@@ -128,7 +128,7 @@ object WebAccess {
         println("Export to: file://$path")
 
         val links = document.select(outlink) { it.attr("abs:href") }
-                .toSet().filter { ".html?p_id" in it }
+                .toSet()
                 .take(20)
         links.forEach { println(it) }
 
@@ -151,6 +151,27 @@ object WebAccess {
         i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
 
         val pages = i.loadAll(links, LoadOptions.parse(args))
+
+        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
+            println(it?.text()?:"(null)")
+        }
+
+        println("All done.")
+        // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
+        // println(WebPageFormatter(page).withLinks())
+    }
+
+    fun loadOutPagesSinopr() {
+        val url = "http://dzhcg.sinopr.org/channel/103"
+        val args = "-ic -i 1s -ii 10d -rs 10000 -irs 100000"
+        val opt = LoadOptions.parse(args)
+        val outlink = ".title a[href~=p_id]"
+
+        val links = i.parse(i.load(url, opt))
+                .select(outlink) { it.attr("abs:href") }.toSet().take(20)
+        links.forEach { println(it) }
+
+        val pages = i.loadAll(links.takeLast(1), opt, itemPages = true)
 
         pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
             println(it?.text()?:"(null)")
@@ -254,10 +275,11 @@ object WebAccess {
     fun run() {
         // load()
         // collectLinks()
-        loadOutPages()
-        repeat(10) {
-            parallelLoadOutPages()
-        }
+        // loadOutPages()
+        loadOutPagesSinopr()
+//        repeat(10) {
+//            parallelLoadOutPages()
+//        }
         // loadAllProducts()
         // parallelLoadAll()
         // parallelLoadAllProducts()

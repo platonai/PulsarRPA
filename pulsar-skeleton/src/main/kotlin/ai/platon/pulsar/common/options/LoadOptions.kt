@@ -43,8 +43,8 @@ open class LoadOptions: CommonOptions {
             description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
     @Parameter(names = ["-rs", "-requireSize", "--require-size"],
-            description = "Required minimum size of pages")
-    var requireSize = ""
+            description = "Fetch pages smaller than requireSize")
+    var requireSize = 0
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
@@ -92,8 +92,8 @@ open class LoadOptions: CommonOptions {
             description = "Keep the item pages only if the required text is not blank")
     var itemRequireNotBlank = ""
     @Parameter(names = ["-irs", "-itemRequireSize", "--item-require-size"],
-            description = "Required minimum size of item pages")
-    var itemRequireSize = ""
+            description = "Fetch item pages smaller than requireSize")
+    var itemRequireSize = 0
 
     @Parameter(names = ["-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")

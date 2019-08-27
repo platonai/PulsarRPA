@@ -45,8 +45,9 @@ public class LoadComponent {
     public static final int FETCH_REASON_DO_NOT_FETCH = 0;
     public static final int FETCH_REASON_NEW_PAGE = 1;
     public static final int FETCH_REASON_EXPIRED = 2;
-    public static final int FETCH_REASON_TEMP_MOVED = 3;
-    public static final int FETCH_REASON_RETRY_ON_FAILURE = 4;
+    public static final int FETCH_REASON_SMALL_CONTENT = 3;
+    public static final int FETCH_REASON_TEMP_MOVED = 4;
+    public static final int FETCH_REASON_RETRY_ON_FAILURE = 5;
     public static final HashMap<Integer, String> fetchReasonCodes = new HashMap<>();
 
     private final static Set<String> globalFetchingUrls = Collections.synchronizedSet(new HashSet<>());
@@ -55,6 +56,7 @@ public class LoadComponent {
         fetchReasonCodes.put(FETCH_REASON_DO_NOT_FETCH, "do_not_fetch");
         fetchReasonCodes.put(FETCH_REASON_NEW_PAGE, "new_page");
         fetchReasonCodes.put(FETCH_REASON_EXPIRED, "expired");
+        fetchReasonCodes.put(FETCH_REASON_SMALL_CONTENT, "small");
         fetchReasonCodes.put(FETCH_REASON_TEMP_MOVED, "temp_moved");
         fetchReasonCodes.put(FETCH_REASON_RETRY_ON_FAILURE, "retry_on_failure");
     }
@@ -186,33 +188,36 @@ public class LoadComponent {
 
         for (NormUrl normUrl : filteredUrls) {
             String url = normUrl.getUrl();
-            LoadOptions op = normUrl.getOptions();
+            LoadOptions opt = normUrl.getOptions();
 
-            WebPage page = webDb.getOrNil(url, op.getShortenKey());
+            WebPage page = webDb.getOrNil(url, opt.getShortenKey());
 
-            int reason = getFetchReason(page, op.getExpires(), op.getRetry());
+            int reason = getFetchReason(page, opt.getExpires(), opt.getRequireSize(), opt.getRetry());
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), url, op);
+                LOG.trace("Fetch reason: {} | {} {}", getFetchReason(reason), url, opt);
             }
 
+            ProtocolStatus status = page.getProtocolStatus();
             if (reason == FETCH_REASON_NEW_PAGE) {
                 pendingUrls.add(url);
             } else if (reason == FETCH_REASON_EXPIRED) {
                 pendingUrls.add(url);
+            } else if (reason == FETCH_REASON_SMALL_CONTENT) {
+                pendingUrls.add(url);
             } else if (reason == FETCH_REASON_TEMP_MOVED) {
                 // TODO: batch redirect
-                page = redirect(page, op);
-                if (page.getProtocolStatus().isSuccess()) {
+                page = redirect(page, opt);
+                if (status.isSuccess()) {
                     knownPages.add(page);
                 }
             } else if (reason == FETCH_REASON_DO_NOT_FETCH) {
-                if (page.getProtocolStatus().isSuccess()) {
+                if (status.isSuccess()) {
                     knownPages.add(page);
                 } else {
-                    // failed
+                    LOG.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt);
                 }
             } else {
-                LOG.error("Unknown fetch reason #{}, url: {}, options: {}", reason, url, op);
+                LOG.error("Unknown fetch reason {} | {} {}", reason, url, opt);
             }
         }
 
@@ -264,34 +269,37 @@ public class LoadComponent {
         Objects.requireNonNull(normUrl);
 
         if (normUrl.isInvalid()) {
-            LOG.warn("Malformed url {}", normUrl);
+            LOG.warn("Malformed url | {}", normUrl);
             return WebPage.NIL;
         }
 
         String url = normUrl.getUrl();
-        LoadOptions options = normUrl.getOptions();
+        LoadOptions opt = normUrl.getOptions();
         if (globalFetchingUrls.contains(url)) {
-            LOG.debug("Load later, it's fetching by someone else. Url: {}", url);
+            LOG.debug("Load later, it's fetching by someone else | {}", url);
+            // TODO: wait for finish?
             return WebPage.NIL;
         }
 
-        boolean ignoreQuery = options.getShortenKey();
+        boolean ignoreQuery = opt.getShortenKey();
         WebPage page = webDb.getOrNil(url, ignoreQuery);
 
-        int reason = getFetchReason(page, options.getExpires(), options.getRetry());
-        LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
+        int reason = getFetchReason(page, opt.getExpires(), opt.getRequireSize(), opt.getRetry());
+        LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), opt);
 
         if (reason == FETCH_REASON_TEMP_MOVED) {
-            return redirect(page, options);
+            return redirect(page, opt);
         }
 
-        boolean refresh = (reason == FETCH_REASON_NEW_PAGE) || (reason == FETCH_REASON_EXPIRED);
+        boolean refresh = reason == FETCH_REASON_NEW_PAGE
+                || reason == FETCH_REASON_EXPIRED
+                || reason == FETCH_REASON_SMALL_CONTENT;
         if (refresh) {
             if (page.isNil()) {
                 page = WebPage.newWebPage(url, ignoreQuery);
             }
 
-            page = fetchComponent.initFetchEntry(page, options);
+            page = fetchComponent.initFetchEntry(page, opt);
 
             // LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
 
@@ -299,7 +307,7 @@ public class LoadComponent {
             page = fetchComponent.fetchContent(page);
             globalFetchingUrls.remove(url);
 
-            update(page, options);
+            update(page, opt);
         }
 
         return page;
@@ -339,7 +347,7 @@ public class LoadComponent {
         return url;
     }
 
-    private int getFetchReason(WebPage page, Duration expires, boolean retryIfFailed) {
+    private int getFetchReason(WebPage page, Duration expires, int requiredSize, boolean retryIfFailed) {
         Objects.requireNonNull(page);
         Objects.requireNonNull(expires);
 
@@ -375,6 +383,10 @@ public class LoadComponent {
         // if (now > lastTime + expires), it's expired
         if (now.isAfter(lastFetchTime.plus(expires))) {
             return FETCH_REASON_EXPIRED;
+        }
+
+        if (requiredSize > 0 && page.getContentBytes() < requiredSize) {
+            return FETCH_REASON_SMALL_CONTENT;
         }
 
         return FETCH_REASON_DO_NOT_FETCH;

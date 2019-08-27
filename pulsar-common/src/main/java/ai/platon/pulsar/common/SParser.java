@@ -614,10 +614,9 @@ public class SParser {
         }
 
         try {
-            String text = value.toLowerCase();
-            if (text.startsWith("p") || text.startsWith("-p")) {
+            if (value.startsWith("P") || value.startsWith("-P")) {
                 try {
-                    return Duration.parse(text);
+                    return Duration.parse(value);
                 } catch (Throwable ignored) {
                 }
             }

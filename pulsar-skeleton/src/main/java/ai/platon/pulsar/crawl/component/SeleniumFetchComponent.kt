@@ -253,6 +253,7 @@ class SeleniumFetchComponent(
             val elapsed = Duration.ofSeconds(cx.round)
             when (response.code) {
                 ProtocolStatus.DOCUMENT_INCOMPLETE -> {
+                    // TODO: seems never happen
                     log.warn("May be incomplete content, received {} average {}, should retry it later",
                             StringUtil.readableByteCount(response.length()), cx.status.averagePageSize)
                     ++cx.status.numIncompletePages

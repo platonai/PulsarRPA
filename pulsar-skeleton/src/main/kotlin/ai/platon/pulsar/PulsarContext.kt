@@ -170,6 +170,8 @@ class PulsarContext: AutoCloseable {
         itemOptions.scriptTimeout = options.itemScriptTimeout
         itemOptions.scrollInterval = options.itemScrollInterval
         itemOptions.pageLoadTimeout = options.itemPageLoadTimeout
+        itemOptions.requireNotBlank = options.itemRequireNotBlank
+        itemOptions.requireSize = options.itemRequireSize
 
         itemOptions.browser = options.itemBrowser
         if (itemOptions.browser == BrowserType.NATIVE) {
@@ -194,7 +196,7 @@ class PulsarContext: AutoCloseable {
         }
 
         if (parts.second.isBlank()) {
-            return NormUrl(normalizedUrl, options)
+            return NormUrl(normalizedUrl, initOptions(options, isItemOption))
         }
 
         val options2 = LoadOptions.mergeModified(LoadOptions.parse(parts.second), options)
