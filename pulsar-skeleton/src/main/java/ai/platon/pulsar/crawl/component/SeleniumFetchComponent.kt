@@ -229,7 +229,6 @@ class SeleniumFetchComponent(
         val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
         task.batchSize = cx.batchSize
         if (incognito) {
-            task.incognito = incognito
             task.deleteAllCookies = true
             task.closeBrowsers = true
         }

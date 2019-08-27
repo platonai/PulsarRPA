@@ -67,12 +67,12 @@ class FetchTask(
         val volatileConfig: VolatileConfig,
         var batchSize: Int = 1,
         val stat: BatchStat? = null,
-        var incognito: Boolean = false,
         var deleteAllCookies: Boolean = false,
         var closeBrowsers: Boolean = false
 ) {
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
+    val incognito = deleteAllCookies && closeBrowsers
     lateinit var response: Response
 
     companion object {
@@ -183,14 +183,9 @@ class SeleniumEngine(
             val driver = driverPool.poll(task.priority, task.volatileConfig)?: continue
             driver.incognito = task.incognito
             try {
-                result = doFetchTask(driver, task)
+                result = doRetrieveContent(task, driver)
             } finally {
-                driver.incognito = false
-                if (result.driverRetired) {
-                    driverPool.retire(driver, result.exception)
-                } else {
-                    driverPool.offer(driver)
-                }
+                afterRetrieveContent(task, driver, result)
             }
 
             val r = result.response
@@ -208,9 +203,34 @@ class SeleniumEngine(
         }
     }
 
-    private fun doFetchTask(driver: ManagedWebDriver, task: FetchTask): RetrieveContentResult {
+    private fun afterRetrieveContent(task: FetchTask, driver: ManagedWebDriver, result: RetrieveContentResult) {
+        if (task.deleteAllCookies) {
+            log.info("Deleting all cookies after task {}/{} under {}", task.batchId, task.taskId, task.domain)
+            driver.deleteAllCookiesSilently()
+            task.deleteAllCookies = false
+        }
+
+        if (result.driverRetired) {
+            driverPool.retire(driver, result.exception)
+        } else {
+            driverPool.offer(driver)
+        }
+
+        if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
+            log.info("Executing local file command {}", CMD_WEB_DRIVER_CLOSE_ALL)
+            driverPool.closeAll()
+            task.closeBrowsers = false
+        }
+
+        if (task.closeBrowsers) {
+            driverPool.closeAll()
+            task.closeBrowsers = false
+        }
+    }
+
+    private fun doRetrieveContent(task: FetchTask, driver: ManagedWebDriver): RetrieveContentResult {
         var driverRetired = false
-        var response: Response? = null
+        var response: Response?
         var exception: Exception? = null
 
         try {
@@ -258,7 +278,14 @@ class SeleniumEngine(
                 driverRetired = true
             }
         } finally {
-            afterRetrieveContent(task, driver)
+            if (isISPEnabled) {
+                driver.proxyEntry = internalProxyServer.proxyEntry
+            }
+
+            val proxyEntry = driver.proxyEntry
+            if (proxyEntry != null) {
+                task.page.metadata.set(Name.PROXY, proxyEntry.hostPort)
+            }
         }
 
         return RetrieveContentResult(response, exception, driverRetired)
@@ -280,31 +307,6 @@ class SeleniumEngine(
         driver.deleteAllCookiesSilently()
     }
 
-    private fun afterRetrieveContent(task: FetchTask, driver: ManagedWebDriver) {
-        if (isISPEnabled) {
-            driver.proxyEntry = internalProxyServer.proxyEntry
-        }
-
-        val proxyEntry = driver.proxyEntry
-        if (proxyEntry != null) {
-            task.page.metadata.set(Name.PROXY, proxyEntry.hostPort)
-        }
-
-        if (task.deleteAllCookies) {
-            log.info("Deleting all cookies after retrieval under {}", task.domain)
-            driver.deleteAllCookiesSilently()
-        }
-
-        if (RuntimeUtils.hasLocalFileCommand(CMD_WEB_DRIVER_CLOSE_ALL)) {
-            log.info("Executing local file command {}", CMD_WEB_DRIVER_CLOSE_ALL)
-            driverPool.closeAll()
-        }
-
-        if (task.closeBrowsers) {
-            driverPool.closeAll()
-        }
-    }
-
     private fun visitPageAndRetrieveContent(driver: ManagedWebDriver, task: FetchTask): Response {
         val batchId = task.batchId
         val page = task.page
@@ -318,7 +320,7 @@ class SeleniumEngine(
             log.warn("Page location does't match url | {} - {}", url, location)
         }
 
-        val driverConfig = getDriverConfig(task.priority, task.page, task.volatileConfig)
+        val driverConfig = getDriverConfig(task.volatileConfig)
         var status: ProtocolStatus
         var jsData: BrowserJsData? = null
         val headers = MultiMetadata()
@@ -467,7 +469,6 @@ class SeleniumEngine(
     }
 
     private fun visit(task: FetchTask, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
-        val batchId = task.batchId
         val taskId = task.taskId
         val url = task.url
         val page = task.page
@@ -620,19 +621,6 @@ class SeleniumEngine(
                 page.lastBrowser = BrowserType.NATIVE
             }
         }
-
-        tryRefreshCookie(page, driver)
-    }
-
-    private fun tryRefreshCookie(page: WebPage, driver: ManagedWebDriver) {
-        val url = page.url
-        val host = URLUtil.getHost(url)
-        val stat = fetchTaskTracker.hostStatistics.computeIfAbsent(host) { FetchStat(it) }
-        if (stat.cookieView > maxCookieView) {
-            // log.info("Delete all cookies under {} after {} tasks", URLUtil.getDomainName(url), stat.cookieView)
-            // driver.manage().deleteAllCookies()
-            stat.cookieView = 0
-        }
     }
 
     private fun handleFetchSuccess(batchId: Int) {
@@ -729,7 +717,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun getDriverConfig(priority: Int, page: WebPage, config: ImmutableConfig): DriverConfig {
+    private fun getDriverConfig(config: ImmutableConfig): DriverConfig {
         // Page load timeout
         val pageLoadTimeout = config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, defaultDriverConfig.pageLoadTimeout)
         // Script timeout
