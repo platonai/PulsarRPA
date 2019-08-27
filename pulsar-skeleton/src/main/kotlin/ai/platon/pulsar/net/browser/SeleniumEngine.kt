@@ -205,7 +205,7 @@ class SeleniumEngine(
 
     private fun afterRetrieveContent(task: FetchTask, driver: ManagedWebDriver, result: RetrieveContentResult) {
         if (task.deleteAllCookies) {
-            log.info("Deleting all cookies after task {}/{} under {}", task.batchId, task.taskId, task.domain)
+            log.info("Deleting all cookies after task {}-{} under {}", task.batchId, task.taskId, task.domain)
             driver.deleteAllCookiesSilently()
             task.deleteAllCookies = false
         }

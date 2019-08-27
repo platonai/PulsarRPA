@@ -21,9 +21,9 @@ class WebDriverMonitor(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverMonitor::class.java)
+    private var lastIPSReport = ""
 
     private var monitorThread = Thread(this::update)
-    private var round = 0
     private val isIdle get() = webDriverPool.isIdle
     private var idleCount = 0
     private val closed = AtomicBoolean()
@@ -45,36 +45,41 @@ class WebDriverMonitor(
             return
         }
 
-        report()
-
         if (internalProxyServer.isEnabled) {
             internalProxyServer.use { it.close() }
         }
 
         monitorThread.interrupt()
         monitorThread.join()
-
-        log.info("WDM is closed after $round rounds")
     }
 
     private fun update() {
+        var tick = 0
         while (!isClosed && !Thread.currentThread().isInterrupted) {
-            updateAndReport(round++)
+            updateAndReport(tick++)
 
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
-                log.warn("WDM loop interrupted after $round rounds")
+                log.warn("WDM loop interrupted after $tick rounds")
                 Thread.currentThread().interrupt()
             }
+        }
+
+        // report for the last time
+        report(tick)
+
+        if (isClosed) {
+            log.info("Quit WDM loop on close after {} rounds", tick)
+        } else {
+            log.error("Quit WDM loop abnormally after {} rounds", tick)
         }
     }
 
     private fun updateAndReport(tick: Int) {
-        idleCount = if (isIdle) { 1 + idleCount } else 0
-        val interval = min(20 + idleCount / 10 * 10, 200) // generates 20, 30, 40, 50, ..., 200
+        val interval = if (isIdle) 300 else 30
         if (tick % interval == 0) {
-            report()
+            report(tick)
         }
 
         // check to close web drivers every minute
@@ -100,7 +105,7 @@ class WebDriverMonitor(
         }
     }
 
-    private fun report() {
+    private fun report(round: Int) {
         val p = webDriverPool
         val idleTime = DateTimeUtil.readableDuration(p.idleTime)
         log.info("WDM - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {} rounds: {}",
@@ -112,7 +117,7 @@ class WebDriverMonitor(
         )
 
         val ipsReport = internalProxyServer.report
-        if (ipsReport.isNotBlank()) {
+        if (ipsReport.isNotBlank() && ipsReport != lastIPSReport) {
             log.info(ipsReport)
         }
     }
