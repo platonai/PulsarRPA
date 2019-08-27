@@ -418,7 +418,7 @@ class InternalProxyServer(
                 }
 
                 // log.warn(StringUtil.simplifyException(cause))
-                PROXY_LOG.write(SimpleLogger.WARN, "proxy", message)
+                PROXY_LOG.write(SimpleLogger.WARN, javaClass, message)
             }
         })
 

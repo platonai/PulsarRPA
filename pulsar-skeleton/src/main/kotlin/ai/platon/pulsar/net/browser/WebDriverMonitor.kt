@@ -25,7 +25,6 @@ class WebDriverMonitor(
 
     private var monitorThread = Thread(this::update)
     private val isIdle get() = webDriverPool.isIdle
-    private var idleCount = 0
     private val closed = AtomicBoolean()
     val isClosed get() = closed.get()
 
@@ -69,14 +68,24 @@ class WebDriverMonitor(
     }
 
     private fun updateAndReport(tick: Int) {
-        idleCount = if (isIdle) idleCount++ else 0
-        val duration = min(20 + idleCount / 5, 120)
-        if (tick % duration == 0) {
+        val p = webDriverPool
+        val seconds = min(20 + p.idleTime.seconds / 5, 5 * 60)
+        if (tick % seconds == 0L) {
             report()
+        }
 
+        // check to close web drivers every minute
+        if (tick % 60 == 0) {
             if (isIdle && !webDriverPool.isAllEmpty) {
                 log.info("The web driver pool is idle, closing all drivers ...")
                 webDriverPool.closeAll(maxWait = 0)
+            }
+        }
+
+        // check local file command
+        if (tick % 20 == 0) {
+            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_PROXY_POOL_DUMP)) {
+                proxyPool.dump()
             }
         }
 
@@ -84,12 +93,6 @@ class WebDriverMonitor(
             when {
                 proxyPool.numFreeProxies == 0 -> proxyPool.updateProxies(asap = true)
                 proxyPool.numFreeProxies < 3 -> proxyPool.updateProxies()
-            }
-        }
-
-        if (tick % 20 == 0) {
-            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_PROXY_POOL_DUMP)) {
-                proxyPool.dump()
             }
         }
     }

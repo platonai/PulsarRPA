@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
@@ -181,8 +182,8 @@ public class HttpResponse implements Response {
     }
 
     @Override
-    public int getStatus() {
-        return -1;
+    public ProtocolStatus getStatus() {
+        return ProtocolStatus.STATUS_NOTFETCHED;
     }
 
     @Override

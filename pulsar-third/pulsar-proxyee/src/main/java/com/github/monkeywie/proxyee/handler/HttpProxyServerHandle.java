@@ -1,5 +1,6 @@
 package com.github.monkeywie.proxyee.handler;
 
+import ai.platon.pulsar.common.SimpleLogger;
 import com.github.monkeywie.proxyee.crt.CertPool;
 import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle;
 import com.github.monkeywie.proxyee.intercept.HttpProxyIntercept;
@@ -28,6 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
+
+  private static SimpleLogger LOG = HttpProxyServer.LOG;
 
   private ChannelFuture cf;
   private String host;
@@ -137,6 +140,9 @@ public class HttpProxyServerHandle extends ChannelInboundHandlerAdapter {
       cf.channel().close();
     }
     ctx.channel().close();
+
+    LOG.write(SimpleLogger.WARN, getClass(), cause.getMessage(), null);
+
     exceptionHandle.beforeCatch(ctx.channel(), cause);
   }
 

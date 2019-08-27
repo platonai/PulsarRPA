@@ -26,6 +26,7 @@ import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
 import ai.platon.pulsar.crawl.protocol.http.HttpException;
+import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
@@ -252,8 +253,9 @@ public class HttpResponse implements Response {
     }
 
     @Override
-    public int getStatus() {
-        return -1;
+    public ProtocolStatus getStatus() {
+        System.out.println("Should check the implementation, it always return STATUS_NOTFETCHED");
+        return ProtocolStatus.STATUS_NOTFETCHED;
     }
 
     @Override

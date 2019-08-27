@@ -46,8 +46,8 @@ internal class BatchFetchContext(
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
     val interval = Duration.ofSeconds(1)
     val idleTimeout = Duration.ofMinutes(2)
-    val numTotalTasks = Iterables.size(pages)
-    val numAllowedFailures = max(10, numTotalTasks / 3)
+    val batchSize = Iterables.size(pages)
+    val numAllowedFailures = max(10, batchSize / 3)
 
     // All submitted tasks
     val pendingTasks = mutableMapOf<String, Future<FetchResult>>()
@@ -170,7 +170,7 @@ class SeleniumFetchComponent(
 
         val cx = BatchFetchContext(batchId, pages, volatileConfig)
 
-        log.info("Start batch task {} with {} pages in parallel", batchId, cx.numTotalTasks)
+        log.info("Start batch task {} with {} pages in parallel", batchId, cx.batchSize)
 
         cx.beforeFetchAll(pages)
 
@@ -179,12 +179,12 @@ class SeleniumFetchComponent(
         pages.associateTo(cx.pendingTasks) { it.url to executor.submit { doFetch(++taskId, it, cx) } }
 
         val isLastTaskTimeout: (cx: BatchFetchContext) -> Boolean = {
-            it.pendingTasks.size == 1 && it.idleSeconds >= 30 && it.numTotalTasks > 10
+            it.batchSize > 10 && it.pendingTasks.size == 1 && it.idleSeconds >= 30
         }
 
         // Since the urls in the batch are usually from the same domain,
         // if there are too many failure, the rest tasks are very likely run to failure too
-        while (cx.status.numTaskDone < cx.numTotalTasks
+        while (cx.status.numTaskDone < cx.batchSize
                 && cx.status.numFailedTasks <= cx.numAllowedFailures
                 && cx.idleSeconds < cx.idleTimeout.seconds
                 && !isLastTaskTimeout(cx)
@@ -227,6 +227,7 @@ class SeleniumFetchComponent(
 
     private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
         val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
+        task.batchSize = cx.batchSize
         if (incognito) {
             task.incognito = incognito
             task.deleteAllCookies = true
@@ -246,7 +247,6 @@ class SeleniumFetchComponent(
         try {
             val result = getFetchResult(url, future, cx.threadTimeout)
             cx.finishedTasks[url] = result
-            ++cx.status.numTaskDone
 
             val response = result.response
 
@@ -309,7 +309,7 @@ class SeleniumFetchComponent(
             return future.get(timeout.seconds, TimeUnit.SECONDS)
         } catch (e: java.util.concurrent.CancellationException) {
             // if the computation was cancelled
-            status = ProtocolStatus.failed(ProtocolStatusCodes.CANCELED)
+            status = ProtocolStatus.STATUS_CANCELED
             headers.put("EXCEPTION", e.toString())
         } catch (e: java.util.concurrent.TimeoutException) {
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
@@ -317,17 +317,17 @@ class SeleniumFetchComponent(
 
             log.warn("Fetch resource timeout, {}", e)
         } catch (e: java.util.concurrent.ExecutionException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
+            status = ProtocolStatus.STATUS_RETRY
             headers.put("EXCEPTION", e.toString())
 
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         } catch (e: InterruptedException) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.RETRY)
+            status = ProtocolStatus.STATUS_RETRY
             headers.put("EXCEPTION", e.toString())
 
             log.warn("Interrupted when fetch resource {}", e)
         } catch (e: Exception) {
-            status = ProtocolStatus.failed(ProtocolStatusCodes.EXCEPTION)
+            status = ProtocolStatus.STATUS_EXCEPTION
             headers.put("EXCEPTION", e.toString())
 
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
@@ -369,16 +369,18 @@ class SeleniumFetchComponent(
     }
 
     private fun logBatchAbort(cx: BatchFetchContext) {
-        log.warn("Batch task is incomplete, finished tasks {}, pending tasks {}, failed tasks: {}, idle: {}s",
-                cx.numFinishedTasks, cx.numPendingTasks, cx.status.numFailedTasks, cx.idleSeconds)
+        log.warn("Batch {} is abort, finished: {}, pending: {}, failed: {}, total: {}, idle: {}s",
+                cx.batchId,
+                cx.numFinishedTasks, cx.numPendingTasks, cx.status.numFailedTasks, cx.batchSize,
+                cx.idleSeconds)
     }
 
     private fun logBatchFinished(cx: BatchFetchContext) {
         if (log.isInfoEnabled) {
             val elapsed = Duration.between(cx.startTime, Instant.now())
-            val aveTime = elapsed.dividedBy(cx.numTotalTasks.toLong())
+            val aveTime = elapsed.dividedBy(cx.batchSize.toLong())
             log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}bps",
-                    cx.batchId, cx.numTotalTasks,
+                    cx.batchId, cx.batchSize,
                     DateTimeUtil.readableDuration(elapsed),
                     DateTimeUtil.readableDuration(aveTime),
                     StringUtil.readableByteCount(cx.status.averagePageSize.roundToLong()),

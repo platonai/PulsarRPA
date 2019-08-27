@@ -41,6 +41,7 @@
     <logger name="com.j256.ormlite" level="WARN"/>
     <logger name="org.apache.hadoop" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
+    <logger name="io.netty.channel.AbstractChannelHandlerContext" level="ERROR"/>
 
     <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>

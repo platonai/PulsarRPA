@@ -115,6 +115,7 @@ class FetchTask(
         val priority: Int,
         val page: WebPage,
         val volatileConfig: VolatileConfig,
+        var batchSize: Int = 1,
         val stat: BatchStat? = null,
         var incognito: Boolean = false,
         var deleteAllCookies: Boolean = false,
@@ -525,8 +526,8 @@ class SeleniumEngine(
         val page = task.page
 
         val t = fetchTaskTracker
-        log.info("Fetching task {}/{}/{} in thread {}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
-                taskId, t.batchTaskCounters[batchId], t.totalTaskCount,
+        log.info("Fetching task {}/{} in thd#{}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
+                taskId, task.batchSize,
                 Thread.currentThread().id,
                 driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
                 page.configuredUrl,

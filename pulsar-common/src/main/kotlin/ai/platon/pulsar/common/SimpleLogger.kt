@@ -28,6 +28,11 @@ class SimpleLogger(val path: Path, var levelFile: Int = DEFAULT_LOG_LEVEL): Auto
         updateLevel()
     }
 
+    fun write(level: Int, clazz: Class<*>, s: String, t: Throwable? = null) {
+        val name = clazz.simpleName
+        write(level, name, s, t)
+    }
+
     fun write(level: Int, module: String, s: String, t: Throwable? = null) {
         if (level <= systemOutLevel) {
             // level <= levelSystemOut: the system out level is set higher

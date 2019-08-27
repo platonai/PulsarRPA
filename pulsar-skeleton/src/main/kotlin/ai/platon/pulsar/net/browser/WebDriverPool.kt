@@ -121,7 +121,7 @@ class ManagedWebDriver(
 
     @Synchronized
     override fun toString(): String {
-        return if (sessionId != null) "#$id-$sessionId" else "$id(closed)"
+        return if (sessionId != null) "#$id-$sessionId" else "#$id(closed)"
     }
 }
 
@@ -240,6 +240,16 @@ class WebDriverPool(
             return
         }
 
+        if (driver.isQuit) {
+            if (freeDrivers[driver.priority]?.contains(driver) == true) {
+                log.warn("Driver is quit, should not be in free driver list | {}", driver)
+            }
+            if (workingDrivers.containsKey(driver.id)) {
+                log.warn("Driver is quit, should not be in working driver list | {}", driver)
+            }
+            return
+        }
+
         driver.status = DriverStatus.RETIRED
 
         lock.withLock {
@@ -268,7 +278,7 @@ class WebDriverPool(
             } else {
                 log.info("Quit retired driver {}", driver)
             }
-            // Quits this driver, closing every associated window.
+            // Quits this driver, close every associated window.
             driver.quit()
             numQuit.incrementAndGet()
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
