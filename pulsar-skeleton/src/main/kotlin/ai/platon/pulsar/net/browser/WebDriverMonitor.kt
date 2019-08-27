@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.proxy.InternalProxyServer
 import org.slf4j.LoggerFactory
-import org.slf4j.helpers.Util.report
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
@@ -24,6 +23,7 @@ class WebDriverMonitor(
     private val log = LoggerFactory.getLogger(WebDriverMonitor::class.java)
 
     private var monitorThread = Thread(this::update)
+    private var round = 0
     private val isIdle get() = webDriverPool.isIdle
     private var idleCount = 0
     private val closed = AtomicBoolean()
@@ -53,17 +53,18 @@ class WebDriverMonitor(
 
         monitorThread.interrupt()
         monitorThread.join()
+
+        log.info("WDM is closed after $round rounds")
     }
 
     private fun update() {
-        var tick = 0
         while (!isClosed && !Thread.currentThread().isInterrupted) {
-            updateAndReport(tick++)
+            updateAndReport(round++)
 
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
-                log.warn("Web driver monitor is interrupted")
+                log.warn("WDM loop interrupted after $round rounds")
                 Thread.currentThread().interrupt()
             }
         }
@@ -102,11 +103,12 @@ class WebDriverMonitor(
     private fun report() {
         val p = webDriverPool
         val idleTime = DateTimeUtil.readableDuration(p.idleTime)
-        log.info("WDP - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {}",
+        log.info("WDM - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {} rounds: {}",
                 if (isIdle) "[Idle($idleTime)] " else "",
                 p.freeSize, p.workingSize, p.aliveSize,
                 WebDriverPool.numCrashed, WebDriverPool.numRetired, WebDriverPool.numQuit,
-                WebDriverPool.pageViews
+                WebDriverPool.pageViews,
+                round
         )
 
         val ipsReport = internalProxyServer.report

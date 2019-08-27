@@ -28,7 +28,10 @@ import static ai.platon.pulsar.common.DateTimeDetector.CURRENT_DATE_EPOCH_DAYS;
 
 public class DateTimeUtil {
 
-    public static SimpleDateFormat FilesystemSafeDateFormat = new SimpleDateFormat("MMdd.HHmmss");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_1 = new SimpleDateFormat("MMdd");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_2 = new SimpleDateFormat("MMdd.HH");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_3 = new SimpleDateFormat("MMdd.HHmm");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_4 = new SimpleDateFormat("MMdd.HHmmss");
 
     public static Instant ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365));
 

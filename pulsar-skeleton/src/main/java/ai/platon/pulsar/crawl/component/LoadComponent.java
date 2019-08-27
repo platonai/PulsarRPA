@@ -21,8 +21,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.net.URL;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -128,13 +130,13 @@ public class LoadComponent {
     @Nonnull
     public WebPage load(String originalUrl, LoadOptions options) {
         Objects.requireNonNull(options);
-        return loadInternal(new NormUrl(originalUrl, options));
+        return loadOne(new NormUrl(originalUrl, options));
     }
 
     @Nonnull
     public WebPage load(URL url, LoadOptions options) {
         Objects.requireNonNull(options);
-        return loadInternal(new NormUrl(url, options));
+        return loadOne(new NormUrl(url, options));
     }
 
     /**
@@ -158,7 +160,7 @@ public class LoadComponent {
 
     @Nonnull
     public WebPage load(NormUrl normUrl) {
-        return loadInternal(normUrl);
+        return loadOne(normUrl);
     }
 
     /**
@@ -176,6 +178,7 @@ public class LoadComponent {
      * @return Pages for all urls.
      */
     public Collection<WebPage> loadAll(Iterable<NormUrl> normUrls, LoadOptions options) {
+        Instant startTime = Instant.now();
         Set<NormUrl> filteredUrls = new HashSet<>();
         CollectionUtils.collect(normUrls, url -> addIgnoreNull(filteredUrls, filterUrlToNull(url)));
 
@@ -245,6 +248,10 @@ public class LoadComponent {
 
         knownPages.addAll(updatedPages);
 
+        if (LOG.isInfoEnabled()) {
+            logBatchComplete(updatedPages, startTime);
+        }
+
         return knownPages;
     }
 
@@ -267,7 +274,7 @@ public class LoadComponent {
     }
 
     @Nonnull
-    private WebPage loadInternal(NormUrl normUrl) {
+    private WebPage loadOne(NormUrl normUrl) {
         Objects.requireNonNull(normUrl);
 
         if (normUrl.isInvalid()) {
@@ -311,6 +318,10 @@ public class LoadComponent {
             globalFetchingUrls.remove(url);
 
             update(page, opt);
+
+            if (LOG.isInfoEnabled()) {
+                LOG.info(getPageCompleteReport(page));
+            }
         }
 
         return page;
@@ -457,10 +468,6 @@ public class LoadComponent {
 
         updateComponent.updateFetchSchedule(page);
 
-        if (LOG.isDebugEnabled()) {
-            logPageCompelete(page);
-        }
-
         if (!protocolStatus.isCanceled() && options.getPersist()) {
             webDb.put(page);
 
@@ -474,10 +481,19 @@ public class LoadComponent {
         }
     }
 
-    private void logPageCompelete(WebPage page) {
+    private void logBatchComplete(Collection<WebPage> pages, Instant startTime) {
+        Duration elapsed = DateTimeUtil.elapsedTime(startTime);
+        String message = String.format("Fetched total %d pages in %s:\n", pages.size(), DateTimeUtil.readableDuration(elapsed));
+        StringBuilder sb = new StringBuilder(message);
+        AtomicInteger i = new AtomicInteger();
+        pages.forEach(p -> sb.append(i.incrementAndGet()).append(".\t").append(getPageCompleteReport(p)).append('\n'));
+        LOG.info(sb.toString());
+    }
+
+    private String getPageCompleteReport(WebPage page) {
         int bytes = page.getContentBytes();
         if (bytes < 0) {
-            return;
+            return "";
         }
 
         String responseTime = page.getMetadata().get(RESPONSE_TIME);
@@ -488,7 +504,7 @@ public class LoadComponent {
             BrowserJsData.Stat stat = jsData.getLastStat();
             jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", stat.getNi(), stat.getNa(), stat.getNnm(), stat.getNst());
         }
-        String s = String.format("Fetched%s in %8s%26s, fc:%2d %24s | %s",
+        return String.format("Fetched%s in %8s%26s, fc:%2d %24s | %s",
                 StringUtil.readableByteCount(bytes, 7, false),
                 DateTimeUtil.readableDuration(responseTime),
                 proxy == null ? "" : " via " + proxy,
@@ -496,7 +512,6 @@ public class LoadComponent {
                 jsSate,
                 page.getUrl()
         );
-        LOG.debug(s);
     }
 
     /**
