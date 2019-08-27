@@ -159,27 +159,7 @@ class PulsarContext: AutoCloseable {
 
         options.volatileConfig?.setBoolean(SELENIUM_BROWSER_INCOGNITO, options.incognito)
 
-        return if (isItemOption) getItemOption(options) else options
-    }
-
-    fun getItemOption(options: LoadOptions): LoadOptions {
-        val itemOptions = options.clone()
-
-        itemOptions.expires = options.itemExpires
-        itemOptions.scrollCount = options.itemScrollCount
-        itemOptions.scriptTimeout = options.itemScriptTimeout
-        itemOptions.scrollInterval = options.itemScrollInterval
-        itemOptions.pageLoadTimeout = options.itemPageLoadTimeout
-        itemOptions.requireNotBlank = options.itemRequireNotBlank
-        itemOptions.requireSize = options.itemRequireSize
-
-        itemOptions.browser = options.itemBrowser
-        if (itemOptions.browser == BrowserType.NATIVE) {
-            // TODO: merge browser and fetch mode
-            itemOptions.fetchMode = FetchMode.NATIVE
-        }
-
-        return itemOptions
+        return if (isItemOption) options.createItemOption() else options
     }
 
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {

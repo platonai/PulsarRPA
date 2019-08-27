@@ -806,11 +806,6 @@ public class WebPage {
             return new ByteArrayInputStream(ByteUtils.toBytes('\0'));
         }
 
-//        if (LOG.isDebugEnabled()) {
-//            LOG.debug(String.format("WebPage content as ByteBuffer: %d - %d",
-//                    contentInOctets.arrayOffset(), contentInOctets.position()));
-//        }
-
         return new ByteArrayInputStream(getContent().array(),
                 contentInOctets.arrayOffset() + contentInOctets.position(),
                 contentInOctets.remaining());
@@ -892,6 +887,26 @@ public class WebPage {
             sig = ByteBuffer.wrap("".getBytes());
         }
         return StringUtil.toHexString(sig);
+    }
+
+    // TODO: use a separate avro field to hold BROWSER_JS_DATA
+    private BrowserJsData browserJsData = null;
+    public BrowserJsData getBrowserJsData() {
+        if (browserJsData == null) {
+            String json = getMetadata().get(Name.BROWSER_JS_DATA);
+            if (json != null) {
+                browserJsData = BrowserJsData.Companion.fromJson(json);
+            }
+        }
+
+        return browserJsData;
+    }
+
+    public void setBrowserJsData(BrowserJsData jsData) {
+        if (jsData != null) {
+            browserJsData = null;
+            getMetadata().set(Name.BROWSER_JS_DATA, jsData.toJson());
+        }
     }
 
     /**

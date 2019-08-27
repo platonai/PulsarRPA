@@ -25,6 +25,7 @@ class WebDriverMonitor(
 
     private var monitorThread = Thread(this::update)
     private val isIdle get() = webDriverPool.isIdle
+    private var idleCount = 0
     private val closed = AtomicBoolean()
     val isClosed get() = closed.get()
 
@@ -62,15 +63,16 @@ class WebDriverMonitor(
             try {
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
+                log.warn("Web driver monitor is interrupted")
                 Thread.currentThread().interrupt()
             }
         }
     }
 
     private fun updateAndReport(tick: Int) {
-        val p = webDriverPool
-        val seconds = min(20 + p.idleTime.seconds / 5, 5 * 60)
-        if (tick % seconds == 0L) {
+        idleCount = if (isIdle) { 1 + idleCount } else 0
+        val interval = min(20 + idleCount / 10 * 10, 200) // generates 20, 30, 40, 50, ..., 200
+        if (tick % interval == 0) {
             report()
         }
 

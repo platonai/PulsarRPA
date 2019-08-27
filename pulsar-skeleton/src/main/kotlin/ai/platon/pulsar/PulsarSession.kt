@@ -71,7 +71,7 @@ open class PulsarSession(
 
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
-        return context.normalize(url, isItemOption)
+        return context.normalize(url, isItemOption).also { initOptions(it.options) }
     }
 
     fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
@@ -113,9 +113,7 @@ open class PulsarSession(
      */
     fun load(url: String): WebPage {
         ensureRunning()
-        val normUrl = normalize(url)
-        initOptions(normUrl.options)
-        return load(normUrl)
+        return load(normalize(url))
     }
 
     fun load(url: NormUrl): WebPage {
@@ -139,7 +137,7 @@ open class PulsarSession(
      */
     fun load(url: String, options: LoadOptions): WebPage {
         ensureRunning()
-        val normUrl = normalize(url, initOptions(options))
+        val normUrl = normalize(url, options)
         return load(normUrl)
     }
 
@@ -154,12 +152,7 @@ open class PulsarSession(
     fun loadAll(urls: Iterable<String>, options: LoadOptions, itemPages: Boolean = false): Collection<WebPage> {
         ensureRunning()
         val normUrls = normalize(urls, options, itemPages)
-        if (normUrls.isEmpty()) {
-            return listOf()
-        }
-        val opt = normUrls.first().options
-
-        System.out.println(context.getItemOption(opt))
+        val opt = normUrls.firstOrNull()?.options?:return listOf()
 
         return if (enableCache) {
             getCachedOrLoadAll(normUrls, opt)
@@ -179,10 +172,7 @@ open class PulsarSession(
         ensureRunning()
         options.preferParallel = true
         val normUrls = normalize(urls, options, itemPages)
-        if (normUrls.isEmpty()) {
-            return listOf()
-        }
-        val opt = normUrls.first().options
+        val opt = normUrls.firstOrNull()?.options?:return listOf()
 
         return if (enableCache) {
             getCachedOrLoadAll(normUrls, opt)
@@ -206,7 +196,7 @@ open class PulsarSession(
             getLink(it, !opt.noNorm, opt.ignoreUrlQuery)
         }
 
-        return loadAll(links, context.getItemOption(normUrl.options))
+        return loadAll(links, normUrl.options.createItemOption())
     }
 
     /**
@@ -272,6 +262,7 @@ open class PulsarSession(
 
     private fun getCachedOrLoadAll(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         ensureRunning()
+        urls.forEach { initOptions(it.options) }
         initOptions(options)
 
         val pages = ArrayList<WebPage>()

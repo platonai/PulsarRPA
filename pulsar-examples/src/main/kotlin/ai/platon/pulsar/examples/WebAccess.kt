@@ -171,10 +171,10 @@ object WebAccess {
                 .select(outlink) { it.attr("abs:href") }.toSet().take(20)
         links.forEach { println(it) }
 
-        val pages = i.loadAll(links.takeLast(1), opt, itemPages = true)
+        val pages = i.loadAll(links, opt, itemPages = true)
 
-        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
-            println(it?.text()?:"(null)")
+        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEachIndexed { i, it ->
+            println("${i + 1}.\t" + (it?.text()?:"(null)"))
         }
 
         println("All done.")

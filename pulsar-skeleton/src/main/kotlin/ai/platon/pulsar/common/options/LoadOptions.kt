@@ -39,12 +39,14 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-wnb", "-waitNonBlank"],
             description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
     var waitNonBlank: String = ""
-    @Parameter(names = ["-rnb", "-requireNotBlank"],
-            description = "[TODO] Keep the pages only if the required text is not blank")
+    @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
-    @Parameter(names = ["-rs", "-requireSize", "--require-size"],
-            description = "Fetch pages smaller than requireSize")
+    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize")
     var requireSize = 0
+    @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
+    var requireImages = 0
+    @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"], description = "Fetch pages who's anchors less than requireAnchors")
+    var requireAnchors = 0
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
@@ -94,6 +96,12 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-irs", "-itemRequireSize", "--item-require-size"],
             description = "Fetch item pages smaller than requireSize")
     var itemRequireSize = 0
+    @Parameter(names = ["-iri", "-itemRequireImages", "--item-require-images"],
+            description = "Fetch item pages who's images less than requireImages")
+    var itemRequireImages = 0
+    @Parameter(names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],
+            description = "Fetch item pages who's anchors less than requireAnchors")
+    var itemRequireAnchors = 0
 
     @Parameter(names = ["-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
@@ -144,15 +152,8 @@ open class LoadOptions: CommonOptions {
 
     // A volatile config is usually session scoped
     var volatileConfig: VolatileConfig? = null
-        set(value) {
-            if (value != null) {
-                value.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-                value.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-                value.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-                value.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-            }
-            field = value
-        }
+        set(value) { field = initConfig(value) }
+        get() = initConfig(field)
 
     open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
@@ -182,6 +183,30 @@ open class LoadOptions: CommonOptions {
 
     protected constructor(args: String) : super(args) {
         addObjects(this)
+    }
+
+    open fun createItemOption(): LoadOptions {
+        val itemOptions = clone()
+
+        itemOptions.expires = itemExpires
+        itemOptions.scrollCount = itemScrollCount
+        itemOptions.scriptTimeout = itemScriptTimeout
+        itemOptions.scrollInterval = itemScrollInterval
+        itemOptions.pageLoadTimeout = itemPageLoadTimeout
+        itemOptions.requireNotBlank = itemRequireNotBlank
+        itemOptions.requireSize = itemRequireSize
+        itemOptions.requireImages = itemRequireImages
+        itemOptions.requireAnchors = itemRequireAnchors
+
+        itemOptions.browser = itemBrowser
+        if (itemOptions.browser == BrowserType.NATIVE) {
+            // TODO: merge browser and fetch mode
+            itemOptions.fetchMode = FetchMode.NATIVE
+        }
+
+        itemOptions.volatileConfig = volatileConfig
+
+        return itemOptions
     }
 
     open fun isDefault(option: String): Boolean {
@@ -234,6 +259,14 @@ open class LoadOptions: CommonOptions {
         }
 
         return this
+    }
+
+    private fun initConfig(vc: VolatileConfig?): VolatileConfig? {
+        vc?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        vc?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        vc?.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        vc?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        return vc
     }
 
     companion object {

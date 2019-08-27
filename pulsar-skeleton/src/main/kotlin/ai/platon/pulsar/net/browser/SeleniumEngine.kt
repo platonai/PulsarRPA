@@ -15,6 +15,7 @@ import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.Documents
+import ai.platon.pulsar.persist.BrowserJsData
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -42,57 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern.CASE_INSENSITIVE
 import kotlin.math.roundToLong
-
-data class BrowserJsData(
-        val status: Status = Status(),
-        val initStat: Stat = Stat(),
-        val lastStat: Stat = Stat(),
-        val initD: Stat = Stat(),
-        val lastD: Stat = Stat()
-) {
-    data class Status(
-            val n: Int = 0,
-            val scroll: Int = 0,
-            val st: String = "",
-            val r: String = "",
-            val idl: String = ""
-    )
-
-    data class Stat(
-            val ni: Int = 0,
-            val na: Int = 0,
-            val nnm: Int = 0,
-            val nst: Int = 0,
-            val w: Int = 0,
-            val h: Int = 0
-    )
-
-    override fun toString(): String {
-        val s1 = initStat
-        val s2 = lastStat
-        val s3 = initD
-        val s4 = lastD
-
-        val s = String.format(
-                "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
-                        "w: %s/%s/%s/%s, h: %s/%s/%s/%s",
-                s1.ni,  s2.ni,  s3.ni,  s4.ni,
-                s1.na,  s2.na,  s3.na,  s4.na,
-                s1.nnm, s2.nnm, s3.nnm, s4.nnm,
-                s1.nst, s2.nst, s3.nst, s4.nst,
-                s1.w,   s2.w,   s3.w,   s4.w,
-                s1.h,   s2.h,   s3.h,   s4.h
-        )
-
-        val st = status
-        return String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
-                st.n, st.scroll, st.st, st.r, st.idl, s)
-    }
-
-    companion object {
-        val default = BrowserJsData()
-    }
-}
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -143,7 +93,7 @@ private class RetrieveContentResult(
 
 private data class VisitResult(
         val protocolStatus: ProtocolStatus,
-        val jsData: BrowserJsData
+        val jsData: BrowserJsData? = null
 ) {
     companion object {
         val canceled = VisitResult(ProtocolStatus.STATUS_CANCELED, BrowserJsData.default)
@@ -175,7 +125,6 @@ class SeleniumEngine(
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-    private val browserDataGson = Gson()
     private val monthDay = DateTimeUtil.now("MMdd")
 
     private val libJs = browserControl.parseLibJs(false)
@@ -371,7 +320,7 @@ class SeleniumEngine(
 
         val driverConfig = getDriverConfig(task.priority, task.page, task.volatileConfig)
         var status: ProtocolStatus
-        var jsData = BrowserJsData.default
+        var jsData: BrowserJsData? = null
         val headers = MultiMetadata()
         val startTime = System.currentTimeMillis()
         headers.put(Q_REQUEST_TIME, startTime.toString())
@@ -426,9 +375,7 @@ class SeleniumEngine(
         }
 
         handleFetchFinish(page, driver, headers)
-        if (jsData !== BrowserJsData.default) {
-            page.metadata.set(Name.BROWSER_JS_DATA, browserDataGson.toJson(jsData, BrowserJsData::class.java))
-        }
+        page.browserJsData = jsData
         pageSource = handlePageSource(pageSource, status, page, driver)
         headers.put(CONTENT_LENGTH, length.toString())
         if (status.isSuccess) {
@@ -602,15 +549,14 @@ class SeleniumEngine(
 
         val result = jsExecutor.executeScript(clientJs)
         if (result is String) {
-            val jsData = browserDataGson.fromJson(result, BrowserJsData::class.java)
+            val jsData = BrowserJsData.fromJson(result)
             if (log.isDebugEnabled) {
                 log.debug("{} | {}", jsData, url)
             }
-
             return VisitResult(status, jsData)
         }
 
-        return VisitResult(status, BrowserJsData.default)
+        return VisitResult(status)
     }
 
     private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {
