@@ -117,6 +117,7 @@ public interface PulsarConstants {
     int MAX_LINK_PER_PAGE = 4000;
 
     String CMD_FORCE_GENERATE_SEEDS = "force-generate-seeds";
+    String CMD_ENABLE_PROXY = "use_proxy"; // keep consistent with linux system variable
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
     String CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE = "force-IPS-idle";

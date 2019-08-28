@@ -1,6 +1,7 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.GlobalExecutor
+import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
@@ -12,6 +13,8 @@ import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
+import java.lang.reflect.Proxy
+import java.nio.file.Files
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -96,9 +99,37 @@ class PulsarEnv {
         }
     }
 
+    /**
+     * Proxy system can be enabled/disabled at runtime
+     * */
     val useProxy: Boolean get() {
-        // TODO: better method to enable/disable proxy
-        return System.getProperty(PROXY_USE_PROXY, "yes") == "yes"
+        if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_ENABLE_PROXY)) {
+            return true
+        }
+
+        // explicit set system environment property
+        var useProxy = System.getProperty(PROXY_USE_PROXY)
+        if (useProxy != null) {
+            when (useProxy) {
+                "yes" -> return true
+                "no" -> return false
+            }
+        }
+
+        useProxy = unmodifiedConfig.get(PROXY_USE_PROXY)
+        if (useProxy != null) {
+            when (useProxy) {
+                "yes" -> return true
+                "no" -> return false
+            }
+        }
+
+        // if no one set the proxy availability explicitly, but we have providers, use it
+        if (ProxyPool.hasEnabledProvider()) {
+            return true
+        }
+
+        return false
     }
 
     val isQuit = AtomicBoolean()

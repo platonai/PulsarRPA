@@ -21,6 +21,7 @@ import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.streams.toList
 
 /**
  * Manager all external proxies
@@ -381,6 +382,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             }
 
             log.info(toString())
+        }
+
+        fun hasEnabledProvider(): Boolean {
+            return Files.list(ENABLED_PROVIDER_DIR).toList().any { Files.isRegularFile(it) }
         }
     }
 }
