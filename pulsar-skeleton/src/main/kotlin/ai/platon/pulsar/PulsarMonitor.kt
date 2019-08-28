@@ -1,28 +1,29 @@
-package ai.platon.pulsar.net.browser
+package ai.platon.pulsar
 
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.net.browser.WebDriverPool
 import ai.platon.pulsar.proxy.InternalProxyServer
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.min
 
 /**
  * TODO: merge all monitor threads
  * */
-class WebDriverMonitor(
+class PulsarMonitor(
         val webDriverPool: WebDriverPool,
         val proxyPool: ProxyPool,
         val internalProxyServer: InternalProxyServer,
         private val conf: ImmutableConfig
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(WebDriverMonitor::class.java)
+    private val log = LoggerFactory.getLogger(PulsarMonitor::class.java)
     private var lastIPSReport = ""
 
+    private val env = PulsarEnv.getOrCreate()
     private var monitorThread = Thread(this::update)
     private val isIdle get() = webDriverPool.isIdle
     private var idleCount = 0
@@ -30,10 +31,11 @@ class WebDriverMonitor(
     val isClosed get() = closed.get()
 
     fun start() {
-        // TODO: move to a better place to start proxy relative threads
-        proxyPool.updateProxies(asap = true)
-        if (internalProxyServer.isEnabled) {
-            internalProxyServer.start()
+        if (env.useProxy) {
+            proxyPool.updateProxies(asap = true)
+            if (internalProxyServer.isEnabled) {
+                internalProxyServer.start()
+            }
         }
 
         monitorThread.isDaemon = true
@@ -90,17 +92,19 @@ class WebDriverMonitor(
             }
         }
 
-        // check local file command
-        if (tick % 20 == 0) {
-            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_PROXY_POOL_DUMP)) {
-                proxyPool.dump()
+        if (env.useProxy) {
+            // check local file command
+            if (tick % 20 == 0) {
+                if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_PROXY_POOL_DUMP)) {
+                    proxyPool.dump()
+                }
             }
-        }
 
-        if (!proxyPool.isIdle) {
-            when {
-                proxyPool.numFreeProxies == 0 -> proxyPool.updateProxies(asap = true)
-                proxyPool.numFreeProxies < 3 -> proxyPool.updateProxies()
+            if (!proxyPool.isIdle) {
+                when {
+                    proxyPool.numFreeProxies == 0 -> proxyPool.updateProxies(asap = true)
+                    proxyPool.numFreeProxies < 3 -> proxyPool.updateProxies()
+                }
             }
         }
     }

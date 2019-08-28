@@ -2,24 +2,19 @@ package ai.platon.pulsar.net
 
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.BrowserControl
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.net.browser.ManagedWebDriver
 import ai.platon.pulsar.net.browser.WebDriverPool
 import org.eclipse.jetty.util.BlockingArrayQueue
 import org.junit.AfterClass
-import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.CapabilityType
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -33,7 +28,7 @@ class TestWebDriver {
 
         val env = PulsarEnv.getOrCreate()
         val conf = PulsarEnv.unmodifiedConfig
-        val pool = PulsarEnv.webDriverMonitor.webDriverPool
+        val pool = PulsarEnv.monitor.webDriverPool
         var quitMultiThreadTesting = false
 
         @BeforeClass

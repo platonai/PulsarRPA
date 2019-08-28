@@ -5,14 +5,11 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.proxy.ProxyMonitor
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
-import ai.platon.pulsar.net.browser.WebDriverMonitor
 import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
-import ai.platon.pulsar.proxy.InternalProxyServer
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
@@ -53,7 +50,7 @@ class PulsarEnv {
 
         val seleniumFetchComponent: SeleniumFetchComponent
 
-        val webDriverMonitor: WebDriverMonitor
+        val monitor: PulsarMonitor
 
         private val env = AtomicReference<PulsarEnv>()
 
@@ -81,10 +78,9 @@ class PulsarEnv {
 
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            webDriverMonitor = applicationContext.getBean(WebDriverMonitor::class.java)
+            monitor = applicationContext.getBean(PulsarMonitor::class.java)
 
-            // TODO: merge all monitors, e.g. merge to FetchMonitor
-            webDriverMonitor.start()
+            monitor.start()
 
             log.info("Pulsar env is initialized")
         }
@@ -101,7 +97,8 @@ class PulsarEnv {
     }
 
     val useProxy: Boolean get() {
-        return System.getProperty(PROXY_USE_PROXY, "yes") == "yes";
+        // TODO: better method to enable/disable proxy
+        return System.getProperty(PROXY_USE_PROXY, "yes") == "yes"
     }
 
     val isQuit = AtomicBoolean()
@@ -116,7 +113,7 @@ class PulsarEnv {
         }
 
         // Internal proxy server blocks can not be closed by spring, the reason should be investigated
-        webDriverMonitor.use { it.close() }
+        monitor.use { it.close() }
         applicationContext.use { it.close() }
     }
 }
