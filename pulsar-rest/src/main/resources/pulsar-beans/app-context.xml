@@ -23,7 +23,7 @@
         <constructor-arg name="autoTruncate" value="true"/>
     </bean>
 
-    <bean id="masterApplication" class="ai.platon.pulsar.rest.MasterApplication">
+    <bean id="masterResouceConfig" class="ai.platon.pulsar.rest.MasterResourceConfig">
         <constructor-arg ref="conf"/>
     </bean>
 

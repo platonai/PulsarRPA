@@ -217,10 +217,14 @@
             <artifactId>spring-web</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.containers/jersey-container-grizzly2-http -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-grizzly2-http</artifactId>
+            <artifactId>jersey-container-jetty-http</artifactId>
             <version>${jersey-2.version}</version>
         </dependency>
         <!-- JSON binding support via MOXy is a default and preferred way of supporting JSON binding -->

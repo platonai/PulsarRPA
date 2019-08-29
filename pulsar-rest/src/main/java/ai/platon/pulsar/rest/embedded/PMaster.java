@@ -16,23 +16,22 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.embedded;
 
-import ai.platon.pulsar.rest.MasterApplication;
-import ai.platon.pulsar.rest.resources.SeedResource;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
+import ai.platon.pulsar.PulsarEnv;
+import ai.platon.pulsar.rest.MasterResourceConfig;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.web.context.ContextLoaderListener;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Scanner;
 
@@ -40,13 +39,22 @@ public class PMaster {
 
   public static final Logger LOG = LoggerFactory.getLogger(PMaster.class);
 
-  private MasterApplication masterApplication;
-  private HttpServer server;
+  private static final String CONTEXT_PATH = "/api";
+  private static final String MAPPING_URL = "/api";
+  private static final String WEBAPP_DIRECTORY = "webapp";
 
-  public PMaster(MasterApplication masterApplication) {
-    this.masterApplication = masterApplication;
-    masterApplication.property(PMaster.class.getName(), this);
-    server = GrizzlyHttpServerFactory.createHttpServer(masterApplication.getBaseUri(), masterApplication, false);
+  private Server server;
+
+  public PMaster(MasterResourceConfig config) {
+    config.property(PMaster.class.getName(), this);
+    ServletHolder servletHolder = new ServletHolder(new ServletContainer(config));
+
+    server = new Server(config.getPort());
+    ServletContextHandler context = new ServletContextHandler(server, "/*");
+    context.addEventListener(new ContextLoaderListener()); // spring integration
+
+    context.addServlet(servletHolder, "/api/*");
+    context.setInitParameter("contextConfigLocation", PulsarEnv.Companion.getContextConfigLocation());
   }
 
   public boolean isStarted() {
@@ -56,10 +64,12 @@ public class PMaster {
   public void start() {
     try {
       server.start();
+      server.join();
       Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-    } catch (IOException e) {
-      server.shutdownNow();
-      throw new ProcessingException(LocalizationMessages.FAILED_TO_START_SERVER(e.getMessage()), e);
+    } catch (Exception e) {
+      LOG.error("Failed to start PMaster", e);
+    } finally {
+      server.destroy();
     }
   }
 
@@ -74,12 +84,12 @@ public class PMaster {
 
   public void shutdown() {
     LOG.info("Shutdown server now");
-    server.shutdownNow();
+    server.destroy();
   }
 
   public void shutdownNow() {
     LOG.info("Shutdown server");
-    server.shutdown();
+    server.destroy();
   }
 
   public static int callStopApi(URI baseUri, String authToken, boolean force) {
@@ -107,34 +117,31 @@ public class PMaster {
       }
     }
 
-    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:/**/rest-context.xml");
-    MasterApplication masterApplication = applicationContext.getBean(MasterApplication.class);
+    PulsarEnv env = PulsarEnv.Companion.getOrCreate();
+    ApplicationContext applicationContext = PulsarEnv.Companion.getApplicationContext();
+    MasterResourceConfig config = applicationContext.getBean(MasterResourceConfig.class);
 
     if (stop) {
       LOG.debug("Try stop server via REST Api");
-      callStopApi(masterApplication.getBaseUri(), AdminResource.SIMPLE_AUTH_TOKEN, true);
-    }
-    else {
-      masterApplication.property("contextConfig", applicationContext);
-      masterApplication.registerClasses(AdminResource.class);
-      masterApplication.packages(false, SeedResource.class.getPackage().getName());
-      masterApplication.property("log4jConfigLocation", "log4j-jetty.properties");
+      callStopApi(config.getBaseUri(), AdminResource.SIMPLE_AUTH_TOKEN, true);
+    } else {
+      config.registerClasses(AdminResource.class);
 
-      PMaster pMaster = new PMaster(masterApplication);
+      PMaster master = new PMaster(config);
 
       if (interactive) {
-        pMaster.startAsDaemon();
-        System.out.println("Application started.\nTry out " + masterApplication.getBaseUri());
+        master.startAsDaemon();
+        System.out.println("Application started.\nTry out " + config.getBaseUri());
         while (true) {
           System.out.println("Hit X to exit : ");
           String cmd = new Scanner(System.in).nextLine();
           if (cmd.equalsIgnoreCase("x")) {
-            pMaster.shutdown();
+            master.shutdown();
             break;
           }
         }
       } else {
-        pMaster.start();
+        master.start();
       }
     }
   }

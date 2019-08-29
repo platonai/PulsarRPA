@@ -30,6 +30,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -51,13 +54,11 @@ public class SeedResource {
 
   public static String URL_SEPARATOR = "^^";
 
+  private ApplicationContext applicationContext;
   private final JobConfigurations jobConfigurations;
   private final WebDb webDb;
 
   private final InjectComponent injectComponent;
-  private final FetchComponent fetchComponent;
-  private final ParseComponent parseComponent;
-  private final UpdateComponent updateComponent;
   private final LoadComponent loadComponent;
   private final FetchSchedule fetchSchedule;
 
@@ -66,17 +67,11 @@ public class SeedResource {
   @Inject
   public SeedResource(WebDb webDb,
                       InjectComponent injectComponent,
-                      FetchComponent fetchComponent,
-                      ParseComponent parseComponent,
-                      UpdateComponent updateComponent,
                       LoadComponent loadComponent,
                       FetchSchedule fetchSchedule,
                       JobConfigurations jobConfigurations) {
     this.webDb = webDb;
     this.injectComponent = injectComponent;
-    this.fetchComponent = fetchComponent;
-    this.parseComponent = parseComponent;
-    this.updateComponent = updateComponent;
     this.loadComponent = loadComponent;
     this.fetchSchedule = fetchSchedule;
     this.jobConfigurations = jobConfigurations;
@@ -216,4 +211,5 @@ public class SeedResource {
     fetchSchedule.forceRefetch(page, true);
     return gson.toJson(new WebPageFormatter(page).toMap());
   }
+
 }

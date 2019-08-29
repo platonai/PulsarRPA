@@ -385,7 +385,13 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         }
 
         fun hasEnabledProvider(): Boolean {
-            return Files.list(ENABLED_PROVIDER_DIR).toList().any { Files.isRegularFile(it) }
+            try {
+                return ENABLED_PROVIDER_DIR.toFile().listFiles()?.isNotEmpty()?:false
+            } catch (e: IOException) {
+                log.error("Failed to list files in $ENABLED_PROVIDER_DIR", e)
+            }
+
+            return false
         }
     }
 }

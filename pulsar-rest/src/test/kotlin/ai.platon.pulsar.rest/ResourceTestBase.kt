@@ -22,7 +22,7 @@ open class ResourceTestBase : JerseyTest() {
 
     override fun configure(): Application {
         val applicationContext = ClassPathXmlApplicationContext("classpath:/rest-context/rest-test-context.xml")
-        val application = applicationContext.getBean(MasterApplication::class.java)
+        val application = applicationContext.getBean(MasterResourceConfig::class.java)
         application.property("contextConfig", applicationContext)
 
         this.conf = applicationContext.getBean(ImmutableConfig::class.java)

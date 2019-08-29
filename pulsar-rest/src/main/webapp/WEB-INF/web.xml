@@ -12,7 +12,7 @@
 
     <context-param>
         <param-name>contextConfigLocation</param-name>
-        <param-value>classpath:/rest-context/rest-context.xml</param-value>
+        <param-value>classpath:/pulsar-beans/app-context.xml</param-value>
     </context-param>
 
     <!--<context-param>-->
@@ -29,7 +29,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>ai.platon.pulsar.rest.MasterApplication</param-value>
+            <param-value>ai.platon.pulsar.rest.MasterResourceConfig</param-value>
         </init-param>
         <!-- Register my custom provider (not needed if it's in my.package) AND LoggingFilter. -->
         <init-param>

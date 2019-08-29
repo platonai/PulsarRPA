@@ -31,6 +31,7 @@ class PulsarEnv {
         // TODO: read form config file
         val clientJsVersion = "0.2.3"
 
+        val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
         val storageService: AutoDetectedStorageService
         val startTime = Instant.now()
@@ -64,7 +65,8 @@ class PulsarEnv {
             setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION)
 
             // the spring application context
-            applicationContext = ClassPathXmlApplicationContext(System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION))
+            contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
+            applicationContext = ClassPathXmlApplicationContext(contextConfigLocation)
             // shut down application context before progress exit
             applicationContext.registerShutdownHook()
             // the primary configuration, keep unchanged with the configuration files

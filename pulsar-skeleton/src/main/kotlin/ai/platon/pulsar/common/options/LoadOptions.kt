@@ -103,7 +103,7 @@ open class LoadOptions: CommonOptions {
             description = "Fetch item pages who's anchors less than requireAnchors")
     var itemRequireAnchors = 0
 
-    @Parameter(names = ["-shortenKey", "--shorten-key"],
+    @Parameter(names = ["-sk", "-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
     var shortenKey = false
     @Parameter(names = ["-persist", "--persist"], arity = 1,
