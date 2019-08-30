@@ -13,8 +13,6 @@ import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
-import java.lang.reflect.Proxy
-import java.nio.file.Files
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -58,6 +56,9 @@ class PulsarEnv {
 
         private val env = AtomicReference<PulsarEnv>()
 
+        private val active = AtomicBoolean()
+        private val closed = AtomicBoolean()
+
         init {
             // prerequisite system properties
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
@@ -87,7 +88,7 @@ class PulsarEnv {
 
             monitor.start()
 
-            log.info("Pulsar env is initialized")
+            active.set(true)
         }
 
         fun getOrCreate(): PulsarEnv {
@@ -99,6 +100,22 @@ class PulsarEnv {
                 return env.get()
             }
         }
+    }
+
+    // other possible environment scope objects
+    // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
+    // serializers, etc
+
+    fun shutdown() {
+        if (closed.getAndSet(true)) {
+            return
+        }
+
+        // Internal proxy server blocks can not be closed by spring, the reason should be investigated
+        monitor.use { it.close() }
+        applicationContext.use { it.close() }
+
+        active.set(false)
     }
 
     /**
@@ -132,21 +149,5 @@ class PulsarEnv {
         }
 
         return false
-    }
-
-    val isQuit = AtomicBoolean()
-
-    // other possible environment scope objects
-    // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
-    // serializers, etc
-
-    fun quit() {
-        if (isQuit.getAndSet(true)) {
-            return
-        }
-
-        // Internal proxy server blocks can not be closed by spring, the reason should be investigated
-        monitor.use { it.close() }
-        applicationContext.use { it.close() }
     }
 }

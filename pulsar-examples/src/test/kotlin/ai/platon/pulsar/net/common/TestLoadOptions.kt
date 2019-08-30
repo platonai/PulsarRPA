@@ -23,6 +23,7 @@ class TestLoadOptions {
             " -taskName $taskName" +
             " -itemExpires 10d" +
             " -expires 1000d" +
+            " -outlink \".products a\"" +
             " -preferParallel true" +
             " -itemScrollCount 20 -itemScrollInterval 1s" +
             ""
@@ -31,10 +32,11 @@ class TestLoadOptions {
     fun testOptions() {
         val args0 = Urls.splitUrlArgs(url).second
         val options = LoadOptions.parse("$args0 $args")
+        assertEquals(".products a", options.outlinkSelector)
 
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
         val options3 = options.mergeModified(options2)
-        assertOptions(options3)
+        // assertOptions(options3)
     }
 
     @Test
@@ -74,6 +76,7 @@ class TestLoadOptions {
 
     private fun assertOptions(options: LoadOptions) {
         assertTrue(options.incognito)
+        assertEquals(".products a", options.outlinkSelector)
         assertEquals(1, options.expires.seconds)
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)

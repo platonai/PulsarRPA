@@ -28,7 +28,7 @@ class PulsarMonitor(
     private val loopStarted = AtomicBoolean()
     private val isIdle get() = webDriverPool.isIdle
     private val closed = AtomicBoolean()
-    val isClosed get() = closed.get()
+    private val isClosed get() = closed.get()
 
     fun start() {
         if (loopStarted.compareAndSet(false, true)) {
@@ -94,6 +94,7 @@ class PulsarMonitor(
 
     private fun monitorProxySystem(tick: Int) {
         if (tick % 20 == 0) {
+            // proxy system can be started and shutdown at runtime
             if (!internalProxyServer.isLoopStarted) {
                 if (internalProxyServer.isEnabled) {
                     proxyPool.updateProxies(asap = true)

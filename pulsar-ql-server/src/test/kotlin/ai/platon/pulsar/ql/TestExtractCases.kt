@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.WebPageFormatter
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -60,7 +61,8 @@ class TestExtractCases : TestBase() {
         session.flush()
 
         println("Loading " + page.vividLinks.size + " out links")
-        session.loadAll(page.vividLinks.keys.map { it -> it.toString() })
+        val optins = LoadOptions.create()
+        session.loadAll(page.vividLinks.keys.map { it -> it.toString() }, optins)
 
         var page2 = session.getOrNil(URL_TRACKER_HOME_URL)
         println(WebPageFormatter(page2))

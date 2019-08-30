@@ -38,7 +38,7 @@ class TestWebDriver {
 
         @AfterClass
         fun teardown() {
-            PulsarEnv.getOrCreate().quit()
+            PulsarEnv.getOrCreate().shutdown()
         }
     }
 

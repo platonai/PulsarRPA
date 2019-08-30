@@ -74,7 +74,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDriverMonitor" class="ai.platon.pulsar.PulsarMonitor" destroy-method="close">
+    <bean id="monitor" class="ai.platon.pulsar.PulsarMonitor" destroy-method="close">
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="internalProxyServer"/>

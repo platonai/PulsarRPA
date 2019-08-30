@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_H
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.component.BatchHandler
-import ai.platon.pulsar.net.browser.ManagedWebDriver
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Iterables
@@ -23,23 +22,22 @@ object WebAccess {
     private val log = LoggerFactory.getLogger(WebAccess::class.java)
 
     private val seeds = mapOf(
-            0 to "https://www.mia.com/formulas.html",
-            1 to "https://www.mia.com/diapers.html",
-            2 to "http://category.dangdang.com/cid4002590.html",
-            3 to "https://list.mogujie.com/book/magic/51894",
-            4 to "https://category.vip.com/search-1-0-1.html?q=3|49738||&rp=26600|48483&ff=|0|2|1&adidx=2&f=ad&adp=130610&adid=632686",
-            5 to "https://category.vip.com/search-5-0-1.html?q=3|142346||&rp=26600|103675&ff=|0|6|9&adidx=1&f=ad&adp=130612&adid=632821",
-            6 to "https://category.vip.com/search-5-0-1.html?q=3|320726||&rp=30068|320513",
-            7 to "https://list.jd.com/list.html?cat=6728,6742,13246",
-            8 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
-            9 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
-            10 to "https://music.163.com/",
-            11 to "https://news.sogou.com/ent.shtml",
-            12 to "http://shop.boqii.com/brand/",
-            13 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163",
-            14 to "http://dzhcg.sinopr.org/channel/103",
-            15 to "http://blog.zhaojie.me/",
-            16 to "https://shopee.vn/search?keyword=qu%E1%BA%A7n%20l%C3%B3t%20na"
+            0 to "http://category.dangdang.com/cid4002590.html",
+            1 to "https://list.mogujie.com/book/magic/51894",
+            2 to "https://category.vip.com/search-1-0-1.html?q=3|49738||&rp=26600|48483&ff=|0|2|1&adidx=2&f=ad&adp=130610&adid=632686",
+            3 to "https://category.vip.com/search-5-0-1.html?q=3|142346||&rp=26600|103675&ff=|0|6|9&adidx=1&f=ad&adp=130612&adid=632821",
+            4 to "https://category.vip.com/search-5-0-1.html?q=3|320726||&rp=30068|320513",
+            5 to "https://list.jd.com/list.html?cat=6728,6742,13246",
+            6 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
+            7 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
+            8 to "https://music.163.com/",
+            9 to "https://news.sogou.com/ent.shtml",
+            10 to "http://shop.boqii.com/brand/",
+            11 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163",
+            12 to "http://dzhcg.sinopr.org/channel/103",
+            13 to "http://blog.zhaojie.me/",
+            14 to "https://shopee.vn/search?keyword=qu%E1%BA%A7n%20l%C3%B3t%20na",
+            15 to "https://www.darphin.com/collections/essential-oil-elixir"
     )
 
     private val trivialUrls = listOf(
@@ -107,7 +105,7 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[14]?:return
+        val url = seeds[0]?:return
 
         var args = "-ic -i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
@@ -275,8 +273,8 @@ object WebAccess {
     fun run() {
         // load()
         // collectLinks()
-        // loadOutPages()
-        loadOutPagesSinopr()
+        loadOutPages()
+        // loadOutPagesSinopr()
 //        repeat(10) {
 //            parallelLoadOutPages()
 //        }
@@ -288,5 +286,5 @@ object WebAccess {
 
 fun main() {
     WebAccess.run()
-    PulsarEnv.getOrCreate().quit()
+    PulsarEnv.getOrCreate().shutdown()
 }

@@ -86,8 +86,13 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     @Synchronized
+    fun shutdown() {
+        PulsarEnv.getOrCreate().shutdown()
+    }
+
+    @Synchronized
     fun shutdownNow() {
-        PulsarEnv.getOrCreate().quit()
+        PulsarEnv.getOrCreate().shutdown()
     }
 }
 

@@ -44,19 +44,23 @@ object Queries {
      * @return A collection of [WebPage]s
      */
     @InterfaceStability.Evolving
-    fun loadAll(session: QuerySession, configuredUrls: Value): Collection<WebPage> {
+    fun loadAll(session: QuerySession, portal: Value): Collection<WebPage> {
         var pages: Collection<WebPage> = listOf()
 
-        when (configuredUrls) {
+        when (portal) {
             is ValueString -> {
+                val normUrl = session.normalize(portal.string)
                 pages = ArrayList()
-                pages.add(session.load(configuredUrls.getString()))
+                pages.add(session.load(normUrl))
             }
             is ValueArray ->
-                for (configuredUrl in configuredUrls.list) {
-                    pages = session.loadAll(configuredUrls.list.map { configuredUrl.string })
+                if (portal.list.isNotEmpty()) {
+                    val normUrl = session.normalize(portal.list[0].string)
+                    for (configuredUrl in portal.list) {
+                        pages = session.loadAll(portal.list.map { configuredUrl.string }, normUrl.options)
+                    }
                 }
-            else -> throw DbException.get(ErrorCode.FUNCTION_NOT_FOUND_1, "Unknown custom type")
+            else -> throw DbException.get(ErrorCode.METHOD_NOT_FOUND_1, "Unsupported type ${Value::class}")
         }
 
         return pages
