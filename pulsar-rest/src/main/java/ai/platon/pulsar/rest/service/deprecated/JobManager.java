@@ -14,11 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package ai.platon.pulsar.rest.service;
+package ai.platon.pulsar.rest.service.deprecated;
 
 import ai.platon.pulsar.common.PulsarJobBase;
 import ai.platon.pulsar.common.config.MutableConfig;
-import ai.platon.pulsar.rest.embedded.PMaster;
 import ai.platon.pulsar.rest.model.request.JobConfig;
 import ai.platon.pulsar.rest.model.response.JobInfo;
 import org.apache.commons.lang.StringUtils;
@@ -44,7 +43,7 @@ public class JobManager {
         CLASS
     }
 
-    public static final Logger LOG = LoggerFactory.getLogger(PMaster.class);
+    public static final Logger LOG = LoggerFactory.getLogger(JobManager.class);
 
     private JobFactory jobFactory;
     private JobWorkerPoolExecutor executor;

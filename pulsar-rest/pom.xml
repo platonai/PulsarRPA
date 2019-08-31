@@ -141,23 +141,21 @@
             <exclusions>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-client</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-server</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-json</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-grizzly2</artifactId>
+                    <artifactId>*</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>javax.ws.rs</groupId>
                     <artifactId>jsr311-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-h2</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -218,114 +216,25 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-jetty-http</artifactId>
-            <version>${jersey-2.version}</version>
-        </dependency>
-        <!-- JSON binding support via MOXy is a default and preferred way of supporting JSON binding -->
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-moxy</artifactId>
-            <version>${jersey-2.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-spring4</artifactId>
-            <version>${jersey-2.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- ************************************************************************************* -->
-        <!-- Start jerseyTest support -->
-        <!--
-            JerseyTest supports deploying applications on various containers,
-            all (except the external container wrapper) need to have some "glue" code to be supported.
-            Currently Jersey Test Framework provides support for
-            1. Grizzly,
-            2. In-Memory,
-            3. JDK (com.sun.net.httpserver.HttpServer),
-            4. Simple HTTP container (org.simpleframework.http)
-            5. and Jetty HTTP container (org.eclipse.jetty).
-         -->
         <dependency>
-            <groupId>org.glassfish.jersey.test-framework</groupId>
-            <artifactId>jersey-test-framework-core</artifactId>
-            <version>${jersey-2.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework</groupId>
-            <artifactId>jersey-test-framework-util</artifactId>
-            <version>${jersey-2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-inmemory</artifactId>
-            <version>${jersey-2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.test-framework.providers</groupId>-->
-        <!--<artifactId>jersey-test-framework-provider-jdk-http</artifactId>-->
-        <!--<version>${jersey-2.version}</version>-->
-        <!--<scope>test</scope>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.test-framework.providers</groupId>-->
-        <!--<artifactId>jersey-test-framework-provider-grizzly2</artifactId>-->
-        <!--<version>${jersey-2.version}</version>-->
-        <!--<scope>test</scope>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.test-framework.providers</groupId>-->
-        <!--<artifactId>jersey-test-framework-provider-jetty</artifactId>-->
-        <!--<version>${jersey-2.version}</version>-->
-        <!--<scope>test</scope>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.test-framework.providers</groupId>-->
-        <!--<artifactId>jersey-test-framework-provider-bundle</artifactId>-->
-        <!--<version>${jersey-2.version}</version>-->
-        <!--<type>pom</type>-->
-        <!--<scope>test</scope>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>org.glassfish.jersey.test-framework.providers</groupId>-->
-        <!--<artifactId>jersey-test-framework-provider-external</artifactId>-->
-        <!--<version>${jersey-2.version}</version>-->
-        <!--<type>pom</type>-->
-        <!--<scope>test</scope>-->
-        <!--</dependency>-->
-        <!-- End jerseyTest support  -->
-        <!-- ************************************************************************************* -->
 
-        <!--<dependency>-->
-            <!--<groupId>org.apache.hadoop</groupId>-->
-            <!--<artifactId>hadoop-annotations</artifactId>-->
-        <!--</dependency>-->
-
-        <!-- jHades is a simple tool for troubleshooting Java classpath problems. -->
-        <!--<dependency>-->
-            <!--<groupId>org.jhades</groupId>-->
-            <!--<artifactId>jhades</artifactId>-->
-            <!--<version>1.0.4</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${solr.version}</version>
         </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>${javax.servlet-api.version}</version>
-        </dependency>
-
     </dependencies>
 
 </project>

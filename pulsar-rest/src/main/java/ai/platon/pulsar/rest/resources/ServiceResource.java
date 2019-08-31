@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,19 +20,14 @@ import ai.platon.pulsar.common.NetUtil;
 import ai.platon.pulsar.persist.rdb.model.BrowserInstance;
 import ai.platon.pulsar.persist.rdb.model.ServerInstance;
 import ai.platon.pulsar.rest.service.BrowserInstanceService;
-import ai.platon.pulsar.rest.service.JobConfigurations;
 import ai.platon.pulsar.rest.service.ServerInstanceService;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,14 +38,11 @@ import static ai.platon.pulsar.persist.rdb.model.ServerInstance.Type.FetchServic
 /**
  * Fetcher Server Resource
  * */
-@Component
-@Singleton
-@Path("/service")
+@RestController
+@RequestMapping("/service")
 public class ServiceResource {
 
   public static final Logger LOG = LoggerFactory.getLogger(ServiceResource.class);
-
-  private JobConfigurations jobConfigurations;
 
   private ServerInstanceService serverInstanceService;
 
@@ -61,10 +53,8 @@ public class ServiceResource {
   // @Inject
   @Autowired
   public ServiceResource(
-          JobConfigurations jobConfigurations,
           ServerInstanceService serverInstanceService,
           BrowserInstanceService browserInstanceService) {
-    this.jobConfigurations = jobConfigurations;
     this.serverInstanceService = serverInstanceService;
     this.browserInstanceService = browserInstanceService;
   }
@@ -73,10 +63,7 @@ public class ServiceResource {
    * For test
    * Register pulsar relative server
    * */
-  @POST
-  @Path("/echo")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
+  @PostMapping("/echo")
   public ServerInstance echo(ServerInstance serverInstance) {
     return serverInstance;
   }
@@ -86,9 +73,7 @@ public class ServiceResource {
    * Return a list of integer
    * NOTE: return of a list of integers is not supported by jersey-2.26-b03, use string instead
    * */
-  @GET
-  @Path("/listOfInteger")
-  @Produces(MediaType.APPLICATION_JSON)
+  @GetMapping("/listOfInteger")
   public List<Integer> getListOfInteger() {
     return IntStream.range(0, 10).boxed().collect(Collectors.toList());
   }
@@ -96,8 +81,7 @@ public class ServiceResource {
   /**
    * List all servers instances
    * */
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
+  @GetMapping
   public List<ServerInstance> list() {
     return serverInstanceService.list();
   }
@@ -105,10 +89,8 @@ public class ServiceResource {
   /**
    * List all servers instances
    * */
-  @PUT
-  @Path("/{browserId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  public List<ServerInstance> getLiveServerInstances(@PathParam("browserId") long browserId, String password) {
+  @PutMapping("/{browserId}")
+  public List<ServerInstance> getLiveServerInstances(@PathVariable("browserId") long browserId, String password) {
     if (browserInstanceService.authorize(browserId, password)) {
       return getLiveServerInstances(FetchService);
     }
@@ -116,11 +98,8 @@ public class ServiceResource {
     return Lists.newArrayList();
   }
 
-  @POST
-  @Path("/login")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public BrowserInstance report(@Context HttpServletRequest request, BrowserInstance browserInstance) {
+  @PostMapping("/login")
+  public BrowserInstance report(HttpServletRequest request, BrowserInstance browserInstance) {
     if (browserInstance.getId() == null) {
       browserInstance.setCreated(Instant.now());
     }
@@ -148,11 +127,8 @@ public class ServiceResource {
    * But it seems there is nothing to inject when we run tests using provider
    * jersey-test-framework-provider-inmemory
    * */
-  @POST
-  @Path("/register")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public ServerInstance register(@Context HttpServletRequest request, ServerInstance serverInstance) {
+  @PostMapping("/register")
+  public ServerInstance register(HttpServletRequest request, ServerInstance serverInstance) {
     // In test mode,
     if (request != null) {
       serverInstance.setIp(request.getRemoteAddr());
@@ -165,10 +141,8 @@ public class ServiceResource {
   /**
    * Unregister pulsar relative server
    * */
-  @DELETE
-  @Path("/unregister/{id}")
-  @Produces(MediaType.APPLICATION_JSON)
-  public ServerInstance unregister(@PathParam("id") Long id) {
+  @DeleteMapping("/unregister/{id}")
+  public ServerInstance unregister(@PathVariable("id") Long id) {
     ServerInstance instance = serverInstanceService.get(id);
     if (instance != null) {
       serverInstanceService.unregister(id);
@@ -180,7 +154,7 @@ public class ServiceResource {
     List<ServerInstance> serverInstances = serverInstanceService.list(type);
 
     long now = System.currentTimeMillis();
-    int checkPeriod = jobConfigurations.getDefault().getInt("service.resource.check.period.sec", 15);
+    int checkPeriod = 15;
     if (now - lastCheckAvailableTime > checkPeriod * 1000) {
       List<ServerInstance> serverInstances2 = Lists.newArrayList();
 

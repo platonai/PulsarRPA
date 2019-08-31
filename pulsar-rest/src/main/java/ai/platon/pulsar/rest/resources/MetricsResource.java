@@ -20,33 +20,31 @@ import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.PulsarConstants.METRICS_HOME_URL;
 
-@Component
-@Singleton
-@Path("/metrics")
+@RestController
+@RequestMapping("/metrics")
 public class MetricsResource {
   public static final Logger LOG = LoggerFactory.getLogger(MetricsResource.class);
 
   private final WebDb webDb;
 
-  @Inject
+  @Autowired
   public MetricsResource(WebDb webDb) {
     this.webDb = webDb;
   }
 
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
+  @GetMapping
   public String list(
-          @QueryParam("limit") @DefaultValue("1000") int limit) {
+          @PathVariable("limit") int limit) {
     WebPage page = webDb.getOrNil(METRICS_HOME_URL);
     if (page.isNil() || page.getLiveLinks().isEmpty()) {
       return "[]";

@@ -27,22 +27,20 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_URL;
 
-@Component
-@Singleton
-@Path("/solr")
+@RestController
+@RequestMapping("/solr")
 public class SolrResource {
 
   private final ImmutableConfig conf;
@@ -53,7 +51,7 @@ public class SolrResource {
   private String sort = "publish_time desc";
   private String fields = "article_title,encoding,resource_category,author,director,last_crawl_time,publish_time,domain,url";
 
-  @Inject
+  @Autowired
   public SolrResource(ImmutableConfig conf) {
     String indexerUrl = conf.get(INDEXER_URL);
     // solrClient = SolrUtils.getSolrClient(indexerUrl);
@@ -63,44 +61,38 @@ public class SolrResource {
     this.conf = conf;
   }
 
-  @GET
-  @Path("/get")
-  public String get(@QueryParam("key") String key) throws IOException, SolrServerException {
+  @GetMapping("/get")
+  public String get(@PathVariable("key") String key) throws IOException, SolrServerException {
     SolrDocument doc = solrClient.getById(Urls.reverseUrlOrEmpty(key));
     return format(doc);
   }
 
-  @GET
-  @Path("/p24h")
+  @GetMapping("/p24h")
   public ArrayList<SolrDocument> p24h() throws IOException, SolrServerException {
     QueryResponse response = runQuery(Params.of("publish_time", "[NOW-DAY/DAY TO NOW]"));
     return response.getResults();
   }
 
-  @GET
-  @Path("/p48h")
+  @GetMapping("/p48h")
   public ArrayList<SolrDocument> p48h() throws IOException, SolrServerException {
     QueryResponse response = runQuery(Params.of("publish_time", "[NOW-2DAY/DAY TO NOW]"));
     return response.getResults();
   }
 
-  @GET
-  @Path("/c24h")
+  @GetMapping("/c24h")
   public ArrayList<SolrDocument> c24h() throws IOException, SolrServerException {
     QueryResponse response = runQuery(Params.of("last_crawl_time", "[NOW-DAY/DAY TO NOW]"));
     return response.getResults();
   }
 
-  @GET
-  @Path("/c48h")
+  @GetMapping("/c48h")
   public ArrayList<SolrDocument> c48h() throws IOException, SolrServerException {
     QueryResponse response = runQuery(Params.of("last_crawl_time", "[NOW-2DAY/DAY TO NOW]"));
     return response.getResults();
   }
 
-  @GET
-  @Path("/truncate")
-  public boolean truncate(@QueryParam("collection") String collection) throws IOException, SolrServerException {
+  @GetMapping("/truncate")
+  public boolean truncate(@PathVariable("collection") String collection) throws IOException, SolrServerException {
     solrClient.deleteByQuery(collection, "*:*");
     return true;
   }
@@ -128,13 +120,4 @@ public class SolrResource {
             .setParam("wt", "json");
     return solrQuery;
   }
-
-//  public String format(SolrDocumentList documents) {
-//    int i = 0;
-//    for (SolrDocument document : documents) {
-//      println(i + ".");
-//      format(document);
-//      println("\n");
-//    }
-//  }
 }

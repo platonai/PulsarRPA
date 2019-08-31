@@ -19,43 +19,35 @@ package ai.platon.pulsar.rest.resources;
 import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.common.options.LinkOptions;
 import ai.platon.pulsar.common.options.LoadOptions;
-import ai.platon.pulsar.crawl.component.*;
+import ai.platon.pulsar.crawl.component.InjectComponent;
+import ai.platon.pulsar.crawl.component.LoadComponent;
 import ai.platon.pulsar.crawl.schedule.FetchSchedule;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.WebPageFormatter;
 import ai.platon.pulsar.rest.model.response.LinkDatum;
-import ai.platon.pulsar.rest.service.JobConfigurations;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Component
-@Singleton
-@Path("/seeds")
+@RestController
+@RequestMapping("/seeds")
 public class SeedResource {
   public static final Logger LOG = LoggerFactory.getLogger(SeedResource.class);
 
   public static String URL_SEPARATOR = "^^";
 
   private ApplicationContext applicationContext;
-  private final JobConfigurations jobConfigurations;
   private final WebDb webDb;
 
   private final InjectComponent injectComponent;
@@ -64,26 +56,23 @@ public class SeedResource {
 
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-  @Inject
+  @Autowired
   public SeedResource(WebDb webDb,
                       InjectComponent injectComponent,
                       LoadComponent loadComponent,
-                      FetchSchedule fetchSchedule,
-                      JobConfigurations jobConfigurations) {
+                      FetchSchedule fetchSchedule) {
     this.webDb = webDb;
     this.injectComponent = injectComponent;
     this.loadComponent = loadComponent;
     this.fetchSchedule = fetchSchedule;
-    this.jobConfigurations = jobConfigurations;
   }
 
-  @GET
-  @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+  @GetMapping
   public String list(
-      @QueryParam("start") @DefaultValue("1") int start,
-      @QueryParam("limit") @DefaultValue("1000") int limit,
-      @QueryParam("log") @DefaultValue("0") int logLevel,
-      @Context HttpServletRequest request
+      @RequestParam(value = "start", defaultValue = "1") int start,
+      @RequestParam(value = "limit", defaultValue = "40") int limit,
+      @RequestParam(value = "log", defaultValue = "1") int logLevel,
+      HttpServletRequest request
   ) {
     Map<String, Object> results = loadComponent.loadOutPages(PulsarConstants.SEED_PAGE_1_URL,
       LoadOptions.Companion.parse("-s,-nlf,--expires=36500d"),
@@ -97,12 +86,10 @@ public class SeedResource {
     return gson.toJson(results);
   }
 
-  @GET
-  @Path("/get-live-links")
-  @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+  @GetMapping("/get-live-links")
   public String getLiveLinks(
-      @QueryParam("start") @DefaultValue("1") int start,
-      @QueryParam("limit") @DefaultValue("1000") int limit) {
+      @RequestParam("start") int start,
+      @RequestParam("limit") int limit) {
     WebPage page = webDb.getOrNil(PulsarConstants.SEED_PAGE_1_URL);
     if (page.isNil() || page.getLiveLinks().isEmpty()) {
       return "[]";
@@ -118,12 +105,10 @@ public class SeedResource {
         "\n]";
   }
 
-  @GET
-  @Path("/home")
-  @Produces(MediaType.APPLICATION_JSON)
+  @GetMapping("/home")
   public List<LinkDatum> home(
-      @QueryParam("pageNo") @DefaultValue("1") int pageNo,
-      @QueryParam("limit") @DefaultValue("1000") int limit) {
+      @RequestParam("pageNo") int pageNo,
+      @RequestParam("limit") int limit) {
     WebPage page = webDb.getOrNil(PulsarConstants.SEED_PAGE_1_URL);
     List<LinkDatum> links = new ArrayList<>();
     if (page.isNil() || page.getLiveLinks().isEmpty()) {
@@ -135,11 +120,10 @@ public class SeedResource {
         .collect(Collectors.toList());
   }
 
-  @GET
-  @Path(value = "/inject")
+  @GetMapping(value = "/inject")
   public String inject(
-    @QueryParam("url") String url,
-    @QueryParam("args") String args
+    @RequestParam("url") String url,
+    @RequestParam("args") String args
   ) {
     if (url.isEmpty()) {
       return "{}";
@@ -154,9 +138,8 @@ public class SeedResource {
     return "{}";
   }
 
-  @GET
-  @Path(value = "/uninject")
-  public String unInject(@QueryParam("url") String url) {
+  @GetMapping(value = "/uninject")
+  public String unInject(@RequestParam("url") String url) {
     if (url.isEmpty()) {
       return "{}";
     }
@@ -173,9 +156,8 @@ public class SeedResource {
   /**
    * Configured url separated by URL_SEPARATOR
    * */
-  @GET
-  @Path(value = "/inject-all")
-  public String injectAll(@QueryParam("configuredUrls") String configuredUrls) {
+  @GetMapping(value = "/inject-all")
+  public String injectAll(@RequestParam("configuredUrls") String configuredUrls) {
     if (configuredUrls.isEmpty()) {
       return "{}";
     }
@@ -190,9 +172,8 @@ public class SeedResource {
   /**
    * Configured url separated by "__`N`__"
    * */
-  @GET
-  @Path(value = "/uninject-all")
-  public String unInjectAll(@QueryParam("urls") String urls) {
+  @GetMapping(value = "/uninject-all")
+  public String unInjectAll(@RequestParam("urls") String urls) {
     List<WebPage> pages = new ArrayList<>(injectComponent.injectAll(urls.split(URL_SEPARATOR)));
     injectComponent.commit();
 
@@ -200,9 +181,8 @@ public class SeedResource {
         .collect(Collectors.joining(", ", "[", "]"));
   }
 
-  @GET
-  @Path(value = "/force-refetch")
-  public String forceRefetch(@QueryParam("url") String url) {
+  @GetMapping(value = "/force-refetch")
+  public String forceRefetch(@RequestParam("url") String url) {
     WebPage page = webDb.getOrNil(url);
     if (page.isNil()) {
       return "{}";

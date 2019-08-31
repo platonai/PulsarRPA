@@ -16,19 +16,15 @@
  ******************************************************************************/
 package ai.platon.pulsar.rest.embedded;
 
-import ai.platon.pulsar.rest.MasterResourceConfig;
 import ai.platon.pulsar.rest.model.response.PulsarStatus;
-import ai.platon.pulsar.rest.service.JobConfigurations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
 import java.time.Duration;
 
-@Service
-@Path(value = "/admin")
+@RestController
+@RequestMapping(value = "/admin")
 public class AdminResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(AdminResource.class);
@@ -36,25 +32,23 @@ public class AdminResource {
 
   public static String SIMPLE_AUTH_TOKEN = "admin@localhost:iwqxi8iloqpol";
 
-  @Inject
-  MasterResourceConfig masterResourceConfig;
+//  @Autowired
+//  MasterResourceConfig masterResourceConfig;
+//
+//  @Autowired
+//  private JobConfigurations jobConfigurations;
 
-  @Inject
-  private JobConfigurations jobConfigurations;
-
-  @GET
+  @GetMapping
   public PulsarStatus getPulsarStatus() {
     PulsarStatus status = new PulsarStatus();
 
-    status.setConfiguration(jobConfigurations.list());
+//    status.setConfiguration(jobConfigurations.list());
 
     return status;
   }
 
-  @PUT
-  @Path("/stop")
-  @Consumes("application/x-www-form-urlencoded")
-  public int stop(@FormParam("authToken") String authToken, @FormParam("force") boolean force) {
+  @PutMapping("/stop")
+  public int stop(@RequestParam("authToken") String authToken, @RequestParam("force") boolean force) {
     if (!SIMPLE_AUTH_TOKEN.equals(authToken)) {
       return -1;
     }
@@ -65,25 +59,25 @@ public class AdminResource {
   }
 
   private void scheduleServerStop(boolean force) {
-    LOG.info("Server shutdown scheduled in {} seconds", DELAY_SEC.getSeconds());
-    Thread thread = new Thread() {
-      public void run() {
-        PMaster pMaster = (PMaster) masterResourceConfig.getProperty(PMaster.class.getName());
-        if (!pMaster.isStarted()) {
-          return;
-        }
-
-        try {
-          Thread.sleep(DELAY_SEC.getSeconds());
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        }
-
-        pMaster.shutdownNow();
-      }
-    };
-    thread.setDaemon(true);
-    thread.start();
-    LOG.info("Service shutting down...");
+//    LOG.info("Server shutdown scheduled in {} seconds", DELAY_SEC.getSeconds());
+//    Thread thread = new Thread() {
+//      public void run() {
+//        PMaster pMaster = (PMaster) masterResourceConfig.getProperty(PMaster.class.getName());
+//        if (!pMaster.isStarted()) {
+//          return;
+//        }
+//
+//        try {
+//          Thread.sleep(DELAY_SEC.getSeconds());
+//        } catch (InterruptedException e) {
+//          Thread.currentThread().interrupt();
+//        }
+//
+//        pMaster.shutdownNow();
+//      }
+//    };
+//    thread.setDaemon(true);
+//    thread.start();
+//    LOG.info("Service shutting down...");
   }
 }

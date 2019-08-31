@@ -72,7 +72,6 @@
         <constructor-arg ref="updateComponent"/>
     </bean>
 
-
     <bean id="jitIndexer" class="ai.platon.pulsar.crawl.fetch.indexer.JITIndexer" destroy-method="close">
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="indexingFilters"/>

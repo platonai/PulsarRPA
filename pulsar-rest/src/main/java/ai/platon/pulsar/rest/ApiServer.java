@@ -14,19 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package ai.platon.pulsar.rest.resources;
+package ai.platon.pulsar.rest;
 
-import org.springframework.stereotype.Component;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ImportResource;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-
-@Component
-@Path("/logging")
-public class LoggingResource {
-
-  @GET
-  public String welcome() {
-    return "<p>Welcome to pulsar</p>";
-  }
+@SpringBootApplication
+@ImportResource("classpath:pulsar-beans/app-context.xml")
+public class ApiServer {
+    public static void main(String[] args) {
+        SpringApplication.run(ApiServer.class, args);
+    }
 }

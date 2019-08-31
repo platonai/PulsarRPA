@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,21 +24,18 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.*;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Proxy Resource module
  * */
-@Component
-@Path("/proxy")
-@Produces(MediaType.APPLICATION_JSON)
+@RestController
+@RequestMapping("/proxy")
 public class ProxyResource {
   public static final Logger LOG = LoggerFactory.getLogger(ProxyResource.class);
 
@@ -50,25 +47,20 @@ public class ProxyResource {
   /**
    * List all proxy servers
    * */
-  @GET
+  @GetMapping
   public List<String> list() {
     // return ProxyPool.getInstance(immutableConfig)();
     return new ArrayList<>();
   }
 
-  @PUT
-  @Path("/echo")
-  @Consumes("text/html; charset='UTF-8'")
-  @Produces("text/html; charset='UTF-8'")
-  public byte[] echo(@Context HttpHeaders httpHeaders, byte[] content) {
+  @PutMapping("/echo")
+  public byte[] echo(@RequestHeader Map<String, String> headers, byte[] content) {
     MultiMetadata customHeaders = new SpellCheckedMultiMetadata();
-    for (java.util.Map.Entry<String, List<String>> entry : httpHeaders.getRequestHeaders().entrySet()) {
-      for (String value : entry.getValue()) {
-        customHeaders.put(entry.getKey(), value);
-      }
+    for (java.util.Map.Entry<String, String> entry : headers.entrySet()) {
+      customHeaders.put(entry.getKey(), entry.getValue());
     }
 
-    LOG.info("{}", httpHeaders.getRequestHeaders().entrySet());
+    LOG.info("{}", headers.entrySet());
     LOG.info("{}", customHeaders);
 
     return content;
@@ -86,8 +78,7 @@ public class ProxyResource {
   /**
    * refresh proxy list file
    * */
-  @GET
-  @Path("/touch")
+  @GetMapping("/touch")
   public String touch() {
     // return "last modified : " + ProxyPool.getInstance();
     return "not implemented";
@@ -95,14 +86,12 @@ public class ProxyResource {
 
   /**
    * manage reports from satellite
-   * 
-   * satellite reports itself with it's configuration file, 
+   *
+   * satellite reports itself with it's configuration file,
    * the server side add the satellite into proxy list
-   * 
+   *
    * */
-  @POST
-  @Path("/report")
-  @Consumes(javax.ws.rs.core.MediaType.APPLICATION_JSON)
+  @PostMapping("/report")
   public ArrayList<String> report(String content) {
 //    String host = Request.getCurrent().getClientInfo().getAddress();
     String host = "";

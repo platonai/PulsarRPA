@@ -1,26 +1,22 @@
 package ai.platon.pulsar.rest
 
+import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_PULSAR_MASTER_PORT
 import ai.platon.pulsar.rest.rpc.PageResourceReference
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.util.*
+import org.slf4j.LoggerFactory
+import kotlin.test.assertTrue
 
-/**
- * Created by vincent on 17-8-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
- */
-class TestPageResource : ResourceTestBase() {
+open class TestPageResource {
+    private val log = LoggerFactory.getLogger(TestPageResource::class.java)
     private val seedUrl = "http://news.cqnews.net/html/2017-06/08/content_41874417.htm"
     private val detailUrl = "http://news.163.com/17/0607/21/CMC14QCD000189FH.html"
 
-    protected lateinit var pageResourceReference: PageResourceReference
+    private lateinit var pageResourceReference: PageResourceReference
 
     @Before
-    override fun setUp() {
-        super.setUp()
-
-        pageResourceReference = PageResourceReference(baseUri, client())
+    fun setUp() {
+        pageResourceReference = PageResourceReference("127.0.0.1", DEFAULT_PULSAR_MASTER_PORT)
         pageResourceReference.fetch(seedUrl)
         pageResourceReference.fetch(detailUrl)
     }

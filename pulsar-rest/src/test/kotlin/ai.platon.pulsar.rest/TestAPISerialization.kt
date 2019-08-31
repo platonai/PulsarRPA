@@ -3,7 +3,7 @@ package ai.platon.pulsar.rest
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.rest.model.request.JobConfig
-import ai.platon.pulsar.rest.service.JobManager
+import ai.platon.pulsar.rest.service.deprecated.JobManager
 import com.google.gson.GsonBuilder
 import org.junit.Assert
 import org.junit.Test
