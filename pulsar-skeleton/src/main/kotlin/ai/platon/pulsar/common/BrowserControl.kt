@@ -90,6 +90,7 @@ open class BrowserControl(
             // some web sites have technology to detect whether the browser is controlled by web driver
             // chromeOptions.addArguments("disable-infobars")
             chromeOptions.addArguments("--disable-extensions")
+            // chromeOptions.addArguments("--incognito") // may cause anti-spider
             chromeOptions.addArguments("--window-size=" + viewPort.width + "," + viewPort.height)
             chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
             chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)

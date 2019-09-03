@@ -111,11 +111,11 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   $bin/pulsar server -tcpShutdown tcp://127.0.1.1:9092
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
-  MODULE=pulsar-ql-server
-  CLASS=ai.platon.pulsar.ql.h2.start.H2DbConsole
+  MODULE=pulsar-app
+  CLASS=ai.platon.pulsar.app.PulsarMasterKt
 elif [[ "$COMMAND" = "sql" ]] ; then
-  MODULE=pulsar-ql-server
-  CLASS=ai.platon.pulsar.ql.h2.start.H2Shell
+  MODULE=pulsar-app
+  CLASS=ai.platon.pulsar.app.H2ShellKt
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else

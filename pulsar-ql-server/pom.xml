@@ -21,56 +21,6 @@
     <artifactId>pulsar-ql-server</artifactId>
     <name>Pulsar QL Server</name>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>ai.platon.pulsar.ql.h2.start.H2DbConsole</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <!-- H2 runtime need local libs -->
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <inherited>true</inherited>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>ai.platon.pulsar.ql.h2.start.H2DbConsole</mainClass>
-                    <arguments>
-                        <!--<argument>-trace</argument>-->
-                        <argument>-tcp</argument>
-                        <argument>-tcpAllowOthers</argument>
-                        <argument>-web</argument>
-                        <argument>-webAllowOthers</argument>
-                    </arguments>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

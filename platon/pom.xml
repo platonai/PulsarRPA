@@ -461,6 +461,20 @@
                 <artifactId>javax.ws.rs-api</artifactId>
                 <version>${jax-rs.version}</version>
             </dependency>
+            <!-- JSTL -->
+            <!-- https://mvnrepository.com/artifact/javax.servlet/jstl -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jstl</artifactId>
+                <version>1.2</version>
+            </dependency>
+            <!-- To compile JSP files -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-jasper</artifactId>
+                <scope>provided</scope>
+                <version>${tomcat.version}</version>
+            </dependency>
 
             <!-- Html -->
             <dependency>
@@ -482,21 +496,6 @@
                 <groupId>jtidy</groupId>
                 <artifactId>jtidy</artifactId>
                 <version>4aug2000r7-dev</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jdom</groupId>
-                <artifactId>jdom</artifactId>
-                <version>${jdom.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>maven-plugins</groupId>
-                        <artifactId>maven-cobertura-plugin</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>maven-plugins</groupId>
-                        <artifactId>maven-findbugs-plugin</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <!-- for EncodingDetector -->
             <dependency>
@@ -579,6 +578,18 @@
                 <artifactId>spring-jcl</artifactId>
                 <version>${spring.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-oxm</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+
             <!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -587,11 +598,16 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.springframework.session</groupId>
+                <artifactId>spring-session-core</artifactId>
+                <version>${spring-session.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-autoconfigure</artifactId>
@@ -606,6 +622,12 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-tomcat</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -733,9 +755,11 @@
              -->
             <dependency>
                 <groupId>org.hamcrest</groupId>
-                <artifactId>hamcrest-core</artifactId>
-                <version>1.3</version>
+                <artifactId>hamcrest-all</artifactId>
+                <version>${hamcrest-all.version}</version>
+                <scope>test</scope>
             </dependency>
+
             <!--
                 The Jakarta-ORO Java classes are a set of text-processing Java classes
                 that provide Perl5 compatible regular expressions.
@@ -854,7 +878,6 @@
         <nekohtml.version>1.9.19</nekohtml.version>
         <!--<tika.version>[1.19.1,)</tika.version>-->
         <tika.version>1.7</tika.version>
-        <jdom.version>1.1.2</jdom.version>
 
         <!-- Data Platform Dependencies -->
         <hadoop.version>2.5.2</hadoop.version>
@@ -876,6 +899,8 @@
 
         <!-- Spring -->
         <spring.version>5.1.8.RELEASE</spring.version>
+        <spring-session.version>2.1.6.RELEASE</spring-session.version>
+        <spring-data.version>2.1.6.RELEASE</spring-data.version>
         <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
 
         <!-- Server Dependencies -->
@@ -896,6 +921,7 @@
 
         <jetty.version>9.4.19.v20190610</jetty.version>
         <jetty-maven-plugin.version>9.4.19.v20190610</jetty-maven-plugin.version>
+        <tomcat.version>9.0.21</tomcat.version>
         <!-- TODO: according to github's warning, jetty version should be the following to avoid security issues. -->
         <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
 
@@ -915,7 +941,13 @@
         <!-- Logging And Testing Dependencies -->
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
+        <!-- Matchers that can be combined to create flexible expressions of intent -->
+        <hamcrest-all.version>1.3</hamcrest-all.version>
+        <org.hamcrest.version>1.3</org.hamcrest.version>
+        <mockito-core.version>2.21.0</mockito-core.version>
         <junit.version>4.12</junit.version>
+
+        <javassist.version>3.22.0-GA</javassist.version>
 
         <!-- Java -->
         <java.version>1.8</java.version>

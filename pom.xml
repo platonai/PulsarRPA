@@ -39,6 +39,7 @@
         <module>pulsar-beans</module>
         <module>pulsar-ql-common</module>
         <module>pulsar-ql-server</module>
+        <module>pulsar-app</module>
         <module>pulsar-examples</module>
     </modules>
 
@@ -67,6 +68,7 @@
             </activation>
             <modules>
                 <module>pulsar-rest</module>
+                <module>pulsar-rest-full</module>
             </modules>
         </profile>
 
@@ -170,13 +172,6 @@
                 <artifactId>pulsar-index</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-beans</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-h2</artifactId>
@@ -200,6 +195,17 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-beans</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-rest</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_PULSAR_MASTER_PORT
-import ai.platon.pulsar.rest.rpc.PageResourceReference
+import ai.platon.pulsar.rest.api.rpc.PageResourceReference
 import org.junit.Before
 import org.junit.Test
 import org.slf4j.LoggerFactory

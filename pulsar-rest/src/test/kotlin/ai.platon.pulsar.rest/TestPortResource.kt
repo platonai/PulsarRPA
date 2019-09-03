@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.persist.rdb.model.ServerInstance
-import ai.platon.pulsar.rest.service.PortManager
+import ai.platon.pulsar.rest.api.service.PortManager
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.ParameterizedTypeReference

@@ -84,7 +84,7 @@ object WebAccess {
         // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
         // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
         // val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
-        val url = "https://www.hao123.com/ -i 1s"
+        val url = "https://afusjt.tmall.com/search.htm?spm=a1z10.3-b-s.w5001-17122979309.4.454b36d3OGiU6M&scene=taobao_shop -i 1s"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
