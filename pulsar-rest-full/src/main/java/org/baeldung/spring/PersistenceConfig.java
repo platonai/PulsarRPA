@@ -81,5 +81,4 @@ public class PersistenceConfig {
         // hibernateProperties.setProperty("hibernate.globally_quoted_identifiers", "true");
         return hibernateProperties;
     }
-
 }

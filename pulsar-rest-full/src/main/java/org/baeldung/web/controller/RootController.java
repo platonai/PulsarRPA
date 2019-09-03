@@ -47,6 +47,4 @@ public class RootController {
         }
         return result;
     }
-
-
 }
