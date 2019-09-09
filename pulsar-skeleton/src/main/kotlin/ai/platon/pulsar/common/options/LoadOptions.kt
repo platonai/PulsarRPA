@@ -33,6 +33,8 @@ open class LoadOptions: CommonOptions {
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
     @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
+    var iframe = 0
+    @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
     var topLinks = 20
     @Parameter(names = ["-tg", "-topAnchorGroups", "--top-anchor-groups"], description = "Try the top anchor groups")
     var topAnchorGroups = 3

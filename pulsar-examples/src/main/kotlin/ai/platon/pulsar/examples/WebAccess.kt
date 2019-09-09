@@ -240,21 +240,18 @@ object WebAccess {
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 
+    fun extractAds() {
+        val url = "https://wuhan.baixing.com/xianhualipin/a1100414743.html"
+        val doc = i.loadAndParse(url)
+        doc.select("a[href~=mssp.baidu]").map {  }
+    }
+
     fun scan() {
         val contractBaseUri = "http://www.ccgp-hubei.gov.cn:8040/fcontractAction!download.action?path="
         pc.scan(contractBaseUri).forEachRemaining {
             val size = it.content?.array()?.size?:0
             println(size)
         }
-    }
-
-    fun piped() {
-        val url = seeds[8]?:return
-
-        arrayOf(url)
-                .map { i.load(it) }
-                .map { i.parse(it) }
-                .forEach { println("${it.location} ${it.title}") }
     }
 
     fun truncate() {
@@ -273,14 +270,15 @@ object WebAccess {
     fun run() {
         // load()
         // collectLinks()
-        loadOutPages()
+        // loadOutPages()
         // loadOutPagesSinopr()
-//        repeat(10) {
-//            parallelLoadOutPages()
-//        }
+        // repeat(10) {
+        //   parallelLoadOutPages()
+        // }
         // loadAllProducts()
         // parallelLoadAll()
         // parallelLoadAllProducts()
+        extractAds()
     }
 }
 
