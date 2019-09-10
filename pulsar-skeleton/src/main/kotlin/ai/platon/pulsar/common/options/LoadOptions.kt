@@ -32,7 +32,7 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
-    @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
+    @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The i-th iframe")
     var iframe = 0
     @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
     var topLinks = 20
@@ -276,8 +276,8 @@ open class LoadOptions: CommonOptions {
         val default = LoadOptions()
         val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val optionNames: List<String> = LoadOptions::class.java.declaredFields
-                .filter { it.annotations.any { it is Parameter } }.map { it.name }
+        val optionNames = LoadOptions::class.java.declaredFields.flatMap { it.annotations.toList() }.filter { it is Parameter }
+                .map { it as Parameter }.flatMap { it.names.toList() }
 
         val helpList: List<List<String>> get() =
                 LoadOptions::class.java.declaredFields
