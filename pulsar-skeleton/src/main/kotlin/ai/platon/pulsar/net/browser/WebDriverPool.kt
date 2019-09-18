@@ -12,7 +12,6 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
-import com.gargoylesoftware.htmlunit.WebClient
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
@@ -20,7 +19,6 @@ import org.openqa.selenium.Capabilities
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -419,9 +417,6 @@ class WebDriverPool(
             browserType == BrowserType.CHROME -> {
                 ChromeDriver(BrowserControl.createChromeOptions(capabilities))
             }
-            browserType == BrowserType.HTMLUNIT -> {
-                PulsarHtmlUnitDriver(capabilities.also { it.setCapability("browserName", "htmlunit") })
-            }
             RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
                 defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
             }
@@ -536,15 +531,6 @@ class WebDriverPool(
             } catch (e: Exception) {
                 log.error("Unexpected exception: {}", e)
             }
-        }
-    }
-
-    internal inner class PulsarHtmlUnitDriver(capabilities: Capabilities) : HtmlUnitDriver() {
-        private val throwExceptionOnScriptError: Boolean = capabilities.`is`("throwExceptionOnScriptError")
-
-        override fun modifyWebClient(client: WebClient): WebClient {
-            client.options.isThrowExceptionOnScriptError = throwExceptionOnScriptError
-            return client
         }
     }
 }

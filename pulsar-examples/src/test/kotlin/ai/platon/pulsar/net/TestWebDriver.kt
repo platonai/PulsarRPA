@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.net.browser.ManagedWebDriver
 import ai.platon.pulsar.net.browser.WebDriverPool
-import org.eclipse.jetty.util.BlockingArrayQueue
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
@@ -14,6 +13,8 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.CapabilityType
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -96,7 +97,7 @@ class TestWebDriver {
 
     @Test
     fun testWebDriverPoolMultThreaded() {
-        val workingDrivers = BlockingArrayQueue<ManagedWebDriver>(30)
+        val workingDrivers = ArrayBlockingQueue<ManagedWebDriver>(30)
 
         val consumer = Thread {
             while (!quitMultiThreadTesting) {

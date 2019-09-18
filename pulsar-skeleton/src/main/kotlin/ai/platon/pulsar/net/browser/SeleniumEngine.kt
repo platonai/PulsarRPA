@@ -31,7 +31,6 @@ import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.htmlunit.HtmlUnitDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
@@ -615,7 +614,7 @@ class SeleniumEngine(
 
         when (driver.driver) {
             is ChromeDriver -> page.lastBrowser = BrowserType.CHROME
-            is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
+//            is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
             else -> {
                 log.warn("Actual browser is set to be NATIVE by selenium engine")
                 page.lastBrowser = BrowserType.NATIVE

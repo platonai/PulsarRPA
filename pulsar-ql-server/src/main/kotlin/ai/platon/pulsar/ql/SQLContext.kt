@@ -114,7 +114,7 @@ class SQLContext: AutoCloseable {
     fun getSession(sessionId: Int): QuerySession {
         ensureRunning()
         val key = DbSession(sessionId, Any())
-        return sessions[key]?:throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session is closed")
+        return sessions[key]?:throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session #$sessionId is closed")
     }
 
     fun closeSession(sessionId: Int) {
