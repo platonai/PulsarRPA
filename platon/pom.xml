@@ -339,6 +339,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-annotations</artifactId>
                 <version>${hadoop.version}</version>
                 <exclusions>
@@ -353,6 +364,12 @@
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-common</artifactId>
                 <version>${hbase.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
 <!--            <dependency>-->

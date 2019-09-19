@@ -74,6 +74,11 @@
         </dependency>
 
         <!-- Persistent -->
+        <!-- Required by GraphGroupKey -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
