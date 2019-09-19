@@ -82,14 +82,21 @@
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
         </dependency>
+        <!-- TODO: we can ignore this dependency -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-shaded-client</artifactId>
+            <artifactId>hbase-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.gora</groupId>
-            <artifactId>gora-hbase</artifactId>
-        </dependency>
+
+        <!-- Since we use mongo db by default, we do not include hbase-shaded-client.jar, it's big -->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hbase</groupId>-->
+<!--            <artifactId>hbase-shaded-client</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.gora</groupId>-->
+<!--            <artifactId>gora-hbase</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-mongodb</artifactId>

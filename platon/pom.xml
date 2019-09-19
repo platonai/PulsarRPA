@@ -349,18 +349,23 @@
                 </exclusions>
             </dependency>
 
-            <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
             <dependency>
                 <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-shaded-client</artifactId>
+                <artifactId>hbase-common</artifactId>
                 <version>${hbase.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
+<!--            <dependency>-->
+<!--                <groupId>org.apache.hbase</groupId>-->
+<!--                <artifactId>hbase-shaded-client</artifactId>-->
+<!--                <version>${hbase.version}</version>-->
+<!--                <exclusions>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>*</groupId>-->
+<!--                        <artifactId>*</artifactId>-->
+<!--                    </exclusion>-->
+<!--                </exclusions>-->
+<!--            </dependency>-->
 
             <!-- TODO: Support MongoDB -->
             <dependency>
@@ -925,9 +930,11 @@
 
         <javax.servlet-api.version>3.1.0</javax.servlet-api.version>
 
+        <tomcat.version>9.0.21</tomcat.version>
+
+        <!-- we prefer tomcat since we employed spring-boot which uses tomcat as the default servlet container -->
         <jetty.version>9.4.19.v20190610</jetty.version>
         <jetty-maven-plugin.version>9.4.19.v20190610</jetty-maven-plugin.version>
-        <tomcat.version>9.0.21</tomcat.version>
         <!-- TODO: according to github's warning, jetty version should be the following to avoid security issues. -->
         <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
 

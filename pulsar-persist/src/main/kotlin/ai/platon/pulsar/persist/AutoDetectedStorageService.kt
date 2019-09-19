@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Created by vincent on 19-1-19.
  * Copyright @ 2013-2019 Platon AI. All rights reserved
  *
- * TODO: Try spring.io
+ * TODO: Try spring boot
  */
 class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
     val storeClassName: String = detectDataStoreClassName(conf)

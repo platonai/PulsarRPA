@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package ai.platon.pulsar.persist.gora.mongodb
+package ai.platon.pulsar.persist.experimental.mongodb
 
 import com.mongodb.*
 import org.apache.avro.Schema

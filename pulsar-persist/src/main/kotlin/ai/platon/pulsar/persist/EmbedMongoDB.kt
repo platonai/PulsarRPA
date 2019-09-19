@@ -16,6 +16,9 @@ import de.flapdoodle.embed.process.config.io.ProcessOutput
 import de.flapdoodle.embed.process.runtime.Network
 import org.slf4j.LoggerFactory
 
+/**
+ * TODO: use spring boot instead
+ * */
 class EmbedMongoDB(val server: String = DEFAULT_EMBED_MONGO_SERVER) {
 
     private val log = LoggerFactory.getLogger(EmbedMongoDB::class.java)

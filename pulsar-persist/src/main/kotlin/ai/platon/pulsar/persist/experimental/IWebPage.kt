@@ -33,21 +33,6 @@ val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
 val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)
 val defaultZoneId = ZoneId.systemDefault()
 
-/**
- * The core data structure across the whole program execution
- *
- *
- * Notice: Use a build-in java string or a Utf8 to serialize strings?
- *
- * @see org.apache.gora.hbase.util.HBaseByteInterface.fromBytes
- *
- *
- * In serializetion phrase, a byte array created by s.getBytes
- */
-/**
- * Experimental, do not use this class
- * We are looking for a better way to represent a WebPage
- * */
 interface IWebPage {
     val url: String
     var createTime: Instant
