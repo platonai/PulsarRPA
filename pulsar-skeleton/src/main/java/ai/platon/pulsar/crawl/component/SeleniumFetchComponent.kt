@@ -44,7 +44,7 @@ internal class BatchFetchContext(
     val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
-    val interval = Duration.ofSeconds(1)
+    val checkInterval = Duration.ofSeconds(1)
     val idleTimeout = Duration.ofMinutes(2)
     val batchSize = Iterables.size(pages)
     val numAllowedFailures = max(10, batchSize / 3)
@@ -103,7 +103,6 @@ class SeleniumFetchComponent(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumFetchComponent::class.java)!!
 
-    private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val isClosed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -207,7 +206,7 @@ class SeleniumFetchComponent(
             }
 
             try {
-                TimeUnit.SECONDS.sleep(cx.interval.seconds)
+                TimeUnit.SECONDS.sleep(cx.checkInterval.seconds)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
                 log.warn("Selenium interrupted, {} pending tasks will be canceled", cx.pendingTasks.size)

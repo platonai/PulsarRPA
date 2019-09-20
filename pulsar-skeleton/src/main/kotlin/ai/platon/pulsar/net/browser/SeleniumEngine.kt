@@ -9,9 +9,11 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.fetch.FetchStat
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
+import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.Documents
@@ -388,7 +390,20 @@ class SeleniumEngine(
         // TODO: fetch only the major pages, css, js, etc, ignore the rest resources, ignore external resources
         // TODO: ignore timeout and get the page source
 
-        return ForwardingResponse(page.url, pageSource, status, headers)
+        val response = ForwardingResponse(page.url, pageSource, status, headers)
+        eagerUpdateWebPage(page, response, immutableConfig)
+        return response
+    }
+
+    /**
+     * Eager update web page, the status is incomplete but required by callbacks
+     * */
+    private fun eagerUpdateWebPage(page: WebPage, response: Response, conf: ImmutableConfig) {
+        page.protocolStatus = response.status
+        val bytes = response.content
+        val contentType = response.getHeader(HttpHeaders.CONTENT_TYPE)
+        val content = Content(page.url, page.location, bytes, contentType, response.headers, conf)
+        FetchComponent.updateContent(page, content)
     }
 
     private fun checkContentIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask) {

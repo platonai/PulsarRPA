@@ -2,11 +2,11 @@ package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.persist.rdb.model.ServerInstance
 import ai.platon.pulsar.rest.api.service.PortManager
-import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.web.client.RestTemplate
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TestPortResource: ResourceTestBase() {
@@ -15,7 +15,7 @@ class TestPortResource: ResourceTestBase() {
     fun testPortAcquire() {
         for (i in 0..49) {
             val port = restTemplate.getForObject("$baseUri/port/acquire", Int::class.java, "type", FetchServerName)
-            Assert.assertEquals((21001 + i), port)
+            assertEquals((21001 + i), port)
         }
     }
 
@@ -42,11 +42,11 @@ class TestPortResource: ResourceTestBase() {
     @Test
     fun testPortRecycle() {
         for (i in 0..49) {
-            val port = restTemplate.getForObject("$baseUri/port/acquire", Int::class.java, "type", FetchServerName)
-            Assert.assertEquals((21001 + i).toLong(), port.toLong())
+            val port = restTemplate.getForObject("$baseUri/port/acquire", Int::class.java, "type", FetchServerName)?:0
+            assertEquals((21001 + i), port)
         }
 
-        val port = restTemplate.getForObject("$baseUri/port/acquire", Int::class.java, "type", FetchServerName)
+        val port = restTemplate.getForObject("$baseUri/port/acquire", Int::class.java, "type", FetchServerName)?:0
         assertTrue(port > 21000)
         restTemplate.getForObject("$baseUri/port/acquire", Int::class.java, "type", FetchServerName)
         restTemplate.postForObject("$baseUri/port/recycle", Int::class.java, String::class.java, "type", FetchServerName)

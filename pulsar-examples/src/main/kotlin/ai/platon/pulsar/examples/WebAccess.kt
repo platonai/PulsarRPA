@@ -125,9 +125,7 @@ object WebAccess {
         val path = i.export(document)
         println("Export to: file://$path")
 
-        val links = document.select(outlink) { it.attr("abs:href") }
-                .toSet()
-                .take(20)
+        val links = document.select(outlink) { it.attr("abs:href") }.toSet().take(20)
         links.forEach { println(it) }
 
         class BeforeBatchHandler: BatchHandler() {

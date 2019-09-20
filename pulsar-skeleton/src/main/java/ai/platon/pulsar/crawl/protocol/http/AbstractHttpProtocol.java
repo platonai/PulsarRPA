@@ -314,7 +314,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
-        String contentType = response.getHeader("Content-Type");
+        String contentType = response.getHeader(HttpHeaders.CONTENT_TYPE);
         Content content = new Content(url, location, bytes, contentType, response.getHeaders(), mimeTypes);
         MultiMetadata headers = response.getHeaders();
         ProtocolStatus status;
