@@ -17,6 +17,7 @@ public enum Name {
 
     IS_NAVIGATOR("I_N"),
     IS_SEED("I_S"),
+    IS_PORTAL("I_P"),
     IS_TMP_SEED("I_TS"),
     IS_DETAIL("I_D"),
 

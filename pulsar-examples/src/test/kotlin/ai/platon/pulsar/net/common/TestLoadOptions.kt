@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class TestLoadOptions {
@@ -37,6 +38,30 @@ class TestLoadOptions {
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
         val options3 = options.mergeModified(options2)
         // assertOptions(options3)
+    }
+
+    @Test
+    fun testOverride() {
+        assertOptionEquals("-tl 50", "-tl 40 -tl 50")
+    }
+
+    @Test
+    fun testEquality() {
+        assertOptionEquals("", "")
+        assertOptionEquals("", "-shouldIgnore")
+        assertOptionEquals("", "-shouldIgnore2 2")
+        assertOptionEquals("", "-shouldIgnore3 a b c")
+
+        assertOptionEquals("-retry", "-retry -shouldIgnore")
+        assertOptionEquals("-retry", "-retry -shouldIgnore2 2")
+        assertOptionEquals("-retry", "-retry -shouldIgnore3 a b c")
+
+        assertOptionEquals("-tl 50", "-tl 40 -tl 50")
+        assertOptionEquals("-tl 40 -itemExpires 10", "-itemExpires 10 -tl 40")
+
+        assertOptionNotEquals("-tl 10", "-tl 40")
+        assertOptionNotEquals("-tl 10 -itemExpires 10", "-itemExpires 10 -tl 40")
+        assertOptionNotEquals("-retry -tl 40 -itemExpires 10", "-itemExpires 10 -tl 40")
     }
 
     @Test
@@ -82,5 +107,13 @@ class TestLoadOptions {
         assertEquals(1, options.itemScrollInterval.seconds)
         assertTrue(options.preferParallel)
         assertTrue(options.retry)
+    }
+
+    private fun assertOptionEquals(expected: String, actual: String, msg: String? = null) {
+        assertEquals(LoadOptions.parse(expected), LoadOptions.parse(actual), msg)
+    }
+
+    private fun assertOptionNotEquals(expected: String, actual: String, msg: String? = null) {
+        assertNotEquals(LoadOptions.parse(expected), LoadOptions.parse(actual), msg)
     }
 }

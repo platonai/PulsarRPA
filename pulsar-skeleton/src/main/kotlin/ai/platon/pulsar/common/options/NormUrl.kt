@@ -27,15 +27,15 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is NormUrl && url == other.url
+        return other is NormUrl && url == other.url && options == other.options
     }
 
     override fun compareTo(other: NormUrl): Int {
-        return url.compareTo(other.url)
+        return configuredUrl.compareTo(other.configuredUrl)
     }
 
     override fun toString(): String {
-        return url
+        return configuredUrl
     }
 
     companion object {

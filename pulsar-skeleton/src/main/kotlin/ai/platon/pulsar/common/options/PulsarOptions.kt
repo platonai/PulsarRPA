@@ -16,6 +16,7 @@ import kotlin.system.exitProcess
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class PulsarOptions : Parameterized {
+    protected val log = LoggerFactory.getLogger(PulsarOptions::class.java)
 
     var expandAtSign = true
     // arguments
@@ -132,9 +133,7 @@ open class PulsarOptions : Parameterized {
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(PulsarOptions::class.java)
-
-        val DEFAULT_DELIMETER = " "
+        const val DEFAULT_DELIMETER = " "
         val CMD_SPLIT_PATTERN = Pattern.compile("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\\S+")
 
         @JvmOverloads

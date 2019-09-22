@@ -43,8 +43,6 @@ public class Params {
         args.forEach((key, value) -> this.paramsList.add(Pair.of(key, value)));
     }
 
-    // public void put(String name, String value) { paramsList.add(Pair.of(name, value)); }
-
     public static Params of(String key, Object value, Object... others) {
         return new Params(key, value, others);
     }

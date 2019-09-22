@@ -228,8 +228,16 @@ open class LoadOptions: CommonOptions {
     }
 
     override fun toString(): String {
-        return modifiedParams.withCmdLineStyle(true).withKVDelimiter(" ")
+        return modifiedParams.distinct().sorted().withCmdLineStyle(true).withKVDelimiter(" ")
                 .formatAsLine().replace("\\s+".toRegex(), " ")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is LoadOptions && other.toString() == toString()
+    }
+
+    override fun hashCode(): Int {
+        return toString().hashCode()
     }
 
     /**
