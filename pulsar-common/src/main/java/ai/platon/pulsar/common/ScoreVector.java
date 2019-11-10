@@ -36,7 +36,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
      * @param scores   Score value for each dimension, the size
      */
     public ScoreVector(String dimensionStr, int... scores) {
-        this(Integer.valueOf(dimensionStr), Ints.asList(scores));
+        this(Integer.parseInt(dimensionStr), Ints.asList(scores));
     }
 
     public ScoreVector(int dimension, Collection<Integer> scores) {
@@ -73,7 +73,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
 
         ScoreVector score = new ScoreVector(parts.length);
         for (int i = 0; i < parts.length; ++i) {
-            score.setValue(i, Integer.valueOf(parts[i]));
+            score.setValue(i, Integer.parseInt(parts[i]));
         }
 
         return score;

@@ -76,6 +76,12 @@ class TestLoadOptions {
     }
 
     @Test
+    fun testHashCode() {
+        val op = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
+        println(op.hashCode())
+    }
+
+    @Test
     fun testNormalizeOptions2() {
         val options = LoadOptions.parse(Urls.splitUrlArgs("$url $args -incognito -expires 1s -retry").second)
         val normUrl = i.normalize(url, options)

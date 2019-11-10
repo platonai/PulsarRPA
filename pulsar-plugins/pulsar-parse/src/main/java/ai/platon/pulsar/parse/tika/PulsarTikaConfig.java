@@ -16,20 +16,26 @@
  */
 package ai.platon.pulsar.parse.tika;
 
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.detect.Detector;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.mime.MediaType;
-import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.apache.tika.mime.MimeTypesFactory;
+import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.html.HtmlParser;
+import org.apache.tika.parser.microsoft.OfficeParser;
+import org.apache.tika.parser.microsoft.ooxml.OOXMLParser;
+import org.apache.tika.parser.mp3.Mp3Parser;
+import org.apache.tika.parser.odf.OpenDocumentParser;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.imageio.spi.ServiceRegistry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,32 +44,31 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Parse xml config file.
  */
-public class TikaConfig {
+public class PulsarTikaConfig {
 
     private final Map<String, Parser> parsers = new HashMap<String, Parser>();
 
     private final MimeTypes mimeTypes;
 
-    public TikaConfig(String file) throws TikaException, IOException,
-            SAXException {
+    public PulsarTikaConfig(String file) throws TikaException, IOException, SAXException {
         this(new File(file));
     }
 
-    public TikaConfig(File file) throws TikaException, IOException, SAXException {
+    public PulsarTikaConfig(File file) throws TikaException, IOException, SAXException {
         this(getBuilder().parse(file));
     }
 
-    public TikaConfig(URL url) throws TikaException, IOException, SAXException {
+    public PulsarTikaConfig(URL url) throws TikaException, IOException, SAXException {
         this(getBuilder().parse(url.toString()));
     }
 
-    public TikaConfig(InputStream stream) throws TikaException, IOException,
+    public PulsarTikaConfig(InputStream stream) throws TikaException, IOException,
             SAXException {
         this(getBuilder().parse(stream));
     }
@@ -72,12 +77,11 @@ public class TikaConfig {
      * @see <a href="https://issues.apache.org/jira/browse/TIKA-275">TIKA-275</a>
      * @deprecated This method will be removed in Apache Tika 1.0
      */
-    public TikaConfig(InputStream stream, Parser delegate) throws TikaException,
-            IOException, SAXException {
+    public PulsarTikaConfig(InputStream stream, Parser delegate) throws TikaException, IOException, SAXException {
         this(stream);
     }
 
-    public TikaConfig(Document document) throws TikaException, IOException {
+    public PulsarTikaConfig(Document document) throws TikaException, IOException {
         this(document.getDocumentElement());
     }
 
@@ -85,12 +89,12 @@ public class TikaConfig {
      * @see <a href="https://issues.apache.org/jira/browse/TIKA-275">TIKA-275</a>
      * @deprecated This method will be removed in Apache Tika 1.0
      */
-    public TikaConfig(Document document, Parser delegate) throws TikaException,
+    public PulsarTikaConfig(Document document, Parser delegate) throws TikaException,
             IOException {
         this(document);
     }
 
-    public TikaConfig(Element element) throws TikaException, IOException {
+    public PulsarTikaConfig(Element element) throws TikaException, IOException {
         Element mtr = getChild(element, "mimeTypeRepository");
         if (mtr != null && mtr.hasAttribute("resource")) {
             mimeTypes = MimeTypesFactory.create(mtr.getAttribute("resource"));
@@ -134,26 +138,21 @@ public class TikaConfig {
         }
     }
 
-    public TikaConfig() throws MimeTypeException, IOException {
-        ParseContext context = new ParseContext();
-        Iterator<Parser> iterator = ServiceRegistry.lookupProviders(Parser.class,
-                this.getClass().getClassLoader());
-        while (iterator.hasNext()) {
-            Parser parser = iterator.next();
-            for (MediaType type : parser.getSupportedTypes(context)) {
-                parsers.put(type.toString(), parser);
-            }
-        }
-        mimeTypes = MimeTypesFactory.create("tika-mimetypes.xml");
-    }
+    public PulsarTikaConfig() throws TikaException, IOException {
+//        TikaConfig config = new TikaConfig("/path/to/tika-config.xml");
+//        Detector detector = config.getDetector();
+//        Parser autoDetectParser = new AutoDetectParser(config);
 
-    /**
-     * @see <a href="https://issues.apache.org/jira/browse/TIKA-275">TIKA-275</a>
-     * @deprecated This method will be removed in Apache Tika 1.0
-     */
-    public TikaConfig(Element element, Parser delegate) throws TikaException,
-            IOException {
-        this(element);
+        ParseContext context = new ParseContext();
+        for (Parser parser : new Parser[] {
+                new HtmlParser(),
+                new OfficeParser(), new OpenDocumentParser(),
+                new Mp3Parser(), new OOXMLParser()
+        }) {
+            parser.getSupportedTypes(context).forEach(type -> parsers.put(type.toString(), parser));
+        }
+
+        mimeTypes = MimeTypesFactory.create("tika-mimetypes.xml");
     }
 
     /**
@@ -163,23 +162,14 @@ public class TikaConfig {
      *
      * @return default configuration
      */
-    public static TikaConfig getDefaultConfig() {
+    public static PulsarTikaConfig getDefaultConfig() {
         try {
-            return new TikaConfig();
+            return new PulsarTikaConfig();
         } catch (IOException e) {
             throw new RuntimeException("Unable to read default configuration", e);
         } catch (TikaException e) {
             throw new RuntimeException("Unable to access default configuration", e);
         }
-    }
-
-    /**
-     * @see <a href="https://issues.apache.org/jira/browse/TIKA-275">TIKA-275</a>
-     * @deprecated This method will be removed in Apache Tika 1.0
-     */
-    public static TikaConfig getDefaultConfig(Parser delegate)
-            throws TikaException {
-        return getDefaultConfig();
     }
 
     private static DocumentBuilder getBuilder() throws TikaException {

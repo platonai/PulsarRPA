@@ -4,7 +4,8 @@
     <groupId>ai.platon</groupId>
     <artifactId>pulsar-rest-full</artifactId>
     <name>Pulsar Rest Full</name>
-    <packaging>war</packaging>
+    <!--<packaging>war</packaging>-->
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>ai.platon.pulsar</groupId>

@@ -60,7 +60,7 @@ public class TikaParser implements ai.platon.pulsar.crawl.parse.Parser {
     private CrawlFilters crawlFilters;
     private ParseFilters parseFilters;
 
-    private TikaConfig tikaConfig;
+    private PulsarTikaConfig tikaConfig;
     private PrimerParser primerParser;
     private String cachingPolicy;
 
@@ -105,7 +105,7 @@ public class TikaParser implements ai.platon.pulsar.crawl.parse.Parser {
         this.primerParser = new PrimerParser(conf);
 
         try {
-            tikaConfig = TikaConfig.getDefaultConfig();
+            tikaConfig = PulsarTikaConfig.getDefaultConfig();
         } catch (Exception e2) {
             String message = "Problem loading default Tika configuration";
             LOG.error(message, e2);
@@ -229,7 +229,7 @@ public class TikaParser implements ai.platon.pulsar.crawl.parse.Parser {
         return this.conf;
     }
 
-    public TikaConfig getTikaConfig() {
+    public PulsarTikaConfig getTikaConfig() {
         return this.tikaConfig;
     }
 }

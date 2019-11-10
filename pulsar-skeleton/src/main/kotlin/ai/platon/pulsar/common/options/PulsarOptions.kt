@@ -38,7 +38,7 @@ open class PulsarOptions : Parameterized {
             // Since space can not appear in dynamic parameters in command line, we use % instead
             this.argv[i] = this.argv[i].replace("%".toRegex(), " ")
         }
-        args = StringUtils.join(argv, DEFAULT_DELIMETER)
+        args = argv.joinToString(DEFAULT_DELIMETER)
     }
 
     constructor(argv: Map<String, String>)

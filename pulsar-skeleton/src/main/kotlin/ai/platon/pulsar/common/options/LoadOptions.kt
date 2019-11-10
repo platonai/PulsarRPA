@@ -36,8 +36,8 @@ open class LoadOptions: CommonOptions {
     var iframe = 0
     @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
     var topLinks = 20
-    @Parameter(names = ["-tg", "-topAnchorGroups", "--top-anchor-groups"], description = "Try the top anchor groups")
-    var topAnchorGroups = 3
+    @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
+    var topNAnchorGroups = 3
     @Parameter(names = ["-wnb", "-waitNonBlank"],
             description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
     var waitNonBlank: String = ""
@@ -234,10 +234,6 @@ open class LoadOptions: CommonOptions {
 
     override fun equals(other: Any?): Boolean {
         return other is LoadOptions && other.toString() == toString()
-    }
-
-    override fun hashCode(): Int {
-        return toString().hashCode()
     }
 
     /**

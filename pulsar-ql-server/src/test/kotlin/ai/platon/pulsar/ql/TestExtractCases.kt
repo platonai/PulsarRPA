@@ -97,6 +97,23 @@ FROM LOAD_OUT_PAGES('$url -i 1s', '$expr', 1, $limit)
     }
 
     @Test
+    fun testExtractSinglePageForTmall() {
+        val sql = """
+select
+    dom_first_text(dom, 'h1') as title,
+    dom_first_text(dom, '#J_PromoPrice .tm-price') as price,
+    dom_first_text(dom, '#J_StrPriceModBox .tm-price') as tag_price,
+    dom_first_text(dom, '.tm-price') as tag_price1,
+    dom_first_text(dom, '.tm-ind-sellCount .tm-count') as sell_count,
+    dom_first_text(dom, '.tm-ind-reviewCount .tm-count') as review_count,
+    dom_base_uri(dom)
+from
+    dom_load_and_select('https://detail.tmall.com/item.htm?id=577089875457 -i 1d -sc 20', ':root');
+"""
+        execute(sql)
+    }
+
+    @Test
     fun testLoadOutPagesForMogujie() {
         val url = urlGroups["mogujie"]!![0]
         // val url = urlGroups["meilishuo"]!![0]
