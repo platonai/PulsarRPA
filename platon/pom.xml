@@ -416,7 +416,7 @@
 <!--                </exclusions>-->
 <!--            </dependency>-->
 
-            <!-- TODO: Support MongoDB -->
+            <!-- TODO: Support MongoDB, TODO: use spring-boot default -->
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
@@ -499,6 +499,13 @@
                         <groupId>org.seleniumhq.selenium</groupId>
                         <artifactId>htmlunit-driver</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <!-- conflict with hibernate
+                        org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState.resolveClassLoadingStrategy(ByteBuddyState.java:229)
+                        -->
+                        <groupId>net.bytebuddy</groupId>
+                        <artifactId>byte-buddy</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
@@ -513,6 +520,11 @@
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>javax.ws.rs-api</artifactId>
                 <version>${jax-rs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${javax.servlet-api.version}</version>
             </dependency>
             <!-- JSTL -->
             <!-- https://mvnrepository.com/artifact/javax.servlet/jstl -->
@@ -579,6 +591,12 @@
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parsers</artifactId>
                 <version>${tika.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jsoup</groupId>
+                        <artifactId>jsoup</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Spring -->
@@ -706,16 +724,6 @@
             </dependency>
 
             <!-- Storage -->
-            <dependency>
-                <groupId>com.j256.ormlite</groupId>
-                <artifactId>ormlite-jdbc</artifactId>
-                <version>${ormlite.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.persistence</groupId>
-                <artifactId>javax.persistence</artifactId>
-                <version>2.0.0</version>
-            </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
@@ -969,6 +977,10 @@
 
         <!-- mongodb support -->
         <mongo.driver.version>3.5.0</mongo.driver.version>
+        <!-- default version does not support java11,
+            see https://github.com/yandex-qatools/postgresql-embedded/issues/153
+        -->
+        <de.flapdoodle.embed.process>2.0.5</de.flapdoodle.embed.process>
         <mongo.embed.version>2.0.0</mongo.embed.version>
 
         <!-- Search Engine -->
@@ -977,9 +989,12 @@
         <selenium.version>3.8.1</selenium.version>
 
         <!-- Persistence -->
-        <ormlite.version>5.1</ormlite.version>
         <hibernate.version>5.2.5.Final</hibernate.version>
         <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
+
+        <!-- Required by hibernate -->
+        <!-- org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState.resolveClassLoadingStrategy(ByteBuddyState.java:229) -->
+        <byte-buddy.version>1.9.5</byte-buddy.version>
 
         <!-- Spring -->
         <spring.version>5.1.8.RELEASE</spring.version>

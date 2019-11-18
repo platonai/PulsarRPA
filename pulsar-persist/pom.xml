@@ -61,14 +61,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.j256.ormlite</groupId>
-            <artifactId>ormlite-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>javax.persistence</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
@@ -81,7 +73,7 @@
             <version>2.3.1</version>
         </dependency>
 
-        <!-- Required by GraphGroupKey -->
+        <!-- TODO: avoid this dependency, required by GraphGroupKey currently -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
@@ -94,7 +86,7 @@
             <groupId>org.apache.gora</groupId>
             <artifactId>gora-core</artifactId>
         </dependency>
-        <!-- TODO: we can ignore this dependency -->
+        <!-- TODO: avoid this dependency, WebPage requires this jar currently -->
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-common</artifactId>
@@ -116,6 +108,11 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.process</artifactId>
+            <version>${de.flapdoodle.embed.process}</version>
         </dependency>
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>

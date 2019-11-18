@@ -68,7 +68,7 @@
             </activation>
             <modules>
                 <module>pulsar-rest</module>
-                <module>pulsar-rest-full</module>
+                <module>pulsar-rest-example</module>
             </modules>
         </profile>
 

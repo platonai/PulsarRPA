@@ -2,7 +2,7 @@ package ai.platon.pulsar.jobs;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.jobs.fetch.service.jersey1.MasterReference;
-import ai.platon.pulsar.persist.rdb.model.ServerInstance;
+import ai.platon.pulsar.jobs.fetch.service.jersey1.ServerInstance;
 import com.beust.jcommander.internal.Lists;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -73,7 +73,7 @@ public class TestMasterReference {
       return;
     }
 
-    ServerInstance serverInstance = new ServerInstance("126.1.1.7", 21000, ServerInstance.Type.FetchService);
+    ServerInstance serverInstance = new ServerInstance("126.1.1.7", 21000, ServerInstance.Type.FetchService.name());
     serverInstance = masterReference.echo(serverInstance);
     assertEquals(21000, serverInstance.getPort());
     assertEquals("126.1.1.7", serverInstance.getIp());
@@ -88,7 +88,7 @@ public class TestMasterReference {
     for (int i = 0; i < 10; ++i) {
       int port = 21000 + i;
 
-      ServerInstance serverInstance = new ServerInstance(null, port, ServerInstance.Type.FetchService);
+      ServerInstance serverInstance = new ServerInstance("", port, ServerInstance.Type.FetchService.name());
       serverInstance = masterReference.register(serverInstance);
       // System.out.println(serverInstance);
       assertEquals(port, serverInstance.getPort());
@@ -99,7 +99,6 @@ public class TestMasterReference {
 //      assertEquals("127.0.0.1", serverInstance.getIp());
 
       serverInstance = masterReference.unregister(100000);
-      assertTrue(serverInstance == null);
     }
   }
 }

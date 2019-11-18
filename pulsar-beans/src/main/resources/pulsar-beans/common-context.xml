@@ -7,23 +7,6 @@
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
-    <!--RDMS -->
-    <bean id="h2DatabaseType" class="com.j256.ormlite.db.H2DatabaseType" />
-
-    <bean id="connectionSource" class="com.j256.ormlite.jdbc.JdbcConnectionSource">
-        <constructor-arg value="jdbc:h2:~/.pulsar/pulsar" />
-        <constructor-arg ref="h2DatabaseType" />
-    </bean>
-
-    <bean id="ormliteDaoFactory" class="ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory">
-        <constructor-arg ref="connectionSource"/>
-    </bean>
-
-    <bean id="ormliteTableCreator" class="ai.platon.pulsar.persist.rdb.dao.OrmliteTableCreator">
-        <constructor-arg ref="connectionSource"/>
-        <constructor-arg ref="ormliteDaoFactory"/>
-    </bean>
-
     <!--Big Data Storage -->
     <bean id="storageService" class="ai.platon.pulsar.persist.AutoDetectedStorageService" destroy-method="close">
         <constructor-arg ref="conf"/>

@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Holds all the runtime environment objects for a running Pulsar instance
  * All the threads shares the same PulsarEnv.
+ *
+ * TODO: make it compatible with spring boot
  */
 class PulsarEnv {
     companion object {
