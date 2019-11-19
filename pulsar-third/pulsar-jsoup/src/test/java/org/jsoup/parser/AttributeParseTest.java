@@ -1,11 +1,15 @@
 package org.jsoup.parser;
 
+import java.util.List;
+
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.BooleanAttribute;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -80,9 +84,9 @@ public class AttributeParseTest {
         assertEquals("There should be 3 attribute present", 3, attributes.size());
         
         // Assuming the list order always follows the parsed html
-		assertFalse("'normal' attribute should not be boolean", attributes.get(0) instanceof BooleanAttribute);
-		assertTrue("'boolean' attribute should be boolean", attributes.get(1) instanceof BooleanAttribute);
-		assertFalse("'empty' attribute should not be boolean", attributes.get(2) instanceof BooleanAttribute);
+		assertFalse("'normal' attribute should not be boolean", attributes.get(0) instanceof BooleanAttribute);        
+		assertTrue("'boolean' attribute should be boolean", attributes.get(1) instanceof BooleanAttribute);        
+		assertFalse("'empty' attribute should not be boolean", attributes.get(2) instanceof BooleanAttribute);        
         
         assertEquals(html, el.outerHtml());
     }

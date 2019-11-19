@@ -1,42 +1,36 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.FeaturedDocument
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.Validate
 import org.apache.commons.lang3.math.NumberUtils
+import org.jsoup.helper.Validate
 import org.jsoup.internal.Normalizer.normalize
+import org.jsoup.internal.StringUtil
 import org.jsoup.parser.TokenQueue
 import org.jsoup.select.Evaluator
+import org.jsoup.select.Evaluator.*
 import java.util.*
 import java.util.regex.Pattern
 
 /**
  * Parses a CSS selector into an Evaluator tree.
  */
-open class MathematicalQueryParser(private var query: String) {
-    private var tq: TokenQueue = TokenQueue(query)
-    private var evals = ArrayList<Evaluator>()
-
+class MathematicalQueryParser(private val query: String) {
+    private val tq: TokenQueue = TokenQueue(query)
+    private val evals: MutableList<Evaluator> = ArrayList()
     /**
      * Parse the query
-     *
      * @return Evaluator
      */
-    internal fun parse(): Evaluator {
+    fun parse(): Evaluator {
         tq.consumeWhitespace()
-
-        if (tq.matchesAny(*combinators)) {
-            // if starts with a combinator, use root as elements
+        if (tq.matchesAny(*combinators)) { // if starts with a combinator, use root as elements
             evals.add(StructuralEvaluator.Root())
             combinator(tq.consume())
         } else {
             findElements()
         }
-
-        while (!tq.isEmpty) {
-            // hierarchy and extras
+        while (!tq.isEmpty) { // hierarchy and extras
             val seenWhite = tq.consumeWhitespace()
-
             if (tq.matchesAny(*combinators)) {
                 combinator(tq.consume())
             } else if (seenWhite) {
@@ -45,25 +39,22 @@ open class MathematicalQueryParser(private var query: String) {
                 findElements() // take next el, #. etc off queue
             }
         }
-
         return if (evals.size == 1) evals[0] else CombiningEvaluator.And(evals)
     }
 
     private fun combinator(combinator: Char) {
         tq.consumeWhitespace()
         val subQuery = consumeSubQuery() // support multi > childs
-
         var rootEval: Evaluator // the new topmost evaluator
         var currentEval: Evaluator // the evaluator the new eval will be combined to. could be root, or rightmost or.
         val newEval = parse(subQuery) // the evaluator to add into target evaluator
         var replaceRightMost = false
-
         if (evals.size == 1) {
             currentEval = evals[0]
             rootEval = currentEval
             // make sure OR (,) has precedence:
             if (rootEval is CombiningEvaluator.Or && combinator != ',') {
-                currentEval = (currentEval as CombiningEvaluator.Or).rightMostEvaluator()
+                currentEval = (currentEval as CombiningEvaluator.Or).rightMostEvaluator()!!
                 replaceRightMost = true
             }
         } else {
@@ -71,7 +62,6 @@ open class MathematicalQueryParser(private var query: String) {
             rootEval = currentEval
         }
         evals.clear()
-
         // for most combinators: change the current eval into an AND of the current eval and the new eval
         when (combinator) {
             '>' -> currentEval = CombiningEvaluator.And(newEval, StructuralEvaluator.ImmediateParent(currentEval))
@@ -92,17 +82,12 @@ open class MathematicalQueryParser(private var query: String) {
             }
             else -> throw MathematicalSelector.SelectorParseException("Unknown combinator: $combinator")
         }
-
-        if (replaceRightMost)
-            (rootEval as CombiningEvaluator.Or).replaceRightMostEvaluator(currentEval)
-        else
-            rootEval = currentEval
-
+        if (replaceRightMost) (rootEval as CombiningEvaluator.Or).replaceRightMostEvaluator(currentEval) else rootEval = currentEval
         evals.add(rootEval)
     }
 
     private fun consumeSubQuery(): String {
-        val sq = StringBuilder()
+        val sq = StringUtil.borrowBuilder()
         while (!tq.isEmpty) {
             if (tq.matches("("))
                 sq.append("(").append(tq.chompBalanced('(', ')')).append(")")
@@ -113,7 +98,7 @@ open class MathematicalQueryParser(private var query: String) {
             else
                 sq.append(tq.consume())
         }
-        return sq.toString()
+        return StringUtil.releaseBuilder(sq)
     }
 
     private fun findElements() {
@@ -160,53 +145,49 @@ open class MathematicalQueryParser(private var query: String) {
         else if (tq.matchChomp(":nth-last-of-type("))
             cssNthChild(true, true)
         else if (tq.matchChomp(":first-child"))
-            evals.add(Evaluator.IsFirstChild())
+            evals.add(IsFirstChild())
         else if (tq.matchChomp(":last-child"))
-            evals.add(Evaluator.IsLastChild())
+            evals.add(IsLastChild())
         else if (tq.matchChomp(":first-of-type"))
-            evals.add(Evaluator.IsFirstOfType())
+            evals.add(IsFirstOfType())
         else if (tq.matchChomp(":last-of-type"))
-            evals.add(Evaluator.IsLastOfType())
+            evals.add(IsLastOfType())
         else if (tq.matchChomp(":only-child"))
-            evals.add(Evaluator.IsOnlyChild())
+            evals.add(IsOnlyChild())
         else if (tq.matchChomp(":only-of-type"))
-            evals.add(Evaluator.IsOnlyOfType())
+            evals.add(IsOnlyOfType())
         else if (tq.matchChomp(":empty"))
-            evals.add(Evaluator.IsEmpty())
+            evals.add(IsEmpty())
         else if (tq.matchChomp(":root"))
-            evals.add(Evaluator.IsRoot())
+            evals.add(IsRoot())
+        else if (tq.matchChomp(":matchText"))
+            evals.add(MatchText())
         else
             throw MathematicalSelector.SelectorParseException(
                     "Could not parse query '%s': unexpected token at '%s'", query, tq.remainder())
-
     }
 
     private fun byId() {
         val id = tq.consumeCssIdentifier()
         Validate.notEmpty(id)
-        evals.add(Evaluator.Id(id))
+        evals.add(Id(id))
     }
 
     private fun byClass() {
         val className = tq.consumeCssIdentifier()
         Validate.notEmpty(className)
-        evals.add(Evaluator.Class(className.trim { it <= ' ' }))
+        evals.add(Class(className.trim { it <= ' ' }))
     }
 
     private fun byTag() {
         var tagName = tq.consumeElementSelector()
-
         Validate.notEmpty(tagName)
-
         // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
         if (tagName.startsWith("*|")) {
-            evals.add(CombiningEvaluator.Or(Evaluator.Tag(normalize(tagName)), Evaluator.TagEndsWith(normalize(tagName.replace("*|", ":")))))
-        } else {
-            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
-            if (tagName.contains("|"))
-                tagName = tagName.replace("|", ":")
-
-            evals.add(Evaluator.Tag(tagName.trim { it <= ' ' }))
+            evals.add(CombiningEvaluator.Or(Tag(normalize(tagName)), TagEndsWith(normalize(tagName.replace("*|", ":")))))
+        } else { // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+            if (tagName.contains("|")) tagName = tagName.replace("|", ":")
+            evals.add(Tag(tagName.trim { it <= ' ' }))
         }
     }
 
@@ -215,22 +196,20 @@ open class MathematicalQueryParser(private var query: String) {
         val key = cq.consumeToAny(*AttributeEvals) // eq, not, start, end, contain, match, (no val)
         Validate.notEmpty(key)
         cq.consumeWhitespace()
-
         if (cq.isEmpty) {
-            if (key.startsWith("^"))
-                evals.add(Evaluator.AttributeStarting(key.substring(1)))
-            else
-                evals.add(Evaluator.Attribute(key))
+            when {
+                key.startsWith("^") -> evals.add(AttributeStarting(key.substring(1)))
+                else -> evals.add(Attribute(key))
+            }
         } else {
             when {
-                cq.matchChomp("=") -> evals.add(Evaluator.AttributeWithValue(key, cq.remainder()))
-                cq.matchChomp("!=") -> evals.add(Evaluator.AttributeWithValueNot(key, cq.remainder()))
-                cq.matchChomp("^=") -> evals.add(Evaluator.AttributeWithValueStarting(key, cq.remainder()))
-                cq.matchChomp("$=") -> evals.add(Evaluator.AttributeWithValueEnding(key, cq.remainder()))
-                cq.matchChomp("*=") -> evals.add(Evaluator.AttributeWithValueContaining(key, cq.remainder()))
-                cq.matchChomp("~=") -> evals.add(Evaluator.AttributeWithValueMatching(key, Pattern.compile(cq.remainder())))
-                else -> throw MathematicalSelector.SelectorParseException(
-                        "Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder())
+                cq.matchChomp("=") -> evals.add(AttributeWithValue(key, cq.remainder()))
+                cq.matchChomp("!=") -> evals.add(AttributeWithValueNot(key, cq.remainder()))
+                cq.matchChomp("^=") -> evals.add(AttributeWithValueStarting(key, cq.remainder()))
+                cq.matchChomp("$=") -> evals.add(AttributeWithValueEnding(key, cq.remainder()))
+                cq.matchChomp("*=") -> evals.add(AttributeWithValueContaining(key, cq.remainder()))
+                cq.matchChomp("~=") -> evals.add(AttributeWithValueMatching(key, Pattern.compile(cq.remainder())))
+                else -> throw MathematicalSelector.SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder())
             }
         }
     }
@@ -241,20 +220,20 @@ open class MathematicalQueryParser(private var query: String) {
     }
 
     private fun allElements() {
-        evals.add(Evaluator.AllElements())
+        evals.add(AllElements())
     }
 
     // pseudo selectors :lt, :gt, :eq
     private fun indexLessThan() {
-        evals.add(Evaluator.IndexLessThan(consumeIndex()))
+        evals.add(IndexLessThan(consumeIndex()))
     }
 
     private fun indexGreaterThan() {
-        evals.add(Evaluator.IndexGreaterThan(consumeIndex()))
+        evals.add(IndexGreaterThan(consumeIndex()))
     }
 
     private fun indexEquals() {
-        evals.add(Evaluator.IndexEquals(consumeIndex()))
+        evals.add(IndexEquals(consumeIndex()))
     }
 
     private fun cssNthChild(backwards: Boolean, ofType: Boolean) {
@@ -273,33 +252,26 @@ open class MathematicalQueryParser(private var query: String) {
                 b = 0
             }
             mAB.matches() -> {
-                a = if (mAB.group(3) != null) Integer.parseInt(mAB.group(1).replaceFirst("^\\+".toRegex(), "")) else 1
-                b = if (mAB.group(4) != null) Integer.parseInt(mAB.group(4).replaceFirst("^\\+".toRegex(), "")) else 0
+                a = if (mAB.group(3) != null) mAB.group(1).replaceFirst("^\\+".toRegex(), "").toInt() else 1
+                b = if (mAB.group(4) != null) mAB.group(4).replaceFirst("^\\+".toRegex(), "").toInt() else 0
             }
             mB.matches() -> {
                 a = 0
-                b = Integer.parseInt(mB.group().replaceFirst("^\\+".toRegex(), ""))
+                b = mB.group().replaceFirst("^\\+".toRegex(), "").toInt()
             }
-            else -> throw MathematicalSelector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS)
+            else -> {
+                throw MathematicalSelector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS)
+            }
         }
-
-        if (ofType)
-            if (backwards)
-                evals.add(Evaluator.IsNthLastOfType(a, b))
-            else
-                evals.add(Evaluator.IsNthOfType(a, b))
-        else {
-            if (backwards)
-                evals.add(Evaluator.IsNthLastChild(a, b))
-            else
-                evals.add(Evaluator.IsNthChild(a, b))
+        if (ofType) if (backwards) evals.add(IsNthLastOfType(a, b)) else evals.add(IsNthOfType(a, b)) else {
+            if (backwards) evals.add(IsNthLastChild(a, b)) else evals.add(IsNthChild(a, b))
         }
     }
 
     private fun consumeIndex(): Int {
         val indexS = tq.chompTo(")").trim { it <= ' ' }
-        Validate.isTrue(StringUtils.isNumeric(indexS), "Index must be numeric")
-        return Integer.parseInt(indexS)
+        Validate.isTrue(StringUtil.isNumeric(indexS), "Index must be numeric")
+        return indexS.toInt()
     }
 
     // pseudo selector :has(el)
@@ -315,10 +287,7 @@ open class MathematicalQueryParser(private var query: String) {
         tq.consume(if (own) ":containsOwn" else ":contains")
         val searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'))
         Validate.notEmpty(searchText, ":contains(text) query must not be empty")
-        if (own)
-            evals.add(Evaluator.ContainsOwnText(searchText))
-        else
-            evals.add(Evaluator.ContainsText(searchText))
+        if (own) evals.add(ContainsOwnText(searchText)) else evals.add(ContainsText(searchText))
     }
 
     // pseudo selector :containsData(data)
@@ -326,7 +295,7 @@ open class MathematicalQueryParser(private var query: String) {
         tq.consume(":containsData")
         val searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'))
         Validate.notEmpty(searchText, ":containsData(text) query must not be empty")
-        evals.add(Evaluator.ContainsData(searchText))
+        evals.add(ContainsData(searchText))
     }
 
     // :matches(regex), matchesOwn(regex)
@@ -334,11 +303,7 @@ open class MathematicalQueryParser(private var query: String) {
         tq.consume(if (own) ":matchesOwn" else ":matches")
         val regex = tq.chompBalanced('(', ')') // don't unescape, as regex bits will be escaped
         Validate.notEmpty(regex, ":matches(regex) query must not be empty")
-
-        if (own)
-            evals.add(Evaluator.MatchesOwn(Pattern.compile(regex)))
-        else
-            evals.add(Evaluator.Matches(Pattern.compile(regex)))
+        if (own) evals.add(MatchesOwn(Pattern.compile(regex))) else evals.add(Matches(Pattern.compile(regex)))
     }
 
     // :not(selector)
@@ -346,7 +311,6 @@ open class MathematicalQueryParser(private var query: String) {
         tq.consume(":not")
         val subQuery = tq.chompBalanced('(', ')')
         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty")
-
         evals.add(StructuralEvaluator.Not(parse(subQuery)))
     }
 
@@ -418,25 +382,23 @@ open class MathematicalQueryParser(private var query: String) {
     }
 
     companion object {
-        protected val combinators = arrayOf(",", ">", "+", "~", " ")
-        protected val AttributeEvals = arrayOf("=", "!=", "^=", "$=", "*=", "~=")
-
+        private val combinators = arrayOf(",", ">", "+", "~", " ")
+        private val AttributeEvals = arrayOf("=", "!=", "^=", "$=", "*=", "~=")
         /**
          * Parse a CSS query into an Evaluator.
-         *
          * @param query CSS query
          * @return Evaluator
          */
         fun parse(query: String): Evaluator {
-            try {
-                val p = MathematicalQueryParser(query.trim())
-                return p.parse()
+            return try {
+                val p = MathematicalQueryParser(query)
+                p.parse()
             } catch (e: IllegalArgumentException) {
                 throw MathematicalSelector.SelectorParseException(e.message ?: "Unknown IllegalArgumentException")
             }
         }
 
-        // pseudo selectors :first-child, :last-child, :nth-child, ...
+        //pseudo selectors :first-child, :last-child, :nth-child, ...
         private val NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE)
         private val NTH_B = Pattern.compile("([+-])?(\\d+)")
 

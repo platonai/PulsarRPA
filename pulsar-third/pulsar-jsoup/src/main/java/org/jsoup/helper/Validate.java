@@ -1,7 +1,7 @@
 package org.jsoup.helper;
 
 /**
- * Simple validation methods. Designed for dom internal use
+ * Simple validation methods. Designed for jsoup internal use
  */
 public final class Validate {
     

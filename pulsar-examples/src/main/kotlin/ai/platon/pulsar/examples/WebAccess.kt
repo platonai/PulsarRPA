@@ -38,7 +38,8 @@ object WebAccess {
             13 to "http://blog.zhaojie.me/",
             14 to "https://shopee.vn/search?keyword=qu%E1%BA%A7n%20l%C3%B3t%20na",
             15 to "https://www.darphin.com/collections/essential-oil-elixir",
-            16 to "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0"
+            16 to "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0",
+            17 to "https://list.suning.com/0-20006-0-0-0-0-0-0-0-0-11635.html"
     )
 
     private val trivialUrls = listOf(
@@ -88,13 +89,14 @@ object WebAccess {
         // val url = "https://afusjt.tmall.com/search.htm?spm=a1z10.3-b-s.w5001-17122979309.4.454b36d3OGiU6M&scene=taobao_shop -i 1s"
         // val url = "https://search.jd.com/Search?keyword=basketball&enc=utf-8&wq=basketball&pvid=27d8a05385cd49298b5caff778e14b97"
         // val url = "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0"
-        val url = "https://www.lazada.com.my/shop-small-kitchen-appliances/?spm=a2o4k.home.cate_3.3.75f82e7eneQBGa"
+//        val url = "https://www.lazada.com.my/shop-small-kitchen-appliances/?spm=a2o4k.home.cate_3.3.75f82e7eneQBGa"
+        val url = "https://list.suning.com/0-20006-0-0-0-0-0-0-0-0-11635.html"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select("a") { it.attr("abs:href") }.asSequence()
+        doc.select("a[.product-box href~=product]") { it.attr("abs:href") }.asSequence()
                 .filter { Urls.isValidUrl(it) }
                 .mapTo(HashSet()) { it.substringBefore(".com")  }
                 .filter { !it.isBlank() }
@@ -109,7 +111,7 @@ object WebAccess {
     }
 
     fun loadOutPages() {
-        val url = seeds[0]?:return
+        val url = seeds[17]?:return
 
         var args = "-ic -i 1s -ii 1s"
         // val outlink = ".goods_list_mod a"
@@ -120,6 +122,7 @@ object WebAccess {
             "mogu" in url -> "a[href~=detail]"
             "vip" in url -> "a[href~=detail-]"
             "sinopr" in url -> ".title a[href~=p_id]"
+            "suning" in url -> ".product-box a[href~=product]"
             else -> "a"
         }
 
@@ -129,7 +132,9 @@ object WebAccess {
         val path = i.export(document)
         println("Export to: file://$path")
 
-        val links = document.select(outlink) { it.attr("abs:href") }.toSet().take(20)
+        val links = document.select(outlink) { it.attr("abs:href") }
+                .mapTo(mutableSetOf()) { i.normalize(it) }
+                .take(20).map { it.url }
         links.forEach { println(it) }
 
         class BeforeBatchHandler: BatchHandler() {
@@ -272,7 +277,7 @@ object WebAccess {
     fun run() {
         // load()
         // collectLinks()
-        // loadOutPages()
+        loadOutPages()
         // loadOutPagesSinopr()
         // repeat(10) {
         //   parallelLoadOutPages()

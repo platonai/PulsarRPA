@@ -3,6 +3,7 @@ package org.jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,8 +16,8 @@ import java.util.Map;
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
  * <p>
- * To get a new Connection, use {@link org.jsoup.Jsoup#connect(String)}. Connections contain {@link Connection.Request}
- * and {@link Connection.Response} objects. The request objects are reusable as prototype requests.
+ * To get a new Connection, use {@link Jsoup#connect(String)}. Connections contain {@link Request}
+ * and {@link Response} objects. The request objects are reusable as prototype requests.
  * </p>
  * <p>
  * Request configuration can be made using either the shortcut methods in Connection (e.g. {@link #userAgent(String)}),
@@ -145,23 +146,11 @@ public interface Connection {
     Connection ignoreContentType(boolean ignoreContentType);
 
     /**
-     * Disable/enable TLS certificates validation for HTTPS requests.
-     * <p>
-     * By default this is <b>true</b>; all
-     * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
-     * certificate does not validate.
-     * </p>
-     * <p>
-     * Some servers use expired, self-generated certificates; or your JDK may not
-     * support SNI hosts. In which case, you may want to enable this setting.
-     * </p>
-     * <p>
-     * <b>Be careful</b> and understand why you need to disable these validations.
-     * </p>
-     * @param value if should validate TLS (SSL) certificates. <b>true</b> by default.
+     * Set custom SSL socket factory
+     * @param sslSocketFactory custom SSL socket factory
      * @return this Connection, for chaining
      */
-    Connection validateTLSCertificates(boolean value);
+    Connection sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
     /**
      * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
@@ -214,8 +203,8 @@ public interface Connection {
 
     /**
      * Add a number of request data parameters. Multiple parameters may be set at once, e.g.: <code>.data("name",
-     * "dom", "language", "Java", "language", "English");</code> creates a query string like:
-     * <code>{@literal ?name=dom&language=Java&language=English}</code>
+     * "jsoup", "language", "Java", "language", "English");</code> creates a query string like:
+     * <code>{@literal ?name=jsoup&language=Java&language=English}</code>
      * @param keyvals a set of key value pairs.
      * @return this Connection, for chaining
      */
@@ -245,7 +234,7 @@ public interface Connection {
      * @param name header name
      * @param value header value
      * @return this Connection, for chaining
-     * @see org.jsoup.Connection.Request#headers()
+     * @see Request#headers()
      */
     Connection header(String name, String value);
 
@@ -253,7 +242,7 @@ public interface Connection {
      * Adds each of the supplied headers to the request.
      * @param headers map of headers name {@literal ->} value pairs
      * @return this Connection, for chaining
-     * @see org.jsoup.Connection.Request#headers()
+     * @see Request#headers()
      */
     Connection headers(Map<String, String> headers);
 
@@ -588,16 +577,16 @@ public interface Connection {
         Request ignoreContentType(boolean ignoreContentType);
 
         /**
-         * Get the current state of TLS (SSL) certificate validation.
-         * @return true if TLS cert validation enabled
+         * Get the current custom SSL socket factory, if any.
+         * @return custom SSL socket factory if set, null otherwise
          */
-        boolean validateTLSCertificates();
+        SSLSocketFactory sslSocketFactory();
 
         /**
-         * Set TLS certificate validation.
-         * @param value set false to ignore TLS (SSL) certificates
+         * Set a custom SSL socket factory.
+         * @param sslSocketFactory SSL socket factory
          */
-        void validateTLSCertificates(boolean value);
+        void sslSocketFactory(SSLSocketFactory sslSocketFactory);
 
         /**
          * Add a data parameter to the request
@@ -719,6 +708,7 @@ public interface Connection {
          * same connection response (otherwise, once the response is read, its InputStream will have been drained and
          * may not be re-read). Calling {@link #body() } or {@link #bodyAsBytes()} has the same effect.
          * @return this response, for chaining
+         * @throws UncheckedIOException if an IO exception occurs during buffering.
          */
         Response bufferUp();
 

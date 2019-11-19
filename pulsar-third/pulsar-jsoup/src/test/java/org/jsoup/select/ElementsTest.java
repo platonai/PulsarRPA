@@ -10,7 +10,9 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  Tests for ElementList.
@@ -53,7 +55,7 @@ public class ElementsTest {
     }
 
     @Test public void hasAbsAttr() {
-        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://dom.org'>Two</a>");
+        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://jsoup.org'>Two</a>");
         Elements one = doc.select("#1");
         Elements two = doc.select("#2");
         Elements both = doc.select("a");
@@ -69,14 +71,14 @@ public class ElementsTest {
     }
 
     @Test public void absAttr() {
-        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://dom.org'>Two</a>");
+        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://jsoup.org'>Two</a>");
         Elements one = doc.select("#1");
         Elements two = doc.select("#2");
         Elements both = doc.select("a");
 
         assertEquals("", one.attr("abs:href"));
-        assertEquals("https://dom.org", two.attr("abs:href"));
-        assertEquals("https://dom.org", both.attr("abs:href"));
+        assertEquals("https://jsoup.org", two.attr("abs:href"));
+        assertEquals("https://jsoup.org", both.attr("abs:href"));
     }
 
     @Test public void classes() {
@@ -159,29 +161,29 @@ public class ElementsTest {
     }
     
     @Test public void before() {
-        Document doc = Jsoup.parse("<p>This <a>is</a> <a>dom</a>.</p>");
+        Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").before("<span>foo</span>");
-        assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>dom</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p>This <span>foo</span><a>is</a> <span>foo</span><a>jsoup</a>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
     
     @Test public void after() {
-        Document doc = Jsoup.parse("<p>This <a>is</a> <a>dom</a>.</p>");
+        Document doc = Jsoup.parse("<p>This <a>is</a> <a>jsoup</a>.</p>");
         doc.select("a").after("<span>foo</span>");
-        assertEquals("<p>This <a>is</a><span>foo</span> <a>dom</a><span>foo</span>.</p>", TextUtil.stripNewlines(doc.body().html()));
+        assertEquals("<p>This <a>is</a><span>foo</span> <a>jsoup</a><span>foo</span>.</p>", TextUtil.stripNewlines(doc.body().html()));
     }
 
     @Test public void wrap() {
-        String h = "<p><b>This</b> is <b>dom</b></p>";
+        String h = "<p><b>This</b> is <b>jsoup</b></p>";
         Document doc = Jsoup.parse(h);
         doc.select("b").wrap("<i></i>");
-        assertEquals("<p><i><b>This</b></i> is <i><b>dom</b></i></p>", doc.body().html());
+        assertEquals("<p><i><b>This</b></i> is <i><b>jsoup</b></i></p>", doc.body().html());
     }
 
     @Test public void wrapDiv() {
-        String h = "<p><b>This</b> is <b>dom</b>.</p> <p>How do you like it?</p>";
+        String h = "<p><b>This</b> is <b>jsoup</b>.</p> <p>How do you like it?</p>";
         Document doc = Jsoup.parse(h);
         doc.select("p").wrap("<div></div>");
-        assertEquals("<div><p><b>This</b> is <b>dom</b>.</p></div> <div><p>How do you like it?</p></div>",
+        assertEquals("<div><p><b>This</b> is <b>jsoup</b>.</p></div> <div><p>How do you like it?</p></div>",
                 TextUtil.stripNewlines(doc.body().html()));
     }
 
@@ -215,11 +217,11 @@ public class ElementsTest {
     }
 
     @Test public void remove() {
-        Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> dom <p>now!</p></div>");
+        Document doc = Jsoup.parse("<div><p>Hello <b>there</b></p> jsoup <p>now!</p></div>");
         doc.outputSettings().prettyPrint(false);
         
         doc.select("p").remove();
-        assertEquals("<div> dom </div>", doc.body().html());
+        assertEquals("<div> jsoup </div>", doc.body().html());
     }
     
     @Test public void eq() {

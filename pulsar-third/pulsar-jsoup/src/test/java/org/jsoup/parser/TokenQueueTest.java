@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.Jsoup;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -18,7 +19,7 @@ public class TokenQueueTest {
         assertEquals("one (two) three", guts);
         assertEquals(" four", remainder);
     }
-    
+
     @Test public void chompEscapedBalanced() {
         TokenQueue tq = new TokenQueue(":contains(one (two) \\( \\) \\) three) four");
         String pre = tq.consumeTo("(");
@@ -37,17 +38,17 @@ public class TokenQueueTest {
         String match = tq.chompBalanced('(', ')');
         assertEquals("something(or another)", match);
     }
-    
+
     @Test public void unescape() {
         assertEquals("one ( ) \\", TokenQueue.unescape("one \\( \\) \\\\"));
     }
-    
+
     @Test public void chompToIgnoreCase() {
         String t = "<textarea>one < two </TEXTarea>";
         TokenQueue tq = new TokenQueue(t);
         String data = tq.chompToIgnoreCase("</textarea");
         assertEquals("<textarea>one < two ", data);
-        
+
         tq = new TokenQueue("<textarea> one two < three </oops>");
         data = tq.chompToIgnoreCase("</textarea");
         assertEquals("<textarea> one two < three </oops>", data);
@@ -59,17 +60,26 @@ public class TokenQueueTest {
         tq.addFirst("Three");
         assertEquals("Three Two", tq.remainder());
     }
-    
-    
-    @Test 
-    public void consumeToIgnoreSecondCallTest(){
-		String t = "<textarea>one < two </TEXTarea> third </TEXTarea>";
-		TokenQueue tq = new TokenQueue(t);
-		String data = tq.chompToIgnoreCase("</textarea>");
-		assertEquals("<textarea>one < two ", data);
-		
-		data = tq.chompToIgnoreCase("</textarea>");
-		assertEquals(" third ", data);
+
+
+    @Test public void consumeToIgnoreSecondCallTest() {
+        String t = "<textarea>one < two </TEXTarea> third </TEXTarea>";
+        TokenQueue tq = new TokenQueue(t);
+        String data = tq.chompToIgnoreCase("</textarea>");
+        assertEquals("<textarea>one < two ", data);
+
+        data = tq.chompToIgnoreCase("</textarea>");
+        assertEquals(" third ", data);
     }
-    
+
+    @Test public void testNestedQuotes() {
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick=\"func('arg')\" /></body></html>", "a[onclick*=\"('arg\"]");
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick=func('arg') /></body></html>", "a[onclick*=\"('arg\"]");
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick='func(\"arg\")' /></body></html>", "a[onclick*='(\"arg']");
+        validateNestedQuotes("<html><body><a id=\"identifier\" onclick=func(\"arg\") /></body></html>", "a[onclick*='(\"arg']");
+    }
+
+    private static void validateNestedQuotes(String html, String selector) {
+        assertEquals("#identifier", Jsoup.parse(html).select(selector).first().cssSelector());
+    }
 }

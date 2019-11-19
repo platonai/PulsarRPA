@@ -27,7 +27,6 @@ public class JsoupParser extends EntityOptions.Builder {
 
     private final ImmutableConfig conf;
     private final WebPage page;
-    private boolean ignoreScripts;
     private Document document;
     private List<FieldCollection> entities = new LinkedList<>();
 
@@ -106,7 +105,7 @@ public class JsoupParser extends EntityOptions.Builder {
         }
 
         try {
-            document = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getUrl(), ignoreScripts);
+            document = Jsoup.parse(page.getContentAsInputStream(), page.getEncoding(), page.getUrl());
         } catch (IOException e) {
             LOG.warn("Failed to parse page {}", page.getUrl());
             LOG.warn(e.toString());
@@ -115,10 +114,6 @@ public class JsoupParser extends EntityOptions.Builder {
         }
 
         return document;
-    }
-
-    public void setIgnoreScripts(boolean ignoreScripts) {
-        this.ignoreScripts = ignoreScripts;
     }
 
     /**
@@ -181,7 +176,7 @@ public class JsoupParser extends EntityOptions.Builder {
         int id = 0;
         for (Element ele : elements) {
             FieldCollection fields = new FieldCollection();
-            fields.setName("sub_" + String.valueOf(++id));
+            fields.setName("sub_" + ++id);
             rules.getCssRules().forEach((key, value) -> extract(key, value, ele, fields));
             entities.add(fields);
         }

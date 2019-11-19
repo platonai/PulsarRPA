@@ -1,9 +1,14 @@
 package org.jsoup.select;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.helper.Validate;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Comment;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.nodes.PseudoTextElement;
+import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.XmlDeclaration;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -51,26 +56,6 @@ public abstract class Evaluator {
         }
     }
 
-    /**
-     * @author vincent
-     * */
-    public static final class Tags extends Evaluator {
-        private String[] tagNames;
-
-        public Tags(String... tagNames) {
-            this.tagNames = tagNames;
-        }
-
-        @Override
-        public boolean matches(Element root, Element element) {
-            return ArrayUtils.contains(tagNames, element.tagName());
-        }
-
-        @Override
-        public String toString() {
-            return String.format("%s", StringUtils.join(tagNames, ", "));
-        }
-    }
 
     /**
      * Evaluator for tag name that ends with
@@ -459,7 +444,7 @@ public abstract class Evaluator {
     	public boolean matches(Element root, Element element) {
     		final Element p = element.parent();
     		if (p == null || (p instanceof Document)) return false;
-
+    		
     		final int pos = calculatePosition(root, element);
     		if (a == 0) return pos == b;
     		
@@ -500,7 +485,7 @@ public abstract class Evaluator {
 			return "nth-child";
 		}
     }
-
+    
     /**
      * css pseudo class :nth-last-child)
      * 
@@ -515,15 +500,16 @@ public abstract class Evaluator {
         protected int calculatePosition(Element root, Element element) {
         	return element.parent().children().size() - element.elementSiblingIndex();
         }
-
+        
 		@Override
 		protected String getPseudoClass() {
 			return "nth-last-child";
 		}
     }
-
+    
     /**
      * css pseudo class nth-of-type
+     * 
      */
     public static class IsNthOfType extends CssNthEvaluator {
     	public IsNthOfType(int a, int b) {
@@ -545,7 +531,7 @@ public abstract class Evaluator {
 			return "nth-of-type";
 		}
     }
-
+    
     public static class IsNthLastOfType extends CssNthEvaluator {
 
 		public IsNthLastOfType(int a, int b) {
@@ -583,7 +569,7 @@ public abstract class Evaluator {
     		return ":first-child";
     	}
     }
-
+    
     /**
      * css3 pseudo-class :root
      * @see <a href="http://www.w3.org/TR/selectors/#root-pseudo">:root selector</a>
@@ -767,4 +753,26 @@ public abstract class Evaluator {
         }
     }
 
+    public static final class MatchText extends Evaluator {
+
+        @Override
+        public boolean matches(Element root, Element element) {
+            if (element instanceof PseudoTextElement)
+                return true;
+
+            List<TextNode> textNodes = element.textNodes();
+            for (TextNode textNode : textNodes) {
+                PseudoTextElement pel = new PseudoTextElement(
+                    org.jsoup.parser.Tag.valueOf(element.tagName()), element.baseUri(), element.attributes());
+                textNode.replaceWith(pel);
+                pel.appendChild(textNode);
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return ":matchText";
+        }
+    }
 }

@@ -1,8 +1,8 @@
 package org.jsoup.safety;
 
-import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;
@@ -268,7 +268,7 @@ public class CleanerTest {
 
         Document dirtyDoc = Jsoup.parse(dirty);
         Document cleanDoc = new Cleaner(Whitelist.basic()).clean(dirtyDoc);
-        assertFalse(cleanDoc == null);
+        assertNotNull(cleanDoc);
         assertEquals(0, cleanDoc.body().childNodeSize());
     }
 
@@ -297,5 +297,19 @@ public class CleanerTest {
         String html = "<a/\06>";
         String clean = Jsoup.clean(html, Whitelist.basic());
         assertEquals("<a rel=\"nofollow\"></a>", clean);
+    }
+
+    @Test public void handlesAttributesWithNoValue() {
+        // https://github.com/jhy/jsoup/issues/973
+        String clean = Jsoup.clean("<a href>Clean</a>", Whitelist.basic());
+
+        assertEquals("<a rel=\"nofollow\">Clean</a>", clean);
+    }
+
+    @Test public void handlesNoHrefAttribute() {
+        String dirty = "<a>One</a> <a href>Two</a>";
+        Whitelist relaxedWithAnchor = Whitelist.relaxed().addProtocols("a", "href", "#");
+        String clean = Jsoup.clean(dirty, relaxedWithAnchor);
+        assertEquals("<a>One</a> \n<a>Two</a>", clean);
     }
 }

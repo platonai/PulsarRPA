@@ -2,8 +2,13 @@ package org.jsoup.integration;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.jsoup.UncheckedIOException;
+import org.jsoup.integration.servlets.Deflateservlet;
 import org.jsoup.integration.servlets.EchoServlet;
+import org.jsoup.integration.servlets.FileServlet;
 import org.jsoup.integration.servlets.HelloServlet;
+import org.jsoup.integration.servlets.InterruptedServlet;
+import org.jsoup.integration.servlets.RedirectServlet;
 import org.jsoup.integration.servlets.SlowRider;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,8 +25,11 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Map;
 
+import static org.jsoup.helper.HttpConnection.CONTENT_TYPE;
+import static org.jsoup.helper.HttpConnection.MULTIPART_FORM_DATA;
 import static org.jsoup.integration.UrlConnectTest.browserUa;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -31,13 +39,13 @@ public class ConnectTest {
     private static String echoUrl;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         TestServer.start();
         echoUrl = EchoServlet.Url;
     }
 
     @AfterClass
-    public static void tearDown() throws Exception {
+    public static void tearDown() {
         TestServer.stop();
     }
 
@@ -77,7 +85,8 @@ public class ConnectTest {
     }
 
     private static String ihVal(String key, Document doc) {
-        return doc.select("th:contains(" + key + ") + td").first().text();
+        final Element first = doc.select("th:contains(" + key + ") + td").first();
+        return first != null ? first.text() : null;
     }
 
     @Test
@@ -93,6 +102,21 @@ public class ConnectTest {
         assertEquals("度一下", ihVal("百", doc));
         assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
         assertEquals("application/x-www-form-urlencoded; charset=UTF-8", ihVal("Content-Type", doc));
+    }
+
+    @Test
+    public void doesPostMultipartWithoutInputstream() throws IOException {
+        Document doc = Jsoup.connect(echoUrl)
+                .header(CONTENT_TYPE, MULTIPART_FORM_DATA)
+                .userAgent(browserUa)
+                .data("uname", "Jsoup", "uname", "Jonathan", "百", "度一下")
+                .post();
+
+        assertTrue(ihVal("Content-Type", doc).contains(MULTIPART_FORM_DATA));
+
+        assertTrue(ihVal("Content-Type", doc).contains("boundary")); // should be automatically set
+        assertEquals("Jsoup, Jonathan", ihVal("uname", doc));
+        assertEquals("度一下", ihVal("百", doc));
     }
 
     @Test
@@ -263,6 +287,17 @@ public class ConnectTest {
         assertEquals("outatime", h1.text());
     }
 
+    @Ignore
+    @Test public void infiniteReadSupported() throws IOException {
+        Document doc = Jsoup.connect(SlowRider.Url)
+            .timeout(0)
+            .data(SlowRider.MaxTimeParam, "2000")
+            .get();
+
+        Element h1 = doc.selectFirst("h1");
+        assertEquals("outatime", h1.text());
+    }
+
     /**
      * Tests upload of content to a remote service.
      */
@@ -273,26 +308,26 @@ public class ConnectTest {
 
         Document res = Jsoup
             .connect(EchoServlet.Url)
+            .data("firstname", "Jay")
             .data("firstPart", thumb.getName(), new FileInputStream(thumb), "image/jpeg")
             .data("secondPart", html.getName(), new FileInputStream(html)) // defaults to "application-octetstream";
+            .data("surname", "Soup")
             .post();
 
-        assertEquals("2", ihVal("Parts", res));
+        assertEquals("4", ihVal("Parts", res));
 
         assertEquals("application/octet-stream", ihVal("Part secondPart ContentType", res));
         assertEquals("secondPart", ihVal("Part secondPart Name", res));
         assertEquals("google-ipod.html", ihVal("Part secondPart Filename", res));
         assertEquals("43963", ihVal("Part secondPart Size", res));
-        // if this is failing as 43972 it is because git has normalized the html line endings to crlf (windows)
-        // disable that:
-        // git config --global core.eol lf
-        // git config --global core.autocrlf input
-        // (and rm cached and reset)
 
         assertEquals("image/jpeg", ihVal("Part firstPart ContentType", res));
         assertEquals("firstPart", ihVal("Part firstPart Name", res));
         assertEquals("thumb.jpg", ihVal("Part firstPart Filename", res));
         assertEquals("1052", ihVal("Part firstPart Size", res));
+
+        assertEquals("Jay", ihVal("firstname", res));
+        assertEquals("Soup", ihVal("surname", res));
 
         /*
         <tr><th>Part secondPart ContentType</th><td>application/octet-stream</td></tr>
@@ -341,10 +376,9 @@ public class ConnectTest {
     }
 
 
-    @Ignore("Target url not available")
     @Test
     public void multiCookieSet() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302-cookie.pl");
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
         Connection.Response res = con.execute();
 
         // test cookies set by redirect:
@@ -355,5 +389,166 @@ public class ConnectTest {
         // send those cookies into the echo URL by map:
         Document doc = Jsoup.connect(echoUrl).cookies(cookies).get();
         assertEquals("token=asdfg123; uid=jhy", ihVal("Cookie", doc));
+    }
+
+    @Test
+    public void supportsDeflate() throws IOException {
+        Connection.Response res = Jsoup.connect(Deflateservlet.Url).execute();
+        assertEquals("deflate", res.header("Content-Encoding"));
+
+        Document doc = res.parse();
+        assertEquals("Hello, World!", doc.selectFirst("p").text());
+    }
+
+    @Test
+    public void handlesEmptyStreamDuringParseRead() throws IOException {
+        // this handles situations where the remote server sets a content length greater than it actually writes
+
+        Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
+            .timeout(200)
+            .execute();
+
+        boolean threw = false;
+        try {
+            Document document = res.parse();
+            assertEquals("Something", document.title());
+        } catch (IOException e) {
+            threw = true;
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void handlesEmtpyStreamDuringBufferedRead() throws IOException {
+        Connection.Response res = Jsoup.connect(InterruptedServlet.Url)
+            .timeout(200)
+            .execute();
+
+        boolean threw = false;
+        try {
+            res.bufferUp();
+        } catch (UncheckedIOException e) {
+            threw = true;
+        }
+        assertTrue(threw);
+    }
+
+    @Test public void handlesRedirect() throws IOException {
+        Document doc = Jsoup.connect(RedirectServlet.Url)
+            .data(RedirectServlet.LocationParam, HelloServlet.Url)
+            .get();
+
+        Element p = doc.selectFirst("p");
+        assertEquals("Hello, World!", p.text());
+
+        assertEquals(HelloServlet.Url, doc.location());
+    }
+
+    @Test public void handlesEmptyRedirect() throws IOException {
+        boolean threw = false;
+        try {
+            Connection.Response res = Jsoup.connect(RedirectServlet.Url)
+                .execute();
+        } catch (IOException e) {
+            assertTrue(e.getMessage().contains("Too many redirects"));
+            threw = true;
+        }
+        assertTrue(threw);
+    }
+
+    @Test public void doesNotPostFor302() throws IOException {
+        final Document doc = Jsoup.connect(RedirectServlet.Url)
+            .data("Hello", "there")
+            .data(RedirectServlet.LocationParam, EchoServlet.Url)
+            .post();
+
+        assertEquals(EchoServlet.Url, doc.location());
+        assertEquals("GET", ihVal("Method", doc));
+        assertNull(ihVal("Hello", doc)); // data not sent
+    }
+
+    @Test public void doesPostFor307() throws IOException {
+        final Document doc = Jsoup.connect(RedirectServlet.Url)
+            .data("Hello", "there")
+            .data(RedirectServlet.LocationParam, EchoServlet.Url)
+            .data(RedirectServlet.CodeParam, "307")
+            .post();
+
+        assertEquals(EchoServlet.Url, doc.location());
+        assertEquals("POST", ihVal("Method", doc));
+        assertEquals("there", ihVal("Hello", doc));
+    }
+
+    @Test public void getUtf8Bom() throws IOException {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/bomtests/bom_utf8.html");
+        Document doc = con.get();
+
+        assertEquals("UTF-8", con.response().charset());
+        assertEquals("OK", doc.title());
+    }
+
+    @Test
+    public void testBinaryThrowsExceptionWhenTypeIgnored() {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        con.data(FileServlet.ContentTypeParam, "image/jpeg");
+        con.ignoreContentType(true);
+
+        boolean threw = false;
+        try {
+            con.execute();
+            Document doc = con.response().parse();
+        } catch (IOException e) {
+            threw = true;
+            assertEquals("Input is binary and unsupported", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void testBinaryResultThrows() {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        con.data(FileServlet.ContentTypeParam, "text/html");
+
+        boolean threw = false;
+        try {
+            con.execute();
+            Document doc = con.response().parse();
+        } catch (IOException e) {
+            threw = true;
+            assertEquals("Input is binary and unsupported", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void testBinaryContentTypeThrowsException() {
+        Connection con = Jsoup.connect(FileServlet.Url);
+        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+        con.data(FileServlet.ContentTypeParam, "image/jpeg");
+
+        boolean threw = false;
+        try {
+            con.execute();
+            Document doc = con.response().parse();
+        } catch (IOException e) {
+            threw = true;
+            assertEquals("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test
+    public void canFetchBinaryAsBytes() throws IOException {
+        Connection.Response res = Jsoup.connect(FileServlet.Url)
+            .data(FileServlet.LocationParam, "/htmltests/thumb.jpg")
+            .data(FileServlet.ContentTypeParam, "image/jpeg")
+            .ignoreContentType(true)
+            .execute();
+
+        byte[] bytes = res.bodyAsBytes();
+        assertEquals(1052, bytes.length);
     }
 }

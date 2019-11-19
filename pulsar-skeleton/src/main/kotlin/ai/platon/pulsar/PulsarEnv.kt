@@ -88,6 +88,7 @@ class PulsarEnv {
 
             monitor = applicationContext.getBean(PulsarMonitor::class.java)
 
+            // TODO: move it to a better place
             monitor.start()
 
             active.set(true)

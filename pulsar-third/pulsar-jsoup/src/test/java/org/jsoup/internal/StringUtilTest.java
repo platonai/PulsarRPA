@@ -1,13 +1,15 @@
-package org.jsoup.helper;
+package org.jsoup.internal;
 
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.jsoup.helper.StringUtil.normaliseWhitespace;
-import static org.jsoup.helper.StringUtil.resolve;
-import static org.junit.Assert.*;
+import static org.jsoup.internal.StringUtil.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class StringUtilTest {
 

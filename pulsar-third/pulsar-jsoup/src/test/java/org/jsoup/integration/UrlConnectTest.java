@@ -4,7 +4,7 @@ import org.jsoup.Connection;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.W3CDom;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 // todo: rebuild these into a local Jetty test server, so not reliant on the vagaries of the internet.
 public class UrlConnectTest {
     private static final String WEBSITE_WITH_INVALID_CERTIFICATE = "https://certs.cac.washington.edu/CAtest/";
-    private static final String WEBSITE_WITH_SNI = "https://dom.org/";
+    private static final String WEBSITE_WITH_SNI = "https://jsoup.org/";
     public static String browserUa = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36";
 
     @Test
@@ -50,13 +50,13 @@ public class UrlConnectTest {
     
     @Test
     public void exceptOnUnknownContentType() {
-        String url = "http://direct.dom.org/rez/osi_logo.png"; // not text/* but image/png, should throw
+        String url = "http://direct.jsoup.org/rez/osi_logo.png"; // not text/* but image/png, should throw
         boolean threw = false;
         try {
             Document doc = Jsoup.parse(new URL(url), 3000);
         } catch (UnsupportedMimeTypeException e) {
             threw = true;
-            assertEquals("org.dom.UnsupportedMimeTypeException: Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml. Mimetype=image/png, URL=http://direct.dom.org/rez/osi_logo.png", e.toString());
+            assertEquals("org.jsoup.UnsupportedMimeTypeException: Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml. Mimetype=image/png, URL=http://direct.jsoup.org/rez/osi_logo.png", e.toString());
             assertEquals(url, e.getUrl());
             assertEquals("image/png", e.getMimeType());
         } catch (IOException e) {
@@ -66,7 +66,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignoresContentTypeIfSoConfigured() throws IOException {
-        Document doc = Jsoup.connect("https://dom.org/rez/osi_logo.png").ignoreContentType(true).get();
+        Document doc = Jsoup.connect("https://jsoup.org/rez/osi_logo.png").ignoreContentType(true).get();
         assertEquals("", doc.title()); // this will cause an ugly parse tree
     }
 
@@ -76,32 +76,32 @@ public class UrlConnectTest {
 
     @Test
     public void followsTempRedirect() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302.pl"); // http://jsoup.org
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl"); // http://jsoup.org
         Document doc = con.get();
-        assertTrue(doc.title().contains("dom"));
+        assertTrue(doc.title().contains("jsoup"));
     }
 
     @Test
     public void followsNewTempRedirect() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/307.pl"); // http://jsoup.org
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/307.pl"); // http://jsoup.org
         Document doc = con.get();
-        assertTrue(doc.title().contains("dom"));
-        assertEquals("https://dom.org/", con.response().url().toString());
+        assertTrue(doc.title().contains("jsoup"));
+        assertEquals("https://jsoup.org/", con.response().url().toString());
     }
 
     @Test
     public void postRedirectsFetchWithGet() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302.pl")
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl")
                 .data("Argument", "Riposte")
                 .method(Connection.Method.POST);
         Connection.Response res = con.execute();
-        assertEquals("https://dom.org/", res.url().toExternalForm());
+        assertEquals("https://jsoup.org/", res.url().toExternalForm());
         assertEquals(Connection.Method.GET, res.method());
     }
 
     @Test
     public void followsRedirectToHttps() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302-secure.pl"); // https://www.google.com
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-secure.pl"); // https://www.google.com
         con.data("id", "5");
         Document doc = con.get();
         assertTrue(doc.title().contains("Google"));
@@ -109,7 +109,7 @@ public class UrlConnectTest {
 
     @Test
     public void followsRelativeRedirect() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302-rel.pl"); // to /tidy/
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel.pl"); // to /tidy/
         Document doc = con.post();
         assertTrue(doc.title().contains("HTML Tidy Online"));
     }
@@ -117,10 +117,10 @@ public class UrlConnectTest {
     @Test
     public void followsRelativeDotRedirect() throws IOException {
         // redirects to "./ok.html", should resolve to http://direct.infohound.net/tools/ok.html
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302-rel-dot.pl"); // to ./ok.html
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-rel-dot.pl"); // to ./ok.html
         Document doc = con.post();
         assertTrue(doc.title().contains("OK"));
-        assertEquals(doc.location(), "http://direct.infohound.net/cli/ok.html");
+        assertEquals(doc.location(), "http://direct.infohound.net/tools/ok.html");
     }
 
     @Test
@@ -148,14 +148,14 @@ public class UrlConnectTest {
 
     @Test
     public void throwsExceptionOnError() {
-        String url = "http://direct.infohound.net/cli/404";
+        String url = "http://direct.infohound.net/tools/404";
         Connection con = Jsoup.connect(url);
         boolean threw = false;
         try {
             Document doc = con.get();
         } catch (HttpStatusException e) {
             threw = true;
-            assertEquals("org.dom.HttpStatusException: HTTP error fetching URL. Status=404, URL=http://direct.infohound.net/cli/404", e.toString());
+            assertEquals("org.jsoup.HttpStatusException: HTTP error fetching URL. Status=404, URL=http://direct.infohound.net/tools/404", e.toString());
             assertEquals(url, e.getUrl());
             assertEquals(404, e.getStatusCode());
         } catch (IOException e) {
@@ -165,7 +165,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignoresExceptionIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/404").ignoreHttpErrors(true);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/404").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(404, res.statusCode());
@@ -174,7 +174,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignores500tExceptionIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/500.pl").ignoreHttpErrors(true);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/500.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(500, res.statusCode());
@@ -184,7 +184,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignores500WithNoContentExceptionIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/500-no-content.pl").ignoreHttpErrors(true);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/500-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(500, res.statusCode());
@@ -193,7 +193,7 @@ public class UrlConnectTest {
 
     @Test
     public void ignores200WithNoContentExceptionIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/200-no-content.pl").ignoreHttpErrors(true);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/200-no-content.pl").ignoreHttpErrors(true);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(200, res.statusCode());
@@ -203,14 +203,14 @@ public class UrlConnectTest {
     @Test
     public void handles200WithNoContent() throws IOException {
         Connection con = Jsoup
-            .connect("http://direct.infohound.net/cli/200-no-content.pl")
+            .connect("http://direct.infohound.net/tools/200-no-content.pl")
             .userAgent(browserUa);
         Connection.Response res = con.execute();
         Document doc = res.parse();
         assertEquals(200, res.statusCode());
 
         con = Jsoup
-            .connect("http://direct.infohound.net/cli/200-no-content.pl")
+            .connect("http://direct.infohound.net/tools/200-no-content.pl")
             .parser(Parser.xmlParser())
             .userAgent(browserUa);
         res = con.execute();
@@ -220,15 +220,15 @@ public class UrlConnectTest {
 
     @Test
     public void doesntRedirectIfSoConfigured() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302.pl").followRedirects(false);
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302.pl").followRedirects(false);
         Connection.Response res = con.execute();
         assertEquals(302, res.statusCode());
-        assertEquals("http://dom.org", res.header("Location"));
+        assertEquals("http://jsoup.org", res.header("Location"));
     }
 
     @Test
     public void redirectsResponseCookieToNextResponse() throws IOException {
-        Connection con = Jsoup.connect("http://direct.infohound.net/cli/302-cookie.pl");
+        Connection con = Jsoup.connect("http://direct.infohound.net/tools/302-cookie.pl");
         Connection.Response res = con.execute();
         assertEquals("asdfg123", res.cookie("token")); // confirms that cookies set on 1st hit are presented in final result
         Document doc = res.parse();
@@ -239,7 +239,7 @@ public class UrlConnectTest {
     public void maximumRedirects() {
         boolean threw = false;
         try {
-            Document doc = Jsoup.connect("http://direct.infohound.net/cli/loop.pl").get();
+            Document doc = Jsoup.connect("http://direct.infohound.net/tools/loop.pl").get();
         } catch (IOException e) {
             assertTrue(e.getMessage().contains("Too many redirects"));
             threw = true;
@@ -250,7 +250,7 @@ public class UrlConnectTest {
     @Test
     public void handlesDodgyCharset() throws IOException {
         // tests that when we get back "UFT8", that it is recognised as unsupported, and falls back to default instead
-        String url = "http://direct.infohound.net/cli/bad-charset.pl";
+        String url = "http://direct.infohound.net/tools/bad-charset.pl";
         Connection.Response res = Jsoup.connect(url).execute();
         assertEquals("text/html; charset=UFT8", res.header("Content-Type")); // from the header
         assertEquals(null, res.charset()); // tried to get from header, not supported, so returns null
@@ -261,7 +261,7 @@ public class UrlConnectTest {
 
     @Test
     public void maxBodySize() throws IOException {
-        String url = "http://direct.infohound.net/cli/large.html"; // 280 K
+        String url = "http://direct.infohound.net/tools/large.html"; // 280 K
 
         Connection.Response defaultRes = Jsoup.connect(url).execute();
         Connection.Response smallRes = Jsoup.connect(url).maxBodySize(50 * 1024).execute(); // crops
@@ -306,34 +306,6 @@ public class UrlConnectTest {
         Jsoup.connect(url).execute();
     }
 
-    /**
-     * Verify that requests to websites with SNI pass
-     * <p/>
-     * <b>NB!</b> this test is FAILING right now on jdk 1.6
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testSNIPass() throws Exception {
-        String url = WEBSITE_WITH_SNI;
-        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
-        assertEquals(defaultRes.statusCode(), 200);
-    }
-
-    /**
-     * Verify that security disabling feature works properly.
-     * <p/>
-     * 1. disable security checks and call the same url to verify that content is consumed correctly
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testUnsafePass() throws Exception {
-        String url = WEBSITE_WITH_INVALID_CERTIFICATE;
-        Connection.Response defaultRes = Jsoup.connect(url).validateTLSCertificates(false).execute();
-        assertEquals(defaultRes.statusCode(), 200);
-    }
-
     @Test
     public void shouldWorkForCharsetInExtraAttribute() throws IOException {
         Connection.Response res = Jsoup.connect("https://www.creditmutuel.com/groupe/fr/").execute();
@@ -376,7 +348,7 @@ public class UrlConnectTest {
     @Test
     public void baseHrefCorrectAfterHttpEquiv() throws IOException {
         // https://github.com/jhy/jsoup/issues/440
-        Connection.Response res = Jsoup.connect("http://direct.infohound.net/cli/charset-base.html").execute();
+        Connection.Response res = Jsoup.connect("http://direct.infohound.net/tools/charset-base.html").execute();
         Document doc = res.parse();
         assertEquals("http://example.com/foo.jpg", doc.select("img").first().absUrl("src"));
     }
@@ -410,26 +382,26 @@ public class UrlConnectTest {
 
     @Test
     public void handles201Created() throws IOException {
-        Document doc = Jsoup.connect("http://direct.infohound.net/cli/201.pl").get(); // 201, location=dom
-        assertEquals("https://dom.org/", doc.location());
+        Document doc = Jsoup.connect("http://direct.infohound.net/tools/201.pl").get(); // 201, location=jsoup
+        assertEquals("https://jsoup.org/", doc.location());
     }
 
     @Test
     public void fetchToW3c() throws IOException {
-        String url = "https://dom.org";
+        String url = "https://jsoup.org";
         Document doc = Jsoup.connect(url).get();
 
         W3CDom dom = new W3CDom();
         org.w3c.dom.Document wDoc = dom.fromJsoup(doc);
         assertEquals(url, wDoc.getDocumentURI());
         String html = dom.asString(wDoc);
-        assertTrue(html.contains("dom"));
+        assertTrue(html.contains("jsoup"));
     }
 
     @Test
     public void fetchHandlesXml() throws IOException {
         // should auto-detect xml and use XML parser, unless explicitly requested the html parser
-        String xmlUrl = "http://direct.infohound.net/cli/parse-xml.xml";
+        String xmlUrl = "http://direct.infohound.net/tools/parse-xml.xml";
         Connection con = Jsoup.connect(xmlUrl);
         Document doc = con.get();
         Connection.Request req = con.request();
@@ -440,7 +412,7 @@ public class UrlConnectTest {
     @Test
     public void fetchHandlesXmlAsHtmlWhenParserSet() throws IOException {
         // should auto-detect xml and use XML parser, unless explicitly requested the html parser
-        String xmlUrl = "http://direct.infohound.net/cli/parse-xml.xml";
+        String xmlUrl = "http://direct.infohound.net/tools/parse-xml.xml";
         Connection con = Jsoup.connect(xmlUrl).parser(Parser.htmlParser());
         Document doc = con.get();
         Connection.Request req = con.request();
@@ -451,7 +423,7 @@ public class UrlConnectTest {
     @Test
     public void combinesSameHeadersWithComma() throws IOException {
         // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-        String url = "http://direct.infohound.net/cli/q.pl";
+        String url = "http://direct.infohound.net/tools/q.pl";
         Connection con = Jsoup.connect(url);
         con.get();
 
@@ -467,7 +439,7 @@ public class UrlConnectTest {
 
     @Test
     public void sendHeadRequest() throws IOException {
-        String url = "http://direct.infohound.net/cli/parse-xml.xml";
+        String url = "http://direct.infohound.net/tools/parse-xml.xml";
         Connection con = Jsoup.connect(url).method(Connection.Method.HEAD);
         final Connection.Response response = con.execute();
         assertEquals("text/xml", response.header("Content-Type"));
@@ -483,23 +455,23 @@ public class UrlConnectTest {
 
     @Test
     public void fetchViaHttpProxy() throws IOException {
-        String url = "https://dom.org";
+        String url = "https://jsoup.org";
         Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("localhost", 8888));
         Document doc = Jsoup.connect(url).proxy(proxy).get();
-        assertTrue(doc.title().contains("dom"));
+        assertTrue(doc.title().contains("jsoup"));
     }
 
     @Test
     public void fetchViaHttpProxySetByArgument() throws IOException {
-        String url = "https://dom.org";
+        String url = "https://jsoup.org";
         Document doc = Jsoup.connect(url).proxy("localhost", 8888).get();
-        assertTrue(doc.title().contains("dom"));
+        assertTrue(doc.title().contains("jsoup"));
     }
 
     @Test
     public void invalidProxyFails() throws IOException {
         boolean caught = false;
-        String url = "https://dom.org";
+        String url = "https://jsoup.org";
         try {
             Document doc = Jsoup.connect(url).proxy("localhost", 8889).get();
         } catch (IOException e) {
@@ -510,20 +482,20 @@ public class UrlConnectTest {
 
     @Test
     public void proxyGetAndSet() throws IOException {
-        String url = "https://dom.org";
+        String url = "https://jsoup.org";
         Proxy proxy = new Proxy(Proxy.Type.HTTP, InetSocketAddress.createUnresolved("localhost", 8889)); // invalid
         final Connection con = Jsoup.connect(url).proxy(proxy);
 
         assert con.request().proxy() == proxy;
         con.request().proxy(null); // disable
         Document doc = con.get();
-        assertTrue(doc.title().contains("dom")); // would fail if actually went via proxy
+        assertTrue(doc.title().contains("jsoup")); // would fail if actually went via proxy
     }
 
     @Test
     public void throwsIfRequestBodyForGet() throws IOException {
         boolean caught = false;
-        String url = "https://dom.org";
+        String url = "https://jsoup.org";
         try {
             Document doc = Jsoup.connect(url).requestBody("fail").get();
         } catch (IllegalArgumentException e) {
@@ -535,8 +507,8 @@ public class UrlConnectTest {
     @Test
     public void canSpecifyResponseCharset() throws IOException {
         // both these docs have <80> in there as euro/control char depending on charset
-        String noCharsetUrl = "http://direct.infohound.net/cli/Windows-1252-nocharset.html";
-        String charsetUrl = "http://direct.infohound.net/cli/Windows-1252-charset.html";
+        String noCharsetUrl = "http://direct.infohound.net/tools/Windows-1252-nocharset.html";
+        String charsetUrl = "http://direct.infohound.net/tools/Windows-1252-charset.html";
 
         // included in meta
         Connection.Response res1 = Jsoup.connect(charsetUrl).execute();
@@ -569,8 +541,8 @@ public class UrlConnectTest {
     public void handlesUnescapedRedirects() throws IOException {
         // URL locations should be url safe (ascii) but are often not, so we should try to guess
         // in this case the location header is utf-8, but defined in spec as iso8859, so detect, convert, encode
-        String url = "http://direct.infohound.net/cli/302-utf.pl";
-        String urlEscaped = "http://direct.infohound.net/cli/test%F0%9F%92%A9.html";
+        String url = "http://direct.infohound.net/tools/302-utf.pl";
+        String urlEscaped = "http://direct.infohound.net/tools/test%F0%9F%92%A9.html";
 
         Connection.Response res = Jsoup.connect(url).execute();
         Document doc = res.parse();
@@ -578,22 +550,22 @@ public class UrlConnectTest {
         assertEquals(doc.location(), urlEscaped);
 
         Connection.Response res2 = Jsoup.connect(url).followRedirects(false).execute();
-        assertEquals("/cli/test\uD83D\uDCA9.html", res2.header("Location"));
-        // if we didn't notice it was utf8, would look like: Location: /cli/testð©.html
+        assertEquals("/tools/test\uD83D\uDCA9.html", res2.header("Location"));
+        // if we didn't notice it was utf8, would look like: Location: /tools/testð©.html
     }
 
     @Test public void handlesEscapesInRedirecct() throws IOException {
-        Document doc = Jsoup.connect("http://infohound.net/cli/302-escaped.pl").get();
-        assertEquals("http://infohound.net/cli/q.pl?q=one%20two", doc.location());
+        Document doc = Jsoup.connect("http://infohound.net/tools/302-escaped.pl").get();
+        assertEquals("http://infohound.net/tools/q.pl?q=one%20two", doc.location());
 
-        doc = Jsoup.connect("http://infohound.net/cli/302-white.pl").get();
-        assertEquals("http://infohound.net/cli/q.pl?q=one%20two", doc.location());
+        doc = Jsoup.connect("http://infohound.net/tools/302-white.pl").get();
+        assertEquals("http://infohound.net/tools/q.pl?q=one%20two", doc.location());
     }
 
     @Test
     public void handlesUt8fInUrl() throws IOException {
-        String url = "http://direct.infohound.net/cli/test\uD83D\uDCA9.html";
-        String urlEscaped = "http://direct.infohound.net/cli/test%F0%9F%92%A9.html";
+        String url = "http://direct.infohound.net/tools/test\uD83D\uDCA9.html";
+        String urlEscaped = "http://direct.infohound.net/tools/test%F0%9F%92%A9.html";
 
         Connection.Response res = Jsoup.connect(url).execute();
         Document doc = res.parse();
@@ -627,7 +599,7 @@ public class UrlConnectTest {
         // then to: http://www.altalex.com/session/set/?returnurl=http%3a%2f%2fwww.altalex.com%3a80%2fdocuments%2fnews%2f2016%2f12%2f06%2fquestioni-civilistiche-conseguenti-alla-depenalizzazione&sso=RDRG6T684G4AK2E7U591UGR923
         // then : http://www.altalex.com:80/documents/news/2016/12/06/questioni-civilistiche-conseguenti-alla-depenalizzazione
 
-        // bug is that dom goes to
+        // bug is that jsoup goes to
         // 	GET /shared/sso/sso.aspx?sso=&url=http%253a%252f%252fwww.altalex.com%252fsession%252fset%252f%253freturnurl%253dhttp%25253a%25252f%25252fwww.altalex.com%25253a80%25252fdocuments%25252fnews%25252f2016%25252f12%25252f06%25252fquestioni-civilistiche-conseguenti-alla-depenalizzazione HTTP/1.1
         // i.e. double escaped
 

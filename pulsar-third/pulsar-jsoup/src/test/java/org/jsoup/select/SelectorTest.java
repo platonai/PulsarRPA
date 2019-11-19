@@ -1,8 +1,8 @@
 package org.jsoup.select;
 
-import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Rule;
@@ -147,7 +147,7 @@ public class SelectorTest {
     }
 
     @Test @MultiLocaleTest public void testByAttributeStarting() {
-        Document doc = Jsoup.parse("<div id=1 ATTRIBUTE data-name=dom>Hello</div><p data-val=5 id=2>There</p><p id=3>No</p>");
+        Document doc = Jsoup.parse("<div id=1 ATTRIBUTE data-name=jsoup>Hello</div><p data-val=5 id=2>There</p><p id=3>No</p>");
         Elements withData = doc.select("[^data-]");
         assertEquals(2, withData.size());
         assertEquals("1", withData.first().id());
@@ -765,5 +765,48 @@ public class SelectorTest {
         String html = "<p>One<p>Two<p>Three<div>Four";
         Document doc = Jsoup.parse(html);
         assertEquals("One", doc.selectFirst("p, div").text());
+    }
+
+    @Test public void matchText() {
+        String html = "<p>One<br>Two</p>";
+        Document doc = Jsoup.parse(html);
+        String origHtml = doc.html();
+
+        Elements one = doc.select("p:matchText:first-child");
+        assertEquals("One", one.first().text());
+
+        Elements two = doc.select("p:matchText:last-child");
+        assertEquals("Two", two.first().text());
+
+        assertEquals(origHtml, doc.html());
+
+        assertEquals("Two", doc.select("p:matchText + br + *").text());
+    }
+
+    @Test public void splitOnBr() {
+        String html = "<div><p>One<br>Two<br>Three</p></div>";
+        Document doc = Jsoup.parse(html);
+
+        Elements els = doc.select("p:matchText");
+        assertEquals(3, els.size());
+        assertEquals("One", els.get(0).text());
+        assertEquals("Two", els.get(1).text());
+        assertEquals("Three", els.get(2).toString());
+    }
+
+    @Test public void matchTextAttributes() {
+        Document doc = Jsoup.parse("<div><p class=one>One<br>Two<p class=two>Three<br>Four");
+        Elements els = doc.select("p.two:matchText:last-child");
+
+        assertEquals(1, els.size());
+        assertEquals("Four", els.text());
+    }
+
+    @Test public void findBetweenSpan() {
+        Document doc = Jsoup.parse("<p><span>One</span> Two <span>Three</span>");
+        Elements els = doc.select("span ~ p:matchText"); // the Two becomes its own p, sibling of the span
+
+        assertEquals(1, els.size());
+        assertEquals("Two", els.text());
     }
 }

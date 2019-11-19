@@ -1,8 +1,9 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.ParseSettings;
+import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
@@ -17,6 +18,7 @@ import java.util.List;
  @author Jonathan Hedley, jonathan@hedley.net */
 public class Document extends Element {
     private OutputSettings outputSettings = new OutputSettings();
+    private Parser parser; // the parser used to parse this document
     private QuirksMode quirksMode = QuirksMode.noQuirks;
     private String location;
     private boolean updateMetaCharset = false;
@@ -41,6 +43,7 @@ public class Document extends Element {
         Validate.notNull(baseUri);
 
         Document doc = new Document(baseUri);
+        doc.parser = doc.parser();
         Element html = doc.appendElement("html");
         html.appendElement("head");
         html.appendElement("body");
@@ -213,66 +216,66 @@ public class Document extends Element {
     
     /**
      * Sets the charset used in this document. This method is equivalent
-     * to {@link OutputSettings#charset(java.nio.charset.Charset)
+     * to {@link OutputSettings#charset(Charset)
      * OutputSettings.charset(Charset)} but in addition it updates the
      * charset / encoding element within the document.
-     *
+     * 
      * <p>This enables
      * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
-     *
+     * 
      * <p>If there's no element with charset / encoding information yet it will
      * be created. Obsolete charset / encoding definitions are removed!</p>
-     *
+     * 
      * <p><b>Elements used:</b></p>
-     *
+     * 
      * <ul>
      * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
      * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
      * </ul>
-     *
+     * 
      * @param charset Charset
-     *
-     * @see #updateMetaCharsetElement(boolean)
-     * @see OutputSettings#charset(java.nio.charset.Charset)
+     * 
+     * @see #updateMetaCharsetElement(boolean) 
+     * @see OutputSettings#charset(Charset)
      */
     public void charset(Charset charset) {
         updateMetaCharsetElement(true);
         outputSettings.charset(charset);
         ensureMetaCharsetElement();
     }
-
+    
     /**
      * Returns the charset used in this document. This method is equivalent
      * to {@link OutputSettings#charset()}.
-     *
+     * 
      * @return Current Charset
-     *
-     * @see OutputSettings#charset()
+     * 
+     * @see OutputSettings#charset() 
      */
     public Charset charset() {
         return outputSettings.charset();
     }
-
+    
     /**
      * Sets whether the element with charset information in this document is
-     * updated on changes through {@link #charset(java.nio.charset.Charset)
+     * updated on changes through {@link #charset(Charset)
      * Document.charset(Charset)} or not.
-     *
+     * 
      * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
      * modified.</p>
-     *
+     * 
      * @param update If <tt>true</tt> the element updated on charset
      * changes, <tt>false</tt> if not
-     *
-     * @see #charset(java.nio.charset.Charset)
+     * 
+     * @see #charset(Charset)
      */
     public void updateMetaCharsetElement(boolean update) {
         this.updateMetaCharset = update;
     }
-
+    
     /**
      * Returns whether the element with charset information in this document is
-     * updated on changes through {@link #charset(java.nio.charset.Charset)
+     * updated on changes through {@link #charset(Charset)
      * Document.charset(Charset)} or not.
      * 
      * @return Returns <tt>true</tt> if the element is updated on charset
@@ -358,6 +361,7 @@ public class Document extends Element {
             }
         }
     }
+    
 
     /**
      * A Document's output settings control the form of the text() and html() methods.
@@ -370,7 +374,7 @@ public class Document extends Element {
 
         private Entities.EscapeMode escapeMode = Entities.EscapeMode.base;
         private Charset charset;
-        CharsetEncoder encoder; // initialized by start of OuterHtmlVisitor and cleared at end
+        private ThreadLocal<CharsetEncoder> encoderThreadLocal = new ThreadLocal<>(); // initialized by start of OuterHtmlVisitor
         Entities.CoreCharset coreCharset; // fast encoders for ascii and utf8
 
         private boolean prettyPrint = true;
@@ -438,9 +442,16 @@ public class Document extends Element {
         }
 
         CharsetEncoder prepareEncoder() {
-            encoder = charset.newEncoder(); // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            // created at start of OuterHtmlVisitor so each pass has own encoder, so OutputSettings can be shared among threads
+            CharsetEncoder encoder = charset.newEncoder();
+            encoderThreadLocal.set(encoder);
             coreCharset = Entities.CoreCharset.byName(encoder.charset().name());
             return encoder;
+        }
+
+        CharsetEncoder encoder() {
+            CharsetEncoder encoder = encoderThreadLocal.get();
+            return encoder != null ? encoder : prepareEncoder();
         }
 
         /**
@@ -563,6 +574,25 @@ public class Document extends Element {
 
     public Document quirksMode(QuirksMode quirksMode) {
         this.quirksMode = quirksMode;
+        return this;
+    }
+
+    /**
+     * Get the parser that was used to parse this document.
+     * @return the parser
+     */
+    public Parser parser() {
+        return parser;
+    }
+
+    /**
+     * Set the parser used to create this document. This parser is then used when further parsing within this document
+     * is required.
+     * @param parser the configured parser to use when further parsing is required for this document.
+     * @return this document, for chaining.
+     */
+    public Document parser(Parser parser) {
+        this.parser = parser;
         return this;
     }
 }

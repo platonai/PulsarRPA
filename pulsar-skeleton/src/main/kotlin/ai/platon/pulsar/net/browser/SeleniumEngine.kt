@@ -130,7 +130,7 @@ class SeleniumEngine(
 
     private val libJs = browserControl.parseLibJs(false)
     private val clientJs = browserControl.parseJs(false)
-    private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, false)
+    private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
     private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val defaultDriverConfig = DriverConfig(immutableConfig)

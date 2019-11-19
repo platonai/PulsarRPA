@@ -130,12 +130,14 @@ abstract class Token {
             }
         }
 
+        /** Preserves case */
         final String name() { // preserves case, for input into Tag.valueOf (which may drop case)
             Validate.isFalse(tagName == null || tagName.length() == 0);
             return tagName;
         }
 
-        final String normalName() { // loses case, used in tree building for working out where in tree it should go
+        /** Lower case */
+        final String normalName() { // lower case, used in tree building for working out where in tree it should go
             return normalName;
         }
 
@@ -280,7 +282,7 @@ abstract class Token {
         }
     }
 
-    final static class Character extends Token {
+    static class Character extends Token {
         private String data;
 
         Character() {
@@ -309,9 +311,22 @@ abstract class Token {
         }
     }
 
+    final static class CData extends Character {
+        CData(String data) {
+            super();
+            this.data(data);
+        }
+
+        @Override
+        public String toString() {
+            return "<![CDATA[" + getData() + "]]>";
+        }
+
+    }
+
     final static class EOF extends Token {
         EOF() {
-            type = Token.TokenType.EOF;
+            type = TokenType.EOF;
         }
 
         @Override
@@ -356,6 +371,10 @@ abstract class Token {
         return type == TokenType.Character;
     }
 
+    final boolean isCData() {
+        return this instanceof CData;
+    }
+
     final Character asCharacter() {
         return (Character) this;
     }
@@ -364,12 +383,12 @@ abstract class Token {
         return type == TokenType.EOF;
     }
 
-    enum TokenType {
+    public enum TokenType {
         Doctype,
         StartTag,
         EndTag,
         Comment,
-        Character,
+        Character, // note no CData - treated in builder as an extension of Character
         EOF
     }
 }

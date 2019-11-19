@@ -1,6 +1,6 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 
 /**
@@ -11,7 +11,7 @@ import org.jsoup.helper.Validate;
 public class TokenQueue {
     private String queue;
     private int pos = 0;
-
+    
     private static final char ESC = '\\'; // escape char for chomp balanced.
 
     /**
@@ -30,7 +30,7 @@ public class TokenQueue {
     public boolean isEmpty() {
         return remainingLength() == 0;
     }
-
+    
     private int remainingLength() {
         return queue.length() - pos;
     }
@@ -78,7 +78,7 @@ public class TokenQueue {
     public boolean matchesCS(String seq) {
         return queue.startsWith(seq, pos);
     }
-
+    
 
     /**
      Tests if the next characters match any of the sequences. Case insensitive.
@@ -168,7 +168,7 @@ public class TokenQueue {
         int len = seq.length();
         if (len > remainingLength())
             throw new IllegalStateException("Queue not long enough to consume sequence");
-
+        
         pos += len;
     }
 
@@ -187,7 +187,7 @@ public class TokenQueue {
             return remainder();
         }
     }
-
+    
     public String consumeToIgnoreCase(String seq) {
         int start = pos;
         String first = seq.substring(0, 1);
@@ -195,7 +195,7 @@ public class TokenQueue {
         while (!isEmpty()) {
             if (matches(seq))
                 break;
-
+            
             if (canScan) {
                 int skip = queue.indexOf(first, pos) - pos;
                 if (skip == 0) // this char is the skip char, but not match, so force advance of pos
@@ -215,7 +215,7 @@ public class TokenQueue {
     /**
      Consumes to the first sequence provided, or to the end of the queue. Leaves the terminator on the queue.
      @param seq any number of terminators to consume to. <b>Case insensitive.</b>
-     @return consumed string
+     @return consumed string   
      */
     // todo: method name. not good that consumeTo cares for case, and consume to any doesn't. And the only use for this
     // is is a case sensitive time...
@@ -241,7 +241,7 @@ public class TokenQueue {
         matchChomp(seq);
         return data;
     }
-
+    
     public String chompToIgnoreCase(String seq) {
         String data = consumeToIgnoreCase(seq); // case insensitive scan
         matchChomp(seq);
@@ -262,16 +262,20 @@ public class TokenQueue {
         int end = -1;
         int depth = 0;
         char last = 0;
-        boolean inQuote = false;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
 
         do {
             if (isEmpty()) break;
             Character c = consume();
             if (last == 0 || last != ESC) {
-                if ((c.equals('\'') || c.equals('"')) && c != open)
-                    inQuote = !inQuote;
-                if (inQuote)
+                if (c.equals('\'') && c != open && !inDoubleQuote)
+                    inSingleQuote = !inSingleQuote;
+                else if (c.equals('"') && c != open && !inSingleQuote)
+                    inDoubleQuote = !inDoubleQuote;
+                if (inSingleQuote || inDoubleQuote)
                     continue;
+
                 if (c.equals(open)) {
                     depth++;
                     if (start == -1)
@@ -291,25 +295,25 @@ public class TokenQueue {
         }
         return out;
     }
-
+    
     /**
      * Unescape a \ escaped string.
      * @param in backslash escaped string
      * @return unescaped string
      */
     public static String unescape(String in) {
-        StringBuilder out = StringUtil.stringBuilder();
+        StringBuilder out = StringUtil.borrowBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
                 if (last != 0 && last == ESC)
                     out.append(c);
             }
-            else
+            else 
                 out.append(c);
             last = c;
         }
-        return out.toString();
+        return StringUtil.releaseBuilder(out);
     }
 
     /**
@@ -335,30 +339,30 @@ public class TokenQueue {
             pos++;
         return queue.substring(start, pos);
     }
-
+    
     /**
      * Consume an tag name off the queue (word or :, _, -)
-     *
+     * 
      * @return tag name
      */
     public String consumeTagName() {
         int start = pos;
         while (!isEmpty() && (matchesWord() || matchesAny(':', '_', '-')))
             pos++;
-
+        
         return queue.substring(start, pos);
     }
-
+    
     /**
      * Consume a CSS element selector (tag name, but | instead of : for namespaces (or *| for wildcard namespace), to not conflict with :pseudo selects).
-     *
+     * 
      * @return tag name
      */
     public String consumeElementSelector() {
         int start = pos;
         while (!isEmpty() && (matchesWord() || matchesAny("*|","|", "_", "-")))
             pos++;
-
+        
         return queue.substring(start, pos);
     }
 
@@ -383,7 +387,7 @@ public class TokenQueue {
         int start = pos;
         while (!isEmpty() && (matchesWord() || matchesAny('-', '_', ':')))
             pos++;
-
+        
         return queue.substring(start, pos);
     }
 
@@ -392,11 +396,11 @@ public class TokenQueue {
      @return remained of queue.
      */
     public String remainder() {
-        final String remainder = queue.substring(pos);
+        final String remainder = queue.substring(pos, queue.length());
         pos = queue.length();
         return remainder;
     }
-
+    
     @Override
     public String toString() {
         return queue.substring(pos);

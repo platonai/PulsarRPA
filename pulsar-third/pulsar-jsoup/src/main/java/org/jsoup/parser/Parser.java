@@ -9,14 +9,11 @@ import java.io.StringReader;
 import java.util.List;
 
 /**
- * Parses HTML into a {@link org.jsoup.nodes.Document}. Generally best to use one of the  more convenient parse methods
+ * Parses HTML into a {@link Document}. Generally best to use one of the  more convenient parse methods
  * in {@link org.jsoup.Jsoup}.
  */
 public class Parser {
-    private static final int DEFAULT_MAX_ERRORS = 0; // by default, error tracking is disabled.
-    
     private TreeBuilder treeBuilder;
-    private int maxErrors = DEFAULT_MAX_ERRORS;
     private ParseErrorList errors;
     private ParseSettings settings;
 
@@ -27,18 +24,20 @@ public class Parser {
     public Parser(TreeBuilder treeBuilder) {
         this.treeBuilder = treeBuilder;
         settings = treeBuilder.defaultSettings();
+        errors = ParseErrorList.noTracking();
     }
     
     public Document parseInput(String html, String baseUri) {
-        errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
-        return treeBuilder.parse(new StringReader(html), baseUri, errors, settings);
+        return treeBuilder.parse(new StringReader(html), baseUri, this);
     }
 
     public Document parseInput(Reader inputHtml, String baseUri) {
-        errors = isTrackErrors() ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
-        return treeBuilder.parse(inputHtml, baseUri, errors, settings);
+        return treeBuilder.parse(inputHtml, baseUri, this);
     }
 
+    public List<Node> parseFragmentInput(String fragment, Element context, String baseUri) {
+        return treeBuilder.parseFragment(fragment, context, baseUri, this);
+    }
     // gets & sets
     /**
      * Get the TreeBuilder currently in use.
@@ -48,14 +47,6 @@ public class Parser {
         return treeBuilder;
     }
 
-    public void ignoreScript(boolean ignore) {
-      treeBuilder.ignoreScript = ignore;
-    }
-
-    public boolean ignoreScript() {
-      return treeBuilder.ignoreScript;
-    }
-
     /**
      * Update the TreeBuilder used when parsing content.
      * @param treeBuilder current TreeBuilder
@@ -63,6 +54,7 @@ public class Parser {
      */
     public Parser setTreeBuilder(TreeBuilder treeBuilder) {
         this.treeBuilder = treeBuilder;
+        treeBuilder.parser = this;
         return this;
     }
 
@@ -71,7 +63,7 @@ public class Parser {
      * @return current track error state.
      */
     public boolean isTrackErrors() {
-        return maxErrors > 0;
+        return errors.getMaxSize() > 0;
     }
 
     /**
@@ -80,7 +72,7 @@ public class Parser {
      * @return this, for chaining
      */
     public Parser setTrackErrors(int maxErrors) {
-        this.maxErrors = maxErrors;
+        errors = maxErrors > 0 ? ParseErrorList.tracking(maxErrors) : ParseErrorList.noTracking();
         return this;
     }
 
@@ -88,7 +80,7 @@ public class Parser {
      * Retrieve the parse errors, if any, from the last parse.
      * @return list of parse errors, up to the size of the maximum errors tracked.
      */
-    public List<ParseError> getErrors() {
+    public ParseErrorList getErrors() {
         return errors;
     }
 
@@ -112,7 +104,7 @@ public class Parser {
      */
     public static Document parse(String html, String baseUri) {
         TreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parse(new StringReader(html), baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
+        return treeBuilder.parse(new StringReader(html), baseUri, new Parser(treeBuilder));
     }
 
     /**
@@ -127,7 +119,7 @@ public class Parser {
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, new Parser(treeBuilder));
     }
 
     /**
@@ -143,7 +135,9 @@ public class Parser {
      */
     public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri, ParseErrorList errorList) {
         HtmlTreeBuilder treeBuilder = new HtmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, errorList, treeBuilder.defaultSettings());
+        Parser parser = new Parser(treeBuilder);
+        parser.errors = errorList;
+        return treeBuilder.parseFragment(fragmentHtml, context, baseUri, parser);
     }
 
     /**
@@ -155,7 +149,7 @@ public class Parser {
      */
     public static List<Node> parseXmlFragment(String fragmentXml, String baseUri) {
         XmlTreeBuilder treeBuilder = new XmlTreeBuilder();
-        return treeBuilder.parseFragment(fragmentXml, baseUri, ParseErrorList.noTracking(), treeBuilder.defaultSettings());
+        return treeBuilder.parseFragment(fragmentXml, baseUri, new Parser(treeBuilder));
     }
 
     /**
@@ -170,7 +164,7 @@ public class Parser {
         Document doc = Document.createShell(baseUri);
         Element body = doc.body();
         List<Node> nodeList = parseFragment(bodyHtml, body, baseUri);
-        Node[] nodes = nodeList.toArray(new Node[nodeList.size()]); // the node list gets modified when re-parented
+        Node[] nodes = nodeList.toArray(new Node[0]); // the node list gets modified when re-parented
         for (int i = nodes.length - 1; i > 0; i--) {
             nodes[i].remove();
         }

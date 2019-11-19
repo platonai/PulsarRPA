@@ -13,7 +13,7 @@
     <version>1.4.0</version>
   </parent>
 
-  <name>Pulsar Proxy</name>
+  <name>Pulsar Proxyee</name>
   <artifactId>pulsar-proxyee</artifactId>
 
   <description>HTTP proxy server,support HTTPS and websocket.MITM impl,intercept and tamper HTTPS traffic.</description>
