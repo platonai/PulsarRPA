@@ -2,7 +2,7 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
 import java.sql.SQLException
-import java.util.ArrayList
+import java.util.*
 
 class OpenMapAnyTableFormatter(val table: OpenMapAnyTable) {
     private var rowCount: Int = 0

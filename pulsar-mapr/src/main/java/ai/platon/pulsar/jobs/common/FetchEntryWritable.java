@@ -16,6 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.common;
 
+import ai.platon.pulsar.crawl.fetch.IFetchEntry;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import org.apache.gora.util.IOUtils;
@@ -23,6 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -31,7 +33,7 @@ import java.io.IOException;
 /**
  * Fetch Entry for MapReduce
  */
-public class FetchEntryWritable extends Configured implements Writable {
+public class FetchEntryWritable extends Configured implements Writable, IFetchEntry {
 
     private String reservedUrl;
     private WebPage page;
@@ -50,6 +52,28 @@ public class FetchEntryWritable extends Configured implements Writable {
         this.page = page;
     }
 
+    @NotNull
+    @Override
+    public String getReservedUrl() {
+        return reservedUrl;
+    }
+
+    @Override
+    public void setReservedUrl(@NotNull String reservedUrl) {
+        this.reservedUrl = reservedUrl;
+    }
+
+    @NotNull
+    @Override
+    public WebPage getPage() {
+        return page;
+    }
+
+    @Override
+    public void setPage(@NotNull WebPage page) {
+        this.page = page;
+    }
+
     @Override
     public void readFields(DataInput in) throws IOException {
         reservedUrl = Text.readString(in);
@@ -62,16 +86,9 @@ public class FetchEntryWritable extends Configured implements Writable {
         IOUtils.serialize(getConf(), out, page.unbox(), GWebPage.class);
     }
 
-    public String getReservedUrl() {
-        return reservedUrl;
-    }
-
-    public WebPage getWebPage() {
-        return page;
-    }
-
     @Override
     public String toString() {
         return "<" + reservedUrl + ", " + page + ">";
     }
+
 }

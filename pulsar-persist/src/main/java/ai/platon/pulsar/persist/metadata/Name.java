@@ -17,6 +17,7 @@ public enum Name {
 
     IS_NAVIGATOR("I_N"),
     IS_SEED("I_S"),
+    IS_PORTAL("I_P"),
     IS_TMP_SEED("I_TS"),
     IS_DETAIL("I_D"),
 
@@ -35,6 +36,8 @@ public enum Name {
     REDIRECT_DISCOVERED("F_RD"),
     RESPONSE_TIME("F_RT"),
     BROWSER("F_BR"),
+    BROWSER_JS_DATA("F_JD"),
+    PROXY("F_PX"),
 
     /**
      * parse
@@ -47,6 +50,11 @@ public enum Name {
     PARSE_LINK_FILTER_DEBUG_LEVEL("P_LFDL"),
     TOTAL_OUT_LINKS("P_TOL"),
     ANCHORS("P_AS"),
+
+    /**
+     * harvest
+     */
+    HARVEST_STATUS("H_S"),
 
     /**
      * storage
@@ -71,6 +79,7 @@ public enum Name {
     CHAR_ENCODING_FOR_CONVERSION("C_CEFC"),
     ENCODING_CLUES("C_EC"),
     CONTENT_BYTES("C_CB"),
+    AVE_CONTENT_BYTES("C_ACB"),
 
     META_KEYWORDS("meta_keywords"),
     META_DESCRIPTION("meta_description"),

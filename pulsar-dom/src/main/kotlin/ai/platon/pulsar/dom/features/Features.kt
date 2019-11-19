@@ -13,7 +13,6 @@ import com.google.common.collect.Iterables
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.RealVector
 import org.apache.commons.math3.util.Precision
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import java.awt.Color

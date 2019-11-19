@@ -6,8 +6,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Tests for FormElement
@@ -50,7 +49,7 @@ public class FormElementTest {
     @Test public void createsSubmitableConnection() {
         String html = "<form action='/search'><input name='q'></form>";
         Document doc = Jsoup.parse(html, "http://example.com/");
-        doc.select("[name=q]").attr("value", "dom");
+        doc.select("[name=q]").attr("value", "jsoup");
 
         FormElement form = ((FormElement) doc.select("form").first());
         Connection con = form.submit();
@@ -58,7 +57,7 @@ public class FormElementTest {
         assertEquals(Connection.Method.GET, con.request().method());
         assertEquals("http://example.com/search", con.request().url().toExternalForm());
         List<Connection.KeyVal> dataList = (List<Connection.KeyVal>) con.request().data();
-        assertEquals("q=dom", dataList.get(0).toString());
+        assertEquals("q=jsoup", dataList.get(0).toString());
 
         doc.select("form").attr("method", "post");
         Connection con2 = form.submit();
@@ -144,5 +143,27 @@ public class FormElementTest {
         assertEquals("user", data.get(0).key());
         assertEquals("pass", data.get(1).key());
         assertEquals("login", data.get(2).key());
+    }
+
+    @Test public void removeFormElement() {
+        String html = "<html>\n" +
+                "  <body> \n" +
+                "      <form action=\"/hello.php\" method=\"post\">\n" +
+                "      User:<input type=\"text\" name=\"user\" />\n" +
+                "      Password:<input type=\"password\" name=\"pass\" />\n" +
+                "      <input type=\"submit\" name=\"login\" value=\"login\" />\n" +
+                "   </form>\n" +
+                "  </body>\n" +
+                "</html>  ";
+        Document doc = Jsoup.parse(html);
+        FormElement form = (FormElement) doc.selectFirst("form");
+        Element pass = form.selectFirst("input[name=pass]");
+        pass.remove();
+
+        List<Connection.KeyVal> data = form.formData();
+        assertEquals(2, data.size());
+        assertEquals("user", data.get(0).key());
+        assertEquals("login", data.get(1).key());
+        assertEquals(null, doc.selectFirst("input[name=pass]"));
     }
 }

@@ -1,7 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.parser.CharacterReader;
 import org.jsoup.parser.Parser;
@@ -149,13 +149,13 @@ public class Entities {
     public static String escape(String string, Document.OutputSettings out) {
         if (string == null)
             return "";
-        StringBuilder accum = new StringBuilder(string.length() * 2);
+        StringBuilder accum = StringUtil.borrowBuilder();
         try {
             escape(accum, string, out, false, false, false);
         } catch (IOException e) {
             throw new SerializationException(e); // doesn't happen
         }
-        return accum.toString();
+        return StringUtil.releaseBuilder(accum);
     }
 
     /**
@@ -176,7 +176,7 @@ public class Entities {
         boolean lastWasWhite = false;
         boolean reachedNonWhite = false;
         final EscapeMode escapeMode = out.escapeMode();
-        final CharsetEncoder encoder = out.encoder != null ? out.encoder : out.prepareEncoder();
+        final CharsetEncoder encoder = out.encoder();
         final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
         final int length = string.length();
 

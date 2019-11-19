@@ -1,6 +1,5 @@
 package ai.platon.pulsar.boilerpipe.sax;
 
-import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import org.xml.sax.InputSource;

@@ -1,16 +1,28 @@
 package org.jsoup.nodes;
 
 import org.jsoup.helper.ChangeNotifyingArrayList;
-import org.jsoup.helper.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.parser.ParseSettings;
-import org.jsoup.parser.Parser;
 import org.jsoup.parser.Tag;
-import org.jsoup.select.*;
+import org.jsoup.select.Collector;
+import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
+import org.jsoup.select.NodeTraversor;
+import org.jsoup.select.NodeVisitor;
+import org.jsoup.select.QueryParser;
+import org.jsoup.select.Selector;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -111,12 +123,22 @@ public class Element extends Node {
     }
 
     /**
-     * Get the name of the tag for this element. E.g. {@code div}
+     * Get the name of the tag for this element. E.g. {@code div}. If you are using {@link ParseSettings#preserveCase
+     * case preserving parsing}, this will return the source's original case.
      * 
      * @return the tag name
      */
     public String tagName() {
         return tag.getName();
+    }
+
+    /**
+     * Get the normalized name of this Element's tag. This will always be the lowercased version of the tag, regardless
+     * of the tag case preserving setting of the parser.
+     * @return
+     */
+    public String normalName() {
+        return tag.normalName();
     }
 
     /**
@@ -128,7 +150,7 @@ public class Element extends Node {
      */
     public Element tagName(String tagName) {
         Validate.notEmpty(tagName, "Tag name must not be empty.");
-        tag = Tag.valueOf(tagName, ParseSettings.preserveCase); // preserve the requested tag case
+        tag = Tag.valueOf(tagName, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
         return this;
     }
 
@@ -186,16 +208,12 @@ public class Element extends Node {
         return this;
     }
 
-    public boolean isSegmented() {
-        return hasAttr("data-segmented");
-    }
-
     /**
      * Get this element's HTML5 custom data attributes. Each attribute in the element that has a key
      * starting with "data-" is included the dataset.
      * <p>
-     * E.g., the element {@code <div data-package="dom" data-language="Java" class="group">...} has the dataset
-     * {@code package=dom, language=java}.
+     * E.g., the element {@code <div data-package="jsoup" data-language="Java" class="group">...} has the dataset
+     * {@code package=jsoup, language=java}.
      * <p>
      * This map is a filtered view of the element's attribute map. Changes to one map (add, remove, update) are reflected
      * in the other map.
@@ -344,7 +362,7 @@ public class Element extends Node {
      * <p>
      * See the query syntax documentation in {@link org.jsoup.select.Selector}.
      * </p>
-     *
+     * 
      * @param cssQuery a {@link Selector} CSS-like query
      * @return elements that match the query (empty if none match)
      * @see org.jsoup.select.Selector
@@ -382,10 +400,10 @@ public class Element extends Node {
     public boolean is(Evaluator evaluator) {
         return evaluator.matches((Element)this.root(), this);
     }
-
+    
     /**
      * Add a node child node to this element.
-     *
+     * 
      * @param child node to add.
      * @return this element, so that you can add more child nodes or elements.
      */
@@ -414,13 +432,13 @@ public class Element extends Node {
 
     /**
      * Add a node to the start of this element's children.
-     *
+     * 
      * @param child node to add.
      * @return this element, so that you can add more child nodes or elements.
      */
     public Element prependChild(Node child) {
         Validate.notNull(child);
-
+        
         addChildren(0, child);
         return this;
     }
@@ -442,7 +460,7 @@ public class Element extends Node {
         Validate.isTrue(index >= 0 && index <= currentSize, "Insert position out of bounds.");
 
         ArrayList<Node> nodes = new ArrayList<>(children);
-        Node[] nodeArray = nodes.toArray(new Node[nodes.size()]);
+        Node[] nodeArray = nodes.toArray(new Node[0]);
         addChildren(index, nodeArray);
         return this;
     }
@@ -465,36 +483,36 @@ public class Element extends Node {
         addChildren(index, children);
         return this;
     }
-
+    
     /**
      * Create a new element by tag name, and add it as the last child.
-     *
+     * 
      * @param tagName the name of the tag (e.g. {@code div}).
      * @return the new element, to allow you to add content to it, e.g.:
      *  {@code parent.appendElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element appendElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName), baseUri());
+        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
         appendChild(child);
         return child;
     }
-
+    
     /**
      * Create a new element by tag name, and add it as the first child.
-     *
+     * 
      * @param tagName the name of the tag (e.g. {@code div}).
      * @return the new element, to allow you to add content to it, e.g.:
      *  {@code parent.prependElement("h1").attr("id", "header").text("Welcome");}
      */
     public Element prependElement(String tagName) {
-        Element child = new Element(Tag.valueOf(tagName), baseUri());
+        Element child = new Element(Tag.valueOf(tagName, NodeUtils.parser(this).settings()), baseUri());
         prependChild(child);
         return child;
     }
-
+    
     /**
      * Create and append a new TextNode to this element.
-     *
+     * 
      * @param text the unencoded text to add
      * @return this element
      */
@@ -504,10 +522,10 @@ public class Element extends Node {
         appendChild(node);
         return this;
     }
-
+    
     /**
      * Create and prepend a new TextNode to this element.
-     *
+     * 
      * @param text the unencoded text to add
      * @return this element
      */
@@ -517,7 +535,7 @@ public class Element extends Node {
         prependChild(node);
         return this;
     }
-
+    
     /**
      * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended to the end of the children.
      * @param html HTML to add inside this element, after the existing HTML
@@ -526,12 +544,11 @@ public class Element extends Node {
      */
     public Element append(String html) {
         Validate.notNull(html);
-
-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
-        addChildren(nodes.toArray(new Node[nodes.size()]));
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
+        addChildren(nodes.toArray(new Node[0]));
         return this;
     }
-
+    
     /**
      * Add inner HTML into this element. The supplied HTML will be parsed, and each node prepended to the start of the element's children.
      * @param html HTML to add inside this element, before the existing HTML
@@ -540,9 +557,8 @@ public class Element extends Node {
      */
     public Element prepend(String html) {
         Validate.notNull(html);
-
-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
-        addChildren(0, nodes.toArray(new Node[nodes.size()]));
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, this, baseUri());
+        addChildren(0, nodes.toArray(new Node[0]));
         return this;
     }
 
@@ -662,7 +678,7 @@ public class Element extends Node {
     }
 
     /**
-     * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s,
+     * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s, 
      * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
      * <p>
      * This is similar to {@link #nextSibling()}, but specifically finds only Elements
@@ -682,6 +698,15 @@ public class Element extends Node {
     }
 
     /**
+     * Get each of the sibling elements that come after this element.
+     *
+     * @return each of the element siblings after this element, or an empty list if there are no next sibling elements
+     */
+    public Elements nextElementSiblings() {
+        return nextElementSiblings(true);
+    }
+
+    /**
      * Gets the previous element sibling of this element.
      * @return the previous element, or null if there is no previous element
      * @see #nextElementSibling()
@@ -698,15 +723,32 @@ public class Element extends Node {
     }
 
     /**
+     * Get each of the element siblings before this element.
+     *
+     * @return the previous element siblings, or an empty list if there are none.
+     */
+    public Elements previousElementSiblings() {
+        return nextElementSiblings(false);
+    }
+
+    private Elements nextElementSiblings(boolean next) {
+        Elements els = new Elements();
+        if (parentNode == null)
+            return  els;
+        els.add(this);
+        return next ?  els.nextAll() : els.prevAll();
+    }
+
+    /**
      * Gets the first element sibling of this element.
-     * @return the first sibling that is an element (aka the parent's first element child)
+     * @return the first sibling that is an element (aka the parent's first element child) 
      */
     public Element firstElementSibling() {
         // todo: should firstSibling() exclude this?
         List<Element> siblings = parent().childElementsList();
         return siblings.size() > 1 ? siblings.get(0) : null;
     }
-
+    
     /**
      * Get the list index of this element in its element sibling list. I.e. if this is the first element
      * sibling, returns 0.
@@ -719,7 +761,7 @@ public class Element extends Node {
 
     /**
      * Gets the last element sibling of this element
-     * @return the last sibling that is an element (aka the parent's last element child)
+     * @return the last sibling that is an element (aka the parent's last element child) 
      */
     public Element lastElementSibling() {
         List<Element> siblings = parent().childElementsList();
@@ -727,7 +769,8 @@ public class Element extends Node {
     }
 
     private static <E extends Element> int indexInList(Element search, List<E> elements) {
-        for (int i = 0; i < elements.size(); i++) {
+        final int size = elements.size();
+        for (int i = 0; i < size; i++) {
             if (elements.get(i) == search)
                 return i;
         }
@@ -749,20 +792,6 @@ public class Element extends Node {
     }
 
     /**
-     * @author vincent
-     * */
-    public Elements getElementsByTags(String... tagNames) {
-        Validate.notNull(tagNames);
-
-        String[] lowerCaseTagNames = new String[tagNames.length];
-        for (int i = 0; i < tagNames.length; ++i) {
-            lowerCaseTagNames[i] = tagNames[i].toLowerCase();
-        }
-
-        return Collector.collect(new Evaluator.Tags(lowerCaseTagNames), this);
-    }
-
-    /**
      * Find an element by ID, including or under this element.
      * <p>
      * Note that this finds the first matching ID, starting with this element. If you search down from a different
@@ -773,7 +802,7 @@ public class Element extends Node {
      */
     public Element getElementById(String id) {
         Validate.notEmpty(id);
-
+        
         Elements elements = Collector.collect(new Evaluator.Id(id), this);
         if (elements.size() > 0)
             return elements.get(0);
@@ -786,7 +815,7 @@ public class Element extends Node {
      * <p>
      * Elements can have multiple classes (e.g. {@code <div class="header round first">}. This method
      * checks each class, so you can find the above with {@code el.getElementsByClass("header");}.
-     *
+     * 
      * @param className the name of the class to search for.
      * @return elements with the supplied class name, empty if none
      * @see #hasClass(String)
@@ -826,7 +855,7 @@ public class Element extends Node {
 
     /**
      * Find elements that have an attribute with the specific value. Case insensitive.
-     *
+     * 
      * @param key name of the attribute
      * @param value value of the attribute
      * @return elements that have this attribute with this value, empty if none
@@ -837,7 +866,7 @@ public class Element extends Node {
 
     /**
      * Find elements that either do not have this attribute, or have it with a different value. Case insensitive.
-     *
+     * 
      * @param key name of the attribute
      * @param value value of the attribute
      * @return elements that do not have a matching attribute
@@ -848,7 +877,7 @@ public class Element extends Node {
 
     /**
      * Find elements that have attributes that start with the value prefix. Case insensitive.
-     *
+     * 
      * @param key name of the attribute
      * @param valuePrefix start of attribute value
      * @return elements that have attributes that start with the value prefix
@@ -859,7 +888,7 @@ public class Element extends Node {
 
     /**
      * Find elements that have attributes that end with the value suffix. Case insensitive.
-     *
+     * 
      * @param key name of the attribute
      * @param valueSuffix end of the attribute value
      * @return elements that have attributes that end with the value suffix
@@ -870,7 +899,7 @@ public class Element extends Node {
 
     /**
      * Find elements that have attributes whose value contains the match string. Case insensitive.
-     *
+     * 
      * @param key name of the attribute
      * @param match substring of value to search for
      * @return elements that have attributes containing this text
@@ -878,7 +907,7 @@ public class Element extends Node {
     public Elements getElementsByAttributeValueContaining(String key, String match) {
         return Collector.collect(new Evaluator.AttributeWithValueContaining(key, match), this);
     }
-
+    
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
@@ -887,9 +916,9 @@ public class Element extends Node {
      */
     public Elements getElementsByAttributeValueMatching(String key, Pattern pattern) {
         return Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this);
-
+        
     }
-
+    
     /**
      * Find elements that have attributes whose values match the supplied regular expression.
      * @param key name of the attribute
@@ -905,7 +934,7 @@ public class Element extends Node {
         }
         return getElementsByAttributeValueMatching(key, pattern);
     }
-
+    
     /**
      * Find elements whose sibling index is less than the supplied index.
      * @param index 0-based index
@@ -914,7 +943,7 @@ public class Element extends Node {
     public Elements getElementsByIndexLessThan(int index) {
         return Collector.collect(new Evaluator.IndexLessThan(index), this);
     }
-
+    
     /**
      * Find elements whose sibling index is greater than the supplied index.
      * @param index 0-based index
@@ -923,7 +952,7 @@ public class Element extends Node {
     public Elements getElementsByIndexGreaterThan(int index) {
         return Collector.collect(new Evaluator.IndexGreaterThan(index), this);
     }
-
+    
     /**
      * Find elements whose sibling index is equal to the supplied index.
      * @param index 0-based index
@@ -932,7 +961,7 @@ public class Element extends Node {
     public Elements getElementsByIndexEquals(int index) {
         return Collector.collect(new Evaluator.IndexEquals(index), this);
     }
-
+    
     /**
      * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
      * in the element, or in any of its descendants.
@@ -943,7 +972,7 @@ public class Element extends Node {
     public Elements getElementsContainingText(String searchText) {
         return Collector.collect(new Evaluator.ContainsText(searchText), this);
     }
-
+    
     /**
      * Find elements that directly contain the specified string. The search is case insensitive. The text must appear directly
      * in the element, not in any of its descendants.
@@ -954,7 +983,7 @@ public class Element extends Node {
     public Elements getElementsContainingOwnText(String searchText) {
         return Collector.collect(new Evaluator.ContainsOwnText(searchText), this);
     }
-
+    
     /**
      * Find elements whose text matches the supplied regular expression.
      * @param pattern regular expression to match text against
@@ -964,7 +993,7 @@ public class Element extends Node {
     public Elements getElementsMatchingText(Pattern pattern) {
         return Collector.collect(new Evaluator.Matches(pattern), this);
     }
-
+    
     /**
      * Find elements whose text matches the supplied regular expression.
      * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
@@ -980,7 +1009,7 @@ public class Element extends Node {
         }
         return getElementsMatchingText(pattern);
     }
-
+    
     /**
      * Find elements whose own text matches the supplied regular expression.
      * @param pattern regular expression to match text against
@@ -990,7 +1019,7 @@ public class Element extends Node {
     public Elements getElementsMatchingOwnText(Pattern pattern) {
         return Collector.collect(new Evaluator.MatchesOwn(pattern), this);
     }
-
+    
     /**
      * Find elements whose text matches the supplied regular expression.
      * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
@@ -1006,10 +1035,10 @@ public class Element extends Node {
         }
         return getElementsMatchingOwnText(pattern);
     }
-
+    
     /**
      * Find all elements under this element (including self, and children of children).
-     *
+     * 
      * @return all elements
      */
     public Elements getAllElements() {
@@ -1021,30 +1050,63 @@ public class Element extends Node {
      * <p>
      * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
      *
-     * @return unencoded text, or empty string if none.
+     * @return unencoded, normalized text, or empty string if none.
+     * @see #wholeText() if you don't want the text to be normalized.
      * @see #ownText()
      * @see #textNodes()
      */
     public String text() {
-      return accumulateText();
-    }
+        final StringBuilder accum = StringUtil.borrowBuilder();
+        NodeTraversor.traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    appendNormalisedText(accum, textNode);
+                } else if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (accum.length() > 0 &&
+                        (element.isBlock() || element.tag.getName().equals("br")) &&
+                        !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(' ');
+                }
+            }
 
-    private String accumulateText() {
-        final StringBuilder accum = new StringBuilder();
-        NodeTraversor.traverse((node, depth) -> {
-            if (node instanceof TextNode) {
-                TextNode textNode = (TextNode) node;
-                appendNormalisedText(accum, textNode);
-            } else if (node instanceof Element) {
-                Element element = (Element) node;
-                if (accum.length() > 0
-                        && (element.isBlock() || element.tag.getName().equals("br"))
-                        && !TextNode.lastCharIsWhitespace(accum))
-                    accum.append(" ");
+            public void tail(Node node, int depth) {
+                // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
+                if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(' ');
+                }
+
             }
         }, this);
 
-        return accum.toString().trim();
+        return StringUtil.releaseBuilder(accum).trim();
+    }
+
+    /**
+     * Get the (unencoded) text of all children of this element, including any newlines and spaces present in the
+     * original.
+     *
+     * @return unencoded, un-normalized text
+     * @see #text()
+     */
+    public String wholeText() {
+        final StringBuilder accum = StringUtil.borrowBuilder();
+        NodeTraversor.traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    accum.append(textNode.getWholeText());
+                }
+            }
+
+            public void tail(Node node, int depth) {
+            }
+        }, this);
+
+        return StringUtil.releaseBuilder(accum);
     }
 
     /**
@@ -1059,15 +1121,26 @@ public class Element extends Node {
      * @see #textNodes()
      */
     public String ownText() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         ownText(sb);
-        return sb.toString().trim();
+        return StringUtil.releaseBuilder(sb).trim();
+    }
+
+    private void ownText(StringBuilder accum) {
+        for (Node child : childNodes) {
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                appendNormalisedText(accum, textNode);
+            } else if (child instanceof Element) {
+                appendWhitespaceIfBr((Element) child, accum);
+            }
+        }
     }
 
     private static void appendNormalisedText(StringBuilder accum, TextNode textNode) {
         String text = textNode.getWholeText();
 
-        if (preserveWhitespace(textNode.parentNode))
+        if (preserveWhitespace(textNode.parentNode) || textNode instanceof CDataNode)
             accum.append(text);
         else
             StringUtil.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum));
@@ -1079,11 +1152,16 @@ public class Element extends Node {
     }
 
     static boolean preserveWhitespace(Node node) {
-        // looks only at this element and one level up, to prevent recursion & needless stack searches
-        if (node != null && node instanceof Element) {
-            Element element = (Element) node;
-            return element.tag.preserveWhitespace() ||
-                element.parent() != null && element.parent().tag.preserveWhitespace();
+        // looks only at this element and five levels up, to prevent recursion & needless stack searches
+        if (node instanceof Element) {
+            Element el = (Element) node;
+            int i = 0;
+            do {
+                if (el.tag.preserveWhitespace())
+                    return true;
+                el = el.parent();
+                i++;
+            } while (i < 6 && el != null);
         }
         return false;
     }
@@ -1132,7 +1210,7 @@ public class Element extends Node {
      * @see #dataNodes()
      */
     public String data() {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
 
         for (Node childNode : childNodes) {
             if (childNode instanceof DataNode) {
@@ -1145,10 +1223,15 @@ public class Element extends Node {
                 Element element = (Element) childNode;
                 String elementData = element.data();
                 sb.append(elementData);
+            } else if (childNode instanceof CDataNode) {
+                // this shouldn't really happen because the html parser won't see the cdata as anything special when parsing script.
+                // but incase another type gets through.
+                CDataNode cDataNode = (CDataNode) childNode;
+                sb.append(cDataNode.getWholeText());
             }
         }
-        return sb.toString();
-    }
+        return StringUtil.releaseBuilder(sb);
+    }   
 
     /**
      * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
@@ -1350,23 +1433,17 @@ public class Element extends Node {
      * @see #outerHtml()
      */
     public String html() {
-        StringBuilder accum = StringUtil.stringBuilder();
+        StringBuilder accum = StringUtil.borrowBuilder();
         html(accum);
-        return getOutputSettings().prettyPrint() ? accum.toString().trim() : accum.toString();
+        String html = StringUtil.releaseBuilder(accum);
+        return NodeUtils.outputSettings(this).prettyPrint() ? html.trim() : html;
     }
 
-    private void html(StringBuilder accum) {
-        for (Node node : childNodes)
-            node.outerHtml(accum);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public <T extends Appendable> T html(T appendable) {
-        for (Node node : childNodes)
-            node.outerHtml(appendable);
+        final int size = childNodes.size();
+        for (int i = 0; i < size; i++)
+            childNodes.get(i).outerHtml(appendable);
 
         return appendable;
     }
@@ -1384,11 +1461,6 @@ public class Element extends Node {
     }
 
     @Override
-	public String toString() {
-        return outerHtml();
-    }
-
-    @Override
     public Element clone() {
         return (Element) super.clone();
     }
@@ -1396,7 +1468,7 @@ public class Element extends Node {
     @Override
     public Element shallowClone() {
         // simpler than implementing a clone version with no child copy
-        return new Element(tag, baseUri, attributes);
+        return new Element(tag, baseUri, attributes == null ? null : attributes.clone());
     }
 
     @Override
@@ -1420,17 +1492,6 @@ public class Element extends Node {
 
         public void onContentsChanged() {
             owner.nodelistChanged();
-        }
-    }
-
-    private void ownText(StringBuilder accum) {
-        for (Node child : childNodes) {
-            if (child instanceof TextNode) {
-                TextNode textNode = (TextNode) child;
-                appendNormalisedText(accum, textNode);
-            } else if (child instanceof Element) {
-                appendWhitespaceIfBr((Element) child, accum);
-            }
         }
     }
 }

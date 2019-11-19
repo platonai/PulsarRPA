@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.util.StringUtils;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
@@ -210,7 +209,7 @@ public class SParser {
         String valueString = getTrimmed();
         if (valueString == null)
             return defaultValue;
-        return StringUtils.TraditionalBinaryPrefix.string2long(valueString);
+        return StringUtil.TraditionalBinaryPrefix.string2long(valueString);
     }
 
     private String getHexDigits(String value) {
@@ -442,7 +441,7 @@ public class SParser {
      * @return property value as a collection of <code>String</code>s.
      */
     public Collection<String> getStringCollection() {
-        return StringUtils.getStringCollection(value);
+        return StringUtil.getStringCollection(value);
     }
 
     public Pair<String, String> getPair(Pair<String, String> defaultValue) {
@@ -490,7 +489,7 @@ public class SParser {
      *         or <code>null</code>.
      */
     public String[] getStrings() {
-        return StringUtils.getStrings(value);
+        return StringUtil.getStrings(value);
     }
 
     /**
@@ -500,7 +499,7 @@ public class SParser {
      * @param values The values
      */
     public void setStrings(String... values) {
-        set(StringUtils.arrayToString(values));
+        set(StringUtil.arrayToString(values));
     }
 
     /**
@@ -516,7 +515,7 @@ public class SParser {
         if (value == null) {
             return defaultValue;
         } else {
-            return StringUtils.getStrings(value);
+            return StringUtil.getStrings(value);
         }
     }
 
@@ -531,7 +530,7 @@ public class SParser {
         if (null == value) {
             return Collections.emptyList();
         }
-        return StringUtils.getTrimmedStringCollection(value);
+        return StringUtil.getTrimmedStringCollection(value);
     }
 
     /**
@@ -543,7 +542,7 @@ public class SParser {
      *         or empty array.
      */
     public String[] getTrimmedStrings() {
-        return StringUtils.getTrimmedStrings(value);
+        return StringUtil.getTrimmedStrings(value);
     }
 
     /**
@@ -559,7 +558,7 @@ public class SParser {
         if (null == value) {
             return defaultValue;
         } else {
-            return StringUtils.getTrimmedStrings(value);
+            return StringUtil.getTrimmedStrings(value);
         }
     }
 
@@ -614,10 +613,9 @@ public class SParser {
         }
 
         try {
-            String text = value.toLowerCase();
-            if (text.startsWith("p") || text.startsWith("-p")) {
+            if (value.startsWith("P") || value.startsWith("-P")) {
                 try {
-                    return Duration.parse(text);
+                    return Duration.parse(value);
                 } catch (Throwable ignored) {
                 }
             }

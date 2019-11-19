@@ -43,6 +43,24 @@ val BOX_SYNTAX_PATTERN = Pattern.compile("$BOX_SYNTAX_PATTERN_1(,$BOX_SYNTAX_PAT
 val BOX_CSS_PATTERN_1 = Pattern.compile(".{1,5}:in-box\\(\\d+(,\\d+\\){1,4})")
 val BOX_CSS_PATTERN = Pattern.compile("$BOX_CSS_PATTERN_1(,$BOX_CSS_PATTERN_1)?")
 
+data class Anchor(
+        val url: String,
+        val text: String,
+        val path: String,
+        val left: Int,
+        val top: Int,
+        val width: Int,
+        val height: Int
+) {
+    override fun hashCode(): Int {
+        return url.hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Anchor && url.equals(other.url)
+    }
+}
+
 data class DOMRect(var left: Double = 0.0, var top: Double = 0.0, var width: Double = 0.0, var height: Double = 0.0) {
     val isEmpty get() = left == 0.0 && top == 0.0 && width == 0.0 && height == 0.0
 

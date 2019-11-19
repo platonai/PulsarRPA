@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.files.ext
 
 import ai.platon.pulsar.common.PulsarFiles
 import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.PulsarPaths.fileCacheDir
+import ai.platon.pulsar.common.PulsarPaths.FILE_CACHE_DIR
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Document
 import java.nio.file.Files
@@ -14,7 +14,7 @@ fun PulsarFiles.save(page: WebPage, ident: String = ""): Path {
     if (postfix.length > 5) {
         postfix = "other"
     }
-    val path = PulsarPaths.get(fileCacheDir, ident, postfix, filename)
+    val path = PulsarPaths.get(FILE_CACHE_DIR, ident, postfix, filename)
     if (!Files.exists(path)) {
         PulsarFiles.saveTo(page.content?.array()?: "(empty)".toByteArray(), path)
     }
@@ -22,6 +22,6 @@ fun PulsarFiles.save(page: WebPage, ident: String = ""): Path {
 }
 
 fun PulsarFiles.save(doc: Document, ident: String = ""): Path {
-    val path = PulsarPaths.get(fileCacheDir, ident, PulsarPaths.fromUri(doc.baseUri(), ".htm"))
+    val path = PulsarPaths.get(FILE_CACHE_DIR, ident, PulsarPaths.fromUri(doc.baseUri(), ".htm"))
     return PulsarFiles.saveTo(doc.outerHtml(), path)
 }

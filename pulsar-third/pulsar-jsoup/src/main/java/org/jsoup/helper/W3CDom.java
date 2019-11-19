@@ -1,5 +1,6 @@
 package org.jsoup.helper;
 
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
 import org.jsoup.select.NodeTraversor;
@@ -19,6 +20,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Stack;
 
 /**
  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link Document org.w3c.dom.Document},
@@ -28,8 +30,8 @@ public class W3CDom {
     protected DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
     /**
-     * Convert a dom Document to a W3C Document.
-     * @param in dom doc
+     * Convert a jsoup Document to a W3C Document.
+     * @param in jsoup doc
      * @return w3c doc
      */
     public Document fromJsoup(org.jsoup.nodes.Document in) {
@@ -48,11 +50,11 @@ public class W3CDom {
     }
 
     /**
-     * Converts a dom document into the provided W3C Document. If required, you can set options on the output document
+     * Converts a jsoup document into the provided W3C Document. If required, you can set options on the output document
      * before converting.
-     * @param in dom doc
+     * @param in jsoup doc
      * @param out w3c doc
-     * @see org.jsoup.helper.W3CDom#fromJsoup(org.jsoup.nodes.Document)
+     * @see W3CDom#fromJsoup(org.jsoup.nodes.Document)
      */
     public void convert(org.jsoup.nodes.Document in, Document out) {
         if (!StringUtil.isBlank(in.location()))
@@ -70,21 +72,26 @@ public class W3CDom {
         private static final String xmlnsPrefix = "xmlns:";
 
         private final Document doc;
-        private final HashMap<String, String> namespaces = new HashMap<>(); // prefix => urn
+        private final Stack<HashMap<String, String>> namespacesStack = new Stack<>(); // stack of namespaces, prefix => urn
         private Element dest;
 
         public W3CBuilder(Document doc) {
             this.doc = doc;
+            this.namespacesStack.push(new HashMap<String, String>());
         }
 
         public void head(org.jsoup.nodes.Node source, int depth) {
+            namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from above on the stack
             if (source instanceof org.jsoup.nodes.Element) {
                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
 
                 String prefix = updateNamespaces(sourceEl);
-                String namespace = namespaces.get(prefix);
+                String namespace = namespacesStack.peek().get(prefix);
+                String tagName = sourceEl.tagName();
 
-                Element el = doc.createElementNS(namespace, sourceEl.tagName());
+                Element el = namespace == null && tagName.contains(":") ?
+                    doc.createElementNS("", tagName) : // doesn't have a real namespace defined
+                    doc.createElementNS(namespace, tagName);
                 copyAttributes(sourceEl, el);
                 if (dest == null) { // sets up the root
                     doc.appendChild(el);
@@ -113,6 +120,7 @@ public class W3CDom {
             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
                 dest = (Element) dest.getParentNode(); // undescend. cromulent.
             }
+            namespacesStack.pop();
         }
 
         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
@@ -141,7 +149,7 @@ public class W3CDom {
                 } else {
                     continue;
                 }
-                namespaces.put(prefix, attr.getValue());
+                namespacesStack.peek().put(prefix, attr.getValue());
             }
 
             // get the element prefix if any

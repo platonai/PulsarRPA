@@ -19,9 +19,9 @@ package ai.platon.pulsar.parse.html;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.crawl.parse.html.PrimerParser;
 import ai.platon.pulsar.persist.HypeLink;
 import com.google.common.collect.Lists;
-import ai.platon.pulsar.crawl.parse.html.PrimerParser;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.cyberneko.html.parsers.DOMFragmentParser;
 import org.junit.Before;

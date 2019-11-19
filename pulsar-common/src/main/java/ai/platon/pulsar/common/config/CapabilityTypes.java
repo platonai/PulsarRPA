@@ -195,6 +195,12 @@ public interface CapabilityTypes {
     String FETCH_STORE_CONTENT = "fetch.store.content";
     String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
 
+    String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
+    String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
+    String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
+    String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
+    String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
+
     /**
      * Browser
      * */
@@ -202,7 +208,7 @@ public interface CapabilityTypes {
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_DOM_WAIT_FOR_TIMEOUT = "fetch.dom.wait.for.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
-    String FETCH_SCROLL_DOWN_WAIT = "fetch.scroll.down.wait";
+    String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.required.property.names";
@@ -210,27 +216,37 @@ public interface CapabilityTypes {
      * Selenium
      */
     String SELENIUM_BROWSER = "selenium.browser";
+    String SELENIUM_BROWSER_INCOGNITO = "selenium.browser.incognito";
     String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
     String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
     String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
     String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
+    String SELENIUM_WEB_DRIVER_DELETE_ALL_COOKIES = "selenium.web.driver.delete.all.cookies";
 
     /**
      * Proxy
      */
-    String PROXY_DISABLED = "proxy.disabled";
-    String PROXY_IP_PORT = "proxy.ip.port";
-    String PROXY_POOL_SIZE = "proxy.pool.size";
-    String PROXY_POOL_POLLING_WAIT = "proxy.pool.polling.wait";
+    String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
+    String PROXY_POOL_CAPACITY = "proxy.pool.size";
+    String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
+    String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
+    String PROXY_INTERNAL_SERVER_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
+    String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
+    String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";
+    String PROXY_PROXY_POOL_RECOVER_PERIOD = "proxy.proxy.pool.recover.period";
 
     /**
      * Network
      */
     String HTTP_TIMEOUT = "http.timeout";
     String HTTP_FETCH_MAX_RETRY = "http.fetch.max.retry";
+
     /**
      * Generator parameters
      */
+    String PARTITION_MODE_KEY = "partition.url.mode";
+    String PARTITION_URL_SEED = "partition.url.seed";
+
     String GENERATE_TIME = "generate.generate.time";
     String GENERATE_UPDATE_CRAWLDB = "generate.update.crawldb";
     String GENERATE_MIN_SCORE = "generate.min.score";

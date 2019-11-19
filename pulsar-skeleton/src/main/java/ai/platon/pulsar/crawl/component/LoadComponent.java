@@ -1,14 +1,16 @@
 package ai.platon.pulsar.crawl.component;
 
+import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.common.options.LinkOptions;
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.common.options.NormUrl;
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
+import ai.platon.pulsar.crawl.parse.ParseResult;
 import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
-import ai.platon.pulsar.crawl.parse.ParseResult;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.hadoop.classification.InterfaceStability;
@@ -22,10 +24,12 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
+import static ai.platon.pulsar.persist.metadata.Name.PROXY;
 import static ai.platon.pulsar.persist.metadata.Name.RESPONSE_TIME;
 import static org.apache.commons.collections4.CollectionUtils.addIgnoreNull;
 
@@ -41,8 +45,10 @@ public class LoadComponent {
     public static final int FETCH_REASON_DO_NOT_FETCH = 0;
     public static final int FETCH_REASON_NEW_PAGE = 1;
     public static final int FETCH_REASON_EXPIRED = 2;
-    public static final int FETCH_REASON_TEMP_MOVED = 3;
-    public static final int FETCH_REASON_RETRY_ON_FAILURE = 4;
+    public static final int FETCH_REASON_SMALL_CONTENT = 3;
+    public static final int FETCH_REASON_MISS_FIELD = 4;
+    public static final int FETCH_REASON_TEMP_MOVED = 300;
+    public static final int FETCH_REASON_RETRY_ON_FAILURE = 301;
     public static final HashMap<Integer, String> fetchReasonCodes = new HashMap<>();
 
     private final static Set<String> globalFetchingUrls = Collections.synchronizedSet(new HashSet<>());
@@ -51,6 +57,8 @@ public class LoadComponent {
         fetchReasonCodes.put(FETCH_REASON_DO_NOT_FETCH, "do_not_fetch");
         fetchReasonCodes.put(FETCH_REASON_NEW_PAGE, "new_page");
         fetchReasonCodes.put(FETCH_REASON_EXPIRED, "expired");
+        fetchReasonCodes.put(FETCH_REASON_SMALL_CONTENT, "small");
+        fetchReasonCodes.put(FETCH_REASON_MISS_FIELD, "miss_field");
         fetchReasonCodes.put(FETCH_REASON_TEMP_MOVED, "temp_moved");
         fetchReasonCodes.put(FETCH_REASON_RETRY_ON_FAILURE, "retry_on_failure");
     }
@@ -59,7 +67,7 @@ public class LoadComponent {
     private final BatchFetchComponent fetchComponent;
     private final ParseComponent parseComponent;
     private final UpdateComponent updateComponent;
-    private final TaskStatusTracker taskStatusTracker;
+    private final FetchTaskTracker fetchTaskTracker;
 
     public LoadComponent(
             WebDb webDb,
@@ -71,7 +79,7 @@ public class LoadComponent {
         this.fetchComponent = fetchComponent;
         this.parseComponent = parseComponent;
         this.updateComponent = updateComponent;
-        this.taskStatusTracker = fetchComponent.getTaskStatusTracker();
+        this.fetchTaskTracker = fetchComponent.getFetchTaskTracker();
     }
 
     public BatchFetchComponent getFetchComponent() {
@@ -122,13 +130,13 @@ public class LoadComponent {
     @Nonnull
     public WebPage load(String originalUrl, LoadOptions options) {
         Objects.requireNonNull(options);
-        return loadInternal(new NormUrl(originalUrl, options));
+        return loadOne(new NormUrl(originalUrl, options));
     }
 
     @Nonnull
     public WebPage load(URL url, LoadOptions options) {
         Objects.requireNonNull(options);
-        return loadInternal(new NormUrl(url, options));
+        return loadOne(new NormUrl(url, options));
     }
 
     /**
@@ -152,7 +160,7 @@ public class LoadComponent {
 
     @Nonnull
     public WebPage load(NormUrl normUrl) {
-        return loadInternal(normUrl);
+        return loadOne(normUrl);
     }
 
     /**
@@ -170,6 +178,7 @@ public class LoadComponent {
      * @return Pages for all urls.
      */
     public Collection<WebPage> loadAll(Iterable<NormUrl> normUrls, LoadOptions options) {
+        Instant startTime = Instant.now();
         Set<NormUrl> filteredUrls = new HashSet<>();
         CollectionUtils.collect(normUrls, url -> addIgnoreNull(filteredUrls, filterUrlToNull(url)));
 
@@ -182,33 +191,38 @@ public class LoadComponent {
 
         for (NormUrl normUrl : filteredUrls) {
             String url = normUrl.getUrl();
-            LoadOptions op = normUrl.getOptions();
+            LoadOptions opt = normUrl.getOptions();
 
-            WebPage page = webDb.getOrNil(url, op.getShortenKey());
+            WebPage page = webDb.getOrNil(url, opt.getShortenKey());
 
-            int reason = getFetchReason(page, op.getExpires(), op.getRetry());
+            int reason = getFetchReason(page, opt);
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), url, op);
+                LOG.trace("Fetch reason: {} | {} {}", getFetchReason(reason), url, opt);
             }
 
+            ProtocolStatus status = page.getProtocolStatus();
             if (reason == FETCH_REASON_NEW_PAGE) {
                 pendingUrls.add(url);
             } else if (reason == FETCH_REASON_EXPIRED) {
                 pendingUrls.add(url);
+            } else if (reason == FETCH_REASON_SMALL_CONTENT) {
+                pendingUrls.add(url);
+            } else if (reason == FETCH_REASON_MISS_FIELD) {
+                pendingUrls.add(url);
             } else if (reason == FETCH_REASON_TEMP_MOVED) {
                 // TODO: batch redirect
-                page = redirect(page, op);
-                if (page.getProtocolStatus().isSuccess()) {
+                page = redirect(page, opt);
+                if (status.isSuccess()) {
                     knownPages.add(page);
                 }
             } else if (reason == FETCH_REASON_DO_NOT_FETCH) {
-                if (page.getProtocolStatus().isSuccess()) {
+                if (status.isSuccess()) {
                     knownPages.add(page);
                 } else {
-                    // failed
+                    LOG.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt);
                 }
             } else {
-                LOG.error("Unknown fetch reason #{}, url: {}, options: {}", reason, url, op);
+                LOG.error("Unknown fetch reason {} | {} {}", reason, url, opt);
             }
         }
 
@@ -234,6 +248,10 @@ public class LoadComponent {
 
         knownPages.addAll(updatedPages);
 
+        if (LOG.isInfoEnabled()) {
+            logBatchComplete(updatedPages, startTime);
+        }
+
         return knownPages;
     }
 
@@ -256,38 +274,42 @@ public class LoadComponent {
     }
 
     @Nonnull
-    private WebPage loadInternal(NormUrl normUrl) {
+    private WebPage loadOne(NormUrl normUrl) {
         Objects.requireNonNull(normUrl);
 
         if (normUrl.isInvalid()) {
-            LOG.warn("Malformed url {}", normUrl);
+            LOG.warn("Malformed url | {}", normUrl);
             return WebPage.NIL;
         }
 
         String url = normUrl.getUrl();
-        LoadOptions options = normUrl.getOptions();
+        LoadOptions opt = normUrl.getOptions();
         if (globalFetchingUrls.contains(url)) {
-            LOG.debug("Load later, it's fetching by someone else. Url: {}", url);
+            LOG.debug("Load later, it's fetching by someone else | {}", url);
+            // TODO: wait for finish?
             return WebPage.NIL;
         }
 
-        boolean ignoreQuery = options.getShortenKey();
+        boolean ignoreQuery = opt.getShortenKey();
         WebPage page = webDb.getOrNil(url, ignoreQuery);
 
-        int reason = getFetchReason(page, options.getExpires(), options.getRetry());
-        LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), options);
+        int reason = getFetchReason(page, opt);
+        LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.getUrl(), opt);
 
         if (reason == FETCH_REASON_TEMP_MOVED) {
-            return redirect(page, options);
+            return redirect(page, opt);
         }
 
-        boolean refresh = (reason == FETCH_REASON_NEW_PAGE) || (reason == FETCH_REASON_EXPIRED);
+        boolean refresh = reason == FETCH_REASON_NEW_PAGE
+                || reason == FETCH_REASON_EXPIRED
+                || reason == FETCH_REASON_SMALL_CONTENT
+                || reason == FETCH_REASON_MISS_FIELD;
         if (refresh) {
             if (page.isNil()) {
                 page = WebPage.newWebPage(url, ignoreQuery);
             }
 
-            page = fetchComponent.initFetchEntry(page, options);
+            page = fetchComponent.initFetchEntry(page, opt);
 
             // LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
 
@@ -295,7 +317,11 @@ public class LoadComponent {
             page = fetchComponent.fetchContent(page);
             globalFetchingUrls.remove(url);
 
-            update(page, options);
+            update(page, opt);
+
+            if (LOG.isInfoEnabled()) {
+                LOG.info(getPageCompleteReport(page));
+            }
         }
 
         return page;
@@ -318,11 +344,11 @@ public class LoadComponent {
             return null;
         }
 
-        if (taskStatusTracker.isFailed(url)) {
-
+        if (fetchTaskTracker.isFailed(url)) {
+            return null;
         }
 
-        if (taskStatusTracker.isTimeout(url)) {
+        if (fetchTaskTracker.isTimeout(url)) {
 
         }
 
@@ -335,9 +361,9 @@ public class LoadComponent {
         return url;
     }
 
-    private int getFetchReason(WebPage page, Duration expires, boolean retry) {
+    private int getFetchReason(WebPage page, LoadOptions options) {
         Objects.requireNonNull(page);
-        Objects.requireNonNull(expires);
+        Objects.requireNonNull(options);
 
         String url = page.getUrl();
         if (page.isNil()) {
@@ -355,8 +381,9 @@ public class LoadComponent {
         } else if (protocolStatus.isFailed()) {
             // Page is fetched last time, but failed, if retry is not allowed, just return the failed page
 
-            if (!retry) {
-                LOG.warn("Ignore failed page, last status: " + page.getProtocolStatus() + ", options: " + page.getOptions());
+            if (!options.getRetry()) {
+                LOG.warn("Ignore failed page, last status: {} | {} {}",
+                        page.getProtocolStatus(), page.getUrl(), page.getOptions());
                 return FETCH_REASON_DO_NOT_FETCH;
             }
         }
@@ -369,8 +396,24 @@ public class LoadComponent {
         }
 
         // if (now > lastTime + expires), it's expired
-        if (now.isAfter(lastFetchTime.plus(expires))) {
+        if (now.isAfter(lastFetchTime.plus(options.getExpires()))) {
             return FETCH_REASON_EXPIRED;
+        }
+
+        if (page.getContentBytes() < options.getRequireSize()) {
+            return FETCH_REASON_SMALL_CONTENT;
+        }
+
+        BrowserJsData jsData = page.getBrowserJsData();
+        if (jsData != null) {
+            BrowserJsData.Stat stat = jsData.getLastStat();
+            if (stat.getNi() < options.getRequireImages()) {
+                return FETCH_REASON_MISS_FIELD;
+            }
+
+            if (stat.getNa() < options.getRequireAnchors()) {
+                return FETCH_REASON_MISS_FIELD;
+            }
         }
 
         return FETCH_REASON_DO_NOT_FETCH;
@@ -425,26 +468,50 @@ public class LoadComponent {
 
         updateComponent.updateFetchSchedule(page);
 
-        if (LOG.isDebugEnabled()) {
-            int bytes = page.getContentBytes();
-            if (bytes > 0) {
-                LOG.debug("Fetched{}{} bytes in {} with {} | {}",
-                        bytes < 2000 ? " only " : " ", String.format("%,7d", page.getContentBytes()),
-                        page.getMetadata().get(RESPONSE_TIME),
-                        page.getLastBrowser(), page.getConfiguredUrl()
-                );
-            }
-        }
-
-        if (options.getPersist()) {
+        if (!protocolStatus.isCanceled() && options.getPersist()) {
             webDb.put(page);
 
             if (!options.getLazyFlush()) {
                 flush();
             }
 
-            LOG.trace("Persisted {} bytes | {}", page.getContentBytes(), page.getUrl());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Persisted {} | {}", StringUtil.readableByteCount(page.getContentBytes()), page.getUrl());
+            }
         }
+    }
+
+    private void logBatchComplete(Collection<WebPage> pages, Instant startTime) {
+        Duration elapsed = DateTimeUtil.elapsedTime(startTime);
+        String message = String.format("Fetched total %d pages in %s:\n", pages.size(), DateTimeUtil.readableDuration(elapsed));
+        StringBuilder sb = new StringBuilder(message);
+        AtomicInteger i = new AtomicInteger();
+        pages.forEach(p -> sb.append(i.incrementAndGet()).append(".\t").append(getPageCompleteReport(p)).append('\n'));
+        LOG.info(sb.toString());
+    }
+
+    private String getPageCompleteReport(WebPage page) {
+        int bytes = page.getContentBytes();
+        if (bytes < 0) {
+            return "";
+        }
+
+        String responseTime = page.getMetadata().get(RESPONSE_TIME);
+        String proxy = page.getMetadata().get(PROXY);
+        BrowserJsData jsData = page.getBrowserJsData();
+        String jsSate = "";
+        if (jsData != null) {
+            BrowserJsData.Stat stat = jsData.getLastStat();
+            jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", stat.getNi(), stat.getNa(), stat.getNnm(), stat.getNst());
+        }
+        return String.format("Fetched%s in %8s%26s, fc:%2d %24s | %s",
+                StringUtil.readableByteCount(bytes, 7, false),
+                DateTimeUtil.readableDuration(responseTime),
+                proxy == null ? "" : " via " + proxy,
+                page.getFetchCount(),
+                jsSate,
+                page.getUrl()
+        );
     }
 
     /**

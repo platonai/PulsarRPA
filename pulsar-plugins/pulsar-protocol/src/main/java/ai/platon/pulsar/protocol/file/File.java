@@ -18,14 +18,14 @@ package ai.platon.pulsar.protocol.file;
 
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.crawl.protocol.Protocol;
+import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
+import ai.platon.pulsar.crawl.protocol.RobotRulesParser;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import crawlercommons.robots.BaseRobotRules;
-import ai.platon.pulsar.crawl.protocol.Protocol;
-import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
-import ai.platon.pulsar.crawl.protocol.RobotRulesParser;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

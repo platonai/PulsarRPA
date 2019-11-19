@@ -1,159 +1,229 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
+<!--  <name>jsoup Java HTML Parser</name>-->
 
-    <parent>
-        <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-third</artifactId>
-        <version>1.2.0</version>
-    </parent>
+<!--  <groupId>org.jsoup</groupId>-->
+<!--  <artifactId>jsoup</artifactId>-->
+<!--  <version>1.12.1</version>-->
 
-    <name>Pulsar Jsoup</name>
-    <artifactId>pulsar-jsoup</artifactId>
+  <parent>
+    <groupId>ai.platon.pulsar</groupId>
+    <artifactId>pulsar-third</artifactId>
+    <version>1.5.0</version>
+  </parent>
 
-    <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for extracting and manipulating data, using the best of DOM, CSS, and jquery-like methods. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers do.</description>
-    <url>https://jsoup.org/</url>
-    <inceptionYear>2009</inceptionYear>
-    <issueManagement>
-        <system>GitHub</system>
-        <url>http://github.com/jhy/jsoup/issues</url>
-    </issueManagement>
-    <licenses>
-        <license>
-            <name>The MIT License</name>
-            <url>https://jsoup.org/license</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-    <scm>
-        <url>https://github.com/jhy/jsoup</url>
-        <connection>scm:git:https://github.com/jhy/jsoup.git</connection>
-        <!-- <developerConnection>scm:git:git@github.com:jhy/dom.git</developerConnection> -->
-        <tag>HEAD</tag>
-    </scm>
-    <organization>
-        <name>Jonathan Hedley</name>
-        <url>http://jonathanhedley.com/</url>
-    </organization>
+  <name>Pulsar Jsoup</name>
+  <artifactId>pulsar-jsoup</artifactId>
 
-    <build>
+  <description>jsoup is a Java library for working with real-world HTML. It provides a very convenient API for extracting and manipulating data, using the best of DOM, CSS, and jquery-like methods. jsoup implements the WHATWG HTML5 specification, and parses HTML to the same DOM as modern browsers do.</description>
+  <url>https://jsoup.org/</url>
+  <inceptionYear>2009</inceptionYear>
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/jhy/jsoup/issues</url>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>The MIT License</name>
+      <url>https://jsoup.org/license</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/jhy/jsoup</url>
+    <connection>scm:git:https://github.com/jhy/jsoup.git</connection>
+    <!-- <developerConnection>scm:git:git@github.com:jhy/jsoup.git</developerConnection> -->
+    <tag>jsoup-1.12.1</tag>
+  </scm>
+  <organization>
+    <name>Jonathan Hedley</name>
+    <url>https://jhy.io/</url>
+  </organization>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+<!--      <plugin>-->
+<!--        &lt;!&ndash; this plugin allows us to ensure Java 7 API compatibility &ndash;&gt;-->
+<!--        <groupId>org.codehaus.mojo</groupId>-->
+<!--        <artifactId>animal-sniffer-maven-plugin</artifactId>-->
+<!--        <version>1.16</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>animal-sniffer</id>-->
+<!--            <phase>compile</phase>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              <signature>-->
+<!--                <groupId>org.codehaus.mojo.signature</groupId>-->
+<!--                <artifactId>java17</artifactId>-->
+<!--                <version>1.0</version>-->
+<!--              </signature>-->
+<!--&lt;!&ndash;              <signature>&ndash;&gt;-->
+<!--&lt;!&ndash;                <groupId>net.sf.androidscents.signature</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;                <artifactId>android-api-level-8</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;                <version>2.2_r3</version>&ndash;&gt;-->
+<!--&lt;!&ndash;              </signature>&ndash;&gt;-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
+<!--      <plugin>-->
+<!--        <groupId>org.apache.maven.plugins</groupId>-->
+<!--        <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--        <version>3.0.0-M1</version>-->
+<!--        <configuration>-->
+<!--          <additionalparam>-Xdoclint:none</additionalparam>-->
+<!--        </configuration>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>attach-javadoc</id>-->
+<!--            <phase>verify</phase>-->
+<!--            <goals>-->
+<!--              <goal>jar</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <configuration>
+    <excludes>
+      <exclude>org/jsoup/examples/**</exclude>
+    </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.jsoup</Automatic-Module-Name>
+            </manifestEntries>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+    <excludes>
+      <exclude>org/jsoup/examples/**</exclude>
+    </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.5.4</version>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <instructions>
+            <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.0.1</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+      </plugin>
+    </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/java</directory>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src</directory>
+        <targetPath>META-INF/</targetPath>
+        <filtering>false</filtering>
+        <includes>
+          <include>LICENSE</include>
+          <include>README.md</include>
+          <include>CHANGES</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>sonatype-nexus-snapshots</id>
+      <name>Sonatype Nexus Snapshots</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Nexus Release Repository</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.0-M1</version>
-                <configuration>
-                    <additionalparam>-Xdoclint:none</additionalparam>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadoc</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
-                <configuration>
-                    <archive>
-                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.5.4</version>
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <instructions>
-                        <Bundle-DocURL>https://jsoup.org/</Bundle-DocURL>
-                    </instructions>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.0.1</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
-            </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>src/main/java</directory>
-                <includes>
-                    <include>**/*.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>./</directory>
-                <targetPath>META-INF/</targetPath>
-                <filtering>false</filtering>
-                <includes>
-                    <include>LICENSE</include>
-                    <include>README.md</include>
-                    <include>CHANGES</include>
-                </includes>
-            </resource>
-        </resources>
-    </build>
+      </build>
+    </profile>
+  </profiles>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-
-    <dependencies>
+  <dependencies>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -221,16 +291,16 @@
 
     </dependencies>
 
-    <developers>
-        <developer>
-            <id>jhy</id>
-            <name>Jonathan Hedley</name>
-            <email>jonathan@hedley.net</email>
-            <roles>
-                <role>Lead Developer</role>
-            </roles>
-            <timezone>+11</timezone>
-        </developer>
-    </developers>
+  <developers>
+    <developer>
+      <id>jhy</id>
+      <name>Jonathan Hedley</name>
+      <email>jonathan@hedley.net</email>
+      <roles>
+        <role>Lead Developer</role>
+      </roles>
+      <timezone>+11</timezone>
+    </developer>
+  </developers>
 
 </project>

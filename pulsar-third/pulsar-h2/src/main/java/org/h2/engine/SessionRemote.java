@@ -27,8 +27,12 @@ import org.h2.value.Transfer;
 import org.h2.value.Value;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * The client side part of a session when using the server mode. This object
@@ -97,7 +101,7 @@ public class SessionRemote extends SessionWithState implements DataHandler {
     public static SessionInterface createSession(ConnectionInfo ci) throws Exception {
         if (sessionFactory == null) {
             Class<?> engine = getEngineImplementation();
-            System.out.println("H2 Engine: " + engine);
+            System.out.println("H2 Engine implementation is: " + engine);
             sessionFactory = (SessionFactory) engine.getMethod("getInstance").invoke(null);
         }
         return sessionFactory.createSession(ci);
@@ -108,6 +112,22 @@ public class SessionRemote extends SessionWithState implements DataHandler {
      * */
     public static void closeSession(Session session) throws Exception {
         sessionFactory.closeSession(session.getSerialId());
+    }
+
+    /**
+     * Do the external cleansing jobs, for example, release pulsar resources
+     * */
+    public static void shutdownSessionFactory() {
+        Optional<Method> shutdownNow = Arrays.stream(sessionFactory.getClass().getMethods())
+                .filter(method -> method.getName().equals("shutdownNow"))
+                .findFirst();
+        if (shutdownNow.isPresent()) {
+            try {
+                shutdownNow.get().invoke(sessionFactory);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public SessionRemote(ConnectionInfo ci) {

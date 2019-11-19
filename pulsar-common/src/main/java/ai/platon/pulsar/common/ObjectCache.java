@@ -18,11 +18,9 @@ package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import org.apache.hadoop.conf.Configuration;
-import org.checkerframework.checker.units.qual.K;
 
 import java.util.HashMap;
 import java.util.WeakHashMap;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**

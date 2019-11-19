@@ -9,7 +9,6 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.*;
-
 /**
  Tests Nodes
 
@@ -37,7 +36,7 @@ public class NodeTest {
 
     @Test public void setBaseUriIsRecursive() {
         Document doc = Jsoup.parse("<div><p></p></div>");
-        String baseUri = "https://dom.org";
+        String baseUri = "https://jsoup.org";
         doc.setBaseUri(baseUri);
         
         assertEquals(baseUri, doc.baseUri());
@@ -46,23 +45,23 @@ public class NodeTest {
     }
 
     @Test public void handlesAbsPrefix() {
-        Document doc = Jsoup.parse("<a href=/foo>Hello</a>", "https://dom.org/");
+        Document doc = Jsoup.parse("<a href=/foo>Hello</a>", "https://jsoup.org/");
         Element a = doc.select("a").first();
         assertEquals("/foo", a.attr("href"));
-        assertEquals("https://dom.org/foo", a.attr("abs:href"));
+        assertEquals("https://jsoup.org/foo", a.attr("abs:href"));
         assertTrue(a.hasAttr("abs:href"));
     }
 
     @Test public void handlesAbsOnImage() {
-        Document doc = Jsoup.parse("<p><img src=\"/rez/osi_logo.png\" /></p>", "https://dom.org/");
+        Document doc = Jsoup.parse("<p><img src=\"/rez/osi_logo.png\" /></p>", "https://jsoup.org/");
         Element img = doc.select("img").first();
-        assertEquals("https://dom.org/rez/osi_logo.png", img.attr("abs:src"));
+        assertEquals("https://jsoup.org/rez/osi_logo.png", img.attr("abs:src"));
         assertEquals(img.absUrl("src"), img.attr("abs:src"));
     }
 
     @Test public void handlesAbsPrefixOnHasAttr() {
         // 1: no abs url; 2: has abs url
-        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://dom.org/'>Two</a>");
+        Document doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://jsoup.org/'>Two</a>");
         Element one = doc.select("#1").first();
         Element two = doc.select("#2").first();
 
@@ -72,7 +71,7 @@ public class NodeTest {
 
         assertTrue(two.hasAttr("abs:href"));
         assertTrue(two.hasAttr("href"));
-        assertEquals("https://dom.org/", two.absUrl("href"));
+        assertEquals("https://jsoup.org/", two.absUrl("href"));
     }
 
     @Test public void literalAbsPrefix() {
@@ -117,13 +116,13 @@ public class NodeTest {
     Test for an issue with Java's abs URL handler.
      */
     @Test public void absHandlesRelativeQuery() {
-        Document doc = Jsoup.parse("<a href='?foo'>One</a> <a href='bar.html?foo'>Two</a>", "https://dom.org/path/file?bar");
+        Document doc = Jsoup.parse("<a href='?foo'>One</a> <a href='bar.html?foo'>Two</a>", "https://jsoup.org/path/file?bar");
 
         Element a1 = doc.select("a").first();
-        assertEquals("https://dom.org/path/file?foo", a1.absUrl("href"));
+        assertEquals("https://jsoup.org/path/file?foo", a1.absUrl("href"));
 
         Element a2 = doc.select("a").get(1);
-        assertEquals("https://dom.org/path/bar.html?foo", a2.absUrl("href"));
+        assertEquals("https://jsoup.org/path/bar.html?foo", a2.absUrl("href"));
     }
 
     @Test public void absHandlesDotFromIndex() {
@@ -275,7 +274,7 @@ public class NodeTest {
     }
 
     @Test public void supportsClone() {
-        Document doc = org.jsoup.Jsoup.parse("<div class=foo>Text</div>");
+        Document doc = Jsoup.parse("<div class=foo>Text</div>");
         Element el = doc.select("div").first();
         assertTrue(el.hasClass("foo"));
 

@@ -1,11 +1,11 @@
 package ai.platon.pulsar.boilerpipe;
 
-import ai.platon.pulsar.common.DateTimeDetector;
-import com.google.common.collect.Lists;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.utils.Scent;
 import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
+import ai.platon.pulsar.common.DateTimeDetector;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 

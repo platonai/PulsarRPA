@@ -285,6 +285,7 @@ ActionListener, MouseListener, WindowListener,
         } else {
             out.println(server.getStatus());
             out.println("Root cause: " + e.getMessage());
+            e.getCause().printStackTrace();
         }
     }
 

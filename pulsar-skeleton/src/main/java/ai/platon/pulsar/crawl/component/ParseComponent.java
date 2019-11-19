@@ -18,11 +18,11 @@
 package ai.platon.pulsar.crawl.component;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.Name;
 import ai.platon.pulsar.crawl.filter.CrawlFilters;
 import ai.platon.pulsar.crawl.parse.PageParser;
 import ai.platon.pulsar.crawl.parse.ParseResult;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

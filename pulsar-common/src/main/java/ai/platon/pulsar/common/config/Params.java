@@ -43,8 +43,6 @@ public class Params {
         args.forEach((key, value) -> this.paramsList.add(Pair.of(key, value)));
     }
 
-    // public void put(String name, String value) { paramsList.add(Pair.of(name, value)); }
-
     public static Params of(String key, Object value, Object... others) {
         return new Params(key, value, others);
     }
@@ -120,6 +118,15 @@ public class Params {
 
     public void put(String name, Object value) {
         paramsList.add(Pair.of(name, value));
+    }
+
+    public boolean remove(String key) {
+        List<Pair<String, Object>> list = paramsList.stream().filter(entry -> !entry.getKey().equals(key)).collect(Collectors.toList());
+        boolean removed = list.size() < paramsList.size();
+        if (removed) {
+            this.paramsList = list;
+        }
+        return removed;
     }
 
     public Object get(String name) {
@@ -396,21 +403,28 @@ public class Params {
 
             String key = arg.getKey();
             if (arg.getValue() == null) {
+                sb.append(key);
                 if (!cmdLineStyle) {
-                    sb.append(key);
                     sb.append(kvDelimiter);
                     sb.append("null");
                 }
             } else if (cmdLineStyle && key.startsWith("-") && "true".equals(arg.getValue().toString())) {
                 sb.append(arg.getKey());
             } else if (cmdLineStyle && key.startsWith("-") && "false".equals(arg.getValue().toString())) {
+                // TODO: still not handle cases when arity > 1
                 // nothing
             } else {
                 sb.append(key);
-                String value = arg.getValue().toString().replaceAll(kvDelimiter, "");
+                String value = arg.getValue().toString();
                 if (!value.isEmpty()) {
                     sb.append(kvDelimiter);
-                    sb.append(value);
+
+                    // quoted
+                    if (value.contains(kvDelimiter)) {
+                        sb.append('\"').append(value).append('\"');
+                    } else {
+                        sb.append(value);
+                    }
                 }
             }
         }

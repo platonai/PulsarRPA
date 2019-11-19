@@ -1,5 +1,6 @@
 package org.jsoup.parser;
 
+import org.jsoup.parser.HtmlTreeBuilderState.Constants;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -10,23 +11,27 @@ public class HtmlTreeBuilderStateTest {
     @Test
     public void ensureArraysAreSorted() {
         String[][] arrays = {
-            HtmlTreeBuilderState.Constants.InBodyStartToHead,
-            HtmlTreeBuilderState.Constants.InBodyStartPClosers,
-            HtmlTreeBuilderState.Constants.Headings,
-            HtmlTreeBuilderState.Constants.InBodyStartPreListing,
-            HtmlTreeBuilderState.Constants.InBodyStartLiBreakers,
-            HtmlTreeBuilderState.Constants.DdDt,
-            HtmlTreeBuilderState.Constants.Formatters,
-            HtmlTreeBuilderState.Constants.InBodyStartApplets,
-            HtmlTreeBuilderState.Constants.InBodyStartEmptyFormatters,
-            HtmlTreeBuilderState.Constants.InBodyStartMedia,
-            HtmlTreeBuilderState.Constants.InBodyStartInputAttribs,
-            HtmlTreeBuilderState.Constants.InBodyStartOptions,
-            HtmlTreeBuilderState.Constants.InBodyStartRuby,
-            HtmlTreeBuilderState.Constants.InBodyStartDrop,
-            HtmlTreeBuilderState.Constants.InBodyEndClosers,
-            HtmlTreeBuilderState.Constants.InBodyEndAdoptionFormatters,
-            HtmlTreeBuilderState.Constants.InBodyEndTableFosters
+            Constants.InBodyStartToHead,
+            Constants.InBodyStartPClosers,
+            Constants.Headings,
+            Constants.InBodyStartPreListing,
+            Constants.InBodyStartLiBreakers,
+            Constants.DdDt,
+            Constants.Formatters,
+            Constants.InBodyStartApplets,
+            Constants.InBodyStartEmptyFormatters,
+            Constants.InBodyStartMedia,
+            Constants.InBodyStartInputAttribs,
+            Constants.InBodyStartOptions,
+            Constants.InBodyStartRuby,
+            Constants.InBodyStartDrop,
+            Constants.InBodyEndClosers,
+            Constants.InBodyEndAdoptionFormatters,
+            Constants.InBodyEndTableFosters,
+            Constants.InCellNames,
+            Constants.InCellBody,
+            Constants.InCellTable,
+            Constants.InCellCol,
         };
 
         for (String[] array : arrays) {

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants.*
@@ -66,35 +65,48 @@ open class BrowserControl(
 
         // Special
         // var mobileEmulationEnabled = true
+
+        fun createGeneralOptions(): DesiredCapabilities {
+            val generalOptions = DesiredCapabilities()
+
+            generalOptions.setCapability(SUPPORTS_JAVASCRIPT, true)
+            generalOptions.setCapability(TAKES_SCREENSHOT, false)
+            generalOptions.setCapability("downloadImages", imagesEnabled)
+            generalOptions.setCapability("browserLanguage", "zh_CN")
+            generalOptions.setCapability("throwExceptionOnScriptError", false)
+            generalOptions.setCapability("resolution", viewPort.width.toString() + "x" + viewPort.height)
+            generalOptions.setCapability("pageLoadStrategy", pageLoadStrategy)
+
+            return generalOptions
+        }
+
+        fun createChromeOptions(generalOptions: DesiredCapabilities = createGeneralOptions()): ChromeOptions {
+            val chromeOptions = ChromeOptions()
+
+            // see https://peter.sh/experiments/chromium-command-line-switches/
+            chromeOptions.merge(generalOptions)
+            // Use headless mode by default, GUI mode can be used for debugging
+            chromeOptions.setHeadless(headless)
+            // some web sites have technology to detect whether the browser is controlled by web driver
+            // chromeOptions.addArguments("disable-infobars")
+            chromeOptions.addArguments("--disable-extensions")
+            // chromeOptions.addArguments("--incognito") // may cause anti-spider
+            chromeOptions.addArguments("--window-size=" + viewPort.width + "," + viewPort.height)
+            chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
+            chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
+
+            return chromeOptions
+        }
     }
 
     constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
 
-    val generalOptions = DesiredCapabilities()
-    val chromeOptions = ChromeOptions()
     private val jsParameters = mutableMapOf<String, Any>()
     private var mainJs = ""
     private var libJs = ""
     val scripts = mutableMapOf<String, String>()
 
     init {
-        generalOptions.setCapability(SUPPORTS_JAVASCRIPT, true)
-        generalOptions.setCapability(TAKES_SCREENSHOT, false)
-        generalOptions.setCapability("downloadImages", imagesEnabled)
-        generalOptions.setCapability("browserLanguage", "zh_CN")
-        generalOptions.setCapability("throwExceptionOnScriptError", false)
-        generalOptions.setCapability("resolution", viewPort.width.toString() + "x" + viewPort.height)
-        generalOptions.setCapability("pageLoadStrategy", pageLoadStrategy)
-
-        // see https://peter.sh/experiments/chromium-command-line-switches/
-        chromeOptions.merge(generalOptions)
-        // Use headless mode by default, GUI mode can be used for debugging
-        chromeOptions.setHeadless(headless)
-        chromeOptions.addArguments("--disable-extensions")
-        chromeOptions.addArguments("--window-size=" + viewPort.width + "," + viewPort.height)
-        chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
-        chromeOptions.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE)
-
         // The javascript to execute by Web browsers
         val propertyNames = immutableConfig.getTrimmedStrings(
                 FETCH_CLIENT_JS_COMPUTED_STYLES, CLIENT_JS_PROPERTY_NAMES)
@@ -136,7 +148,7 @@ open class BrowserControl(
         if (reload || mainJs.isEmpty()) {
             val sb = StringBuilder(parseLibJs(reload))
             sb.append(";\n__utils__.visualizeHumanize();")
-            sb.append(";\nreturn document.pulsarData;")
+            sb.append(";\nreturn JSON.stringify(document.pulsarData);")
             mainJs = sb.toString()
         }
 

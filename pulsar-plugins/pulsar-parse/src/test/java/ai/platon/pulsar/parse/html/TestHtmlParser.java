@@ -17,11 +17,11 @@
 
 package ai.platon.pulsar.parse.html;
 
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.Name;
 import ai.platon.pulsar.crawl.parse.PageParser;
 import ai.platon.pulsar.crawl.parse.ParseException;
 import ai.platon.pulsar.crawl.parse.ParseResult;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.Name;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

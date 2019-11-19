@@ -3,7 +3,6 @@ package ai.platon.pulsar.common.geometric
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
-import java.util.Collections.swap
 
 data class GeoIntPoint(var x: Int, var y: Int): Comparable<GeoIntPoint> {
     constructor(point: Point) : this(point.x, point.y)

@@ -18,7 +18,6 @@
 package ai.platon.pulsar.crawl.filter;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.filter.UrlNormalizer;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

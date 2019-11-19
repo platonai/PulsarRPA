@@ -31,12 +31,15 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
+    public static final ProtocolStatus STATUS_NOTFETCHED = new ProtocolStatus(NOTFETCHED);
     public static final ProtocolStatus STATUS_FAILED = new ProtocolStatus(FAILED);
 
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
     public static final ProtocolStatus STATUS_RETRY = ProtocolStatus.failed(RETRY);
+    public static final ProtocolStatus STATUS_INCOMPLETE_RETRY = ProtocolStatus.failed(DOCUMENT_INCOMPLETE);
+    public static final ProtocolStatus STATUS_BROWSER_RETRY = ProtocolStatus.failed(WEB_DRIVER_GONE);
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
     public static final ProtocolStatus STATUS_EXCEPTION = ProtocolStatus.failed(EXCEPTION);
 
@@ -67,6 +70,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(BLOCKED, "blocked");
 
         minorCodes.put(RETRY, "retry");
+        minorCodes.put(CANCELED, "canceled");
         minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
         minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
         minorCodes.put(DOCUMENT_READY_TIMEOUT, "document_ready_timeout");
@@ -152,6 +156,10 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public boolean isFailed() {
         return getMajorCode() == FAILED;
+    }
+
+    public boolean isCanceled() {
+        return getMinorCode() == CANCELED;
     }
 
     public boolean isTempMoved() {

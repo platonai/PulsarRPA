@@ -13,20 +13,25 @@ import java.util.Objects;
  */
 public class VolatileConfig extends MutableConfig {
 
-    private MutableConfig fallbackConfig;
+    public static final VolatileConfig EMPTY = new VolatileConfig();
+
+    private ImmutableConfig fallbackConfig;
     private Map<String, Integer> ttls = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, Object> variables = new HashMap<>();
 
     public VolatileConfig() {
         super(false);
     }
 
     public VolatileConfig(ImmutableConfig fallbackConfig) {
-        this(new MutableConfig(fallbackConfig));
+        super(false);
+        this.fallbackConfig = fallbackConfig;
     }
 
-    public VolatileConfig(MutableConfig fallbackConfig) {
-        super(false);
-        this.fallbackConfig = Objects.requireNonNull(fallbackConfig);
+    public void reset() {
+        ttls.clear();
+        variables.clear();
+        super.clear();
     }
 
     @Nonnull
@@ -105,15 +110,46 @@ public class VolatileConfig extends MutableConfig {
         }
     }
 
+    public Object getVariable(String name) {
+        return variables.get(name);
+    }
+
+    public <T> Object putBean(T bean) {
+        return putBean(bean.getClass().getName(), bean);
+    }
+
+    public <T> Object putBean(String name, T bean) {
+        return variables.put(name, bean);
+    }
+
+    @Nullable
+    public <T> T getBean(Class<T> bean) {
+        return getBean(bean.getName(), bean);
+    }
+
+    @Nullable
+    public <T> T getBean(String name, Class<T> bean) {
+        Object obj = variables.get(name);
+        if (obj != null && bean.isAssignableFrom(obj.getClass())) {
+            return (T)obj;
+        }
+        return null;
+    }
+
+    public void setVariable(String name, Object value) {
+        variables.put(name, value);
+    }
+
     public boolean isExpired(String key) {
         return false;
     }
 
-    public MutableConfig getFallbackConfig() {
+    @Nullable
+    public ImmutableConfig getFallbackConfig() {
         return fallbackConfig;
     }
 
-    public void setFallbackConfig(MutableConfig fallbackConfig) {
+    public void setFallbackConfig(ImmutableConfig fallbackConfig) {
         this.fallbackConfig = fallbackConfig;
     }
 }

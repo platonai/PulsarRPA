@@ -96,9 +96,10 @@ object Documents {
         return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath))
     }
 
-    fun parse(file: File, charsetName: String, ignoreScript: Boolean): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath, ignoreScript))
-    }
+    // TODO: check the logic whether to support ignoring script
+//    fun parse(file: File, charsetName: String, ignoreScript: Boolean): FeaturedDocument {
+//        return FeaturedDocument(DataUtil.load(file, charsetName, file.absolutePath, ignoreScript))
+//    }
 
     /**
      * Read an input stream, and parse it to a FeaturedDocument.
@@ -114,9 +115,10 @@ object Documents {
         return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri))
     }
 
-    fun parse(istream: InputStream, charsetName: String, baseUri: String, ignoreScript: Boolean): FeaturedDocument {
-        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, ignoreScript))
-    }
+    // TODO: check the logic whether to support ignoring script
+//    fun parse(istream: InputStream, charsetName: String, baseUri: String, ignoreScript: Boolean): FeaturedDocument {
+//        return FeaturedDocument(DataUtil.load(istream, charsetName, baseUri, ignoreScript))
+//    }
 
     /**
      * Read an input stream, and parse it to a FeaturedDocument. You can provide an alternate parser, such as a simple XML

@@ -16,13 +16,12 @@
  */
 package ai.platon.pulsar.crawl.protocol;
 
+import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import java.time.Duration;
-import java.time.Instant;
 
 /**
  * A response interface. Makes all protocols model HTTP.
@@ -32,8 +31,8 @@ public interface Response {
 
     String getUrl();
 
-    /** The protocol's response code, without transform. */
-    int getStatus();
+    /** The protocol's response status, with transform. */
+    ProtocolStatus getStatus();
 
     /** The protocol's response code, without transform. */
     int getCode();
@@ -48,7 +47,7 @@ public interface Response {
     @Nullable
     byte[] getContent();
 
-    default int size() {
+    default long length() {
         byte[] c = getContent();
         return c == null ? 0 : c.length;
     }

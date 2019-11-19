@@ -21,7 +21,6 @@ import ai.platon.pulsar.persist.HypeLink;
 import ai.platon.pulsar.persist.metadata.PageCategory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ai.platon.pulsar.crawl.filter.UrlNormalizers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;

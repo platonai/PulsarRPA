@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
@@ -44,7 +43,7 @@ object CommonFunctions {
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      *
      * TODO: do we need FetchMode any more?
      *
@@ -68,16 +67,16 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_MODE, mode, ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's unmodified config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
     fun unsetFetchMode(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_MODE)
+        return session.volatileConfig.getAndUnset(FETCH_MODE)
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      * @param h2session H2 session
      * @param browser The browser to use
      * @param ttl The property value time to live in session
@@ -97,13 +96,13 @@ object CommonFunctions {
         return getAndSetConf(h2session, SELENIUM_BROWSER, browserType.name, ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's unmodified config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
     fun unsetBrowser(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
         unsetFetchMode(h2session)
-        return session.config.getAndUnset(SELENIUM_BROWSER)
+        return session.volatileConfig.getAndUnset(SELENIUM_BROWSER)
     }
 
     /**
@@ -128,16 +127,16 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_EAGER_FETCH_LIMIT, parallel.toString(), ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's unmodified config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
     fun unsetEagerFetchLimit(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_EAGER_FETCH_LIMIT)
+        return session.volatileConfig.getAndUnset(FETCH_EAGER_FETCH_LIMIT)
     }
 
     /**
-     * Set page expires, this config affects just in h2session scope
+     * Set page expires, this volatileConfig affects just in h2session scope
      * SQL examples:
      * `CALL setPageExpires('1d')`
      * `CALL setPageExpires('PT24H')`
@@ -161,16 +160,16 @@ object CommonFunctions {
         return getAndSetConf(h2session, STORAGE_DATUM_EXPIRES, value, ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's unmodified config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
     fun unsetPageExpires(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(STORAGE_DATUM_EXPIRES)
+        return session.volatileConfig.getAndUnset(STORAGE_DATUM_EXPIRES)
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      * @param h2session H2 session
      * @param duration The property value to set
      * @param ttl The property value time to live in session
@@ -185,16 +184,16 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_PAGE_LOAD_TIMEOUT, value, ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's unmodified config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
     fun unsetPageLoadTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
+        return session.volatileConfig.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      * @param h2session H2 session
      * @param duration The property value to set
      * @param ttl The property value time to live in session
@@ -209,16 +208,16 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_SCRIPT_TIMEOUT, value, ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's unmodified config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
     fun unsetScriptTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_SCRIPT_TIMEOUT)
+        return session.volatileConfig.getAndUnset(FETCH_SCRIPT_TIMEOUT)
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      * @param h2session H2 session
      * @param count The property value to set
      * @param ttl The property value time to live in session
@@ -231,16 +230,16 @@ object CommonFunctions {
         return getAndSetConf(h2session, FETCH_SCROLL_DOWN_COUNT, count.toString(), ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's initial config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's initial volatileConfig")
     @JvmStatic
     fun unsetScrollDownCount(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
+        return session.volatileConfig.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      * @param h2session H2 session
      * @param duration The property value to set
      * @param ttl The property value time to live in session
@@ -251,15 +250,15 @@ object CommonFunctions {
     fun setScrollInterval(@H2Context h2session: Session, duration: String, ttl: Int): String? {
         val d = getDuration(duration)
         val value = d?.toString()
-        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_WAIT, value, ttl)
+        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_INTERVAL, value, ttl)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's initial config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's initial volatileConfig")
     @JvmStatic
-    fun unsetScrollDownWait(@H2Context h2session: Session): String? {
+    fun setScrollInterval(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(FETCH_SCROLL_DOWN_WAIT)
+        return session.volatileConfig.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
     }
 
     /**
@@ -272,47 +271,47 @@ object CommonFunctions {
      * @param h2session The H2 session, auto injected by h2 runtime
      * @return The old value of the key
      */
-    @UDFunction(description = "Set the config property associated by name with time-to-life of the calling session")
+    @UDFunction(description = "Set the volatileConfig property associated by name with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
     fun setConfig(@H2Context h2session: Session, name: String, value: String, ttl: Int = Integer.MAX_VALUE / 2): String? {
         val session = getSession(h2session)
-        return session.config.getAndSet(name, value, ttl)
+        return session.volatileConfig.getAndSet(name, value, ttl)
     }
 
-    @UDFunction(description = "Set the config property associated by name with time-to-life of the calling session")
+    @UDFunction(description = "Set the volatileConfig property associated by name with time-to-life of the calling session")
     @JvmStatic
     fun setConf(@H2Context h2session: Session, name: String, value: String, ttl: Int): String? {
         return setConfig(h2session, name, value, ttl)
     }
 
-    @UDFunction(description = "Set the config property associated by name of the calling session")
+    @UDFunction(description = "Set the volatileConfig property associated by name of the calling session")
     @JvmStatic
     fun setConf(@H2Context h2session: Session, name: String, value: String): String? {
         return setConfig(h2session, name, value, Integer.MAX_VALUE / 2)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's initial config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's initial volatileConfig")
     @JvmStatic
     fun unsetConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(name)
+        return session.volatileConfig.getAndUnset(name)
     }
 
-    @UDFunction(description = "Unset the config property of the calling session, " +
-            "so it fallback to the process's initial config")
+    @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
+            "so it fallback to the process's initial volatileConfig")
     @JvmStatic
     fun unsetConfig(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.config.getAndUnset(name)
+        return session.volatileConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
     fun getConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.config.get(name)
+        return session.volatileConfig.get(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
@@ -323,7 +322,7 @@ object CommonFunctions {
 
     @UDFunction(description = "Get the initial configuration properties of the process")
     @JvmStatic
-    fun config(): SimpleResultSet {
+    fun volatileConfig(): SimpleResultSet {
         val rs = SimpleResultSet()
 
         rs.addColumn("NAME")
@@ -344,7 +343,7 @@ object CommonFunctions {
         rs.addColumn("VALUE")
 
         val session = getSession(h2session)
-        for ((key, value) in session.config.unbox()) {
+        for ((key, value) in session.volatileConfig.unbox()) {
             rs.addRow(key, value)
         }
 
@@ -389,7 +388,7 @@ object CommonFunctions {
     @JvmStatic
     fun addProxy(ipPort: String): Boolean {
         val proxyEntry = ProxyEntry.parse(ipPort)
-        if (proxyEntry != null && proxyEntry.testNetwork()) {
+        if (proxyEntry != null && proxyEntry.test()) {
             return proxyPool.offer(proxyEntry)
         }
 
@@ -434,12 +433,6 @@ object CommonFunctions {
         }
 
         return count
-    }
-
-    @UDFunction(description = "Recover proxies in proxy pool")
-    @JvmStatic
-    fun recoverProxyPool(n: Int): Int {
-        return proxyPool.recover(n)
     }
 
     @UDFunction(description = "Test if the given string is a number")
@@ -489,7 +482,7 @@ object CommonFunctions {
     }
 
     /**
-     * Set config to the given value
+     * Set volatileConfig to the given value
      * @param h2session H2 session
      * @param name The property name to set
      * @param value The property value to set
@@ -500,9 +493,9 @@ object CommonFunctions {
         Objects.requireNonNull(name)
 
         val session = getSession(h2session)
-        val old = session.config.get(name)
+        val old = session.volatileConfig.get(name)
         if (value != null) {
-            session.config.set(name, value, ttl)
+            session.volatileConfig.set(name, value, ttl)
             return old
         }
 

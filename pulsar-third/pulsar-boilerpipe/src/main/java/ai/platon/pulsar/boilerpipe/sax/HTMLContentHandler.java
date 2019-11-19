@@ -1,7 +1,5 @@
 package ai.platon.pulsar.boilerpipe.sax;
 
-import ai.platon.pulsar.boilerpipe.utils.PageCategory;
-import ai.platon.pulsar.boilerpipe.utils.UnicodeTokenizer;
 import ai.platon.pulsar.boilerpipe.document.LabelAction;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.scoring;
 
-import ai.platon.pulsar.common.ScoreEntry;
 import ai.platon.pulsar.common.ScoreVector;
 import com.google.common.math.IntMath;
 import org.apache.commons.math3.analysis.function.Sigmoid;

@@ -33,15 +33,21 @@
     </bean>
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
-        <constructor-arg ref="fetchStatusTracker"/>
+        <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
-        <constructor-arg ref="fetchStatusTracker"/>
+        <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
+    <bean id="seleniumFetchComponent" class="ai.platon.pulsar.crawl.component.SeleniumFetchComponent" destroy-method="close">
+        <constructor-arg ref="globalExecutor"/>
+        <constructor-arg ref="seleniumEngine"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
     <bean id="parseComponent" class="ai.platon.pulsar.crawl.component.ParseComponent">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="pageParser"/>
@@ -64,6 +70,43 @@
         <constructor-arg ref="batchFetchComponent"/>
         <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="updateComponent"/>
+    </bean>
+
+    <bean id="jitIndexer" class="ai.platon.pulsar.crawl.fetch.indexer.JITIndexer" destroy-method="close">
+        <constructor-arg ref="scoringFilters"/>
+        <constructor-arg ref="indexingFilters"/>
+        <constructor-arg ref="indexWriters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="taskMonitor" class="ai.platon.pulsar.crawl.fetch.TaskMonitor" destroy-method="close">
+        <constructor-arg ref="fetchTaskTracker"/>
+        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="taskScheduler" class="ai.platon.pulsar.crawl.fetch.TaskScheduler" destroy-method="close">
+        <constructor-arg ref="pageParser"/>
+        <constructor-arg ref="jitIndexer"/>
+        <constructor-arg ref="taskMonitor"/>
+        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="taskSchedulers" class="ai.platon.pulsar.crawl.fetch.TaskSchedulers" destroy-method="close">
+        <constructor-arg>
+            <list>
+                <ref bean="taskScheduler"/>
+            </list>
+        </constructor-arg>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.FetchMonitor" destroy-method="close">
+        <constructor-arg ref="batchFetchComponent"/>
+        <constructor-arg ref="taskMonitor"/>
+        <constructor-arg ref="taskSchedulers"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
 </beans>

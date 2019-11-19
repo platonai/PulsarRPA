@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import static org.jsoup.nodes.Document.OutputSettings;
 import static org.jsoup.nodes.Entities.EscapeMode.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class EntitiesTest {
     @Test public void escape() {
@@ -31,7 +31,7 @@ public class EntitiesTest {
         assertEquals(text, Entities.unescape(escapedUtfMin));
     }
 
-    @Test public void escapedSupplemtary() {
+    @Test public void escapedSupplementary() {
         String text = "\uD835\uDD59";
         String escapedAscii = Entities.escape(text, new OutputSettings().charset("ascii").escapeMode(base));
         assertEquals("&#x1d559;", escapedAscii);

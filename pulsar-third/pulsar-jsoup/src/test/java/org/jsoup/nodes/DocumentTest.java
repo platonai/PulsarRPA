@@ -9,11 +9,19 @@ import org.jsoup.select.Elements;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  Tests for Document.
@@ -124,7 +132,7 @@ public class DocumentTest {
                 " </body>\n" +
                 "</html>", doc.html());
 
-        doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+        doc.outputSettings().syntax(Syntax.xml);
         assertEquals("<!DOCTYPE html>\n" +
                 "<html>\n" +
                 " <head></head>\n" +

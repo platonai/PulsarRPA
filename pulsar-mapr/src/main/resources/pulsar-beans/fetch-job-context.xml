@@ -7,43 +7,7 @@
 
     <import resource="classpath:/pulsar-beans/components-context.xml"/>
 
-    <bean id="taskMonitor" class="ai.platon.pulsar.jobs.fetch.TaskMonitor" destroy-method="close">
-        <constructor-arg ref="fetchStatusTracker"/>
-        <constructor-arg ref="pulsarMetrics"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="jitIndexer" class="ai.platon.pulsar.jobs.fetch.indexer.JITIndexer" destroy-method="close">
-        <constructor-arg ref="scoringFilters"/>
-        <constructor-arg ref="indexingFilters"/>
-        <constructor-arg ref="indexWriters"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="taskScheduler" class="ai.platon.pulsar.jobs.fetch.TaskScheduler" destroy-method="close">
-        <constructor-arg ref="pageParser"/>
-        <constructor-arg ref="jitIndexer"/>
-        <constructor-arg ref="taskMonitor"/>
-        <constructor-arg ref="pulsarMetrics"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="taskSchedulers" class="ai.platon.pulsar.jobs.fetch.TaskSchedulers" destroy-method="close">
-        <constructor-arg>
-            <list>
-                <ref bean="taskScheduler"/>
-            </list>
-        </constructor-arg>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="fetchServer" class="ai.platon.pulsar.jobs.fetch.service.jersey1.JerseyFetchServer" destroy-method="shutdown">
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="fetchMonitor" class="ai.platon.pulsar.jobs.fetch.FetchMonitor" destroy-method="close">
-        <constructor-arg ref="taskMonitor"/>
-        <constructor-arg ref="taskSchedulers"/>
         <constructor-arg ref="conf"/>
     </bean>
 

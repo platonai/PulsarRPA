@@ -6,32 +6,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.*;
+import java.time.Duration;
 import java.util.regex.Pattern;
 
 public class NetUtil {
 
     private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
-    public static int ProxyConnectionTimeout = 5 * 1000;
+    public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
 
-    public static final Pattern ipPortPattern = // Pattern for matching ip[:port]
-            Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
+    // Pattern for matching ip[:port]
+    public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
     public static boolean testNetwork(String ip, int port) {
         return testTcpNetwork(ip, port);
     }
 
     public static boolean testHttpNetwork(URL url) {
+        return testHttpNetwork(url, null);
+    }
+
+    public static boolean testHttpNetwork(URL url, Proxy proxy) {
         boolean reachable = false;
 
         try {
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setConnectTimeout(ProxyConnectionTimeout);
+            HttpURLConnection con;
+            if (proxy != null) {
+                con = (HttpURLConnection) url.openConnection(proxy);
+            } else {
+                con = (HttpURLConnection) url.openConnection();
+            }
+            con.setConnectTimeout((int) PROXY_CONNECTION_TIMEOUT.toMillis());
             con.connect();
-            // logger.info("available proxy server {} : {}", ip, port);
+
+            // log.debug("Proxy is available {} for {}", proxy, url);
+
             reachable = true;
             con.disconnect();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         return reachable;
     }
@@ -40,17 +53,22 @@ public class NetUtil {
         try {
             URL url = new URL("http", host, port, "/");
             return testHttpNetwork(url);
-        } catch (MalformedURLException ignored) {}
+        } catch (MalformedURLException ignored) {
+        }
 
         return false;
     }
 
     public static boolean testTcpNetwork(String ip, int port) {
+        return testTcpNetwork(ip, port, PROXY_CONNECTION_TIMEOUT);
+    }
+
+    public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
         boolean reachable = false;
         Socket con = new Socket();
 
         try {
-            con.connect(new InetSocketAddress(ip, port), ProxyConnectionTimeout);
+            con.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
             reachable = true;
             con.close();
         } catch (Exception ignored) {
@@ -120,7 +138,7 @@ public class NetUtil {
      * @return Host name or null if the name can not be determined
      */
     public static String getHostNameOfIP(String ipPort) {
-        if (null == ipPort || !ipPortPattern.matcher(ipPort).matches()) {
+        if (null == ipPort || !IP_PORT_PATTERN.matcher(ipPort).matches()) {
             return null;
         }
 

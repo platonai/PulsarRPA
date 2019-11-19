@@ -35,14 +35,20 @@ public class ParseSettings {
         preserveAttributeCase = attribute;
     }
 
-    String normalizeTag(String name) {
+    /**
+     * Normalizes a tag name according to the case preservation setting.
+     */
+    public String normalizeTag(String name) {
         name = name.trim();
         if (!preserveTagCase)
             name = lowerCase(name);
         return name;
     }
 
-    String normalizeAttribute(String name) {
+    /**
+     * Normalizes an attribute according to the case preservation setting.
+     */
+    public String normalizeAttribute(String name) {
         name = name.trim();
         if (!preserveAttributeCase)
             name = lowerCase(name);

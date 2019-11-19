@@ -8,6 +8,7 @@ package org.h2.server;
 import org.h2.Driver;
 import org.h2.api.ErrorCode;
 import org.h2.engine.Constants;
+import org.h2.engine.SessionRemote;
 import org.h2.message.DbException;
 import org.h2.util.*;
 
@@ -305,6 +306,8 @@ public class TcpServer implements Service {
                 }
             }
         }
+
+        SessionRemote.shutdownSessionFactory();
     }
 
     /**

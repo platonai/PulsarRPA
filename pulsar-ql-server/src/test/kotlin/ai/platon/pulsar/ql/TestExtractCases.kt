@@ -1,8 +1,9 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
+import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.WebPageFormatter
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.junit.Ignore
@@ -15,22 +16,35 @@ class TestExtractCases : TestBase() {
 
     @Test
     fun testSavePages() {
-        execute("SELECT ADMIN_SAVE('$productIndexUrl', 'product.index.html')")
-        execute("SELECT ADMIN_SAVE('$productDetailUrl', 'product.detail.html')")
-        execute("SELECT ADMIN_SAVE('$newsIndexUrl', 'news.index.html')")
-        execute("SELECT ADMIN_SAVE('$newsDetailUrl', 'news.detail.html')")
+        execute("CALL ADMIN_SAVE('$productIndexUrl', 'product.index.html')")
+        execute("CALL ADMIN_SAVE('$productDetailUrl', 'product.detail.html')")
+        execute("CALL ADMIN_SAVE('$newsIndexUrl', 'news.index.html')")
+        execute("CALL ADMIN_SAVE('$newsDetailUrl', 'news.detail.html')")
     }
 
     @Test
     fun testLoadAndGetFeatures() {
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl --expires=1s') LIMIT 20")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl -expires 1d') LIMIT 20")
+    }
+
+    @Test
+    fun testLoadAndGetLinks() {
+        // val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=item]"
+        val expr = "a[href~=item]"
+        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl -expires 1s', '$expr')")
+    }
+
+    @Test
+    fun testLoadAndGetAnchors() {
+        // val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=item]"
+        val expr = "a[href~=item]"
+        execute("SELECT * FROM LOAD_AND_GET_ANCHORS('$productIndexUrl -expires 1d', '$expr')")
     }
 
     @Test
     fun testAccumulateVividLinks() {
-        val expr = "div:expr(WIDTH>=210 && WIDTH<=230 && HEIGHT>=400 && HEIGHT<=420 && SIBLING>30 ) a[href~=detail]"
-        execute("SELECT * FROM LOAD_AND_GET_LINKS('$productIndexUrl --expires=1s', '$expr')")
         val session = pc.createSession()
+        session.load("$productIndexUrl -i 1d")
         println(WebPageFormatter(session.getOrNil(productIndexUrl)))
     }
 
@@ -47,7 +61,8 @@ class TestExtractCases : TestBase() {
         session.flush()
 
         println("Loading " + page.vividLinks.size + " out links")
-        session.loadAll(page.vividLinks.keys.map { it -> it.toString() })
+        val optins = LoadOptions.create()
+        session.loadAll(page.vividLinks.keys.map { it -> it.toString() }, optins)
 
         var page2 = session.getOrNil(URL_TRACKER_HOME_URL)
         println(WebPageFormatter(page2))
@@ -65,17 +80,35 @@ class TestExtractCases : TestBase() {
         val limit = 20
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1d') WHERE SIBLING > 30 LIMIT $limit")
 
-        execute("CALL SET_PAGE_EXPIRES('1d', 1)")
-        val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"
+        execute("CALL SET_PAGE_EXPIRES('1s', 10)")
+        // val expr = "*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a"
+        val expr = "a[href~=item]"
         val sql = """
 SELECT
   DOM_BASE_URI(DOM) AS BaseUri,
   DOM_FIRST_TEXT(DOM, '.brand') AS Title,
   DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
-  DOMWIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
-  DOMHEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
+  DOM_WIDTH(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS WIDTH,
+  DOM_HEIGHT(DOM_SELECT_FIRST(DOM, '.pbox_price')) AS HEIGHT,
   DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
+FROM LOAD_OUT_PAGES('$url -i 1s', '$expr', 1, $limit)
+"""
+        execute(sql)
+    }
+
+    @Test
+    fun testExtractSinglePageForTmall() {
+        val sql = """
+select
+    dom_first_text(dom, 'h1') as title,
+    dom_first_text(dom, '#J_PromoPrice .tm-price') as price,
+    dom_first_text(dom, '#J_StrPriceModBox .tm-price') as tag_price,
+    dom_first_text(dom, '.tm-price') as tag_price1,
+    dom_first_text(dom, '.tm-ind-sellCount .tm-count') as sell_count,
+    dom_first_text(dom, '.tm-ind-reviewCount .tm-count') as review_count,
+    dom_base_uri(dom)
+from
+    dom_load_and_select('https://detail.tmall.com/item.htm?id=577089875457 -i 1d -sc 20', ':root');
 """
         execute(sql)
     }
@@ -87,7 +120,8 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, $limit)
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url --expires=1s') WHERE SIBLING > 30")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
-        val expr = "*:expr(width>=210 && width<=230 && height>=380 && height<=420 && sibling>30 ) a[href~=detail]"
+        // val expr = "*:expr(width>=210 && width<=230 && height>=380 && height<=420 && sibling>30 ) a[href~=detail]"
+        val expr = "a[href~=detail]"
         val sql = """
 SELECT
   DOM_BASE_URI(DOM) AS Uri,
@@ -126,9 +160,9 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
-        val restrictCss = "*:expr(IMG>0 && WIDTH>200 && HEIGHT>200 && SIBLING>30)"
+//        val restrictCss = "*:expr(IMG>0 && WIDTH>200 && HEIGHT>200 && SIBLING>30)"
 //        val restrictCss = "*:expr(WIDTH>=200 && WIDTH<=250 && HEIGHT>=350 && HEIGHT<=500 && _img>0 ) a[href~=item]"
-//        val restrictCss = "li.gl-item a[href~=item]"
+        val restrictCss = "a[href~=item]"
         val sql = """
 SELECT
   DOM_FIRST_TEXT(DOM, '.sku-name') AS NAME,

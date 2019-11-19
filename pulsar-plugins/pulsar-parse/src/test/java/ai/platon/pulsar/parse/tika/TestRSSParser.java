@@ -19,13 +19,13 @@ package ai.platon.pulsar.parse.tika;
 
 import ai.platon.pulsar.common.MimeUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.WebPage;
-import com.google.common.collect.Lists;
 import ai.platon.pulsar.crawl.parse.PageParser;
 import ai.platon.pulsar.crawl.parse.ParseException;
 import ai.platon.pulsar.crawl.parse.ParseResult;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
+import ai.platon.pulsar.persist.HypeLink;
+import ai.platon.pulsar.persist.WebPage;
+import com.google.common.collect.Lists;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;

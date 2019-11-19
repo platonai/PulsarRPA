@@ -1,7 +1,6 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.nodes.Element
-import org.jsoup.select.NodeTraversor
 import javax.lang.model.element.ElementVisitor
 
 interface IElementVisitor {

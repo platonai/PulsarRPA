@@ -1,8 +1,5 @@
 package ai.platon.pulsar.boilerpipe.extractors;
 
-import ai.platon.pulsar.boilerpipe.filters.heuristics.*;
-import ai.platon.pulsar.common.DateTimeUtil;
-import com.google.common.collect.ListMultimap;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.filters.heuristics.*;
 import ai.platon.pulsar.boilerpipe.filters.simple.BoilerplateBlockFilter;
@@ -10,6 +7,8 @@ import ai.platon.pulsar.boilerpipe.filters.simple.LabeledFieldExtractorFilter;
 import ai.platon.pulsar.boilerpipe.filters.simple.RegexFieldExtractorFilter;
 import ai.platon.pulsar.boilerpipe.filters.statistics.NumWordsRulesClassifier;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
+import ai.platon.pulsar.common.DateTimeUtil;
+import com.google.common.collect.ListMultimap;
 
 import java.time.ZoneId;
 import java.util.Set;

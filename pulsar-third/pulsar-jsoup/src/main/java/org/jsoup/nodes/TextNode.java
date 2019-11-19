@@ -1,6 +1,6 @@
 package org.jsoup.nodes;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class TextNode extends LeafNode {
      * @see TextNode#getWholeText()
      */
     public String text() {
-        return normaliseWhitespace(getWholeText());
+        return StringUtil.normaliseWhitespace(getWholeText());
     }
     
     /**

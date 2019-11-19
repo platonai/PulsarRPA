@@ -16,12 +16,12 @@
  */
 package ai.platon.pulsar.scoring.link;
 
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.crawl.scoring.ScoringFilter;
+import ai.platon.pulsar.persist.WebPage;
 
 public class LinkAnalysisScoringFilter implements ScoringFilter {
 

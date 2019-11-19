@@ -3,15 +3,13 @@ package org.jsoup.nodes;
 import org.apache.commons.math3.linear.OpenMapRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.jsoup.SerializationException;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
-import org.jsoup.parser.Parser;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
 
@@ -103,12 +101,13 @@ public abstract class Node implements Cloneable {
 
     /**
      * Set an attribute (key=value). If the attribute already exists, it is replaced. The attribute key comparison is
-     * <b>case insensitive</b>.
+     * <b>case insensitive</b>. The key will be set with case sensitivity as set in the parser settings.
      * @param attributeKey The attribute key.
      * @param attributeValue The attribute value.
      * @return this (for chaining)
      */
     public Node attr(String attributeKey, String attributeValue) {
+        attributeKey = NodeUtils.parser(this).settings().normalizeAttribute(attributeKey);
         attributes().putIgnoreCase(attributeKey, attributeValue);
         return this;
     }
@@ -332,7 +331,7 @@ public abstract class Node implements Cloneable {
     public abstract int childNodeSize();
 
     protected Node[] childNodesAsArray() {
-        return ensureChildNodes().toArray(new Node[childNodeSize()]);
+        return ensureChildNodes().toArray(new Node[0]);
     }
 
     /**
@@ -434,8 +433,8 @@ public abstract class Node implements Cloneable {
         Validate.notNull(parentNode);
 
         Element context = parent() instanceof Element ? (Element) parent() : null;
-        List<Node> nodes = Parser.parseFragment(html, context, baseUri());
-        parentNode.addChildren(index, nodes.toArray(new Node[nodes.size()]));
+        List<Node> nodes = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
+        parentNode.addChildren(index, nodes.toArray(new Node[0]));
     }
 
     /**
@@ -447,9 +446,9 @@ public abstract class Node implements Cloneable {
         Validate.notEmpty(html);
 
         Element context = parent() instanceof Element ? (Element) parent() : null;
-        List<Node> wrapChildren = Parser.parseFragment(html, context, baseUri());
+        List<Node> wrapChildren = NodeUtils.parser(this).parseFragmentInput(html, context, baseUri());
         Node wrapNode = wrapChildren.get(0);
-        if (wrapNode == null || !(wrapNode instanceof Element)) // nothing to wrap with; noop
+        if (!(wrapNode instanceof Element)) // nothing to wrap with; noop
             return null;
 
         Element wrap = (Element) wrapNode;
@@ -662,23 +661,19 @@ public abstract class Node implements Cloneable {
     }
 
     /**
-     Get the outer HTML of this node.
-     @return HTML
+     Get the outer HTML of this node. For example, on a {@code p} element, may return {@code <p>Para</p>}.
+     @return outer HTML
+     @see Element#html()
+     @see Element#text()
      */
     public String outerHtml() {
-        StringBuilder accum = new StringBuilder(128);
+        StringBuilder accum = StringUtil.borrowBuilder();
         outerHtml(accum);
-        return accum.toString();
+        return StringUtil.releaseBuilder(accum);
     }
 
     protected void outerHtml(Appendable accum) {
-        NodeTraversor.traverse(new OuterHtmlVisitor(accum, getOutputSettings()), this);
-    }
-
-    // if this node has no document (or parent), retrieve the default output settings
-    Document.OutputSettings getOutputSettings() {
-        Document owner = ownerDocument();
-        return owner != null ? owner.outputSettings() : (new Document("")).outputSettings();
+        NodeTraversor.traverse(new OuterHtmlVisitor(accum, NodeUtils.outputSettings(this)), this);
     }
 
     /**
@@ -701,6 +696,11 @@ public abstract class Node implements Cloneable {
         return appendable;
     }
 
+    /**
+     * Gets this node's outer HTML.
+     * @return outer HTML.
+     * @see #outerHtml()
+     */
 	public String toString() {
         return outerHtml();
     }
@@ -727,7 +727,6 @@ public abstract class Node implements Cloneable {
      * @param o other object to compare to
      * @return true if the content of this node is the same as the other
      */
-
     public boolean hasSameValue(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -7,15 +7,16 @@ import com.beust.jcommander.ParameterException
 import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.util.ArrayList
-import java.util.HashSet
+import java.util.*
 import java.util.regex.Pattern
+import kotlin.system.exitProcess
 
 /**
  * Created by vincent on 17-4-12.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class PulsarOptions : Parameterized {
+    protected val log = LoggerFactory.getLogger(PulsarOptions::class.java)
 
     var expandAtSign = true
     // arguments
@@ -37,7 +38,7 @@ open class PulsarOptions : Parameterized {
             // Since space can not appear in dynamic parameters in command line, we use % instead
             this.argv[i] = this.argv[i].replace("%".toRegex(), " ")
         }
-        args = StringUtils.join(argv, DEFAULT_DELIMETER)
+        args = argv.joinToString(DEFAULT_DELIMETER)
     }
 
     constructor(argv: Map<String, String>)
@@ -74,11 +75,11 @@ open class PulsarOptions : Parameterized {
 
             if (isHelp) {
                 jc.usage()
-                System.exit(0)
+                exitProcess(0)
             }
         } catch (e: ParameterException) {
             println(e.toString())
-            System.exit(0)
+            exitProcess(0)
         }
     }
 
@@ -132,9 +133,7 @@ open class PulsarOptions : Parameterized {
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(PulsarOptions::class.java)
-
-        val DEFAULT_DELIMETER = " "
+        const val DEFAULT_DELIMETER = " "
         val CMD_SPLIT_PATTERN = Pattern.compile("\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\\S+")
 
         @JvmOverloads

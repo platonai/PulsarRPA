@@ -137,7 +137,7 @@ object PulsarFiles {
     fun createSharedFileTask(url: String) {
         try {
             val paths = PulsarPaths
-            val path = paths.get(paths.webCacheDir.toString(), paths.fromUri(url, ".task"))
+            val path = paths.get(paths.WEB_CACHE_DIR.toString(), paths.fromUri(url, ".task"))
             Files.write(path, url.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
             log.error(e.toString())
@@ -146,7 +146,7 @@ object PulsarFiles {
 
     fun getCachedWebPage(url: String): String? {
         val paths = PulsarPaths
-        val path = paths.get(paths.webCacheDir.toString(), paths.fromUri(url, ".htm"))
+        val path = paths.get(paths.WEB_CACHE_DIR.toString(), paths.fromUri(url, ".htm"))
         if (Files.notExists(path)) {
             return null
         }

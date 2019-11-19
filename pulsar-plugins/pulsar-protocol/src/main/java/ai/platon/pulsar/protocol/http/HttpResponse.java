@@ -21,14 +21,15 @@ import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.proxy.NoProxyException;
 import ai.platon.pulsar.common.proxy.ProxyEntry;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.MultiMetadata;
-import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
 import ai.platon.pulsar.crawl.protocol.http.HttpException;
+import ai.platon.pulsar.persist.ProtocolStatus;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.MultiMetadata;
+import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
 
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLSocket;
@@ -37,7 +38,6 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -238,11 +238,10 @@ public class HttpResponse implements Response {
             if (http.useProxyPool() && proxy != null) {
                 // put back the proxy resource, this is essential important!
                 if (fetchSuccess) {
-                    Http.LOG.debug("put back proxy {}", proxy.ipPort());
-
-                    http.proxyPool().add(proxy);
+                    Http.LOG.debug("put back proxy {}", proxy);
+                    http.proxyPool().offer(proxy);
                 } else {
-                    Http.LOG.debug("retire proxy {}", proxy.ipPort());
+                    Http.LOG.debug("retire proxy {}", proxy);
                     http.proxyPool().retire(proxy);
                 }
             }
@@ -254,8 +253,9 @@ public class HttpResponse implements Response {
     }
 
     @Override
-    public int getStatus() {
-        return -1;
+    public ProtocolStatus getStatus() {
+        System.out.println("Should check the implementation, it always return STATUS_NOTFETCHED");
+        return ProtocolStatus.STATUS_NOTFETCHED;
     }
 
     @Override

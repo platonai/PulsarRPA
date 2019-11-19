@@ -16,8 +16,8 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.app.homepage;
 
-import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.ScoreVector;
+import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.jobs.common.SelectorEntry;
 import ai.platon.pulsar.jobs.common.URLPartitioner;
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper;
@@ -29,7 +29,7 @@ import java.io.IOException;
 
 import static ai.platon.pulsar.common.CommonCounter.mPersist;
 import static ai.platon.pulsar.common.CommonCounter.mRows;
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STAT_INDEX_HOME_URL;
 import static ai.platon.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 import static ai.platon.pulsar.common.config.PulsarConstants.TOP_PAGE_HOME_URL;
 

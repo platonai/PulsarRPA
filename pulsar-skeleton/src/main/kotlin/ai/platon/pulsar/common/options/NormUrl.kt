@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.PulsarConstants
 import java.net.URL
 
-class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
+open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
     constructor(u: URL, options: LoadOptions): this(u.toString(), options)
 
     private val u by lazy { Urls.getURLOrNull(url) }
@@ -15,6 +15,7 @@ class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
     val isNotNil get() = !isNil
     val isValid get() = u != null
     val isInvalid get() = !isValid
+    val configuredUrl get() = "$url $options"
 
     fun toURL(): URL? { return u }
 
@@ -26,15 +27,15 @@ class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is NormUrl && url == other.url
+        return other is NormUrl && url == other.url && options == other.options
     }
 
     override fun compareTo(other: NormUrl): Int {
-        return url.compareTo(other.url)
+        return configuredUrl.compareTo(other.configuredUrl)
     }
 
     override fun toString(): String {
-        return url
+        return configuredUrl
     }
 
     companion object {

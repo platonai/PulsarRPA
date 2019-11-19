@@ -2,14 +2,12 @@ package ai.platon.pulsar.crawl.common;
 
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.Urls;
-import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
 import ai.platon.pulsar.persist.metadata.PageCategory;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
 

@@ -2,7 +2,12 @@ package org.jsoup.parser;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.io.BufferedReader;
+import java.io.StringReader;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for character reader.
@@ -10,6 +15,7 @@ import static org.junit.Assert.*;
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class CharacterReaderTest {
+    public final static int maxBufferLen = CharacterReader.maxBufferLen;
 
     @Test public void consume() {
         CharacterReader r = new CharacterReader("one");
@@ -254,6 +260,51 @@ public class CharacterReaderTest {
         r = new CharacterReader("Two");
         String two = r.consumeToEnd();
         assertEquals("Two", two);
+    }
+
+    @Test
+    public void consumeToNonexistentEndWhenAtAnd() {
+        CharacterReader r = new CharacterReader("<!");
+        assertTrue(r.matchConsume("<!"));
+        assertTrue(r.isEmpty());
+
+        String after = r.consumeTo('>');
+        assertEquals("", after);
+
+        assertTrue(r.isEmpty());
+    }
+
+    @Test
+    public void notEmptyAtBufferSplitPoint() {
+        CharacterReader r = new CharacterReader(new StringReader("How about now"), 3);
+        assertEquals("How", r.consumeTo(' '));
+        assertFalse("Should not be empty", r.isEmpty());
+
+        assertEquals(' ', r.consume());
+        assertFalse(r.isEmpty());
+    }
+
+    @Test public void bufferUp() {
+        String note = "HelloThere"; // + ! = 11 chars
+        int loopCount = 64;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < loopCount; i++) {
+            sb.append(note);
+            sb.append("!");
+        }
+
+        String s = sb.toString();
+        BufferedReader br = new BufferedReader(new StringReader(s));
+
+        CharacterReader r = new CharacterReader(br);
+        for (int i = 0; i < loopCount; i++) {
+            String pull = r.consumeTo('!');
+            assertEquals(note, pull);
+            assertEquals('!', r.current());
+            r.advance();
+        }
+
+        assertTrue(r.isEmpty());
     }
 
 

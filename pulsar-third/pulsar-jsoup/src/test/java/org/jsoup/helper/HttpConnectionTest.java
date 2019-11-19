@@ -1,6 +1,7 @@
 package org.jsoup.helper;
 
 import org.jsoup.Connection;
+import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
 import org.jsoup.integration.ParseTest;
@@ -10,9 +11,16 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class HttpConnectionTest {
     /* most actual network http connection tests are in integration */
@@ -229,5 +237,22 @@ public class HttpConnectionTest {
         URL url1 = new URL("http://test.com/?q=white space");
         URL url2 = HttpConnection.encodeUrl(url1);
         assertEquals("http://test.com/?q=white%20space", url2.toExternalForm());
+    }
+
+    @Test public void noUrlThrowsValidationError() throws IOException {
+        HttpConnection con = new HttpConnection();
+        boolean threw = false;
+        try {
+            con.execute();
+        } catch (IllegalArgumentException e) {
+            threw = true;
+            assertEquals("URL must be specified to connect", e.getMessage());
+        }
+        assertTrue(threw);
+    }
+
+    @Test public void handlesHeaderEncodingOnRequest() {
+        Connection.Request req = new HttpConnection.Request();
+        req.addHeader("xxx", "é");
     }
 }

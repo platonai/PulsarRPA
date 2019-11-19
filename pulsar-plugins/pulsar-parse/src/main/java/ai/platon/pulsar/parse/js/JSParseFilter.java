@@ -17,15 +17,15 @@
 package ai.platon.pulsar.parse.js;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.ParseStatus;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes;
 import ai.platon.pulsar.crawl.parse.ParseFilter;
 import ai.platon.pulsar.crawl.parse.ParseResult;
 import ai.platon.pulsar.crawl.parse.Parser;
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags;
 import ai.platon.pulsar.crawl.parse.html.ParseContext;
+import ai.platon.pulsar.persist.HypeLink;
+import ai.platon.pulsar.persist.ParseStatus;
+import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.oro.text.regex.*;
 import org.slf4j.Logger;

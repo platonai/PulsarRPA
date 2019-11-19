@@ -1,17 +1,17 @@
 package ai.platon.pulsar.ql.h2
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
-import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.QuerySession
-import org.h2.engine.ConnectionInfo
-import org.h2.engine.Mode
-import org.h2.engine.Session
-import org.h2.engine.SysProperties
+import ai.platon.pulsar.ql.SQLContext
+import org.h2.engine.*
+import org.h2.jdbc.JdbcConnection
 import org.h2.message.TraceSystem
 import org.h2.util.JdbcUtils
 import org.h2.util.Utils
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 
 object H2SessionFactory : org.h2.engine.SessionFactory {
 
@@ -32,6 +32,10 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @JvmStatic
     fun getInstance(): H2SessionFactory {
         return H2SessionFactory
+    }
+
+    fun isColumnRetrieval(conn: Connection): Boolean {
+        return Constants.CONN_URL_COLUMNLIST in conn.metaData.url
     }
 
     /**
@@ -65,8 +69,30 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     @Synchronized
+    fun getSession(connection: Connection): QuerySession {
+        val conn = connection as JdbcConnection
+        return getSession(conn.session)
+    }
+
+    @Synchronized
+    fun getSession(sessionInterface: SessionInterface): QuerySession {
+        val h2session = sessionInterface as Session
+        return sqlContext.getSession(h2session.serialId)
+    }
+
+    @Synchronized
     override fun closeSession(serialId: Int) {
         sqlContext.closeSession(serialId)
+    }
+
+    @Synchronized
+    fun shutdown() {
+        PulsarEnv.getOrCreate().shutdown()
+    }
+
+    @Synchronized
+    fun shutdownNow() {
+        PulsarEnv.getOrCreate().shutdown()
     }
 }
 

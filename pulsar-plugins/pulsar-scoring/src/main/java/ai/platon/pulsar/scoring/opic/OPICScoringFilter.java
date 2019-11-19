@@ -15,14 +15,14 @@ package ai.platon.pulsar.scoring.opic; /**
  * limitations under the License.
  */
 
+import ai.platon.pulsar.common.ScoreVector;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.crawl.index.IndexDocument;
+import ai.platon.pulsar.crawl.scoring.ScoringFilter;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.graph.WebEdge;
 import ai.platon.pulsar.persist.graph.WebGraph;
-import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.common.ScoreVector;
-import ai.platon.pulsar.crawl.scoring.ScoringFilter;
 
 import java.net.MalformedURLException;
 import java.net.URL;

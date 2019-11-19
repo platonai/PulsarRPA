@@ -17,13 +17,16 @@
 
 package ai.platon.pulsar.crawl.parse.html;
 
-import ai.platon.pulsar.common.*;
+import ai.platon.pulsar.common.DomUtil;
+import ai.platon.pulsar.common.EncodingDetector;
+import ai.platon.pulsar.common.NodeWalker;
+import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.crawl.filter.CrawlFilters;
+import ai.platon.pulsar.crawl.parse.Parser;
 import ai.platon.pulsar.persist.HypeLink;
 import ai.platon.pulsar.persist.WebPage;
 import com.google.common.collect.Maps;
-import ai.platon.pulsar.crawl.filter.CrawlFilters;
-import ai.platon.pulsar.crawl.parse.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.NamedNodeMap;

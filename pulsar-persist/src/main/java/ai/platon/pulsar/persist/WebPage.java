@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
@@ -78,8 +79,8 @@ public class WebPage {
 
     public static WebPage NIL = newInternalPage(NIL_PAGE_URL, "nil", "nil");
     /**
-     * The url of the web page
-     */
+     * The url is the permanent internal address, and the location is the last working address
+     * */
     private String url = "";
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this object
@@ -92,7 +93,7 @@ public class WebPage {
     /**
      * Object scope configuration
      */
-    private MutableConfig mutableConfig;
+    private VolatileConfig volatileConfig;
     /**
      * Object scope variables
      */
@@ -128,27 +129,34 @@ public class WebPage {
     }
 
     @Nonnull
-    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery) {
+    public static WebPage newWebPage(String originalUrl, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
-        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
+        Objects.requireNonNull(volatileConfig);
+        return newWebPageInternal(originalUrl, volatileConfig);
+    }
+
+    @Nonnull
+    public static WebPage newWebPage(String originalUrl, boolean shortenKey) {
+        Objects.requireNonNull(originalUrl);
+        String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
     @Nonnull
-    public static WebPage newWebPage(String originalUrl, boolean ignoreQuery, MutableConfig mutableConfig) {
+    public static WebPage newWebPage(String originalUrl, boolean shortenKey, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
-        Objects.requireNonNull(mutableConfig);
-        String url = ignoreQuery ? Urls.normalize(originalUrl, ignoreQuery) : originalUrl;
-        return newWebPageInternal(url, mutableConfig);
+        Objects.requireNonNull(volatileConfig);
+        String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
+        return newWebPageInternal(url, volatileConfig);
     }
 
-    private static WebPage newWebPageInternal(String url, @Nullable MutableConfig mutableConfig) {
+    private static WebPage newWebPageInternal(String url, VolatileConfig volatileConfig) {
         Objects.requireNonNull(url);
 
         WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
 
         page.setLocation(url);
-        page.setMutableConfig(mutableConfig);
+        page.setVolatileConfig(volatileConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(impreciseNow);
         page.setScore(0);
@@ -245,6 +253,9 @@ public class WebPage {
         return new Utf8(value);
     }
 
+    /**
+     * page.location is the last working address, and page.url is the permanent internal address
+     * */
     public String getUrl() {
         return url != null ? url : "";
     }
@@ -286,18 +297,18 @@ public class WebPage {
     }
 
     @Nullable
-    public MutableConfig getMutableConfig() {
-        return mutableConfig;
+    public VolatileConfig getVolatileConfig() {
+        return volatileConfig;
     }
 
-    public void setMutableConfig(MutableConfig mutableConfig) {
-        this.mutableConfig = mutableConfig;
+    public void setVolatileConfig(VolatileConfig volatileConfig) {
+        this.volatileConfig = volatileConfig;
     }
 
     @Nonnull
     public MutableConfig getMutableConfigOrElse(MutableConfig fallbackConfig) {
         Objects.requireNonNull(fallbackConfig);
-        return mutableConfig != null ? mutableConfig : fallbackConfig;
+        return volatileConfig != null ? volatileConfig : fallbackConfig;
     }
 
     public Metadata getMetadata() {
@@ -795,11 +806,6 @@ public class WebPage {
             return new ByteArrayInputStream(ByteUtils.toBytes('\0'));
         }
 
-//        if (LOG.isDebugEnabled()) {
-//            LOG.debug(String.format("WebPage content as ByteBuffer: %d - %d",
-//                    contentInOctets.arrayOffset(), contentInOctets.position()));
-//        }
-
         return new ByteArrayInputStream(getContent().array(),
                 contentInOctets.arrayOffset() + contentInOctets.position(),
                 contentInOctets.remaining());
@@ -826,6 +832,7 @@ public class WebPage {
             setContentBytes(value.length);
         } else {
             page.setContent(null);
+            setContentBytes(0);
         }
     }
 
@@ -833,8 +840,29 @@ public class WebPage {
         return getMetadata().getInt(Name.CONTENT_BYTES, 0);
     }
 
-    public void setContentBytes(int bytes) {
+    private void setContentBytes(int bytes) {
+        if (bytes == 0) {
+            return;
+        }
+
         getMetadata().set(Name.CONTENT_BYTES, String.valueOf(bytes));
+
+        int count = getFetchCount();
+        int lastAveBytes = getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
+
+        int aveBytes;
+        if (count > 0 && lastAveBytes == 0) {
+            // old version, average bytes is not calculated
+            aveBytes = bytes;
+        } else {
+            aveBytes = (lastAveBytes * count + bytes) / (count + 1);
+        }
+
+        getMetadata().set(Name.AVE_CONTENT_BYTES, String.valueOf(aveBytes));
+    }
+
+    public int getAveContentBytes() {
+        return getMetadata().getInt(Name.AVE_CONTENT_BYTES, 0);
     }
 
     public String getContentType() {
@@ -859,6 +887,26 @@ public class WebPage {
             sig = ByteBuffer.wrap("".getBytes());
         }
         return StringUtil.toHexString(sig);
+    }
+
+    // TODO: use a separate avro field to hold BROWSER_JS_DATA
+    private BrowserJsData browserJsData = null;
+    public BrowserJsData getBrowserJsData() {
+        if (browserJsData == null) {
+            String json = getMetadata().get(Name.BROWSER_JS_DATA);
+            if (json != null) {
+                browserJsData = BrowserJsData.Companion.fromJson(json);
+            }
+        }
+
+        return browserJsData;
+    }
+
+    public void setBrowserJsData(BrowserJsData jsData) {
+        if (jsData != null) {
+            browserJsData = null;
+            getMetadata().set(Name.BROWSER_JS_DATA, jsData.toJson());
+        }
     }
 
     /**

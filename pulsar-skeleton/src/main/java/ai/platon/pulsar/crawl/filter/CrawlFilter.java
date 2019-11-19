@@ -29,7 +29,6 @@ import org.apache.hadoop.conf.Configured;
 import org.slf4j.Logger;
 import org.w3c.dom.Node;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 

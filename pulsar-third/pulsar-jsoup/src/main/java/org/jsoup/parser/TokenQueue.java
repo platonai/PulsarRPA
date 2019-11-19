@@ -1,6 +1,6 @@
 package org.jsoup.parser;
 
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 
 /**
@@ -262,16 +262,20 @@ public class TokenQueue {
         int end = -1;
         int depth = 0;
         char last = 0;
-        boolean inQuote = false;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
 
         do {
             if (isEmpty()) break;
             Character c = consume();
             if (last == 0 || last != ESC) {
-                if ((c.equals('\'') || c.equals('"')) && c != open)
-                    inQuote = !inQuote;
-                if (inQuote)
+                if (c.equals('\'') && c != open && !inDoubleQuote)
+                    inSingleQuote = !inSingleQuote;
+                else if (c.equals('"') && c != open && !inSingleQuote)
+                    inDoubleQuote = !inDoubleQuote;
+                if (inSingleQuote || inDoubleQuote)
                     continue;
+
                 if (c.equals(open)) {
                     depth++;
                     if (start == -1)
@@ -298,7 +302,7 @@ public class TokenQueue {
      * @return unescaped string
      */
     public static String unescape(String in) {
-        StringBuilder out = StringUtil.stringBuilder();
+        StringBuilder out = StringUtil.borrowBuilder();
         char last = 0;
         for (char c : in.toCharArray()) {
             if (c == ESC) {
@@ -309,7 +313,7 @@ public class TokenQueue {
                 out.append(c);
             last = c;
         }
-        return out.toString();
+        return StringUtil.releaseBuilder(out);
     }
 
     /**

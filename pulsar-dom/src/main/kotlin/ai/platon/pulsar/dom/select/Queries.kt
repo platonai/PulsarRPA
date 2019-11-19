@@ -1,13 +1,13 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.nodes.TraverseState
-import ai.platon.pulsar.dom.nodes.forEach
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
+import kotlin.math.max
 
 /**
  * In-box syntax, cases:
@@ -146,35 +146,59 @@ fun Node.all(predicate: (Node) -> Boolean): Boolean {
     return r
 }
 
+/**
+ * Notice: do not provide default value for offset, it overrides the default version in Node
+ * */
 @JvmOverloads
-fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elements {
     if (this !is Element) {
         return Elements()
     }
 
-    if (offset == 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    // TODO: do the filtering inside [MathematicalSelector#select]
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
-            .toCollection(Elements())
+    return MathematicalSelector.select(cssQuery, this, offset, limit)
 }
 
-@Deprecated("Use first instead", ReplaceWith("MathematicalSelector.selectFirst(cssQuery, this)"))
+fun <O> Node.select(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+                    transformer: (Element) -> O): List<O> {
+    return if (this is Element) {
+        MathematicalSelector.select(cssQuery, this, offset, limit, transformer)
+    } else listOf()
+}
+
+inline fun <R : Any, C : MutableCollection<in R>> Node.selectTo(destination: C,
+        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+        transformer: (Element) -> R) {
+    if (this is Element) {
+        select(query, offset, limit).mapTo(destination) { transformer(it) }
+    }
+}
+
+inline fun <R : Any> Node.selectNotNull(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+                                  transformer: (Element) -> R?): List<R> {
+    return if (this is Element) {
+        select(query, offset, limit).mapNotNull { transformer(it) }
+    } else listOf()
+}
+
+inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destination: C,
+        query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
+        transformer: (Element) -> R?) {
+    if (this is Element) {
+        select(query, offset, limit).mapNotNullTo(destination) { transformer(it) }
+    }
+}
+
+@Deprecated("Use select instead", ReplaceWith("Node.select(cssQuery)"))
+@JvmOverloads
+fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+    return select(cssQuery, offset, limit)
+}
+
+@Deprecated("Use first instead", ReplaceWith("Node.first(cssQuery)"))
 fun Node.selectFirst2(cssQuery: String): Element? {
     return if (this is Element) {
         MathematicalSelector.selectFirst(cssQuery, this)
     } else null
-}
-
-fun <O> Node.select(query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                    transformer: (Element) -> O): List<O> {
-    return if (this is Element) {
-        select2(query, offset, limit).map { transformer(it) }
-    } else listOf()
 }
 
 fun Node.first(cssQuery: String): Element? {
@@ -191,13 +215,12 @@ fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
 
 @JvmOverloads
 fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset == 1 && limit == Int.MAX_VALUE) {
+    if (offset <= 1 && limit == Int.MAX_VALUE) {
         return MathematicalSelector.select(cssQuery, this)
     }
 
-    var i = 1
-    return MathematicalSelector.select(cssQuery, this)
-            .takeWhile { i++ >= offset && i <= limit }
+    val drop = max(offset - 1, 0)
+    return MathematicalSelector.select(cssQuery, this).asSequence().drop(drop).take(limit)
             .toCollection(Elements())
 }
 
@@ -208,4 +231,17 @@ fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VAL
 inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, crossinline filter: (Element) -> Boolean): C {
     ElementTraversor.traverse(this) { if (filter(it)) { destination.add(it) } }
     return destination
+}
+
+fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
+    var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
+    val ap = appendix.trim()
+
+    val parts = q.split(" ")
+    // consider: body > div:nth-child(10) > ul > li:nth-child(3) > a:nth-child(2)
+    if (!parts[parts.size - 1].startsWith(ap, ignoreCase = true)) {
+        q += " $ap"
+    }
+
+    return q
 }

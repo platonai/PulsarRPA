@@ -1,11 +1,11 @@
 package org.jsoup;
 
-import org.jsoup.helper.DataUtil;
-import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.HttpConnection;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 /**
- The core public access point to the dom functionality.
+ The core public access point to the jsoup functionality.
 
  @author Jonathan Hedley */
 public class Jsoup {
@@ -63,7 +63,7 @@ public class Jsoup {
      * <p>
      * Use examples:
      * <ul>
-     *  <li><code>Document doc = Jsoup.connect("http://example.com").userAgent("Mozilla").data("name", "dom").get();</code></li>
+     *  <li><code>Document doc = Jsoup.connect("http://example.com").userAgent("Mozilla").data("name", "jsoup").get();</code></li>
      *  <li><code>Document doc = Jsoup.connect("http://example.com").cookie("auth", "token").post();</code></li>
      * </ul>
      * @param url URL to connect to. The protocol must be {@code http} or {@code https}.
@@ -103,10 +103,6 @@ public class Jsoup {
         return DataUtil.load(in, charsetName, in.getAbsolutePath());
     }
 
-    public static Document parse(File in, String charsetName, boolean ignoreScript) throws IOException {
-      return DataUtil.load(in, charsetName, in.getAbsolutePath(), ignoreScript);
-    }
-
      /**
      Read an input stream, and parse it to a Document.
 
@@ -120,10 +116,6 @@ public class Jsoup {
      */
     public static Document parse(InputStream in, String charsetName, String baseUri) throws IOException {
         return DataUtil.load(in, charsetName, baseUri);
-    }
-
-    public static Document parse(InputStream in, String charsetName, String baseUri, boolean ignoreScript) throws IOException {
-      return DataUtil.load(in, charsetName, baseUri, ignoreScript);
     }
 
     /**
@@ -252,7 +244,7 @@ public class Jsoup {
      @param bodyHtml HTML to test
      @param whitelist whitelist to test against
      @return true if no tags or attributes were removed; false otherwise
-     @see #clean(String, org.jsoup.safety.Whitelist)
+     @see #clean(String, Whitelist)
      */
     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
         return new Cleaner(whitelist).isValidBodyHtml(bodyHtml);

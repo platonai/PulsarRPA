@@ -19,6 +19,7 @@ package ai.platon.pulsar.crawl.protocol;
 
 import ai.platon.pulsar.common.config.Configurable;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.persist.WebPage;
 import crawlercommons.robots.BaseRobotRules;
 import org.slf4j.Logger;
@@ -43,7 +44,7 @@ public interface Protocol extends Configurable, AutoCloseable {
     default void setResponse(Response response) {
     }
 
-    default Collection<Response> getResponses(Collection<WebPage> pages, MutableConfig conf) {
+    default Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         return Collections.emptyList();
     }
 

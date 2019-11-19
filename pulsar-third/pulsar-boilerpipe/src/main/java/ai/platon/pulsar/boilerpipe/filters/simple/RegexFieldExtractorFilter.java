@@ -1,13 +1,11 @@
 package ai.platon.pulsar.boilerpipe.filters.simple;
 
-import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
-import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
-import com.google.common.collect.ListMultimap;
 import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.filters.TextBlockFilter;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
 import ai.platon.pulsar.boilerpipe.utils.ScentUtils;
+import com.google.common.collect.ListMultimap;
 
 import java.util.Map;
 

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist.metadata;
 
 public enum BrowserType {
-    NATIVE, CHROME, HTMLUNIT, PHANTOMJS;
+    NATIVE, CHROME, PHANTOMJS;
 
     public static BrowserType fromString(String s) {
         if (s == null || s.isEmpty()) {

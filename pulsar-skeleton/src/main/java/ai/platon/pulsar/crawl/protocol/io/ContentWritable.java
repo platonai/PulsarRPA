@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.protocol.io;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
+import ai.platon.pulsar.crawl.protocol.Content;
 import ai.platon.pulsar.persist.io.MetadataWritable;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
-import ai.platon.pulsar.crawl.protocol.Content;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;

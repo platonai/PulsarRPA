@@ -121,7 +121,7 @@ public class Metadata {
         if (s == null) {
             return defaultValue;
         }
-        return Boolean.valueOf(s);
+        return Boolean.parseBoolean(s);
     }
 
     public Instant getInstant(Name name, Instant defaultValue) {

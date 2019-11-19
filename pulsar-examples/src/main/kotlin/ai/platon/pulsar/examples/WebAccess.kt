@@ -2,11 +2,18 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.component.BatchHandler
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
+import com.google.common.collect.Iterables
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
+import java.net.URL
 
 object WebAccess {
     private val env = PulsarEnv.getOrCreate()
@@ -15,18 +22,24 @@ object WebAccess {
     private val log = LoggerFactory.getLogger(WebAccess::class.java)
 
     private val seeds = mapOf(
-            0 to "https://www.mia.com/formulas.html",
-            1 to "https://www.mia.com/diapers.html",
-            2 to "http://category.dangdang.com/cid4002590.html",
-            3 to "https://list.mogujie.com/book/magic/51894",
-            4 to "https://category.vip.com/search-1-0-1.html?q=3|49738||&rp=26600|48483&ff=|0|2|1&adidx=2&f=ad&adp=130610&adid=632686",
+            0 to "http://category.dangdang.com/cid4002590.html",
+            1 to "https://list.mogujie.com/book/magic/51894",
+            2 to "https://category.vip.com/search-1-0-1.html?q=3|49738||&rp=26600|48483&ff=|0|2|1&adidx=2&f=ad&adp=130610&adid=632686",
+            3 to "https://category.vip.com/search-5-0-1.html?q=3|142346||&rp=26600|103675&ff=|0|6|9&adidx=1&f=ad&adp=130612&adid=632821",
+            4 to "https://category.vip.com/search-5-0-1.html?q=3|320726||&rp=30068|320513",
             5 to "https://list.jd.com/list.html?cat=6728,6742,13246",
             6 to "https://list.gome.com.cn/cat10000055-00-0-48-1-0-0-0-1-2h8q-0-0-10-0-0-0-0-0.html?intcmp=bx-1000078331-1",
             7 to "https://search.yhd.com/c0-0/k%25E7%2594%25B5%25E8%25A7%2586/",
-            9 to "https://music.163.com/",
-            10 to "https://news.sogou.com/ent.shtml",
-            11 to "http://shop.boqii.com/brand/",
-            12 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163"
+            8 to "https://music.163.com/",
+            9 to "https://news.sogou.com/ent.shtml",
+            10 to "http://shop.boqii.com/brand/",
+            11 to "https://list.gome.com.cn/cat10000070-00-0-48-1-0-0-0-1-0-0-1-0-0-0-0-0-0.html?intcmp=phone-163",
+            12 to "http://dzhcg.sinopr.org/channel/103",
+            13 to "http://blog.zhaojie.me/",
+            14 to "https://shopee.vn/search?keyword=qu%E1%BA%A7n%20l%C3%B3t%20na",
+            15 to "https://www.darphin.com/collections/essential-oil-elixir",
+            16 to "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0",
+            17 to "https://list.suning.com/0-20006-0-0-0-0-0-0-0-0-11635.html"
     )
 
     private val trivialUrls = listOf(
@@ -48,35 +61,136 @@ object WebAccess {
 
     private val loadOptions = "-expires 1d"
 
-    fun load() {
+    fun collectLinks() {
         // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
         // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
         // val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
-        val url = "http://v.youku.com/v_show/id_XNDI3MzA5Nzk4OA==.html"
+        val url = "https://www.hao123.com/ -i 1d"
         val page = i.load(url)
         val doc = i.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
+
+        doc.select("a") { it.attr("abs:href") }
+                .filter { Urls.isValidUrl(it) }
+                .mapTo(HashSet()) { URL(it).let { it.protocol + "://" + it.host } }
+                .filter { NetUtil.testHttpNetwork(URL(it)) }
+                .joinToString("\n") { it }
+                .also { println(it) }
+
+        val path = i.export(doc)
+        log.info("Export to: file://{}", path)
+    }
+
+    fun load() {
+        // val url = "https://list.mogujie.com/book/magic/51894 -expires 1s"
+        // val url = "https://www.mia.com/formulas.html -expires 1s -pageLoadTimeout 1m"
+        // val url = "http://category.dangdang.com/cid4002590.html -expires 1s"
+        // val url = "https://afusjt.tmall.com/search.htm?spm=a1z10.3-b-s.w5001-17122979309.4.454b36d3OGiU6M&scene=taobao_shop -i 1s"
+        // val url = "https://search.jd.com/Search?keyword=basketball&enc=utf-8&wq=basketball&pvid=27d8a05385cd49298b5caff778e14b97"
+        // val url = "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0"
+//        val url = "https://www.lazada.com.my/shop-small-kitchen-appliances/?spm=a2o4k.home.cate_3.3.75f82e7eneQBGa"
+        val url = "https://list.suning.com/0-20006-0-0-0-0-0-0-0-0-11635.html"
+        val page = i.load(url)
+        val doc = i.parse(page)
+        doc.absoluteLinks()
+        doc.stripScripts()
+
+        doc.select("a[.product-box href~=product]") { it.attr("abs:href") }.asSequence()
+                .filter { Urls.isValidUrl(it) }
+                .mapTo(HashSet()) { it.substringBefore(".com")  }
+                .filter { !it.isBlank() }
+                .mapTo(HashSet()) { "$it.com" }
+                .filter { NetUtil.testHttpNetwork(URL(it)) }
+                .take(10)
+                .joinToString("\n") { it }
+                .also { println(it) }
+
         val path = i.export(doc)
         log.info("Export to: file://{}", path)
     }
 
     fun loadOutPages() {
-        // val url = seeds[0]?:return
-        val url = "https://list.mogujie.com/book/magic/51894"
+        val url = seeds[17]?:return
 
-        val args = "-ps -expires 1s"
-        val outlink = ".goods_list_mod a"
+        var args = "-ic -i 1s -ii 1s"
+        // val outlink = ".goods_list_mod a"
+        val outlink = when {
+            "mia" in url -> "a[href~=item]"
+            "gome" in url -> "a[href~=item]"
+            "jd.com" in url -> "a[href~=item.jd]"
+            "mogu" in url -> "a[href~=detail]"
+            "vip" in url -> "a[href~=detail-]"
+            "sinopr" in url -> ".title a[href~=p_id]"
+            "suning" in url -> ".product-box a[href~=product]"
+            else -> "a"
+        }
 
         val page = i.load("$url $args")
         val document = i.parse(page)
-        val path = i.export(page)
+        document.absoluteLinks()
+        val path = i.export(document)
         println("Export to: file://$path")
 
-//        val links = document.select(outlink) { it.attr("abs:href") }
-//        i.loadAll(links, LoadOptions.parse("-expires 1s"))
-        // page.links.stream().parallel().forEach { i.load("$it") }
+        val links = document.select(outlink) { it.attr("abs:href") }
+                .mapTo(mutableSetOf()) { i.normalize(it) }
+                .take(20).map { it.url }
+        links.forEach { println(it) }
+
+        class BeforeBatchHandler: BatchHandler() {
+            override fun invoke(pages: Iterable<WebPage>) {
+                val size = Iterables.size(pages)
+                println("Before fetching - $size pages")
+            }
+        }
+
+        class AfterBatchHandler: BatchHandler() {
+            override fun invoke(pages: Iterable<WebPage>) {
+                val size = Iterables.size(pages)
+                val length = pages.joinToString { StringUtil.readableByteCount(it.aveContentBytes.toLong()) }
+                println("After fetching - Fetched $size pages, length: $length")
+            }
+        }
+
+        i.volatileConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())
+        i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
+
+        val pages = i.loadAll(links, LoadOptions.parse(args))
+
+        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
+            println(it?.text()?:"(null)")
+        }
+
+        println("All done.")
+        // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
         // println(WebPageFormatter(page).withLinks())
+    }
+
+    fun loadOutPagesSinopr() {
+        val url = "http://dzhcg.sinopr.org/channel/103"
+        val args = "-ic -i 1s -ii 10d -rs 10000 -irs 100000"
+        val opt = LoadOptions.parse(args)
+        val outlink = ".title a[href~=p_id]"
+
+        val links = i.parse(i.load(url, opt))
+                .select(outlink) { it.attr("abs:href") }.toSet().take(20)
+        links.forEach { println(it) }
+
+        val pages = i.loadAll(links, opt, itemPages = true)
+
+        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEachIndexed { i, it ->
+            println("${i + 1}.\t" + (it?.text()?:"(null)"))
+        }
+
+        println("All done.")
+        // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
+        // println(WebPageFormatter(page).withLinks())
+    }
+
+    fun parallelLoadOutPages() {
+        IntRange(0, 10).toList().parallelStream().forEach {
+            loadOutPages()
+        }
     }
 
     fun parallelLoadAllOutPages() {
@@ -133,6 +247,12 @@ object WebAccess {
         pages.forEach { println("${it.url} ${it.contentTitle}") }
     }
 
+    fun extractAds() {
+        val url = "https://wuhan.baixing.com/xianhualipin/a1100414743.html"
+        val doc = i.loadAndParse(url)
+        doc.select("a[href~=mssp.baidu]").map {  }
+    }
+
     fun scan() {
         val contractBaseUri = "http://www.ccgp-hubei.gov.cn:8040/fcontractAction!download.action?path="
         pc.scan(contractBaseUri).forEachRemaining {
@@ -141,28 +261,35 @@ object WebAccess {
         }
     }
 
-    fun piped() {
-        val url = seeds[8]?:return
-
-        arrayOf(url)
-                .map { i.load(it) }
-                .map { i.parse(it) }
-                .forEach { println("${it.location} ${it.title}") }
-    }
-
     fun truncate() {
         pc.webDb.truncate()
     }
 
+    fun localFileCommand() {
+        while (true) {
+            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
+                println("Execute local file command: " + PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
+            }
+            Thread.sleep(5000)
+        }
+    }
+
     fun run() {
-        load()
-        // loadOutPages()
+        // load()
+        // collectLinks()
+        loadOutPages()
+        // loadOutPagesSinopr()
+        // repeat(10) {
+        //   parallelLoadOutPages()
+        // }
         // loadAllProducts()
         // parallelLoadAll()
         // parallelLoadAllProducts()
+        // extractAds()
     }
 }
 
 fun main() {
     WebAccess.run()
+    PulsarEnv.getOrCreate().shutdown()
 }

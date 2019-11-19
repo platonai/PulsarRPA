@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.sql.ResultSetFormatter
 import com.google.common.collect.TreeMultimap
+import com.google.common.net.InetAddresses
 import org.apache.commons.math3.distribution.NormalDistribution
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
@@ -9,18 +9,15 @@ import org.apache.commons.math3.util.Precision
 import org.junit.Ignore
 import org.junit.Test
 import java.awt.Color
-import java.awt.SystemColor.text
 import java.math.BigInteger
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
-import java.sql.Types
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
 
 class TestAnything {
 
@@ -379,4 +376,18 @@ class TestAnything {
             assertEquals(36, uuid.toString().length)
         }
     }
+
+    @Test
+    fun testInetAddresses() {
+        assertTrue(InetAddresses.isInetAddress("12.3.3.4"))
+        assertTrue(InetAddresses.isInetAddress("::1"))
+        assertFalse(InetAddresses.isInetAddress("12.3.3.4:80"))
+        assertFalse(InetAddresses.isInetAddress(".3.3.4:80"))
+    }
+
+//    @Test
+//    fun testTika() {
+//        val tikaConfig = TikaConfig.getDefaultConfig()
+//        assertTrue { tikaConfig.parser != null }
+//    }
 }

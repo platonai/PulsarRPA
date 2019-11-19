@@ -8,7 +8,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @Ignore
 public class ConstrainableInputStreamTest {
@@ -19,7 +21,7 @@ public class ConstrainableInputStreamTest {
         int bufferSize = 5 * 1024;
         int capSize = 100 * 1024;
 
-        String url = "http://direct.infohound.net/cli/large.html"; // 280 K
+        String url = "http://direct.infohound.net/tools/large.html"; // 280 K
         BufferedInputStream inputStream = Jsoup.connect(url).maxBodySize(capSize)
             .execute().bodyStream();
 
@@ -51,7 +53,7 @@ public class ConstrainableInputStreamTest {
     public void noLimitAfterFirstRead() throws IOException {
         int bufferSize = 5 * 1024;
 
-        String url = "http://direct.infohound.net/cli/large.html"; // 280 K
+        String url = "http://direct.infohound.net/tools/large.html"; // 280 K
         BufferedInputStream inputStream = Jsoup.connect(url).execute().bodyStream();
 
         assertTrue(inputStream instanceof ConstrainableInputStream);

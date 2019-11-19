@@ -7,23 +7,6 @@
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
-    <!--RDMS -->
-    <bean id="h2DatabaseType" class="com.j256.ormlite.db.H2DatabaseType" />
-
-    <bean id="connectionSource" class="com.j256.ormlite.jdbc.JdbcConnectionSource">
-        <constructor-arg value="jdbc:h2:~/.pulsar/pulsar" />
-        <constructor-arg ref="h2DatabaseType" />
-    </bean>
-
-    <bean id="ormliteDaoFactory" class="ai.platon.pulsar.persist.rdb.dao.OrmliteDaoFactory">
-        <constructor-arg ref="connectionSource"/>
-    </bean>
-
-    <bean id="ormliteTableCreator" class="ai.platon.pulsar.persist.rdb.dao.OrmliteTableCreator">
-        <constructor-arg ref="connectionSource"/>
-        <constructor-arg ref="ormliteDaoFactory"/>
-    </bean>
-
     <!--Big Data Storage -->
     <bean id="storageService" class="ai.platon.pulsar.persist.AutoDetectedStorageService" destroy-method="close">
         <constructor-arg ref="conf"/>
@@ -48,12 +31,12 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyUpdateThread" class="ai.platon.pulsar.common.proxy.ProxyUpdateThread">
-        <constructor-arg ref="conf"/>
+    <bean id="internalProxyServer" class="ai.platon.pulsar.proxy.InternalProxyServer" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchStatusTracker" class="ai.platon.pulsar.crawl.fetch.TaskStatusTracker" destroy-method="close">
+    <bean id="fetchTaskTracker" class="ai.platon.pulsar.crawl.fetch.FetchTaskTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="pulsarMetrics"/>
         <constructor-arg ref="conf"/>
@@ -67,19 +50,28 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDriverQueues" class="ai.platon.pulsar.net.browser.WebDriverQueues" destroy-method="close">
+    <bean id="webDriverPool" class="ai.platon.pulsar.net.browser.WebDriverPool" destroy-method="close">
         <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="proxyPool"/>
+        <constructor-arg ref="internalProxyServer"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="monitor" class="ai.platon.pulsar.PulsarMonitor" destroy-method="close">
+        <constructor-arg ref="webDriverPool"/>
+        <constructor-arg ref="proxyPool"/>
+        <constructor-arg ref="internalProxyServer"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="seleniumEngine" class="ai.platon.pulsar.net.browser.SeleniumEngine" destroy-method="close">
         <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="globalExecutor"/>
-        <constructor-arg ref="webDriverQueues"/>
+        <constructor-arg ref="webDriverPool"/>
+        <constructor-arg ref="fetchTaskTracker"/>
+        <constructor-arg ref="internalProxyServer"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="pulsarContext" class="ai.platon.pulsar.PulsarContext" scope="prototype" destroy-method="close"/>
 
-    <!--<bean id="h2Console" class="org.h2.tools.Console" destroy-method="shutdown"/>-->
 </beans>

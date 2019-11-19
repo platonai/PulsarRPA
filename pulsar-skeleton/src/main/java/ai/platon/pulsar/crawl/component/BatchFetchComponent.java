@@ -3,7 +3,7 @@ package ai.platon.pulsar.crawl.component;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.options.LoadOptions;
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker;
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
 import ai.platon.pulsar.crawl.protocol.Response;
@@ -30,7 +30,11 @@ public class BatchFetchComponent extends FetchComponent {
     private ProtocolFactory protocolFactory;
 
     public BatchFetchComponent(
-            WebDb webDb, TaskStatusTracker statusTracker, ProtocolFactory protocolFactory, ImmutableConfig immutableConfig) {
+            WebDb webDb,
+            FetchTaskTracker statusTracker,
+            ProtocolFactory protocolFactory,
+            ImmutableConfig immutableConfig
+    ) {
         super(protocolFactory, statusTracker, immutableConfig);
         this.protocolFactory = protocolFactory;
         this.webDb = webDb;
@@ -95,7 +99,7 @@ public class BatchFetchComponent extends FetchComponent {
             if (protocol != null) {
                 pages.addAll(parallelFetchAllInternal(gUrls, protocol, options));
             } else {
-                taskStatusTracker.trackFailed(gUrls);
+                fetchTaskTracker.trackFailed(gUrls);
             }
         });
 
@@ -211,7 +215,7 @@ public class BatchFetchComponent extends FetchComponent {
         if (!lazyTasks.isEmpty()) {
             FetchMode mode = options.getFetchMode();
             // TODO: save url with options
-            taskStatusTracker.commitLazyTasks(mode, lazyTasks);
+            fetchTaskTracker.commitLazyTasks(mode, lazyTasks);
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Committed {} lazy tasks in mode {}", lazyTasks.size(), mode);
             }

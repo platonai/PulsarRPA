@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.common.config;
 
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -118,8 +117,16 @@ public interface PulsarConstants {
     int MAX_LINK_PER_PAGE = 4000;
 
     String CMD_FORCE_GENERATE_SEEDS = "force-generate-seeds";
+    String CMD_ENABLE_PROXY = "use_proxy"; // keep consistent with linux system variable
+    String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
-    int BANDWIDTH_INFINITE = 10000; // bandwidth in mbytes
+    String CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE = "force-IPS-idle";
+    String CMD_INTERNAL_PROXY_SERVER_RECONNECT = "IPS-reconnect";
+
+    String CMD_WEB_DRIVER_CLOSE_ALL = "close-all-web-drivers";
+    String CMD_WEB_DRIVER_DELETE_ALL_COOKIES = "delete-all-cookies";
+
+    int BANDWIDTH_INFINITE = 10000; // bandwidth in M bits
 
     /**
      * Index
@@ -132,10 +139,9 @@ public interface PulsarConstants {
     int DEFAULT_PULSAR_MASTER_PORT = 8182;
 
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
-    int DEFAULT_INDEX_SERVER_PORT = 8983;
+    int DEFAULT_INDEX_SERVER_PORT = 8183;
 
     String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
-
 
     /**
      * Other notable properties:
@@ -158,4 +164,9 @@ public interface PulsarConstants {
     String PULSAR_ATTR_HIDDEN = "_h";
     String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
+
+    /**
+     * Proxy
+     * */
+    int INTERNAL_PROXY_SERVER_PORT = 8184;
 }

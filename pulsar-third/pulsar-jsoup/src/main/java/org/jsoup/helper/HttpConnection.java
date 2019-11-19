@@ -5,23 +5,42 @@ import org.jsoup.HttpStatusException;
 import org.jsoup.UncheckedIOException;
 import org.jsoup.UnsupportedMimeTypeException;
 import org.jsoup.internal.ConstrainableInputStream;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.parser.TokenQueue;
 
-import javax.net.ssl.*;
-import java.io.*;
-import java.net.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 import static org.jsoup.Connection.Method.HEAD;
 import static org.jsoup.internal.Normalizer.lowerCase;
@@ -34,14 +53,14 @@ public class HttpConnection implements Connection {
     public static final String CONTENT_ENCODING = "Content-Encoding";
     /**
      * Many users would get caught by not setting a user-agent and therefore getting different responses on their desktop
-     * vs in dom, which would otherwise default to {@code Java}. So by default, use a desktop UA.
+     * vs in jsoup, which would otherwise default to {@code Java}. So by default, use a desktop UA.
      */
     public static final String DEFAULT_UA =
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
     private static final String USER_AGENT = "User-Agent";
-    private static final String CONTENT_TYPE = "Content-Type";
-    private static final String MULTIPART_FORM_DATA = "multipart/form-data";
-    private static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+    public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
     private static final int HTTP_TEMP_REDIR = 307; // http/1.1 temporary redirect, not in Java's set.
     private static final String DefaultUploadType = "application/octet-stream";
 
@@ -55,6 +74,11 @@ public class HttpConnection implements Connection {
         Connection con = new HttpConnection();
         con.url(url);
         return con;
+    }
+
+    public HttpConnection() {
+        req = new Request();
+        res = new Response();
     }
 
     /**
@@ -91,11 +115,6 @@ public class HttpConnection implements Connection {
 
     private Connection.Request req;
     private Connection.Response res;
-
-	private HttpConnection() {
-        req = new Request();
-        res = new Response();
-    }
 
     public Connection url(URL url) {
         req.url(url);
@@ -164,14 +183,15 @@ public class HttpConnection implements Connection {
         return this;
     }
 
-    public Connection validateTLSCertificates(boolean value) {
-        req.validateTLSCertificates(value);
-        return this;
-    }
 
     public Connection data(String key, String value) {
         req.data(KeyVal.create(key, value));
         return this;
+    }
+
+    public Connection sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+	    req.sslSocketFactory(sslSocketFactory);
+	    return this;
     }
 
     public Connection data(String key, String filename, InputStream inputStream) {
@@ -401,6 +421,9 @@ public class HttpConnection implements Connection {
                     return false;
                 }
 
+                if (end >= input.length)
+                    return false;
+
                 while (i < end) {
                     i++;
                     o = input[i];
@@ -510,7 +533,7 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Request extends HttpConnection.Base<Connection.Request> implements Connection.Request {
+    public static class Request extends Base<Connection.Request> implements Connection.Request {
         private Proxy proxy; // nullable
         private int timeoutMilliseconds;
         private int maxBodySizeBytes;
@@ -521,8 +544,8 @@ public class HttpConnection implements Connection {
         private boolean ignoreContentType = false;
         private Parser parser;
         private boolean parserDefined = false; // called parser(...) vs initialized in ctor
-        private boolean validateTSLCertificates = true;
         private String postDataCharset = DataUtil.defaultCharset;
+        private SSLSocketFactory sslSocketFactory;
 
         Request() {
             timeoutMilliseconds = 30000; // 30 seconds
@@ -582,12 +605,12 @@ public class HttpConnection implements Connection {
             return ignoreHttpErrors;
         }
 
-        public boolean validateTLSCertificates() {
-            return validateTSLCertificates;
+        public SSLSocketFactory sslSocketFactory() {
+            return sslSocketFactory;
         }
 
-        public void validateTLSCertificates(boolean value) {
-            validateTSLCertificates = value;
+        public void sslSocketFactory(SSLSocketFactory sslSocketFactory) {
+            this.sslSocketFactory = sslSocketFactory;
         }
 
         public Connection.Request ignoreHttpErrors(boolean ignoreHttpErrors) {
@@ -645,14 +668,14 @@ public class HttpConnection implements Connection {
         }
     }
 
-    public static class Response extends HttpConnection.Base<Connection.Response> implements Connection.Response {
+    public static class Response extends Base<Connection.Response> implements Connection.Response {
         private static final int MAX_REDIRECTS = 20;
-        private static SSLSocketFactory sslSocketFactory;
         private static final String LOCATION = "Location";
         private int statusCode;
         private String statusMessage;
         private ByteBuffer byteData;
         private InputStream bodyStream;
+        private HttpURLConnection conn;
         private String charset;
         private String contentType;
         private boolean executed = false;
@@ -684,6 +707,7 @@ public class HttpConnection implements Connection {
 
         static Response execute(Connection.Request req, Response previousResponse) throws IOException {
             Validate.notNull(req, "Request must not be null");
+            Validate.notNull(req.url(), "URL must be specified to connect");
             String protocol = req.url().getProtocol();
             if (!protocol.equals("http") && !protocol.equals("https"))
                 throw new MalformedURLException("Only http & https protocols supported");
@@ -722,7 +746,7 @@ public class HttpConnection implements Connection {
                     }
 
                     String location = res.header(LOCATION);
-                    if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                    if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
                         location = location.substring(6);
                     URL redir = StringUtil.resolve(req.url(), location);
                     req.url(encodeUrl(redir));
@@ -748,7 +772,7 @@ public class HttpConnection implements Connection {
                 // switch to the XML parser if content type is xml and not parser not explicitly set
                 if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
                     // only flip it if a HttpConnection.Request (i.e. don't presume other impls want it):
-                    if (req instanceof HttpConnection.Request && !((Request) req).parserDefined) {
+                    if (req instanceof Request && !((Request) req).parserDefined) {
                         req.parser(Parser.xmlParser());
                     }
                 }
@@ -757,8 +781,11 @@ public class HttpConnection implements Connection {
                 if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
                     res.bodyStream = null;
                     res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
-                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip"))
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
                         res.bodyStream = new GZIPInputStream(res.bodyStream);
+                    } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
+                        res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
+                    }
                     res.bodyStream = ConstrainableInputStream
                         .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
                         .timeout(startTime, req.timeout())
@@ -871,14 +898,8 @@ public class HttpConnection implements Connection {
             conn.setConnectTimeout(req.timeout());
             conn.setReadTimeout(req.timeout() / 2); // gets reduced after connection is made and status is read
 
-            if (conn instanceof HttpsURLConnection) {
-                if (!req.validateTLSCertificates()) {
-                    initUnSecureTSL();
-                    ((HttpsURLConnection)conn).setSSLSocketFactory(sslSocketFactory);
-                    ((HttpsURLConnection)conn).setHostnameVerifier(getInsecureVerifier());
-                }
-            }
-
+            if (req.sslSocketFactory() != null && conn instanceof HttpsURLConnection)
+                ((HttpsURLConnection) conn).setSSLSocketFactory(req.sslSocketFactory());
             if (req.method().hasBody())
                 conn.setDoOutput(true);
             if (req.cookies().size() > 0)
@@ -895,6 +916,10 @@ public class HttpConnection implements Connection {
          * Call on completion of stream read, to close the body (or error) stream
          */
         private void safeClose() {
+            if (conn != null) {
+                conn.disconnect();
+                conn = null;
+            }
             if (bodyStream != null) {
                 try {
                     bodyStream.close();
@@ -906,62 +931,9 @@ public class HttpConnection implements Connection {
             }
         }
 
-        /**
-         * Instantiate Hostname Verifier that does nothing.
-         * This is used for connections with disabled SSL certificates validation.
-         *
-         *
-         * @return Hostname Verifier that does nothing and accepts all hostnames
-         */
-        private static HostnameVerifier getInsecureVerifier() {
-            return new HostnameVerifier() {
-                public boolean verify(String urlHostName, SSLSession session) {
-                    return true;
-                }
-            };
-        }
-
-        /**
-         * Initialise Trust manager that does not validate certificate chains and
-         * add it to current SSLContext.
-         * <p/>
-         * please not that this method will only perform action if sslSocketFactory is not yet
-         * instantiated.
-         *
-         * @throws IOException on SSL init errors
-         */
-        private static synchronized void initUnSecureTSL() throws IOException {
-            if (sslSocketFactory == null) {
-                // Create a trust manager that does not validate certificate chains
-                final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-
-                    public void checkClientTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public void checkServerTrusted(final X509Certificate[] chain, final String authType) {
-                    }
-
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                }};
-
-                // Install the all-trusting trust manager
-                final SSLContext sslContext;
-                try {
-                    sslContext = SSLContext.getInstance("SSL");
-                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-                    // Create an ssl socket factory with our all-trusting manager
-                    sslSocketFactory = sslContext.getSocketFactory();
-                } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    throw new IOException("Can't create unsecure trust manager");
-                }
-            }
-
-        }
-
         // set up url, method, header, cookies
-        private void setupFromConnection(HttpURLConnection conn, Connection.Response previousResponse) throws IOException {
+        private void setupFromConnection(HttpURLConnection conn, Response previousResponse) throws IOException {
+            this.conn = conn;
             method = Method.valueOf(conn.getRequestMethod());
             url = conn.getURL();
             statusCode = conn.getResponseCode();
@@ -977,6 +949,7 @@ public class HttpConnection implements Connection {
                     if (!hasCookie(prevCookie.getKey()))
                         cookie(prevCookie.getKey(), prevCookie.getValue());
                 }
+                previousResponse.safeClose();
             }
         }
 
@@ -1034,7 +1007,15 @@ public class HttpConnection implements Connection {
             String bound = null;
             if (req.hasHeader(CONTENT_TYPE)) {
                 // no-op; don't add content type as already set (e.g. for requestBody())
-                // todo - if content type already set, we could add charset or boundary if those aren't included
+                // todo - if content type already set, we could add charset
+
+                // if user has set content type to multipart/form-data, auto add boundary.
+                if(req.header(CONTENT_TYPE).contains(MULTIPART_FORM_DATA) &&
+                        !req.header(CONTENT_TYPE).contains("boundary")) {
+                    bound = DataUtil.mimeBoundary();
+                    req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound);
+                }
+
             }
             else if (needsMultipart(req)) {
                 bound = DataUtil.mimeBoundary();
@@ -1098,7 +1079,7 @@ public class HttpConnection implements Connection {
         }
 
         private static String getRequestCookieString(Connection.Request req) {
-            StringBuilder sb = StringUtil.stringBuilder();
+            StringBuilder sb = StringUtil.borrowBuilder();
             boolean first = true;
             for (Map.Entry<String, String> cookie : req.cookies().entrySet()) {
                 if (!first)
@@ -1108,13 +1089,13 @@ public class HttpConnection implements Connection {
                 sb.append(cookie.getKey()).append('=').append(cookie.getValue());
                 // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
             }
-            return sb.toString();
+            return StringUtil.releaseBuilder(sb);
         }
 
         // for get url reqs, serialise the data map into the url
         private static void serialiseRequestUrl(Connection.Request req) throws IOException {
             URL in = req.url();
-            StringBuilder url = StringUtil.stringBuilder();
+            StringBuilder url = StringUtil.borrowBuilder();
             boolean first = true;
             // reconstitute the query, ready for appends
             url
@@ -1138,21 +1119,18 @@ public class HttpConnection implements Connection {
                     .append('=')
                     .append(URLEncoder.encode(keyVal.value(), DataUtil.defaultCharset));
             }
-            req.url(new URL(url.toString()));
+            req.url(new URL(StringUtil.releaseBuilder(url)));
             req.data().clear(); // moved into url as get params
         }
     }
 
     private static boolean needsMultipart(Connection.Request req) {
         // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
-        boolean needsMulti = false;
         for (Connection.KeyVal keyVal : req.data()) {
-            if (keyVal.hasInputStream()) {
-                needsMulti = true;
-                break;
-            }
+            if (keyVal.hasInputStream())
+                return true;
         }
-        return needsMulti;
+        return false;
     }
 
     public static class KeyVal implements Connection.KeyVal {

@@ -41,7 +41,8 @@ import java.io.IOException;
 
 import static ai.platon.pulsar.common.CommonCounter.rPersist;
 import static ai.platon.pulsar.common.CommonCounter.rRows;
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import static ai.platon.pulsar.common.config.CapabilityTypes.GENERATE_TIME;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 import static ai.platon.pulsar.persist.io.WebGraphWritable.OptimizeMode.IGNORE_SOURCE;
 import static ai.platon.pulsar.persist.metadata.CrawlVariables.REDIRECT_DISCOVERED;
 import static ai.platon.pulsar.persist.metadata.Mark.*;

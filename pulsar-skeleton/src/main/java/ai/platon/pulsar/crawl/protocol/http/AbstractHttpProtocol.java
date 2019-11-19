@@ -19,18 +19,18 @@ package ai.platon.pulsar.crawl.protocol.http;
 import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.common.proxy.ProxyPool;
+import ai.platon.pulsar.crawl.protocol.Content;
+import ai.platon.pulsar.crawl.protocol.Protocol;
+import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
+import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import crawlercommons.robots.BaseRobotRules;
-import ai.platon.pulsar.crawl.protocol.Content;
-import ai.platon.pulsar.crawl.protocol.Protocol;
-import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
-import ai.platon.pulsar.crawl.protocol.Response;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import javax.annotation.Nullable;
@@ -176,9 +176,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.timeout = conf.getDuration(HTTP_TIMEOUT, Duration.ofSeconds(10));
         this.fetchMaxRetry = conf.getInt(HTTP_FETCH_MAX_RETRY, 3);
         this.maxContent = conf.getInt("http.content.limit", 1024 * 1024);
-//    this.userAgent = getAgentString(conf.get("http.agent.name"),
-//        conf.get("http.agent.version"), conf.get("http.agent.description"),
-//        conf.get("http.agent.url"), conf.get("http.agent.email"));
+//      this.userAgent = getAgentString(conf.get("http.agent.name"),
+//      conf.get("http.agent.version"), conf.get("http.agent.description"),
+//      conf.get("http.agent.url"), conf.get("http.agent.email"));
         this.userAgent = NetUtil.getAgentString(conf.get("http.agent.name"));
 
         this.acceptLanguage = conf.get("http.accept.language", acceptLanguage);
@@ -253,7 +253,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     @Override
-    public Collection<Response> getResponses(Collection<WebPage> pages, MutableConfig conf) {
+    public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         return pages.stream()
                 .map(page -> getResponseOrNull(page.getUrl(), page, false))
                 .collect(Collectors.toList());
@@ -311,11 +311,10 @@ public abstract class AbstractHttpProtocol implements Protocol {
     private ProtocolOutput getProtocolOutput(String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
-        int httpStatus = response.getStatus();
         int httpCode = response.getCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
-        String contentType = response.getHeader("Content-Type");
+        String contentType = response.getHeader(HttpHeaders.CONTENT_TYPE);
         Content content = new Content(url, location, bytes, contentType, response.getHeaders(), mimeTypes);
         MultiMetadata headers = response.getHeaders();
         ProtocolStatus status;

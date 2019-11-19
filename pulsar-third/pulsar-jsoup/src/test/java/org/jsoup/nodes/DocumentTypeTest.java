@@ -4,7 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * Tests for the DocumentType node

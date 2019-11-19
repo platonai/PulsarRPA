@@ -1,7 +1,7 @@
 package org.jsoup.examples;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -14,25 +14,25 @@ import org.jsoup.select.NodeVisitor;
 import java.io.IOException;
 
 /**
- * HTML to plain-text. This example program demonstrates the use of dom to convert HTML input to lightly-formatted
- * plain-text. That is divergent from the general goal of dom's .text() methods, which is to get clean data from a
+ * HTML to plain-text. This example program demonstrates the use of jsoup to convert HTML input to lightly-formatted
+ * plain-text. That is divergent from the general goal of jsoup's .text() methods, which is to get clean data from a
  * scrape.
  * <p>
  * Note that this is a fairly simplistic formatter -- for real world use you'll want to embrace and extend.
  * </p>
  * <p>
- * To invoke from the command line, assuming you've downloaded the dom jar to your current directory:</p>
- * <p><code>java -cp dom.jar org.dom.examples.HtmlToPlainText url [selector]</code></p>
+ * To invoke from the command line, assuming you've downloaded the jsoup jar to your current directory:</p>
+ * <p><code>java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]</code></p>
  * where <i>url</i> is the URL to fetch, and <i>selector</i> is an optional CSS selector.
  * 
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 public class HtmlToPlainText {
-    private static final String userAgent = "Mozilla/5.0 (dom)";
+    private static final String userAgent = "Mozilla/5.0 (jsoup)";
     private static final int timeout = 5 * 1000;
 
     public static void main(String... args) throws IOException {
-        Validate.isTrue(args.length == 1 || args.length == 2, "usage: java -cp dom.jar org.dom.examples.HtmlToPlainText url [selector]");
+        Validate.isTrue(args.length == 1 || args.length == 2, "usage: java -cp jsoup.jar org.jsoup.examples.HtmlToPlainText url [selector]");
         final String url = args[0];
         final String selector = args.length == 2 ? args[1] : null;
 

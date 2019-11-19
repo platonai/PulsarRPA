@@ -1,12 +1,10 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarSession
 import org.junit.Test
 import kotlin.test.assertEquals
 
-class
-TestMetadataFunctions : TestBase() {
+class TestMetadataFunctions : TestBase() {
 
     @Test
     fun testMetadata() {

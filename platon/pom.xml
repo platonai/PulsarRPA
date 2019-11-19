@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-	license agreements. See the NOTICE file distributed with this work for additional 
-	information regarding copyright ownership. The ASF licenses this file to 
-	you under the Apache License, Version 2.0 (the "License"); you may not use 
-	this file except in compliance with the License. You may obtain a copy of 
-	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
-	by applicable law or agreed to in writing, software distributed under the 
-	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
-	OF ANY KIND, either express or implied. See the License for the specific 
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
+	license agreements. See the NOTICE file distributed with this work for additional
+	information regarding copyright ownership. The ASF licenses this file to
+	you under the Apache License, Version 2.0 (the "License"); you may not use
+	this file except in compliance with the License. You may obtain a copy of
+	the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+	by applicable law or agreed to in writing, software distributed under the
+	License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+	OF ANY KIND, either express or implied. See the License for the specific
 	language governing permissions and limitations under the License. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -203,10 +203,62 @@
         </pluginManagement>
 
         <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+            </plugin>
             <!-- kotlin plugin should come before maven-compiler-plugin -->
             <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <configuration>
+                    <args>
+                        <arg>-Xjsr305=strict</arg>
+                    </args>
+                    <compilerPlugins>
+                        <plugin>spring</plugin>
+                        <plugin>jpa</plugin>
+                        <plugin>all-open</plugin>
+                    </compilerPlugins>
+                    <pluginOptions>
+                        <option>all-open:annotation=javax.persistence.Entity</option>
+                        <option>all-open:annotation=javax.persistence.Embeddable</option>
+                        <option>all-open:annotation=javax.persistence.MappedSuperclass</option>
+                    </pluginOptions>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-allopen</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-noarg</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>kapt</id>
+                        <goals>
+                            <goal>kapt</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>src/main/kotlin</sourceDir>
+                            </sourceDirs>
+                            <annotationProcessorPaths>
+                                <annotationProcessorPath>
+                                    <groupId>org.springframework.boot</groupId>
+                                    <artifactId>spring-boot-configuration-processor</artifactId>
+                                    <version>${spring-boot.version}</version>
+                                </annotationProcessorPath>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -319,6 +371,17 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-annotations</artifactId>
                 <version>${hadoop.version}</version>
                 <exclusions>
@@ -329,10 +392,9 @@
                 </exclusions>
             </dependency>
 
-            <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
             <dependency>
                 <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-shaded-client</artifactId>
+                <artifactId>hbase-common</artifactId>
                 <version>${hbase.version}</version>
                 <exclusions>
                     <exclusion>
@@ -341,8 +403,20 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/org.apache.hbase/hbase-shaded-client -->
+<!--            <dependency>-->
+<!--                <groupId>org.apache.hbase</groupId>-->
+<!--                <artifactId>hbase-shaded-client</artifactId>-->
+<!--                <version>${hbase.version}</version>-->
+<!--                <exclusions>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>*</groupId>-->
+<!--                        <artifactId>*</artifactId>-->
+<!--                    </exclusion>-->
+<!--                </exclusions>-->
+<!--            </dependency>-->
 
-            <!-- TODO: Support MongoDB -->
+            <!-- TODO: Support MongoDB, TODO: use spring-boot default -->
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
@@ -421,12 +495,18 @@
                         <groupId>org.seleniumhq.selenium</groupId>
                         <artifactId>selenium-safari-driver</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.seleniumhq.selenium</groupId>
+                        <artifactId>htmlunit-driver</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <!-- conflict with hibernate
+                        org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState.resolveClassLoadingStrategy(ByteBuddyState.java:229)
+                        -->
+                        <groupId>net.bytebuddy</groupId>
+                        <artifactId>byte-buddy</artifactId>
+                    </exclusion>
                 </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.seleniumhq.selenium</groupId>
-                <artifactId>htmlunit-driver</artifactId>
-                <version>2.29.0</version>
             </dependency>
 
             <!-- TODO: check the version, seems higher version exists -->
@@ -434,6 +514,25 @@
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>1</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${javax.servlet-api.version}</version>
+            </dependency>
+            <!-- JSTL -->
+            <!-- https://mvnrepository.com/artifact/javax.servlet/jstl -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>jstl</artifactId>
+                <version>1.2</version>
+            </dependency>
+            <!-- To compile JSP files -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-jasper</artifactId>
+                <scope>provided</scope>
+                <version>${tomcat.version}</version>
             </dependency>
 
             <!-- Html -->
@@ -456,21 +555,6 @@
                 <groupId>jtidy</groupId>
                 <artifactId>jtidy</artifactId>
                 <version>4aug2000r7-dev</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jdom</groupId>
-                <artifactId>jdom</artifactId>
-                <version>${jdom.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>maven-plugins</groupId>
-                        <artifactId>maven-cobertura-plugin</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>maven-plugins</groupId>
-                        <artifactId>maven-findbugs-plugin</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <!-- for EncodingDetector -->
             <dependency>
@@ -501,6 +585,12 @@
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-parsers</artifactId>
                 <version>${tika.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jsoup</groupId>
+                        <artifactId>jsoup</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Spring -->
@@ -553,6 +643,18 @@
                 <artifactId>spring-jcl</artifactId>
                 <version>${spring.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-oxm</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+
             <!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -561,8 +663,25 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.springframework.session</groupId>
+                <artifactId>spring-session-core</artifactId>
+                <version>${spring-session.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-devtools</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-autoconfigure</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
@@ -572,22 +691,33 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-mustache</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-tomcat</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${spring-boot.version}</version>
                 <scope>test</scope>
             </dependency>
 
             <!-- Storage -->
-            <dependency>
-                <groupId>com.j256.ormlite</groupId>
-                <artifactId>ormlite-jdbc</artifactId>
-                <version>${ormlite.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.persistence</groupId>
-                <artifactId>javax.persistence</artifactId>
-                <version>2.0.0</version>
-            </dependency>
             <dependency>
                 <groupId>commons-codec</groupId>
                 <artifactId>commons-codec</artifactId>
@@ -611,6 +741,11 @@
                 <version>${commons-io.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>1.8</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
@@ -661,6 +796,24 @@
                 <version>${gson.version}</version>
             </dependency>
 
+            <!-- NLP -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-common</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers-smartcn -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-smartcn</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+
             <!-- WebGraph computing, required by WebGraph -->
             <dependency>
                 <groupId>org.jgrapht</groupId>
@@ -678,9 +831,11 @@
              -->
             <dependency>
                 <groupId>org.hamcrest</groupId>
-                <artifactId>hamcrest-core</artifactId>
-                <version>1.3</version>
+                <artifactId>hamcrest-all</artifactId>
+                <version>${hamcrest-all.version}</version>
+                <scope>test</scope>
             </dependency>
+
             <!--
                 The Jakarta-ORO Java classes are a set of text-processing Java classes
                 that provide Perl5 compatible regular expressions.
@@ -752,11 +907,19 @@
                 <artifactId>perf4j</artifactId>
                 <version>${perf4j.version}</version>
             </dependency>
+            <!-- junit 4 -->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <scope>test</scope>
                 <version>${junit.version}</version>
+            </dependency>
+            <!-- junit 5 -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <scope>test</scope>
+                <version>${junit-jupiter.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -769,7 +932,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
+            <artifactId>kotlin-test-junit</artifactId>
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
@@ -798,8 +961,7 @@
         <xerces.version>2.9.1</xerces.version>
         <nekohtml.version>1.9.19</nekohtml.version>
         <!--<tika.version>[1.19.1,)</tika.version>-->
-        <tika.version>1.7</tika.version>
-        <jdom.version>1.1.2</jdom.version>
+        <tika.version>1.22</tika.version>
 
         <!-- Data Platform Dependencies -->
         <hadoop.version>2.5.2</hadoop.version>
@@ -809,6 +971,10 @@
 
         <!-- mongodb support -->
         <mongo.driver.version>3.5.0</mongo.driver.version>
+        <!-- default version does not support java11,
+            see https://github.com/yandex-qatools/postgresql-embedded/issues/153
+        -->
+        <de.flapdoodle.embed.process>2.0.5</de.flapdoodle.embed.process>
         <mongo.embed.version>2.0.0</mongo.embed.version>
 
         <!-- Search Engine -->
@@ -817,13 +983,22 @@
         <selenium.version>3.8.1</selenium.version>
 
         <!-- Persistence -->
-        <ormlite.version>5.1</ormlite.version>
+        <hibernate.version>5.2.5.Final</hibernate.version>
+        <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
+
+        <!-- Required by hibernate -->
+        <!-- org.hibernate.bytecode.internal.bytebuddy.ByteBuddyState.resolveClassLoadingStrategy(ByteBuddyState.java:229) -->
+        <byte-buddy.version>1.9.5</byte-buddy.version>
 
         <!-- Spring -->
         <spring.version>5.1.8.RELEASE</spring.version>
+        <spring-session.version>2.1.6.RELEASE</spring-session.version>
+        <spring-data.version>2.1.6.RELEASE</spring-data.version>
         <spring-boot.version>2.1.6.RELEASE</spring-boot.version>
 
-        <!-- Server Dependencies -->
+        <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
+        <tomcat.version>9.0.21</tomcat.version>
+
         <!--
             jersey : RESTful Web Services in Java.
             Jersey RESTful Web Services framework is open source, production quality,
@@ -833,15 +1008,14 @@
          -->
         <!-- Hadoop [2, ) depends on jersey-1, jersey-1 is required if the code starts by hadoop's RunJar -->
         <jersey-1.version>1.19.3</jersey-1.version>
-        <!-- Jersey-2 has better test, serialization, document, examples support, used if the program runs outside hadoop -->
-        <jersey-2.version>2.28</jersey-2.version>
 
-        <javax.servlet-api.version>3.1.0</javax.servlet-api.version>
-
-        <jetty.version>9.4.4.v20170414</jetty.version>
-        <jetty-maven-plugin.version>9.4.4.v20170414</jetty-maven-plugin.version>
+        <!-- we prefer tomcat since we employed spring-boot which uses tomcat as the default servlet container -->
+        <jetty.version>9.4.19.v20190610</jetty.version>
+        <jetty-maven-plugin.version>9.4.19.v20190610</jetty-maven-plugin.version>
         <!-- TODO: according to github's warning, jetty version should be the following to avoid security issues. -->
         <!--<jetty.version>[9.4.12.v20180830,)</jetty.version>-->
+
+        <netty.version>4.1.25.Final</netty.version>
 
         <!-- Misc Dependencies -->
         <commons-lang.version>2.6</commons-lang.version>
@@ -849,6 +1023,7 @@
         <!--  Google core libraries for Java, include Multimaps, etc -->
         <guava.version>27.0.1-jre</guava.version>
         <gson.version>2.6.2</gson.version>
+        <lucene.version>8.1.1</lucene.version>
 
         <!-- Logging, metrics analyze -->
         <codahale.metrics.version>3.1.5</codahale.metrics.version>
@@ -856,7 +1031,14 @@
         <!-- Logging And Testing Dependencies -->
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
+        <!-- Matchers that can be combined to create flexible expressions of intent -->
+        <hamcrest-all.version>1.3</hamcrest-all.version>
+        <org.hamcrest.version>1.3</org.hamcrest.version>
+        <mockito-core.version>2.21.0</mockito-core.version>
         <junit.version>4.12</junit.version>
+        <junit-jupiter.version>5.5.2</junit-jupiter.version>
+
+        <javassist.version>3.22.0-GA</javassist.version>
 
         <!-- Java -->
         <java.version>1.8</java.version>
@@ -864,13 +1046,8 @@
         <javac.target.version>1.8</javac.target.version>
 
         <!-- Kotlin -->
-        <kotlin.version>1.3.20</kotlin.version>
-        <!--<kotlin.version>1.2.70</kotlin.version>-->
+        <kotlin.version>1.3.41</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-
-        <!-- OSGI -->
-        <osgi.import>*</osgi.import>
-        <osgi.export>org.apache.gora.mongodb*;version="${project.version}";-noimport:=true</osgi.export>
 
         <!-- Maven Plugin Dependencies -->
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>

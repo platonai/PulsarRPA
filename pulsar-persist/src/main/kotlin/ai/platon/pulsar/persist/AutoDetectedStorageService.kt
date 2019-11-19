@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -18,9 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Created by vincent on 19-1-19.
  * Copyright @ 2013-2019 Platon AI. All rights reserved
+ *
+ * TODO: Try spring boot
  */
 class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
-
     val storeClassName: String = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> = detectDataStoreClass(conf)
     val pageStore: DataStore<String, GWebPage>
@@ -49,6 +49,7 @@ class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
     companion object {
 
         private val log = LoggerFactory.getLogger(AutoDetectedStorageService::class.java)
+        // const val SPRING_EMBEDDED_MONGO_AUTO_CONFIGURATION = "org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration"
 
         /**
          * Return the DataStore persistent class used to persist WebPage.

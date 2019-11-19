@@ -11,7 +11,9 @@ import ai.platon.pulsar.ql.h2.udas.GroupFetch
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import ai.platon.pulsar.ql.types.ValueDom
 import com.google.common.reflect.ClassPath
+import org.h2.engine.Constants
 import org.h2.engine.SessionInterface
+import java.sql.Connection
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
@@ -21,12 +23,14 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     private var totalUdas = AtomicInteger()
 
     val registeredAllUserUdfClasses = mutableListOf<Class<out Any>>()
-    val registeredAdminUdfClasses get() = registeredAllUserUdfClasses.filter {
-        it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
-    }
-    val registeredUdfClasses get() = registeredAllUserUdfClasses.filterNot {
-        it in registeredAdminUdfClasses
-    }
+    val registeredAdminUdfClasses
+        get() = registeredAllUserUdfClasses.filter {
+            it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
+        }
+    val registeredUdfClasses
+        get() = registeredAllUserUdfClasses.filterNot {
+            it in registeredAdminUdfClasses
+        }
 
     init {
         if (dbSession.implementation is org.h2.engine.Session) {
@@ -38,6 +42,10 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
 
     fun parseToValue(page: WebPage): ValueDom {
         return ValueDom.get(parse(page))
+    }
+
+    fun isColumnRetrieval(conn: Connection): Boolean {
+        return Constants.CONN_URL_COLUMNLIST in conn.metaData.url
     }
 
     /**

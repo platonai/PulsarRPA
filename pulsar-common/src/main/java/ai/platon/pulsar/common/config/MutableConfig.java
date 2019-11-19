@@ -13,18 +13,11 @@ import java.util.Objects;
 public class MutableConfig extends ImmutableConfig {
 
     public MutableConfig() {
+        this(true);
     }
 
-    public MutableConfig(boolean loadDefaultResource) {
-        super(loadDefaultResource);
-    }
-
-    public MutableConfig(String resourcePrefix) {
-        super(resourcePrefix);
-    }
-
-    public MutableConfig(Configuration conf) {
-        super(conf);
+    public MutableConfig(boolean loadDefaultDesource) {
+        super(loadDefaultDesource);
     }
 
     /**
@@ -32,10 +25,6 @@ public class MutableConfig extends ImmutableConfig {
      * */
     public MutableConfig(ImmutableConfig conf) {
         super(conf.unbox());
-    }
-
-    public static MutableConfig emptyConfig() {
-        return new MutableConfig(false);
     }
 
     /**
@@ -206,5 +195,9 @@ public class MutableConfig extends ImmutableConfig {
                 set(key, prop.getValue());
             }
         }
+    }
+
+    public VolatileConfig toVolatileConfig() {
+        return new VolatileConfig(this);
     }
 }

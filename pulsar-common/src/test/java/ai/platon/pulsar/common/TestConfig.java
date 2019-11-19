@@ -66,7 +66,7 @@ public class TestConfig {
 
     @Test
     public void testStrings() {
-        MutableConfig conf = new MutableConfig(false);
+        MutableConfig conf = new MutableConfig();
 
         String n1 = "n1";
         String v1 = "a,b,c,d";

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ai.platon.pulsar.common.CommonCounter.rRows;
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STAT_INDEX_HOME_URL;
 
 /**
  * Created by vincent on 17-6-18.

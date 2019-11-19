@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.scoring;
 
 import ai.platon.pulsar.common.ScoreEntry;
 import ai.platon.pulsar.common.ScoreVector;
-import ai.platon.pulsar.common.ScoreVector;
 
 import java.util.Comparator;
 import java.util.stream.Collectors;

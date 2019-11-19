@@ -2,10 +2,10 @@ package ai.platon.pulsar.crawl.component;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexWriters;
 import ai.platon.pulsar.crawl.index.IndexingFilters;
+import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

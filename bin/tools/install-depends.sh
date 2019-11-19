@@ -51,7 +51,7 @@ install_chrome_driver() {
     chromedriver -version
 }
 
-cd /tmp/
+cd /tmp/ || exit
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"
@@ -62,4 +62,4 @@ fi
 
 install_chrome_driver
 
-cd -
+cd - || exit

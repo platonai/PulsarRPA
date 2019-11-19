@@ -1,6 +1,7 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.IOException;
@@ -40,8 +41,9 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      * @see #createFromEncoded*/
     public Attribute(String key, String val, Attributes parent) {
         Validate.notNull(key);
-        this.key = key.trim();
+        key = key.trim();
         Validate.notEmpty(key); // trimming could potentially make empty, so validate here
+        this.key = key;
         this.val = val;
         this.parent = parent;
     }
@@ -75,7 +77,7 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @return the attribute value
      */
     public String getValue() {
-        return val;
+        return Attributes.checkNotNull(val);
     }
 
     /**
@@ -83,14 +85,15 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @param val the new attribute value; must not be null
      */
     public String setValue(String val) {
-        String oldVal = parent.get(this.key);
+        String oldVal = this.val;
         if (parent != null) {
+            oldVal = parent.get(this.key); // trust the container more
             int i = parent.indexOfKey(this.key);
             if (i != Attributes.NotFound)
                 parent.vals[i] = val;
         }
         this.val = val;
-        return oldVal;
+        return Attributes.checkNotNull(oldVal);
     }
 
     /**
@@ -98,14 +101,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
      @return HTML
      */
     public String html() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         
         try {
-        	html(accum, (new Document("")).outputSettings());
+        	html(sb, (new Document("")).outputSettings());
         } catch(IOException exception) {
         	throw new SerializationException(exception);
         }
-        return accum.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     protected static void html(String key, String val, Appendable accum, Document.OutputSettings out) throws IOException {
@@ -159,11 +162,10 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
         return shouldCollapseAttribute(key, val, out);
     }
 
-    protected static boolean shouldCollapseAttribute(String key, String val, Document.OutputSettings out) {
-        // todo: optimize
-        return (val == null || "".equals(val) || val.equalsIgnoreCase(key))
-            && out.syntax() == Document.OutputSettings.Syntax.html
-            && isBooleanAttribute(key);
+    protected static boolean shouldCollapseAttribute(final String key, final String val, final Document.OutputSettings out) {
+        return (
+            out.syntax() == Document.OutputSettings.Syntax.html &&
+                (val == null || ("".equals(val) || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
     }
 
     /**

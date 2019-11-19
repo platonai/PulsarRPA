@@ -19,7 +19,6 @@ package ai.platon.pulsar.common;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -29,9 +28,12 @@ import static ai.platon.pulsar.common.DateTimeDetector.CURRENT_DATE_EPOCH_DAYS;
 
 public class DateTimeUtil {
 
-    public static SimpleDateFormat FilesystemSafeDateFormat = new SimpleDateFormat("MMdd.HHmmss");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_1 = new SimpleDateFormat("MMdd");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_2 = new SimpleDateFormat("MMdd.HH");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_3 = new SimpleDateFormat("MMdd.HHmm");
+    public static SimpleDateFormat PATH_SAFE_FORMAT_4 = new SimpleDateFormat("MMdd.HHmmss");
 
-    public static long[] TIME_FACTOR = {60 * 60 * 1000, 60 * 1000, 1000};
+    public static Instant ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365));
 
     public static String format(long time) {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(time));
@@ -55,6 +57,14 @@ public class DateTimeUtil {
 
     public static String format(long epochMilli, String format) {
         return format(Instant.ofEpochMilli(epochMilli), format);
+    }
+
+    public static String readableDuration(Duration duration) {
+        return StringUtils.removeStart(duration.toString(), "PT").toLowerCase();
+    }
+
+    public static String readableDuration(String duration) {
+        return StringUtils.removeStart(duration, "PT").toLowerCase();
     }
 
     public static String isoInstantFormat(long time) {

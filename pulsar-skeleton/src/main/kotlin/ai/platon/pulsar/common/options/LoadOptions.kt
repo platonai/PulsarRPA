@@ -16,11 +16,96 @@ import java.time.Duration
  * ISO-8601 standard : PnDTnHnMn.nS
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
-open class LoadOptions : CommonOptions {
+open class LoadOptions: CommonOptions {
+    /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var expires: Duration = Duration.ofDays(36500)
-    @Parameter(names = ["-shortenKey", "--shorten-key"],
+    var expires = Duration.ofDays(36500)
+    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Simulate browser as incognito mode")
+    var incognito = false
+
+    /** Arrange links */
+    @Parameter(names = ["-ol", "-outlink", "-outlinkSelector", "--outlink-selector"],
+            description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
+                    "Out pages will be detected automatically if the selector is empty")
+    var outlinkSelector = ""
+    @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
+            description = "[TODO] The css selector of next page anchor")
+    var nextPageSelector = ""
+    @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The i-th iframe")
+    var iframe = 0
+    @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
+    var topLinks = 20
+    @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
+    var topNAnchorGroups = 3
+    @Parameter(names = ["-wnb", "-waitNonBlank"],
+            description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
+    var waitNonBlank: String = ""
+    @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
+    var requireNotBlank: String = ""
+    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize")
+    var requireSize = 0
+    @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
+    var requireImages = 0
+    @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"], description = "Fetch pages who's anchors less than requireAnchors")
+    var requireAnchors = 0
+
+    @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
+            description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
+    var fetchMode = FetchMode.SELENIUM
+    @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
+            description = "The browser to use, google chrome is the default")
+    var browser = BrowserType.CHROME
+    @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
+            description = "The count to scroll down after a page is opened by a browser")
+    var scrollCount = 5
+    @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
+            description = "The interval to scroll down after a page is opened by a browser")
+    var scrollInterval = Duration.ofMillis(500)
+    @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
+            description = "The maximum time to perform javascript injected into selenium")
+    var scriptTimeout = Duration.ofSeconds(60)
+    @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
+            description = "The maximum time to wait for a page to be finished by selenium")
+    var pageLoadTimeout = Duration.ofSeconds(60)
+
+    // itemXXX should be available for all index-item pattern pages
+    @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
+            description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
+    var itemBrowser = BrowserType.CHROME
+    @Parameter(names = ["-ie", "-itemExtractor", "--item-extractor"], converter = BrowserTypeConverter::class,
+            description = "The extract used to extract item pages, use BOILERPIPE for news and DEFAULT for others")
+    var itemExtractor = ItemExtractor.DEFAULT
+    @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
+            description = "The same as expires, but only works for item pages in harvest tasks")
+    var itemExpires = Duration.ofDays(36500)
+    /** Note: if scroll too many times, the page may fail to calculate the vision information */
+    @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
+            description = "The same as scrollCount, but only works for item pages in harvest tasks")
+    var itemScrollCount = scrollCount
+    @Parameter(names = ["-isi", "-itemScrollInterval", "--item-scroll-interval"], converter = DurationConverter::class,
+            description = "The same as scrollInterval, but only works for item pages in harvest tasks")
+    var itemScrollInterval = scrollInterval
+    @Parameter(names = ["-ist", "-itemScriptTimeout", "--item-script-timeout"], converter = DurationConverter::class,
+            description = "The same as scriptTimeout, but only works for item pages in harvest tasks")
+    var itemScriptTimeout = scriptTimeout
+    @Parameter(names = ["-iplt", "-itemPageLoadTimeout", "--item-page-load-timeout"], converter = DurationConverter::class,
+            description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
+    var itemPageLoadTimeout = pageLoadTimeout
+    @Parameter(names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
+            description = "Keep the item pages only if the required text is not blank")
+    var itemRequireNotBlank = ""
+    @Parameter(names = ["-irs", "-itemRequireSize", "--item-require-size"],
+            description = "Fetch item pages smaller than requireSize")
+    var itemRequireSize = 0
+    @Parameter(names = ["-iri", "-itemRequireImages", "--item-require-images"],
+            description = "Fetch item pages who's images less than requireImages")
+    var itemRequireImages = 0
+    @Parameter(names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],
+            description = "Fetch item pages who's anchors less than requireAnchors")
+    var itemRequireAnchors = 0
+
+    @Parameter(names = ["-sk", "-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
     var shortenKey = false
     @Parameter(names = ["-persist", "--persist"], arity = 1,
@@ -36,24 +121,6 @@ open class LoadOptions : CommonOptions {
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
             description = "Parallel fetch pages whenever applicable")
     var preferParallel = true
-    @Parameter(names = ["-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
-            description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
-    var fetchMode = FetchMode.SELENIUM
-    @Parameter(names = ["-browser", "--browser"], converter = BrowserTypeConverter::class,
-            description = "The browser to use, google chrome is the default")
-    var browser = BrowserType.CHROME
-    @Parameter(names = ["-scrollCount", "--scroll-count"],
-            description = "The count to scroll down after a page is opened by a browser")
-    var scrollCount = 5
-    @Parameter(names = ["-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
-            description = "The interval to scroll down after a page is opened by a browser")
-    var scrollInterval: Duration = Duration.ofMillis(1000)
-    @Parameter(names = ["-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to perform javascript injected into selenium")
-    var scriptTimeout: Duration = Duration.ofSeconds(60)
-    @Parameter(names = ["-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to wait for a page to be finished by selenium")
-    var pageLoadTimeout: Duration = Duration.ofSeconds(60)
 
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
@@ -69,9 +136,11 @@ open class LoadOptions : CommonOptions {
     var parse = false
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
-    @Parameter(names = ["-noNorm", "--no-link-normalizer"], arity = 1, description = "No normalizer is applied to parse links")
+    @Parameter(names = ["-ignoreUrlQuery", "--ignore-url-query"], description = "Remove the query parameters of urls")
+    var ignoreUrlQuery = false
+    @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
     var noNorm = false
-    @Parameter(names = ["-noFilter", "--no-link-filter"], arity = 1, description = "No filter is applied to parse links")
+    @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
     var noFilter = false
 
     @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
@@ -85,19 +154,12 @@ open class LoadOptions : CommonOptions {
 
     // A volatile config is usually session scoped
     var volatileConfig: VolatileConfig? = null
-        set(value) {
-            if (value != null) {
-                value.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-                value.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_WAIT, scrollInterval)
-                value.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-                value.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-            }
-            field = value
-        }
+        set(value) { field = initConfig(value) }
+        get() = initConfig(field)
 
-    val modifiedParams: Params get() {
+    open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
-        val fields = this.javaClass.declaredFields
+        val fields = LoadOptions::class.java.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
                 .onEach { it.isAccessible = true }
                 .filter { it.get(this) != null }
@@ -105,8 +167,8 @@ open class LoadOptions : CommonOptions {
                 .let { Params.of(it).withRowFormat(rowFormat) }
     }
 
-    val modifiedOptions: Map<String, Any> get() {
-        val fields = this.javaClass.declaredFields
+    open val modifiedOptions: Map<String, Any> get() {
+        val fields = LoadOptions::class.java.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
                 .onEach { it.isAccessible = true }
                 .filter { it.get(this) != null }
@@ -121,19 +183,43 @@ open class LoadOptions : CommonOptions {
         addObjects(this)
     }
 
-    protected constructor(args: String) : super(args.trim { it <= ' ' }.replace("=".toRegex(), " ")) {
+    protected constructor(args: String) : super(args) {
         addObjects(this)
     }
 
-    open fun isDefault(optionName: String): Boolean {
-        val value = this.javaClass.declaredFields.find { it.name == optionName }
-                ?.also { it.isAccessible = true }?.get(this)
-        return value == defaultParams[optionName]
+    open fun createItemOption(): LoadOptions {
+        val itemOptions = clone()
+
+        itemOptions.expires = itemExpires
+        itemOptions.scrollCount = itemScrollCount
+        itemOptions.scriptTimeout = itemScriptTimeout
+        itemOptions.scrollInterval = itemScrollInterval
+        itemOptions.pageLoadTimeout = itemPageLoadTimeout
+        itemOptions.requireNotBlank = itemRequireNotBlank
+        itemOptions.requireSize = itemRequireSize
+        itemOptions.requireImages = itemRequireImages
+        itemOptions.requireAnchors = itemRequireAnchors
+
+        itemOptions.browser = itemBrowser
+        if (itemOptions.browser == BrowserType.NATIVE) {
+            // TODO: merge browser and fetch mode
+            itemOptions.fetchMode = FetchMode.NATIVE
+        }
+
+        itemOptions.volatileConfig = volatileConfig
+
+        return itemOptions
+    }
+
+    open fun isDefault(option: String): Boolean {
+        val value = LoadOptions::class.java.declaredFields.find { it.name == option }
+                ?.also { it.isAccessible = true }?.get(this)?:return false
+        return value == defaultParams[option]
     }
 
     override fun getParams(): Params {
         val rowFormat = "%40s: %s"
-        val fields = this.javaClass.declaredFields
+        val fields = LoadOptions::class.java.declaredFields
         return fields.filter { it.annotations.any { it is Parameter } }
                 .onEach { it.isAccessible = true }
                 .associate { "-${it.name}" to it.get(this) }
@@ -142,18 +228,38 @@ open class LoadOptions : CommonOptions {
     }
 
     override fun toString(): String {
-        return modifiedParams.withCmdLineStyle(true).withKVDelimiter(" ")
+        return modifiedParams.distinct().sorted().withCmdLineStyle(true).withKVDelimiter(" ")
                 .formatAsLine().replace("\\s+".toRegex(), " ")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is LoadOptions && other.toString() == toString()
+    }
+
+    /**
+     * Create a new LoadOptions
+     * */
+    open fun clone(): LoadOptions {
+        return parse(toString(), volatileConfig)
     }
 
     /**
      * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
      * */
-    fun mergeModified(other: LoadOptions): LoadOptions {
+    open fun mergeModified(other: LoadOptions): LoadOptions {
         val modified = other.modifiedOptions
 
+        LoadOptions::class.java.declaredFields.forEach {
+            if (it.name in modified.keys) {
+                it.isAccessible = true
+                it.set(this, modified[it.name])
+            }
+        }
+
+        // the fields of sub classes
         this.javaClass.declaredFields.forEach {
             if (it.name in modified.keys) {
+                it.isAccessible = true
                 it.set(this, modified[it.name])
             }
         }
@@ -161,13 +267,21 @@ open class LoadOptions : CommonOptions {
         return this
     }
 
+    private fun initConfig(vc: VolatileConfig?): VolatileConfig? {
+        vc?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        vc?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        vc?.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        vc?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
+        return vc
+    }
+
     companion object {
 
         val default = LoadOptions()
-        val defaultParams = default.javaClass.declaredFields.associate { it.name to it.get(default) }
+        val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val optionNames: List<String> = default.javaClass.declaredFields
-                .filter { it.annotations.any { it is Parameter } }.map { it.name }
+        val optionNames = LoadOptions::class.java.declaredFields.flatMap { it.annotations.toList() }.filter { it is Parameter }
+                .map { it as Parameter }.flatMap { it.names.toList() }
 
         val helpList: List<List<String>> get() =
                 LoadOptions::class.java.declaredFields

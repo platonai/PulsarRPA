@@ -24,7 +24,6 @@ import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.WebPageFormatter;
 import ai.platon.pulsar.persist.gora.db.DbQuery;
 import ai.platon.pulsar.persist.gora.db.DbQueryResult;
-import org.apache.gora.util.GoraException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,10 +1,19 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 
@@ -290,13 +299,13 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
      @throws SerializationException if the HTML representation of the attributes cannot be constructed.
      */
     public String html() {
-        StringBuilder accum = new StringBuilder();
+        StringBuilder sb = StringUtil.borrowBuilder();
         try {
-            html(accum, (new Document("")).outputSettings()); // output settings a bit funky, but this html() seldom used
+            html(sb, (new Document("")).outputSettings()); // output settings a bit funky, but this html() seldom used
         } catch (IOException e) { // ought never happen
             throw new SerializationException(e);
         }
-        return accum.toString();
+        return StringUtil.releaseBuilder(sb);
     }
 
     final void html(final Appendable accum, final Document.OutputSettings out) throws IOException {
@@ -308,9 +317,7 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
             accum.append(' ').append(key);
 
             // collapse checked=null, checked="", checked=checked; write out others
-            if (!(out.syntax() == Document.OutputSettings.Syntax.html
-                && (val == null || val.equals(key) && Attribute.isBooleanAttribute(key)))) {
-
+            if (!Attribute.shouldCollapseAttribute(key, val, out)) {
                 accum.append("=\"");
                 Entities.escape(accum, val == null ? EmptyString : val, out, true, false, false);
                 accum.append('"');

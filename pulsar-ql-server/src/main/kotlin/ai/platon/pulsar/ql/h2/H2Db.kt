@@ -3,10 +3,8 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.PulsarPaths
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
-import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
-import java.time.Instant
 import java.util.*
 import kotlin.math.abs
 
@@ -24,12 +22,12 @@ class H2Db(
     /**
      * The temporary directory.
      */
-    val tmpDir = PulsarPaths.get(PulsarPaths.tmpDir, "h2")
+    val tmpDir = PulsarPaths.get(PulsarPaths.TMP_DIR, "h2")
 
     /**
      * The base directory to write test databases.
      */
-    val baseDir = PulsarPaths.get(PulsarPaths.testDir, "h2")
+    val baseDir = PulsarPaths.get(PulsarPaths.TEST_DIR, "h2")
 
     /**
      * Get the file password (only required if file encryption is used).
@@ -261,7 +259,7 @@ class H2Db(
     }
 
     private fun getConnectionInternal(url: String, user: String, password: String): Connection {
-        println("H2 Connection: $url")
+        println("Open H2 Connection: $url")
 
         org.h2.Driver.load()
         return DriverManager.getConnection(url, user, password)

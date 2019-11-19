@@ -2,18 +2,22 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.SELENIUM_BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.component.*
-import ai.platon.pulsar.crawl.fetch.TaskStatusTracker
+import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.persist.metadata.FetchMode
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
@@ -99,9 +103,7 @@ class PulsarContext: AutoCloseable {
      * */
     val fetchComponent: FetchComponent
 
-//    val taskTracker = PulsarEnv.
-
-    val taskStatusTracker: TaskStatusTracker
+    val fetchTaskTracker: FetchTaskTracker
 
     val pageCache: ConcurrentLRUCache<String, WebPage>
     val documentCache: ConcurrentLRUCache<String, FeaturedDocument>
@@ -119,7 +121,7 @@ class PulsarContext: AutoCloseable {
         fetchComponent = applicationContext.getBean(BatchFetchComponent::class.java)
         parseComponent = applicationContext.getBean(ParseComponent::class.java)
         urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)
-        taskStatusTracker = applicationContext.getBean(TaskStatusTracker::class.java)
+        fetchTaskTracker = applicationContext.getBean(FetchTaskTracker::class.java)
     }
 
     fun createSession(): PulsarSession {
@@ -150,41 +152,45 @@ class PulsarContext: AutoCloseable {
         closableObjects.add(closable)
     }
 
-    fun normalize(url: String): NormUrl {
-        ensureRunning()
-        val parts = Urls.splitUrlArgs(url)
-        val options = initOptions(LoadOptions.parse(parts.second))
-        var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
-        if (!options.noFilter) {
-            normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
+    private fun initOptions(options: LoadOptions, isItemOption: Boolean = false): LoadOptions {
+        if (options.volatileConfig == null) {
+            options.volatileConfig = VolatileConfig(PulsarEnv.unmodifiedConfig)
         }
-        return NormUrl(normalizedUrl, initOptions(options))
+
+        options.volatileConfig?.setBoolean(SELENIUM_BROWSER_INCOGNITO, options.incognito)
+
+        return if (isItemOption) options.createItemOption() else options
     }
 
-    fun normalize(url: String, options: LoadOptions): NormUrl {
+    fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
+        ensureRunning()
+        return normalize(url, LoadOptions.create(), isItemOption)
+    }
+
+    fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
         ensureRunning()
         val parts = Urls.splitUrlArgs(url)
         var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
-        if (!options.noFilter) {
+        if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
         }
 
         if (parts.second.isBlank()) {
-            return NormUrl(normalizedUrl, options)
+            return NormUrl(normalizedUrl, initOptions(options, isItemOption))
         }
 
-        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(parts.second), options.volatileConfig)
-        return NormUrl(normalizedUrl, initOptions(options2))
+        val options2 = LoadOptions.mergeModified(LoadOptions.parse(parts.second), options)
+        return NormUrl(normalizedUrl, initOptions(options2, isItemOption))
     }
 
-    fun normalize(urls: Iterable<String>): List<NormUrl> {
+    fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
-        return urls.mapNotNull { normalize(it).takeIf { it.isNotNil } }
+        return urls.mapNotNull { normalize(it, isItemOption).takeIf { it.isNotNil } }
     }
 
-    fun normalize(urls: Iterable<String>, options: LoadOptions): List<NormUrl> {
+    fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl> {
         ensureRunning()
-        return urls.mapNotNull { normalize(it, options).takeIf { it.isNotNil } }
+        return urls.mapNotNull { normalize(it, options, isItemOption).takeIf { it.isNotNil } }
     }
 
     /**
@@ -227,7 +233,6 @@ class PulsarContext: AutoCloseable {
     fun load(url: String): WebPage {
         ensureRunning()
         val normUrl = normalize(url)
-        initOptions(normUrl.options)
         return loadComponent.load(normUrl)
     }
 
@@ -240,7 +245,7 @@ class PulsarContext: AutoCloseable {
      */
     fun load(url: String, options: LoadOptions): WebPage {
         ensureRunning()
-        val normUrl = normalize(url, initOptions(options))
+        val normUrl = normalize(url, options)
         return loadComponent.load(normUrl)
     }
 
@@ -252,7 +257,7 @@ class PulsarContext: AutoCloseable {
      */
     fun load(url: URL): WebPage {
         ensureRunning()
-        return loadComponent.load(url, initOptions(LoadOptions.create()))
+        return loadComponent.load(url, LoadOptions.create())
     }
 
     /**
@@ -295,7 +300,6 @@ class PulsarContext: AutoCloseable {
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
-        initOptions(options)
         return loadComponent.loadAll(normalize(urls, options), options)
     }
 
@@ -321,7 +325,6 @@ class PulsarContext: AutoCloseable {
     @JvmOverloads
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
         ensureRunning()
-        initOptions(options)
         return loadComponent.parallelLoadAll(normalize(urls, options), options)
     }
 
@@ -385,12 +388,5 @@ class PulsarContext: AutoCloseable {
 //            throw IllegalStateException(
 //                    """Cannot call methods on a stopped PulsarContext.""")
         }
-    }
-
-    private fun initOptions(options: LoadOptions): LoadOptions {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = VolatileConfig(PulsarEnv.unmodifiedConfig)
-        }
-        return options
     }
 }
