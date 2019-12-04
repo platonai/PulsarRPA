@@ -504,10 +504,12 @@ public class LoadComponent {
             BrowserJsData.Stat stat = jsData.getLastStat();
             jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", stat.getNi(), stat.getNa(), stat.getNnm(), stat.getNst());
         }
-        return String.format("Fetched%s in %8s%26s, fc:%2d %24s | %s",
+
+        String fmt = "Fetched%s in %8s" + (proxy == null ? "%s" : "%26s") + ", fc:%2d %24s | %s";
+        return String.format(fmt,
                 StringUtil.readableByteCount(bytes, 7, false),
                 DateTimeUtil.readableDuration(responseTime),
-                proxy == null ? "" : " via " + proxy,
+                proxy == null ? "(no proxy)" : " via " + proxy,
                 page.getFetchCount(),
                 jsSate,
                 page.getUrl()

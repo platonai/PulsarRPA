@@ -34,13 +34,11 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
-import java.nio.charset.Charset
 import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.Pattern.CASE_INSENSITIVE
 import kotlin.math.roundToLong
 
 data class DriverConfig(
@@ -129,7 +127,7 @@ class SeleniumEngine(
     private val libJs = browserControl.parseLibJs(false)
     private val clientJs = browserControl.parseJs(false)
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
-    private var charsetPattern = if (supportAllCharsets) systemAvailableCharsetPattern else defaultCharsetPattern
+    private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val defaultDriverConfig = DriverConfig(immutableConfig)
     private val maxCookieView = 40
@@ -664,26 +662,8 @@ class SeleniumEngine(
     }
 
     private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver): String {
-        if (pageSource.isEmpty()) {
-            return ""
-        }
-
-        // take the head part and replace charset to UTF-8
-        val pos = pageSource.indexOf("</head>")
-        var head = pageSource.take(pos)
-        // TODO: can still faster
-        // Some parsers use html directive to decide the content's encoding, correct it to be UTF-8
-        head = charsetPattern.matcher(head).replaceAll("UTF-8")
-
-        // append the rest
-        val sb = StringBuilder(head)
-        var i = pos
-        while (i < pageSource.length) {
-            sb.append(pageSource[i])
-            ++i
-        }
-
-        val content = sb.toString()
+        val sb = replaceHTMLCharset(pageSource, charsetPattern)
+        val content = sb.toString();
 
         if (log.isDebugEnabled && content.isNotEmpty()) {
             export(sb, status, content, page)
@@ -768,12 +748,5 @@ class SeleniumEngine(
 
     companion object {
         private var instanceCount = AtomicInteger()
-        val defaultSupportedCharsets = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
-                "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
-        val systemAvailableCharsets = Charset.availableCharsets().values.joinToString("|") { it.name() }
-        // All charsets are supported by the system
-        // The set is big, can use a static cache to hold them if necessary
-        val defaultCharsetPattern = defaultSupportedCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
-        val systemAvailableCharsetPattern = systemAvailableCharsets.replace("UTF-8\\|?", "").toPattern(CASE_INSENSITIVE)
     }
 }

@@ -95,16 +95,6 @@ if [ "$PULSAR_DB_PASSWORD" = "" ]; then
   export PULSAR_DB_PASSWORD="pulsar"
 fi
 
-# REST JMX opts
-if [[ -n "$PULSAR_JMX_OPTS" && -z "$PULSAR_REST_JMX_OPTS" ]]; then
-  PULSAR_REST_JMX_OPTS="$PULSAR_JMX_OPTS -Dcom.sun.management.jmxremote.port=10105"
-fi
-
-# REST opts
-if [[ -z "$PULSAR_REST_OPTS" ]]; then
-  export PULSAR_REST_OPTS="$PULSAR_REST_JMX_OPTS"
-fi
-
 if [[ "$PULSAR_NICENESS" = "" ]]; then
     export PULSAR_NICENESS=0
 fi
