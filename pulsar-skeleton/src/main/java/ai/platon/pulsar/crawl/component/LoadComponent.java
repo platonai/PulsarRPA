@@ -509,7 +509,7 @@ public class LoadComponent {
         return String.format(fmt,
                 StringUtil.readableByteCount(bytes, 7, false),
                 DateTimeUtil.readableDuration(responseTime),
-                proxy == null ? "(no proxy)" : " via " + proxy,
+                proxy == null ? "" : " via " + proxy,
                 page.getFetchCount(),
                 jsSate,
                 page.getUrl()

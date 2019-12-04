@@ -416,7 +416,6 @@
 <!--                </exclusions>-->
 <!--            </dependency>-->
 
-            <!-- TODO: Support MongoDB, TODO: use spring-boot default -->
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>

@@ -22,6 +22,7 @@
     <name>Pulsar Common</name>
 
     <dependencies>
+        <!-- Required by configurations -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>

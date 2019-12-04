@@ -483,7 +483,6 @@ class SeleniumEngine(
         val url = task.url
         val page = task.page
 
-        val t = fetchTaskTracker
         log.info("Fetching task {}/{} in thd#{}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
                 taskId, task.batchSize,
                 Thread.currentThread().id,
@@ -648,19 +647,6 @@ class SeleniumEngine(
         }
     }
 
-    private fun takeScreenshot(contentLength: Int, page: WebPage, driver: RemoteWebDriver) {
-        if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
-            try {
-                if (contentLength > 100) {
-                    val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                    export(page, bytes, ".png")
-                }
-            } catch (e: Exception) {
-                log.warn("Cannot take screenshot, page length {} | {}", contentLength, page.url)
-            }
-        }
-    }
-
     private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver): String {
         val sb = replaceHTMLCharset(pageSource, charsetPattern)
         val content = sb.toString();
@@ -693,6 +679,19 @@ class SeleniumEngine(
         val path = export(page, prettyHtml.toByteArray(), ident)
 
         page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
+    }
+
+    private fun takeScreenshot(contentLength: Int, page: WebPage, driver: RemoteWebDriver) {
+        if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
+            try {
+                if (contentLength > 100) {
+                    val bytes = driver.getScreenshotAs(OutputType.BYTES)
+                    export(page, bytes, ".png")
+                }
+            } catch (e: Exception) {
+                log.warn("Cannot take screenshot, page length {} | {}", contentLength, page.url)
+            }
+        }
     }
 
     private fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
