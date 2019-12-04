@@ -54,7 +54,7 @@ class PulsarEnv {
 
         val seleniumFetchComponent: SeleniumFetchComponent
 
-        val monitor: PulsarMonitor
+        val MONITOR: AppMonitor
 
         private val env = AtomicReference<PulsarEnv>()
 
@@ -87,10 +87,10 @@ class PulsarEnv {
 
             seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
 
-            monitor = applicationContext.getBean(PulsarMonitor::class.java)
+            MONITOR = applicationContext.getBean(AppMonitor::class.java)
 
             // TODO: move it to a better place
-            monitor.start()
+            MONITOR.start()
 
             active.set(true)
         }
@@ -116,7 +116,7 @@ class PulsarEnv {
         }
 
         // Internal proxy server blocks can not be closed by spring, the reason should be investigated
-        monitor.use { it.close() }
+        MONITOR.use { it.close() }
         applicationContext.use { it.close() }
 
         active.set(false)

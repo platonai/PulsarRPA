@@ -14,13 +14,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * TODO: merge all monitor threads
  * */
-class PulsarMonitor(
+class AppMonitor(
         val webDriverPool: WebDriverPool,
         val proxyPool: ProxyPool,
         val internalProxyServer: InternalProxyServer,
         private val conf: ImmutableConfig
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(PulsarMonitor::class.java)
+    private val log = LoggerFactory.getLogger(AppMonitor::class.java)
     private var lastIPSReport = ""
 
     private val env = PulsarEnv.getOrCreate()

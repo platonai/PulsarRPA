@@ -14,7 +14,6 @@ import org.openqa.selenium.remote.CapabilityType
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -29,7 +28,7 @@ class TestWebDriver {
 
         val env = PulsarEnv.getOrCreate()
         val conf = PulsarEnv.unmodifiedConfig
-        val pool = PulsarEnv.monitor.webDriverPool
+        val pool = PulsarEnv.MONITOR.webDriverPool
         var quitMultiThreadTesting = false
 
         @BeforeClass

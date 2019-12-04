@@ -38,25 +38,31 @@ while [ -h "$this" ]; do
 done
 
 # Convert relative path to absolute path
-bin=`dirname "$this"`
-script=`basename "$this"`
-bin=`cd "$bin">/dev/null; pwd`
+bin=$(dirname "$this")
+script=$(basename "$this")
+bin=$(cd "$bin">/dev/null || exit; pwd)
 this="$bin/$script"
 
 # The root dir of this program
 if [ "$PULSAR_HOME" = "" ]; then
-  PULSAR_HOME=`dirname "$this"`/../..
-  PULSAR_HOME=`cd "$PULSAR_HOME">/dev/null; pwd`
+  PULSAR_HOME=$(dirname "$this")/../..
+  PULSAR_HOME=$(cd "$PULSAR_HOME">/dev/null || exit; pwd)
   export PULSAR_HOME=$PULSAR_HOME
 fi
 
-# The runtime mode
-if [ -f "${PULSAR_HOME}"/pulsar-enterprise-*-job.jar ]; then
-  export PULSAR_RUNTIME_MODE="PACKED"
-elif [ -f "$PULSAR_HOME/pom.xml" ]; then
-  export PULSAR_RUNTIME_MODE="DEVELOPMENT"
-else
-  export PULSAR_RUNTIME_MODE="ASSEMBLY"
+# Detect the runtime mode
+for f in "${PULSAR_HOME}"/pulsar-enterprise-*-job.jar; do
+  if [ -f "$f" ]; then
+    export PULSAR_RUNTIME_MODE="PACKED"
+  fi
+done
+
+if [ "$PULSAR_RUNTIME_MODE" = ""  ]; then
+  if [ -f "$PULSAR_HOME/pom.xml" ]; then
+    export PULSAR_RUNTIME_MODE="DEVELOPMENT"
+  else
+    export PULSAR_RUNTIME_MODE="ASSEMBLY"
+  fi
 fi
 
 # The log dir
@@ -77,7 +83,7 @@ fi
 mkdir -p "$PULSAR_TMP_DIR"
 
 # The directory to keep process PIDs
-if [ "$PULSAR_PID_DIR"="" ]; then
+if [ "$PULSAR_PID_DIR" = "" ]; then
   export PULSAR_PID_DIR="$PULSAR_TMP_DIR"
 fi
 
