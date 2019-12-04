@@ -1,7 +1,7 @@
 package com.github.monkeywie.proxyee.server;
 
 import ai.platon.pulsar.common.DateTimeUtil;
-import ai.platon.pulsar.common.PulsarPaths;
+import ai.platon.pulsar.common.AppPaths;
 import ai.platon.pulsar.common.SimpleLogger;
 import com.github.monkeywie.proxyee.crt.CertPool;
 import com.github.monkeywie.proxyee.crt.CertUtil;
@@ -31,7 +31,7 @@ import java.security.cert.X509Certificate;
 public class HttpProxyServer implements AutoCloseable {
 
   private static String now = DateTimeUtil.now("yyyyMMdd");
-  private static Path path = PulsarPaths.INSTANCE.get("proxy", "logs", "proxy-" + now + ".log");
+  private static Path path = AppPaths.INSTANCE.get("proxy", "logs", "proxy-" + now + ".log");
   // there are too many disconnect/timeout warnings, we write them into another file
   public static SimpleLogger LOG = new SimpleLogger(path, SimpleLogger.INFO);
 

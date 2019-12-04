@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.PulsarPaths;
+import ai.platon.pulsar.common.AppPaths;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.persist.gora.GoraStorage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
@@ -56,7 +56,7 @@ public class TestGoraStorageInMemory {
 
     protected MutableConfig conf;
     protected FileSystem fs;
-    protected Path testdir = new Path(PulsarPaths.INSTANCE.getTEST_DIR().toString() + "/working");
+    protected Path testdir = new Path(AppPaths.INSTANCE.getTEST_DIR().toString() + "/working");
     protected DataStore<String, GWebPage> datastore;
     protected boolean persistentDataStore = false;
 

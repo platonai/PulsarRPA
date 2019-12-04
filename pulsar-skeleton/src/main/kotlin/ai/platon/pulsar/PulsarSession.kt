@@ -1,11 +1,10 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.BeanFactory
-import ai.platon.pulsar.common.PulsarFiles
-import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.PulsarPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
@@ -13,8 +12,6 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.persist.metadata.FetchMode
 import org.h2.util.Utils
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
@@ -327,19 +324,19 @@ open class PulsarSession(
 
     fun export(page: WebPage, ident: String = ""): Path {
         ensureRunning()
-        val path = PulsarPaths.get(WEB_CACHE_DIR, "export", ident, PulsarPaths.fromUri(page.url, ".htm"))
-        return PulsarFiles.saveTo(page.contentAsString, path, true)
+        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(page.url, ".htm"))
+        return AppFiles.saveTo(page.contentAsString, path, true)
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
         ensureRunning()
-        val path = PulsarPaths.get(WEB_CACHE_DIR, "export", ident, PulsarPaths.fromUri(doc.location, ".htm"))
-        return PulsarFiles.saveTo(doc.prettyHtml, path, true)
+        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(doc.location, ".htm"))
+        return AppFiles.saveTo(doc.prettyHtml, path, true)
     }
 
     fun exportTo(doc: FeaturedDocument, path: Path): Path {
         ensureRunning()
-        return PulsarFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
+        return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
     }
 
     override fun equals(other: Any?): Boolean {

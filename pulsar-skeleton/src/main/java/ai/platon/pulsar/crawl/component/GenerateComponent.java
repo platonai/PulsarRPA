@@ -41,8 +41,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
-import static ai.platon.pulsar.common.PulsarPaths.PATH_BANNED_URLS;
-import static ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS;
+import static ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS;
+import static ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
 import static ai.platon.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE;

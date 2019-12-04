@@ -98,7 +98,7 @@ class FetchMonitor(
     /**
      * Scripts
      */
-    private var finishScript: Path = PulsarPaths.get("scripts", "finish_$jobName.sh")
+    private var finishScript: Path = AppPaths.get("scripts", "finish_$jobName.sh")
 
     var isHalt = false
         private set
@@ -144,7 +144,7 @@ class FetchMonitor(
     }
 
     private fun generateFinishCommand() {
-        val cmd = "#bin\necho finish-job $jobName >> " + PulsarPaths.PATH_LOCAL_COMMAND
+        val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
 
         try {
             Files.createDirectories(finishScript.parent)

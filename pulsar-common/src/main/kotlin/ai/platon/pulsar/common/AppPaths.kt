@@ -16,7 +16,7 @@ import java.util.*
  * Created by vincent on 18-3-23.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-object PulsarPaths {
+object AppPaths {
     val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
     val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_DATA_DIR)
@@ -56,6 +56,10 @@ object PulsarPaths {
 
     fun get(first: String, vararg more: String): Path {
         return Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
+    }
+
+    fun getTmp(first: String, vararg more: String): Path {
+        return Paths.get(tmpDirStr, first.removePrefix(homeDirStr), *more)
     }
 
     fun fromUri(url: String, suffix: String = ""): String {

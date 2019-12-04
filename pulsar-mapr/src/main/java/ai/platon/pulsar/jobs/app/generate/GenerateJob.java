@@ -89,7 +89,7 @@ public final class GenerateJob extends AppContextAwareJob {
 
     int round = conf.getInt(CRAWL_ROUND, 0);
     int maxDistance = conf.getUint(CRAWL_MAX_DISTANCE, DISTANCE_INFINITE);
-    int lastGeneratedRows = PulsarFiles.INSTANCE.readLastGeneratedRows();
+    int lastGeneratedRows = AppFiles.INSTANCE.readLastGeneratedRows();
     if (!reGenerateSeeds) {
       reGenerateSeeds = RuntimeUtils.hasLocalFileCommand(CMD_FORCE_GENERATE_SEEDS);
     }
@@ -130,13 +130,13 @@ public final class GenerateJob extends AppContextAwareJob {
   }
 
   private void prepareSystemFiles(ImmutableConfig conf) throws IOException {
-    PulsarFiles.INSTANCE.writeBatchId(conf.get(BATCH_ID));
+    AppFiles.INSTANCE.writeBatchId(conf.get(BATCH_ID));
 
     if (HdfsUtils.isDistributedFS(conf)) {
       LOG.info("Running under hadoop distributed file system, copy files to HDFS");
 
-      if (Files.exists(PulsarPaths.PATH_BANNED_URLS)) {
-        HdfsUtils.copyFromLocalFile(PulsarPaths.PATH_BANNED_URLS.toString(), conf);
+      if (Files.exists(AppPaths.PATH_BANNED_URLS)) {
+        HdfsUtils.copyFromLocalFile(AppPaths.PATH_BANNED_URLS.toString(), conf);
       }
     }
   }
@@ -158,7 +158,7 @@ public final class GenerateJob extends AppContextAwareJob {
 
     try {
       long affectedRows = currentJob.getCounters().findCounter(STAT_PULSAR_STATUS, "2'rPersist").getValue();
-      PulsarFiles.INSTANCE.writeLastGeneratedRows(affectedRows);
+      AppFiles.INSTANCE.writeLastGeneratedRows(affectedRows);
     } catch (IOException e) {
       LOG.error(e.toString());
     }
@@ -167,9 +167,9 @@ public final class GenerateJob extends AppContextAwareJob {
   private void printInfo() {
     String info = "File Based Commands : \n"
         + "1. force generate and re-fetch seeds next round : \n"
-        + "echo " + CMD_FORCE_GENERATE_SEEDS + " > " + PulsarPaths.PATH_LOCAL_COMMAND + "\n"
+        + "echo " + CMD_FORCE_GENERATE_SEEDS + " > " + AppPaths.PATH_LOCAL_COMMAND + "\n"
         + "2. ban a url : \n"
-        + "echo \"" + EXAMPLE_URL + "\" >> " + PulsarPaths.PATH_BANNED_URLS + "\n";
+        + "echo \"" + EXAMPLE_URL + "\" >> " + AppPaths.PATH_BANNED_URLS + "\n";
 
     LOG.info(info);
   }

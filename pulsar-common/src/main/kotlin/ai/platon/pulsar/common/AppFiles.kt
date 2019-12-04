@@ -12,9 +12,9 @@ import java.nio.file.StandardOpenOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-object PulsarFiles {
+object AppFiles {
 
-    val log = LoggerFactory.getLogger(PulsarFiles::class.java)!!
+    val log = LoggerFactory.getLogger(AppFiles::class.java)!!
 
     fun saveTo(any: Any, path: Path, deleteIfExists: Boolean = false): Path {
         return saveTo(any.toString().toByteArray(), path, deleteIfExists)
@@ -96,14 +96,14 @@ object PulsarFiles {
 
     @Throws(IOException::class)
     fun writeLastGeneratedRows(rows: Long): Path {
-        val path = PulsarPaths.PATH_LAST_BATCH_ID
+        val path = AppPaths.PATH_LAST_BATCH_ID
         Files.write(path, (rows.toString() + "\n").toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         return path
     }
 
     fun readLastGeneratedRows(): Int {
         try {
-            val line = Files.readAllLines(PulsarPaths.PATH_LAST_GENERATED_ROWS)[0]
+            val line = Files.readAllLines(AppPaths.PATH_LAST_GENERATED_ROWS)[0]
             return NumberUtils.toInt(line, -1)
         } catch (ignored: Throwable) {
         }
@@ -114,7 +114,7 @@ object PulsarFiles {
     @Throws(IOException::class)
     fun writeBatchId(batchId: String?): Path? {
         if (batchId != null && !batchId.isEmpty()) {
-            val path = PulsarPaths.PATH_LAST_BATCH_ID
+            val path = AppPaths.PATH_LAST_BATCH_ID
             Files.write(path, (batchId + "\n").toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
             return path
         }
@@ -124,7 +124,7 @@ object PulsarFiles {
 
     fun readBatchIdOrDefault(defaultValue: String): String {
         try {
-            return Files.readAllLines(PulsarPaths.PATH_LAST_BATCH_ID)[0]
+            return Files.readAllLines(AppPaths.PATH_LAST_BATCH_ID)[0]
         } catch (ignored: Throwable) {
         }
 
@@ -136,7 +136,7 @@ object PulsarFiles {
      */
     fun createSharedFileTask(url: String) {
         try {
-            val paths = PulsarPaths
+            val paths = AppPaths
             val path = paths.get(paths.WEB_CACHE_DIR.toString(), paths.fromUri(url, ".task"))
             Files.write(path, url.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
@@ -145,7 +145,7 @@ object PulsarFiles {
     }
 
     fun getCachedWebPage(url: String): String? {
-        val paths = PulsarPaths
+        val paths = AppPaths
         val path = paths.get(paths.WEB_CACHE_DIR.toString(), paths.fromUri(url, ".htm"))
         if (Files.notExists(path)) {
             return null
@@ -165,7 +165,7 @@ object PulsarFiles {
                 .map { StringUtil.reverse(it) }.joinToString { "\n" }
 
         try {
-            Files.write(PulsarPaths.PATH_UNREACHABLE_HOSTS, report.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            Files.write(AppPaths.PATH_UNREACHABLE_HOSTS, report.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
             log.error(e.toString())
         }

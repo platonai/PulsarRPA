@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.app.fetch;
 
-import ai.platon.pulsar.common.PulsarFiles;
+import ai.platon.pulsar.common.AppFiles;
 import ai.platon.pulsar.common.URLUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
@@ -223,7 +223,7 @@ public final class FetchJob extends AppContextAwareJob {
       }
 
       if (batchId.isEmpty()) {
-        batchId.add(PulsarFiles.INSTANCE.readBatchIdOrDefault(ALL_BATCHES));
+        batchId.add(AppFiles.INSTANCE.readBatchIdOrDefault(ALL_BATCHES));
       }
 
       indexer = StringUtils.stripEnd(indexer, "/");

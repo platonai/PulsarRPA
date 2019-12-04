@@ -17,7 +17,7 @@ public class RuntimeUtils {
     protected static final Logger LOG = LoggerFactory.getLogger(RuntimeUtils.class);
 
     private static final Object COMMAND_FILE_LOCKER = new Object();
-    private static final Path COMMAND_FILE = PulsarPaths.PATH_LOCAL_COMMAND;
+    private static final Path COMMAND_FILE = AppPaths.PATH_LOCAL_COMMAND;
     private static final Duration DEFAULT_COMMAND_FILE_CHECK_INTERVAL = Duration.ofSeconds(5);
     private static long commandFileLastModified = 0;
 

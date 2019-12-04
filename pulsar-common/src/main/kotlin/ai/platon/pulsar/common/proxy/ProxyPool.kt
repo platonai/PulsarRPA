@@ -21,7 +21,6 @@ import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.streams.toList
 
 /**
  * Manager all external proxies
@@ -199,8 +198,8 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         var updatedCount = 0
 
         try {
-            val filename = "proxies." + PulsarPaths.fromUri(providerUrl.toString()) + "." + vendor + "." + format
-            val target = PulsarPaths.get(ARCHIVE_DIR, filename)
+            val filename = "proxies." + AppPaths.fromUri(providerUrl.toString()) + "." + vendor + "." + format
+            val target = AppPaths.get(ARCHIVE_DIR, filename)
 
             Files.deleteIfExists(target)
             FileUtils.copyURLToFile(providerUrl, target.toFile())
@@ -218,7 +217,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     fun dump() {
         val now = DateTimeUtil.now("MMdd.HHmm")
 
-        val currentArchiveDir = PulsarPaths.get(ARCHIVE_DIR, now)
+        val currentArchiveDir = AppPaths.get(ARCHIVE_DIR, now)
         Files.createDirectories(currentArchiveDir)
 
         val archiveDestinations = HashMap<Collection<ProxyEntry>, String>()
@@ -228,7 +227,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         archiveDestinations[unavailableProxies] = "proxies.unavailable.txt"
 
         archiveDestinations.forEach { (proxies, destination) ->
-            val path = PulsarPaths.get(currentArchiveDir, destination)
+            val path = AppPaths.get(currentArchiveDir, destination)
             dump(path, proxies)
         }
 
@@ -359,12 +358,12 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
 
-        val BASE_DIR = PulsarPaths.get("proxy")
-        val ENABLED_PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers-enabled")
-        val AVAILABLE_PROVIDER_DIR = PulsarPaths.get(BASE_DIR, "providers-available")
-        val ENABLED_PROXY_DIR = PulsarPaths.get(BASE_DIR, "proxies-enabled")
-        val AVAILABLE_PROXY_DIR = PulsarPaths.get(BASE_DIR, "proxies-available")
-        val ARCHIVE_DIR = PulsarPaths.get(BASE_DIR, "proxies-archived")
+        val BASE_DIR = AppPaths.get("proxy")
+        val ENABLED_PROVIDER_DIR = AppPaths.get(BASE_DIR, "providers-enabled")
+        val AVAILABLE_PROVIDER_DIR = AppPaths.get(BASE_DIR, "providers-available")
+        val ENABLED_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-enabled")
+        val AVAILABLE_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-available")
+        val ARCHIVE_DIR = AppPaths.get(BASE_DIR, "proxies-archived")
         val INIT_PROXY_PROVIDER_FILES = arrayOf(PulsarConstants.TMP_DIR, PulsarConstants.HOME_DIR)
                 .map { Paths.get(it, "proxy.providers.txt") }
 

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom
 
-import ai.platon.pulsar.common.PulsarFiles
-import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
@@ -42,10 +42,10 @@ open class FeaturedDocument(val document: Document) {
             return doc == NIL || doc.location == NIL.location
         }
         fun getExportFilename(uri: String): String {
-            return PulsarPaths.fromUri(uri, ".htm")
+            return AppPaths.fromUri(uri, ".htm")
         }
         fun getExportPath(url: String, ident: String): Path {
-            return PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
+            return AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
         }
 
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
@@ -166,13 +166,13 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun export(): Path {
-        val filename = PulsarPaths.fromUri(location, ".html")
-        val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR, "featured", filename)
+        val filename = AppPaths.fromUri(location, ".html")
+        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "featured", filename)
         return exportTo(path)
     }
 
     fun exportTo(path: Path): Path {
-        return PulsarFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
+        return AppFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
     }
 
     override fun equals(other: Any?): Boolean {

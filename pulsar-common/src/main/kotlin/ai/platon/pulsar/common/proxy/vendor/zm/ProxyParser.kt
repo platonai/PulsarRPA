@@ -35,7 +35,14 @@ class ZMProxyParser: ProxyParser() {
                 return result.data.map { ProxyEntry(it.ip, it.port, declaredTTL = parseInstant(it.expire_time)) }
             }
             if (result.code != 0) {
-                throw ProxyVendorException("Proxy vendor exception - $text")
+                if (result.code == 113) {
+                    val ip = result.msg.substringAfter("请添加白名单")
+                    val link = "wapi.http.cnapi.cc/index/index/save_white?neek=76534&appkey=2d5f64c71bdf2b6e632f951c7aab2c9b&white=$ip"
+                    log.warn(result.msg + " using the following link:\n$link")
+                    throw ProxyVendorException("Proxy vendor exception, please add $ip to the vendor's while list")
+                } else {
+                    throw ProxyVendorException("Proxy vendor exception - $text")
+                }
             }
         }
         return listOf()

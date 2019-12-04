@@ -3,7 +3,7 @@ package ai.platon.pulsar.jobs.app.fetch;
 import ai.platon.pulsar.common.CounterUtils;
 import ai.platon.pulsar.common.LocalFSUtils;
 import ai.platon.pulsar.common.MetricsCounters;
-import ai.platon.pulsar.common.PulsarPaths;
+import ai.platon.pulsar.common.AppPaths;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.jobs.app.generate.GenerateJob;
 import ai.platon.pulsar.jobs.common.FetchEntryWritable;
@@ -61,7 +61,7 @@ public class FetchMapper extends AppContextAwareGoraMapper<String, GWebPage, Int
 
     resume = conf.getBoolean(RESUME, false);
 
-    unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PulsarPaths.PATH_UNREACHABLE_HOSTS));
+    unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(AppPaths.PATH_UNREACHABLE_HOSTS));
 
     LOG.info(Params.format(
         "className", this.getClass().getSimpleName(),
@@ -70,7 +70,7 @@ public class FetchMapper extends AppContextAwareGoraMapper<String, GWebPage, Int
         "resume", resume,
         "numTasks", numTasks,
         "limit", limit,
-        "unreachableHostsPath", PulsarPaths.PATH_UNREACHABLE_HOSTS,
+        "unreachableHostsPath", AppPaths.PATH_UNREACHABLE_HOSTS,
         "unreachableHosts", unreachableHosts.size()
     ));
   }

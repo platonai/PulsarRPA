@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.PulsarPaths.PATH_UNREACHABLE_HOSTS
+import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.PulsarConstants.SEED_HOME_URL
@@ -248,7 +248,7 @@ class FetchTaskTracker(
 
     private fun reportAndLogUnreachableHosts() {
         LOG.info("There are " + unreachableHosts.size + " unreachable hosts")
-        PulsarFiles.logUnreachableHosts(this.unreachableHosts)
+        AppFiles.logUnreachableHosts(this.unreachableHosts)
     }
 
     private fun reportAndLogAvailableHosts() {

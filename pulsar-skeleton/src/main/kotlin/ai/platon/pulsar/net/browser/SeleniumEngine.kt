@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.BatchStat
-import ai.platon.pulsar.crawl.fetch.FetchStat
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -26,7 +25,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.net.InternetDomainName
-import com.google.gson.Gson
 import org.apache.commons.codec.digest.DigestUtils
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
@@ -754,11 +752,11 @@ class SeleniumEngine(
     private fun export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
         val browser = page.lastBrowser.name.toLowerCase()
 
-        val u = Urls.getURLOrNull(page.url)?: return PulsarPaths.TMP_DIR
+        val u = Urls.getURLOrNull(page.url)?: return AppPaths.TMP_DIR
         val domain = if (StringUtil.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
         val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
-        val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR.toString(), "original", browser, domain, filename)
-        PulsarFiles.saveTo(content, path, true)
+        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), "original", browser, domain, filename)
+        AppFiles.saveTo(content, path, true)
         return path
     }
 

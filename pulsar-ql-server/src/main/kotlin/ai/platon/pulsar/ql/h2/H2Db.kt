@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.AppPaths
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
 import java.sql.Connection
@@ -22,12 +22,12 @@ class H2Db(
     /**
      * The temporary directory.
      */
-    val tmpDir = PulsarPaths.get(PulsarPaths.TMP_DIR, "h2")
+    val tmpDir = AppPaths.get(AppPaths.TMP_DIR, "h2")
 
     /**
      * The base directory to write test databases.
      */
-    val baseDir = PulsarPaths.get(PulsarPaths.TEST_DIR, "h2")
+    val baseDir = AppPaths.get(AppPaths.TEST_DIR, "h2")
 
     /**
      * Get the file password (only required if file encryption is used).

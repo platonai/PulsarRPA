@@ -150,6 +150,12 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
+    fun location(dom: ValueDom): String {
+        return dom.element.location
+    }
+
+    @UDFunction
+    @JvmStatic
     fun childNodeSize(dom: ValueDom): Int {
         return dom.element.childNodeSize()
     }

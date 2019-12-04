@@ -80,6 +80,7 @@ class PulsarEnv {
             // TODO: use spring boot
             storageService = applicationContext.getBean(AutoDetectedStorageService::class.java)
 
+            // TODO: the thread system should be simplified
             globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
 
             proxyPool = applicationContext.getBean(ProxyPool::class.java)

@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.*
-import ai.platon.pulsar.common.config.ReloadableParameterized
 import ai.platon.pulsar.crawl.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
@@ -78,7 +77,7 @@ class TaskScheduler(
     /**
      * Output
      */
-    private var outputDir: Path = PulsarPaths.REPORT_DIR
+    private var outputDir: Path = AppPaths.REPORT_DIR
 
     /**
      * The reprUrl is the representative url of a redirect, we save a reprUrl for each thread

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.net.common
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
@@ -19,7 +19,7 @@ class TestLoadOptions {
 
     var i = PulsarContext.createSession()
     val url = "http://abc.com"
-    val taskName = PulsarPaths.fromUri(url)
+    val taskName = AppPaths.fromUri(url)
     val args = "" +
             " -taskName $taskName" +
             " -itemExpires 10d" +

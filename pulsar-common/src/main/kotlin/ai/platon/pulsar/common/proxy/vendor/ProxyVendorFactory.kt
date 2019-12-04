@@ -1,6 +1,8 @@
 package ai.platon.pulsar.common.proxy.vendor
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyPool
+import org.slf4j.LoggerFactory
 
 class ProxyVendorException : Exception {
 
@@ -14,6 +16,7 @@ class ProxyVendorException : Exception {
 }
 
 abstract class ProxyParser {
+    val log = LoggerFactory.getLogger(ProxyParser::class.java)
     abstract fun parse(text: String, format: String): List<ProxyEntry>
 }
 

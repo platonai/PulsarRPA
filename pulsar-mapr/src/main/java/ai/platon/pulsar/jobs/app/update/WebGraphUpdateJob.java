@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.app.update;
 
-import ai.platon.pulsar.common.PulsarFiles;
+import ai.platon.pulsar.common.AppFiles;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.options.CommonOptions;
 import ai.platon.pulsar.jobs.core.AppContextAwareJob;
@@ -95,7 +95,7 @@ abstract class WebGraphUpdateJob extends AppContextAwareJob {
     @Override
     public Params getParams() {
       if (batchId.isEmpty()) {
-        batchId.add(PulsarFiles.INSTANCE.readBatchIdOrDefault("all"));
+        batchId.add(AppFiles.INSTANCE.readBatchIdOrDefault("all"));
       }
 
       return Params.of(
