@@ -17,14 +17,22 @@ import java.util.*
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 object AppPaths {
+    @JvmField
     val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
+    @JvmField
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
+    @JvmField
     val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_DATA_DIR)
 
+    @JvmField
     val CACHE_DIR = get(TMP_DIR, "cache")
+    @JvmField
     val WEB_CACHE_DIR = get(CACHE_DIR, "web")
+    @JvmField
     val FILE_CACHE_DIR = get(CACHE_DIR, "files")
+    @JvmField
     val REPORT_DIR = get(TMP_DIR, "report")
+    @JvmField
     val TEST_DIR = get(TMP_DIR, "test")
 
     @JvmField
@@ -45,9 +53,11 @@ object AppPaths {
     private val homeDirStr get() = HOME_DIR.toString()
 
     init {
-        if (!Files.exists(TMP_DIR)) Files.createDirectories(TMP_DIR)
-        if (!Files.exists(CACHE_DIR)) Files.createDirectories(CACHE_DIR)
-        if (!Files.exists(WEB_CACHE_DIR)) Files.createDirectories(WEB_CACHE_DIR)
+        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, REPORT_DIR, TEST_DIR).forEach {
+            if (!Files.exists(it)) {
+                Files.createDirectories(it)
+            }
+        }
     }
 
     fun get(baseDirectory: Path, vararg more: String): Path {

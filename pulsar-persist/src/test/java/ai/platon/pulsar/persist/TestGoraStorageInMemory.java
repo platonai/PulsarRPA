@@ -56,7 +56,7 @@ public class TestGoraStorageInMemory {
 
     protected MutableConfig conf;
     protected FileSystem fs;
-    protected Path testdir = new Path(AppPaths.INSTANCE.getTEST_DIR().toString() + "/working");
+    protected Path testdir = new Path(AppPaths.TEST_DIR.toString() + "/working");
     protected DataStore<String, GWebPage> datastore;
     protected boolean persistentDataStore = false;
 

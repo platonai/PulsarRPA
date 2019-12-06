@@ -278,10 +278,4 @@ public final class GenerateJob extends AppContextAwareJob {
     }
     return 0;
   }
-
-  public static void main(String args[]) throws Exception {
-    String configLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, JOB_CONTEXT_CONFIG_LOCATION);
-    int res = AppContextAwareJob.run(configLocation, new GenerateJob(), args);
-    System.exit(res);
-  }
 }

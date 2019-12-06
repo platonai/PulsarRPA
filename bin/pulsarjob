@@ -77,7 +77,6 @@ esac
 done
 
 COMMAND=$1
-shift
 
 if [[ $SHOW_HELP ]]; then
   printUsage;
@@ -96,17 +95,9 @@ if [[ $COMMAND == "" ]]; then
   exit 0
 fi
 
-bin=`dirname "$0"`
-bin=`cd "$bin">/dev/null; pwd`
-
- . "$bin"/include/pulsar-config.sh
-
-# To prevent mishandling, too short paths are not allowed
-if [[ ${#PULSAR_EXTRA_CONF_DIR} -gt 5 ]]; then
-  find $PULSAR_EXTRA_CONF_DIR -maxdepth 1 -type f | xargs -I {} cp {} $PULSAR_CONF_DIR
-else
-  echo "<$PULSAR_EXTRA_CONF_DIR> seems not a valid directory, please check it ..."
-  exit 1
+if [ "$PULSAR_HOME" = "" ]; then
+   # shellcheck source=bin/include/pulsar-config.sh
+   . "$(dirname "$0")"/include/pulsar-config.sh
 fi
 
 if [ -d "$PULSAR_CONF_DIR" ]; then
@@ -114,42 +105,14 @@ if [ -d "$PULSAR_CONF_DIR" ]; then
 fi
 
 CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/cli.jar"
+MODULE=pulsar-mapr
+CLASS=ai.platon.pulsar.jobs.app.JobRunnerKt
 
-# choose runnable Java class
-if [ "$COMMAND" = "inject" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.inject.InjectJob
-elif [ "$COMMAND" = "generate" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.generate.GenerateJob
-elif [ "$COMMAND" = "fetch" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.fetch.FetchJob
-elif [ "$COMMAND" = "parse" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.parse.ParserJob
-elif [ "$COMMAND" = "updateoutgraph" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.update.OutGraphUpdateJob
-elif [ "$COMMAND" = "updateingraph" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.update.InGraphUpdateJob
-elif [ "$COMMAND" = "updateseeds" ] ; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.homepage.SeedHomeUpdateJob
-elif [ "$COMMAND" = "updatetoppages" ]; then
-  MODULE=pulsar-mapr
-  CLASS=ai.platon.pulsar.jobs.app.homepage.TopPageHomeUpdateJob
-elif [ -n "$MODULE" ]; then
-  CLASS=$COMMAND
-else
-  printUsage
-  exit 0
-fi
-
-if [ $PULSAR_RUNTIME_MODE == "CLUSTER_JOB" ]; then
+if [ "$PULSAR_RUNTIME_MODE" == "CLUSTER_JOB" ]; then
  # cluster mode, just pull the job file into hadoop, and exit
- . "$bin"/run-cluster.sh
+ # shellcheck source=bin/include/run-local.sh
+ . "$bin"/include/run-cluster.sh
 else
- . "$bin"/run-local.sh
+ # shellcheck source=bin/include/run-local.sh
+ . "$bin"/include/run-local.sh
 fi

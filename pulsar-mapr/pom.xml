@@ -23,6 +23,10 @@
 
     <build>
         <plugins>
+            <!-- H2 runtime, scripts need local libs -->
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -109,7 +113,7 @@
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
-            <version>2.5.2</version>
+            <version>${hadoop.version}</version>
         </dependency>
         <!-- Required by Jobs -->
         <dependency>
@@ -125,7 +129,7 @@
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
-            <version>2.5.2</version>
+            <version>${hadoop.version}</version>
         </dependency>
 
         <!-- hadoop requires jersey 1 -->
@@ -154,7 +158,11 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot</artifactId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
     </dependencies>

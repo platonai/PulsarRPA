@@ -18,6 +18,7 @@ package ai.platon.pulsar.jobs.core;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.MutableConfig;
+import ai.platon.pulsar.jobs.JobEnv;
 import ai.platon.pulsar.persist.WebDb;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION;
-import static ai.platon.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 
 public abstract class AppContextAwareJob extends PulsarJob {
 
@@ -36,7 +36,7 @@ public abstract class AppContextAwareJob extends PulsarJob {
     protected ConfigurableApplicationContext applicationContext;
 
     public static int run(AppContextAwareJob job, String[] args) throws Exception {
-        return run(JOB_CONTEXT_CONFIG_LOCATION, job, args);
+        return run(JobEnv.Companion.getContextConfigLocation(), JobEnv.Companion.getApplicationContext(), job, args);
     }
 
     public static int run(String contextConfigLocation, AppContextAwareJob job, String[] args) throws Exception {

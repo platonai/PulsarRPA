@@ -71,6 +71,7 @@ class PulsarEnv {
         }
 
         fun initialize(): PulsarEnv {
+            // TODO: is it necessary to keep an instance?
             synchronized(PulsarEnv::class.java) {
                 if (env.get() == null) {
                     env.set(PulsarEnv())

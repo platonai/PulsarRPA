@@ -40,13 +40,18 @@ public class FetchReducer extends AppContextAwareGoraReducer<IntWritable, FetchE
     // Configuration conf = context.getConfiguration(); // the conf can be different from the one loaded by application context
 
     fetchMonitor = applicationContext.getBean(FetchMonitor.class);
-    fetchServer = applicationContext.getBean("fetchServer", FetchServer.class);
-    fetchServer.initialize(applicationContext);
+    boolean crowdSourceModeIsEnabled = conf.getBoolean("fetch.crowd.source.mode.is.enabled", false);
+    if (crowdSourceModeIsEnabled) {
+      fetchServer = applicationContext.getBean("fetchServer", FetchServer.class);
+      fetchServer.initialize(applicationContext);
+    }
   }
 
   @Override
   protected void doRun(Context context) {
-    fetchServer.startAsDaemon();
+    if (fetchServer != null) {
+      fetchServer.startAsDaemon();
+    }
     ReducerContext<IntWritable, FetchEntryWritable, String, GWebPage> rc = new HadoopReducerContext<>(context);
     fetchMonitor.start(rc);
   }
@@ -54,7 +59,9 @@ public class FetchReducer extends AppContextAwareGoraReducer<IntWritable, FetchE
   @Override
   protected void cleanup(Context context) {
     try {
-      fetchServer.shutdownNow();
+      if (fetchServer != null) {
+        fetchServer.shutdownNow();
+      }
       fetchMonitor.close();
     }
     catch (Throwable e) {

@@ -5,142 +5,133 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package ai.platon.pulsar.jobs.app.inject;
+ */
+package ai.platon.pulsar.jobs.app.inject
 
-import ai.platon.pulsar.common.HdfsUtils;
-import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.common.options.CommonOptions;
-import ai.platon.pulsar.jobs.core.AppContextAwareJob;
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import com.beust.jcommander.Parameter;
-import org.apache.commons.io.FileUtils;
-import org.apache.gora.mapreduce.GoraOutputFormat;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ai.platon.pulsar.common.HdfsUtils
+import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.CommonOptions
+import ai.platon.pulsar.jobs.JobEnv
+import ai.platon.pulsar.jobs.core.AppContextAwareJob
+import ai.platon.pulsar.persist.gora.generated.GWebPage
+import com.beust.jcommander.Parameter
+import org.apache.commons.io.FileUtils
+import org.apache.gora.mapreduce.GoraOutputFormat
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.mapreduce.Reducer
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.*
+import kotlin.system.exitProcess
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static ai.platon.pulsar.common.PulsarParams.*;
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
-
-public final class InjectJob extends AppContextAwareJob {
-
-  public static final Logger LOG = LoggerFactory.getLogger(InjectJob.class);
-
-  public InjectJob() {}
-
-  public InjectJob(ImmutableConfig conf) {
-    setConf(conf);
-  }
-
-  @Override
-  public void setup(Params params) throws Exception {
-    String crawlId = params.get(ARG_CRAWL_ID, conf.get(STORAGE_CRAWL_ID));
-    String seeds = params.get(ARG_SEEDS, "");
-
-    if (seeds.startsWith("@")) {
-      seeds = new String(Files.readAllBytes(Paths.get(seeds.substring(1))));
+class InjectJob : AppContextAwareJob {
+    constructor() {}
+    constructor(conf: ImmutableConfig) {
+        setConf(conf)
     }
 
-    List<String> configuredUrls = StringUtil.getUnslashedLines(seeds).stream()
-        .filter(u -> !u.isEmpty() && !u.startsWith("#"))
-        .sorted().distinct().collect(Collectors.toList());
-
-    // And also save it in HDFS as normal file
-    File seedFile = File.createTempFile("seed", ".txt");
-    FileUtils.writeLines(seedFile, configuredUrls);
-    String seedPath = seedFile.getAbsolutePath();
-    if (HdfsUtils.isDistributedFS(conf)) {
-      LOG.info("Running under hadoop distributed file system, copy seed file onto HDFS");
-      HdfsUtils.copyFromLocalFile(seedPath, conf);
+    @Throws(Exception::class)
+    public override fun setup(params: Params) {
+        val crawlId = params[PulsarParams.ARG_CRAWL_ID, conf[CapabilityTypes.STORAGE_CRAWL_ID]]
+        var seeds = params[PulsarParams.ARG_SEEDS, ""]
+        if (seeds.startsWith("@")) {
+            seeds = String(Files.readAllBytes(Paths.get(seeds.substring(1))))
+        }
+        val configuredUrls = StringUtil.getUnslashedLines(seeds).filter { it.isNotBlank() && !it.startsWith("#") }
+                .sorted().distinct().toList()
+        // And also save it in HDFS as normal file
+        val seedFile = File.createTempFile("seed", ".txt")
+        FileUtils.writeLines(seedFile, configuredUrls)
+        val seedPath = seedFile.absolutePath
+        if (HdfsUtils.isDistributedFS(conf)) {
+            LOG.info("Running under hadoop distributed file system, copy seed file onto HDFS")
+            HdfsUtils.copyFromLocalFile(seedPath, conf)
+        }
+        conf[CapabilityTypes.STORAGE_CRAWL_ID] = crawlId
+        conf[CapabilityTypes.INJECT_SEED_PATH] = seedPath
+        LOG.info(Params.format(
+                "className", this.javaClass.simpleName,
+                "crawlId", crawlId,
+                "seedPath", seedPath
+        ))
     }
 
-    conf.set(STORAGE_CRAWL_ID, crawlId);
-    conf.set(INJECT_SEED_PATH, seedPath);
-
-    LOG.info(Params.format(
-        "className", this.getClass().getSimpleName(),
-        "crawlId", crawlId,
-        "seedPath", seedPath
-    ));
-  }
-
-  @Override
-  public void initJob() throws Exception {
-    Configuration conf = getConf().unbox();
-
-    String seedPath = conf.get(INJECT_SEED_PATH);
-
-    FileInputFormat.addInputPath(currentJob, new Path(seedPath));
-    currentJob.setMapperClass(InjectMapper.class);
-    currentJob.setMapOutputKeyClass(String.class);
-    currentJob.setMapOutputValueClass(GWebPage.class);
-    currentJob.setOutputFormatClass(GoraOutputFormat.class);
-
-    currentJob.setReducerClass(Reducer.class);
-    GoraOutputFormat.setOutput(currentJob, webDb.getStore(), true);
-    currentJob.setNumReduceTasks(0);
-  }
-
-  /**
-   * Command options for {@link InjectJob}.
-   * Expect the list option which specify the seed or seed file, the @ sign is not supported
-   * */
-  private static class InjectOptions extends CommonOptions {
-    @Parameter(required = true, description = "<seeds> \nSeed urls. Use {@code @FILE} syntax to read from file.")
-    List<String> seeds = new ArrayList<>();
-    @Parameter(names = ARG_LIMIT, description = "task limit")
-    int limit = -1;
-
-    public InjectOptions(String[] args, ImmutableConfig conf) {
-      super(args);
-      // We may read seeds from a file using @ sign, the file parsing should be handled manually
-      setExpandAtSign(false);
-      this.setCrawlId(conf.get(STORAGE_CRAWL_ID, ""));
+    @Throws(Exception::class)
+    public override fun initJob() {
+        val conf = getConf().unbox()
+        val seedPath = conf[CapabilityTypes.INJECT_SEED_PATH]
+        FileInputFormat.addInputPath(currentJob, Path(seedPath))
+        currentJob.mapperClass = InjectMapper::class.java
+        currentJob.mapOutputKeyClass = String::class.java
+        currentJob.mapOutputValueClass = GWebPage::class.java
+        currentJob.outputFormatClass = GoraOutputFormat::class.java
+        currentJob.reducerClass = Reducer::class.java
+        GoraOutputFormat.setOutput(currentJob, webDb.store, true)
+        currentJob.numReduceTasks = 0
     }
 
-    @Override
-    public Params getParams() {
-      return Params.of(
-          ARG_CRAWL_ID, getCrawlId(),
-          ARG_SEEDS, seeds.get(0),
-          ARG_LIMIT, limit
-      );
+    override fun run(args: Array<String>): Int {
+        if (args.isEmpty()) {
+            LOG.error("A seed url is required")
+            return -1
+        }
+
+        val opts = InjectOptions(args)
+        opts.crawlId = conf[CapabilityTypes.STORAGE_CRAWL_ID, ""]
+        opts.parseOrExit()
+        run(opts.params)
+        return 0
     }
-  }
 
-  @Override
-  public int run(String[] args) throws Exception {
-    InjectOptions opts = new InjectOptions(args, conf);
-    opts.parseOrExit();
-    run(opts.getParams());
-    return 0;
-  }
+    companion object {
+        val LOG = LoggerFactory.getLogger(InjectJob::class.java)
+    }
+}
 
-  public static void main(String[] args) throws Exception {
-    String configLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, JOB_CONTEXT_CONFIG_LOCATION);
-    int res = AppContextAwareJob.run(configLocation, new InjectJob(), args);
-    System.exit(res);
-  }
+
+/**
+ * Command options for [InjectJob].
+ * Expect the list option which specify the seed or seed file, the @ sign is not supported
+ */
+internal class InjectOptions(args: Array<String>) : CommonOptions(args) {
+    @Parameter(description = "<seeds> \nSeed urls. You can use {@code @FILE} syntax to read from file.")
+    var seeds: List<String> = ArrayList()
+    @Parameter(names = [PulsarParams.ARG_LIMIT], description = "task limit")
+    var limit = -1
+
+    init {
+        // We may read seeds from a file using @ sign, the file parsing should be handled manually
+        expandAtSign = false
+        // if acceptUnknownOptions is true, the main parameter is not recognized
+        acceptUnknownOptions = false
+    }
+
+    override fun getParams(): Params {
+        return Params.of(
+                PulsarParams.ARG_CRAWL_ID, crawlId,
+                PulsarParams.ARG_SEEDS, if (seeds.isEmpty()) "" else seeds[0],
+                PulsarParams.ARG_LIMIT, limit
+        )
+    }
+}
+
+fun main(args: Array<String>) {
+    JobEnv.initialize()
+    val res = AppContextAwareJob.run(InjectJob(), args)
+    exitProcess(res)
 }

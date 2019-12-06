@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration scan="true" scanPeriod="30 seconds" debug="true">
+<configuration>
     <property name="pulsar.log.dir" value="${pulsar.log.dir:-logs}" />
     <property name="pulsar.log.file" value="${pulsar.log.file:-pulsar.log}" />
 

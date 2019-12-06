@@ -251,5 +251,4 @@ class GeneralWebAccess: WebAccess() {
 
 fun main() {
     GeneralWebAccess().run()
-    PulsarEnv.initialize().shutdown()
 }

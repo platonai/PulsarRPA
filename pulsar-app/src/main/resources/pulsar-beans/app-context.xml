@@ -5,4 +5,11 @@
 
     <import resource="classpath:/pulsar-beans/components-context.xml" />
 
+    <bean id="monitor" class="ai.platon.pulsar.AppMonitor" init-method="start" destroy-method="close" lazy-init="false">
+        <constructor-arg ref="webDriverPool"/>
+        <constructor-arg ref="proxyPool"/>
+        <constructor-arg ref="internalProxyServer"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
 </beans>

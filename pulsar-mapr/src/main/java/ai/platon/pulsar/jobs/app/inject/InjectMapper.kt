@@ -1,43 +1,37 @@
-package ai.platon.pulsar.jobs.app.inject;
+package ai.platon.pulsar.jobs.app.inject
 
-import ai.platon.pulsar.common.Urls;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.crawl.component.InjectComponent;
-import ai.platon.pulsar.jobs.core.AppContextAwareMapper;
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-
-import java.io.IOException;
-
-import static ai.platon.pulsar.common.CommonCounter.mPersist;
-import static ai.platon.pulsar.common.CommonCounter.mRows;
+import ai.platon.pulsar.common.CommonCounter
+import ai.platon.pulsar.common.Urls.splitUrlArgs
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.component.InjectComponent
+import ai.platon.pulsar.jobs.core.AppContextAwareMapper
+import ai.platon.pulsar.jobs.core.Mapper
+import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.apache.commons.lang3.StringUtils
+import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.io.Text
+import java.io.IOException
 
 /**
  * Created by vincent on 17-4-13.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public class InjectMapper extends AppContextAwareMapper<LongWritable, Text, String, GWebPage> {
-  private InjectComponent injectComponent;
+class InjectMapper : AppContextAwareMapper<LongWritable, Text, String, GWebPage>() {
+    private lateinit var injectComponent: InjectComponent
 
-  @Override
-  protected void setup(Context context) throws IOException, InterruptedException {
-    injectComponent = applicationContext.getBean(InjectComponent.class);
-
-    Params.of("className", this.getClass().getSimpleName())
-        .merge(injectComponent.getParams()).withLogger(LOG).info();
-  }
-
-  protected void map(LongWritable key, Text line, Context context) throws IOException, InterruptedException {
-    metricsCounters.increase(mRows);
-
-    String configuredUrl = StringUtils.stripToEmpty(line.toString());
-    if (configuredUrl.isEmpty() || configuredUrl.startsWith("#")) {
-      return;
+    override fun setup(context: Context) {
+        injectComponent = applicationContext.getBean(InjectComponent::class.java)
+        Params.of("className", this.javaClass.simpleName)
+                .merge(injectComponent.params).withLogger(Mapper.LOG).info()
     }
 
-    injectComponent.inject(Urls.splitUrlArgs(configuredUrl));
-    metricsCounters.increase(mPersist);
-  }
+    override fun map(key: LongWritable, line: Text, context: Context) {
+        metricsCounters.increase(CommonCounter.mRows)
+        val configuredUrl = StringUtils.stripToEmpty(line.toString())
+        if (configuredUrl.isEmpty() || configuredUrl.startsWith("#")) {
+            return
+        }
+        injectComponent.inject(splitUrlArgs(configuredUrl))
+        metricsCounters.increase(CommonCounter.mPersist)
+    }
 }

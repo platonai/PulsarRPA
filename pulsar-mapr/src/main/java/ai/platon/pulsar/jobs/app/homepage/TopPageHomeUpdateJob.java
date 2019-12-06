@@ -30,7 +30,6 @@ import java.io.IOException;
 import static ai.platon.pulsar.common.CommonCounter.mPersist;
 import static ai.platon.pulsar.common.CommonCounter.mRows;
 import static ai.platon.pulsar.common.config.CapabilityTypes.STAT_INDEX_HOME_URL;
-import static ai.platon.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION;
 import static ai.platon.pulsar.common.config.PulsarConstants.TOP_PAGE_HOME_URL;
 
 public final class TopPageHomeUpdateJob extends HomePageUpdateJob {
@@ -43,12 +42,12 @@ public final class TopPageHomeUpdateJob extends HomePageUpdateJob {
   @Override
   public void initJob() throws Exception {
     initMapper(currentJob, FIELDS, SelectorEntry.class,
-        GWebPage.class, TopScorePageIndexMapper.class, URLPartitioner.SelectorEntryPartitioner.class,
+        GWebPage.class, TopPageHomeIndexMapper.class, URLPartitioner.SelectorEntryPartitioner.class,
             getQueryFilter(), false);
     initReducer(currentJob, HomePageUpdateReducer.class);
   }
 
-  public static class TopScorePageIndexMapper extends AppContextAwareGoraMapper<String, GWebPage, SelectorEntry, GWebPage> {
+  public static class TopPageHomeIndexMapper extends AppContextAwareGoraMapper<String, GWebPage, SelectorEntry, GWebPage> {
     private ContentAnalysisScoringFilter scoringFilter;
 
     @Override
@@ -83,10 +82,5 @@ public final class TopPageHomeUpdateJob extends HomePageUpdateJob {
 
       metricsCounters.increase(mPersist);
     }
-  }
-
-  public static void main(String args[]) throws Exception {
-    int res = run(JOB_CONTEXT_CONFIG_LOCATION, new TopPageHomeUpdateJob(), args);
-    System.exit(res);
   }
 }

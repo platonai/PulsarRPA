@@ -72,8 +72,8 @@ MESSAGES=(
 "============ Pulsar Runtime ================"
 "\n`date`"
 "\nCommand: $COMMAND"
-"\nHostname: `hostname`"
-"\nVersion: " `${PULSAR_HOME}/bin/version`
+"\nHostname: $(hostname)"
+"\nVersion: " $("${PULSAR_HOME}"/bin/version)
 "\nConfiguration directories: $PULSAR_CONF_DIR <= $PULSAR_PRIME_CONF_DIR, $PULSAR_EXTRA_CONF_DIR"
 "\nWorking directory: `pwd`"
 "\nPulsar home: " $PULSAR_HOME

@@ -19,7 +19,6 @@ package ai.platon.pulsar.jobs.app.fetch;
 import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.AppFiles;
 import ai.platon.pulsar.common.URLUtil;
-import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.PulsarConstants;
@@ -42,7 +41,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.util.*;
 
 import static ai.platon.pulsar.common.PulsarParams.*;
-import static ai.platon.pulsar.common.SystemKt.setPropertyIfAbsent;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
 
@@ -271,16 +269,5 @@ public final class FetchJob extends AppContextAwareJob {
     run(opts.toParams());
 
     return 0;
-  }
-
-  public static void main(String[] args) throws Exception {
-    System.setProperty(PULSAR_CONFIG_PREFERRED_DIR, "mapr-conf");
-    System.setProperty(PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml");
-    System.setProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION);
-    String contextConfigLocation = PulsarEnv.Companion.getContextConfigLocation();
-    ConfigurableApplicationContext applicationContext = PulsarEnv.Companion.getApplicationContext();
-
-    int res = AppContextAwareJob.run(contextConfigLocation, applicationContext, new FetchJob(), args);
-    System.exit(res);
   }
 }

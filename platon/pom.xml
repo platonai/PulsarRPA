@@ -268,6 +268,19 @@
             </plugin>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -849,7 +862,7 @@
             <dependency>
                 <groupId>com.beust</groupId>
                 <artifactId>jcommander</artifactId>
-                <version>1.72</version>
+                <version>1.78</version>
             </dependency>
             <!-- Expression -->
             <dependency>
@@ -962,8 +975,10 @@
         <tika.version>1.22</tika.version>
 
         <!-- Data Platform Dependencies -->
-        <hadoop.version>2.5.2</hadoop.version>
-        <yarn.version>${hadoop.version}</yarn.version>
+<!--        <hadoop.version>2.5.2</hadoop.version>-->
+        <!-- hadoop-mapreduce-client-core 2.5.2 have problems with guava- -->
+        <!-- see https://stackoverflow.com/questions/36427291/illegalaccesserror-to-guavas-stopwatch-from-org-apache-hadoop-mapreduce-lib-inp -->
+        <hadoop.version>2.7.2</hadoop.version>
         <hbase.version>1.2.3</hbase.version>
         <spark.version>2.3.0</spark.version>
 
@@ -1019,7 +1034,7 @@
         <commons-lang.version>2.6</commons-lang.version>
         <commons-io.version>2.4</commons-io.version>
         <!--  Google core libraries for Java, include Multimaps, etc -->
-        <guava.version>27.0.1-jre</guava.version>
+        <guava.version>28.1-jre</guava.version>
         <gson.version>2.6.2</gson.version>
         <lucene.version>8.1.1</lucene.version>
 

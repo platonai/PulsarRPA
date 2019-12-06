@@ -397,10 +397,9 @@ public abstract class PulsarJob implements PulsarJobBase {
      * @return true if succeeded, false otherwise.
      */
     public boolean killJob() {
-        LOG.warn("Killing job " + currentJob.getJobName());
-
         try {
             if (currentJob != null && !currentJob.isComplete()) {
+                LOG.info("Killing job " + currentJob.getJobName());
                 currentJob.killJob();
             }
 

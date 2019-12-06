@@ -65,7 +65,7 @@ public class MetricsSystem implements AutoCloseable {
         this.dayOfWeek = String.valueOf(LocalDate.now().getDayOfWeek().getValue());
 
         try {
-            reportDir = conf.getPath(CapabilityTypes.PARAM_REPORT_DIR, AppPaths.INSTANCE.getREPORT_DIR());
+            reportDir = conf.getPath(CapabilityTypes.PARAM_REPORT_DIR, AppPaths.REPORT_DIR);
             String ident = DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd");
             reportDir = AppPaths.INSTANCE.get(reportDir, ident);
             Files.createDirectories(reportDir);

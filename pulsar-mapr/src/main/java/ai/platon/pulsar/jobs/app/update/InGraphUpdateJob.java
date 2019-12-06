@@ -42,10 +42,4 @@ public class InGraphUpdateJob extends WebGraphUpdateJob {
     initMapper(currentJob, fields, GraphGroupKey.class, WebGraphWritable.class, InGraphUpdateMapper.class, getBatchIdFilter(batchId));
     initReducer(currentJob, InGraphUpdateReducer.class);
   }
-
-  public static void main(String[] args) throws Exception {
-    String configLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, JOB_CONTEXT_CONFIG_LOCATION);
-    int res = run(configLocation, new InGraphUpdateJob(), args);
-    System.exit(res);
-  }
 }

@@ -37,15 +37,15 @@ while [ -h "$this" ]; do
   fi
 done
 
-# Convert relative path to absolute path
-bin=$(dirname "$this")
-script=$(basename "$this")
-bin=$(cd "$bin">/dev/null || exit; pwd)
-this="$bin/$script"
-
 # The root dir of this program
 if [ "$PULSAR_HOME" = "" ]; then
-  PULSAR_HOME=$(dirname "$this")/../..
+  # Convert relative path to absolute path
+  bin=$(dirname "$this")/..
+  script=$(basename "$this")
+  this="$bin/$script"
+  bin=$(cd "$bin">/dev/null || exit; pwd)
+
+  PULSAR_HOME=$(dirname "$bin")
   PULSAR_HOME=$(cd "$PULSAR_HOME">/dev/null || exit; pwd)
   export PULSAR_HOME=$PULSAR_HOME
 fi
