@@ -41,15 +41,19 @@ public abstract class AppContextAwareJob extends PulsarJob {
 
     public static int run(String contextConfigLocation, AppContextAwareJob job, String[] args) throws Exception {
         ConfigurableApplicationContext applicationContext = new ClassPathXmlApplicationContext(contextConfigLocation);
-        applicationContext.registerShutdownHook();
-        job.setContextConfigLocation(contextConfigLocation);
-        return run(applicationContext, job, args);
+        return run(contextConfigLocation, applicationContext, job, args);
     }
 
-    public static int run(ConfigurableApplicationContext applicationContext, AppContextAwareJob job, String[] args) throws Exception {
-        MutableConfig conf = new MutableConfig(applicationContext.getBean(ImmutableConfig.class));
-        conf.set(APPLICATION_CONTEXT_CONFIG_LOCATION, job.getContextConfigLocation());
+    public static int run(String contextConfigLocation,
+                           ConfigurableApplicationContext applicationContext,
+                           AppContextAwareJob job,
+                           String[] args) throws Exception {
+        applicationContext.registerShutdownHook();
 
+        MutableConfig conf = applicationContext.getBean(ImmutableConfig.class).toMutableConfig();
+        conf.set(APPLICATION_CONTEXT_CONFIG_LOCATION, contextConfigLocation);
+
+        job.setContextConfigLocation(contextConfigLocation);
         job.setApplicationContext(applicationContext);
         job.setConf(conf);
         job.setWebDb(applicationContext.getBean(WebDb.class));

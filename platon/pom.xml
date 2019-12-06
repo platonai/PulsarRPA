@@ -420,7 +420,6 @@
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongo-java-driver</artifactId>
                 <version>${mongo.driver.version}</version>
-                <scope>compile</scope>
             </dependency>
 
             <dependency>

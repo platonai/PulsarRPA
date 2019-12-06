@@ -169,4 +169,9 @@ public interface PulsarConstants {
      * Proxy
      * */
     int INTERNAL_PROXY_SERVER_PORT = 8184;
+
+    /**
+     * SQL engine
+     * */
+    String H2_SESSION_FACTORY = "ai.platon.pulsar.ql.h2.H2SessionFactory";
 }

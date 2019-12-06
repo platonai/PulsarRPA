@@ -1,6 +1,5 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -8,9 +7,8 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
-import ai.platon.pulsar.crawl.component.SeleniumFetchComponent
-import ai.platon.pulsar.persist.AutoDetectedStorageService
 import ai.platon.pulsar.persist.gora.GoraStorage
+import org.h2.util.Utils
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
@@ -33,7 +31,6 @@ class PulsarEnv {
 
         val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
-        val storageService: AutoDetectedStorageService
         val startTime = Instant.now()
         /**
          * The number of processors available to the Java virtual machine
@@ -48,14 +45,6 @@ class PulsarEnv {
          * */
         val unmodifiedConfig: ImmutableConfig
 
-        val globalExecutor: GlobalExecutor
-
-        val proxyPool: ProxyPool
-
-        val seleniumFetchComponent: SeleniumFetchComponent
-
-        val MONITOR: AppMonitor
-
         private val env = AtomicReference<PulsarEnv>()
 
         private val active = AtomicBoolean()
@@ -66,6 +55,7 @@ class PulsarEnv {
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
             setPropertyIfAbsent(PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
             setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION)
+            setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, PulsarConstants.H2_SESSION_FACTORY)
 
             // the spring application context
             contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
@@ -76,26 +66,11 @@ class PulsarEnv {
             unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
             // gora properties
             goraProperties = GoraStorage.properties
-            // storage service must be initialized in advance to ensure prerequisites
-            // TODO: use spring boot
-            storageService = applicationContext.getBean(AutoDetectedStorageService::class.java)
-
-            // TODO: the thread system should be simplified
-            globalExecutor = applicationContext.getBean(GlobalExecutor::class.java)
-
-            proxyPool = applicationContext.getBean(ProxyPool::class.java)
-
-            seleniumFetchComponent = applicationContext.getBean(SeleniumFetchComponent::class.java)
-
-            MONITOR = applicationContext.getBean(AppMonitor::class.java)
-
-            // TODO: move it to a better place
-            MONITOR.start()
 
             active.set(true)
         }
 
-        fun getOrCreate(): PulsarEnv {
+        fun initialize(): PulsarEnv {
             synchronized(PulsarEnv::class.java) {
                 if (env.get() == null) {
                     env.set(PulsarEnv())
@@ -116,8 +91,7 @@ class PulsarEnv {
         }
 
         // Internal proxy server blocks can not be closed by spring, the reason should be investigated
-        MONITOR.use { it.close() }
-        applicationContext.use { it.close() }
+//        applicationContext.use { it.close() }
 
         active.set(false)
     }

@@ -2,7 +2,6 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.SELENIUM_BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
@@ -16,8 +15,6 @@ import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.persist.metadata.FetchMode
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
@@ -53,7 +50,7 @@ class PulsarContext: AutoCloseable {
     /**
      * The program environment
      * */
-    val env = PulsarEnv.getOrCreate()
+    val env = PulsarEnv.initialize()
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */

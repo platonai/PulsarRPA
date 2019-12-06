@@ -39,8 +39,8 @@ class FetchMonitor(
     private val startTime = Instant.now()
 
     private var jobName: String = immutableConfig.get(PARAM_JOB_NAME, DateTimeUtil.now("MMddHHmmss"))
-    private var crawlId: String = immutableConfig.get(STORAGE_CRAWL_ID)
-    private var batchId: String = immutableConfig.get(BATCH_ID)
+    private var crawlId: String = immutableConfig.get(STORAGE_CRAWL_ID, "")
+    private var batchId: String = immutableConfig.get(BATCH_ID, "")
     private var fetchMode: FetchMode = immutableConfig.getEnum(FETCH_MODE, FetchMode.NATIVE)
 
     /**
@@ -153,7 +153,6 @@ class FetchMonitor(
         } catch (e: IOException) {
             LOG.error(e.toString())
         }
-
     }
 
     fun registerFeedThread(feedThread: FeedThread) {

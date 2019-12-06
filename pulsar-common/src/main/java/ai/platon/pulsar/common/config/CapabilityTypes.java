@@ -373,4 +373,7 @@ public interface CapabilityTypes {
 
     // Spark
     String SPARK_MASTER = "spark.master";
+
+    // H2
+    String PARAM_H2_SESSION_FACTORY = "h2.sessionFactory";
 }

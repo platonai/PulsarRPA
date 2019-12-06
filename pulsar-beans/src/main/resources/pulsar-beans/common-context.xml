@@ -57,7 +57,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="monitor" class="ai.platon.pulsar.AppMonitor" destroy-method="close">
+    <bean id="monitor" class="ai.platon.pulsar.AppMonitor" init-method="start" destroy-method="close" lazy-init="false">
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="internalProxyServer"/>

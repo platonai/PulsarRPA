@@ -65,6 +65,7 @@ class FetchResource {
         }
     }
 
+
     /**
      * Accept page content from satellite(crowdsourcing web fetcher),
      * the content should be put with media getType "text/html; charset='UTF-8'"

@@ -13,8 +13,8 @@
     <!-- persist -->
     <property>
         <name>storage.crawl.id</name>
-        <value>information_tmp</value>
-        <description>Crawl pages for opinion mining</description>
+        <value>ec</value>
+        <description>Crawl e-commerce pages</description>
     </property>
 
     <!-- net -->

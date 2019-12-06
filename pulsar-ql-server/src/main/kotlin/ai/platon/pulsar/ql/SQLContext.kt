@@ -54,7 +54,7 @@ class SQLContext: AutoCloseable {
 
     val unmodifiedConfig: ImmutableConfig
 
-    val env = PulsarEnv.getOrCreate()
+    val env = PulsarEnv.initialize()
 
     val pulsarContext = PulsarContext.getOrCreate()
 

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
@@ -22,6 +23,7 @@ import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.getBean
 import java.io.File
 import java.lang.Long.MAX_VALUE
 import java.time.Duration
@@ -33,7 +35,7 @@ object CommonFunctions {
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
     private val sqlContext = SQLContext.getOrCreate()
-    private val proxyPool = PulsarEnv.proxyPool
+    private val proxyPool = PulsarEnv.applicationContext.getBean(ProxyPool::class.java)
     private val unmodifiedConfig = sqlContext.unmodifiedConfig
 
     @UDFunction(description = "Get the proxy pool status")

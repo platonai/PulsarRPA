@@ -40,7 +40,7 @@ class InternalProxyServer(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(InternalProxyServer::class.java)
-    private val env = PulsarEnv.getOrCreate()
+    private val env = PulsarEnv.initialize()
 
     private var runningWithoutProxy = false
     private var forwardServer: HttpProxyServer? = null

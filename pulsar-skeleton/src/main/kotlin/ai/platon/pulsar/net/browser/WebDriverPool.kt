@@ -158,7 +158,7 @@ class WebDriverPool(
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
     private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
-    private val env = PulsarEnv.getOrCreate()
+    private val env = PulsarEnv.initialize()
     private val closed = AtomicBoolean(false)
     private val isClosed = closed.get()
     val capacity: Int = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * PulsarEnv.NCPU).toInt())

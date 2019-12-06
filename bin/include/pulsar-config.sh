@@ -28,12 +28,12 @@
 # resolve links - "${BASH_SOURCE-$0}" may be a softlink
 this="${BASH_SOURCE-$0}"
 while [ -h "$this" ]; do
-  ls=`ls -ld "$this"`
-  link=`expr "$ls" : '.*-> \(.*\)$'`
+  ls=$(ls -ld "$this")
+  link=$(expr "$ls" : '.*-> \(.*\)$')
   if expr "$link" : '.*/.*' > /dev/null; then
     this="$link"
   else
-    this=`dirname "$this"`/"$link"
+    this=$(dirname "$this")/"$link"
   fi
 done
 
@@ -119,4 +119,9 @@ if [[ -z "$JAVA_HOME" ]]; then
 +======================================================================+
 EOF
     exit 1
+fi
+
+if [[ "$JAVA_HOME" != "/usr/lib/jvm/java-8-sun" ]]; then
+  echo "Since the latest gora still uses hadoop-2.5.2 which is not compitable with java 9 or later, we have to use java 8"
+  exit 1
 fi

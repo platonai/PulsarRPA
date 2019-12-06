@@ -16,6 +16,7 @@ import java.util.Properties;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.HBASE_STORE_CLASS;
+import static ai.platon.pulsar.common.config.PulsarConstants.MONGO_STORE_CLASS;
 
 /**
  * Created by vincent on 17-5-15.
@@ -35,7 +36,7 @@ public class GoraStorage {
             Class<K> keyClass,
             Class<V> persistentClass
     ) throws GoraException, ClassNotFoundException {
-        String className = conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS);
+        String className = conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS);
         Class<? extends DataStore<K, V>> dataStoreClass = (Class<? extends DataStore<K, V>>)Class.forName(className);
         return createDataStore(conf, keyClass, persistentClass, dataStoreClass);
     }

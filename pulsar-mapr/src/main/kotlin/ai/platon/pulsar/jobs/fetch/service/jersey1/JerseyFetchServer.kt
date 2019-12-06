@@ -71,7 +71,6 @@ class JerseyFetchServer(private val conf: ImmutableConfig) : FetchServer {
         } catch (e: IOException) {
             FetchServer.LOG.error(e.toString())
         }
-
     }
 
     /**

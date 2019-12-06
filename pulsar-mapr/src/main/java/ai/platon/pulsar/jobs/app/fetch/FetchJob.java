@@ -16,10 +16,13 @@
  ******************************************************************************/
 package ai.platon.pulsar.jobs.app.fetch;
 
+import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.AppFiles;
 import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
+import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.jobs.common.FetchEntryWritable;
 import ai.platon.pulsar.jobs.common.URLPartitioner;
 import ai.platon.pulsar.jobs.core.AppContextAwareJob;
@@ -34,10 +37,12 @@ import org.apache.gora.filter.MapFieldValueFilter;
 import org.apache.hadoop.io.IntWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.*;
 
 import static ai.platon.pulsar.common.PulsarParams.*;
+import static ai.platon.pulsar.common.SystemKt.setPropertyIfAbsent;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.*;
 
@@ -64,7 +69,7 @@ public final class FetchJob extends AppContextAwareJob {
   @Override
   public void setup(Params params) throws Exception {
     int round = conf.getInt(CRAWL_ROUND, 0);
-    String crawlId = params.get(ARG_CRAWL_ID, conf.get(STORAGE_CRAWL_ID));
+    String crawlId = params.get(ARG_CRAWL_ID, conf.get(STORAGE_CRAWL_ID, ""));
     FetchMode fetchMode = params.getEnum(ARG_FETCH_MODE, conf.getEnum(FETCH_MODE, FetchMode.NATIVE));
     boolean strictDf = params.getBoolean(ARG_STRICT_DF, false);
     String batchId = params.get(ARG_BATCH_ID, ALL_BATCHES);
@@ -269,8 +274,13 @@ public final class FetchJob extends AppContextAwareJob {
   }
 
   public static void main(String[] args) throws Exception {
-    String configLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, JOB_CONTEXT_CONFIG_LOCATION);
-    int res = AppContextAwareJob.run(configLocation, new FetchJob(), args);
+    System.setProperty(PULSAR_CONFIG_PREFERRED_DIR, "mapr-conf");
+    System.setProperty(PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml");
+    System.setProperty(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION);
+    String contextConfigLocation = PulsarEnv.Companion.getContextConfigLocation();
+    ConfigurableApplicationContext applicationContext = PulsarEnv.Companion.getApplicationContext();
+
+    int res = AppContextAwareJob.run(contextConfigLocation, applicationContext, new FetchJob(), args);
     System.exit(res);
   }
 }

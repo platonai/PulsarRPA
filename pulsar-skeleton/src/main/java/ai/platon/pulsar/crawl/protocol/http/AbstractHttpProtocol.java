@@ -60,7 +60,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     /**
      * The process environment
      * */
-    private PulsarEnv env = PulsarEnv.Companion.getOrCreate();
+    private PulsarEnv env = PulsarEnv.Companion.initialize();
     /**
      * Prevent multiple threads generate the same log unnecessary
      */
@@ -169,7 +169,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.proxyPort = conf.getInt("http.proxy.port", 8080);
         this.useProxyPool = conf.getBoolean("http.proxy.pool", false);
         if (this.useProxyPool) {
-            this.proxyPool = PulsarEnv.Companion.getProxyPool();
+            this.proxyPool = PulsarEnv.Companion.getApplicationContext().getBean(ProxyPool.class);
         }
         this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
 

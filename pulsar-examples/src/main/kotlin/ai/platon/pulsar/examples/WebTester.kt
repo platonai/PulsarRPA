@@ -3,20 +3,10 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
-import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.component.BatchHandler
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.WebPageFormatter
-import com.google.common.collect.Iterables
-import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
-import java.net.URL
 
 object WebTester {
-    private val env = PulsarEnv.getOrCreate()
+    private val env = PulsarEnv.initialize()
     private val pc = PulsarContext.getOrCreate()
     private val i = pc.createSession()
     private val log = LoggerFactory.getLogger(WebAccess::class.java)
@@ -43,5 +33,5 @@ object WebTester {
 fun main() {
     WebTester.load()
 
-    PulsarEnv.getOrCreate().shutdown()
+    PulsarEnv.initialize().shutdown()
 }

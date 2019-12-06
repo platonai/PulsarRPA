@@ -23,7 +23,7 @@ class AppMonitor(
     private val log = LoggerFactory.getLogger(AppMonitor::class.java)
     private var lastIPSReport = ""
 
-    private val env = PulsarEnv.getOrCreate()
+    private val env = PulsarEnv.initialize()
     private var monitorThread = Thread(this::update)
     private val loopStarted = AtomicBoolean()
     private val isIdle get() = webDriverPool.isIdle
