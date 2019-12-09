@@ -16,7 +16,10 @@
  */
 package ai.platon.pulsar.parse.tika
 
+import ai.platon.pulsar.common.ReflectionUtils
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
+import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_TIKA_HTML_MAPPER_NAME
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -31,6 +34,7 @@ import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.apache.commons.lang3.StringUtils
+import org.apache.cxf.common.util.ReflectionUtil
 import org.apache.html.dom.HTMLDocumentImpl
 import org.apache.tika.metadata.Metadata
 import org.apache.tika.metadata.TikaCoreProperties
@@ -51,28 +55,11 @@ class TikaParser(
         val parseFilters: ParseFilters,
         val conf: ImmutableConfig
 ) : Parser {
+    private val LOG = LoggerFactory.getLogger(TikaParser::class.java)
     private val primerParser = PrimerParser(conf)
-    val tikaConfig = PulsarTikaConfig.defaultConfig
-    private val cachingPolicy: String
-    private var HTMLMapper: HtmlMapper? = null
-
-    init {
-        val htmlmapperClassName = conf.get("tika.htmlmapper.classname", "")
-        if (htmlmapperClassName.isNotBlank()) {
-            HTMLMapper = try {
-                val HTMLMapperClass = Class.forName(htmlmapperClassName)
-                val interfaceOK = HtmlMapper::class.java.isAssignableFrom(HTMLMapperClass)
-                if (!interfaceOK) {
-                    throw RuntimeException("Class $htmlmapperClassName does not implement HtmlMapper")
-                }
-                HTMLMapperClass.newInstance() as HtmlMapper
-            } catch (e: Exception) {
-                LOG.error("Can't generate instance for class $htmlmapperClassName")
-                throw RuntimeException("Can't generate instance for class $htmlmapperClassName")
-            }
-        }
-        cachingPolicy = conf.get("parser.caching.forbidden.policy", PulsarConstants.CACHING_FORBIDDEN_CONTENT)
-    }
+    private val tikaConfig = PulsarTikaConfig.defaultConfig
+    private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, PulsarConstants.CACHING_FORBIDDEN_CONTENT)
+    private var htmlMapper = conf.get(PARSE_TIKA_HTML_MAPPER_NAME)?.let { ReflectionUtils.forNameOrNull<HtmlMapper>(it) }
 
     override fun parse(page: WebPage): ParseResult {
         val baseUrl = page.location
@@ -91,8 +78,8 @@ class TikaParser(
         val root = doc.createDocumentFragment()
         val domhandler = DOMBuilder(doc, root)
         val context = ParseContext()
-        if (HTMLMapper != null) {
-            context.set(HtmlMapper::class.java, HTMLMapper)
+        if (htmlMapper != null) {
+            context.set(HtmlMapper::class.java, htmlMapper)
         }
         // to add once available in Tika
         // context.set(HtmlMapper.class, IdentityHtmlMapper.INSTANCE);
@@ -147,9 +134,5 @@ class TikaParser(
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
         return parseResult
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(TikaParser::class.java)
     }
 }

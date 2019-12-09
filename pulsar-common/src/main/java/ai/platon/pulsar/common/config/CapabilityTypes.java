@@ -281,6 +281,8 @@ public interface CapabilityTypes {
     String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
+    String PARSE_TIKA_HTML_MAPPER_NAME = "tika.htmlmapper.classname";
+
     // TODO: not used, may be caused by a git merge problem
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
