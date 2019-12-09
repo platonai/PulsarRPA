@@ -11,9 +11,7 @@ import org.h2.engine.SysProperties;
 import org.h2.message.DbException;
 import org.h2.store.fs.FileUtils;
 
-import javax.tools.*;
 import javax.tools.JavaFileObject.Kind;
-import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

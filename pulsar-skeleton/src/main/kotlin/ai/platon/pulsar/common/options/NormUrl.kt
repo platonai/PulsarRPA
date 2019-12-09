@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.AppConstants
 import java.net.URL
 
 open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
@@ -39,6 +39,6 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
     }
 
     companion object {
-        val nil = NormUrl(PulsarConstants.NIL_PAGE_URL, LoadOptions.default)
+        val nil = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
     }
 }

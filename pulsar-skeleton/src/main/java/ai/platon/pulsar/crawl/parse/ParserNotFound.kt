@@ -24,11 +24,11 @@ class ParserNotFound : ParseException {
     var contentType: String? = null
         private set
 
-    constructor(message: String?) : super(message) {}
+    constructor(message: String) : super(message)
 
     @JvmOverloads
     constructor(url: String,
-                contentType: String, message: String? = "Parser not found for $contentType | $url") : super(message) {
+                contentType: String, message: String = "Parser not found for $contentType | $url") : super(message) {
         this.url = url
         this.contentType = contentType
     }

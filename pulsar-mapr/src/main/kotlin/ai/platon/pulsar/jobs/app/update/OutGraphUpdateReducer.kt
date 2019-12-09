@@ -18,9 +18,9 @@ package ai.platon.pulsar.jobs.app.update
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.Urls.unreverseUrl
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
@@ -200,7 +200,7 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
                 shallowestEdge = incomingEdge
             }
         }
-        if (focusedPage.distance != PulsarConstants.DISTANCE_INFINITE && smallestDepth < focusedPage.distance) {
+        if (focusedPage.distance != AppConstants.DISTANCE_INFINITE && smallestDepth < focusedPage.distance) {
             metricsSystem.debugDepthUpdated(focusedPage.distance.toString() + " -> " + smallestDepth + ", " + focus.url)
         }
         if (shallowestEdge != null) {

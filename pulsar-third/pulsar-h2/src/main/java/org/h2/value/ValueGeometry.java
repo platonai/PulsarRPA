@@ -5,8 +5,6 @@
  */
 package org.h2.value;
 
-import com.vividsolutions.jts.geom.*;
-import com.vividsolutions.jts.io.*;
 import org.h2.engine.Mode;
 import org.h2.message.DbException;
 import org.h2.table.Column;

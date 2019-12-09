@@ -8,12 +8,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.jobs.common.FetchEntryWritable
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper
-import ai.platon.pulsar.jobs.core.Mapper
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.apache.hadoop.io.IntWritable
-import java.io.IOException
 import java.util.*
 
 /**

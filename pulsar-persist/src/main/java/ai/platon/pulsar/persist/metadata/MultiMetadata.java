@@ -19,7 +19,7 @@ package ai.platon.pulsar.persist.metadata;
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.DublinCore;
 import ai.platon.pulsar.common.HttpHeaders;
-import ai.platon.pulsar.common.config.PulsarConstants;
+import ai.platon.pulsar.common.config.AppConstants;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * @author Chris Mattmann
  * @author J&eacute;r&ocirc;me Charron
  */
-public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
+public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
 
     public static final String META_TMP = "TMP_";
 

@@ -10,7 +10,6 @@ import org.h2.message.DbException;
 import org.h2.security.SHA256;
 import org.h2.store.FileLister;
 import org.h2.store.FileStore;
-import org.h2.store.fs.*;
 import org.h2.util.Tool;
 
 import java.io.IOException;

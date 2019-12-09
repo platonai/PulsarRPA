@@ -49,9 +49,9 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static ai.platon.pulsar.common.config.AppConstants.ALL_BATCHES;
+import static ai.platon.pulsar.common.config.AppConstants.YES_STRING;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
-import static ai.platon.pulsar.common.config.PulsarConstants.YES_STRING;
 
 public abstract class PulsarJob implements PulsarJobBase {
 

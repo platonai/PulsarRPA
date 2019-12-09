@@ -9,11 +9,8 @@ import org.h2.engine.Constants;
 import org.h2.engine.SysProperties;
 import org.h2.message.DbException;
 import org.h2.store.fs.FileUtils;
-import org.h2.util.*;
 
-import java.io.*;
 import java.nio.charset.Charset;
-import java.sql.*;
 import java.util.concurrent.TimeUnit;
 
 /**

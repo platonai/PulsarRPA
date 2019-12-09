@@ -11,7 +11,6 @@ import org.h2.bnf.context.DbContextRule;
 import org.h2.message.DbException;
 import org.h2.util.New;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;

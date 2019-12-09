@@ -3,15 +3,14 @@ package org.jsoup.nodes;
 import org.apache.commons.math3.linear.OpenMapRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.jsoup.SerializationException;
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.select.NodeFilter;
 import org.jsoup.select.NodeTraversor;
 import org.jsoup.select.NodeVisitor;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.*;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.

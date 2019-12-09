@@ -1,14 +1,13 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.data.PoolId

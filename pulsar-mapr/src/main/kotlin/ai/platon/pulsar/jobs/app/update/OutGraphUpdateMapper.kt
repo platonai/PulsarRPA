@@ -20,14 +20,13 @@ import ai.platon.pulsar.common.CommonCounter
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls.reverseUrl
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.graph.GraphGroupKey
 import ai.platon.pulsar.persist.graph.WebEdge
@@ -37,8 +36,6 @@ import ai.platon.pulsar.persist.io.WebGraphWritable
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.util.*
-import java.util.function.Consumer
 
 internal class OutGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, GraphGroupKey, WebGraphWritable>() {
     val LOG = LoggerFactory.getLogger(OutGraphUpdateMapper::class.java)
@@ -48,7 +45,7 @@ internal class OutGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebPage
         init { MetricsCounters.register(Counter::class.java) }
     }
 
-    private var maxDistance = PulsarConstants.DISTANCE_INFINITE
+    private var maxDistance = AppConstants.DISTANCE_INFINITE
     private val maxLiveLinks = 10000
     private var limit = -1
     private var count = 0
@@ -61,7 +58,7 @@ internal class OutGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebPage
     public override fun setup(context: Context) {
         val crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
         limit = jobConf.getInt(CapabilityTypes.LIMIT, -1)
-        maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, PulsarConstants.DISTANCE_INFINITE)
+        maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
         scoringFilters = getBean(ScoringFilters::class.java)
         graphGroupKey = GraphGroupKey()
         webGraphWritable = WebGraphWritable(null, WebGraphWritable.OptimizeMode.IGNORE_TARGET, jobConf.unbox())

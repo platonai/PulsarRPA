@@ -12,7 +12,6 @@ import org.h2.engine.Constants;
 import org.h2.engine.Database;
 import org.h2.engine.Session;
 import org.h2.message.DbException;
-import org.h2.mvstore.*;
 import org.h2.mvstore.db.TransactionStore.Transaction;
 import org.h2.mvstore.db.TransactionStore.TransactionMap;
 import org.h2.store.InDoubtTransaction;

@@ -17,7 +17,6 @@
 
 package ai.platon.pulsar.common;
 
-import com.google.common.net.InetAddresses;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;

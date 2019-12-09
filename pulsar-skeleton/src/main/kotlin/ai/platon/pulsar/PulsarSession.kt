@@ -1,9 +1,9 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.BeanFactory
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions

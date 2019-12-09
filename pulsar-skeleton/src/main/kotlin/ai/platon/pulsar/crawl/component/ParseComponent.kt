@@ -18,9 +18,8 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -50,12 +49,12 @@ class ParseComponent(
 
     fun parse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean): ParseResult {
         if (reparseLinks) {
-            page.variables[Name.FORCE_FOLLOW] = PulsarConstants.YES_STRING
-            page.variables[Name.REPARSE_LINKS] = PulsarConstants.YES_STRING
+            page.variables[Name.FORCE_FOLLOW] = AppConstants.YES_STRING
+            page.variables[Name.REPARSE_LINKS] = AppConstants.YES_STRING
             page.variables[Name.PARSE_LINK_FILTER_DEBUG_LEVEL] = 1
         }
         if (noLinkFilter) {
-            page.variables[Name.PARSE_NO_LINK_FILTER] = PulsarConstants.YES_STRING
+            page.variables[Name.PARSE_NO_LINK_FILTER] = AppConstants.YES_STRING
         }
         if (query != null) {
             page.query = query

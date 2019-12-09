@@ -16,7 +16,7 @@ import org.h2.message.TraceObject;
 import org.h2.result.ResultInterface;
 import org.h2.util.New;
 
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 /**

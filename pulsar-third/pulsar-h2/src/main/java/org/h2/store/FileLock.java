@@ -21,7 +21,6 @@ import org.h2.value.Transfer;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.*;
 import java.util.Properties;
 
 /**

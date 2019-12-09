@@ -12,7 +12,6 @@ import org.h2.command.dml.SetTypes;
 import org.h2.message.DbException;
 import org.h2.message.Trace;
 import org.h2.store.FileLock;
-import org.h2.util.*;
 
 import java.util.HashMap;
 

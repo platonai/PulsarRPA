@@ -6,7 +6,6 @@
 package org.h2.command.ddl;
 
 import org.h2.command.CommandInterface;
-import org.h2.engine.*;
 import org.h2.schema.Schema;
 import org.h2.schema.SchemaObject;
 import org.h2.schema.Sequence;

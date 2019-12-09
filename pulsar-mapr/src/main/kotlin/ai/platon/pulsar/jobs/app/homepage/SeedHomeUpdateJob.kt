@@ -17,25 +17,23 @@
 package ai.platon.pulsar.jobs.app.homepage
 
 import ai.platon.pulsar.common.CommonCounter
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.common.URLPartitioner.SelectorEntryPartitioner
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
-import ai.platon.pulsar.jobs.core.Mapper
 import ai.platon.pulsar.jobs.core.PulsarJob
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import org.slf4j.LoggerFactory
 import java.io.IOException
 import kotlin.system.exitProcess
 
 class SeedHomeUpdateJob : HomePageUpdateJob() {
     override fun setIndexHomeUrl() {
-        jobConf[CapabilityTypes.STAT_INDEX_HOME_URL] = PulsarConstants.SEED_HOME_URL
+        jobConf[CapabilityTypes.STAT_INDEX_HOME_URL] = AppConstants.SEED_HOME_URL
     }
 
     @Throws(Exception::class)
@@ -73,7 +71,7 @@ class SeedHomeUpdateJob : HomePageUpdateJob() {
 }
 
 fun main(args: Array<String>) {
-    val configLocation = System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION)
+    val configLocation = System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.JOB_CONTEXT_CONFIG_LOCATION)
     val res = AppContextAwareJob.run(configLocation, SeedHomeUpdateJob(), args)
     exitProcess(res)
 }

@@ -1,7 +1,7 @@
 package org.jsoup.parser;
 
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Entities;
 
 import java.util.Arrays;

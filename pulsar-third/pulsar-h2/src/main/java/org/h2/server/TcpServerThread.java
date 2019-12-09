@@ -8,7 +8,6 @@ package org.h2.server;
 import org.h2.api.ErrorCode;
 import org.h2.command.Command;
 import org.h2.command.CommandInterface;
-import org.h2.engine.*;
 import org.h2.expression.Parameter;
 import org.h2.expression.ParameterInterface;
 import org.h2.expression.ParameterRemote;
@@ -25,7 +24,6 @@ import org.h2.value.Transfer;
 import org.h2.value.Value;
 import org.h2.value.ValueLobDb;
 
-import java.io.*;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;

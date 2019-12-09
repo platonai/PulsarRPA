@@ -8,7 +8,6 @@ package org.h2.fulltext;
 import org.h2.api.Trigger;
 import org.h2.command.Parser;
 import org.h2.engine.Session;
-import org.h2.expression.*;
 import org.h2.jdbc.JdbcConnection;
 import org.h2.message.DbException;
 import org.h2.tools.SimpleResultSet;
@@ -20,8 +19,7 @@ import org.h2.util.StringUtils;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StreamTokenizer;
-import java.sql.*;
-import java.util.*;
+import java.sql.SQLException;
 
 /**
  * This class implements the native full text search.

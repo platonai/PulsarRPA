@@ -7,8 +7,6 @@ package org.h2.util;
 
 import org.h2.store.fs.FileUtils;
 
-import java.io.*;
-import java.util.*;
 import java.util.Map.Entry;
 
 /**

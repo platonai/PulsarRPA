@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import com.beust.jcommander.Parameter
 import org.apache.commons.lang3.StringUtils
 import java.text.DecimalFormat
@@ -22,7 +22,7 @@ class CrawlOptions : CommonOptions {
     @Parameter(names = ["-i", "--fetch-interval"], converter = DurationConverter::class, description = "Fetch interval")
     var fetchInterval = Duration.ofHours(1)
     @Parameter(names = ["-p", "--fetch-priority"], description = "Fetch priority")
-    val fetchPriority = PulsarConstants.FETCH_PRIORITY_DEFAULT
+    val fetchPriority = AppConstants.FETCH_PRIORITY_DEFAULT
     @Parameter(names = ["-s", "--score"], description = "Injected score")
     var score = 0
     @Parameter(names = ["-d", "--depth"], description = "Max crawl depth. Do not crawl anything deeper")

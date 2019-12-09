@@ -1,8 +1,8 @@
 package ai.platon.pulsar.jobs.app.homepage
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.CommonOptions
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
 import ai.platon.pulsar.persist.WebPage
@@ -49,7 +49,7 @@ abstract class HomePageUpdateJob : AppContextAwareJob() {
             filter.filterOp = FilterOp.NOT_EQUALS
             filter.isFilterIfMissing = false
             filter.mapKey = WebPage.wrapKey(Mark.INACTIVE)
-            filter.operands.add(WebPage.u8(PulsarConstants.YES_STRING))
+            filter.operands.add(WebPage.u8(AppConstants.YES_STRING))
             return filter
         }
 

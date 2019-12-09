@@ -13,7 +13,6 @@ import org.h2.message.DbException;
 import org.h2.store.DataHandler;
 import org.h2.table.Column;
 import org.h2.tools.SimpleResultSet;
-import org.h2.util.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -21,7 +20,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
-import java.sql.*;
 
 /**
  * This is the base class for all value classes.

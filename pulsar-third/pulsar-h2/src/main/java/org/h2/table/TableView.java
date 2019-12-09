@@ -8,8 +8,6 @@ package org.h2.table;
 import org.h2.api.ErrorCode;
 import org.h2.command.Prepared;
 import org.h2.command.dml.Query;
-import org.h2.engine.*;
-import org.h2.expression.*;
 import org.h2.index.Index;
 import org.h2.index.IndexType;
 import org.h2.index.ViewIndex;

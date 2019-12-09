@@ -1,7 +1,10 @@
 package ai.platon.pulsar.crawl.inject
 
 import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.CrawlOptions.Companion.parse
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebPage
@@ -55,7 +58,7 @@ class SeedBuilder(
         }
         val options = parse(args, conf)
         page.distance = 0
-        if (page.createTime.isBefore(PulsarConstants.TCP_IP_STANDARDIZED_TIME)) {
+        if (page.createTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
             page.createTime = impreciseNow
         }
         page.markSeed()
@@ -64,7 +67,7 @@ class SeedBuilder(
         page.fetchTime = impreciseNow
         page.fetchInterval = options.fetchInterval
         page.fetchPriority = options.fetchPriority
-        page.marks.put(Mark.INJECT, PulsarConstants.YES_STRING)
+        page.marks.put(Mark.INJECT, AppConstants.YES_STRING)
         return true
     }
 

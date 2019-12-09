@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_DEFAULT_TMP_DIR
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_DEFAULT_TMP_DIR
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path

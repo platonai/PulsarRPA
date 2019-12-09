@@ -8,7 +8,6 @@ package org.h2.fulltext;
 import org.h2.util.New;
 import org.h2.util.SoftHashMap;
 
-import java.sql.*;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;

@@ -29,7 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.Instant;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import static ai.platon.pulsar.common.config.CapabilityTypes.BATCH_ID;
+import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 
 public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer<K1, V1, K2, V2> implements Configurable {
 

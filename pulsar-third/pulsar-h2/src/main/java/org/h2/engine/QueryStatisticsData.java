@@ -5,7 +5,6 @@
  */
 package org.h2.engine;
 
-import java.util.*;
 import java.util.Map.Entry;
 
 /**

@@ -12,8 +12,6 @@ import org.h2.util.JdbcUtils;
 import org.h2.util.Tool;
 import org.h2.util.Utils;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -1,108 +1,87 @@
-package ai.platon.pulsar.jobs.app.parse;
+package ai.platon.pulsar.jobs.app.parse
 
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.crawl.parse.PageParser;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.jobs.core.GoraMapper;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import ai.platon.pulsar.persist.metadata.Mark;
-import org.apache.avro.util.Utf8;
-import org.slf4j.Logger;
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.parse.PageParser
+import ai.platon.pulsar.crawl.parse.PageParser.Companion.isTruncated
+import ai.platon.pulsar.jobs.core.GoraMapper
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.metadata.Mark
+import org.apache.avro.util.Utf8
+import java.io.IOException
 
-import java.io.IOException;
+class ParserMapper : GoraMapper<String, GWebPage, String, GWebPage>() {
+    private var pageParser: PageParser? = null
+    private var resume = false
+    private var force = false
+    private var reparse = false
+    private var batchId: Utf8? = null
+    private var limit = -1
+    private var skipTruncated = false
+    private var count = 0
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
-
-public class ParserMapper extends GoraMapper<String, GWebPage, String, GWebPage> {
-
-  public static final Logger LOG = ParserJob.LOG;
-
-  private PageParser pageParser;
-  private boolean resume;
-  private boolean force;
-  private boolean reparse;
-  private Utf8 batchId;
-  private int limit = -1;
-  private boolean skipTruncated;
-
-  private int count = 0;
-
-  @Override
-  public void setup(Context context) {
-    batchId = new Utf8(jobConf.get(BATCH_ID, ALL_BATCHES));
-    pageParser = new PageParser(jobConf);
-    resume = jobConf.getBoolean(RESUME, false);
-    reparse = jobConf.getBoolean(PARSE_REPARSE, false);
-    force = jobConf.getBoolean(FORCE, false);
-    limit = jobConf.getInt(LIMIT, -1);
-    skipTruncated = jobConf.getBoolean(PARSE_SKIP_TRUNCATED, true);
-
-    LOG.info(Params.format(
-        "batchId", batchId,
-        "resume", resume,
-        "reparse", reparse,
-        "force", force,
-        "limit", limit,
-        "skipTruncated", skipTruncated
-    ));
-  }
-
-  @Override
-  public void map(String reversedUrl, GWebPage row, Context context) throws IOException, InterruptedException {
-    WebPage page = WebPage.box(reversedUrl, row, true);
-    String url = page.getUrl();
-
-    if (limit > -1 && count > limit) {
-      stop("hit limit " + limit + ", finish mapper.");
-      return;
+    public override fun setup(context: Context) {
+        batchId = Utf8(jobConf[CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES])
+        pageParser = PageParser(jobConf)
+        resume = jobConf.getBoolean(CapabilityTypes.RESUME, false)
+        reparse = jobConf.getBoolean(CapabilityTypes.PARSE_REPARSE, false)
+        force = jobConf.getBoolean(CapabilityTypes.FORCE, false)
+        limit = jobConf.getInt(CapabilityTypes.LIMIT, -1)
+        skipTruncated = jobConf.getBoolean(CapabilityTypes.PARSE_SKIP_TRUNCATED, true)
+        LOG.info(Params.format(
+                "batchId", batchId,
+                "resume", resume,
+                "reparse", reparse,
+                "force", force,
+                "limit", limit,
+                "skipTruncated", skipTruncated
+        ))
     }
 
-    if (!shouldProcess(page)) {
-      return;
+    @Throws(IOException::class, InterruptedException::class)
+    override fun map(reversedUrl: String, row: GWebPage, context: Context) {
+        val page = WebPage.box(reversedUrl, row, true)
+        val url = page.url
+        if (limit > -1 && count > limit) {
+            stop("hit limit $limit, finish mapper.")
+            return
+        }
+        if (!shouldProcess(page)) {
+            return
+        }
+        val parseResult = pageParser!!.parse(page)
+        context.write(reversedUrl, page.unbox())
+        ++count
     }
 
-    ParseResult parseResult = pageParser.parse(page);
-
-    context.write(reversedUrl, page.unbox());
-
-    ++count;
-  }
-
-  private boolean shouldProcess(WebPage page) {
-    if (!reparse && !page.hasMark(Mark.FETCH)) {
-      metricsCounters.increase(PageParser.Counter.notFetched);
-
-      if (LOG.isDebugEnabled()) {
-//        log.debug("Skipping " + TableUtil.unreverseUrl(key) + "; not fetched yet");
-      }
-
-      return false;
+    private fun shouldProcess(page: WebPage): Boolean {
+        if (!reparse && !page.hasMark(Mark.FETCH)) {
+            metricsCounters.increase(PageParser.Counter.notFetched)
+            if (LOG.isDebugEnabled) { //        log.debug("Skipping " + TableUtil.unreverseUrl(key) + "; not fetched yet");
+            }
+            return false
+        }
+        if (!reparse && resume && page.hasMark(Mark.PARSE)) {
+            metricsCounters.increase(PageParser.Counter.alreadyParsed)
+            if (!force) {
+                LOG.debug("Skipping " + page.url + "; already parsed")
+                return false
+            }
+            LOG.debug("Forced parsing " + page.url + "; already parsed")
+        } // if resume
+        if (skipTruncated && isTruncated(page)) {
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Page truncated, ignore")
+            }
+            metricsCounters.increase(PageParser.Counter.truncated)
+            return false
+        }
+        return true
     }
 
-    if (!reparse && resume && page.hasMark(Mark.PARSE)) {
-      metricsCounters.increase(PageParser.Counter.alreadyParsed);
-
-      if (!force) {
-        LOG.debug("Skipping " + page.getUrl() + "; already parsed");
-        return false;
-      }
-
-      LOG.debug("Forced parsing " + page.getUrl() + "; already parsed");
-    } // if resume
-
-    if (skipTruncated && PageParser.Companion.isTruncated(page)) {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Page truncated, ignore");
-      }
-
-      metricsCounters.increase(PageParser.Counter.truncated);
-
-      return false;
+    companion object {
+        val LOG = ParserJob.LOG
     }
-
-    return true;
-  }
-
-} // ParserMapper
+}

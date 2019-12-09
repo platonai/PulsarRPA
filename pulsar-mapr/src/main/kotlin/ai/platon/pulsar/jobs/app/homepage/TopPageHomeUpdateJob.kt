@@ -18,22 +18,19 @@ package ai.platon.pulsar.jobs.app.homepage
 
 import ai.platon.pulsar.common.CommonCounter
 import ai.platon.pulsar.common.ScoreVector
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.common.URLPartitioner.SelectorEntryPartitioner
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper
-import ai.platon.pulsar.jobs.core.Mapper
-import ai.platon.pulsar.jobs.core.PulsarJob
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.scoring.ContentAnalysisScoringFilter
-import java.io.IOException
 
 class TopPageHomeUpdateJob : HomePageUpdateJob() {
     override fun setIndexHomeUrl() {
-        jobConf[CapabilityTypes.STAT_INDEX_HOME_URL] = PulsarConstants.TOP_PAGE_HOME_URL
+        jobConf[CapabilityTypes.STAT_INDEX_HOME_URL] = AppConstants.TOP_PAGE_HOME_URL
     }
 
     public override fun initJob() {

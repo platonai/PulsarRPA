@@ -1,10 +1,14 @@
 package ai.platon.pulsar.proxy
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.NetUtil
+import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.SimpleLogger
+import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.AppConstants.CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE
+import ai.platon.pulsar.common.config.AppConstants.INTERNAL_PROXY_SERVER_PORT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool

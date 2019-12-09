@@ -21,8 +21,6 @@ package ai.platon.pulsar.crawl.parse
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
-import java.util.*
-import java.util.stream.Collectors
 
 /**
  * Creates and caches [ParseFilter] implementing plugins.
@@ -33,10 +31,15 @@ class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfi
     /**
      * Run all defined filters.
      */
-    fun filter(parseContext: ParseContext) { // loop on each filter
+    fun filter(parseContext: ParseContext) {
+        // loop on each filter
         for (parseFilter in parseFilters) {
             try {
                 parseFilter.filter(parseContext)
+
+                if (parseContext.parseResult.isSuccess) {
+                    // TODO: do something, break or continue?
+                }
             } catch (e: Throwable) {
                 LOG.warn(e.toString())
             }
@@ -44,6 +47,6 @@ class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfi
     }
 
     override fun toString(): String {
-        return parseFilters.stream().map { n: ParseFilter -> n.javaClass.simpleName }.collect(Collectors.joining(", "))
+        return parseFilters.joinToString { it.javaClass.simpleName }
     }
 }

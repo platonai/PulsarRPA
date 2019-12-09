@@ -18,11 +18,11 @@
  */
 package ai.platon.pulsar.jobs.app.fetch
 
+import ai.platon.pulsar.common.config.AppConstants.CRAWL_DEPTH_FIRST
+import ai.platon.pulsar.common.config.AppConstants.CRAWL_STRICT_DEPTH_FIRST
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants.CRAWL_DEPTH_FIRST
-import ai.platon.pulsar.common.config.PulsarConstants.CRAWL_STRICT_DEPTH_FIRST
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.jobs.JobEnv
 import ai.platon.pulsar.jobs.common.FetchEntryWritable
@@ -30,16 +30,14 @@ import ai.platon.pulsar.jobs.common.URLPartitioner.FetchEntryPartitioner
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
 import ai.platon.pulsar.jobs.core.PulsarJob
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
-import java.util.*
 import kotlin.system.exitProcess
 
 /**
  * Fetch job
  */
-class FetchJob : AppContextAwareJob {
+class FetchJob : AppContextAwareJob() {
     companion object {
         val LOG = LoggerFactory.getLogger(FetchJob::class.java)
         private val unrelatedFields = arrayOf(
@@ -51,11 +49,6 @@ class FetchJob : AppContextAwareJob {
     }
 
     private lateinit var options: FetchOptions
-
-    constructor() {}
-    constructor(conf: ImmutableConfig) {
-        setJobConf(conf)
-    }
 
     public override fun setup(params: Params) {
         // Recomputed config variables, this config will be passed to Mapper and Reducer

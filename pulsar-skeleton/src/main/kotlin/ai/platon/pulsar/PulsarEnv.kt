@@ -1,10 +1,10 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.persist.gora.GoraStorage
@@ -53,8 +53,8 @@ class PulsarEnv {
             // prerequisite system properties
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
             setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
-            setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION)
-            setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, PulsarConstants.H2_SESSION_FACTORY)
+            setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
+            setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, AppConstants.H2_SESSION_FACTORY)
 
             // the spring application context
             contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
@@ -100,7 +100,7 @@ class PulsarEnv {
      * Proxy system can be enabled/disabled at runtime
      * */
     val useProxy: Boolean get() {
-        if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_ENABLE_PROXY)) {
+        if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_ENABLE_PROXY)) {
             return true
         }
 

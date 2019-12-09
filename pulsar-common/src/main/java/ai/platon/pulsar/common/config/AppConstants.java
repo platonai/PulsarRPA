@@ -16,6 +16,8 @@
  */
 package ai.platon.pulsar.common.config;
 
+import org.apache.commons.lang3.SystemUtils;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -25,9 +27,10 @@ import java.time.Instant;
  * A collection of constants.
  */
 @SuppressWarnings("unused")
-public interface PulsarConstants {
+public interface AppConstants {
 
-    String USER = System.getenv("USER");
+    // String USER = System.getenv("USER");
+    String USER = SystemUtils.USER_NAME;
 
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
     String JOB_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/job-context.xml";
@@ -156,8 +159,8 @@ public interface PulsarConstants {
     /**
      * Directories
      * */
-    String TMP_DIR = System.getProperty("java.io.tmpdir");
-    String HOME_DIR = System.getProperty("user.home");
+    String TMP_DIR = SystemUtils.JAVA_IO_TMPDIR;
+    String HOME_DIR = SystemUtils.USER_HOME;
 
     Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
     Path PULSAR_DEFAULT_DATA_DIR = Paths.get(HOME_DIR, ".pulsar");

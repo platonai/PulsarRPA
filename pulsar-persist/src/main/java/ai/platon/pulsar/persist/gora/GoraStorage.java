@@ -14,9 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.common.config.PulsarConstants.HBASE_STORE_CLASS;
-import static ai.platon.pulsar.common.config.PulsarConstants.MONGO_STORE_CLASS;
 
 /**
  * Created by vincent on 17-5-15.

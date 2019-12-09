@@ -33,7 +33,6 @@ import ai.platon.pulsar.persist.io.WebGraphWritable
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.util.function.Consumer
 
 internal class InGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, GraphGroupKey, WebGraphWritable>() {
     val LOG = LoggerFactory.getLogger(InGraphUpdateMapper::class.java)

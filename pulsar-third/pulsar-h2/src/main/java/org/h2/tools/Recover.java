@@ -24,17 +24,12 @@ import org.h2.result.Row;
 import org.h2.result.RowFactory;
 import org.h2.result.SimpleRow;
 import org.h2.security.SHA256;
-import org.h2.store.*;
 import org.h2.store.fs.FileUtils;
-import org.h2.util.*;
-import org.h2.value.*;
 
-import java.io.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
 import java.util.Map.Entry;
 import java.util.zip.CRC32;
 

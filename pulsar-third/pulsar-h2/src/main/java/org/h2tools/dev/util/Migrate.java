@@ -8,7 +8,6 @@ package org.h2tools.dev.util;
 import org.h2.engine.Constants;
 import org.h2.tools.RunScript;
 
-import java.io.*;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

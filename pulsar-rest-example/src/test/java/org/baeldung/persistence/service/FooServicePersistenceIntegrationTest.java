@@ -1,8 +1,5 @@
 package org.baeldung.persistence.service;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
-import static org.junit.Assert.assertNotNull;
-
 import org.baeldung.persistence.IOperations;
 import org.baeldung.persistence.model.Foo;
 import org.baeldung.spring.PersistenceConfig;
@@ -15,6 +12,9 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { PersistenceConfig.class }, loader = AnnotationConfigContextLoader.class)

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.vendor.ProxyParser
 import ai.platon.pulsar.common.proxy.vendor.ProxyVendorException
 import com.google.gson.GsonBuilder
-import java.lang.RuntimeException
 import java.time.Instant
 
 private class ProxyItem(

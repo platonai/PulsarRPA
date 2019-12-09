@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static ai.platon.pulsar.common.config.AppConstants.*;
 import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
-import static ai.platon.pulsar.common.config.PulsarConstants.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

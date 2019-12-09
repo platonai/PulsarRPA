@@ -10,7 +10,6 @@ import org.h2.message.DbException;
 import org.h2.message.Trace;
 import org.h2.schema.Schema;
 import org.h2.security.SHA256;
-import org.h2.table.*;
 import org.h2.util.MathUtils;
 import org.h2.util.New;
 import org.h2.util.StringUtils;

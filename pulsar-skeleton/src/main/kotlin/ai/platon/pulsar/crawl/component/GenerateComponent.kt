@@ -35,7 +35,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -99,7 +98,7 @@ class GenerateComponent(
 
     override fun setup(jobConf: ImmutableConfig) {
         crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
-        batchId = jobConf[CapabilityTypes.BATCH_ID, PulsarConstants.ALL_BATCHES]
+        batchId = jobConf[CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES]
         fetchMode = jobConf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.SELENIUM)
 
         groupMode = jobConf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
@@ -107,7 +106,7 @@ class GenerateComponent(
         reGenerateSeeds = jobConf.getBoolean(CapabilityTypes.GENERATE_REGENERATE_SEEDS, false)
         filter = jobConf.getBoolean(CapabilityTypes.GENERATE_FILTER, true)
         normalise = jobConf.getBoolean(CapabilityTypes.GENERATE_NORMALISE, true)
-        maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, PulsarConstants.DISTANCE_INFINITE)
+        maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
         pseudoCurrTime = jobConf.getInstant(CapabilityTypes.GENERATE_CUR_TIME, startTime)
         topN = jobConf.getInt(CapabilityTypes.GENERATE_TOP_N, -1)
         lowGeneratedRowsRate = 0.8f

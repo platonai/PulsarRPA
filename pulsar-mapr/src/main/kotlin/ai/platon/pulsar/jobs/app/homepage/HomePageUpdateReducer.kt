@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.WeakPageIndexer
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraReducer
-import ai.platon.pulsar.jobs.core.Reducer
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import java.io.IOException

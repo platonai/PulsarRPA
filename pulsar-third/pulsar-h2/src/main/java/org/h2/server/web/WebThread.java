@@ -13,7 +13,6 @@ import org.h2.util.IOUtils;
 import org.h2.util.NetUtils;
 import org.h2.util.StringUtils;
 
-import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Iterator;

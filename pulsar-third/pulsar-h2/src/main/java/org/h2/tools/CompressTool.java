@@ -6,7 +6,6 @@
 package org.h2.tools;
 
 import org.h2.api.ErrorCode;
-import org.h2.compress.*;
 import org.h2.engine.Constants;
 import org.h2.message.DbException;
 import org.h2.mvstore.DataUtils;
@@ -15,7 +14,6 @@ import org.h2.util.StringUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.*;
 
 /**
  * A tool to losslessly compress data, and expand the compressed data again.

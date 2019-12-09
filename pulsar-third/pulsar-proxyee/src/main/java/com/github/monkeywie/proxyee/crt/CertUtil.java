@@ -11,12 +11,10 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;

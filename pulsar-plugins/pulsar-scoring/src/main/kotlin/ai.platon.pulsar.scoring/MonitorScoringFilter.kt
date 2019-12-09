@@ -19,10 +19,10 @@ package ai.platon.pulsar.scoring
 
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.ScoreVector
+import ai.platon.pulsar.common.config.AppConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector

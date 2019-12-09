@@ -2,11 +2,11 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.HttpHeaders.*
+import ai.platon.pulsar.common.config.AppConstants.CMD_WEB_DRIVER_CLOSE_ALL
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants.CMD_WEB_DRIVER_CLOSE_ALL
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.component.FetchComponent

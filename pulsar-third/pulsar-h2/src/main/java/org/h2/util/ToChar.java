@@ -14,7 +14,6 @@ import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * Emulates Oracle's TO_CHAR function.

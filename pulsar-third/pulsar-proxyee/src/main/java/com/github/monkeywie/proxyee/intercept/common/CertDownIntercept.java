@@ -6,7 +6,6 @@ import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
 import com.github.monkeywie.proxyee.util.ProtoUtil;
 import com.github.monkeywie.proxyee.util.ProtoUtil.RequestProto;
 import io.netty.channel.Channel;
-import io.netty.handler.codec.http.*;
 
 import java.net.InetSocketAddress;
 

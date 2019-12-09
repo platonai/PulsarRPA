@@ -17,11 +17,11 @@
 package ai.platon.pulsar.parse.tika
 
 import ai.platon.pulsar.common.ReflectionUtils
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_TIKA_HTML_MAPPER_NAME
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -33,8 +33,6 @@ import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import org.apache.commons.lang3.StringUtils
-import org.apache.cxf.common.util.ReflectionUtil
 import org.apache.html.dom.HTMLDocumentImpl
 import org.apache.tika.metadata.Metadata
 import org.apache.tika.metadata.TikaCoreProperties
@@ -58,7 +56,7 @@ class TikaParser(
     private val LOG = LoggerFactory.getLogger(TikaParser::class.java)
     private val primerParser = PrimerParser(conf)
     private val tikaConfig = PulsarTikaConfig.defaultConfig
-    private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, PulsarConstants.CACHING_FORBIDDEN_CONTENT)
+    private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private var htmlMapper = conf.get(PARSE_TIKA_HTML_MAPPER_NAME)?.let { ReflectionUtils.forNameOrNull<HtmlMapper>(it) }
 
     override fun parse(page: WebPage): ParseResult {

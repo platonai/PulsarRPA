@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.proxy.vendor
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
 import org.slf4j.LoggerFactory
 
 class ProxyVendorException : Exception {

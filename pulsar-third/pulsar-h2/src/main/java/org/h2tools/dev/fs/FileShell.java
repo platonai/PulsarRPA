@@ -15,7 +15,6 @@ import org.h2.util.New;
 import org.h2.util.StringUtils;
 import org.h2.util.Tool;
 
-import java.io.*;
 import java.nio.channels.FileChannel;
 import java.sql.SQLException;
 import java.sql.Timestamp;

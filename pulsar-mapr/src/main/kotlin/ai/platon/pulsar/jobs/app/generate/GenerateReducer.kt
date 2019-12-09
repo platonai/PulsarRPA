@@ -20,19 +20,17 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppFiles.writeBatchId
 import ai.platon.pulsar.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.Urls.reverseUrl
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraReducer
-import ai.platon.pulsar.jobs.core.Reducer
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import com.google.common.collect.LinkedHashMultiset
 import com.google.common.collect.Multiset
-import java.io.IOException
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -66,7 +64,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
 
     override fun setup(context: Context) {
         val crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
-        batchId = jobConf[CapabilityTypes.BATCH_ID, PulsarConstants.ALL_BATCHES]
+        batchId = jobConf[CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES]
         // Generate top N links only
         limit = jobConf.getUint(CapabilityTypes.GENERATE_TOP_N, Int.MAX_VALUE)
         limit /= context.numReduceTasks

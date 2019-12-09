@@ -16,7 +16,6 @@ import org.h2.mvstore.DataUtils;
 import org.h2.tools.SimpleResultSet;
 import org.h2.util.DateTimeUtils;
 import org.h2.util.MathUtils;
-import org.h2.value.*;
 
 import java.io.IOException;
 import java.io.OutputStream;

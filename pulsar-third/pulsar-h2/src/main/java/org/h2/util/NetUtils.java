@@ -11,7 +11,6 @@ import org.h2.message.DbException;
 import org.h2.security.CipherFactory;
 
 import java.io.IOException;
-import java.net.*;
 import java.util.concurrent.TimeUnit;
 
 /**

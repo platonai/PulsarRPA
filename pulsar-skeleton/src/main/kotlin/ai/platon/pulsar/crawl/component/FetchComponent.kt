@@ -20,11 +20,9 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls.getURLOrNull
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
@@ -38,7 +36,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.*
-import java.util.function.Consumer
 
 /**
  * Created by vincent on 17-5-1.
@@ -195,7 +192,7 @@ open class FetchComponent(
         if (newUrl.isNotEmpty()) {
             // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());
             val reprUrl = URLUtil.chooseRepr(url, newUrl, temp)
-            if (reprUrl.length >= PulsarConstants.SHORTEST_VALID_URL_LENGTH) {
+            if (reprUrl.length >= AppConstants.SHORTEST_VALID_URL_LENGTH) {
                 page.reprUrl = reprUrl
             }
         }

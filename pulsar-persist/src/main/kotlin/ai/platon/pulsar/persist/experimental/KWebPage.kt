@@ -1,7 +1,8 @@
 package ai.platon.pulsar.persist.experimental
 
 import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.config.PulsarConstants.EXAMPLE_URL
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.EXAMPLE_URL
 import ai.platon.pulsar.persist.Variables
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
@@ -62,7 +63,7 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
     }
 
     fun markSeed() {
-        metadata.set(Name.IS_SEED, ai.platon.pulsar.common.config.PulsarConstants.YES_STRING)
+        metadata.set(Name.IS_SEED, AppConstants.YES_STRING)
     }
 
     fun unmarkSeed() {
@@ -80,8 +81,8 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
         var priority = fetchPriority
 
         val depth = distance
-        if (depth < ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEPTH_BASE) {
-            priority = Math.max(priority, ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEPTH_BASE - depth)
+        if (depth < AppConstants.FETCH_PRIORITY_DEPTH_BASE) {
+            priority = Math.max(priority, AppConstants.FETCH_PRIORITY_DEPTH_BASE - depth)
         }
 
         return priority
@@ -193,7 +194,7 @@ class KWebPage(implementation: IWebPage): IWebPage by implementation {
     }
 
     private fun isValidContentModifyTime(publishTime: Instant): Boolean {
-        return publishTime.isAfter(ai.platon.pulsar.common.config.PulsarConstants.MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(imprecise2DaysAhead)
+        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(imprecise2DaysAhead)
     }
 
     fun updateContentPublishTime(newPublishTime: Instant): Boolean {

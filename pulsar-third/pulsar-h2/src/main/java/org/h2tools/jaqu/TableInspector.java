@@ -15,7 +15,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
-import java.util.*;
 
 import static org.h2tools.jaqu.ValidationRemark.warn;
 

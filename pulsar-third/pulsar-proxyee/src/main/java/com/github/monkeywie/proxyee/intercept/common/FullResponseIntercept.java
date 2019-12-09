@@ -3,7 +3,8 @@ package com.github.monkeywie.proxyee.intercept.common;
 import com.github.monkeywie.proxyee.intercept.HttpProxyIntercept;
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
 import io.netty.channel.Channel;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.ReferenceCountUtil;
 
 public abstract class FullResponseIntercept extends HttpProxyIntercept {

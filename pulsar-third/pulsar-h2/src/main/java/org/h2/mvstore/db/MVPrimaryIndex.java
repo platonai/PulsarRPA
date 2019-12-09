@@ -26,7 +26,6 @@ import org.h2.value.ValueArray;
 import org.h2.value.ValueLong;
 import org.h2.value.ValueNull;
 
-import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 

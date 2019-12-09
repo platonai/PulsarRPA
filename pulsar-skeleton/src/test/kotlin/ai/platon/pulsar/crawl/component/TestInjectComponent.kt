@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.InjectOptions
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
     val opts = InjectOptions(args)
     opts.parseOrExit()
     val context: ApplicationContext = ClassPathXmlApplicationContext(
-            System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION))
+            System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION))
     val conf = context.getBean(MutableConfig::class.java)
     conf.setIfNotEmpty(CapabilityTypes.STORAGE_CRAWL_ID, opts.crawlId)
     var seeds = opts.seeds[0]

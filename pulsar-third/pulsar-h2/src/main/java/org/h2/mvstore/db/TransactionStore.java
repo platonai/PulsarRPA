@@ -5,13 +5,11 @@
  */
 package org.h2.mvstore.db;
 
-import org.h2.mvstore.*;
 import org.h2.mvstore.type.DataType;
 import org.h2.mvstore.type.ObjectDataType;
 import org.h2.util.New;
 
 import java.nio.ByteBuffer;
-import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 

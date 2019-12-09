@@ -1,9 +1,6 @@
 package org.baeldung.spring;
 
-import java.util.Properties;
-
-import javax.sql.DataSource;
-
+import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -19,7 +16,8 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import com.google.common.base.Preconditions;
+import javax.sql.DataSource;
+import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement

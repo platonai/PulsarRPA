@@ -9,7 +9,6 @@ import org.h2.engine.Constants;
 import org.h2.store.fs.FileUtils;
 import org.h2.util.StringUtils;
 
-import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;

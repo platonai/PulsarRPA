@@ -13,7 +13,6 @@ import org.h2.util.StringUtils;
 import javax.naming.Reference;
 import javax.naming.Referenceable;
 import javax.naming.StringRefAddr;
-import javax.sql.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;

@@ -21,9 +21,7 @@ import org.h2.util.MathUtils;
 import org.h2.util.New;
 import org.h2.util.StatementBuilder;
 import org.h2.util.StringUtils;
-import org.h2.value.*;
 
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

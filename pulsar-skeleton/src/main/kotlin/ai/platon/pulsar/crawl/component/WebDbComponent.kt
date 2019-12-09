@@ -18,11 +18,10 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.crawl.component.WebDbComponent
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.WebPageFormatter
@@ -67,7 +66,7 @@ class WebDbComponent(private val webDb: WebDb, private val conf: ImmutableConfig
 
     fun scan(startUrl: String, endUrl: String): DbQueryResult {
         val result = DbQueryResult()
-        val query = DbQuery(conf[CapabilityTypes.STORAGE_CRAWL_ID], PulsarConstants.ALL_BATCHES, startUrl, endUrl)
+        val query = DbQuery(conf[CapabilityTypes.STORAGE_CRAWL_ID], AppConstants.ALL_BATCHES, startUrl, endUrl)
         Params.of("startUrl", startUrl, "endUrl", endUrl).withLogger(LOG).debug(true)
         val iterator = webDb.query(query)
         while (iterator.hasNext()) {

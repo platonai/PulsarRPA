@@ -10,7 +10,6 @@ import org.h2.command.Parser;
 import org.h2.engine.Constants;
 import org.h2.engine.Mode;
 import org.h2.engine.Session;
-import org.h2.expression.*;
 import org.h2.ext.pulsar.ExternalTableInterface;
 import org.h2.message.DbException;
 import org.h2.result.Row;
@@ -19,7 +18,6 @@ import org.h2.schema.Sequence;
 import org.h2.util.DateTimeUtils;
 import org.h2.util.MathUtils;
 import org.h2.util.StringUtils;
-import org.h2.value.*;
 
 import java.sql.ResultSetMetaData;
 import java.util.Arrays;

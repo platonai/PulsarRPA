@@ -80,7 +80,7 @@ class PageParser(
     }
 
     override fun reload(conf: ImmutableConfig) {
-        maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, PulsarConstants.DEFAULT_MAX_PARSE_TIME)
+        maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
         maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
         linkFilter = LinkFilter(crawlFilters, conf)
         if (maxParseTime.seconds > 0) {
@@ -219,10 +219,10 @@ class PageParser(
         }
 
         page.addLiveLink(HypeLink(newUrl))
-        page.metadata[Name.REDIRECT_DISCOVERED] = PulsarConstants.YES_STRING
+        page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
         if (newUrl == page.url) {
             val refreshTime = parseStatus.getArgOrDefault(ParseStatus.REFRESH_TIME, "0").toInt()
-            val reprUrl = URLUtil.chooseRepr(page.url, newUrl, refreshTime < PulsarConstants.PERM_REFRESH_TIME)
+            val reprUrl = URLUtil.chooseRepr(page.url, newUrl, refreshTime < AppConstants.PERM_REFRESH_TIME)
             page.reprUrl = reprUrl
         }
     }

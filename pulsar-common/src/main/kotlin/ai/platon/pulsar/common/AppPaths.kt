@@ -1,8 +1,7 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.config.PulsarConstants
-import com.google.common.net.HostAndPort
 import com.google.common.net.InetAddresses
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -18,11 +17,11 @@ import java.util.*
  */
 object AppPaths {
     @JvmField
-    val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
+    val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @JvmField
-    val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_TMP_DIR)
+    val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @JvmField
-    val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(PulsarConstants.PULSAR_DEFAULT_DATA_DIR)
+    val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(AppConstants.PULSAR_DEFAULT_DATA_DIR)
 
     @JvmField
     val CACHE_DIR = get(TMP_DIR, "cache")
@@ -69,7 +68,7 @@ object AppPaths {
     }
 
     fun getTmp(first: String, vararg more: String): Path {
-        return Paths.get(tmpDirStr, first.removePrefix(homeDirStr), *more)
+        return Paths.get(tmpDirStr, first.removePrefix(tmpDirStr), *more)
     }
 
     fun fromUri(url: String, suffix: String = ""): String {

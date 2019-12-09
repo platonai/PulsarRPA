@@ -21,9 +21,7 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.config.*
-import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.CrawlFilter
-import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.crawl.signature.SignatureComparator
@@ -190,7 +188,7 @@ class UpdateComponent(
                     fetchSchedule.forceRefetch(page, false)
                 }
 
-                if (modifiedTime.isBefore(PulsarConstants.TCP_IP_STANDARDIZED_TIME)) {
+                if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
                     metricsCounters.increase(Counter.rBadModTime)
                     pulsarMetrics.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,

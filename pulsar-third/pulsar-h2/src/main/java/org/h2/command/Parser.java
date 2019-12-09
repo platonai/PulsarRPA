@@ -10,27 +10,20 @@ package org.h2.command;
 
 import org.h2.api.ErrorCode;
 import org.h2.api.Trigger;
-import org.h2.command.ddl.*;
 import org.h2.command.dml.Set;
-import org.h2.command.dml.*;
 import org.h2.constraint.ConstraintReferential;
-import org.h2.engine.*;
-import org.h2.expression.*;
 import org.h2.ext.pulsar.ExternalTableInterface;
 import org.h2.index.Index;
 import org.h2.message.DbException;
 import org.h2.result.SortOrder;
 import org.h2.schema.Schema;
 import org.h2.schema.Sequence;
-import org.h2.table.*;
 import org.h2.table.TableFilter.TableFilterVisitor;
 import org.h2.util.New;
 import org.h2.util.StringUtils;
-import org.h2.value.*;
 
 import java.nio.charset.Charset;
 import java.text.Collator;
-import java.util.*;
 
 import static java.lang.System.out;
 import static org.h2.api.ErrorCode.TABLE_OR_VIEW_NOT_FOUND_1;

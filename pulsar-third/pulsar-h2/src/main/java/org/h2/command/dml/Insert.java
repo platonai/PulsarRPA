@@ -13,7 +13,6 @@ import org.h2.command.Prepared;
 import org.h2.engine.Right;
 import org.h2.engine.Session;
 import org.h2.engine.UndoLogRecord;
-import org.h2.expression.*;
 import org.h2.index.Index;
 import org.h2.message.DbException;
 import org.h2.mvstore.db.MVPrimaryIndex;

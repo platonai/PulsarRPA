@@ -11,7 +11,6 @@ import org.h2.util.StringUtils;
 import org.h2tools.jaqu.Db;
 import org.h2tools.jaqu.DbInspector;
 
-import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

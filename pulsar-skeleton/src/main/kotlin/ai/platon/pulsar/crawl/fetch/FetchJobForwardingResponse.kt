@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.HttpHeaders
-import ai.platon.pulsar.common.config.PulsarConstants.FETCH_PRIORITY_DEFAULT
+import ai.platon.pulsar.common.config.AppConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.MultiMetadata

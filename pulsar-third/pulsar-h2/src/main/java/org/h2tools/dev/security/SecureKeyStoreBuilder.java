@@ -8,7 +8,6 @@ package org.h2tools.dev.security;
 import org.h2.security.CipherFactory;
 import org.h2.util.StringUtils;
 
-import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.Enumeration;

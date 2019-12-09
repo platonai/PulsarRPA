@@ -1,11 +1,11 @@
 package org.jsoup;
 
+import org.jsoup.helper.DataUtil;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
 import org.jsoup.safety.Cleaner;
 import org.jsoup.safety.Whitelist;
-import org.jsoup.helper.DataUtil;
-import org.jsoup.helper.HttpConnection;
 
 import java.io.File;
 import java.io.IOException;

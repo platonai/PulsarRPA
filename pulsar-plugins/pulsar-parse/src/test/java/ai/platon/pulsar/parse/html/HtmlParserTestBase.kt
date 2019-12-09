@@ -18,8 +18,8 @@
  */
 package ai.platon.pulsar.parse.html
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -57,7 +57,7 @@ open class HtmlParserTestBase {
                 + encodingTestKeywords + "</title>\n"
                 + "<meta name=\"keywords\" content=\"" + encodingTestKeywords + "\"/>\n"
                 + "</head>\n<body>" + encodingTestBody + encodingTestBody2 + "</body>\n</html>")
-        const val exampleUrl = PulsarConstants.EXAMPLE_URL
+        const val exampleUrl = AppConstants.EXAMPLE_URL
         var encodingTestPages = arrayOf(arrayOf(
                 "HTML4, utf-8, meta http-equiv, no quotes",
                 "utf-8",

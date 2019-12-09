@@ -1,13 +1,12 @@
 package org.baeldung.persistence.service.common;
 
-import java.io.Serializable;
-import java.util.List;
-
+import com.google.common.collect.Lists;
 import org.baeldung.persistence.IOperations;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.Lists;
+import java.io.Serializable;
+import java.util.List;
 
 @Transactional
 public abstract class AbstractService<T extends Serializable> implements IOperations<T> {

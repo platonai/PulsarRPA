@@ -21,7 +21,6 @@ import org.h2.store.FileStore;
 import org.h2.store.LobStorageFrontend;
 import org.h2.store.LobStorageInterface;
 import org.h2.store.fs.FileUtils;
-import org.h2.util.*;
 import org.h2.value.CompareMode;
 import org.h2.value.Transfer;
 import org.h2.value.Value;

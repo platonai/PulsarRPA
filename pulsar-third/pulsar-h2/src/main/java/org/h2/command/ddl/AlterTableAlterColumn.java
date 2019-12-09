@@ -11,7 +11,6 @@ import org.h2.command.Parser;
 import org.h2.command.Prepared;
 import org.h2.constraint.Constraint;
 import org.h2.constraint.ConstraintReferential;
-import org.h2.engine.*;
 import org.h2.expression.Expression;
 import org.h2.expression.ExpressionVisitor;
 import org.h2.index.Index;

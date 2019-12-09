@@ -7,10 +7,7 @@ package org.h2.tools;
 
 import org.h2.engine.Constants;
 import org.h2.server.web.ConnectionInfo;
-import org.h2.util.*;
 
-import java.io.*;
-import java.sql.*;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;

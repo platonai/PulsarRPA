@@ -18,7 +18,6 @@
 package ai.platon.pulsar.crawl.protocol;
 
 import ai.platon.pulsar.common.config.Configurable;
-import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.persist.WebPage;
 import crawlercommons.robots.BaseRobotRules;

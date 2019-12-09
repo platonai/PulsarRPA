@@ -14,7 +14,6 @@ import org.h2.message.Trace;
 import org.h2.schema.Schema;
 import org.h2.schema.SchemaObjectBase;
 import org.h2.table.Table;
-import org.h2.util.*;
 import org.h2.value.DataType;
 import org.h2.value.Value;
 import org.h2.value.ValueArray;

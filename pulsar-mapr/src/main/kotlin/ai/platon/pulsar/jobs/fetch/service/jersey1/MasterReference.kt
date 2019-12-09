@@ -1,11 +1,11 @@
 package ai.platon.pulsar.jobs.fetch.service.jersey1
 
 import ai.platon.pulsar.common.NetUtil.testHttpNetwork
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_PULSAR_MASTER_HOST
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_PULSAR_MASTER_PORT
 import ai.platon.pulsar.common.config.CapabilityTypes.PULSAR_MASTER_HOST
 import ai.platon.pulsar.common.config.CapabilityTypes.PULSAR_MASTER_PORT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_PULSAR_MASTER_HOST
-import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_PULSAR_MASTER_PORT
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.sun.jersey.api.client.Client

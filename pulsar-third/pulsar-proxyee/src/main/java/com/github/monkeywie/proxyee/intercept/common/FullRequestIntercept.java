@@ -4,7 +4,6 @@ import com.github.monkeywie.proxyee.intercept.HttpProxyIntercept;
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.codec.http.*;
 
 public abstract class FullRequestIntercept extends HttpProxyIntercept {
 

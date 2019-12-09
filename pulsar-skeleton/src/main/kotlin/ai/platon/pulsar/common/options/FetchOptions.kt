@@ -3,10 +3,10 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
@@ -71,7 +71,7 @@ class FetchOptions(conf: ImmutableConfig) {
             jc.usage()
         } else {
             if (batchId.isEmpty()) {
-                batchId.add(AppFiles.readBatchIdOrDefault(PulsarConstants.ALL_BATCHES))
+                batchId.add(AppFiles.readBatchIdOrDefault(AppConstants.ALL_BATCHES))
             }
             indexerUrl = StringUtils.stripEnd(indexerUrl, "/")
             val indexerHost = URLUtil.getHostName(indexerUrl)

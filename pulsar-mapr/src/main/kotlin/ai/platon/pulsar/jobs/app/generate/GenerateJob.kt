@@ -18,33 +18,25 @@ package ai.platon.pulsar.jobs.app.generate
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppFiles.readLastGeneratedRows
-import ai.platon.pulsar.common.AppFiles.writeBatchId
 import ai.platon.pulsar.common.AppFiles.writeLastGeneratedRows
 import ai.platon.pulsar.common.URLUtil.GroupMode
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.GenerateOptions
 import ai.platon.pulsar.jobs.JobEnv
-import ai.platon.pulsar.jobs.app.fetch.FetchJob
-import ai.platon.pulsar.jobs.common.JobUtils
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.common.URLPartitioner.SelectorEntryPartitioner
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
 import ai.platon.pulsar.jobs.core.PulsarJob
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import com.beust.jcommander.JCommander
-import com.beust.jcommander.Parameter
-import com.beust.jcommander.ParameterException
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
-import java.time.Duration
-import java.util.*
 import kotlin.system.exitProcess
 
-class GenerateJob : AppContextAwareJob {
+class GenerateJob : AppContextAwareJob() {
     companion object {
         val LOG = LoggerFactory.getLogger(GenerateJob::class.java)
         private val unrelatedFields = arrayOf(
@@ -61,11 +53,6 @@ class GenerateJob : AppContextAwareJob {
 
     private lateinit var options: GenerateOptions
 
-    constructor() {}
-    constructor(conf: ImmutableConfig) {
-        setJobConf(conf)
-    }
-
     /**
      * Transform arguments to configuration
      * */
@@ -73,11 +60,11 @@ class GenerateJob : AppContextAwareJob {
         // A pseudo current time can be passed to tell pulsar the pages should be updated
         val pseudoCurrTime = params.getLong(PulsarParams.ARG_CURTIME, startTime)
         val round = jobConf.getInt(CapabilityTypes.CRAWL_ROUND, 1)
-        val maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, PulsarConstants.DISTANCE_INFINITE)
+        val maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
         val lastGeneratedRows = readLastGeneratedRows()
         var reGenerateSeeds = options.reGenerateSeeds
         if (!reGenerateSeeds) {
-            reGenerateSeeds = RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_FORCE_GENERATE_SEEDS)
+            reGenerateSeeds = RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_FORCE_GENERATE_SEEDS)
         }
         val groupMode = jobConf.getEnum(CapabilityTypes.GENERATE_COUNT_MODE, GroupMode.BY_HOST)
 
@@ -142,9 +129,9 @@ class GenerateJob : AppContextAwareJob {
     private fun printInfo() {
         val info = ("Supported File Commands : \n"
                 + "1. force generate and re-fetch seeds next round : \n"
-                + "echo " + PulsarConstants.CMD_FORCE_GENERATE_SEEDS + " > " + AppPaths.PATH_LOCAL_COMMAND + "\n"
+                + "echo " + AppConstants.CMD_FORCE_GENERATE_SEEDS + " > " + AppPaths.PATH_LOCAL_COMMAND + "\n"
                 + "2. ban a url : \n"
-                + "echo \"" + PulsarConstants.EXAMPLE_URL + "\" >> " + AppPaths.PATH_BANNED_URLS + "\n")
+                + "echo \"" + AppConstants.EXAMPLE_URL + "\" >> " + AppPaths.PATH_BANNED_URLS + "\n")
         LOG.info(info)
     }
 

@@ -19,8 +19,6 @@ import org.h2.table.RegularTable;
 import org.h2.table.TableFilter;
 import org.h2.util.New;
 
-import java.util.*;
-
 /**
  * The scan index is not really an 'index' in the strict sense, because it can
  * not be used for direct lookup. It can only be used to iterate over all rows

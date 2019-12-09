@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.persist.experimental
 
-import ai.platon.pulsar.common.config.PulsarConstants.*
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GParseStatus
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus

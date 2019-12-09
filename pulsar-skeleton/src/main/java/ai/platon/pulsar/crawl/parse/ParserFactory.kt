@@ -22,14 +22,8 @@ import ai.platon.pulsar.common.MimeUtil
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.parse.ParserNotFound
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.function.BinaryOperator
-import java.util.function.Consumer
-import java.util.function.Function
-import java.util.function.Predicate
-import java.util.stream.Collectors
 
 /**
  * Creates [Parser].

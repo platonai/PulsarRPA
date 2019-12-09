@@ -1,17 +1,12 @@
 package org.jsoup.select;
 
-import org.jsoup.internal.StringUtil;
 import org.jsoup.helper.Validate;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.FormElement;
 import org.jsoup.nodes.Node;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  A list of {@link Element}s, with methods that act on every element in the list.

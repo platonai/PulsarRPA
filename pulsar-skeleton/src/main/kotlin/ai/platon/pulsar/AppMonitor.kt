@@ -2,8 +2,8 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.net.browser.WebDriverPool
 import ai.platon.pulsar.proxy.InternalProxyServer
@@ -103,7 +103,7 @@ class AppMonitor(
             }
 
             // check local file command
-            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_PROXY_POOL_DUMP)) {
+            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_PROXY_POOL_DUMP)) {
                 proxyPool.dump()
             }
         }

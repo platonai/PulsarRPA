@@ -40,8 +40,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static ai.platon.pulsar.common.config.PulsarConstants.SHORTEST_VALID_URL;
-import static ai.platon.pulsar.common.config.PulsarConstants.TOY_STORE_CLASS;
+import static ai.platon.pulsar.common.config.AppConstants.SHORTEST_VALID_URL;
+import static ai.platon.pulsar.common.config.AppConstants.TOY_STORE_CLASS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 

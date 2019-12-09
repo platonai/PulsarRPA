@@ -14,7 +14,6 @@ import org.h2.table.Column;
 import org.h2.tools.SimpleResultSet;
 import org.h2.util.MathUtils;
 import org.h2.util.StatementBuilder;
-import org.h2.value.*;
 
 import java.util.ArrayList;
 

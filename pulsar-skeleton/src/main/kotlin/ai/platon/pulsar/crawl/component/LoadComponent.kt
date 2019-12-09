@@ -4,13 +4,11 @@ import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls.isValidUrl
 import ai.platon.pulsar.common.Urls.splitUrlArgs
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
-import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -18,7 +16,6 @@ import ai.platon.pulsar.persist.WebPageFormatter
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.metadata.Name
 import org.apache.avro.util.Utf8
-import org.apache.commons.collections4.CollectionUtils
 import org.apache.hadoop.classification.InterfaceStability.Evolving
 import org.apache.hadoop.classification.InterfaceStability.Unstable
 import org.slf4j.LoggerFactory
@@ -27,8 +24,6 @@ import java.net.URL
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.Consumer
-import java.util.function.Function
 import java.util.stream.Collectors
 
 /**
@@ -287,9 +282,9 @@ class LoadComponent(
     }
 
     private fun filterUrlToNull(url: String): String? {
-        if (url.length <= PulsarConstants.SHORTEST_VALID_URL_LENGTH
-                || url.contains(PulsarConstants.NIL_PAGE_URL)
-                || url.contains(PulsarConstants.EXAMPLE_URL)) {
+        if (url.length <= AppConstants.SHORTEST_VALID_URL_LENGTH
+                || url.contains(AppConstants.NIL_PAGE_URL)
+                || url.contains(AppConstants.EXAMPLE_URL)) {
             return null
         }
         if (globalFetchingUrls.contains(url)) {
@@ -330,7 +325,7 @@ class LoadComponent(
 
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
-        if (lastFetchTime.isBefore(PulsarConstants.TCP_IP_STANDARDIZED_TIME)) {
+        if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
             LOG.warn("Invalid last fetch time: {}, last status: {}", lastFetchTime, page.protocolStatus)
         }
 

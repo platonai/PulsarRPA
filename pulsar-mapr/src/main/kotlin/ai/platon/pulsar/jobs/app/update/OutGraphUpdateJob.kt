@@ -25,11 +25,7 @@ import ai.platon.pulsar.persist.graph.GraphGroupKey.*
 import ai.platon.pulsar.persist.io.WebGraphWritable
 import kotlin.system.exitProcess
 
-class OutGraphUpdateJob: WebGraphUpdateJob {
-    constructor() {}
-    constructor(conf: ImmutableConfig) {
-        setJobConf(conf)
-    }
+class OutGraphUpdateJob: WebGraphUpdateJob() {
 
     public override fun initJob() {
         // Partition by {url}, sort by {url,score} and group by {url}.
@@ -37,6 +33,7 @@ class OutGraphUpdateJob: WebGraphUpdateJob {
         currentJob.partitionerClass = UrlOnlyPartitioner::class.java
         currentJob.setSortComparatorClass(GraphKeyComparator::class.java)
         currentJob.setGroupingComparatorClass(UrlOnlyComparator::class.java)
+
         // currentJob.setCombinerClass(OutGraphUpdateCombiner.class);
         // currentJob.setCombinerKeyGroupingComparatorClass(UrlOnlyComparator.class);
         val fields = getFields(currentJob)

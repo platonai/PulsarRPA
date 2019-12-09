@@ -2,10 +2,10 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.WeakPageIndexer
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -22,7 +22,7 @@ class InjectComponent(
         val webDb: WebDb,
         val conf: ImmutableConfig
 ) : Parameterized, AutoCloseable {
-    private val seedIndexer: WeakPageIndexer = WeakPageIndexer(PulsarConstants.SEED_HOME_URL, webDb)
+    private val seedIndexer: WeakPageIndexer = WeakPageIndexer(AppConstants.SEED_HOME_URL, webDb)
     private val closed = AtomicBoolean(false)
 
     override fun getParams(): Params {
@@ -100,7 +100,7 @@ class InjectComponent(
     }
 
     fun report(): String {
-        val seedHome = webDb.getOrNil(PulsarConstants.SEED_PAGE_1_URL)
+        val seedHome = webDb.getOrNil(AppConstants.SEED_PAGE_1_URL)
         if (seedHome.isNil) {
             val count = seedHome.liveLinks.size
             return "Total " + count + " seeds in store " + webDb.schemaName

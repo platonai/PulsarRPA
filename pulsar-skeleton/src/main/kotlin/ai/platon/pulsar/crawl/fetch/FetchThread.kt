@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl.fetch
 import ai.platon.pulsar.common.ReducerContext
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MODE
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.data.PoolId

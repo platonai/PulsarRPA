@@ -37,11 +37,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.system.exitProcess
 
-class InjectJob : AppContextAwareJob {
-    constructor() {}
-    constructor(conf: ImmutableConfig) {
-        setJobConf(conf)
-    }
+class InjectJob : AppContextAwareJob() {
 
     @Throws(Exception::class)
     public override fun setup(params: Params) {

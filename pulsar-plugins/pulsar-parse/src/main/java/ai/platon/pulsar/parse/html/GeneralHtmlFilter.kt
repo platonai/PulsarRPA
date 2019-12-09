@@ -42,7 +42,6 @@ class GeneralHtmlFilter(
     /**
      * Extract all fields in the page
      */
-    @Throws(IOException::class)
     override fun filter(parseContext: ParseContext) {
         val page = parseContext.page
         val parseResult = parseContext.parseResult

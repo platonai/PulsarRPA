@@ -5,8 +5,6 @@
  */
 package org.h2tools.dev.cache;
 
-import java.util.*;
-
 /**
  * A scan resistant cache. It is meant to cache objects that are relatively
  * costly to acquire, for example file content.

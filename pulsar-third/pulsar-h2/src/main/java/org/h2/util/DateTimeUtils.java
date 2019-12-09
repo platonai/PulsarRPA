@@ -8,7 +8,6 @@ package org.h2.util;
 
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
-import org.h2.value.*;
 
 import java.sql.Date;
 import java.sql.Time;

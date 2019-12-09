@@ -19,8 +19,6 @@
 package ai.platon.pulsar.crawl.parse
 
 import com.google.common.collect.Lists
-import java.util.*
-import kotlin.collections.LinkedHashMap
 
 /**
  * This class represents a natural ordering for which parsing plugin should get

@@ -9,11 +9,8 @@ import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import com.google.common.collect.Lists
-import com.google.common.collect.Maps
 import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.StringUtils
-import org.springframework.stereotype.Component
 import java.util.*
 import java.util.concurrent.*
 import java.util.stream.Collectors

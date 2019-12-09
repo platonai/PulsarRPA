@@ -16,7 +16,6 @@
     </bean>
 
     <bean id="htmlParser" class="ai.platon.pulsar.parse.html.HtmlParser">
-        <constructor-arg ref="webDb"/>
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>

@@ -22,7 +22,6 @@ import ai.platon.pulsar.boilerpipe.document.TextDocument
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.ParseFilter
 import ai.platon.pulsar.crawl.parse.html.ParseContext
@@ -30,7 +29,6 @@ import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.PageCategory
 import org.apache.commons.logging.LogFactory
-import java.util.*
 
 /**
  * Parse html document into fields

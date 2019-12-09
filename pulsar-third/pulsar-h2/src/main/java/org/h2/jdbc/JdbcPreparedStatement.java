@@ -15,13 +15,12 @@ import org.h2.tools.SimpleResultSet;
 import org.h2.util.DateTimeUtils;
 import org.h2.util.IOUtils;
 import org.h2.util.New;
-import org.h2.value.*;
 
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;

@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
-import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.*

@@ -1,16 +1,15 @@
 package org.baeldung.spring;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.context.request.RequestContextListener;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 /**
  * Main Application Class - uses Spring Boot. Just run this as a normal Java

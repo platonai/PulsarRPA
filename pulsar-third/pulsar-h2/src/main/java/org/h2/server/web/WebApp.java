@@ -16,15 +16,10 @@ import org.h2.engine.SysProperties;
 import org.h2.jdbc.JdbcSQLException;
 import org.h2.message.DbException;
 import org.h2.security.SHA256;
-import org.h2.tools.*;
-import org.h2.util.*;
 
-import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.sql.*;
-import java.util.*;
 
 /**
  * For each connection to a session, an object of this class is created.

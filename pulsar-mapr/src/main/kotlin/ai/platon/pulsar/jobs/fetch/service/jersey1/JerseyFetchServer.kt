@@ -1,8 +1,8 @@
 package ai.platon.pulsar.jobs.fetch.service.jersey1
 
 import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.AppConstants.JOB_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.JOB_CONTEXT_CONFIG_LOCATION
 import ai.platon.pulsar.jobs.fetch.service.FetchResource
 import ai.platon.pulsar.jobs.fetch.service.FetchServer
 import com.sun.jersey.api.container.grizzly2.GrizzlyServerFactory

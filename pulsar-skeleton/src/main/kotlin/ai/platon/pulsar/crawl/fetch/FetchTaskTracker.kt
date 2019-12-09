@@ -2,10 +2,13 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.AppConstants.SEED_HOME_URL
+import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
-import ai.platon.pulsar.common.config.PulsarConstants.SEED_HOME_URL
-import ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode

@@ -16,7 +16,6 @@ import org.h2.util.New;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
-import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 

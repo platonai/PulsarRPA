@@ -10,8 +10,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class HttpProxyClientHandle extends ChannelInboundHandlerAdapter {
 

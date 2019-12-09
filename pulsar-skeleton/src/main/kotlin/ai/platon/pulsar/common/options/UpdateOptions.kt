@@ -1,12 +1,11 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import com.beust.jcommander.Parameter
-import java.util.ArrayList
+import java.util.*
 
 /**
  * Command options for [WebGraphUpdateJob].

@@ -10,7 +10,6 @@ import org.h2.engine.Mode;
 import org.h2.engine.SysProperties;
 import org.h2.message.DbException;
 import org.h2.mvstore.DataUtils;
-import org.h2.store.*;
 import org.h2.store.fs.FileUtils;
 import org.h2.table.Column;
 import org.h2.util.IOUtils;
@@ -18,7 +17,6 @@ import org.h2.util.MathUtils;
 import org.h2.util.StringUtils;
 import org.h2.util.Utils;
 
-import java.io.*;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 

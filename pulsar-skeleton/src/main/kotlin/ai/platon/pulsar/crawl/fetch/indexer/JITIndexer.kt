@@ -3,10 +3,12 @@ package ai.platon.pulsar.crawl.fetch.indexer
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
+import ai.platon.pulsar.common.config.Configurable
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.JobInitialized
-import ai.platon.pulsar.crawl.fetch.FetchMonitor
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.index.IndexWriters
@@ -29,8 +31,8 @@ class JITIndexer(
         private val scoringFilters: ScoringFilters,
         private val indexingFilters: IndexingFilters,
         private val indexWriters: IndexWriters,
-        private val conf: ImmutableConfig
-) : Parameterized, Configurable, JobInitialized, AutoCloseable {
+        val conf: ImmutableConfig
+) : Parameterized, JobInitialized, AutoCloseable {
 
     private val id: Int = instanceSequence.incrementAndGet()
 
@@ -60,10 +62,6 @@ class JITIndexer(
             this.indexDocumentBuilder = IndexDocument.Builder(conf).with(indexingFilters).with(scoringFilters)
             this.indexWriters.open()
         }
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return conf
     }
 
     override fun getParams(): Params {
@@ -112,9 +110,13 @@ class JITIndexer(
     }
 
     override fun close() {
+        if (!isEnabled) {
+            return
+        }
+
         LOG.info("[Destruction] Closing JITIndexer #$id ...")
 
-        indexThreads.forEach{ it.exitAndJoin() }
+        indexThreads.forEach { it.exitAndJoin() }
 
         try {
             var fetchTask = consume()

@@ -1,11 +1,11 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants.*
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer

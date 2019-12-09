@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common;
 
+import ai.platon.pulsar.common.config.AppConstants;
 import ai.platon.pulsar.common.config.CapabilityTypes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.common.config.PulsarConstants;
 import ai.platon.pulsar.persist.*;
 import ai.platon.pulsar.persist.metadata.PageCategory;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +60,7 @@ public class MetricsSystem implements AutoCloseable {
         this.conf = conf;
         this.hostname = NetUtil.getHostname();
         this.jobName = conf.get(CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm"));
-        this.urlPrefix = PulsarConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimeUtil.now("yyyy/MM/dd") + "/" + jobName + "/" + hostname;
+        this.urlPrefix = AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimeUtil.now("yyyy/MM/dd") + "/" + jobName + "/" + hostname;
         this.reportSuffix = jobName;
         this.dayOfWeek = String.valueOf(LocalDate.now().getDayOfWeek().getValue());
 
@@ -74,7 +74,7 @@ public class MetricsSystem implements AutoCloseable {
         }
 
         this.webDb = webDb;
-        this.weakIndexer = new WeakPageIndexer(PulsarConstants.CRAWL_LOG_HOME_URL, webDb);
+        this.weakIndexer = new WeakPageIndexer(AppConstants.CRAWL_LOG_HOME_URL, webDb);
     }
 
     public WebDb getWebDb() {

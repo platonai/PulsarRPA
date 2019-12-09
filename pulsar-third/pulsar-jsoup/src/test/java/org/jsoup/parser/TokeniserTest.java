@@ -1,19 +1,14 @@
 package org.jsoup.parser;
 
-import java.io.UnsupportedEncodingException;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Comment;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.nodes.TextNode;
+import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+
 import static org.jsoup.parser.CharacterReader.maxBufferLen;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TokeniserTest {
     @Test

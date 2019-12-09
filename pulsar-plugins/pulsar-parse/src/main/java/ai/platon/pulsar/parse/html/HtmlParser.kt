@@ -18,13 +18,11 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.EncodingDetector
-import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
@@ -34,7 +32,6 @@ import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.ParseStatus
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.apache.html.dom.HTMLDocumentImpl
@@ -47,23 +44,19 @@ import org.xml.sax.SAXException
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.function.Consumer
 
 /**
  * Html parser
  */
 class HtmlParser(
-        private val webDb: WebDb,
         private val crawlFilters: CrawlFilters,
         private val parseFilters: ParseFilters,
         private val conf: ImmutableConfig
 ) : Parser {
     private val parserImpl = conf[CapabilityTypes.PARSE_HTML_IMPL, "neko"]
     private val defaultCharEncoding = conf[CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8"]
-    private val cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, PulsarConstants.CACHING_FORBIDDEN_CONTENT]
+    private val cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT]
     private val primerParser = PrimerParser(conf)
-    private val encodingDetector = EncodingDetector(conf)
-    private val metricsSystem = MetricsSystem(webDb, conf)
 
     init {
         Parser.LOG.info(params.formatAsLine())
@@ -81,26 +74,7 @@ class HtmlParser(
 
     override fun parse(page: WebPage): ParseResult {
         return try { // The base url is set by protocol. Might be different from url if the request redirected.
-            val url = page.url
-            val baseUrl = page.baseUrl
-            val baseURL = URL(baseUrl)
-            if (page.encoding == null) {
-                primerParser.detectEncoding(page)
-            }
-            val inputSource = page.contentAsSaxInputSource
-            val documentFragment = parse(baseUrl, inputSource)
-            val metaTags = parseMetaTags(baseURL, documentFragment, page)
-            val parseResult = initParseResult(metaTags)
-            if (parseResult.isFailed) {
-                return parseResult
-            }
-            val parseContext = ParseContext(page, metaTags, documentFragment, parseResult)
-            parseLinks(baseURL, parseContext)
-            page.pageTitle = primerParser.getPageTitle(documentFragment)
-            page.pageText = primerParser.getPageText(documentFragment)
-            page.pageModel.clear()
-            parseFilters.filter(parseContext)
-            parseContext.parseResult
+            doParse(page)
         } catch (e: MalformedURLException) {
             failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
         } catch (e: Exception) {
@@ -108,47 +82,76 @@ class HtmlParser(
         }
     }
 
+    @Throws(MalformedURLException::class, Exception::class)
+    private fun doParse(page: WebPage): ParseResult {
+        val baseUrl = page.baseUrl
+        val baseURL = URL(baseUrl)
+        if (page.encoding == null) {
+            primerParser.detectEncoding(page)
+        }
+
+        val documentFragment = parse(baseUrl, page.contentAsSaxInputSource)
+        val metaTags = parseMetaTags(baseURL, documentFragment, page)
+        val parseResult = initParseResult(metaTags)
+        if (parseResult.isFailed) {
+            return parseResult
+        }
+
+        val parseContext = ParseContext(page, metaTags, documentFragment, parseResult)
+        parseLinks(baseURL, parseContext)
+        page.pageTitle = primerParser.getPageTitle(documentFragment)
+        page.pageText = primerParser.getPageText(documentFragment)
+
+        page.pageModel.clear()
+        parseFilters.filter(parseContext)
+
+        return parseContext.parseResult
+    }
+
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
         val metaTags = HTMLMetaTags(docRoot, baseURL)
         val tags = metaTags.generalTags
         val metadata = page.metadata
-        tags.names().forEach(Consumer { name: String -> metadata["meta_$name"] = tags[name] })
+        tags.names().forEach { name: String -> metadata["meta_$name"] = tags[name] }
         if (metaTags.noCache) {
             metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
         return metaTags
     }
 
-    private fun parseLinks(baseURL: URL, parseContext: ParseContext) {
-        var baseURL: URL? = baseURL
+    private fun parseLinks(baseURLHint: URL, parseContext: ParseContext) {
+        var baseURL: URL? = baseURLHint
         var url = parseContext.url
         url = crawlFilters.normalizeToEmpty(url)
         if (url.isEmpty()) {
             return
         }
-        val page = parseContext.page
-        val metaTags = parseContext.metaTags
+
         val docRoot = parseContext.documentFragment
         val parseResult = parseContext.parseResult
-        if (!metaTags.noFollow) { // okay to follow links
+        if (!parseContext.metaTags.noFollow) {
+            // okay to follow links
             val baseURLFromTag = primerParser.getBaseURL(docRoot)
             baseURL = baseURLFromTag ?: baseURL
             primerParser.getLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
         }
-        page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
-        page.variables[PulsarParams.VAR_LINKS_COUNT] = parseResult.hypeLinks.size
+
+        parseContext.page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
+        parseContext.page.variables[PulsarParams.VAR_LINKS_COUNT] = parseResult.hypeLinks.size
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
         if (metaTags.noIndex) {
             return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX)
         }
+
         val parseResult = ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK)
         if (metaTags.refresh) {
             parseResult.minorCode = ParseStatus.SUCCESS_REDIRECT
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
             parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
+
         return parseResult
     }
 
@@ -181,6 +184,7 @@ class HtmlParser(
             parser.setFeature("http://cyberneko.org/html/features/report-errors", Parser.LOG.isTraceEnabled)
         } catch (ignored: SAXException) {
         }
+
         // convert Document to DocumentFragment
         val doc = HTMLDocumentImpl()
         doc.errorChecking = false
@@ -188,6 +192,7 @@ class HtmlParser(
         var frag = doc.createDocumentFragment()
         parser.parse(input, frag)
         res.appendChild(frag)
+
         try {
             while (true) {
                 frag = doc.createDocumentFragment()

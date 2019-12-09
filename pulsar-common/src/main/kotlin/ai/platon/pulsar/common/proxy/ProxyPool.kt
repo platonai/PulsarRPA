@@ -1,10 +1,13 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_CAPACITY
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_POLLING_INTERVAL
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.vendor.ProxyVendorFactory
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
@@ -358,21 +361,18 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
 
-        val BASE_DIR = AppPaths.get("proxy")
+        val BASE_DIR = AppPaths.getTmp("proxy")
         val ENABLED_PROVIDER_DIR = AppPaths.get(BASE_DIR, "providers-enabled")
         val AVAILABLE_PROVIDER_DIR = AppPaths.get(BASE_DIR, "providers-available")
         val ENABLED_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-enabled")
         val AVAILABLE_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-available")
         val ARCHIVE_DIR = AppPaths.get(BASE_DIR, "proxies-archived")
-        val INIT_PROXY_PROVIDER_FILES = arrayOf(PulsarConstants.TMP_DIR, PulsarConstants.HOME_DIR)
+        val INIT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.HOME_DIR)
                 .map { Paths.get(it, "proxy.providers.txt") }
 
         init {
-            Files.createDirectories(ENABLED_PROVIDER_DIR)
-            Files.createDirectories(AVAILABLE_PROVIDER_DIR)
-            Files.createDirectories(ENABLED_PROXY_DIR)
-            Files.createDirectories(AVAILABLE_PROXY_DIR)
-            Files.createDirectories(ARCHIVE_DIR)
+            arrayOf(ENABLED_PROVIDER_DIR, AVAILABLE_PROVIDER_DIR, ENABLED_PROXY_DIR, AVAILABLE_PROXY_DIR, ARCHIVE_DIR)
+                    .forEach { Files.createDirectories(it) }
 
             INIT_PROXY_PROVIDER_FILES.forEach {
                 if (Files.exists(it)) {
@@ -380,7 +380,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
                 }
             }
 
-            log.info(toString())
+            log.info("Proxy base dir: $BASE_DIR")
         }
 
         fun hasEnabledProvider(): Boolean {

@@ -51,7 +51,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import static ai.platon.pulsar.common.config.PulsarConstants.*;
+import static ai.platon.pulsar.common.config.AppConstants.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 /**

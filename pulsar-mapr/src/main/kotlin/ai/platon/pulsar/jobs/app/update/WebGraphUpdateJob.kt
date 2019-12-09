@@ -19,12 +19,10 @@ package ai.platon.pulsar.jobs.app.update
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.UpdateOptions
-import ai.platon.pulsar.jobs.app.fetch.FetchJob
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.hadoop.mapreduce.Job
 import org.slf4j.LoggerFactory
-import java.util.*
 
 abstract class WebGraphUpdateJob : AppContextAwareJob() {
     companion object {

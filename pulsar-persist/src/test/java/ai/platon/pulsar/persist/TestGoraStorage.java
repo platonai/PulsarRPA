@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static ai.platon.pulsar.common.config.AppConstants.EXAMPLE_URL;
 import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
-import static ai.platon.pulsar.common.config.PulsarConstants.EXAMPLE_URL;
 import static org.junit.Assert.*;
 
 /**

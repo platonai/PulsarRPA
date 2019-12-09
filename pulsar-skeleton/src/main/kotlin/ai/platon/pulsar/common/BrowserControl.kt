@@ -1,9 +1,9 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.*
 import com.google.gson.GsonBuilder
 import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.chrome.ChromeOptions

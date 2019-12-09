@@ -1,16 +1,5 @@
 package org.baeldung.persistence.service;
 
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-
-import java.io.Serializable;
-import java.util.List;
-
 import org.baeldung.persistence.IOperations;
 import org.baeldung.persistence.model.Foo;
 import org.baeldung.util.IDUtil;
@@ -18,6 +7,14 @@ import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.dao.DataAccessException;
+
+import java.io.Serializable;
+import java.util.List;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.*;
 
 public abstract class AbstractServicePersistenceIntegrationTest<T extends Serializable> {
 

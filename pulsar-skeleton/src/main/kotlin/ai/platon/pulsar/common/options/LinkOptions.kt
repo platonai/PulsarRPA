@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import com.beust.jcommander.Parameter
-import org.apache.commons.lang3.tuple.Pair
 import java.util.*
 import java.util.function.Predicate
 

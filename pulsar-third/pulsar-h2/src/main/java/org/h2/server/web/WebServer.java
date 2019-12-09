@@ -11,7 +11,6 @@ import org.h2.message.DbException;
 import org.h2.server.Service;
 import org.h2.server.ShutdownHandler;
 import org.h2.store.fs.FileUtils;
-import org.h2.util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +21,6 @@ import java.net.Socket;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Map.Entry;
 
 /**

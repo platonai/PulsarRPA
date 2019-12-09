@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.parse.tika
 
-import org.apache.tika.exception.TikaException
 import org.apache.tika.mime.MediaType
 import org.apache.tika.mime.MimeTypes
 import org.apache.tika.mime.MimeTypesFactory
@@ -27,18 +26,7 @@ import org.apache.tika.parser.microsoft.OfficeParser
 import org.apache.tika.parser.microsoft.ooxml.OOXMLParser
 import org.apache.tika.parser.mp3.Mp3Parser
 import org.apache.tika.parser.odf.OpenDocumentParser
-import org.w3c.dom.Document
-import org.w3c.dom.Element
-import org.w3c.dom.Node
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.net.URL
 import java.util.*
-import java.util.function.Consumer
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.ParserConfigurationException
 
 /**
  * Parse xml config file.

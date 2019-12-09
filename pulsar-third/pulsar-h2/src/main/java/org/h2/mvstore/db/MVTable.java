@@ -26,14 +26,12 @@ import org.h2.mvstore.db.TransactionStore.Transaction;
 import org.h2.result.Row;
 import org.h2.result.SortOrder;
 import org.h2.schema.SchemaObject;
-import org.h2.table.*;
 import org.h2.util.DebuggingThreadLocal;
 import org.h2.util.MathUtils;
 import org.h2.util.New;
 import org.h2.value.DataType;
 import org.h2.value.Value;
 
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 

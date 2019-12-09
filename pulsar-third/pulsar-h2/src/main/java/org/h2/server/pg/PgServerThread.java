@@ -13,12 +13,9 @@ import org.h2.jdbc.JdbcPreparedStatement;
 import org.h2.jdbc.JdbcStatement;
 import org.h2.message.DbException;
 import org.h2.mvstore.DataUtils;
-import org.h2.util.*;
 import org.h2.value.CaseInsensitiveMap;
 
-import java.io.*;
 import java.net.Socket;
-import java.sql.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;

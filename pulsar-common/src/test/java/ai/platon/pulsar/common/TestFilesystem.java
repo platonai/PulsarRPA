@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common;
 
-import ai.platon.pulsar.common.config.PulsarConstants;
+import ai.platon.pulsar.common.config.AppConstants;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestFilesystem {
     private String readableTime = new SimpleDateFormat("MMdd.HHmmss").format(System.currentTimeMillis());
-    private Path commandFile = Paths.get(PulsarConstants.PULSAR_DEFAULT_TMP_DIR.toString(), "command", "test." + readableTime + ".sh");
+    private Path commandFile = Paths.get(AppConstants.PULSAR_DEFAULT_TMP_DIR.toString(), "command", "test." + readableTime + ".sh");
 
     @Test
     public void testCreateFiles() throws IOException {

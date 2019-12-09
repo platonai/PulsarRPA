@@ -7,7 +7,6 @@ package org.h2tools.dev.fs;
 
 import org.h2.engine.Constants;
 import org.h2.message.DbException;
-import org.h2.store.fs.*;
 import org.h2.util.IOUtils;
 import org.h2.util.New;
 

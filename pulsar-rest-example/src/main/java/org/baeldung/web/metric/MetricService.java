@@ -1,5 +1,7 @@
 package org.baeldung.web.metric;
 
+import org.springframework.stereotype.Service;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -7,8 +9,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class MetricService implements IMetricService {
