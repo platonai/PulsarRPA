@@ -75,10 +75,6 @@ public class FieldCollection extends HashMap<CharSequence, CharSequence> {
     }
 
     public FieldCollection assertContains(String message, String key, String value) {
-        if (!value.equals(get(key).toString())) {
-            System.out.println(key + ", " + "value");
-            System.out.println(message);
-        }
         return this;
     }
 }

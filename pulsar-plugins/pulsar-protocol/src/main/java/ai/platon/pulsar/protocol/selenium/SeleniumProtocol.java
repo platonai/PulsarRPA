@@ -40,8 +40,8 @@ public class SeleniumProtocol extends ForwardingProtocol {
      * @see ai.platon.pulsar.crawl.protocol.ProtocolFactory#ProtocolFactory
      * */
     @Override
-    public void setConf(ImmutableConfig conf) {
-        super.setConf(conf);
+    public void setConf(ImmutableConfig jobConf) {
+        super.setConf(jobConf);
     }
 
     public boolean supportParallel() {

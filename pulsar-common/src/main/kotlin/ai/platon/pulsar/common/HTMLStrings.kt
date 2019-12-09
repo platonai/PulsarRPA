@@ -5,11 +5,12 @@ import java.util.regex.Pattern
 
 const val DEFAULT_SUPPORTED_CHARSETS = "UTF-8|GB2312|GB18030|GBK|Big5|ISO-8859-1" +
         "|windows-1250|windows-1251|windows-1252|windows-1253|windows-1254|windows-1257"
-val SYSTEM_AVAILABLE_CHARSETS = Charset.availableCharsets().values.joinToString("|") { it.name() }
+val DEFAULT_CHARSET_PATTERN = DEFAULT_SUPPORTED_CHARSETS.replace("UTF-8\\|?", "")
+        .toPattern(Pattern.CASE_INSENSITIVE)
 // All charsets are supported by the system
-// The set is big, can use a static cache to hold them if necessary
-val DEFAULT_CHARSET_PATTERN = DEFAULT_SUPPORTED_CHARSETS.replace("UTF-8\\|?", "").toPattern(Pattern.CASE_INSENSITIVE)
-val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\\|?", "").toPattern(Pattern.CASE_INSENSITIVE)
+val SYSTEM_AVAILABLE_CHARSETS = Charset.availableCharsets().values.joinToString("|") { it.name() }
+val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\\|?", "")
+        .toPattern(Pattern.CASE_INSENSITIVE)
 
 /**
  * Replace the charset to the target charset

@@ -1,10 +1,7 @@
 package ai.platon.pulsar.jobs.app
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.jobs.JobEnv
 import ai.platon.pulsar.jobs.app.fetch.FetchJob
 import ai.platon.pulsar.jobs.app.generate.GenerateJob

@@ -35,7 +35,10 @@ public class Mapper<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Mapper<K
 
     protected Context context;
 
-    protected ImmutableConfig conf;
+    /**
+     * The job conf is passed from a MapReduce Job
+     * */
+    protected ImmutableConfig jobConf;
     protected MetricsCounters metricsCounters;
     protected MetricsReporter pulsarReporter;
 
@@ -45,10 +48,10 @@ public class Mapper<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Mapper<K
 
     protected void beforeSetup(Context context) throws IOException, InterruptedException {
         this.context = context;
-        this.conf = new ImmutableConfig(context.getConfiguration());
+        this.jobConf = new ImmutableConfig(context.getConfiguration());
 
         this.metricsCounters = new MetricsCounters();
-        this.pulsarReporter = new MetricsReporter(context.getJobName(), metricsCounters, conf, context);
+        this.pulsarReporter = new MetricsReporter(context.getJobName(), metricsCounters, jobConf, context);
 
         LOG.info(Params.formatAsLine(
                 "---- mapper setup ", " ----",
@@ -123,11 +126,11 @@ public class Mapper<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Mapper<K
 
     @Override
     public ImmutableConfig getConf() {
-        return conf;
+        return jobConf;
     }
 
     @Override
-    public void setConf(ImmutableConfig conf) {
-        this.conf = conf;
+    public void setConf(ImmutableConfig jobConf) {
+        this.jobConf = jobConf;
     }
 }

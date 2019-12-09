@@ -160,37 +160,37 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     // Inherited Javadoc
-    public void setConf(ImmutableConfig conf) {
-        this.conf = conf;
-        this.defaultFetchMode = conf.getEnum(FETCH_MODE, FetchMode.NATIVE);
+    public void setConf(ImmutableConfig jobConf) {
+        this.conf = jobConf;
+        this.defaultFetchMode = jobConf.getEnum(FETCH_MODE, FetchMode.NATIVE);
 
         // TODO: be consistent with WebDriverQueues
-        this.proxyHost = conf.get("http.proxy.host");
-        this.proxyPort = conf.getInt("http.proxy.port", 8080);
-        this.useProxyPool = conf.getBoolean("http.proxy.pool", false);
+        this.proxyHost = jobConf.get("http.proxy.host");
+        this.proxyPort = jobConf.getInt("http.proxy.port", 8080);
+        this.useProxyPool = jobConf.getBoolean("http.proxy.pool", false);
         if (this.useProxyPool) {
             this.proxyPool = PulsarEnv.Companion.getApplicationContext().getBean(ProxyPool.class);
         }
         this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
 
-        this.timeout = conf.getDuration(HTTP_TIMEOUT, Duration.ofSeconds(10));
-        this.fetchMaxRetry = conf.getInt(HTTP_FETCH_MAX_RETRY, 3);
-        this.maxContent = conf.getInt("http.content.limit", 1024 * 1024);
+        this.timeout = jobConf.getDuration(HTTP_TIMEOUT, Duration.ofSeconds(10));
+        this.fetchMaxRetry = jobConf.getInt(HTTP_FETCH_MAX_RETRY, 3);
+        this.maxContent = jobConf.getInt("http.content.limit", 1024 * 1024);
 //      this.userAgent = getAgentString(conf.get("http.agent.name"),
 //      conf.get("http.agent.version"), conf.get("http.agent.description"),
 //      conf.get("http.agent.url"), conf.get("http.agent.email"));
-        this.userAgent = NetUtil.getAgentString(conf.get("http.agent.name"));
+        this.userAgent = NetUtil.getAgentString(jobConf.get("http.agent.name"));
 
-        this.acceptLanguage = conf.get("http.accept.language", acceptLanguage);
-        this.accept = conf.get("http.accept", accept);
-        this.mimeTypes = new MimeUtil(conf);
-        this.useHttp11 = conf.getBoolean("http.useHttp11", false);
-        this.storeResponseTime = conf.getBoolean("http.store.responsetime", true);
-        this.robots.setConf(conf);
+        this.acceptLanguage = jobConf.get("http.accept.language", acceptLanguage);
+        this.accept = jobConf.get("http.accept", accept);
+        this.mimeTypes = new MimeUtil(jobConf);
+        this.useHttp11 = jobConf.getBoolean("http.useHttp11", false);
+        this.storeResponseTime = jobConf.getBoolean("http.store.responsetime", true);
+        this.robots.setConf(jobConf);
 
-        String[] protocols = conf.getStrings("http.tls.supported.protocols",
+        String[] protocols = jobConf.getStrings("http.tls.supported.protocols",
                 "TLSv1.2", "TLSv1.1", "TLSv1", "SSLv3");
-        String[] ciphers = conf.getStrings("http.tls.supported.cipher.suites",
+        String[] ciphers = jobConf.getStrings("http.tls.supported.cipher.suites",
                 "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
                 "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
                 "TLS_RSA_WITH_AES_256_CBC_SHA256",

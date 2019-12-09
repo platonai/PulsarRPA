@@ -42,7 +42,7 @@ class TaskPool(val id: PoolId,
     private val slowTasksRecorder = CircularFifoQueue<Duration>(RECENT_TASKS_COUNT_LIMIT)
 
     /** Next fetch time  */
-    private var nextFetchTime: Instant? = null
+    private var nextFetchTime = Instant.now()
     private var recentFinishedTasks = 1
     private var recentFetchMillis: Long = 1
     private var totalFinishedTasks = 1
@@ -85,10 +85,6 @@ class TaskPool(val id: PoolId,
 
     enum class Status {
         ACTIVITY, INACTIVITY, RETIRED
-    }
-
-    init {
-        this.nextFetchTime = Instant.now()
     }
 
     override fun getParams(): Params {
@@ -138,7 +134,7 @@ class TaskPool(val id: PoolId,
         }
 
         val now = Instant.now()
-        if (now.isBefore(nextFetchTime!!)) {
+        if (now.isBefore(nextFetchTime)) {
             return null
         }
 
@@ -150,22 +146,22 @@ class TaskPool(val id: PoolId,
         return fetchTask
     }
 
+    fun finish(itemId: Int, asap: Boolean): Boolean {
+        val item = pendingTasks[itemId]
+        return item != null && finish(item, asap)
+    }
+
     /**
      * Note : We have set response time for each page, @see {HttpBase#getProtocolOutput}
      */
     fun finish(fetchTask: FetchTask, asap: Boolean): Boolean {
-        val itemId = fetchTask.itemId
-        val fetchTask = pendingTasks.remove(itemId)
-        if (fetchTask == null) {
-            LOG.warn("Failed to remove FetchTask : $itemId")
-            return false
-        }
+        pendingTasks.remove(fetchTask.itemId)
 
         val finishTime = Instant.now()
         setNextFetchTime(finishTime, asap)
 
         val timeCost = Duration.between(fetchTask.pendingStart, finishTime)
-        if (timeCost.compareTo(slowTaskThreshold) > 0) {
+        if (timeCost > slowTaskThreshold) {
             slowTasksRecorder.add(timeCost)
         }
 
@@ -182,11 +178,6 @@ class TaskPool(val id: PoolId,
         return true
     }
 
-    fun finish(itemId: Int, asap: Boolean): Boolean {
-        val item = pendingTasks[itemId]
-        return item != null && finish(item, asap)
-    }
-
     fun getPendingTask(itemID: Int): FetchTask? {
         return pendingTasks[itemID]
     }
@@ -194,11 +185,7 @@ class TaskPool(val id: PoolId,
     /**
      * Hang up the task and wait for completion. Move the fetch task to pending queue.
      */
-    private fun hangUp(fetchTask: FetchTask?, now: Instant) {
-        if (fetchTask == null) {
-            return
-        }
-
+    private fun hangUp(fetchTask: FetchTask, now: Instant) {
         fetchTask.pendingStart = now
         pendingTasks[fetchTask.itemId] = fetchTask
     }
@@ -299,22 +286,26 @@ class TaskPool(val id: PoolId,
     fun dump() {
         LOG.info(params.formatAsLine())
 
-        var i = 0
-        val limit = 20
-        var report = "\nDrop the following tasks : "
-        var fetchTask: FetchTask? = readyTasks.poll()
-        while (fetchTask != null && ++i <= limit) {
-            report += "  " + i + ". " + fetchTask.url + "\t"
-            fetchTask = readyTasks.poll()
+        if (readyTasks.isNotEmpty()) {
+            var i = 0
+            val limit = 20
+            var report = "Drop the following tasks : "
+
+            var fetchTask: FetchTask? = readyTasks.poll()
+            while (fetchTask != null && ++i <= limit) {
+                report += "  " + i + ". " + fetchTask.url + "\t"
+                fetchTask = readyTasks.poll()
+            }
+
+            LOG.info(report)
         }
-        LOG.info(report)
     }
 
     private fun setNextFetchTime(finishTime: Instant, asap: Boolean) {
-        if (!asap) {
-            nextFetchTime = finishTime.plus(if (allowedThreads > 1) minCrawlDelay else crawlDelay)
+        nextFetchTime = if (!asap) {
+            finishTime.plus(if (allowedThreads > 1) minCrawlDelay else crawlDelay)
         } else {
-            nextFetchTime = finishTime
+            finishTime
         }
     }
 

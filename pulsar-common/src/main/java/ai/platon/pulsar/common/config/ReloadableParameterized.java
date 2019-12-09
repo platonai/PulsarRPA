@@ -6,6 +6,9 @@ package ai.platon.pulsar.common.config;
 public interface ReloadableParameterized extends Parameterized {
     ImmutableConfig getConf();
 
+    /**
+     * TODO: need a better name: reset/setup/init, etc
+     * */
     default void reload(ImmutableConfig conf) {
     }
 

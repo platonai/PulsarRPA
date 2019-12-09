@@ -28,6 +28,7 @@ import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.gora.GoraStorage;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.Mark;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.gora.filter.Filter;
 import org.apache.gora.filter.FilterOp;
@@ -46,10 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 import static ai.platon.pulsar.common.config.PulsarConstants.ALL_BATCHES;
@@ -60,7 +58,7 @@ public abstract class PulsarJob implements PulsarJobBase {
     public static final Logger LOG = LoggerFactory.getLogger(PulsarJob.class);
     protected final Map<String, Object> status = Collections.synchronizedMap(Maps.newLinkedHashMap());
     protected final Map<String, Object> results = Collections.synchronizedMap(Maps.newLinkedHashMap());
-    protected MutableConfig conf;
+    protected MutableConfig jobConf;
     protected long startTime = System.currentTimeMillis();
     protected Job currentJob;
     protected WebDb webDb;
@@ -69,7 +67,7 @@ public abstract class PulsarJob implements PulsarJobBase {
     protected int currentJobNum = 0;
 
     public static int run(ImmutableConfig conf, PulsarJob job, String[] args) throws Exception {
-        job.setConf(conf);
+        job.setJobConf(conf);
 
         // Strip hadoop reserved args
         GenericOptionsParser parser = new GenericOptionsParser(conf.unbox(), args);
@@ -160,10 +158,10 @@ public abstract class PulsarJob implements PulsarJobBase {
     }
 
     protected void beforeSetup() throws Exception {
-        String jobDescription = getJobName() + " - " + conf.get(PULSAR_CONFIG_ID, "");
+        String jobDescription = getJobName() + " - " + jobConf.get(PULSAR_CONFIG_ID, "");
         LOG.info("\n\n\n\n------------------------- " + jobDescription + " -------------------------");
         LOG.info("Job started at " + DateTimeUtil.format(startTime));
-        conf.set(PARAM_JOB_NAME, getJobName());
+        jobConf.set(PARAM_JOB_NAME, getJobName());
 
         status.put("startTime", DateTimeUtil.format(startTime));
     }
@@ -172,11 +170,16 @@ public abstract class PulsarJob implements PulsarJobBase {
     }
 
     protected void beforeInitJob() throws Exception {
-        currentJob = Job.getInstance(conf.unbox(), getJobName());
+        currentJob = Job.getInstance(jobConf.unbox(), getJobName());
+        Configuration jobConf = currentJob.getConfiguration();
+        Lists.newArrayList(STORAGE_CRAWL_ID, BATCH_ID, FETCH_MODE).forEach(name -> {
+            assert Objects.equals(jobConf.get(name), this.jobConf.get(name));
+        });
+
         currentJob.setJarByClass(this.getClass());
 
         if (webDb == null) {
-            webDb = new WebDb(conf);
+            webDb = new WebDb(this.jobConf);
         }
 
         // It seems failed to exit if hbase is lost
@@ -265,16 +268,12 @@ public abstract class PulsarJob implements PulsarJobBase {
         }
     }
 
-    public MutableConfig getConf() {
-        return conf;
+    public MutableConfig getJobConf() {
+        return jobConf;
     }
 
-    public void setConf(ImmutableConfig conf) {
-        this.conf = new MutableConfig(conf);
-    }
-
-    public void setConf(MutableConfig conf) {
-        this.conf = conf;
+    public void setJobConf(ImmutableConfig jobConf) {
+        this.jobConf = new MutableConfig(jobConf);
     }
 
     public MapFieldValueFilter<String, GWebPage> getBatchIdFilter(String batchId) {

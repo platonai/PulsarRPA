@@ -26,6 +26,7 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriver
@@ -143,7 +144,7 @@ class SeleniumEngine(
     override fun getParams(): Params {
         return Params.of(
                 "instanceCount", instanceCount,
-                "charsetPattern", charsetPattern,
+                "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
                 "pageLoadTimeout", defaultDriverConfig.pageLoadTimeout,
                 "scriptTimeout", defaultDriverConfig.scriptTimeout,
                 "scrollDownCount", defaultDriverConfig.scrollDownCount,
@@ -557,6 +558,7 @@ class SeleniumEngine(
             throw e
         }
 
+        // TODO: check if the js is injected twice, libJs is already injected
         val result = jsExecutor.executeScript(clientJs)
         if (result is String) {
             val jsData = BrowserJsData.fromJson(result)

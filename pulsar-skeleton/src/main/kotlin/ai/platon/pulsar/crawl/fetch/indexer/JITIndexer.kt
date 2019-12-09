@@ -3,10 +3,9 @@ package ai.platon.pulsar.crawl.fetch.indexer
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes.INDEX_JIT
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.ReloadableParameterized
+import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
+import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.fetch.FetchMonitor
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
@@ -15,9 +14,10 @@ import ai.platon.pulsar.crawl.index.IndexingFilters
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import com.google.common.collect.Lists
 import com.google.common.collect.Queues
+import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -30,29 +30,33 @@ class JITIndexer(
         private val indexingFilters: IndexingFilters,
         private val indexWriters: IndexWriters,
         private val conf: ImmutableConfig
-) : ReloadableParameterized, AutoCloseable {
+) : Parameterized, Configurable, JobInitialized, AutoCloseable {
 
     private val id: Int = instanceSequence.incrementAndGet()
-    private var indexJIT: Boolean = conf.getBoolean(INDEX_JIT, false)
-    private var indexDocumentBuilder: IndexDocument.Builder? = null
+
+    var isEnabled: Boolean = false
+        private set
 
     private var batchSize: Int = conf.getInt("index.index.batch.size", 2000)
     var indexThreadCount: Int = conf.getInt("index.index.thread.count", 1)
-    private var minTextLenght: Int = conf.getInt("index.minimal.text.length", 300)
+    private var minTextLength: Int = conf.getInt("index.minimal.text.length", 300)
     // All object inside a process shares the same counters
     private val indexedPages = AtomicInteger(0)
     private val ignoredPages = AtomicInteger(0)
 
+    private val indexThreads = mutableListOf<IndexThread>()
     private val activeIndexThreads = ConcurrentSkipListSet<IndexThread>()
-    private val indexTasks = Queues.newLinkedBlockingQueue<FetchTask>(batchSize)
-
-    private val indexThreads = Lists.newLinkedList<IndexThread>()
+    private lateinit var indexTasks: Queue<FetchTask>
+    private lateinit var indexDocumentBuilder: IndexDocument.Builder
 
     val indexedPageCount: Int get() = indexedPages.get()
     val ignoredPageCount: Int get() = ignoredPages.get()
 
-    init {
-        if (indexJIT) {
+    override fun setup(jobConf: ImmutableConfig) {
+        isEnabled = jobConf.getBoolean(INDEXER_JIT, false)
+        if (isEnabled) {
+            indexTasks = Queues.newLinkedBlockingQueue<FetchTask>(batchSize)
+
             this.indexDocumentBuilder = IndexDocument.Builder(conf).with(indexingFilters).with(scoringFilters)
             this.indexWriters.open()
         }
@@ -66,12 +70,8 @@ class JITIndexer(
         return Params.of(
                 "batchSize", batchSize,
                 "indexThreadCount", indexThreadCount,
-                "minTextLenght", minTextLenght
+                "minTextLength", minTextLength
         )
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        //
     }
 
     internal fun registerFetchThread(indexThread: IndexThread) {
@@ -87,7 +87,7 @@ class JITIndexer(
      * Thread safe
      */
     fun produce(fetchTask: FetchTask) {
-        if (!indexJIT) {
+        if (!isEnabled) {
             return
         }
 
@@ -133,7 +133,7 @@ class JITIndexer(
      * Thread safe
      */
     fun index(fetchTask: FetchTask?) {
-        if (!indexJIT) {
+        if (!isEnabled) {
             return
         }
 
@@ -167,7 +167,7 @@ class JITIndexer(
         }
 
         val textContent = doc.getFieldValueAsString(DOC_FIELD_TEXT_CONTENT)
-        if (textContent == null || textContent.length < minTextLenght) {
+        if (textContent == null || textContent.length < minTextLength) {
             ignoredPages.incrementAndGet()
             LOG.warn("Invalid text content to index, url : " + doc.url)
             return false
@@ -187,7 +187,7 @@ class JITIndexer(
             return false
         }
 
-        if (page.contentText.length < minTextLenght) {
+        if (page.contentText.length < minTextLength) {
             ignoredPages.incrementAndGet()
             return false
         }
@@ -196,7 +196,7 @@ class JITIndexer(
     }
 
     companion object {
-        val LOG = FetchMonitor.LOG
+        val LOG = LoggerFactory.getLogger(JITIndexer::class.java)
         private val instanceSequence = AtomicInteger(0)
     }
 }

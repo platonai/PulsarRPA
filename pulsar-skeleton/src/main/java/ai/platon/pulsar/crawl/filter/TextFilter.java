@@ -31,22 +31,18 @@ public class TextFilter {
         buildCache();
 
         if (!ArrayUtils.isEmpty(_contains) && !StringUtil.contains(text, _contains)) {
-            System.out.println("!contains");
             return false;
         }
 
         if (!ArrayUtils.isEmpty(_containsAny) && StringUtil.containsNone(text, _containsAny)) {
-            System.out.println("containsNone");
             return false;
         }
 
         if (!ArrayUtils.isEmpty(_notContains) && StringUtil.contains(text, _notContains)) {
-            System.out.println("contains");
             return false;
         }
 
         if (!ArrayUtils.isEmpty(_containsNone) && StringUtil.containsAny(text, _containsNone)) {
-            System.out.println("containsAny");
             return false;
         }
 

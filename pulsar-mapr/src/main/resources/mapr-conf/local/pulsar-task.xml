@@ -74,7 +74,7 @@
 
     <property>
         <name>indexer.url</name>
-        <value>http://master:8983/information_tmp</value>
+<!--        <value>http://master:8983/information_tmp</value>-->
     </property>
 
     <property>

@@ -244,15 +244,15 @@ public class Http extends AbstractHttpProtocol {
     }
 
     @Override
-    public void setConf(ImmutableConfig conf) {
-        super.setConf(conf);
-        Http.conf = conf;
-        this.maxThreadsTotal = conf.getInt(FETCH_THREADS_FETCH, 10);
-        this.proxyUsername = conf.get("http.proxy.username", "");
-        this.proxyPassword = conf.get("http.proxy.password", "");
-        this.proxyRealm = conf.get("http.proxy.realm", "");
-        agentHost = conf.get("http.agent.host", "");
-        authFile = conf.get("http.auth.file", "");
+    public void setConf(ImmutableConfig jobConf) {
+        super.setConf(jobConf);
+        Http.conf = jobConf;
+        this.maxThreadsTotal = jobConf.getInt(FETCH_THREADS_FETCH, 10);
+        this.proxyUsername = jobConf.get("http.proxy.username", "");
+        this.proxyPassword = jobConf.get("http.proxy.password", "");
+        this.proxyRealm = jobConf.get("http.proxy.realm", "");
+        agentHost = jobConf.get("http.agent.host", "");
+        authFile = jobConf.get("http.auth.file", "");
         configureClient();
         try {
             setCredentials();

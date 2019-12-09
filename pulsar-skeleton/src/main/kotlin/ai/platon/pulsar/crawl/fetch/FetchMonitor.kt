@@ -2,12 +2,16 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.*
-import ai.platon.pulsar.common.config.ReloadableParameterized
+import ai.platon.pulsar.common.options.FetchOptions
+import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.indexer.IndexThread
+import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.hadoop.io.IntWritable
@@ -30,35 +34,17 @@ class FetchMonitor(
         private val fetchComponent: FetchComponent,
         private val taskMonitor: TaskMonitor,
         private val taskSchedulers: TaskSchedulers,
+        private val jitIndexer: JITIndexer,
         private val immutableConfig: ImmutableConfig
-) : ReloadableParameterized, AutoCloseable {
+) : Parameterized, Configurable, JobInitialized, AutoCloseable {
 
     private val id = instanceSequence.incrementAndGet()
     private val taskScheduler = taskSchedulers.first // TODO: multiple task schedulers are not supported
 
     private val startTime = Instant.now()
 
-    private var jobName: String = immutableConfig.get(PARAM_JOB_NAME, DateTimeUtil.now("MMddHHmmss"))
-    private var crawlId: String = immutableConfig.get(STORAGE_CRAWL_ID, "")
-    private var batchId: String = immutableConfig.get(BATCH_ID, "")
-    private var fetchMode: FetchMode = immutableConfig.getEnum(FETCH_MODE, FetchMode.NATIVE)
-
-    /**
-     * Threads
-     */
-    private var fetchThreadCount: Int = immutableConfig.getInt(FETCH_THREADS_FETCH, 5)
-
-    private val activeFetchThreads = ConcurrentSkipListSet<FetchThread>()
-    private val retiredFetchThreads = ConcurrentSkipListSet<FetchThread>()
-    private val idleFetchThreads = ConcurrentSkipListSet<FetchThread>()
-
     private val activeFetchThreadCount = AtomicInteger(0)
     private val idleFetchThreadCount = AtomicInteger(0)
-
-    /**
-     * Feeder threads
-     */
-    private val feedThreads = ConcurrentSkipListSet<FeedThread>()
 
     /**
      * Timing
@@ -96,9 +82,16 @@ class FetchMonitor(
     private var indexServerPort = immutableConfig.getInt(INDEXER_PORT, DEFAULT_INDEX_SERVER_PORT)
 
     /**
-     * Scripts
+     * Thread tracking
+     * */
+    private val activeFetchThreads = ConcurrentSkipListSet<FetchThread>()
+    private val retiredFetchThreads = ConcurrentSkipListSet<FetchThread>()
+    private val idleFetchThreads = ConcurrentSkipListSet<FetchThread>()
+
+    /**
+     * Feeder threads
      */
-    private var finishScript: Path = AppPaths.get("scripts", "finish_$jobName.sh")
+    private val feedThreads = ConcurrentSkipListSet<FeedThread>()
 
     var isHalt = false
         private set
@@ -109,21 +102,52 @@ class FetchMonitor(
     val isMissionComplete: Boolean
         get() = !isFeederAlive && taskMonitor.readyTaskCount() == 0 && taskMonitor.pendingTaskCount() == 0
 
-    init {
+    lateinit var options: FetchOptions
+
+    lateinit var jobName: String
+    /**
+     * Scripts
+     */
+    private lateinit var finishScript: Path
+
+    override fun setup(jobConf: ImmutableConfig) {
+        jitIndexer.setup(jobConf)
+        taskMonitor.setup(jobConf)
+        taskScheduler.setup(jobConf)
+
+        this.options = FetchOptions(jobConf)
+
+        this.jobName = jobConf.get(PARAM_JOB_NAME, "UNKNOWN")
+        this.finishScript = AppPaths.get("scripts", "finish_$jobName.sh")
+
         generateFinishCommand()
+
         LOG.info(params.format())
     }
 
-    override fun getConf(): ImmutableConfig? {
-        return immutableConfig
+    fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
+        startFeedThread(context)
+
+        if (FetchMode.CROWDSOURCING == options.fetchMode) {
+            startCrowdsourcingThreads(context)
+        } else {
+            // Threads for SELENIUM or proxy mode
+            startLocalFetcherThreads(context)
+        }
+
+        if (jitIndexer.isEnabled) {
+            startIndexThreads()
+        }
+
+        startCheckAndReportLoop(context)
     }
 
     override fun getParams(): Params {
         return Params.of(
                 "className", this.javaClass.simpleName,
-                "crawlId", crawlId,
-                "batchId", batchId,
-                "fetchMode", fetchMode,
+                "crawlId", options.crawlId,
+                "batchId", options.batchId,
+                "fetchMode", options.fetchMode,
 
                 "taskSchedulers", taskSchedulers.name,
                 "taskScheduler", taskScheduler.name,
@@ -141,6 +165,10 @@ class FetchMonitor(
 
                 "finishScript", finishScript
         )
+    }
+
+    override fun getConf(): ImmutableConfig {
+        return immutableConfig
     }
 
     private fun generateFinishCommand() {
@@ -185,23 +213,6 @@ class FetchMonitor(
         idleFetchThreadCount.decrementAndGet()
     }
 
-    fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        startFeedThread(context)
-
-        if (FetchMode.CROWDSOURCING == fetchMode) {
-            startCrowdsourcingThreads(context)
-        } else {
-            // Threads for native or proxy mode
-            startNativeFetcherThreads(context)
-        }
-
-        if (taskScheduler.indexJIT) {
-            startIndexThreads()
-        }
-
-        startCheckAndReportLoop(context)
-    }
-
     override fun close() {
         try {
             LOG.info("[Destruction] Closing FetchMonitor #$id")
@@ -234,17 +245,18 @@ class FetchMonitor(
     /**
      * Start crowd sourcing threads
      * Non-Blocking
+     * TODO: not implemented
      */
     private fun startCrowdsourcingThreads(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        startFetchThreads(fetchThreadCount, context)
+        startFetchThreads(options.numFetchThreads, context)
     }
 
     /**
-     * Start native fetcher threads
+     * Start SELENIUM fetcher threads
      * Non-Blocking
      */
-    private fun startNativeFetcherThreads(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        startFetchThreads(fetchThreadCount, context)
+    private fun startLocalFetcherThreads(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
+        startFetchThreads(options.numFetchThreads, context)
     }
 
     private fun startFetchThreads(threadCount: Int, context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
@@ -258,11 +270,9 @@ class FetchMonitor(
      * Start index threads
      * Non-Blocking
      */
-    @Throws(IOException::class)
     private fun startIndexThreads() {
-        val JITIndexer = taskScheduler.jitIndexer
-        for (i in 0 until JITIndexer.indexThreadCount) {
-            val indexThread = IndexThread(JITIndexer, immutableConfig)
+        for (i in 0 until jitIndexer.indexThreadCount) {
+            val indexThread = IndexThread(jitIndexer, immutableConfig)
             indexThread.start()
         }
     }
@@ -350,7 +360,7 @@ class FetchMonitor(
                 break
             }
 
-            if (taskScheduler.indexJIT && !NetUtil.testHttpNetwork(indexServer, indexServerPort)) {
+            if (jitIndexer.isEnabled && !NetUtil.testHttpNetwork(indexServer, indexServerPort)) {
                 LOG.warn("Lost index server, exit the job")
                 break
             }

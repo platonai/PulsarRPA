@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.*
+import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
@@ -34,7 +35,15 @@ class TaskScheduler(
         val pageParser: PageParser,
         var jitIndexer: JITIndexer,
         val conf: ImmutableConfig
-) : Parameterized, AutoCloseable {
+) : Parameterized, JobInitialized, AutoCloseable {
+    data class Status(
+            var pagesThoRate: Float,
+            var bytesThoRate: Float,
+            var readyFetchItems: Int,
+            var pendingFetchItems: Int
+    )
+
+
     val id: Int = objectSequence.getAndIncrement()
     private val metricsCounters = MetricsCounters()
 
@@ -47,12 +56,10 @@ class TaskScheduler(
     private var skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true)
     private var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, false)
 
-    /**
-     * Indexer
-     */
-    val indexJIT: Boolean = conf.getBoolean(INDEX_JIT, false)
+    // Indexer
+    private var indexJIT: Boolean = false
     // Parser setting
-    private var parse: Boolean = indexJIT || conf.getBoolean(PARSE_PARSE, true)
+    private var parse: Boolean = false
 
     /**
      * Fetch threads
@@ -88,13 +95,15 @@ class TaskScheduler(
     private val reprUrls = ConcurrentSkipListMap<Long, String>()
 
     val unparsableTypes: Set<CharSequence>
-        get() = if (pageParser == null) emptySet() else pageParser.unparsableTypes
+        get() = pageParser.unparsableTypes
 
-    init {
+    override fun setup(jobConf: ImmutableConfig) {
+        indexJIT = jobConf.getBoolean(INDEXER_JIT, false)
+        // Parser setting
+        parse = indexJIT || conf.getBoolean(PARSE_PARSE, true)
+
         LOG.info(params.format())
     }
-
-    class Status(var pagesThoRate: Float, var bytesThoRate: Float, var readyFetchItems: Int, var pendingFetchItems: Int)
 
     override fun getParams(): Params {
         return Params.of(
@@ -102,7 +111,7 @@ class TaskScheduler(
 
                 "id", id,
 
-                "bandwidth", bandwidth,
+                "bandwidth", StringUtil.readableByteCount(bandwidth.toLong()),
                 "initFetchThreadCount", initFetchThreadCount,
                 "threadsPerQueue", threadsPerQueue,
 
@@ -153,27 +162,27 @@ class TaskScheduler(
      * Null queue id means the queue with top priority
      * Consume a fetch item and try to download the target web page
      */
-    fun schedule(queueId: PoolId?, number_: Int): List<FetchTask> {
-        var number = number_
-        if (number <= 0) {
+    fun schedule(queueId: PoolId?, number: Int): List<FetchTask> {
+        var num = number
+        if (num <= 0) {
             LOG.warn("Required no fetch item")
             return ArrayList()
         }
 
-        val fetchTasks = ArrayList<FetchTask>(number)
+        val fetchTasks = ArrayList<FetchTask>(num)
         if (tasksMonitor.pendingTaskCount().toDouble() * averagePageSize.get() * 8.0 > 30 * this.bandwidth) {
             LOG.info("Bandwidth exhausted, slows down the scheduling")
             return fetchTasks
         }
 
-        while (number-- > 0) {
+        while (num-- > 0) {
             val fetchTask = if (queueId == null) tasksMonitor.consume() else tasksMonitor.consume(queueId)
             if (fetchTask != null) {
                 fetchTasks.add(fetchTask)
             }
         }
 
-        if (!fetchTasks.isEmpty()) {
+        if (fetchTasks.isNotEmpty()) {
             lastTaskStartTime.set(System.currentTimeMillis())
         }
 
@@ -203,8 +212,8 @@ class TaskScheduler(
             return
         }
 
-        val page = fetchTask.page
-        val protocolStatus = page!!.getProtocolStatus()
+        val page = fetchTask.page?:return
+        val protocolStatus = page.protocolStatus
         try {
             // un-block queue
             tasksMonitor.finish(fetchTask)
@@ -425,7 +434,7 @@ class TaskScheduler(
 
         CounterUtils.increaseRDepth(page.distance, metricsCounters)
 
-        metricsCounters.increase(Counter.rMbytes, Math.round(page.contentBytes / 1024.0f))
+        metricsCounters.increase(Counter.rMbytes, (page.contentBytes / 1024.0f).roundToInt())
     }
 
     private fun logFetchFailure(message: String) {
@@ -461,9 +470,7 @@ class TaskScheduler(
             rDepthUp
         }
 
-        init {
-            MetricsCounters.register(Counter::class.java)
-        }
+        init { MetricsCounters.register(Counter::class.java) }
 
         private val objectSequence = AtomicInteger(0)
     }

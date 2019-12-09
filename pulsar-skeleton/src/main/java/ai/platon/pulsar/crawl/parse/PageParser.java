@@ -53,10 +53,6 @@ public final class PageParser implements ReloadableParameterized {
 
     public static final Logger LOG = LoggerFactory.getLogger(PageParser.class);
 
-    static {
-        MetricsCounters.register(Counter.class);
-    }
-
     private final ImmutableConfig conf;
     private MetricsCounters metricsCounters;
     private Set<CharSequence> unparsableTypes = Collections.synchronizedSet(new HashSet<>());
@@ -188,7 +184,7 @@ public final class PageParser implements ReloadableParameterized {
                 updateCounters(parseResult);
 
                 if (parseResult.isSuccess()) {
-                    page.getMarks().putIfNonNull(Mark.PARSE, page.getMarks().get(Mark.FETCH));
+                    page.getMarks().putIfNotNull(Mark.PARSE, page.getMarks().get(Mark.FETCH));
                 }
             }
 
@@ -361,5 +357,6 @@ public final class PageParser implements ReloadableParameterized {
         return inHeaderSize > actualSize;
     }
 
-    public enum Counter {notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed}
+    public enum Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
+    static { MetricsCounters.register(Counter.class); }
 }

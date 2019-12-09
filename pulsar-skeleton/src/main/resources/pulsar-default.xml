@@ -1081,8 +1081,8 @@
 
     <property>
         <name>fetch.fetch.mode</name>
-        <value>NATIVE</value>
-        <description>There are 3 fetch modes : native, proxy and crowdsourcing.
+        <value>SELENIUM</value>
+        <description>There are 4 fetch modes : native, proxy, selenium and crowdsourcing.
             The native mode is the fastest one but without ajax support; the
             proxy mode uses a 3rd party fetcher as a proxy; and the crowdsourcing mode
             just schedule the fetch task and wait for someone request the task and

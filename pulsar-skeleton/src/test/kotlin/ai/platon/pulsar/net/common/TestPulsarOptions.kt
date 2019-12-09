@@ -63,12 +63,12 @@ class TestPulsarOptions {
             assertEquals(args, Duration.ofSeconds(1), options.fetchInterval)
             assertEquals(args, 2000, options.fetchPriority.toLong())
 
-            assertEquals(args, "body", options.linkOptions.getRestrictCss())
-            assertEquals(args, ".+", options.linkOptions.getUrlRegex())
-            assertEquals(args, 4, options.linkOptions.getMinAnchorLength().toLong())
-            assertEquals(args, 45, options.linkOptions.getMaxAnchorLength().toLong())
-            assertEquals(args, 44, options.linkOptions.getMinUrlLength().toLong())
-            assertEquals(args, 200, options.linkOptions.getMaxUrlLength().toLong())
+            assertEquals(args, "body", options.linkOptions.restrictCss)
+            assertEquals(args, ".+", options.linkOptions.urlRegex)
+            assertEquals(args, 4, options.linkOptions.minAnchorLength.toLong())
+            assertEquals(args, 45, options.linkOptions.maxAnchorLength.toLong())
+            assertEquals(args, 44, options.linkOptions.minUrlLength.toLong())
+            assertEquals(args, 200, options.linkOptions.maxUrlLength.toLong())
 
             val eopts = EntityOptions.parse(args)
             assertEquals("article", eopts.getName())
@@ -143,7 +143,7 @@ class TestPulsarOptions {
 
         val filteredLinks = links.filter { linkOptions.asUrlPredicate().test(it) }
         println(linkOptions.build())
-        println(linkOptions.report)
+        println(linkOptions.getReport())
 
         assertTrue(filteredLinks.size < links.size)
     }

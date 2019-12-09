@@ -13,7 +13,7 @@ interface FetchServer {
     fun isRunning(): Boolean
 
     @Throws(IOException::class)
-    fun initialize(applicationContext: ApplicationContext)
+    fun setup(applicationContext: ApplicationContext)
 
     fun canStart(): Boolean
 

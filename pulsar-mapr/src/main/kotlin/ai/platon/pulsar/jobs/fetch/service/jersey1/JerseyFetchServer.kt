@@ -29,7 +29,7 @@ class JerseyFetchServer(private val conf: ImmutableConfig) : FetchServer {
     private lateinit var masterReference: MasterReference
 
     @Throws(IOException::class)
-    override fun initialize(applicationContext: ApplicationContext) {
+    override fun setup(applicationContext: ApplicationContext) {
         this.masterReference = MasterReference(conf)
         if (!masterReference.test()) {
             FetchServer.LOG.warn("Failed to create fetch server : PMaster is not available")
@@ -138,7 +138,7 @@ fun main() {
     val context = ClassPathXmlApplicationContext(JOB_CONTEXT_CONFIG_LOCATION)
     val fetchServer = context.getBean(JerseyFetchServer::class.java)
     // JerseyFetchServer fetchServer1 = new JerseyFetchServer(context.getBean(ImmutableConfig.class));
-    fetchServer.initialize(context)
+    fetchServer.setup(context)
 
     if (!fetchServer.canStart()) {
         println("Can not start FetchServer")

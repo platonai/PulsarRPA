@@ -116,6 +116,9 @@ public interface PulsarConstants {
     int MAX_LIVE_LINK_PER_PAGE = 1000;
     int MAX_LINK_PER_PAGE = 4000;
 
+    /**
+     * Local file commands
+     * */
     String CMD_FORCE_GENERATE_SEEDS = "force-generate-seeds";
     String CMD_ENABLE_PROXY = "use_proxy"; // keep consistent with linux system variable
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";

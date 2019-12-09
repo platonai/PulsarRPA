@@ -13,5 +13,5 @@ public interface Configurable {
     /**
      * Set the configuration to be used by this object.
      */
-    void setConf(ImmutableConfig conf);
+    default void setConf(ImmutableConfig jobConf) {}
 }

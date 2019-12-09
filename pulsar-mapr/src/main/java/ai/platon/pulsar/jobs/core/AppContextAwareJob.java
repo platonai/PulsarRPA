@@ -55,7 +55,7 @@ public abstract class AppContextAwareJob extends PulsarJob {
 
         job.setContextConfigLocation(contextConfigLocation);
         job.setApplicationContext(applicationContext);
-        job.setConf(conf);
+        job.setJobConf(conf);
         job.setWebDb(applicationContext.getBean(WebDb.class));
 
         // Strip hadoop reserved args

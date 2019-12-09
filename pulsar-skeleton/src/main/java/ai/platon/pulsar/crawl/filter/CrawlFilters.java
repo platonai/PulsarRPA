@@ -178,6 +178,9 @@ public class CrawlFilters {
         return keyRanges;
     }
 
+    /**
+     * TODO: use pair
+     * */
     public String[] getMaxReversedKeyRange() {
         String[] keyRange = {null, null};
 

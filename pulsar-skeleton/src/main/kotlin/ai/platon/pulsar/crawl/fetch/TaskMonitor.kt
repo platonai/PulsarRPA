@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls
@@ -8,6 +9,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.PulsarConstants.FETCH_TASK_REMAINDER_NUMBER
+import ai.platon.pulsar.common.options.FetchOptions
+import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.data.PoolId
 import ai.platon.pulsar.crawl.data.PoolQueue
 import ai.platon.pulsar.crawl.data.TaskPool
@@ -31,9 +34,10 @@ import java.util.concurrent.atomic.AtomicInteger
 class TaskMonitor(
         private val taskTracker: FetchTaskTracker,
         val metrics: MetricsSystem,
-        conf: ImmutableConfig
-) : Parameterized, AutoCloseable {
+        immutableConfig: ImmutableConfig
+) : Parameterized, JobInitialized, AutoCloseable {
 
+    private lateinit var options: FetchOptions
     private val id = instanceSequence.incrementAndGet()
     private val feederCompleted = AtomicBoolean(false)
     private val fetchPools = PoolQueue()
@@ -54,29 +58,26 @@ class TaskMonitor(
     private val pendingTaskCount = AtomicInteger(0)
     private val finishedTaskCount = AtomicInteger(0)
 
-    private val fetchMode = conf.getEnum(FETCH_MODE, FetchMode.NATIVE)
-
-    private var groupMode = conf.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
+    private var groupMode = immutableConfig.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     /**
      * The minimal page throughout rate
      */
-    private var minPageThoRate = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_PAGES, -1)
+    private var minPageThoRate = immutableConfig.getInt(FETCH_THROUGHPUT_THRESHOLD_PAGES, -1)
     /**
      * Delay before crawl
      */
-    private var crawlDelay = conf.getDuration(FETCH_QUEUE_DELAY, Duration.ofSeconds(5))
-    private var minCrawlDelay = conf.getDuration(FETCH_QUEUE_MIN_DELAY, Duration.ofSeconds(0))
+    private var crawlDelay = immutableConfig.getDuration(FETCH_QUEUE_DELAY, Duration.ofSeconds(5))
+    private var minCrawlDelay = immutableConfig.getDuration(FETCH_QUEUE_MIN_DELAY, Duration.ofSeconds(0))
 
     /**
      * The maximal number of threads allowed to access a task pool
      */
-    private var poolThreads: Int = if (fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE
-        else conf.getInt(FETCH_THREADS_PER_QUEUE, 1)
+    private var poolThreads: Int = 1
 
     /**
      * Once timeout, the pending items should be put to the ready pool again.
      */
-    private var poolPendingTimeout: Duration = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(3))
+    private var poolPendingTimeout: Duration = immutableConfig.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(3))
     /**
      * @return Return true if the feeder is completed
      */
@@ -100,7 +101,12 @@ class TaskMonitor(
             return pool
         }
 
-    init {
+    override fun setup(jobConf: ImmutableConfig) {
+        this.options = FetchOptions(jobConf)
+
+        poolThreads = if (options.fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE
+        else jobConf.getInt(FETCH_THREADS_PER_QUEUE, 1)
+
         LOG.info(params.format())
     }
 
@@ -118,7 +124,7 @@ class TaskMonitor(
     @Synchronized
     fun produce(jobID: Int, url: String, page: WebPage) {
         val priority = page.fetchPriority
-        val task = FetchTask.create(jobID, priority, url, page, groupMode!!)
+        val task = FetchTask.create(jobID, priority, url, page, groupMode)
 
         if (task != null) {
             produce(task)

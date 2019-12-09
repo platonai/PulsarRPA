@@ -3,13 +3,11 @@
 # local mode, add class paths
 if [ "$PULSAR_RUNTIME_MODE" == "DEVELOPMENT" ]; then
   # development mode
-  # shellcheck disable=SC2231
-  for f in $PULSAR_HOME/$MODULE/lib/*.jar; do
+  for f in "$PULSAR_HOME/$MODULE"/lib/*.jar; do
     CLASSPATH=${CLASSPATH}:$f;
   done
 
-  # shellcheck disable=SC2231
-  for f in $PULSAR_HOME/$MODULE/target/*.jar; do
+  for f in "$PULSAR_HOME/$MODULE"/target/*.jar; do
     [[ ! sed-$f =~ -job.jar$ ]] && CLASSPATH=${CLASSPATH}:$f;
   done
 elif [ "$PULSAR_RUNTIME_MODE" == "ASSEMBLY" ]; then

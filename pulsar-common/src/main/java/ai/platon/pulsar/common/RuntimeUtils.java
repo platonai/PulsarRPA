@@ -39,12 +39,23 @@ public class RuntimeUtils {
     }
 
     /**
-     * Check local command file
+     * Check local command file to see if there are pending commands
+     * Supported local file commands can be found in PulsarConstants CMD_*
+     * General command options are supported:
+     * -keep: the command should be always keep in the file and execute every time the command file is checked,
+     *          otherwise the command is executed only
      */
     public static boolean hasLocalFileCommand(String command) {
         return hasLocalFileCommand(command, DEFAULT_COMMAND_FILE_CHECK_INTERVAL);
     }
 
+    /**
+     * Check local command file to see if there are pending commands
+     * Supported local file commands can be found in PulsarConstants CMD_*
+     * General command options are supported:
+     * -keep: the command should be always keep in the file and execute every time the command file is checked,
+     *          otherwise the command is executed only
+     */
     public static boolean hasLocalFileCommand(String command, Duration checkInterval) {
         boolean exist = false;
 

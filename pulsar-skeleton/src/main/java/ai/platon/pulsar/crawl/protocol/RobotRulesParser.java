@@ -147,8 +147,8 @@ public abstract class RobotRulesParser implements Configurable {
     /**
      * Set the {@link Configuration} object
      */
-    public void setConf(ImmutableConfig conf) {
-        this.conf = conf;
+    public void setConf(ImmutableConfig jobConf) {
+        this.conf = jobConf;
         refresh();
     }
 

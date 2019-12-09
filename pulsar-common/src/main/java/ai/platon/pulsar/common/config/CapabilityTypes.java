@@ -30,7 +30,7 @@ public interface CapabilityTypes {
     String PULSAR_CONFIG_DIR = "pulsar.configuration.dir";
     String PULSAR_CONFIG_ID = "pulsar.config.id";
     String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
-    String PULSAR_CONFIG_RESOURCES = "pulsar.config.resources";
+    String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "pulsar.config.resources";
 
     String PARAM_HOME_DIR = "pulsar.home.dir";
     String PARAM_TMP_DIR = "pulsar.tmp.dir";
@@ -298,7 +298,7 @@ public interface CapabilityTypes {
     /**
      * Indexing parameters
      */
-    String INDEX_JIT = "fetch.index.just.in.time";
+    String INDEXER_JIT = "indexer.just.in.time";
     String INDEXER_HOSTNAME = "index.server.hostname";
     String INDEXER_PORT = "index.server.port";
     String INDEXER_URL = "indexer.url";

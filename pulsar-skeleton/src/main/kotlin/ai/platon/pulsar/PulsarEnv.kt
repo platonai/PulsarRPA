@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.persist.gora.GoraStorage
-import org.h2.util.Utils
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
@@ -53,7 +52,7 @@ class PulsarEnv {
         init {
             // prerequisite system properties
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
-            setPropertyIfAbsent(PULSAR_CONFIG_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
+            setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
             setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, PulsarConstants.APP_CONTEXT_CONFIG_LOCATION)
             setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, PulsarConstants.H2_SESSION_FACTORY)
 

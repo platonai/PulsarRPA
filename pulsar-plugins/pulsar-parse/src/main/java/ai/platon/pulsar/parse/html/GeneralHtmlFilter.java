@@ -25,11 +25,8 @@ import java.util.List;
 @Deprecated
 public class GeneralHtmlFilter implements ParseFilter {
 
-    public enum Counter {jsoupFailure, noEntity, brokenEntity, brokenSubEntity}
-
-    static {
-        MetricsCounters.register(Counter.class);
-    }
+    public enum Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
+    static { MetricsCounters.register(Counter.class); }
 
     private ImmutableConfig conf;
     private MetricsCounters metricsCounters;

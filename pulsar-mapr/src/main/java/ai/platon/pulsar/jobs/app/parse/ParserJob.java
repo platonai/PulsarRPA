@@ -53,7 +53,7 @@ public class ParserJob extends AppContextAwareJob {
   }
 
   public ParserJob(ImmutableConfig conf) {
-    setConf(conf);
+    setJobConf(conf);
   }
 
   public static Collection<GWebPage.Field> getFields(ImmutableConfig conf) {
@@ -62,8 +62,8 @@ public class ParserJob extends AppContextAwareJob {
 
   @Override
   public void setup(Params params) throws Exception {
-    String crawlId = params.get(PulsarParams.ARG_CRAWL_ID, conf.get(STORAGE_CRAWL_ID));
-    String fetchMode = conf.get(CapabilityTypes.FETCH_MODE);
+    String crawlId = params.get(PulsarParams.ARG_CRAWL_ID, jobConf.get(STORAGE_CRAWL_ID));
+    String fetchMode = jobConf.get(CapabilityTypes.FETCH_MODE);
 
     batchId = params.get(PulsarParams.ARG_BATCH_ID, ALL_BATCHES);
     Boolean reparse = batchId.equalsIgnoreCase("-reparse");
@@ -72,12 +72,12 @@ public class ParserJob extends AppContextAwareJob {
     Boolean resume = params.getBoolean(PulsarParams.ARG_RESUME, false);
     Boolean force = params.getBoolean(PulsarParams.ARG_FORCE, false);
 
-    conf.set(STORAGE_CRAWL_ID, crawlId);
-    conf.set(BATCH_ID, batchId);
-    conf.setInt(CapabilityTypes.LIMIT, limit);
-    conf.setBoolean(CapabilityTypes.RESUME, resume);
-    conf.setBoolean(CapabilityTypes.FORCE, force);
-    conf.setBoolean(CapabilityTypes.PARSE_REPARSE, reparse);
+    jobConf.set(STORAGE_CRAWL_ID, crawlId);
+    jobConf.set(BATCH_ID, batchId);
+    jobConf.setInt(CapabilityTypes.LIMIT, limit);
+    jobConf.setBoolean(CapabilityTypes.RESUME, resume);
+    jobConf.setBoolean(CapabilityTypes.FORCE, force);
+    jobConf.setBoolean(CapabilityTypes.PARSE_REPARSE, reparse);
 
     LOG.info(Params.format(
         "className", this.getClass().getSimpleName(),
@@ -93,7 +93,7 @@ public class ParserJob extends AppContextAwareJob {
 
   @Override
   public void initJob() throws Exception {
-    Collection<GWebPage.Field> fields = getFields(getConf());
+    Collection<GWebPage.Field> fields = getFields(getJobConf());
     MapFieldValueFilter<String, GWebPage> batchIdFilter = getBatchIdFilter(batchId);
 
     initMapper(currentJob, fields, String.class, GWebPage.class, ParserMapper.class, batchIdFilter);
@@ -119,7 +119,7 @@ public class ParserJob extends AppContextAwareJob {
       return -1;
     }
 
-    ImmutableConfig conf = getConf();
+    ImmutableConfig conf = getJobConf();
 
     String batchId = args[0];
     if (batchId.startsWith("-")) {

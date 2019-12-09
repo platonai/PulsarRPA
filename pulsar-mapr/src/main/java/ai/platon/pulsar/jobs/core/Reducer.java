@@ -29,13 +29,18 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.Instant;
 
+import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+
 public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer<K1, V1, K2, V2> implements Configurable {
 
     protected static final Logger LOG = LoggerFactory.getLogger(Reducer.class.getName());
 
     protected Context context;
 
-    protected ImmutableConfig conf;
+    /**
+     * The job conf is passed from a MapReduce Job
+     * */
+    protected ImmutableConfig jobConf;
     protected MetricsCounters metricsCounters;
     protected MetricsReporter pulsarReporter;
 
@@ -45,15 +50,20 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
 
     protected void beforeSetup(Context context) throws IOException, InterruptedException {
         this.context = context;
-        this.conf = new ImmutableConfig(context.getConfiguration());
+        this.jobConf = new ImmutableConfig(context.getConfiguration());
 
         this.metricsCounters = new MetricsCounters();
-        this.pulsarReporter = new MetricsReporter(context.getJobName(), metricsCounters, conf, context);
+        this.pulsarReporter = new MetricsReporter(context.getJobName(), metricsCounters, jobConf, context);
+
+        String crawlId = jobConf.get(STORAGE_CRAWL_ID);
+        String batchId = jobConf.get(BATCH_ID);
 
         LOG.info(Params.formatAsLine(
                 "---- reducer setup ", " ----",
                 "className", this.getClass().getSimpleName(),
                 "startTime", DateTimeUtil.format(startTime),
+                "crawlId", crawlId,
+                "batchId", batchId,
                 "reducerTasks", context.getNumReduceTasks(),
                 "hostname", metricsCounters.getHostname()
         ));
@@ -131,11 +141,11 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
 
     @Override
     public ImmutableConfig getConf() {
-        return conf;
+        return jobConf;
     }
 
     @Override
-    public void setConf(ImmutableConfig conf) {
-        this.conf = conf;
+    public void setConf(ImmutableConfig jobConf) {
+        this.jobConf = jobConf;
     }
 }

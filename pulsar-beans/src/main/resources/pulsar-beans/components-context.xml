@@ -24,12 +24,13 @@
     <bean id="generateComponent" class="ai.platon.pulsar.crawl.component.GenerateComponent">
         <constructor-arg ref="conf"/>
         <constructor-arg ref="crawlFilters"/>
-        <property name="webDb" ref="webDb"/>
-        <property name="urlFilters" ref="urlFilters"/>
-        <property name="urlNormalizers" ref="urlNormalizers"/>
-        <property name="scoringFilters" ref="scoringFilters"/>
-        <property name="fetchSchedule" ref="fetchSchedule"/>
-        <property name="pulsarMetrics" ref="pulsarMetrics"/>
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="urlFilters"/>
+        <constructor-arg ref="urlNormalizers"/>
+        <constructor-arg ref="scoringFilters"/>
+        <constructor-arg ref="fetchSchedule"/>
+        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="pulsarCounters"/>
     </bean>
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
@@ -54,15 +55,16 @@
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="indexComponent" class="ai.platon.pulsar.crawl.component.IndexComponent">
-        <property name="indexWriters" ref="indexWriters"/>
-        <property name="indexingFilters" ref="indexingFilters"/>
+        <constructor-arg ref="indexWriters"/>
+        <constructor-arg ref="indexingFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="updateComponent" class="ai.platon.pulsar.crawl.component.UpdateComponent">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="fetchSchedule"/>
-        <constructor-arg ref="pulsarMetrics"/>
         <constructor-arg ref="scoringFilters"/>
+        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="pulsarCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent">
@@ -106,6 +108,7 @@
         <constructor-arg ref="batchFetchComponent"/>
         <constructor-arg ref="taskMonitor"/>
         <constructor-arg ref="taskSchedulers"/>
+        <constructor-arg ref="jitIndexer"/>
         <constructor-arg ref="conf"/>
     </bean>
 

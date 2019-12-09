@@ -30,10 +30,6 @@ class FetchThread(
     private val LOG = FetchMonitor.LOG
 
     private val id: Int
-    /**
-     * Native, Crowdsourcing, Proxy
-     */
-    private val fetchMode: FetchMode
 
     /**
      * Fix the thread to a specified queue as possible as we can
@@ -52,8 +48,6 @@ class FetchThread(
 
         this.isDaemon = true
         this.name = javaClass.simpleName + "-" + id
-
-        this.fetchMode = immutableConfig.getEnum(FETCH_MODE, FetchMode.NATIVE)
     }
 
     fun halt() {
@@ -84,6 +78,8 @@ class FetchThread(
                     continue
                 }
 
+                // TODO: is there a better place to set fetch mode?
+                task.page?.fetchMode = fetchMonitor.options.fetchMode
                 val page = fetchOne(task)
                 write(page.key, page)
 
@@ -130,6 +126,7 @@ class FetchThread(
     private fun schedule(): FetchTask? {
         var fetchTask: FetchTask? = null
 
+        val fetchMode = fetchMonitor.options.fetchMode
         if (fetchMode == FetchMode.CROWDSOURCING) {
             val response = taskScheduler.pollFetchResult()
 
@@ -164,7 +161,9 @@ class FetchThread(
     }
 
     private fun fetchOne(task: FetchTask): WebPage {
-        val page = fetchComponent.fetchContent(task.page)
+        // TODO: throw a exception if page is null
+        val page = task.page!!
+        fetchComponent.fetchContent(page)
 
         val queueId = PoolId(task.priority, task.protocol, task.host)
         taskScheduler.finish(queueId, task.itemId)

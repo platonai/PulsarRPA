@@ -31,13 +31,13 @@ public class ParserMapper extends GoraMapper<String, GWebPage, String, GWebPage>
 
   @Override
   public void setup(Context context) {
-    batchId = new Utf8(conf.get(BATCH_ID, ALL_BATCHES));
-    pageParser = new PageParser(conf);
-    resume = conf.getBoolean(RESUME, false);
-    reparse = conf.getBoolean(PARSE_REPARSE, false);
-    force = conf.getBoolean(FORCE, false);
-    limit = conf.getInt(LIMIT, -1);
-    skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true);
+    batchId = new Utf8(jobConf.get(BATCH_ID, ALL_BATCHES));
+    pageParser = new PageParser(jobConf);
+    resume = jobConf.getBoolean(RESUME, false);
+    reparse = jobConf.getBoolean(PARSE_REPARSE, false);
+    force = jobConf.getBoolean(FORCE, false);
+    limit = jobConf.getInt(LIMIT, -1);
+    skipTruncated = jobConf.getBoolean(PARSE_SKIP_TRUNCATED, true);
 
     LOG.info(Params.format(
         "batchId", batchId,

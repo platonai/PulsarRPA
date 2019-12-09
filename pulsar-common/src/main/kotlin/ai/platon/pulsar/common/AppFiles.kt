@@ -96,7 +96,7 @@ object AppFiles {
 
     @Throws(IOException::class)
     fun writeLastGeneratedRows(rows: Long): Path {
-        val path = AppPaths.PATH_LAST_BATCH_ID
+        val path = AppPaths.PATH_LAST_GENERATED_ROWS
         Files.write(path, (rows.toString() + "\n").toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         return path
     }
@@ -112,14 +112,14 @@ object AppFiles {
     }
 
     @Throws(IOException::class)
-    fun writeBatchId(batchId: String?): Path? {
-        if (batchId != null && !batchId.isEmpty()) {
-            val path = AppPaths.PATH_LAST_BATCH_ID
+    fun writeBatchId(batchId: String): Path {
+        val path = AppPaths.PATH_LAST_BATCH_ID
+
+        if (batchId.isNotEmpty()) {
             Files.write(path, (batchId + "\n").toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-            return path
         }
 
-        return null
+        return path
     }
 
     fun readBatchIdOrDefault(defaultValue: String): String {
@@ -136,8 +136,7 @@ object AppFiles {
      */
     fun createSharedFileTask(url: String) {
         try {
-            val paths = AppPaths
-            val path = paths.get(paths.WEB_CACHE_DIR.toString(), paths.fromUri(url, ".task"))
+            val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(url, ".task"))
             Files.write(path, url.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
             log.error(e.toString())
@@ -145,8 +144,7 @@ object AppFiles {
     }
 
     fun getCachedWebPage(url: String): String? {
-        val paths = AppPaths
-        val path = paths.get(paths.WEB_CACHE_DIR.toString(), paths.fromUri(url, ".htm"))
+        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(url, ".htm"))
         if (Files.notExists(path)) {
             return null
         }

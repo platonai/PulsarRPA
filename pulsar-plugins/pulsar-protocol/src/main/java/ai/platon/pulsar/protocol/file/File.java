@@ -72,11 +72,11 @@ public class File implements Protocol {
      * Set the {@link Configuration} object
      */
     @Override
-    public void setConf(ImmutableConfig conf) {
-        this.conf = conf;
-        this.maxContentLength = conf.getInt("file.content.limit", 64 * 1024);
-        this.crawlParents = conf.getBoolean("file.crawl.parent", true);
-        this.symlinksAsRedirects = conf.getBoolean(
+    public void setConf(ImmutableConfig jobConf) {
+        this.conf = jobConf;
+        this.maxContentLength = jobConf.getInt("file.content.limit", 64 * 1024);
+        this.crawlParents = jobConf.getBoolean("file.crawl.parent", true);
+        this.symlinksAsRedirects = jobConf.getBoolean(
                 "file.crawl.redirect_noncanonical", true);
     }
 

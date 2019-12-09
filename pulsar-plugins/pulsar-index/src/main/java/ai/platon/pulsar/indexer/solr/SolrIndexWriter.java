@@ -78,7 +78,6 @@ public class SolrIndexWriter implements IndexWriter {
 
     public SolrIndexWriter(IndexerMapping indexerMapping, ImmutableConfig conf) {
         this.indexerMapping = indexerMapping;
-
         reload(conf);
     }
 
