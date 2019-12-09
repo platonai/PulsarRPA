@@ -35,29 +35,8 @@ import java.util.*
 /**
  * Parse html document into fields
  */
-class BoilerpipeFilter(conf: ImmutableConfig) : ParseFilter {
-    private var conf: ImmutableConfig? = null
-    private var primerParser: PrimerParser? = null
-    private val metatagset: MutableSet<String> = HashSet()
-
-    init {
-        reload(conf)
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        this.conf = conf
-        primerParser = PrimerParser(conf)
-        // Specify whether we want a specific subset of metadata
-        // by default take everything we can find
-        val values = conf.getStrings(CapabilityTypes.METATAG_NAMES, "*")
-        for (v in values) {
-            metatagset.add(v.toLowerCase(Locale.ROOT))
-        }
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return conf!!
-    }
+class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
+    private val primerParser = PrimerParser(conf)
 
     override fun filter(parseContext: ParseContext) {
         val page = parseContext.page
@@ -71,8 +50,8 @@ class BoilerpipeFilter(conf: ImmutableConfig) : ParseFilter {
      */
     fun extract(page: WebPage, encoding: String?): TextDocument? {
         val doc = extract(page) ?: return null
-        page.setContentTitle(doc.contentTitle)
-        page.setContentText(doc.textContent)
+        page.contentTitle = doc.contentTitle
+        page.contentText = doc.textContent
         page.pageCategory = PageCategory.valueOf(doc.pageCategoryAsString)
         page.updateContentPublishTime(doc.publishTime)
         page.updateContentModifiedTime(doc.modifiedTime)
@@ -82,14 +61,14 @@ class BoilerpipeFilter(conf: ImmutableConfig) : ParseFilter {
     }
 
     private fun extract(page: WebPage): TextDocument? {
-        Objects.requireNonNull(page)
         if (page.content == null) {
             LOG.warn("Can not extract page without content, url : " + page.url)
             return null
         }
+
         try {
             if (page.encoding == null) {
-                primerParser!!.detectEncoding(page)
+                primerParser.detectEncoding(page)
             }
             val inputSource = page.contentAsSaxInputSource
             val doc = SAXInput().parse(page.location, inputSource)
@@ -99,6 +78,7 @@ class BoilerpipeFilter(conf: ImmutableConfig) : ParseFilter {
         } catch (e: ProcessingException) {
             LOG.warn("Failed to extract text content by boilerpipe, " + e.message)
         }
+
         return null
     }
 

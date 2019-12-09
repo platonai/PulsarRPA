@@ -15,14 +15,15 @@ import java.io.IOException
 /**
  * Created by vincent on 16-9-14.
  *
- *
  * Parse Web page using Jsoup if and only if WebPage.query is specified
- *
  *
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
  */
 @Deprecated("Use Web SQL instead")
-class GeneralHtmlFilter : ParseFilter {
+class GeneralHtmlFilter(
+        val metricsCounters: MetricsCounters,
+        val conf: ImmutableConfig
+) : ParseFilter {
     enum class Counter {
         jsoupFailure, noEntity, brokenEntity, brokenSubEntity
     }
@@ -31,27 +32,6 @@ class GeneralHtmlFilter : ParseFilter {
         init {
             MetricsCounters.register(Counter::class.java)
         }
-    }
-
-    private var conf: ImmutableConfig? = null
-    private var metricsCounters: MetricsCounters
-
-    constructor() {
-        metricsCounters = MetricsCounters()
-    }
-
-    constructor(conf: ImmutableConfig) {
-        metricsCounters = MetricsCounters()
-        reload(conf)
-    }
-
-    constructor(metricsCounters: MetricsCounters, conf: ImmutableConfig) {
-        this.metricsCounters = metricsCounters
-        reload(conf)
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        this.conf = conf
     }
 
     @Throws(IOException::class)
@@ -111,9 +91,5 @@ class GeneralHtmlFilter : ParseFilter {
 
         page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
         metricsCounters.increase(Counter.brokenSubEntity, brokenSubEntity)
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return conf!!
     }
 }

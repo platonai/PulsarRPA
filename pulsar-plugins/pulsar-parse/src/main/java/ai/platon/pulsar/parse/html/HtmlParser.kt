@@ -56,33 +56,17 @@ class HtmlParser(
         private val webDb: WebDb,
         private val crawlFilters: CrawlFilters,
         private val parseFilters: ParseFilters,
-        private var conf: ImmutableConfig
+        private val conf: ImmutableConfig
 ) : Parser {
-    private var parserImpl: String? = null
-    private var defaultCharEncoding: String? = null
-    private var encodingDetector: EncodingDetector? = null
-    private var primerParser: PrimerParser? = null
-    private var cachingPolicy: String? = null
-    private var metricsSystem: MetricsSystem? = null
+    private val parserImpl = conf[CapabilityTypes.PARSE_HTML_IMPL, "neko"]
+    private val defaultCharEncoding = conf[CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8"]
+    private val cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, PulsarConstants.CACHING_FORBIDDEN_CONTENT]
+    private val primerParser = PrimerParser(conf)
+    private val encodingDetector = EncodingDetector(conf)
+    private val metricsSystem = MetricsSystem(webDb, conf)
 
     init {
-        reload(conf)
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        this.conf = conf
-        parserImpl = conf[CapabilityTypes.PARSE_HTML_IMPL, "neko"]
-        defaultCharEncoding = conf[CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8"]
-        cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, PulsarConstants.CACHING_FORBIDDEN_CONTENT]
-        primerParser = PrimerParser(conf)
-        encodingDetector = EncodingDetector(conf)
-        metricsSystem = MetricsSystem(webDb, conf)
         Parser.LOG.info(params.formatAsLine())
-        Parser.LOG.info("Active parse filters : $parseFilters")
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return conf
     }
 
     override fun getParams(): Params {
@@ -90,7 +74,8 @@ class HtmlParser(
                 "className", this.javaClass.simpleName,
                 "parserImpl", parserImpl,
                 "defaultCharEncoding", defaultCharEncoding,
-                "cachingPolicy", cachingPolicy
+                "cachingPolicy", cachingPolicy,
+                "parseFilters", parseFilters
         )
     }
 
@@ -100,7 +85,7 @@ class HtmlParser(
             val baseUrl = page.baseUrl
             val baseURL = URL(baseUrl)
             if (page.encoding == null) {
-                primerParser!!.detectEncoding(page)
+                primerParser.detectEncoding(page)
             }
             val inputSource = page.contentAsSaxInputSource
             val documentFragment = parse(baseUrl, inputSource)
@@ -111,8 +96,8 @@ class HtmlParser(
             }
             val parseContext = ParseContext(page, metaTags, documentFragment, parseResult)
             parseLinks(baseURL, parseContext)
-            page.pageTitle = primerParser!!.getPageTitle(documentFragment)
-            page.pageText = primerParser!!.getPageText(documentFragment)
+            page.pageTitle = primerParser.getPageTitle(documentFragment)
+            page.pageText = primerParser.getPageText(documentFragment)
             page.pageModel.clear()
             parseFilters.filter(parseContext)
             parseContext.parseResult
@@ -146,9 +131,9 @@ class HtmlParser(
         val docRoot = parseContext.documentFragment
         val parseResult = parseContext.parseResult
         if (!metaTags.noFollow) { // okay to follow links
-            val baseURLFromTag = primerParser!!.getBaseURL(docRoot)
+            val baseURLFromTag = primerParser.getBaseURL(docRoot)
             baseURL = baseURLFromTag ?: baseURL
-            primerParser!!.getLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
+            primerParser.getLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
         }
         page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
         page.variables[PulsarParams.VAR_LINKS_COUNT] = parseResult.hypeLinks.size

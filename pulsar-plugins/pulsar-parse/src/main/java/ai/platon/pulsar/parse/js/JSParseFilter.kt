@@ -46,11 +46,7 @@ import java.util.*
  *
  * @author Andrzej Bialecki &lt;ab@getopt.org&gt;
  */
-class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
-    private var conf: ImmutableConfig? = null
-    override fun reload(conf: ImmutableConfig) {
-        this.conf = conf
-    }
+class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
 
     /**
      * Scan the JavaScript looking for possible [HypeLink]'s
@@ -58,8 +54,7 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
      * @param parseContext Context of parse.
      */
     override fun filter(parseContext: ParseContext) {
-        walk(parseContext.documentFragment,
-                parseContext.metaTags, parseContext.url, parseContext.parseResult.hypeLinks)
+        walk(parseContext.documentFragment, parseContext.metaTags, parseContext.url, parseContext.parseResult.hypeLinks)
     }
 
     private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hypeLinks: MutableList<HypeLink>) {
@@ -75,19 +70,19 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
                     script.append(nn.item(i).nodeValue)
                 }
                 // This logging makes the output very messy.
-// if (log.isInfoEnabled()) {
-// log.info("script: language=" + lang + ", text: " +
-// script.toString());
-// }
+                // if (log.isInfoEnabled()) {
+                // log.info("script: language=" + lang + ", text: " +
+                // script.toString());
+                // }
                 hypeLinks.addAll(getJSLinks(script.toString(), "", base))
             } else { // process all HTML 4.0 events, if present...
                 val attrs = n.getAttributes()
                 val len = attrs.length
                 for (i in 0 until len) { // Window: onload,onunload
-// Form: onchange,onsubmit,onreset,onselect,onblur,onfocus
-// Keyboard: onkeydown,onkeypress,onkeyup
-// Mouse:
-// onclick,ondbclick,onmousedown,onmouseout,onmousover,onmouseup
+                    // Form: onchange,onsubmit,onreset,onselect,onblur,onfocus
+                    // Keyboard: onkeydown,onkeypress,onkeyup
+                    // Mouse:
+                    // onclick,ondbclick,onmousedown,onmouseout,onmousover,onmouseup
                     val anode = attrs.item(i)
                     var links = ArrayList<HypeLink>()
                     if (anode.nodeName.startsWith("on")) {
@@ -108,8 +103,8 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
         }
     }
     // Alternative pattern, which limits valid url characters.
-// private static final String URI_PATTERN =
-// "(^|\\s*?)[A-Za-z0-9/](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+[/.](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*,;/?:@&~=%-]*))?($|\\s*)";
+    // private static final String URI_PATTERN =
+    // "(^|\\s*?)[A-Za-z0-9/](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+[/.](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*,;/?:@&~=%-]*))?($|\\s*)";
     /**
      * Set the [Configuration] object
      *
@@ -155,11 +150,9 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
         try {
             val cp: PatternCompiler = Perl5Compiler()
             val pattern = cp.compile(STRING_PATTERN,
-                    Perl5Compiler.CASE_INSENSITIVE_MASK or Perl5Compiler.READ_ONLY_MASK
-                            or Perl5Compiler.MULTILINE_MASK)
+                    Perl5Compiler.CASE_INSENSITIVE_MASK or Perl5Compiler.READ_ONLY_MASK or Perl5Compiler.MULTILINE_MASK)
             val pattern1 = cp.compile(URI_PATTERN,
-                    Perl5Compiler.CASE_INSENSITIVE_MASK or Perl5Compiler.READ_ONLY_MASK
-                            or Perl5Compiler.MULTILINE_MASK)
+                    Perl5Compiler.CASE_INSENSITIVE_MASK or Perl5Compiler.READ_ONLY_MASK or Perl5Compiler.MULTILINE_MASK)
             val matcher: PatternMatcher = Perl5Matcher()
             val matcher1: PatternMatcher = Perl5Matcher()
             val input = PatternMatcherInput(plainText)
@@ -176,16 +169,16 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
                     }
                     continue
                 }
+
                 url = if (url.startsWith("www.")) {
                     "http://$url"
-                } else { // See if candidate URL is parseable. If not, pass and move on to
-// the next match.
+                } else {
+                    // See if candidate URL is parseable. If not, pass and move on to the next match.
                     try {
                         URL(baseURL, url).toString()
                     } catch (ex: MalformedURLException) {
                         if (LOG.isTraceEnabled) {
-                            LOG.trace(" - failed URL parse '" + url + "' and baseURL '"
-                                    + baseURL + "'", ex)
+                            LOG.trace(" - failed URL parse '$url' and baseURL '$baseURL'", ex)
                         }
                         continue
                     }
@@ -194,22 +187,14 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
                 if (LOG.isTraceEnabled) {
                     LOG.trace(" - outlink from JS: '$url'")
                 }
+
                 hypeLinks.add(HypeLink(url, anchor))
             }
-        } catch (ex: Exception) { // if it is a malformed URL we just throw it away and continue with
-// extraction.
-            if (LOG.isErrorEnabled) {
-                LOG.error(" - invalid or malformed URL", ex)
-            }
+        } catch (ex: Exception) {
+            // if it is a malformed URL we just throw it away and continue with extraction.
+            LOG.error(" - invalid or malformed URL", ex)
         }
         return hypeLinks
-    }
-
-    /**
-     * Get the [Configuration] object
-     */
-    override fun getConf(): ImmutableConfig {
-        return conf!!
     }
 
     companion object {
@@ -218,37 +203,5 @@ class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
         private const val STRING_PATTERN = "(\\\\*(?:\"|\'))([^\\s\"\']+?)(?:\\1)"
         // A simple pattern. This allows also invalid URL characters.
         private const val URI_PATTERN = "(^|\\s*?)/?\\S+?[/\\.]\\S+($|\\s*)"
-
-        /**
-         * Main method which can be run from command line with the plugin option. The
-         * method takes two arguments e.g. o.a.n.parse.js.JSParseFilter file.js
-         * baseURL
-         *
-         * @param args
-         * @throws Exception
-         */
-        @Throws(Exception::class)
-        @JvmStatic
-        fun main(args: Array<String>) {
-            if (args.size < 2) {
-                System.err.println(JSParseFilter::class.java.name + " file.js baseURL")
-                return
-            }
-            val `in`: InputStream = FileInputStream(args[0])
-            val br = BufferedReader(InputStreamReader(`in`, "UTF-8"))
-            val sb = StringBuilder()
-            var line: String?
-            while (br.readLine().also { line = it } != null) {
-                sb.append(line).append("\n")
-            }
-            val parseFilter = JSParseFilter(ImmutableConfig())
-            val links = parseFilter.getJSLinks(sb.toString(), "", args[1])
-            println("Live links extracted: " + links.size)
-            links.stream().map { l: HypeLink -> " - $l" }.forEach { x: String? -> println(x) }
-        }
-    }
-
-    init {
-        reload(conf)
     }
 }

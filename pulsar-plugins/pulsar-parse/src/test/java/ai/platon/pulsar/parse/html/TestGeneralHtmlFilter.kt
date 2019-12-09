@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.parse.html
 
+import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupUtils
@@ -68,7 +69,7 @@ class TestGeneralHtmlFilter : HtmlParserTestBase() {
         val baseUrl = "http://news.example.com/selector/1/pages/html_example_3_news.html"
         val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
         page.options = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
-        val filter = GeneralHtmlFilter(conf!!)
+        val filter = GeneralHtmlFilter(MetricsCounters(), conf)
         val parseResult = ParseResult()
         filter.filter(page, parseResult)
         Assert.assertTrue(parseResult.isParsed)
@@ -94,7 +95,7 @@ class TestGeneralHtmlFilter : HtmlParserTestBase() {
                 " -c reviews -cd .atl-main -ci .atl-item " +
                 " -FFauthor=.atl-info%span:eq(0)>a! -FFcreated=.atl-info%span:eq(1)! -FFcontent=.bbs-content"
         val parseResult = ParseResult()
-        val extractor = GeneralHtmlFilter(conf!!)
+        val extractor = GeneralHtmlFilter(MetricsCounters(), conf)
         extractor.filter(page, parseResult)
         Assert.assertTrue(parseResult.isParsed)
         Assert.assertTrue(parseResult.isSuccess)

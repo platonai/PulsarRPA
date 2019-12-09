@@ -25,34 +25,16 @@ import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.persist.Metadata
 import org.apache.commons.logging.LogFactory
 import java.util.*
+import kotlin.collections.HashSet
 
 /**
  * ParseResult HTML meta tags (keywords, description) and store them in the parse
  * metadata so that they can be indexed with the index-metadata plugin with the
  * prefix 'metatag.'. Metatags are matched ignoring case.
  */
-class MetaTagsParser : ParseFilter {
-    private var conf: ImmutableConfig? = null
-    private val metatagset: MutableSet<String> = HashSet()
-
-    constructor() {}
-    constructor(conf: ImmutableConfig) {
-        reload(conf)
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        this.conf = conf
-        // specify whether we want a specific subset of metadata
-// by default take everything we can find
-        val values = conf.getStrings(CapabilityTypes.METATAG_NAMES, "*")
-        for (`val` in values) {
-            metatagset.add(`val`.toLowerCase(Locale.ROOT))
-        }
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return conf!!
-    }
+class MetaTagsParser(val conf: ImmutableConfig) : ParseFilter {
+    private val metatagset: Set<String> = conf.getStrings(CapabilityTypes.METATAG_NAMES, "*")
+            .mapTo(HashSet()) { it.toLowerCase() }
 
     override fun filter(parseContext: ParseContext) {
         val page = parseContext.page

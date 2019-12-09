@@ -144,7 +144,9 @@ public class TestMetaTagsParser {
     public void setup() {
         conf = new MutableConfig(immutableConfig);
         conf.set(METATAG_NAMES, "*");
-        metaTagsParser.reload(conf);
+
+        // TODO: reload is deleted
+        // metaTagsParser.reload(conf);
     }
 
     /**

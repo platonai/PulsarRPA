@@ -29,7 +29,7 @@ import java.nio.charset.Charset
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
 open class HtmlParserTestBase {
     @Autowired
-    protected var conf: ImmutableConfig? = null
+    protected lateinit var conf: ImmutableConfig
 
     protected fun getPage(html: String, charset: Charset): WebPage {
         val page = WebPage.newWebPage(exampleUrl)

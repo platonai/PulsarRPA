@@ -17,6 +17,7 @@
 
 package ai.platon.pulsar.crawl.parse;
 
+import ai.platon.pulsar.common.config.Parameterized;
 import ai.platon.pulsar.common.config.ReloadableParameterized;
 import ai.platon.pulsar.crawl.parse.html.ParseContext;
 import org.slf4j.Logger;
@@ -28,10 +29,8 @@ import java.io.IOException;
  * Extension point for DOM-based parsers. Permits one to add additional metadata
  * to parses provided by the html or tika plugins. All plugins found which
  * implement this extension point are run sequentially on the parse.
- *
- * TODO: ParseFilter should not be reloadable
  */
-public interface ParseFilter extends ReloadableParameterized {
+public interface ParseFilter extends Parameterized {
     Logger LOG = LoggerFactory.getLogger(ParseFilter.class);
 
     /**
