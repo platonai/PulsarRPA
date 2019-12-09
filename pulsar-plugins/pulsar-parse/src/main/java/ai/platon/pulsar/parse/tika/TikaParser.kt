@@ -14,222 +14,157 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.parse.tika;
+package ai.platon.pulsar.parse.tika
 
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.filter.CrawlFilters;
-import ai.platon.pulsar.crawl.parse.ParseFilters;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags;
-import ai.platon.pulsar.crawl.parse.html.ParseContext;
-import ai.platon.pulsar.crawl.parse.html.PrimerParser;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.ParseStatus;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.html.dom.HTMLDocumentImpl;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.html.HtmlMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.DocumentFragment;
-
-import java.io.ByteArrayInputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
-import static ai.platon.pulsar.common.config.CapabilityTypes.CACHING_FORBIDDEN_KEY;
-import static ai.platon.pulsar.common.config.PulsarConstants.CACHING_FORBIDDEN_CONTENT;
-import static ai.platon.pulsar.persist.ParseStatus.REFRESH_HREF;
-import static ai.platon.pulsar.persist.ParseStatus.REFRESH_TIME;
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.crawl.filter.CrawlFilters
+import ai.platon.pulsar.crawl.parse.ParseFilters
+import ai.platon.pulsar.crawl.parse.ParseResult
+import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
+import ai.platon.pulsar.crawl.parse.Parser
+import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
+import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import org.apache.commons.lang3.StringUtils
+import org.apache.html.dom.HTMLDocumentImpl
+import org.apache.tika.metadata.Metadata
+import org.apache.tika.metadata.TikaCoreProperties
+import org.apache.tika.parser.ParseContext
+import org.apache.tika.parser.html.HtmlMapper
+import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
+import java.net.MalformedURLException
+import java.net.URL
+import java.util.*
 
 /**
  * Wrapper for Tika parsers. Mimics the HTMLParser but using the XHTML
  * representation returned by Tika as SAX events
- ***/
-public class TikaParser implements ai.platon.pulsar.crawl.parse.Parser {
+ */
+class TikaParser(
+        val crawlFilters: CrawlFilters,
+        val parseFilters: ParseFilters,
+        private val conf: ImmutableConfig
+) : Parser {
+    var tikaConfig: PulsarTikaConfig? = null
+        private set
+    private var primerParser: PrimerParser? = null
+    private var cachingPolicy: String? = null
+    private var HTMLMapper: HtmlMapper? = null
 
-    public static final Logger LOG = LoggerFactory.getLogger(TikaParser.class);
-
-    private ImmutableConfig conf;
-    private CrawlFilters crawlFilters;
-    private ParseFilters parseFilters;
-
-    private PulsarTikaConfig tikaConfig;
-    private PrimerParser primerParser;
-    private String cachingPolicy;
-
-    private HtmlMapper HTMLMapper;
-
-    public TikaParser() {
+    init {
+        reload(conf)
     }
 
-    public TikaParser(ImmutableConfig conf) {
-        this(new CrawlFilters(conf), new ParseFilters(conf), conf);
-    }
-
-    public TikaParser(ParseFilters parseFilters, ImmutableConfig conf) {
-        this(new CrawlFilters(conf), parseFilters, conf);
-    }
-
-    public TikaParser(CrawlFilters crawlFilters, ParseFilters parseFilters, ImmutableConfig conf) {
-        this.crawlFilters = crawlFilters;
-        this.parseFilters = parseFilters;
-        reload(conf);
-    }
-
-    public ParseFilters getParseFilters() {
-        return parseFilters;
-    }
-
-    public void setParseFilters(ParseFilters parseFilters) {
-        this.parseFilters = parseFilters;
-    }
-
-    public CrawlFilters getCrawlFilters() {
-        return crawlFilters;
-    }
-
-    public void setCrawlFilters(CrawlFilters crawlFilters) {
-        this.crawlFilters = crawlFilters;
-    }
-
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        this.primerParser = new PrimerParser(conf);
-
-        try {
-            tikaConfig = PulsarTikaConfig.getDefaultConfig();
-        } catch (Exception e2) {
-            String message = "Problem loading default Tika configuration";
-            LOG.error(message, e2);
-            throw new RuntimeException(e2);
+    override fun reload(conf: ImmutableConfig) {
+        primerParser = PrimerParser(conf)
+        tikaConfig = try {
+            PulsarTikaConfig.defaultConfig
+        } catch (e2: Exception) {
+            val message = "Problem loading default Tika configuration"
+            LOG.error(message, e2)
+            throw RuntimeException(e2)
         }
-
         // use a custom html mapper
-        String htmlmapperClassName = conf.get("tika.htmlmapper.classname");
+        val htmlmapperClassName = conf["tika.htmlmapper.classname"]
         if (StringUtils.isNotBlank(htmlmapperClassName)) {
-            try {
-                Class HTMLMapperClass = Class.forName(htmlmapperClassName);
-                boolean interfaceOK = HtmlMapper.class.isAssignableFrom(HTMLMapperClass);
+            HTMLMapper = try {
+                val HTMLMapperClass = Class.forName(htmlmapperClassName)
+                val interfaceOK = HtmlMapper::class.java.isAssignableFrom(HTMLMapperClass)
                 if (!interfaceOK) {
-                    throw new RuntimeException("Class " + htmlmapperClassName + " does not implement HtmlMapper");
+                    throw RuntimeException("Class $htmlmapperClassName does not implement HtmlMapper")
                 }
-                HTMLMapper = (HtmlMapper) HTMLMapperClass.newInstance();
-            } catch (Exception e) {
-                LOG.error("Can't generate instance for class " + htmlmapperClassName);
-                throw new RuntimeException("Can't generate instance for class " + htmlmapperClassName);
+                HTMLMapperClass.newInstance() as HtmlMapper
+            } catch (e: Exception) {
+                LOG.error("Can't generate instance for class $htmlmapperClassName")
+                throw RuntimeException("Can't generate instance for class $htmlmapperClassName")
             }
         }
-
-        this.cachingPolicy = getConf().get("parser.caching.forbidden.policy", CACHING_FORBIDDEN_CONTENT);
+        cachingPolicy = getConf()["parser.caching.forbidden.policy", PulsarConstants.CACHING_FORBIDDEN_CONTENT]
     }
 
-    @Override
-    public ParseResult parse(WebPage page) {
-        String baseUrl = page.getLocation();
-        URL base;
-        try {
-            base = new URL(baseUrl);
-        } catch (MalformedURLException e) {
-            return ParseResult.failed(e);
+    override fun parse(page: WebPage): ParseResult {
+        val baseUrl = page.location
+        val base: URL
+        base = try {
+            URL(baseUrl)
+        } catch (e: MalformedURLException) {
+            return failed(e)
         }
-
         // get the right parser using the mime type as a clue
-        String mimeType = page.getContentType();
-        Parser parser = tikaConfig.getParser(mimeType);
-
-        if (parser == null) {
-            return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, mimeType);
-        }
-
-        Metadata tikamd = new Metadata();
-
-        HTMLDocumentImpl doc = new HTMLDocumentImpl();
-        doc.setErrorChecking(false);
-        DocumentFragment root = doc.createDocumentFragment();
-        DOMBuilder domhandler = new DOMBuilder(doc, root);
-        org.apache.tika.parser.ParseContext context = new org.apache.tika.parser.ParseContext();
+        val mimeType = page.contentType
+        val parser = tikaConfig!!.getParser(mimeType) ?: return failed(ParseStatus.FAILED_NO_PARSER, mimeType)
+        val tikamd = Metadata()
+        val doc = HTMLDocumentImpl()
+        doc.errorChecking = false
+        val root = doc.createDocumentFragment()
+        val domhandler = DOMBuilder(doc, root)
+        val context = ParseContext()
         if (HTMLMapper != null) {
-            context.set(HtmlMapper.class, HTMLMapper);
+            context.set(HtmlMapper::class.java, HTMLMapper)
         }
         // to add once available in Tika
         // context.set(HtmlMapper.class, IdentityHtmlMapper.INSTANCE);
-        tikamd.set(Metadata.CONTENT_TYPE, mimeType);
+        tikamd[Metadata.CONTENT_TYPE] = mimeType
         try {
-            ByteBuffer raw = page.getContent();
-            parser.parse(new ByteArrayInputStream(raw.array(), raw.arrayOffset()
-                    + raw.position(), raw.remaining()), domhandler, tikamd, context);
-        } catch (Exception e) {
-            LOG.error("Error parsing " + page.getUrl(), e);
-            return ParseResult.failed(e);
+            val raw = page.content
+            parser.parse(ByteArrayInputStream(raw!!.array(), raw.arrayOffset()
+                    + raw.position(), raw.remaining()), domhandler, tikamd, context)
+        } catch (e: Exception) {
+            LOG.error("Error parsing " + page.url, e)
+            return failed(e)
         }
-
-        String pageTitle = "";
-        String pageText = "";
-        ArrayList<HypeLink> hypeLinks = new ArrayList<>();
-
+        var pageTitle: String? = ""
+        var pageText: String? = ""
+        val hypeLinks = ArrayList<HypeLink>()
         // we have converted the sax events generated by Tika into a DOM object
-        HTMLMetaTags metaTags = new HTMLMetaTags(root, base);
-
+        val metaTags = HTMLMetaTags(root, base)
         // check meta directives
-        if (!metaTags.getNoIndex()) { // okay to index
-            pageText = primerParser.getPageText(root); // extract text
-            pageTitle = primerParser.getPageTitle(root); // extract title
+        if (!metaTags.noIndex) { // okay to index
+            pageText = primerParser!!.getPageText(root) // extract text
+            pageTitle = primerParser!!.getPageTitle(root) // extract title
         }
-
-        if (!metaTags.getNoFollow()) { // okay to follow links
-            URL baseTag = primerParser.getBaseURL(root);
-            primerParser.getLinks(baseTag != null ? baseTag : base, hypeLinks, root, null);
+        if (!metaTags.noFollow) { // okay to follow links
+            val baseTag = primerParser!!.getBaseURL(root)
+            primerParser!!.getLinks(baseTag ?: base, hypeLinks, root, null)
         }
-
-        page.setPageTitle(pageTitle);
-        page.setPageText(pageText);
-
-        for (String name : tikamd.names()) {
-            if (name.equalsIgnoreCase(TikaCoreProperties.TITLE.toString())) {
-                continue;
+        page.setPageTitle(pageTitle)
+        page.setPageText(pageText)
+        for (name in tikamd.names()) {
+            if (name.equals(TikaCoreProperties.TITLE.toString(), ignoreCase = true)) {
+                continue
             }
-            page.getMetadata().set(name, tikamd.get(name));
+            page.metadata[name] = tikamd[name]
         }
-
         // no hypeLinks? try OutlinkExtractor e.g works for mime types where no
-        // explicit markup for anchors
-
-        ParseResult parseResult = new ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK);
-//    if (hypeLinks.isEmpty()) {
+// explicit markup for anchors
+        val parseResult = ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK)
+        //    if (hypeLinks.isEmpty()) {
 //      hypeLinks = OutlinkExtractor.getLiveLinks(pageText, getConf());
 //      parseResult.getLiveLinks().addAll(hypeLinks);
 //    }
-
-        if (metaTags.getRefresh()) {
-            parseResult.setMinorCode(ParseStatusCodes.SUCCESS_REDIRECT);
-            parseResult.getArgs().put(REFRESH_HREF, metaTags.getRefreshHref().toString());
-            parseResult.getArgs().put(REFRESH_TIME, Integer.toString(metaTags.getRefreshTime()));
+        if (metaTags.refresh) {
+            parseResult.minorCode = ParseStatusCodes.SUCCESS_REDIRECT
+            parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
+            parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
-
-        parseFilters.filter(new ParseContext(page, metaTags, root, parseResult));
-
-        if (metaTags.getNoCache()) {
-            // not okay to cache
-            page.getMetadata().set(CACHING_FORBIDDEN_KEY, cachingPolicy);
+        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, metaTags, root, parseResult))
+        if (metaTags.noCache) { // not okay to cache
+            page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
-
-        return parseResult;
+        return parseResult
     }
 
-    @Override
-    public ImmutableConfig getConf() {
-        return this.conf;
+    override fun getConf(): ImmutableConfig {
+        return conf
     }
 
-    public PulsarTikaConfig getTikaConfig() {
-        return this.tikaConfig;
+    companion object {
+        val LOG = LoggerFactory.getLogger(TikaParser::class.java)
     }
 }

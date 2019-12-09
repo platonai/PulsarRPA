@@ -5,358 +5,286 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.crawl.parse;
+package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.MetricsCounters;
-import ai.platon.pulsar.common.StringUtil;
-import ai.platon.pulsar.common.URLUtil;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.crawl.filter.CrawlFilters;
-import ai.platon.pulsar.crawl.filter.UrlNormalizers;
-import ai.platon.pulsar.crawl.signature.Signature;
-import ai.platon.pulsar.crawl.signature.TextMD5Signature;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.ParseStatus;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.Mark;
-import ai.platon.pulsar.persist.metadata.Name;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.crawl.filter.CrawlFilters
+import ai.platon.pulsar.crawl.filter.UrlNormalizers
+import ai.platon.pulsar.crawl.signature.Signature
+import ai.platon.pulsar.crawl.signature.TextMD5Signature
+import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.Mark
+import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
-import javax.annotation.Nonnull;
-import java.nio.ByteBuffer;
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
-
-import static ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE;
-import static ai.platon.pulsar.common.config.CapabilityTypes.PARSE_TIMEOUT;
-import static ai.platon.pulsar.common.config.PulsarConstants.*;
-import static ai.platon.pulsar.persist.metadata.Name.NO_FOLLOW;
-import static ai.platon.pulsar.persist.metadata.Name.REDIRECT_DISCOVERED;
-import static ai.platon.pulsar.persist.metadata.ParseStatusCodes.FAILED;
-
-public final class PageParser implements ReloadableParameterized {
-
-    public static final Logger LOG = LoggerFactory.getLogger(PageParser.class);
-
-    private final ImmutableConfig conf;
-    private MetricsCounters metricsCounters;
-    private Set<CharSequence> unparsableTypes = Collections.synchronizedSet(new HashSet<>());
-    private CrawlFilters crawlFilters;
-    private ParserFactory parserFactory;
-    private Signature signature;
-    private LinkFilter linkFilter;
-    private int maxParsedLinks;
+class PageParser(
+        val crawlFilters: CrawlFilters,
+        val parserFactory: ParserFactory,
+        val signature: Signature,
+        val pulsarCounters: MetricsCounters,
+        private val conf: ImmutableConfig
+) : ReloadableParameterized {
+    val unparsableTypes = Collections.synchronizedSet(HashSet<CharSequence>())
+    private var maxParsedLinks = 0
     /**
      * Parser timeout set to 30 sec by default. Set -1 (or any negative int) to deactivate
-     **/
-    private Duration maxParseTime;
-    private ExecutorService executorService;
+     */
+    private lateinit var maxParseTime: Duration
+    lateinit var linkFilter: LinkFilter
+    // TODO: merge with GlobalExecutor
+    private var executorService: ExecutorService? = null
 
     /**
      * @param conf The configuration
      */
-    public PageParser(ImmutableConfig conf) {
-        this(new CrawlFilters(conf), new ParserFactory(conf), new TextMD5Signature(), conf);
+    constructor(conf: ImmutableConfig) : this(
+            CrawlFilters(conf),
+            ParserFactory(conf),
+            TextMD5Signature(),
+            MetricsCounters(),
+            conf
+    )
+
+    override fun getConf(): ImmutableConfig {
+        return conf
     }
 
-    public PageParser(ParserFactory parserFactory, ImmutableConfig conf) {
-        this(new CrawlFilters(conf), parserFactory, new TextMD5Signature(), conf);
-    }
-
-    public PageParser(CrawlFilters crawlFilters, ParserFactory parserFactory, Signature signature, ImmutableConfig conf) {
-        this.conf = conf;
-        this.crawlFilters = crawlFilters;
-        this.parserFactory = parserFactory;
-        this.signature = signature;
-
-        reload(conf);
-    }
-
-    @Override
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public Params getParams() {
+    override fun getParams(): Params {
         return Params.of(
                 "maxParseTime", maxParseTime,
                 "maxParsedLinks", maxParsedLinks
-        );
+        )
     }
 
-    @Override
-    public void reload(ImmutableConfig conf) {
-        maxParseTime = conf.getDuration(PARSE_TIMEOUT, DEFAULT_MAX_PARSE_TIME);
-        maxParsedLinks = conf.getUint(PARSE_MAX_LINKS_PER_PAGE, 200);
-        linkFilter = new LinkFilter(crawlFilters, conf);
-
-        if (maxParseTime.getSeconds() > 0) {
-            ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("parse-%d").setDaemon(true).build();
-            this.executorService = Executors.newCachedThreadPool(threadFactory);
+    override fun reload(conf: ImmutableConfig) {
+        maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, PulsarConstants.DEFAULT_MAX_PARSE_TIME)
+        maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
+        linkFilter = LinkFilter(crawlFilters, conf)
+        if (maxParseTime.seconds > 0) {
+            val threadFactory = ThreadFactoryBuilder().setNameFormat("parser-%d").setDaemon(true).build()
+            executorService = Executors.newCachedThreadPool(threadFactory)
         }
-
-        getParams().merge(linkFilter.getParams()).withLogger(LOG).info(true);
-    }
-
-    public MetricsCounters getPulsarCounters() {
-        return metricsCounters;
-    }
-
-    public void setPulsarCounters(MetricsCounters metricsCounters) {
-        this.metricsCounters = metricsCounters;
-    }
-
-    public ParserFactory getParserFactory() {
-        return parserFactory;
-    }
-
-    public void setParserFactory(ParserFactory parserFactory) {
-        this.parserFactory = parserFactory;
-    }
-
-    public Signature getSignature() {
-        return signature;
-    }
-
-    public void setSignature(Signature signature) {
-        this.signature = signature;
-    }
-
-    public CrawlFilters getCrawlFilters() {
-        return crawlFilters;
-    }
-
-    public void setCrawlFilters(CrawlFilters crawlFilters) {
-        this.crawlFilters = crawlFilters;
-    }
-
-    public LinkFilter getLinkFilter() {
-        return linkFilter;
-    }
-
-    public void setLinkFilter(LinkFilter linkFilter) {
-        this.linkFilter = linkFilter;
-    }
-
-    public Set<CharSequence> getUnparsableTypes() {
-        return unparsableTypes;
+        params.merge(linkFilter.params).withLogger(LOG).info(true)
     }
 
     /**
      * Parses given web page and stores parsed content within page. Puts a
      * meta-redirect to outlinks.
-     * <p>
      *
      * @param page The web page
      * @return ParseResult
      * A non-null ParseResult contains the main result and status of this parse
      */
-    @Nonnull
-    public ParseResult parse(WebPage page) {
+    fun parse(page: WebPage): ParseResult {
         try {
-            ParseResult parseResult = doParse(page);
+            val parseResult = doParse(page)
 
-            if (parseResult.isParsed()) {
-                page.setParseStatus(parseResult);
+            if (parseResult.isParsed) {
+                page.parseStatus = parseResult
 
-                if (parseResult.isRedirect()) {
-                    processRedirect(page, parseResult);
-                } else if (parseResult.isSuccess()) {
-                    processSuccess(page, parseResult);
+                if (parseResult.isRedirect) {
+                    processRedirect(page, parseResult)
+                } else if (parseResult.isSuccess) {
+                    processSuccess(page, parseResult)
                 }
+                updateCounters(parseResult)
 
-                updateCounters(parseResult);
-
-                if (parseResult.isSuccess()) {
-                    page.getMarks().putIfNotNull(Mark.PARSE, page.getMarks().get(Mark.FETCH));
+                if (parseResult.isSuccess) {
+                    page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
                 }
             }
 
-            return parseResult;
-        } catch (Throwable e) {
-            LOG.error(StringUtil.stringifyException(e));
+            return parseResult
+        } catch (e: Throwable) {
+            LOG.error(StringUtil.stringifyException(e))
         }
 
-        return new ParseResult();
+        return ParseResult()
     }
 
-    public List<HypeLink> filterLinks(WebPage page, List<HypeLink> unfilteredLinks) {
-        final int[] sequence = {0};
-
-        return unfilteredLinks.stream()
-                .filter(linkFilter.asPredicate(page)) // filter out invalid urls
-                .peek(l -> l.setOrder(++sequence[0])) // links added later, crawls earlier
-                .sorted((l1, l2) -> l2.getAnchor().length() - l1.getAnchor().length()) // longer anchor comes first
-                .distinct()
-                .limit(maxParsedLinks)
-                .collect(Collectors.toList());
+    // TODO: optimization
+    private fun filterLinks(page: WebPage, unfilteredLinks: List<HypeLink>): List<HypeLink> {
+        var sequence = 0
+        return unfilteredLinks.asSequence()
+                .filter { linkFilter.asPredicate(page).test(it) } // filter out invalid urls
+                .onEach { it.order = ++sequence } // links added later, crawls earlier
+                .sortedByDescending { it.anchor.length } // longer anchor comes first
+                .toSet().take(maxParsedLinks)
     }
 
-    private ParseResult doParse(WebPage page) {
-        String url = page.getUrl();
+    private fun doParse(page: WebPage): ParseResult {
+        val url = page.url
         if (isTruncated(page)) {
-            return ParseResult.failed(ParseStatus.FAILED_TRUNCATED, url);
+            return ParseResult.failed(ParseStatus.FAILED_TRUNCATED, url)
         }
 
-        ParseResult parseResult;
-        try {
-            parseResult = applyParsers(page);
-        } catch (ParserNotFound e) {
-            String contentType = page.getContentType();
-            if (!unparsableTypes.contains(contentType)) {
-                unparsableTypes.add(contentType);
-                LOG.warn("No suitable parser for <" + contentType + ">." + e.getMessage());
-            }
-            return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, contentType);
-        } catch (Throwable e) {
-            return ParseResult.failed(e);
-        }
+        return try {
+            applyParsers(page)
+        } catch (e: ParserNotFound) {
+            unparsableTypes.add(page.contentType)
+            LOG.warn("No parser found for <" + page.contentType + ">\n" + e.message)
 
-        return parseResult;
+            return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, page.contentType)
+        } catch (e: Throwable) {
+            return ParseResult.failed(e)
+        }
     }
 
     /**
      * @throws ParseException If there is an error parsing.
      */
-    @Nonnull
-    private ParseResult applyParsers(WebPage page) throws ParseException {
-        ParseResult parseResult = new ParseResult();
+    @Throws(ParseException::class)
+    private fun applyParsers(page: WebPage): ParseResult {
+        var parseResult = ParseResult()
 
-        List<Parser> parsers = parserFactory.getParsers(page.getContentType(), page.getUrl());
-        for (Parser parser : parsers) {
-            if (executorService != null) {
-                assert (maxParseTime.getSeconds() > 0);
-                parseResult = runParser(parser, page);
+        val parsers = parserFactory.getParsers(page.contentType, page.url)
+
+        for (parser in parsers) {
+            parseResult = if (executorService != null) {
+                runParser(parser, page)
             } else {
-                parseResult = parser.parse(page);
+                parser.parse(page)
             }
+            parseResult.parser = parser
 
             // Found a suitable parser and successfully parsed
-            if (parseResult.isSuccess()) {
-                break;
+            if (parseResult.isSuccess) {
+                break
             }
         }
 
-        return parseResult;
+        return parseResult
     }
 
-    private ParseResult runParser(Parser p, WebPage page) {
-        ParseResult parseResult = new ParseResult();
-        Future<ParseResult> task = executorService.submit(() -> p.parse(page));
+    private fun runParser(p: Parser, page: WebPage): ParseResult {
+        var parseResult = ParseResult()
+        val executor = executorService?:return parseResult
+
+        val task = executor.submit<ParseResult> { p.parse(page) }
         try {
-            parseResult = task.get(maxParseTime.getSeconds(), TimeUnit.SECONDS);
-        } catch (Exception e) {
-            LOG.warn("Failed to parsing " + page.getUrl(), e);
-            task.cancel(true);
+            parseResult = task.get(maxParseTime.seconds, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            LOG.warn("Failed to parsing " + page.url, e)
+            task.cancel(true)
         }
-
-        return parseResult;
+        return parseResult
     }
 
-    private void processSuccess(WebPage page, ParseResult parseResult) {
-        ByteBuffer prevSig = page.getSignature();
+    private fun processSuccess(page: WebPage, parseResult: ParseResult) {
+        val prevSig = page.signature
         if (prevSig != null) {
-            page.setPrevSignature(prevSig);
+            page.prevSignature = prevSig
         }
-        page.setSignature(signature.calculate(page));
-
+        page.setSignature(signature.calculate(page))
         // Collect links
-        // TODO : check no-follow html tag directive
-        boolean follow = !page.getMetadata().contains(NO_FOLLOW)
-                || page.isSeed()
+        // TODO : check the no-follow html tag directive
+        val follow = (!page.metadata.contains(Name.NO_FOLLOW)
+                || page.isSeed
                 || page.hasMark(Mark.INJECT)
-                || page.getMetadata().contains(Name.FORCE_FOLLOW)
-                || page.getVariables().contains(Name.FORCE_FOLLOW.name());
+                || page.metadata.contains(Name.FORCE_FOLLOW)
+                || page.variables.contains(Name.FORCE_FOLLOW.name))
         if (follow) {
-            processLinks(page, parseResult.getHypeLinks());
+            processLinks(page, parseResult.hypeLinks)
         }
     }
 
-    private void processRedirect(WebPage page, ParseStatus parseStatus) {
-        String refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "");
-        String newUrl = crawlFilters.normalizeToEmpty(refreshHref, UrlNormalizers.SCOPE_FETCHER);
+    private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
+        val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
+        val newUrl = crawlFilters.normalizeToEmpty(refreshHref, UrlNormalizers.SCOPE_FETCHER)
         if (newUrl.isEmpty()) {
-            return;
+            return
         }
 
-        page.addLiveLink(new HypeLink(newUrl));
-        page.getMetadata().set(REDIRECT_DISCOVERED, YES_STRING);
-
-        if (newUrl.equals(page.getUrl())) {
-            int refreshTime = Integer.parseInt(parseStatus.getArgOrDefault(ParseStatus.REFRESH_TIME, "0"));
-            String reprUrl = URLUtil.chooseRepr(page.getUrl(), newUrl, refreshTime < PERM_REFRESH_TIME);
-            page.setReprUrl(reprUrl);
+        page.addLiveLink(HypeLink(newUrl))
+        page.metadata[Name.REDIRECT_DISCOVERED] = PulsarConstants.YES_STRING
+        if (newUrl == page.url) {
+            val refreshTime = parseStatus.getArgOrDefault(ParseStatus.REFRESH_TIME, "0").toInt()
+            val reprUrl = URLUtil.chooseRepr(page.url, newUrl, refreshTime < PulsarConstants.PERM_REFRESH_TIME)
+            page.reprUrl = reprUrl
         }
     }
 
-    private void processLinks(WebPage page, ArrayList<HypeLink> unfilteredLinks) {
-        List<HypeLink> hypeLinks = filterLinks(page, unfilteredLinks);
-
-        page.setLiveLinks(hypeLinks);
-        page.addHyperLinks(hypeLinks);
+    private fun processLinks(page: WebPage, unfilteredLinks: ArrayList<HypeLink>) {
+        val hypeLinks = filterLinks(page, unfilteredLinks)
+        page.setLiveLinks(hypeLinks)
+        page.addHyperLinks(hypeLinks)
     }
 
     // 0 : "notparsed", 1 : "success", 2 : "failed"
-    private void updateCounters(ParseStatus parseStatus) {
+    private fun updateCounters(parseStatus: ParseStatus?) {
         if (parseStatus == null) {
-            return;
+            return
         }
-
-        Counter counter = null;
-        switch (parseStatus.getMajorCode()) {
-            case FAILED:
-                counter = Counter.parseFailed;
-                break;
-            default:
-                break;
+        var counter: Counter? = null
+        when (parseStatus.majorCode) {
+            ParseStatusCodes.FAILED -> counter = Counter.parseFailed
+            else -> {
+            }
         }
-
-        if (counter != null && metricsCounters != null) {
-            metricsCounters.increase(counter);
+        if (counter != null) {
+            pulsarCounters.increase(counter)
         }
     }
 
-    /**
-     * Checks if the page's content is truncated.
-     *
-     * @param page The web page
-     * @return If the page is truncated <code>true</code>. When it is not, or when
-     * it could be determined, <code>false</code>.
-     */
-    public boolean isTruncated(WebPage page) {
-        String url = page.getUrl();
-        int inHeaderSize = page.getHeaders().getContentLength();
-        if (inHeaderSize < 0) {
-            LOG.debug("HttpHeaders.CONTENT_LENGTH is not available | " + url);
-            return false;
-        }
-
-        ByteBuffer content = page.getContent();
-        if (content == null) {
-            LOG.debug("Page content is null, url: " + url);
-            return false;
-        }
-        int actualSize = content.limit();
-
-        return inHeaderSize > actualSize;
+    enum class Counter {
+        notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed
     }
 
-    public enum Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
-    static { MetricsCounters.register(Counter.class); }
+    companion object {
+        val LOG = LoggerFactory.getLogger(PageParser::class.java)
+
+        /**
+         * Checks if the page's content is truncated.
+         *
+         * @param page The web page
+         * @return If the page is truncated `true`. When it is not, or when
+         * it could be determined, `false`.
+         */
+        fun isTruncated(page: WebPage): Boolean {
+            val url = page.url
+            val inHeaderSize = page.headers.contentLength
+            if (inHeaderSize < 0) {
+                LOG.debug("HttpHeaders.CONTENT_LENGTH is not available | $url")
+                return false
+            }
+            val content = page.content
+            if (content == null) {
+                LOG.debug("Page content is null, url: $url")
+                return false
+            }
+            val actualSize = content.limit()
+            return inHeaderSize > actualSize
+        }
+
+        init {
+            MetricsCounters.register(Counter::class.java)
+        }
+    }
+
+    init {
+        reload(conf)
+    }
 }

@@ -5,22 +5,22 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.crawl.parse;
+package ai.platon.pulsar.crawl.parse
 
-import com.google.common.collect.Lists;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists
+import java.util.*
+import kotlin.collections.LinkedHashMap
 
 /**
  * This class represents a natural ordering for which parsing plugin should get
@@ -32,46 +32,30 @@ import java.util.Map;
  * @version 1.0
  */
 class ParserConfig {
-
     /* a map to link mimeType to an ordered list of parsing plugins */
-    private Map<String, List<String>> mimeType2ParserClasses = new HashMap<>();
-
+    private val mimeType2ParserClasses: MutableMap<String, List<String>> = LinkedHashMap()
     /* Aliases to class */
-    private Map<String, String> aliases = new HashMap<>();
+    var aliases: Map<String, String> = mapOf()
 
-    public ParserConfig() {
+    fun setParsers(mimeType: String, classes: List<String>) {
+        mimeType2ParserClasses[mimeType] = classes
     }
 
-    public void setParsers(String mimeType, List<String> classes) {
-        mimeType2ParserClasses.put(mimeType, classes);
+    val parsers: Map<String, List<String>>
+        get() = mimeType2ParserClasses
+
+    fun getParsers(mimeType: String): List<String> {
+        return mimeType2ParserClasses[mimeType]?: listOf()
     }
 
-    public Map<String, List<String>> getParsers() {
-        return mimeType2ParserClasses;
+    fun getClassName(aliase: String): String? {
+        return aliases[aliase]
     }
 
-    public List<String> getParsers(String mimeType) {
-        return mimeType2ParserClasses.get(mimeType);
-    }
+    val supportedMimeTypes: List<String>
+        get() = Lists.newArrayList(mimeType2ParserClasses.keys)
 
-    public String getClassName(String aliase) {
-        return aliases.get(aliase);
-    }
-
-    public Map<String, String> getAliases() {
-        return aliases;
-    }
-
-    public void setAliases(Map<String, String> aliases) {
-        this.aliases = aliases;
-    }
-
-    public List<String> getSupportedMimeTypes() {
-        return Lists.newArrayList(mimeType2ParserClasses.keySet());
-    }
-
-    @Override
-    public String toString() {
-        return mimeType2ParserClasses.toString();
+    override fun toString(): String {
+        return mimeType2ParserClasses.toString()
     }
 }

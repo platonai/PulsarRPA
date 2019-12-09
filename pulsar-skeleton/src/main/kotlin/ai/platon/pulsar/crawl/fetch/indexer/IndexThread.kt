@@ -1,14 +1,20 @@
 package ai.platon.pulsar.crawl.fetch.indexer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.fetch.FetchMonitor
+import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * This class picks items from queues and fetches the pages.
  */
-class IndexThread(private val JITIndexer: JITIndexer, private val conf: ImmutableConfig) : Thread(), Comparable<IndexThread> {
+class IndexThread(
+        private val JITIndexer: JITIndexer,
+        private val conf: ImmutableConfig
+) : Thread(), Comparable<IndexThread> {
+
+    val LOG = LoggerFactory.getLogger(IndexThread::class.java)
+
     private val id: Int
     private val halt = AtomicBoolean(false)
 
@@ -58,7 +64,6 @@ class IndexThread(private val JITIndexer: JITIndexer, private val conf: Immutabl
     }
 
     companion object {
-        val LOG = FetchMonitor.LOG
         private val instanceSequence = AtomicInteger(0)
     }
 }

@@ -22,15 +22,15 @@ import java.util.stream.Collectors;
 public class Params {
     public static final Params EMPTY_PARAMS = new Params();
 
-    private Logger LOG = LoggerFactory.getLogger(Params.class);
+    private Logger log = LoggerFactory.getLogger(Params.class);
     private List<Pair<String, Object>> paramsList = new LinkedList<>();
     private String captionFormat = String.format("%20sParams Table%-25s\n", "----------", "----------");
     private String headerFormat = String.format("%25s   %-25s\n", "Name", "Value");
     private String rowFormat = "%25s: %s";
     private boolean cmdLineStyle = false;
-    private String pairDelimeter = " ";
+    private String pairDelimiter = " ";
     private String kvDelimiter = ": ";
-    private Logger tmpLOG = null;
+    private Logger defaultLog = null;
 
     public Params() {
     }
@@ -246,8 +246,8 @@ public class Params {
         return this;
     }
 
-    public Params withPairDelimiter(String pairDelimeter) {
-        this.pairDelimeter = pairDelimeter;
+    public Params withPairDelimiter(String pairDelimiter) {
+        this.pairDelimiter = pairDelimiter;
         return this;
     }
 
@@ -319,7 +319,7 @@ public class Params {
     }
 
     public Params withLogger(Logger logger) {
-        this.tmpLOG = logger;
+        this.defaultLog = logger;
         return this;
     }
 
@@ -328,10 +328,10 @@ public class Params {
     }
 
     public void debug(boolean inline) {
-        if (tmpLOG != null) {
-            tmpLOG.debug(inline ? formatAsLine() : format());
+        if (defaultLog != null) {
+            defaultLog.debug(inline ? formatAsLine() : format());
         } else {
-            LOG.debug(inline ? formatAsLine() : format());
+            log.debug(inline ? formatAsLine() : format());
         }
     }
 
@@ -340,10 +340,18 @@ public class Params {
     }
 
     public void info(boolean inline) {
-        if (tmpLOG != null) {
-            tmpLOG.info(inline ? formatAsLine() : format());
+        info("", "", inline);
+    }
+
+    public void info(String prefix, String postfix, boolean inline) {
+        StringBuilder sb = new StringBuilder(prefix);
+        sb.append(inline ? formatAsLine() : format());
+        sb.append(postfix);
+
+        if (defaultLog != null) {
+            defaultLog.info(sb.toString());
         } else {
-            LOG.info(inline ? formatAsLine() : format());
+            log.info(sb.toString());
         }
     }
 
@@ -398,7 +406,7 @@ public class Params {
         int i = 0;
         for (Pair<String, Object> arg : params) {
             if (i++ > 0) {
-                sb.append(pairDelimeter);
+                sb.append(pairDelimiter);
             }
 
             String key = arg.getKey();

@@ -1,122 +1,74 @@
-package ai.platon.pulsar.crawl.inject;
+package ai.platon.pulsar.crawl.inject
 
-import ai.platon.pulsar.common.DateTimeUtil;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.common.options.CrawlOptions;
-import ai.platon.pulsar.crawl.scoring.ScoringFilters;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.Mark;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
-import java.time.Instant;
-import java.util.Objects;
-
-import static ai.platon.pulsar.common.config.PulsarConstants.TCP_IP_STANDARDIZED_TIME;
-import static ai.platon.pulsar.common.config.PulsarConstants.YES_STRING;
+import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.options.CrawlOptions.Companion.parse
+import ai.platon.pulsar.crawl.scoring.ScoringFilters
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.Mark
+import org.apache.commons.lang3.tuple.Pair
+import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.util.*
 
 /**
  * Created by vincent on 16-9-24.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-public class SeedBuilder implements ReloadableParameterized {
+class SeedBuilder(
+        private val scoreFilters: ScoringFilters = ScoringFilters(),
+        private val conf: ImmutableConfig = ImmutableConfig()
+) : Parameterized {
+    private val impreciseNow = Instant.now()
 
-    public static final Logger LOG = LoggerFactory.getLogger(SeedBuilder.class);
-
-    private Instant impreciseNow = Instant.now();
-    private ImmutableConfig conf;
-    private ScoringFilters scoreFilters;
-
-    public SeedBuilder() {
-        this(new ScoringFilters());
+    override fun getParams(): Params {
+        return Params.of("injectTime", DateTimeUtil.format(impreciseNow))
     }
 
-    public SeedBuilder(ScoringFilters scoreFilters) {
-        this.scoreFilters = scoreFilters;
-    }
-
-    public SeedBuilder(ScoringFilters scoreFilters, ImmutableConfig conf) {
-        this.scoreFilters = scoreFilters;
-        reload(conf);
-    }
-
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-    }
-
-    @Override
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public Params getParams() {
-        return Params.of(
-                "injectTime", DateTimeUtil.format(impreciseNow)
-        );
-    }
-
-    @Nonnull
-    public WebPage create(Pair<String, String> urlArgs) {
-        return create(urlArgs.getKey(), urlArgs.getValue());
+    fun create(urlArgs: Pair<String, String>): WebPage {
+        return create(urlArgs.key, urlArgs.value)
     }
 
     /**
      * @param url  The seed url
-     *             A configured url is a string contains the url and arguments.
+     * A configured url is a string contains the url and arguments.
      * @param args The args
      * @return The created WebPage.
      * If the url is an invalid url or an internal url, return ai.platon.pulsar.persistWebPage.NIL
      */
-    @Nonnull
-    public WebPage create(String url, String args) {
-        Objects.requireNonNull(url);
-        Objects.requireNonNull(args);
-
+    fun create(url: String, args: String): WebPage {
         if (url.isEmpty()) {
-            return WebPage.NIL;
+            return WebPage.NIL
         }
-
-        WebPage page = WebPage.newWebPage(url);
-        return makeSeed(url, args, page) ? page : WebPage.NIL;
+        val page = WebPage.newWebPage(url)
+        return if (makeSeed(url, args, page)) page else WebPage.NIL
     }
 
-    public boolean makeSeed(WebPage page) {
-        Objects.requireNonNull(page);
-        return makeSeed(page.getUrl(), page.getOptions().toString(), page);
+    fun makeSeed(page: WebPage): Boolean {
+        Objects.requireNonNull(page)
+        return makeSeed(page.url, page.options.toString(), page)
     }
 
-    private boolean makeSeed(String url, String args, WebPage page) {
-        Objects.requireNonNull(url);
-        Objects.requireNonNull(args);
-        Objects.requireNonNull(page);
-
-        if (page.isSeed() || page.isInternal()) {
-            return false;
+    private fun makeSeed(url: String, args: String, page: WebPage): Boolean {
+        if (page.isSeed || page.isInternal) {
+            return false
         }
-
-        CrawlOptions options = CrawlOptions.Companion.parse(args, conf);
-
-        page.setDistance(0);
-        if (page.getCreateTime().isBefore(TCP_IP_STANDARDIZED_TIME)) {
-            page.setCreateTime(impreciseNow);
+        val options = parse(args, conf)
+        page.distance = 0
+        if (page.createTime.isBefore(PulsarConstants.TCP_IP_STANDARDIZED_TIME)) {
+            page.createTime = impreciseNow
         }
-        page.markSeed();
+        page.markSeed()
+        page.score = options.score.toFloat()
+        scoreFilters.injectedScore(page)
+        page.fetchTime = impreciseNow
+        page.fetchInterval = options.fetchInterval
+        page.fetchPriority = options.fetchPriority
+        page.marks.put(Mark.INJECT, PulsarConstants.YES_STRING)
+        return true
+    }
 
-        page.setScore(options.getScore());
-        scoreFilters.injectedScore(page);
-
-        page.setFetchTime(impreciseNow);
-        page.setFetchInterval(options.getFetchInterval());
-        page.setFetchPriority(options.getFetchPriority());
-
-        page.getMarks().put(Mark.INJECT, YES_STRING);
-
-        return true;
+    companion object {
+        val LOG = LoggerFactory.getLogger(SeedBuilder::class.java)
     }
 }

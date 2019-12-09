@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.ReloadableParameterized
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.hadoop.io.IntWritable
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Duration
 import java.time.Instant
@@ -25,7 +26,7 @@ class FeedThread(
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
         private val conf: ImmutableConfig
 ) : Thread(), Comparable<FeedThread>, Parameterized {
-    private val LOG = FetchMonitor.LOG
+    private val LOG = LoggerFactory.getLogger(FeedThread::class.java)
 
     private val id: Int = instanceSequence.incrementAndGet()
     private val checkInterval: Duration = Duration.ofSeconds(2)

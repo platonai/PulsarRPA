@@ -1,148 +1,107 @@
-package ai.platon.pulsar.crawl.parse;
+package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.URLUtil;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.common.config.ReloadableParameterized;
-import ai.platon.pulsar.common.options.LinkOptions;
-import ai.platon.pulsar.crawl.filter.CrawlFilters;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.Name;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.function.Predicate;
-
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
+import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.URLUtil.GroupMode
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.LinkOptions
+import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
+import ai.platon.pulsar.crawl.filter.CrawlFilters
+import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.Name
+import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.function.Predicate
 
 /**
  * Created by vincent on 17-5-21.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public class LinkFilter implements ReloadableParameterized {
-    public static final Logger LOG = LoggerFactory.getLogger(LinkFilter.class);
+class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConfig) : Parameterized {
+    private val groupMode = conf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
+    private val ignoreExternalLinks = conf.getBoolean(CapabilityTypes.PARSE_IGNORE_EXTERNAL_LINKS, false)
+    private val maxUrlLength = conf.getInt(CapabilityTypes.PARSE_MAX_URL_LENGTH, 1024)
+    private var sourceHost: String? = null
+    private var linkOptions: LinkOptions? = null
+    private var reparseLinks = false
+    private var noFilter = false
+    private var debugLevel = 0
+    private val links: MutableSet<String> = TreeSet()
+    private val mutableFilterReport: MutableList<String> = LinkedList()
 
-    private URLUtil.GroupMode groupMode;
-    private boolean ignoreExternalLinks;
+    val filterReport: List<String> get() = mutableFilterReport
 
-    private int maxUrlLength;
-
-    private ImmutableConfig conf;
-    private CrawlFilters crawlFilters;
-    private String sourceHost;
-    private LinkOptions linkOptions;
-    private boolean reparseLinks = false;
-    private boolean noFilter = false;
-    private int debugLevel = 0;
-    private Set<String> links = new TreeSet<>();
-    private List<String> filterReport = new LinkedList<>();
-
-    public LinkFilter(CrawlFilters crawlFilters, ImmutableConfig conf) {
-        this.crawlFilters = crawlFilters;
-
-        reload(conf);
-    }
-
-    @Override
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public Params getParams() {
+    override fun getParams(): Params {
         return Params.of(
                 "groupMode", groupMode,
                 "ignoreExternalLinks", ignoreExternalLinks,
                 "maxUrlLength", maxUrlLength,
-                "defaultAnchorLenMin", conf.get(PARSE_MIN_ANCHOR_LENGTH),
-                "defaultAnchorLenMax", conf.get(PARSE_MAX_ANCHOR_LENGTH)
-        );
+                "defaultAnchorLenMin", conf[CapabilityTypes.PARSE_MIN_ANCHOR_LENGTH],
+                "defaultAnchorLenMax", conf[CapabilityTypes.PARSE_MAX_ANCHOR_LENGTH]
+        )
     }
 
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-
-        groupMode = conf.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST);
-        ignoreExternalLinks = conf.getBoolean(PARSE_IGNORE_EXTERNAL_LINKS, false);
-        maxUrlLength = conf.getInt(PARSE_MAX_URL_LENGTH, 1024);
+    fun reset(page: WebPage) {
+        // TODO: LinkOptions.parse() should be very fast and highly optimized, JCommand is not a good way
+        linkOptions = parse(page.options.toString(), conf)
+        sourceHost = if (ignoreExternalLinks) URLUtil.getHost(page.url, groupMode) else ""
+        reparseLinks = page.variables.contains(Name.REPARSE_LINKS)
+        noFilter = page.variables.contains(Name.PARSE_NO_LINK_FILTER)
+        debugLevel = page.variables.get(Name.PARSE_LINK_FILTER_DEBUG_LEVEL, 0)
+        links.clear()
+        page.links.forEach { l: CharSequence -> links.add(l.toString()) }
+        mutableFilterReport.clear()
     }
 
-    public void reset(WebPage page) {
-        Objects.requireNonNull(page);
-
-        linkOptions = LinkOptions.parse(page.getOptions().toString(), conf);
-        sourceHost = ignoreExternalLinks ? URLUtil.getHost(page.getUrl(), groupMode) : "";
-
-        reparseLinks = page.getVariables().contains(Name.REPARSE_LINKS);
-        noFilter = page.getVariables().contains(Name.PARSE_NO_LINK_FILTER);
-        debugLevel = page.getVariables().get(Name.PARSE_LINK_FILTER_DEBUG_LEVEL, 0);
-
-        links.clear();
-        page.getLinks().forEach(l -> links.add(l.toString()));
-
-        filterReport.clear();
-    }
-
-    public List<String> getFilterReport() {
-        return filterReport;
-    }
-
-    public Predicate<HypeLink> asPredicate(WebPage page) {
-        reset(page);
-        return l -> {
-            int r = this.filter(l);
+    fun asPredicate(page: WebPage): Predicate<HypeLink> {
+        reset(page)
+        return Predicate { l: HypeLink ->
+            val r = this.filter(l)
             if (debugLevel > 0) {
-                filterReport.add(r + " <- " + l.getUrl() + "\t" + l.getAnchor());
+                mutableFilterReport.add(r.toString() + " <- " + l.url + "\t" + l.anchor)
             }
-            return 0 == r;
-        };
+            0 == r
+        }
     }
 
-    public int filter(HypeLink link) {
+    fun filter(link: HypeLink): Int {
         if (noFilter) {
-            return 0;
+            return 0
         }
-
-        String url = link.getUrl();
-
-        if (link.getUrl().isEmpty()) {
-            return 110;
+        var url = link.url
+        if (link.url.isEmpty()) {
+            return 110
         }
-
-        if (link.getUrl().length() > maxUrlLength) {
-            return 112;
+        if (link.url.length > maxUrlLength) {
+            return 112
         }
-
-        String destHost = URLUtil.getHost(url, groupMode);
+        val destHost = URLUtil.getHost(url, groupMode)
         if (destHost.isEmpty()) {
-            return 104;
+            return 104
         }
-
-        if (ignoreExternalLinks && !sourceHost.equals(destHost)) {
-            return 106;
+        if (ignoreExternalLinks && sourceHost != destHost) {
+            return 106
         }
-
-        int r = linkOptions.filter(link.getUrl(), link.getAnchor());
+        val r = linkOptions!!.filter(link.url, link.anchor)
         if (r > 0) {
-            return 2000 + r;
+            return 2000 + r
         }
-
-        if (!reparseLinks && links.contains(link.getUrl())) {
-            return 118;
+        if (!reparseLinks && links.contains(link.url)) {
+            return 118
         }
-
-        url = crawlFilters.normalizeToEmpty(link.getUrl());
+        url = crawlFilters.normalizeToEmpty(link.url)
         if (url.isEmpty()) {
-            return 1000;
+            return 1000
         }
+        return if (!reparseLinks && links.contains(url)) {
+            120
+        } else 0
+    }
 
-        if (!reparseLinks && links.contains(url)) {
-            return 120;
-        }
-
-        return 0;
+    companion object {
+        val LOG = LoggerFactory.getLogger(LinkFilter::class.java)
     }
 }

@@ -225,7 +225,7 @@ class TaskPool(val id: PoolId,
     /**
      * Retune the queue to avoid hung tasks, pending tasks are push to ready queue so they can be re-fetched
      *
-     * In crowdsourcing mode, it's a common situation to lost
+     * In crowd-sourcing mode, it's a common situation to lost
      * the fetching mission and should the task should be restarted
      *
      * @param force If force is true, reload all pending fetch items immediately, otherwise, reload only exceeds pendingTimeout
@@ -274,7 +274,7 @@ class TaskPool(val id: PoolId,
 
         val now = Instant.now()
         val report = pendingTasks.values.take(threshold)
-                .joinToString("\n", "Clearing slow pending itmes : ")
+                .joinToString("\n", "Clearing slow pending items : ")
                 { it.url + " : " + Duration.between(it.pendingStart, now) }
         LOG.info(report)
 
@@ -284,7 +284,7 @@ class TaskPool(val id: PoolId,
     }
 
     fun dump() {
-        LOG.info(params.formatAsLine())
+        LOG.info("Dump pool - " + params.formatAsLine())
 
         if (readyTasks.isNotEmpty()) {
             var i = 0

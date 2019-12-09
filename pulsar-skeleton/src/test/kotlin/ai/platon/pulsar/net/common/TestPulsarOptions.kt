@@ -53,7 +53,7 @@ class TestPulsarOptions {
     @Test
     @Ignore("Failed to parse CrawlOptions")
     fun testProgramOpts() {
-        Stream.of(args1, args2).forEach { args->
+        Stream.of(args1, args2).forEach { args ->
             val options = CrawlOptions.parse(args, conf)
             println("====")
             println(args)
@@ -80,7 +80,8 @@ class TestPulsarOptions {
             assertEquals("#comments", eopts.getCollectionOptions().getRoot())
             assertEquals(".comment", eopts.getCollectionOptions().getItem())
             assertTrue(eopts.getCollectionOptions().getCssRules().containsKey("author"))
-            assertTrue(eopts.getCollectionOptions().getCssRules().containsValue(".content")) }
+            assertTrue(eopts.getCollectionOptions().getCssRules().containsValue(".content"))
+        }
     }
 
     @Test
@@ -131,6 +132,12 @@ class TestPulsarOptions {
 
         println(CrawlOptions.DEFAULT)
         println(LinkOptions.DEFAULT)
+    }
+
+    @Test
+    fun testLinkFilterOptions1() {
+        val linkOptions = LinkOptions(linkFilterCommandLine, conf)
+        // linkOptions.parse()
     }
 
     @Test

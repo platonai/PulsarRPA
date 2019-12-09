@@ -11,6 +11,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.hadoop.io.IntWritable
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -27,7 +28,7 @@ class FetchThread(
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>
 ): Thread(), Comparable<FetchThread> {
 
-    private val LOG = FetchMonitor.LOG
+    private val LOG = LoggerFactory.getLogger(FetchThread::class.java)
 
     private val id: Int
 
@@ -61,7 +62,6 @@ class FetchThread(
         } catch (e: InterruptedException) {
             LOG.error(e.toString())
         }
-
     }
 
     override fun run() {
@@ -81,7 +81,9 @@ class FetchThread(
                 // TODO: is there a better place to set fetch mode?
                 task.page?.fetchMode = fetchMonitor.options.fetchMode
                 val page = fetchOne(task)
-                write(page.key, page)
+                if (page.isNotNil) {
+                    write(page.key, page)
+                }
 
                 ++taskCount
             } // while
@@ -161,8 +163,8 @@ class FetchThread(
     }
 
     private fun fetchOne(task: FetchTask): WebPage {
-        // TODO: throw a exception if page is null
-        val page = task.page!!
+        val page = task.page?:return WebPage.NIL
+
         fetchComponent.fetchContent(page)
 
         val queueId = PoolId(task.priority, task.protocol, task.host)

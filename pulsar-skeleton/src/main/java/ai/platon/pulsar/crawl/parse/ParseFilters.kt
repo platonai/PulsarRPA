@@ -5,69 +5,45 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package ai.platon.pulsar.crawl.parse
 
-package ai.platon.pulsar.crawl.parse;
-
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.parse.html.ParseContext;
-import org.slf4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.parse.html.ParseContext
+import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.stream.Collectors
 
 /**
- * Creates and caches {@link ParseFilter} implementing plugins.
+ * Creates and caches [ParseFilter] implementing plugins.
  */
-public class ParseFilters {
-
-    public static final Logger LOG = ParseFilter.LOG;
-
-    private ArrayList<ParseFilter> parseFilters = new ArrayList<>();
-
-    public ParseFilters() {
-    }
-
-    public ParseFilters(ImmutableConfig conf) {
-    }
-
-    public ParseFilters(List<ParseFilter> parseFilters, ImmutableConfig conf) {
-        this.parseFilters.addAll(parseFilters);
-    }
-
-    public ArrayList<ParseFilter> getParseFilters() {
-        return parseFilters;
-    }
-
-    public void setParseFilters(ArrayList<ParseFilter> parseFilters) {
-        this.parseFilters = parseFilters;
-    }
+class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfig) {
+    var LOG = LoggerFactory.getLogger(ParseFilters::class.java)
 
     /**
      * Run all defined filters.
      */
-    public void filter(ParseContext parseContext) {
-        // loop on each filter
-        for (ParseFilter parseFilter : parseFilters) {
+    fun filter(parseContext: ParseContext) { // loop on each filter
+        for (parseFilter in parseFilters) {
             try {
-                parseFilter.filter(parseContext);
-            } catch (Throwable e) {
-                LOG.warn(e.toString());
+                parseFilter.filter(parseContext)
+            } catch (e: Throwable) {
+                LOG.warn(e.toString())
             }
         }
     }
 
-    @Override
-    public String toString() {
-        return parseFilters.stream().map(n -> n.getClass().getSimpleName()).collect(Collectors.joining(", "));
+    override fun toString(): String {
+        return parseFilters.stream().map { n: ParseFilter -> n.javaClass.simpleName }.collect(Collectors.joining(", "))
     }
 }

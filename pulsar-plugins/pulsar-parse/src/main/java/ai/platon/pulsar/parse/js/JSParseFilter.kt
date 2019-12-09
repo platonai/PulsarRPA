@@ -14,35 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.parse.js;
+package ai.platon.pulsar.parse.js
 
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.parse.ParseFilter;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.parse.Parser;
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags;
-import ai.platon.pulsar.crawl.parse.html.ParseContext;
-import ai.platon.pulsar.persist.HypeLink;
-import ai.platon.pulsar.persist.ParseStatus;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.ParseStatusCodes;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.oro.text.regex.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.parse.ParseFilter
+import ai.platon.pulsar.crawl.parse.ParseResult
+import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
+import ai.platon.pulsar.crawl.parse.Parser
+import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
+import ai.platon.pulsar.crawl.parse.html.ParseContext
+import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import org.apache.oro.text.regex.*
+import org.slf4j.LoggerFactory
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.net.MalformedURLException
+import java.net.URL
+import java.util.*
 
 /**
  * This class is a heuristic link extractor for JavaScript files and code
@@ -51,228 +46,209 @@ import java.util.List;
  *
  * @author Andrzej Bialecki &lt;ab@getopt.org&gt;
  */
-public class JSParseFilter implements ParseFilter, Parser {
-    public static final Logger LOG = LoggerFactory.getLogger(JSParseFilter.class);
-
-    private static final int MAX_TITLE_LEN = 80;
-    private static final String STRING_PATTERN = "(\\\\*(?:\"|\'))([^\\s\"\']+?)(?:\\1)";
-    // A simple pattern. This allows also invalid URL characters.
-    private static final String URI_PATTERN = "(^|\\s*?)/?\\S+?[/\\.]\\S+($|\\s*)";
-    private ImmutableConfig conf;
-
-    public JSParseFilter(ImmutableConfig conf) {
-        reload(conf);
+class JSParseFilter(conf: ImmutableConfig) : ParseFilter, Parser {
+    private var conf: ImmutableConfig? = null
+    override fun reload(conf: ImmutableConfig) {
+        this.conf = conf
     }
 
     /**
-     * Main method which can be run from command line with the plugin option. The
-     * method takes two arguments e.g. o.a.n.parse.js.JSParseFilter file.js
-     * baseURL
-     *
-     * @param args
-     * @throws Exception
-     */
-    public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
-            System.err.println(JSParseFilter.class.getName() + " file.js baseURL");
-            return;
-        }
-
-        InputStream in = new FileInputStream(args[0]);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = br.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-
-        JSParseFilter parseFilter = new JSParseFilter(new ImmutableConfig());
-        ArrayList<HypeLink> links = parseFilter.getJSLinks(sb.toString(), "", args[1]);
-        System.out.println("Live links extracted: " + links.size());
-        links.stream().map(l -> " - " + l).forEach(System.out::println);
-    }
-
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-    }
-
-    /**
-     * Scan the JavaScript looking for possible {@link HypeLink}'s
+     * Scan the JavaScript looking for possible [HypeLink]'s
      *
      * @param parseContext Context of parse.
      */
-    @Override
-    public void filter(ParseContext parseContext) {
-        walk(parseContext.getDocumentFragment(),
-                parseContext.getMetaTags(), parseContext.getUrl(), parseContext.getParseResult().getHypeLinks());
+    override fun filter(parseContext: ParseContext) {
+        walk(parseContext.documentFragment,
+                parseContext.metaTags, parseContext.url, parseContext.parseResult.hypeLinks)
     }
 
-    private void walk(Node n, HTMLMetaTags metaTags, String base, List<HypeLink> hypeLinks) {
-        if (n instanceof Element) {
-            String name = n.getNodeName();
-            if (name.equalsIgnoreCase("script")) {
-                StringBuilder script = new StringBuilder();
-
-                NodeList nn = n.getChildNodes();
-                for (int i = 0; i < nn.getLength(); i++) {
+    private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hypeLinks: MutableList<HypeLink>) {
+        if (n is Element) {
+            val name = n.getNodeName()
+            if (name.equals("script", ignoreCase = true)) {
+                val script = StringBuilder()
+                val nn = n.getChildNodes()
+                for (i in 0 until nn.length) {
                     if (i > 0) {
-                        script.append('\n');
+                        script.append('\n')
                     }
-                    script.append(nn.item(i).getNodeValue());
+                    script.append(nn.item(i).nodeValue)
                 }
                 // This logging makes the output very messy.
-                // if (log.isInfoEnabled()) {
-                // log.info("script: language=" + lang + ", text: " +
-                // script.toString());
-                // }
-                hypeLinks.addAll(getJSLinks(script.toString(), "", base));
-            } else {
-                // process all HTML 4.0 events, if present...
-                NamedNodeMap attrs = n.getAttributes();
-                int len = attrs.getLength();
-                for (int i = 0; i < len; i++) {
-                    // Window: onload,onunload
-                    // Form: onchange,onsubmit,onreset,onselect,onblur,onfocus
-                    // Keyboard: onkeydown,onkeypress,onkeyup
-                    // Mouse:
-                    // onclick,ondbclick,onmousedown,onmouseout,onmousover,onmouseup
-                    Node anode = attrs.item(i);
-                    ArrayList<HypeLink> links = new ArrayList<>();
-                    if (anode.getNodeName().startsWith("on")) {
-                        links = getJSLinks(anode.getNodeValue(), "", base);
-                    } else if (anode.getNodeName().equalsIgnoreCase("href")) {
-                        String val = anode.getNodeValue();
-                        if (val != null && val.toLowerCase().contains("javascript:")) {
-                            links = getJSLinks(val, "", base);
+// if (log.isInfoEnabled()) {
+// log.info("script: language=" + lang + ", text: " +
+// script.toString());
+// }
+                hypeLinks.addAll(getJSLinks(script.toString(), "", base))
+            } else { // process all HTML 4.0 events, if present...
+                val attrs = n.getAttributes()
+                val len = attrs.length
+                for (i in 0 until len) { // Window: onload,onunload
+// Form: onchange,onsubmit,onreset,onselect,onblur,onfocus
+// Keyboard: onkeydown,onkeypress,onkeyup
+// Mouse:
+// onclick,ondbclick,onmousedown,onmouseout,onmousover,onmouseup
+                    val anode = attrs.item(i)
+                    var links = ArrayList<HypeLink>()
+                    if (anode.nodeName.startsWith("on")) {
+                        links = getJSLinks(anode.nodeValue, "", base)
+                    } else if (anode.nodeName.equals("href", ignoreCase = true)) {
+                        val `val` = anode.nodeValue
+                        if (`val` != null && `val`.toLowerCase().contains("javascript:")) {
+                            links = getJSLinks(`val`, "", base)
                         }
                     }
-
-                    hypeLinks.addAll(links);
+                    hypeLinks.addAll(links)
                 }
             }
         }
-
-        NodeList nl = n.getChildNodes();
-        for (int i = 0; i < nl.getLength(); i++) {
-            walk(nl.item(i), metaTags, base, hypeLinks);
+        val nl = n.childNodes
+        for (i in 0 until nl.length) {
+            walk(nl.item(i), metaTags, base, hypeLinks)
         }
     }
-
     // Alternative pattern, which limits valid url characters.
-    // private static final String URI_PATTERN =
-    // "(^|\\s*?)[A-Za-z0-9/](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+[/.](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*,;/?:@&~=%-]*))?($|\\s*)";
-
+// private static final String URI_PATTERN =
+// "(^|\\s*?)[A-Za-z0-9/](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+[/.](([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2})+(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*,;/?:@&~=%-]*))?($|\\s*)";
     /**
-     * Set the {@link Configuration} object
+     * Set the [Configuration] object
      *
-     * @param page {@link WebPage} object relative to the URL
-     * @return parse the actual {@link ParseResult} object
+     * @param page [WebPage] object relative to the URL
+     * @return parse the actual [ParseResult] object
      */
-    @Override
-    public ParseResult parse(WebPage page) {
-        String contentType = page.getContentType();
+    override fun parse(page: WebPage): ParseResult {
+        val contentType = page.contentType
         if (!contentType.startsWith("application/x-javascript")) {
-            return ParseResult.failed(ParseStatus.FAILED_INVALID_FORMAT, contentType);
+            return failed(ParseStatus.FAILED_INVALID_FORMAT, contentType)
         }
-        String script = page.getContentAsString();
-
-        String url = page.getUrl();
-        ArrayList<HypeLink> hypeLinks = getJSLinks(script, "", url);
+        val script = page.contentAsString
+        val url = page.url
+        val hypeLinks = getJSLinks(script, "", url)
         // Title? use the first line of the script...
-        String title;
-        int idx = script.indexOf('\n');
+        val title: String
+        var idx = script.indexOf('\n')
         if (idx != -1) {
-            if (idx > MAX_TITLE_LEN) idx = MAX_TITLE_LEN;
-            title = script.substring(0, idx);
+            if (idx > MAX_TITLE_LEN) idx = MAX_TITLE_LEN
+            title = script.substring(0, idx)
         } else {
-            idx = Math.min(MAX_TITLE_LEN, script.length());
-            title = script.substring(0, idx);
+            idx = Math.min(MAX_TITLE_LEN, script.length)
+            title = script.substring(0, idx)
         }
-
-        page.setPageTitle(title);
-        page.setPageText(script);
-
-        return new ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK);
+        page.pageTitle = title
+        page.pageText = script
+        return ParseResult(ParseStatusCodes.SUCCESS, ParseStatusCodes.SUCCESS_OK)
     }
 
     /**
      * This method extracts URLs from literals embedded in JavaScript.
      */
-    private ArrayList<HypeLink> getJSLinks(String plainText, String anchor, String base) {
-        final ArrayList<HypeLink> hypeLinks = new ArrayList<>();
-        URL baseURL = null;
-
+    private fun getJSLinks(plainText: String, anchor: String, base: String): ArrayList<HypeLink> {
+        val hypeLinks = ArrayList<HypeLink>()
+        var baseURL: URL? = null
         try {
-            baseURL = new URL(base);
-        } catch (Exception e) {
-            if (LOG.isErrorEnabled()) {
-                LOG.error("error assigning base URL", e);
+            baseURL = URL(base)
+        } catch (e: Exception) {
+            if (LOG.isErrorEnabled) {
+                LOG.error("error assigning base URL", e)
             }
         }
-
         try {
-            final PatternCompiler cp = new Perl5Compiler();
-            final Pattern pattern = cp.compile(STRING_PATTERN,
-                    Perl5Compiler.CASE_INSENSITIVE_MASK | Perl5Compiler.READ_ONLY_MASK
-                            | Perl5Compiler.MULTILINE_MASK);
-            final Pattern pattern1 = cp.compile(URI_PATTERN,
-                    Perl5Compiler.CASE_INSENSITIVE_MASK | Perl5Compiler.READ_ONLY_MASK
-                            | Perl5Compiler.MULTILINE_MASK);
-            final PatternMatcher matcher = new Perl5Matcher();
-
-            final PatternMatcher matcher1 = new Perl5Matcher();
-            final PatternMatcherInput input = new PatternMatcherInput(plainText);
-
-            MatchResult result;
-            String url;
-
+            val cp: PatternCompiler = Perl5Compiler()
+            val pattern = cp.compile(STRING_PATTERN,
+                    Perl5Compiler.CASE_INSENSITIVE_MASK or Perl5Compiler.READ_ONLY_MASK
+                            or Perl5Compiler.MULTILINE_MASK)
+            val pattern1 = cp.compile(URI_PATTERN,
+                    Perl5Compiler.CASE_INSENSITIVE_MASK or Perl5Compiler.READ_ONLY_MASK
+                            or Perl5Compiler.MULTILINE_MASK)
+            val matcher: PatternMatcher = Perl5Matcher()
+            val matcher1: PatternMatcher = Perl5Matcher()
+            val input = PatternMatcherInput(plainText)
+            var result: MatchResult
+            var url: String
             // loop the matches
             while (matcher.contains(input, pattern)) {
-                result = matcher.getMatch();
-                url = result.group(2);
-                PatternMatcherInput input1 = new PatternMatcherInput(url);
+                result = matcher.match
+                url = result.group(2)
+                val input1 = PatternMatcherInput(url)
                 if (!matcher1.matches(input1, pattern1)) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(" - invalid '" + url + "'");
+                    if (LOG.isTraceEnabled) {
+                        LOG.trace(" - invalid '$url'")
                     }
-                    continue;
+                    continue
                 }
-                if (url.startsWith("www.")) {
-                    url = "http://" + url;
-                } else {
-                    // See if candidate URL is parseable. If not, pass and move on to
-                    // the next match.
+                url = if (url.startsWith("www.")) {
+                    "http://$url"
+                } else { // See if candidate URL is parseable. If not, pass and move on to
+// the next match.
                     try {
-                        url = new URL(baseURL, url).toString();
-                    } catch (MalformedURLException ex) {
-                        if (LOG.isTraceEnabled()) {
+                        URL(baseURL, url).toString()
+                    } catch (ex: MalformedURLException) {
+                        if (LOG.isTraceEnabled) {
                             LOG.trace(" - failed URL parse '" + url + "' and baseURL '"
-                                    + baseURL + "'", ex);
+                                    + baseURL + "'", ex)
                         }
-                        continue;
+                        continue
                     }
                 }
-                url = url.replaceAll("&amp;", "&");
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace(" - outlink from JS: '" + url + "'");
+                url = url.replace("&amp;".toRegex(), "&")
+                if (LOG.isTraceEnabled) {
+                    LOG.trace(" - outlink from JS: '$url'")
                 }
-                hypeLinks.add(new HypeLink(url, anchor));
+                hypeLinks.add(HypeLink(url, anchor))
             }
-        } catch (Exception ex) {
-            // if it is a malformed URL we just throw it away and continue with
-            // extraction.
-            if (LOG.isErrorEnabled()) {
-                LOG.error(" - invalid or malformed URL", ex);
+        } catch (ex: Exception) { // if it is a malformed URL we just throw it away and continue with
+// extraction.
+            if (LOG.isErrorEnabled) {
+                LOG.error(" - invalid or malformed URL", ex)
             }
         }
-
-        return hypeLinks;
+        return hypeLinks
     }
 
     /**
-     * Get the {@link Configuration} object
+     * Get the [Configuration] object
      */
-    public ImmutableConfig getConf() {
-        return this.conf;
+    override fun getConf(): ImmutableConfig {
+        return conf!!
+    }
+
+    companion object {
+        val LOG = LoggerFactory.getLogger(JSParseFilter::class.java)
+        private const val MAX_TITLE_LEN = 80
+        private const val STRING_PATTERN = "(\\\\*(?:\"|\'))([^\\s\"\']+?)(?:\\1)"
+        // A simple pattern. This allows also invalid URL characters.
+        private const val URI_PATTERN = "(^|\\s*?)/?\\S+?[/\\.]\\S+($|\\s*)"
+
+        /**
+         * Main method which can be run from command line with the plugin option. The
+         * method takes two arguments e.g. o.a.n.parse.js.JSParseFilter file.js
+         * baseURL
+         *
+         * @param args
+         * @throws Exception
+         */
+        @Throws(Exception::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            if (args.size < 2) {
+                System.err.println(JSParseFilter::class.java.name + " file.js baseURL")
+                return
+            }
+            val `in`: InputStream = FileInputStream(args[0])
+            val br = BufferedReader(InputStreamReader(`in`, "UTF-8"))
+            val sb = StringBuilder()
+            var line: String?
+            while (br.readLine().also { line = it } != null) {
+                sb.append(line).append("\n")
+            }
+            val parseFilter = JSParseFilter(ImmutableConfig())
+            val links = parseFilter.getJSLinks(sb.toString(), "", args[1])
+            println("Live links extracted: " + links.size)
+            links.stream().map { l: HypeLink -> " - $l" }.forEach { x: String? -> println(x) }
+        }
+    }
+
+    init {
+        reload(conf)
     }
 }

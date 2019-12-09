@@ -5,130 +5,104 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.parse.html;
+package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.boilerpipe.document.TextDocument;
-import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
-import ai.platon.pulsar.boilerpipe.sax.SAXInput;
-import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.parse.ParseFilter;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.parse.html.ParseContext;
-import ai.platon.pulsar.crawl.parse.html.PrimerParser;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.PageCategory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.xml.sax.InputSource;
-
-import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
-
-import static ai.platon.pulsar.common.config.CapabilityTypes.METATAG_NAMES;
+import ai.platon.pulsar.boilerpipe.document.TextDocument
+import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor
+import ai.platon.pulsar.boilerpipe.sax.SAXInput
+import ai.platon.pulsar.boilerpipe.utils.ProcessingException
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.parse.ParseFilter
+import ai.platon.pulsar.crawl.parse.html.ParseContext
+import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.PageCategory
+import org.apache.commons.logging.LogFactory
+import java.util.*
 
 /**
  * Parse html document into fields
  */
-public class BoilerpipeFilter implements ParseFilter {
+class BoilerpipeFilter(conf: ImmutableConfig) : ParseFilter {
+    private var conf: ImmutableConfig? = null
+    private var primerParser: PrimerParser? = null
+    private val metatagset: MutableSet<String> = HashSet()
 
-    private static final Log LOG = LogFactory.getLog(BoilerpipeFilter.class.getName());
-
-    private ImmutableConfig conf;
-    private PrimerParser primerParser;
-    private Set<String> metatagset = new HashSet<>();
-
-    public BoilerpipeFilter(ImmutableConfig conf) {
-        reload(conf);
+    init {
+        reload(conf)
     }
 
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        this.primerParser = new PrimerParser(conf);
+    override fun reload(conf: ImmutableConfig) {
+        this.conf = conf
+        primerParser = PrimerParser(conf)
         // Specify whether we want a specific subset of metadata
         // by default take everything we can find
-        String[] values = conf.getStrings(METATAG_NAMES, "*");
-        for (String val : values) {
-            metatagset.add(val.toLowerCase(Locale.ROOT));
+        val values = conf.getStrings(CapabilityTypes.METATAG_NAMES, "*")
+        for (v in values) {
+            metatagset.add(v.toLowerCase(Locale.ROOT))
         }
     }
 
-    @Override
-    public ImmutableConfig getConf() {
-        return this.conf;
+    override fun getConf(): ImmutableConfig {
+        return conf!!
     }
 
-    @Override
-    public void filter(ParseContext parseContext) {
-        WebPage page = parseContext.getPage();
-        ParseResult parseResult = parseContext.getParseResult();
-
-        extract(page, page.getEncodingOrDefault("UTF-8"));
-
-        parseResult.setSuccessOK();
+    override fun filter(parseContext: ParseContext) {
+        val page = parseContext.page
+        val parseResult = parseContext.parseResult
+        extract(page, page.getEncodingOrDefault("UTF-8"))
+        parseResult.setSuccessOK()
     }
 
     /**
      * Extract the page into fields
      */
-    public TextDocument extract(@Nonnull WebPage page, @Nonnull String encoding) {
-        Objects.requireNonNull(page);
-
-        TextDocument doc = extract(page);
-
-        if (doc == null) {
-            return null;
-        }
-
-        page.setContentTitle(doc.getContentTitle());
-        page.setContentText(doc.getTextContent());
-        page.setPageCategory(PageCategory.valueOf(doc.getPageCategoryAsString()));
-        page.updateContentPublishTime(doc.getPublishTime());
-        page.updateContentModifiedTime(doc.getModifiedTime());
-
-        long id = 1000;
-        page.getPageModel().emplace(id, 0, "boilerpipe", doc.getFields());
-
-        return doc;
+    fun extract(page: WebPage, encoding: String?): TextDocument? {
+        val doc = extract(page) ?: return null
+        page.setContentTitle(doc.contentTitle)
+        page.setContentText(doc.textContent)
+        page.pageCategory = PageCategory.valueOf(doc.pageCategoryAsString)
+        page.updateContentPublishTime(doc.publishTime)
+        page.updateContentModifiedTime(doc.modifiedTime)
+        val id: Long = 1000
+        page.pageModel.emplace(id, 0, "boilerpipe", doc.fields)
+        return doc
     }
 
-    private TextDocument extract(WebPage page) {
-        Objects.requireNonNull(page);
-
-        if (page.getContent() == null) {
-            LOG.warn("Can not extract page without content, url : " + page.getUrl());
-            return null;
+    private fun extract(page: WebPage): TextDocument? {
+        Objects.requireNonNull(page)
+        if (page.content == null) {
+            LOG.warn("Can not extract page without content, url : " + page.url)
+            return null
         }
-
         try {
-            if (page.getEncoding() == null) {
-                primerParser.detectEncoding(page);
+            if (page.encoding == null) {
+                primerParser!!.detectEncoding(page)
             }
-
-            InputSource inputSource = page.getContentAsSaxInputSource();
-            TextDocument doc = new SAXInput().parse(page.getLocation(), inputSource);
-
-            ChineseNewsExtractor extractor = new ChineseNewsExtractor();
-            extractor.process(doc);
-
-            return doc;
-        } catch (ProcessingException e) {
-            LOG.warn("Failed to extract text content by boilerpipe, " + e.getMessage());
+            val inputSource = page.contentAsSaxInputSource
+            val doc = SAXInput().parse(page.location, inputSource)
+            val extractor = ChineseNewsExtractor()
+            extractor.process(doc)
+            return doc
+        } catch (e: ProcessingException) {
+            LOG.warn("Failed to extract text content by boilerpipe, " + e.message)
         }
+        return null
+    }
 
-        return null;
+    companion object {
+        private val LOG = LogFactory.getLog(BoilerpipeFilter::class.java.name)
     }
 }

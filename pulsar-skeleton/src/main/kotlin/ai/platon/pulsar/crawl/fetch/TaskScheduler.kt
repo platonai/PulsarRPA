@@ -355,7 +355,7 @@ class TaskScheduler(
                 metricsSystem.reportFlawyParsedPage(page, true)
             }
 
-            if (indexJIT && parseResult.isSuccess) {
+            if (jitIndexer.isEnabled && parseResult.isSuccess) {
                 // JIT Index
                 jitIndexer.produce(fetchTask)
             }

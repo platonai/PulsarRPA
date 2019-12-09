@@ -3,7 +3,6 @@
  * XXX distribution, org.apache.xml.utils.XMLCharacterRecognizer,
  * XXX in order to avoid dependency on Xalan.
  */
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -23,25 +22,23 @@
 /*
  * $Id: XMLCharacterRecognizer.java 823614 2009-10-09 17:02:32Z ab $
  */
-package ai.platon.pulsar.parse.tika;
+package ai.platon.pulsar.parse.tika
 
 /**
  * Class used to verify whether the specified <var>ch</var> conforms to the XML
  * 1.0 definition of whitespace.
  */
-class XMLCharacterRecognizer {
-
+internal object XMLCharacterRecognizer {
     /**
      * Returns whether the specified <var>ch</var> conforms to the XML 1.0
-     * definition of whitespace. Refer to <A
-     * href="http://www.w3.org/TR/1998/REC-xml-19980210#NT-S"> the definition of
+     * definition of whitespace. Refer to <A href="http://www.w3.org/TR/1998/REC-xml-19980210#NT-S"> the definition of
      * <CODE>S</CODE></A> for details.
      *
      * @param ch Character to check as XML whitespace.
      * @return =true if <var>ch</var> is XML whitespace; otherwise =false.
      */
-    static boolean isWhiteSpace(char ch) {
-        return (ch == 0x20) || (ch == 0x09) || (ch == 0xD) || (ch == 0xA);
+    fun isWhiteSpace(ch: Char): Boolean {
+        return ch.toInt() == 0x20 || ch.toInt() == 0x09 || ch.toInt() == 0xD || ch.toInt() == 0xA
     }
 
     /**
@@ -53,16 +50,12 @@ class XMLCharacterRecognizer {
      * @return True if the characters in the array are XML whitespace; otherwise,
      * false.
      */
-    static boolean isWhiteSpace(char ch[], int start, int length) {
-
-        int end = start + length;
-
-        for (int s = start; s < end; s++) {
-            if (!isWhiteSpace(ch[s]))
-                return false;
+    fun isWhiteSpace(ch: CharArray, start: Int, length: Int): Boolean {
+        val end = start + length
+        for (s in start until end) {
+            if (!isWhiteSpace(ch[s])) return false
         }
-
-        return true;
+        return true
     }
 
     /**
@@ -71,16 +64,12 @@ class XMLCharacterRecognizer {
      * @param buf StringBuffer to check as XML whitespace.
      * @return True if characters in buffer are XML whitespace, false otherwise
      */
-    static boolean isWhiteSpace(StringBuffer buf) {
-
-        int n = buf.length();
-
-        for (int i = 0; i < n; i++) {
-            if (!isWhiteSpace(buf.charAt(i)))
-                return false;
+    fun isWhiteSpace(buf: StringBuffer): Boolean {
+        val n = buf.length
+        for (i in 0 until n) {
+            if (!isWhiteSpace(buf[i])) return false
         }
-
-        return true;
+        return true
     }
 
     /**
@@ -89,18 +78,13 @@ class XMLCharacterRecognizer {
      * @param s String to check as XML whitespace.
      * @return True if characters in buffer are XML whitespace, false otherwise
      */
-    static boolean isWhiteSpace(String s) {
-
+    fun isWhiteSpace(s: String?): Boolean {
         if (null != s) {
-            int n = s.length();
-
-            for (int i = 0; i < n; i++) {
-                if (!isWhiteSpace(s.charAt(i)))
-                    return false;
+            val n = s.length
+            for (i in 0 until n) {
+                if (!isWhiteSpace(s[i])) return false
             }
         }
-
-        return true;
+        return true
     }
-
 }

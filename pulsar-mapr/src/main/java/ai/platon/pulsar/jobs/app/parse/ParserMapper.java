@@ -92,7 +92,7 @@ public class ParserMapper extends GoraMapper<String, GWebPage, String, GWebPage>
       LOG.debug("Forced parsing " + page.getUrl() + "; already parsed");
     } // if resume
 
-    if (skipTruncated && pageParser.isTruncated(page)) {
+    if (skipTruncated && PageParser.Companion.isTruncated(page)) {
       if (LOG.isDebugEnabled()) {
         LOG.debug("Page truncated, ignore");
       }

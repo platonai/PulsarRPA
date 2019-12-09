@@ -58,8 +58,8 @@
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>
+        <constructor-arg ref="pulsarCounters"/>
         <constructor-arg ref="conf"/>
-        <property name="linkFilter" ref="linkFilter"/>
     </bean>
 
 </beans>

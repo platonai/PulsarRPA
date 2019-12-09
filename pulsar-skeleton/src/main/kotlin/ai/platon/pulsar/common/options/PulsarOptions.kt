@@ -88,7 +88,6 @@ open class PulsarOptions : Parameterized {
     private fun doParse() {
         objects.add(this)
 
-        objects.joinToString { it.javaClass.name }.also { println(it) }
         jc = JCommander.newBuilder()
                 .acceptUnknownOptions(acceptUnknownOptions)
                 .allowParameterOverwriting(allowParameterOverwriting)

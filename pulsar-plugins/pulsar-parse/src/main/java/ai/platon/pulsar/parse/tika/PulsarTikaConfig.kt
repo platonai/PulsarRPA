@@ -14,216 +14,72 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.parse.tika;
+package ai.platon.pulsar.parse.tika
 
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.detect.Detector;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.mime.MediaType;
-import org.apache.tika.mime.MimeTypes;
-import org.apache.tika.mime.MimeTypesFactory;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.html.HtmlParser;
-import org.apache.tika.parser.microsoft.OfficeParser;
-import org.apache.tika.parser.microsoft.ooxml.OOXMLParser;
-import org.apache.tika.parser.mp3.Mp3Parser;
-import org.apache.tika.parser.odf.OpenDocumentParser;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import org.apache.tika.exception.TikaException
+import org.apache.tika.mime.MediaType
+import org.apache.tika.mime.MimeTypes
+import org.apache.tika.mime.MimeTypesFactory
+import org.apache.tika.parser.ParseContext
+import org.apache.tika.parser.Parser
+import org.apache.tika.parser.html.HtmlParser
+import org.apache.tika.parser.microsoft.OfficeParser
+import org.apache.tika.parser.microsoft.ooxml.OOXMLParser
+import org.apache.tika.parser.mp3.Mp3Parser
+import org.apache.tika.parser.odf.OpenDocumentParser
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.net.URL
+import java.util.*
+import java.util.function.Consumer
+import javax.xml.parsers.DocumentBuilder
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.parsers.ParserConfigurationException
 
 /**
  * Parse xml config file.
  */
-public class PulsarTikaConfig {
+class PulsarTikaConfig {
+    private val parsers: MutableMap<String, Parser> = HashMap()
+    val mimeRepository: MimeTypes
 
-    private final Map<String, Parser> parsers = new HashMap<String, Parser>();
-
-    private final MimeTypes mimeTypes;
-
-    public PulsarTikaConfig(String file) throws TikaException, IOException, SAXException {
-        this(new File(file));
-    }
-
-    public PulsarTikaConfig(File file) throws TikaException, IOException, SAXException {
-        this(getBuilder().parse(file));
-    }
-
-    public PulsarTikaConfig(URL url) throws TikaException, IOException, SAXException {
-        this(getBuilder().parse(url.toString()));
-    }
-
-    public PulsarTikaConfig(InputStream stream) throws TikaException, IOException,
-            SAXException {
-        this(getBuilder().parse(stream));
-    }
-
-    /**
-     * @see <a href="https://issues.apache.org/jira/browse/TIKA-275">TIKA-275</a>
-     * @deprecated This method will be removed in Apache Tika 1.0
-     */
-    public PulsarTikaConfig(InputStream stream, Parser delegate) throws TikaException, IOException, SAXException {
-        this(stream);
-    }
-
-    public PulsarTikaConfig(Document document) throws TikaException, IOException {
-        this(document.getDocumentElement());
-    }
-
-    /**
-     * @see <a href="https://issues.apache.org/jira/browse/TIKA-275">TIKA-275</a>
-     * @deprecated This method will be removed in Apache Tika 1.0
-     */
-    public PulsarTikaConfig(Document document, Parser delegate) throws TikaException,
-            IOException {
-        this(document);
-    }
-
-    public PulsarTikaConfig(Element element) throws TikaException, IOException {
-        Element mtr = getChild(element, "mimeTypeRepository");
-        if (mtr != null && mtr.hasAttribute("resource")) {
-            mimeTypes = MimeTypesFactory.create(mtr.getAttribute("resource"));
-        } else {
-            mimeTypes = MimeTypesFactory.create("tika-mimetypes.xml");
+    init {
+        val context = ParseContext()
+        for (parser in arrayOf<Parser>(
+                HtmlParser(),
+                OfficeParser(),
+                OpenDocumentParser(),
+                Mp3Parser(),
+                OOXMLParser()
+        )) {
+            parser.getSupportedTypes(context).forEach { type: MediaType -> parsers[type.toString()] = parser }
         }
-
-        NodeList nodes = element.getElementsByTagName("parser");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Element node = (Element) nodes.item(i);
-            String name = node.getAttribute("class");
-
-            try {
-                Class<?> parserClass = Class.forName(name);
-                Object instance = parserClass.newInstance();
-                if (!(instance instanceof Parser)) {
-                    throw new TikaException("Configured class is not a Tika Parser: "
-                            + name);
-                }
-                Parser parser = (Parser) instance;
-
-                NodeList mimes = node.getElementsByTagName("mime");
-                if (mimes.getLength() > 0) {
-                    for (int j = 0; j < mimes.getLength(); j++) {
-                        parsers.put(getText(mimes.item(j)).trim(), parser);
-                    }
-                } else {
-                    ParseContext context = new ParseContext();
-                    for (MediaType type : parser.getSupportedTypes(context)) {
-                        parsers.put(type.toString(), parser);
-                    }
-                }
-            } catch (ClassNotFoundException e) {
-                throw new TikaException("Configured parser class not found: " + name, e);
-            } catch (IllegalAccessException e) {
-                throw new TikaException("Unable to access a parser class: " + name, e);
-            } catch (InstantiationException e) {
-                throw new TikaException(
-                        "Unable to instantiate a parser class: " + name, e);
-            }
-        }
-    }
-
-    public PulsarTikaConfig() throws TikaException, IOException {
-//        TikaConfig config = new TikaConfig("/path/to/tika-config.xml");
-//        Detector detector = config.getDetector();
-//        Parser autoDetectParser = new AutoDetectParser(config);
-
-        ParseContext context = new ParseContext();
-        for (Parser parser : new Parser[] {
-                new HtmlParser(),
-                new OfficeParser(), new OpenDocumentParser(),
-                new Mp3Parser(), new OOXMLParser()
-        }) {
-            parser.getSupportedTypes(context).forEach(type -> parsers.put(type.toString(), parser));
-        }
-
-        mimeTypes = MimeTypesFactory.create("tika-mimetypes.xml");
-    }
-
-    /**
-     * Provides a default configuration (TikaConfig). Currently creates a new
-     * instance each time it's called; we may be able to have it return a shared
-     * instance once it is completely immutable.
-     *
-     * @return default configuration
-     */
-    public static PulsarTikaConfig getDefaultConfig() {
-        try {
-            return new PulsarTikaConfig();
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read default configuration", e);
-        } catch (TikaException e) {
-            throw new RuntimeException("Unable to access default configuration", e);
-        }
-    }
-
-    private static DocumentBuilder getBuilder() throws TikaException {
-        try {
-            return DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        } catch (ParserConfigurationException e) {
-            throw new TikaException("XML parser not available", e);
-        }
-    }
-
-    private static Element getChild(Element element, String name) {
-        Node child = element.getFirstChild();
-        while (child != null) {
-            if (child.getNodeType() == Node.ELEMENT_NODE
-                    && name.equals(child.getNodeName())) {
-                return (Element) child;
-            }
-            child = child.getNextSibling();
-        }
-        return null;
-    }
-
-    private String getText(Node node) {
-        if (node.getNodeType() == Node.TEXT_NODE) {
-            return node.getNodeValue();
-        } else if (node.getNodeType() == Node.ELEMENT_NODE) {
-            StringBuilder builder = new StringBuilder();
-            NodeList list = node.getChildNodes();
-            for (int i = 0; i < list.getLength(); i++) {
-                builder.append(getText(list.item(i)));
-            }
-            return builder.toString();
-        } else {
-            return "";
-        }
+        mimeRepository = MimeTypesFactory.create("tika-mimetypes.xml")
     }
 
     /**
      * Returns the parser instance configured for the given MIME type. Returns
-     * <code>null</code> if the given MIME type is unknown.
+     * `null` if the given MIME type is unknown.
      *
      * @param mimeType MIME type
-     * @return configured Parser instance, or <code>null</code>
+     * @return configured Parser instance, or `null`
      */
-    public Parser getParser(String mimeType) {
-        return parsers.get(mimeType);
+    fun getParser(mimeType: String): Parser? {
+        return parsers[mimeType]
     }
 
-    public Map<String, Parser> getParsers() {
-        return parsers;
+    companion object {
+        /**
+         * Provides a default configuration (TikaConfig). Currently creates a new
+         * instance each time it's called; we may be able to have it return a shared
+         * instance once it is completely immutable.
+         *
+         * @return default configuration
+         */
+        val defaultConfig = PulsarTikaConfig()
     }
-
-    public MimeTypes getMimeRepository() {
-        return mimeTypes;
-    }
-
 }

@@ -94,10 +94,10 @@ open class FetchComponent(
      * @return The fetch result
      */
     protected fun fetchContentInternal(page: WebPage): WebPage {
-        Objects.requireNonNull(page)
         val url = page.url
         val u = getURLOrNull(url) ?: return WebPage.NIL
         val protocol = protocolFactory.getProtocol(page)
+
         if (protocol == null) {
             LOG.warn("No protocol found for {}", url)
             updateStatus(page, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND)

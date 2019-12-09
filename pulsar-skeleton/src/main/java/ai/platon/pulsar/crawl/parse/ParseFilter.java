@@ -28,6 +28,8 @@ import java.io.IOException;
  * Extension point for DOM-based parsers. Permits one to add additional metadata
  * to parses provided by the html or tika plugins. All plugins found which
  * implement this extension point are run sequentially on the parse.
+ *
+ * TODO: ParseFilter should not be reloadable
  */
 public interface ParseFilter extends ReloadableParameterized {
     Logger LOG = LoggerFactory.getLogger(ParseFilter.class);

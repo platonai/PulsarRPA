@@ -1,87 +1,89 @@
-package ai.platon.pulsar.parse.html;
+package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.MetricsCounters;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.options.EntityOptions;
-import ai.platon.pulsar.crawl.parse.ParseFilter;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.parse.html.FieldCollection;
-import ai.platon.pulsar.crawl.parse.html.JsoupParser;
-import ai.platon.pulsar.crawl.parse.html.ParseContext;
-import ai.platon.pulsar.persist.*;
-import org.jsoup.nodes.Document;
-
-import java.io.IOException;
-import java.util.List;
+import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.options.EntityOptions
+import ai.platon.pulsar.crawl.parse.ParseFilter
+import ai.platon.pulsar.crawl.parse.ParseResult
+import ai.platon.pulsar.crawl.parse.html.JsoupParser
+import ai.platon.pulsar.crawl.parse.html.ParseContext
+import ai.platon.pulsar.persist.PageCounters.Self
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.WebPage
+import java.io.IOException
 
 /**
  * Created by vincent on 16-9-14.
- * <p>
+ *
+ *
  * Parse Web page using Jsoup if and only if WebPage.query is specified
- * <p>
+ *
+ *
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
- * @deprecated Use Web SQL instead
  */
-@Deprecated
-public class GeneralHtmlFilter implements ParseFilter {
-
-    public enum Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
-    static { MetricsCounters.register(Counter.class); }
-
-    private ImmutableConfig conf;
-    private MetricsCounters metricsCounters;
-
-    public GeneralHtmlFilter() {
-        metricsCounters = new MetricsCounters();
+@Deprecated("Use Web SQL instead")
+class GeneralHtmlFilter : ParseFilter {
+    enum class Counter {
+        jsoupFailure, noEntity, brokenEntity, brokenSubEntity
     }
 
-    public GeneralHtmlFilter(ImmutableConfig conf) {
-        this.metricsCounters = new MetricsCounters();
-        reload(conf);
+    companion object {
+        init {
+            MetricsCounters.register(Counter::class.java)
+        }
     }
 
-    public GeneralHtmlFilter(MetricsCounters metricsCounters, ImmutableConfig conf) {
-        this.metricsCounters = metricsCounters;
-        reload(conf);
+    private var conf: ImmutableConfig? = null
+    private var metricsCounters: MetricsCounters
+
+    constructor() {
+        metricsCounters = MetricsCounters()
     }
 
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
+    constructor(conf: ImmutableConfig) {
+        metricsCounters = MetricsCounters()
+        reload(conf)
     }
 
-    public void filter(WebPage page, ParseResult parseResult) throws IOException {
-        filter(new ParseContext(page, null, null, parseResult));
+    constructor(metricsCounters: MetricsCounters, conf: ImmutableConfig) {
+        this.metricsCounters = metricsCounters
+        reload(conf)
+    }
+
+    override fun reload(conf: ImmutableConfig) {
+        this.conf = conf
+    }
+
+    @Throws(IOException::class)
+    fun filter(page: WebPage?, parseResult: ParseResult?) {
+        filter(ParseContext(page, null, null, parseResult))
     }
 
     /**
      * Extract all fields in the page
      */
-    @Override
-    public void filter(ParseContext parseContext) throws IOException {
-        WebPage page = parseContext.getPage();
-        ParseResult parseResult = parseContext.getParseResult();
-
-        parseResult.setMajorCode(ParseStatus.SUCCESS);
-
-        String query = page.getQuery();
+    @Throws(IOException::class)
+    override fun filter(parseContext: ParseContext) {
+        val page = parseContext.page
+        val parseResult = parseContext.parseResult
+        parseResult.majorCode = ParseStatus.SUCCESS
+        var query = page.query
         if (query == null) {
-            query = page.getOptions().toString();
+            query = page.options.toString()
         }
 
-        EntityOptions options = EntityOptions.parse(query);
+        val options = EntityOptions.parse(query)
         if (!options.hasRules()) {
-            parseResult.setMinorCode(ParseStatus.SUCCESS_EXT);
-            return;
+            parseResult.minorCode = ParseStatus.SUCCESS_EXT
+            return
         }
 
-        JsoupParser parser = new JsoupParser(page, conf);
-        Document document = parser.parse();
-        parseResult.setDocument(document);
-
-        List<FieldCollection> fieldCollections = parser.extractAll(options);
+        val parser = JsoupParser(page, conf)
+        val document = parser.parse()
+        parseResult.document = document
+        val fieldCollections = parser.extractAll(options)
         if (fieldCollections.isEmpty()) {
-            return;
+            return
         }
 
         // All last extracted fields are cleared, so we just keep the last extracted fields
@@ -89,31 +91,29 @@ public class GeneralHtmlFilter implements ParseFilter {
         // We only save comments extracted from the current page,
         // Comments appears in sub pages can not be read in this WebPage,
         // they may be crawled as separated WebPages
-        PageModel pageModel = page.getPageModel();
+        val pageModel = page.pageModel
+        var fieldCollection = fieldCollections[0]
+        val majorGroup = pageModel.emplace(1, 0, "selector", fieldCollection)
+        var loss = fieldCollection.loss
 
-        FieldCollection fieldCollection = fieldCollections.get(0);
-        FieldGroup majorGroup = pageModel.emplace(1, 0, "selector", fieldCollection);
-        int loss = fieldCollection.getLoss();
-        page.getPageCounters().set(PageCounters.Self.missingFields, loss);
-        metricsCounters.increase(Counter.brokenEntity, loss > 0 ? 1 : 0);
+        page.pageCounters.set(Self.missingFields, loss)
+        metricsCounters.increase(Counter.brokenEntity, if (loss > 0) 1 else 0)
 
-        int brokenSubEntity = 0;
-        for (int i = 1; i < fieldCollections.size(); i++) {
-            fieldCollection = fieldCollections.get(i);
-            pageModel.emplace(10000 + i, majorGroup.getId(), "selector-sub", fieldCollection);
-            loss = fieldCollection.getLoss();
+        var brokenSubEntity = 0
+        for (i in 1 until fieldCollections.size) {
+            fieldCollection = fieldCollections[i]
+            pageModel.emplace(10000 + i.toLong(), majorGroup.id, "selector-sub", fieldCollection)
+            loss = fieldCollection.loss
             if (loss > 0) {
-                ++brokenSubEntity;
+                ++brokenSubEntity
             }
         }
 
-        page.getPageCounters().set(PageCounters.Self.brokenSubEntity, brokenSubEntity);
-        metricsCounters.increase(Counter.brokenSubEntity, brokenSubEntity);
+        page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
+        metricsCounters.increase(Counter.brokenSubEntity, brokenSubEntity)
     }
 
-    @Override
-    public ImmutableConfig getConf() {
-        return this.conf;
+    override fun getConf(): ImmutableConfig {
+        return conf!!
     }
-
 }

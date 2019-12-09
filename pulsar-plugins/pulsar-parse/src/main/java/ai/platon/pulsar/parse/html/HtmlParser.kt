@@ -5,256 +5,217 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package ai.platon.pulsar.parse.html
 
-package ai.platon.pulsar.parse.html;
-
-import ai.platon.pulsar.common.EncodingDetector;
-import ai.platon.pulsar.common.MetricsSystem;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.crawl.filter.CrawlFilters;
-import ai.platon.pulsar.crawl.parse.ParseFilters;
-import ai.platon.pulsar.crawl.parse.ParseResult;
-import ai.platon.pulsar.crawl.parse.Parser;
-import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags;
-import ai.platon.pulsar.crawl.parse.html.ParseContext;
-import ai.platon.pulsar.crawl.parse.html.PrimerParser;
-import ai.platon.pulsar.persist.Metadata;
-import ai.platon.pulsar.persist.ParseStatus;
-import ai.platon.pulsar.persist.WebDb;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.MultiMetadata;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.w3c.dom.DocumentFragment;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import static ai.platon.pulsar.common.PulsarParams.VAR_LINKS_COUNT;
-import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.common.config.PulsarConstants.CACHING_FORBIDDEN_CONTENT;
-import static ai.platon.pulsar.persist.ParseStatus.REFRESH_HREF;
-import static ai.platon.pulsar.persist.ParseStatus.REFRESH_TIME;
-import static ai.platon.pulsar.persist.metadata.ParseStatusCodes.FAILED_INVALID_FORMAT;
-import static ai.platon.pulsar.persist.metadata.ParseStatusCodes.FAILED_MALFORMED_URL;
+import ai.platon.pulsar.common.EncodingDetector
+import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.crawl.filter.CrawlFilters
+import ai.platon.pulsar.crawl.parse.ParseFilters
+import ai.platon.pulsar.crawl.parse.ParseResult
+import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
+import ai.platon.pulsar.crawl.parse.Parser
+import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
+import ai.platon.pulsar.crawl.parse.html.ParseContext
+import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.persist.ParseStatus
+import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.ParseStatusCodes
+import org.apache.html.dom.HTMLDocumentImpl
+import org.cyberneko.html.parsers.DOMFragmentParser
+import org.jsoup.Jsoup
+import org.jsoup.helper.W3CDom
+import org.w3c.dom.DocumentFragment
+import org.xml.sax.InputSource
+import org.xml.sax.SAXException
+import java.io.IOException
+import java.net.MalformedURLException
+import java.net.URL
+import java.util.function.Consumer
 
 /**
  * Html parser
  */
-public class HtmlParser implements Parser {
+class HtmlParser(
+        private val webDb: WebDb,
+        private val crawlFilters: CrawlFilters,
+        private val parseFilters: ParseFilters,
+        private var conf: ImmutableConfig
+) : Parser {
+    private var parserImpl: String? = null
+    private var defaultCharEncoding: String? = null
+    private var encodingDetector: EncodingDetector? = null
+    private var primerParser: PrimerParser? = null
+    private var cachingPolicy: String? = null
+    private var metricsSystem: MetricsSystem? = null
 
-    private ImmutableConfig conf;
-    private CrawlFilters crawlFilters;
-    private ParseFilters parseFilters;
-
-    private String parserImpl;
-    private String defaultCharEncoding;
-    private EncodingDetector encodingDetector;
-
-    private PrimerParser primerParser;
-    private String cachingPolicy;
-
-    private WebDb webDb;
-    private MetricsSystem metricsSystem;
-
-    public HtmlParser(WebDb webDb, ImmutableConfig conf) {
-        this(webDb, new CrawlFilters(conf), new ParseFilters(conf), conf);
+    init {
+        reload(conf)
     }
 
-    public HtmlParser(WebDb webDb, ParseFilters parseFilters, ImmutableConfig conf) {
-        this(webDb, new CrawlFilters(conf), parseFilters, conf);
+    override fun reload(conf: ImmutableConfig) {
+        this.conf = conf
+        parserImpl = conf[CapabilityTypes.PARSE_HTML_IMPL, "neko"]
+        defaultCharEncoding = conf[CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8"]
+        cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, PulsarConstants.CACHING_FORBIDDEN_CONTENT]
+        primerParser = PrimerParser(conf)
+        encodingDetector = EncodingDetector(conf)
+        metricsSystem = MetricsSystem(webDb, conf)
+        Parser.LOG.info(params.formatAsLine())
+        Parser.LOG.info("Active parse filters : $parseFilters")
     }
 
-    public HtmlParser(WebDb webDb, CrawlFilters crawlFilters, ParseFilters parseFilters, ImmutableConfig conf) {
-        this.webDb = webDb;
-        this.crawlFilters = crawlFilters;
-        this.parseFilters = parseFilters;
-
-        reload(conf);
+    override fun getConf(): ImmutableConfig {
+        return conf
     }
 
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-
-        this.parserImpl = conf.get(PARSE_HTML_IMPL, "neko");
-        this.defaultCharEncoding = conf.get(PARSE_DEFAULT_ENCODING, "utf-8");
-        this.cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, CACHING_FORBIDDEN_CONTENT);
-
-        this.primerParser = new PrimerParser(conf);
-        this.encodingDetector = new EncodingDetector(conf);
-        this.metricsSystem = new MetricsSystem(webDb, conf);
-
-        LOG.info(getParams().formatAsLine());
-        LOG.info("Active parse filters : " + parseFilters);
-    }
-
-    @Override
-    public ImmutableConfig getConf() {
-        return this.conf;
-    }
-
-    @Override
-    public Params getParams() {
+    override fun getParams(): Params {
         return Params.of(
-                "className", this.getClass().getSimpleName(),
+                "className", this.javaClass.simpleName,
                 "parserImpl", parserImpl,
                 "defaultCharEncoding", defaultCharEncoding,
                 "cachingPolicy", cachingPolicy
-        );
+        )
     }
 
-    @Override
-    public ParseResult parse(WebPage page) {
-        try {
-            // The base url is set by protocol. Might be different from url if the request redirected.
-            String url = page.getUrl();
-            String baseUrl = page.getLocation();
-            URL baseURL = new URL(baseUrl);
-
-            if (page.getEncoding() == null) {
-                primerParser.detectEncoding(page);
+    override fun parse(page: WebPage): ParseResult {
+        return try { // The base url is set by protocol. Might be different from url if the request redirected.
+            val url = page.url
+            val baseUrl = page.baseUrl
+            val baseURL = URL(baseUrl)
+            if (page.encoding == null) {
+                primerParser!!.detectEncoding(page)
             }
-            InputSource inputSource = page.getContentAsSaxInputSource();
-            DocumentFragment documentFragment = parse(baseUrl, inputSource);
-
-            HTMLMetaTags metaTags = parseMetaTags(baseURL, documentFragment, page);
-            ParseResult parseResult = initParseResult(metaTags);
-            if (parseResult.isFailed()) {
-                return parseResult;
+            val inputSource = page.contentAsSaxInputSource
+            val documentFragment = parse(baseUrl, inputSource)
+            val metaTags = parseMetaTags(baseURL, documentFragment, page)
+            val parseResult = initParseResult(metaTags)
+            if (parseResult.isFailed) {
+                return parseResult
             }
-
-            ParseContext parseContext = new ParseContext(page, metaTags, documentFragment, parseResult);
-            parseLinks(baseURL, parseContext);
-
-            page.setPageTitle(primerParser.getPageTitle(documentFragment));
-            page.setPageText(primerParser.getPageText(documentFragment));
-
-            page.getPageModel().clear();
-            parseFilters.filter(parseContext);
-
-            return parseContext.getParseResult();
-        } catch (MalformedURLException e) {
-            return ParseResult.failed(FAILED_MALFORMED_URL, e.getMessage());
-        } catch (Exception e) {
-            return ParseResult.failed(FAILED_INVALID_FORMAT, e.getMessage());
+            val parseContext = ParseContext(page, metaTags, documentFragment, parseResult)
+            parseLinks(baseURL, parseContext)
+            page.pageTitle = primerParser!!.getPageTitle(documentFragment)
+            page.pageText = primerParser!!.getPageText(documentFragment)
+            page.pageModel.clear()
+            parseFilters.filter(parseContext)
+            parseContext.parseResult
+        } catch (e: MalformedURLException) {
+            failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
+        } catch (e: Exception) {
+            failed(ParseStatusCodes.FAILED_INVALID_FORMAT, e.message)
         }
     }
 
-    private HTMLMetaTags parseMetaTags(URL baseURL, DocumentFragment docRoot, WebPage page) {
-        HTMLMetaTags metaTags = new HTMLMetaTags(docRoot, baseURL);
-
-        MultiMetadata tags = metaTags.getGeneralTags();
-        Metadata metadata = page.getMetadata();
-
-        tags.names().forEach(name -> metadata.set("meta_" + name, tags.get(name)));
-        if (metaTags.getNoCache()) {
-            metadata.set(CACHING_FORBIDDEN_KEY, cachingPolicy);
+    private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {
+        val metaTags = HTMLMetaTags(docRoot, baseURL)
+        val tags = metaTags.generalTags
+        val metadata = page.metadata
+        tags.names().forEach(Consumer { name: String -> metadata["meta_$name"] = tags[name] })
+        if (metaTags.noCache) {
+            metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
-
-        return metaTags;
+        return metaTags
     }
 
-    private void parseLinks(URL baseURL, ParseContext parseContext) {
-        String url = parseContext.getUrl();
-        url = crawlFilters.normalizeToEmpty(url);
+    private fun parseLinks(baseURL: URL, parseContext: ParseContext) {
+        var baseURL: URL? = baseURL
+        var url = parseContext.url
+        url = crawlFilters.normalizeToEmpty(url)
         if (url.isEmpty()) {
-            return;
+            return
         }
-
-        WebPage page = parseContext.getPage();
-        HTMLMetaTags metaTags = parseContext.getMetaTags();
-        DocumentFragment docRoot = parseContext.getDocumentFragment();
-        ParseResult parseResult = parseContext.getParseResult();
-
-        if (!metaTags.getNoFollow()) { // okay to follow links
-            URL baseURLFromTag = primerParser.getBaseURL(docRoot);
-            baseURL = baseURLFromTag != null ? baseURLFromTag : baseURL;
-            primerParser.getLinks(baseURL, parseResult.getHypeLinks(), docRoot, crawlFilters);
+        val page = parseContext.page
+        val metaTags = parseContext.metaTags
+        val docRoot = parseContext.documentFragment
+        val parseResult = parseContext.parseResult
+        if (!metaTags.noFollow) { // okay to follow links
+            val baseURLFromTag = primerParser!!.getBaseURL(docRoot)
+            baseURL = baseURLFromTag ?: baseURL
+            primerParser!!.getLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
         }
-
-        page.increaseImpreciseLinkCount(parseResult.getHypeLinks().size());
-        page.getVariables().set(VAR_LINKS_COUNT, parseResult.getHypeLinks().size());
+        page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
+        page.variables[PulsarParams.VAR_LINKS_COUNT] = parseResult.hypeLinks.size
     }
 
-    private ParseResult initParseResult(HTMLMetaTags metaTags) {
-        if (metaTags.getNoIndex()) {
-            return new ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX);
+    private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
+        if (metaTags.noIndex) {
+            return ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_NO_INDEX)
         }
-
-        ParseResult parseResult = new ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK);
-        if (metaTags.getRefresh()) {
-            parseResult.setMinorCode(ParseStatus.SUCCESS_REDIRECT);
-            parseResult.getArgs().put(REFRESH_HREF, metaTags.getRefreshHref().toString());
-            parseResult.getArgs().put(REFRESH_TIME, Integer.toString(metaTags.getRefreshTime()));
+        val parseResult = ParseResult(ParseStatus.SUCCESS, ParseStatus.SUCCESS_OK)
+        if (metaTags.refresh) {
+            parseResult.minorCode = ParseStatus.SUCCESS_REDIRECT
+            parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
+            parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
-
-        return parseResult;
+        return parseResult
     }
 
-    private DocumentFragment parse(String baseUri, InputSource input) throws Exception {
-        if (parserImpl.equalsIgnoreCase("neko")) {
-            return parseNeko(baseUri, input);
+    @Throws(Exception::class)
+    private fun parse(baseUri: String, input: InputSource): DocumentFragment {
+        return if (parserImpl.equals("neko", ignoreCase = true)) {
+            parseNeko(baseUri, input)
         } else {
-            return parseJsoup(baseUri, input);
+            parseJsoup(baseUri, input)
         }
     }
 
-    private DocumentFragment parseJsoup(String baseUri, InputSource input) throws IOException {
-        Document doc = Jsoup.parse(input.getByteStream(), input.getEncoding(), baseUri);
-        org.jsoup.helper.W3CDom dom = new org.jsoup.helper.W3CDom();
-        return dom.fromJsoup(doc).createDocumentFragment();
+    @Throws(IOException::class)
+    private fun parseJsoup(baseUri: String, input: InputSource): DocumentFragment {
+        val doc = Jsoup.parse(input.byteStream, input.encoding, baseUri)
+        val dom = W3CDom()
+        return dom.fromJsoup(doc).createDocumentFragment()
     }
 
-    private DocumentFragment parseNeko(String baseUri, InputSource input) throws Exception {
-        org.cyberneko.html.parsers.DOMFragmentParser parser = new org.cyberneko.html.parsers.DOMFragmentParser();
+    @Throws(Exception::class)
+    private fun parseNeko(baseUri: String, input: InputSource): DocumentFragment {
+        val parser = DOMFragmentParser()
         try {
-            parser.setFeature("http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe", true);
-            parser.setFeature("http://cyberneko.org/html/features/augmentations", true);
-            parser.setProperty("http://cyberneko.org/html/properties/default-encoding", defaultCharEncoding);
-            parser.setFeature("http://cyberneko.org/html/features/scanner/ignore-specified-charset", true);
-            parser.setFeature("http://cyberneko.org/html/features/balance-tags/ignore-outside-content", false);
-            parser.setFeature("http://cyberneko.org/html/features/balance-tags/document-fragment", true);
-            parser.setFeature("http://cyberneko.org/html/features/report-errors", LOG.isTraceEnabled());
-        } catch (SAXException ignored) {
+            parser.setFeature("http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe", true)
+            parser.setFeature("http://cyberneko.org/html/features/augmentations", true)
+            parser.setProperty("http://cyberneko.org/html/properties/default-encoding", defaultCharEncoding)
+            parser.setFeature("http://cyberneko.org/html/features/scanner/ignore-specified-charset", true)
+            parser.setFeature("http://cyberneko.org/html/features/balance-tags/ignore-outside-content", false)
+            parser.setFeature("http://cyberneko.org/html/features/balance-tags/document-fragment", true)
+            parser.setFeature("http://cyberneko.org/html/features/report-errors", Parser.LOG.isTraceEnabled)
+        } catch (ignored: SAXException) {
         }
-
         // convert Document to DocumentFragment
-        org.apache.html.dom.HTMLDocumentImpl doc = new org.apache.html.dom.HTMLDocumentImpl();
-        doc.setErrorChecking(false);
-        DocumentFragment res = doc.createDocumentFragment();
-        DocumentFragment frag = doc.createDocumentFragment();
-        parser.parse(input, frag);
-        res.appendChild(frag);
-
+        val doc = HTMLDocumentImpl()
+        doc.errorChecking = false
+        val res = doc.createDocumentFragment()
+        var frag = doc.createDocumentFragment()
+        parser.parse(input, frag)
+        res.appendChild(frag)
         try {
             while (true) {
-                frag = doc.createDocumentFragment();
-                parser.parse(input, frag);
-                if (!frag.hasChildNodes())
-                    break;
-                if (LOG.isInfoEnabled()) {
-                    LOG.info(" - new frag, " + frag.getChildNodes().getLength() + " nodes.");
+                frag = doc.createDocumentFragment()
+                parser.parse(input, frag)
+                if (!frag.hasChildNodes()) break
+                if (Parser.LOG.isInfoEnabled) {
+                    Parser.LOG.info(" - new frag, " + frag.childNodes.length + " nodes.")
                 }
-                res.appendChild(frag);
+                res.appendChild(frag)
             }
-        } catch (Exception x) {
-            LOG.error("Failed with the following Exception: ", x);
+        } catch (x: Exception) {
+            Parser.LOG.error("Failed with the following Exception: ", x)
         }
-
-        return res;
+        return res
     }
 }

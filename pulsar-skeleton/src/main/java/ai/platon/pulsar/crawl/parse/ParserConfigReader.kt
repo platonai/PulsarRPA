@@ -5,169 +5,152 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.crawl.parse;
+package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.ResourceLoader;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import javax.annotation.Nonnull;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.*;
-
-import static ai.platon.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
+import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import org.slf4j.LoggerFactory
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.xml.sax.InputSource
+import org.xml.sax.SAXException
+import java.io.IOException
+import java.util.*
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.parsers.ParserConfigurationException
 
 /**
- * A reader to load the information stored in the
- * <code>$PULSAR_HOME/conf/parse-plugins.xml</code> file.
+ * A reader to load the information stored in the `$PULSAR_HOME/conf/parse-plugins.xml` file.
  *
  * @author mattmann
  * @version 1.0
  */
-public class ParserConfigReader {
-
-    /* our log stream */
-    public static final Logger LOG = LoggerFactory.getLogger(ParserConfigReader.class);
-
-    /**
-     * The property name of the parse-plugins location
-     */
-    public static final String PARSE_PLUGINS_FILE = "parse.plugin.file";
-
+class ParserConfigReader {
     /**
      * the parse-plugins file
      */
-    private String parseConfigFile = null;
-
-    private List<String> notDefinedParsers = new LinkedList<>();
-
+    private lateinit var parseConfigFile: String
+    private val notDefinedParsers = mutableListOf<String>()
     /**
-     * Reads the <code>parse-plugins.xml</code> file and returns the
-     * {@link ParserConfig} defined by it.
+     * Reads the `parse-plugins.xml` file and returns the
+     * [ParserConfig] defined by it.
      *
-     * @return A {@link ParserConfig} specified by the
-     * <code>parse-plugins.xml</code> file.
+     * @return A [ParserConfig] specified by the
+     * `parse-plugins.xml` file.
      */
-    @Nonnull
-    public ParserConfig parse(ImmutableConfig conf) {
-        ParserConfig parserConfig = new ParserConfig();
-
-        String resourcePrefix = conf.get(PULSAR_CONFIG_PREFERRED_DIR, "");
-        String fileResource = conf.get(PARSE_PLUGINS_FILE, "parse-plugins.xml");
-
-        Document document;
-        try (Reader reader = ResourceLoader.getResourceAsReader(fileResource, resourcePrefix)) {
-            InputSource inputSource = new InputSource(reader);
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder parser = factory.newDocumentBuilder();
-            document = parser.parse(inputSource);
-        } catch (IOException e) {
-            LOG.error("Failed to find resource " + fileResource);
-            return parserConfig;
-        } catch (ParserConfigurationException | SAXException e) {
-            LOG.warn("Unable to parse [" + parseConfigFile + "]." + "Reason is [" + e + "]");
-            return parserConfig;
+    fun parse(conf: ImmutableConfig): ParserConfig {
+        val parserConfig = ParserConfig()
+        val resourcePrefix = conf.get(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, "")
+        val fileResource = conf.get(PARSE_PLUGINS_FILE, "parse-plugins.xml")
+        var document: Document? = null
+        try {
+            ResourceLoader.getResourceAsReader(fileResource, resourcePrefix).use { reader ->
+                val inputSource = InputSource(reader)
+                val parser = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                document = parser.parse(inputSource)
+            }
+        } catch (e: IOException) {
+            LOG.error("Failed to find resource $fileResource")
+            return parserConfig
+        } catch (e: ParserConfigurationException) {
+            LOG.warn("Unable to parse [$parseConfigFile]", e)
+            return parserConfig
+        } catch (e: SAXException) {
+            LOG.warn("Unable to parse [$parseConfigFile]", e)
+            return parserConfig
+        } catch (e: Throwable) {
+            LOG.warn("Unable to parse [$parseConfigFile], unexpected exception", e)
+            return parserConfig
         }
 
-        Element parsePlugins = document.getDocumentElement();
-
+        val parsePlugins = document!!.documentElement
         // build up the alias hash map
-        Map<String, String> aliases = getAliases(parsePlugins);
+        val aliases = getAliases(parsePlugins)
         // And store it on the parse plugin list
-        parserConfig.setAliases(aliases);
-
+        parserConfig.aliases = aliases
         // get all the mime type nodes
-        NodeList mimeTypes = parsePlugins.getElementsByTagName("mimeType");
-
+        val mimeTypes = parsePlugins.getElementsByTagName("mimeType")
         // iterate through the mime types
-        for (int i = 0; i < mimeTypes.getLength(); i++) {
-            Element mimeType = (Element) mimeTypes.item(i);
-            String mimeTypeStr = mimeType.getAttribute("name");
-
+        for (i in 0 until mimeTypes.length) {
+            val mimeType = mimeTypes.item(i) as Element
+            val mimeTypeStr = mimeType.getAttribute("name")
             // for each mimeType, get the plugin list
-            NodeList parserNodes = mimeType.getElementsByTagName("parser");
-
+            val parserNodes = mimeType.getElementsByTagName("parser")
             // iterate through the plugins, add them in order read
             // OR if they have a special order="" attribute, then hold those in
             // a separate list, and then insert them into the final list at the
             // order specified
-            if (parserNodes != null && parserNodes.getLength() > 0) {
-                List<String> parsers = new ArrayList<>(parserNodes.getLength());
-
-                for (int j = 0; j < parserNodes.getLength(); j++) {
-                    Element parserNode = (Element) parserNodes.item(j);
-                    String parserId = parserNode.getAttribute("id");
-                    String parserClass = aliases.get(parserId);
+            if (parserNodes != null && parserNodes.length > 0) {
+                val parserClasses = mutableListOf<String>()
+                for (j in 0 until parserNodes.length) {
+                    val parserNode = parserNodes.item(j) as Element
+                    val parserId = parserNode.getAttribute("id")
+                    val parserClass = aliases[parserId]
                     if (parserClass == null) {
-                        notDefinedParsers.add(parserId);
-                        continue;
+                        notDefinedParsers.add(parserId)
+                        continue
                     }
-
-                    parsers.add(parserClass);
+                    parserClasses.add(parserClass)
                 }
-
                 // now add the plugin list and map it to this mimeType
-                if (!parsers.isEmpty()) {
-                    parserConfig.setParsers(mimeTypeStr, parsers);
+                if (parserClasses.isNotEmpty()) {
+                    parserConfig.setParsers(mimeTypeStr, parserClasses)
                 }
             } else {
-                LOG.warn("No plugins defined for mime type: " + mimeTypeStr + ", continuing parse");
+                LOG.warn("No plugins defined for mime type: $mimeTypeStr, continuing parse")
             }
         }
-
-        return parserConfig;
+        return parserConfig
     }
 
-    private Map<String, String> getAliases(Element parsePluginsRoot) {
-        Map<String, String> aliases = new HashMap<>();
-        NodeList aliasRoot = parsePluginsRoot.getElementsByTagName("aliases");
-
-        if (aliasRoot == null || aliasRoot.getLength() == 0) {
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("No aliases defined in parse-plugins.xml!");
+    private fun getAliases(parsePluginsRoot: Element): Map<String, String> {
+        val aliases: MutableMap<String, String> = HashMap()
+        val aliasRoot = parsePluginsRoot.getElementsByTagName("aliases")
+        if (aliasRoot == null || aliasRoot.length == 0) {
+            if (LOG.isWarnEnabled) {
+                LOG.warn("No aliases defined in parse-plugins.xml!")
             }
-            return aliases;
+            return aliases
         }
-
-        if (aliasRoot.getLength() > 1) {
-            // log a warning, but try and continue processing
-            if (LOG.isWarnEnabled()) {
-                LOG.warn("There should only be one \"aliases\" tag in parse-plugins.xml");
+        if (aliasRoot.length > 1) { // log a warning, but try and continue processing
+            if (LOG.isWarnEnabled) {
+                LOG.warn("There should only be one \"aliases\" tag in parse-plugins.xml")
             }
         }
-
-        Element aliasRootElem = (Element) aliasRoot.item(0);
-        NodeList aliasElements = aliasRootElem.getElementsByTagName("alias");
-
-        if (aliasElements != null && aliasElements.getLength() > 0) {
-            for (int i = 0; i < aliasElements.getLength(); i++) {
-                Element aliasElem = (Element) aliasElements.item(i);
-                String name = aliasElem.getAttribute("name");
-                String clazz = aliasElem.getAttribute("class");
+        val aliasRootElem = aliasRoot.item(0) as Element
+        val aliasElements = aliasRootElem.getElementsByTagName("alias")
+        if (aliasElements != null && aliasElements.length > 0) {
+            for (i in 0 until aliasElements.length) {
+                val aliasElem = aliasElements.item(i) as Element
+                val name = aliasElem.getAttribute("name")
+                val clazz = aliasElem.getAttribute("class")
                 if (name != null && clazz != null) {
-                    aliases.put(name, clazz);
+                    aliases[name] = clazz
                 }
             }
         }
-        return aliases;
+
+        return aliases
+    }
+
+    companion object {
+        /* our log stream */
+        val LOG = LoggerFactory.getLogger(ParserConfigReader::class.java)
+        /**
+         * The property name of the parse-plugins location
+         */
+        const val PARSE_PLUGINS_FILE = "parse.plugin.file"
     }
 }

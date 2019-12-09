@@ -5,102 +5,89 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.crawl.parse;
+package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.MimeUtil;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
+import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.parse.ParserNotFound
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.function.BinaryOperator
+import java.util.function.Consumer
+import java.util.function.Function
+import java.util.function.Predicate
+import java.util.stream.Collectors
 
 /**
- * Creates {@link Parser}.
+ * Creates [Parser].
  */
-public final class ParserFactory {
-    public static final Logger LOG = LoggerFactory.getLogger(ParserFactory.class);
-
-    public static final String DEFAULT_MINE_TYPE = "*";
-
+class ParserFactory {
     // Thread safe for both outer map and inner list
-    private Map<String, List<Parser>> mineType2Parsers = Collections.synchronizedMap(new HashMap<>());
+    private val mineType2Parsers = Collections.synchronizedMap(HashMap<String, List<Parser>>())
 
-    public ParserFactory(ImmutableConfig conf) {
-        this(Collections.emptyList(), conf);
+    constructor(conf: ImmutableConfig) : this(listOf(), conf)
+
+    constructor(availableParsers: List<Parser>, conf: ImmutableConfig) : this(ParserConfigReader().parse(conf), availableParsers)
+
+    constructor(parserConfig: ParserConfig, availableParsers: List<Parser>) {
+        val availableNamedParsers = availableParsers.associateBy { it.javaClass.name }
+        parserConfig.parsers.forEach { (mimeType: String, parserClasses: List<String>) ->
+            val parsers = parserClasses.mapNotNull { name -> availableNamedParsers[name] }
+            mineType2Parsers[mimeType] = Collections.synchronizedList(parsers)
+        }
+
+        mineType2Parsers.keys.associateWith { mineType2Parsers[it]?.joinToString { it.javaClass.name } }
+                .let { Params(it) }.withLogger(LOG).info("Active parsers: ", "", false)
     }
 
-    public ParserFactory(List<Parser> availableParsers, ImmutableConfig conf) {
-        this(new ParserConfigReader().parse(conf), availableParsers);
-    }
-
-    public ParserFactory(ParserConfig parserConfig, List<Parser> availableParsers) {
-        Map<String, Parser> availableNamedParsers = availableParsers.stream()
-                .collect(Collectors.toMap(parser -> parser.getClass().getName(), parser -> parser, (p1, p2) -> p1));
-
-        parserConfig.getParsers().forEach((key, value) -> {
-            List<Parser> parsers = value.stream()
-                    .filter(StringUtils::isNotBlank)
-                    .map(availableNamedParsers::get)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            mineType2Parsers.put(key, Collections.synchronizedList(parsers));
-        });
-        LOG.info("Active parsers : " + parserConfig.toString());
-    }
-
-    public ParserFactory(Map<String, List<Parser>> parses) {
-        mineType2Parsers.putAll(parses);
+    constructor(parses: Map<String, List<Parser>>) {
+        mineType2Parsers.putAll(parses)
     }
 
     /**
-     * Function returns an array of {@link Parser}s for a given content type.
-     * <p>
+     * Function returns an array of [Parser]s for a given content type.
+     *
      * The function consults the internal list of parse plugins for the
      * ParserFactory to determine the list of pluginIds, then gets the appropriate
-     * extension points to instantiate as {@link Parser}s.
-     * <p>
+     * extension points to instantiate as [Parser]s.
+     *
      * The function is thread safe
      *
-     * @param contentType The contentType to return the <code>Array</code> of {@link Parser}
-     *                    s for.
-     * @param url         The url for the content that may allow us to get the type from the
-     *                    file suffix.
-     * @return An <code>List</code> of {@link Parser}s for the given contentType.
+     * @param contentType The contentType to return the `Array` of [Parser]'s for.
+     * @param url         The url for the content that may allow us to get the type from the file suffix.
+     * @return An `List` of [Parser]s for the given contentType.
      */
-    public List<Parser> getParsers(String contentType, String url) throws ParserNotFound {
-        String mimeType = MimeUtil.cleanMimeType(contentType);
-
-        List<Parser> parsers = mineType2Parsers.get(mimeType);
-        if (parsers == null) {
-            parsers = mineType2Parsers.get(DEFAULT_MINE_TYPE);
-        }
-
-        return parsers;
+    @Throws(ParserNotFound::class)
+    fun getParsers(contentType: String, url: String = ""): List<Parser> {
+        val mimeType = MimeUtil.cleanMimeType(contentType)
+        return mineType2Parsers[mimeType]?: mineType2Parsers[DEFAULT_MINE_TYPE]?: listOf()
     }
 
-    private String escapeContentType(String contentType) {
-        // Escapes contentType in order to use as a regex
-        // (and keep backwards compatibility).
+    private fun escapeContentType(contentType: String): String {
+        // Escapes contentType in order to use as a regex (and keep backwards compatibility).
         // This enables to accept multiple types for a single parser.
-        return contentType.replace("+", "\\+").replace(".", "\\.");
+        return contentType.replace("+", "\\+").replace(".", "\\.")
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        mineType2Parsers.values().forEach(parser -> sb.append(parser.getClass().getSimpleName()).append(", "));
-        return sb.toString();
+    override fun toString(): String {
+        return mineType2Parsers.values.joinToString { it.javaClass.simpleName }
+    }
+
+    companion object {
+        val LOG = LoggerFactory.getLogger(ParserFactory::class.java)
+        const val DEFAULT_MINE_TYPE = "*"
     }
 }

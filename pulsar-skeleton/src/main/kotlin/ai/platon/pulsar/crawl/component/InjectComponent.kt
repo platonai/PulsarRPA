@@ -1,25 +1,17 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.WeakPageIndexer
-import ai.platon.pulsar.common.config.*
-import ai.platon.pulsar.common.options.InjectOptions
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
-import org.springframework.context.ApplicationContext
-import org.springframework.context.support.ClassPathXmlApplicationContext
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.Consumer
-import java.util.function.Function
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 /**
  * Created by vincent on 17-5-14.
@@ -37,18 +29,12 @@ class InjectComponent(
         return seedBuilder.params
     }
 
-    fun inject(urlArgs: org.apache.commons.lang3.tuple.Pair<String?, String?>): WebPage {
-        return inject(urlArgs.key, urlArgs.value)
-    }
-
-    fun inject(urlArgs: Pair<String?, String?>): WebPage {
+    fun inject(urlArgs: Pair<String, String>): WebPage {
         return inject(urlArgs.first, urlArgs.second)
     }
 
-    fun inject(url: String?, args: String?): WebPage {
-        Objects.requireNonNull(url)
-        Objects.requireNonNull(args)
-        var page = webDb.getOrNil(url!!, false)
+    fun inject(url: String, args: String): WebPage {
+        var page = webDb.getOrNil(url, false)
         if (page.isNil) {
             page = seedBuilder.create(url, args)
             if (page.isSeed) {
@@ -62,7 +48,6 @@ class InjectComponent(
     }
 
     fun inject(page: WebPage): Boolean {
-        Objects.requireNonNull(page)
         val success = seedBuilder.makeSeed(page)
         if (success) {
             webDb.put(page)
