@@ -1,4 +1,4 @@
-package ai.platon.pulsar.jobs.app.parse
+package ai.platon.pulsar.jobs.parse
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes

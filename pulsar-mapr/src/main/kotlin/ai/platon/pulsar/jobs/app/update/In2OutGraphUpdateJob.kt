@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.jobs.app.update
 
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.jobs.JobEnv
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
 import ai.platon.pulsar.jobs.core.PulsarJob
@@ -25,26 +24,22 @@ import ai.platon.pulsar.persist.graph.GraphGroupKey.*
 import ai.platon.pulsar.persist.io.WebGraphWritable
 import kotlin.system.exitProcess
 
-class OutGraphUpdateJob: WebGraphUpdateJob() {
-
+class InGraphUpdateJob : WebGraphUpdateJob() {
     public override fun initJob() {
         // Partition by {url}, sort by {url,score} and group by {url}.
         // This ensures that the inlinks are sorted by score when they enter the reducer.
         currentJob.partitionerClass = UrlOnlyPartitioner::class.java
         currentJob.setSortComparatorClass(GraphKeyComparator::class.java)
         currentJob.setGroupingComparatorClass(UrlOnlyComparator::class.java)
-
-        // currentJob.setCombinerClass(OutGraphUpdateCombiner.class);
-        // currentJob.setCombinerKeyGroupingComparatorClass(UrlOnlyComparator.class);
         val fields = getFields(currentJob)
         PulsarJob.initMapper(currentJob, fields, GraphGroupKey::class.java, WebGraphWritable::class.java,
-                OutGraphUpdateMapper::class.java, getBatchIdFilter(options.batchId[0]))
-        PulsarJob.initReducer(currentJob, OutGraphUpdateReducer::class.java)
+                In2OutGraphUpdateMapper::class.java, getBatchIdFilter(options.batchId[0]))
+        PulsarJob.initReducer(currentJob, In2OutGraphhUpdateReducer::class.java)
     }
 }
 
 fun main(args: Array<String>) {
     JobEnv.initialize()
-    val res = AppContextAwareJob.run(OutGraphUpdateJob(), args)
+    val res = AppContextAwareJob.run(InGraphUpdateJob(), args)
     exitProcess(res)
 }

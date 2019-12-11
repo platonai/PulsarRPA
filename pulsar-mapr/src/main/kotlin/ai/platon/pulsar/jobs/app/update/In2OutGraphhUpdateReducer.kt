@@ -37,7 +37,7 @@ import ai.platon.pulsar.persist.metadata.CrawlVariables
 import ai.platon.pulsar.persist.metadata.Mark
 import com.google.common.collect.Lists
 
-internal class InGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
+internal class In2OutGraphhUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
     private lateinit var webDb: WebDb
     private lateinit var metricsSystem: MetricsSystem
     private lateinit var updateComponent: UpdateComponent
@@ -71,13 +71,16 @@ internal class InGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, 
             metricsCounters.increase(UpdateComponent.Companion.Counter.rNotExist)
             return
         }
+
         updateGraph(graph)
         if (page.hasMark(Mark.FETCH)) {
             updateComponent.updateFetchSchedule(page)
             CounterUtils.updateStatusCounter(page.crawlStatus, metricsCounters)
         }
+
         updateMetadata(page)
         updateMarks(page)
+
         context.write(reversedUrl, page.unbox())
         metricsSystem.report(page)
         metricsCounters.increase(CommonCounter.rPersist)
@@ -126,12 +129,17 @@ internal class InGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, 
         return graph
     }
 
+    /**
+     * Update vertices by outgoing edges
+     *
+     */
     private fun updateGraph(graph: WebGraph): Boolean {
         val focus = graph.focus
         val page = focus.webPage
         var totalUpdates = 0
         for (outgoingEdge in graph.outgoingEdgesOf(focus)) {
             if (outgoingEdge.isLoop) {
+                // a loop graph is a graph which has only one vertex and one edge
                 continue
             }
 
@@ -142,8 +150,13 @@ internal class InGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, 
             updateComponent.updateByOutgoingPage(page, outgoingPage)
             updateComponent.updatePageCounters(lastPageCounters, page.pageCounters, page)
 
-            if (outgoingPage.pageCategory.isDetail || CrawlFilter.sniffPageCategory(outgoingPage.url).isDetail) {
+            if (outgoingPage.pageCategory.isDetail) {
                 ++totalUpdates
+            } else if (outgoingPage.pageCategory.isUnknown) {
+                if (CrawlFilter.sniffPageCategory(outgoingPage.url).isDetail) {
+                    // TODO: make sure page category is calculated
+                    ++totalUpdates
+                }
             }
         }
 
@@ -153,6 +166,7 @@ internal class InGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, 
 
             return true
         }
+
         return false
     }
 
@@ -166,7 +180,7 @@ internal class InGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, 
         val marks = page.marks
         marks.putIfNotNull(Mark.UPDATEING, marks[Mark.UPDATEOUTG])
 
-        val retiredMarks: List<Mark> = Lists.newArrayList(
+        val retiredMarks = listOf(
                 Mark.INJECT,
                 Mark.GENERATE,
                 Mark.FETCH,

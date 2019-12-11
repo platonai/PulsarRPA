@@ -99,7 +99,7 @@ class UpdateComponent(
 
     fun updateByOutgoingPages(page: WebPage, outgoingPages: Collection<WebPage>) {
         val lastPageCounters = page.pageCounters.clone()
-        outgoingPages.forEach(Consumer { outgoingPage: WebPage -> updateByOutgoingPage(page, outgoingPage) })
+        outgoingPages.forEach { updateByOutgoingPage(page, it) }
         updatePageCounters(lastPageCounters, page.pageCounters, page)
     }
 

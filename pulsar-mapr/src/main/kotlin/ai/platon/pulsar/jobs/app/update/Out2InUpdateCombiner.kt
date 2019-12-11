@@ -25,7 +25,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapreduce.Reducer
 import org.slf4j.LoggerFactory
 
-internal class OutGraphUpdateCombiner : Reducer<GraphGroupKey, WebGraphWritable, GraphGroupKey, WebGraphWritable>() {
+internal class Out2InUpdateCombiner : Reducer<GraphGroupKey, WebGraphWritable, GraphGroupKey, WebGraphWritable>() {
     private var edgeCountBeforeCombine = 0
     private var edgeCountAfterCombine = 0
 
@@ -59,6 +59,6 @@ internal class OutGraphUpdateCombiner : Reducer<GraphGroupKey, WebGraphWritable,
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(OutGraphUpdateCombiner::class.java)
+        val LOG = LoggerFactory.getLogger(Out2InUpdateCombiner::class.java)
     }
 }

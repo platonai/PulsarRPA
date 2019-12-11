@@ -188,6 +188,7 @@ open class FetchComponent(
             crawlStatus = CrawlStatus.STATUS_REDIR_TEMP
             temp = true
         }
+
         val newUrl = protocolStatus.getArgOrDefault(ProtocolStatus.ARG_REDIRECT_TO_URL, "")
         if (newUrl.isNotEmpty()) {
             // handleRedirect(url, newUrl, temp, PROTOCOL_REDIR, fetchTask.getPage());

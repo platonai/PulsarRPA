@@ -97,8 +97,8 @@ class GenerateComponent(
     }
 
     override fun setup(jobConf: ImmutableConfig) {
-        crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
-        batchId = jobConf[CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES]
+        crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID)
+        batchId = jobConf.get(CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES)
         fetchMode = jobConf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.SELENIUM)
 
         groupMode = jobConf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
@@ -109,8 +109,8 @@ class GenerateComponent(
         maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
         pseudoCurrTime = jobConf.getInstant(CapabilityTypes.GENERATE_CUR_TIME, startTime)
         topN = jobConf.getInt(CapabilityTypes.GENERATE_TOP_N, -1)
-        lowGeneratedRowsRate = 0.8f
         lastGeneratedRows = jobConf.getInt(CapabilityTypes.GENERATE_LAST_GENERATED_ROWS, -1)
+        lowGeneratedRowsRate = 0.8f
         lowGeneratedRows = (lowGeneratedRowsRate * topN).toInt()
     }
 
@@ -129,8 +129,8 @@ class GenerateComponent(
                         "pseudoCurrTime", DateTimeUtil.format(pseudoCurrTime.truncatedTo(ChronoUnit.SECONDS)),
                         "topN", topN,
                         "lastGeneratedRows", lastGeneratedRows,
-                        "lowGeneratedRows", lowGeneratedRows,
                         "lowGeneratedRowsRate", lowGeneratedRowsRate,
+                        "lowGeneratedRows", lowGeneratedRows,
                         "fetchSchedule", fetchSchedule.javaClass.name,
                         "scoringFilters", scoringFilters,
                         "urlNormalizers", urlNormalizers,
@@ -153,7 +153,6 @@ class GenerateComponent(
             return true
         }
 
-        val distance = page.distance
         if (!checkFetchSchedule(page)) {
             return false
         }
@@ -182,7 +181,8 @@ class GenerateComponent(
              * There are three ways to fetch pages that are generated but not fetched nor fetching.
              * 1. Restart a text with ignoreGenerated set to be false
              * 2. Resume a FetchJob with resume set to be true
-             * */if (!reGenerate) {
+             * */
+            if (!reGenerate) {
                 val days = Duration.between(page.generateTime, startTime).toDays()
                 when {
                     days == 1L -> {
@@ -204,12 +204,12 @@ class GenerateComponent(
 
         val distanceBias = 0
         // Filter on distance
-        if (distance > maxDistance + distanceBias) {
+        if (page.distance > maxDistance + distanceBias) {
             metricsCounters.increase(Counter.mTooDeep)
             return false
         }
 
-        // TODO : Url range filtering should be applied to HBase query filter
+        // TODO : Url range filtering should be applied to (HBase) native query filter
         // key before start key
         if (!CrawlFilter.keyGreaterEqual(reversedUrl, keyRange[0])) {
             metricsCounters.increase(Counter.mBeforeStart)
@@ -250,6 +250,7 @@ class GenerateComponent(
 
     /**
      * Fetch schedule, timing filter
+     * TODO: all the logic can be write in the [FetchSchedule]
      */
     private fun checkFetchSchedule(page: WebPage): Boolean {
         if (fetchSchedule.shouldFetch(page, pseudoCurrTime)) {
@@ -264,7 +265,6 @@ class GenerateComponent(
         val fetchTime = page.fetchTime
         val hours = ChronoUnit.HOURS.between(pseudoCurrTime, fetchTime)
         if (hours <= 6 && 0 < lastGeneratedRows && lastGeneratedRows < lowGeneratedRows) {
-            // There are enough resource to do tasks ahead of time
             // TODO : we can expend maxDistance to gain a bigger web graph if the machines are idle
             val fetchInterval = ChronoUnit.HOURS.between(page.prevFetchTime, pseudoCurrTime)
             if (fetchInterval > 6) {
@@ -272,6 +272,8 @@ class GenerateComponent(
                 if (page.isSeed) {
                     metricsCounters.increase(Counter.mSeedAhead)
                 }
+
+                // There are plenty resource to do tasks ahead of time
                 return true
             }
         }

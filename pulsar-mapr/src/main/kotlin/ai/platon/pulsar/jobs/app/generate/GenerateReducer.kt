@@ -45,26 +45,21 @@ import java.time.temporal.ChronoUnit
 class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, String, GWebPage>() {
 
     companion object {
-        enum class Counter {
-            rHosts, rMalformedUrl, rSeeds, rFromSeed;
-        }
+        enum class Counter { rHosts, rMalformedUrl, rSeeds, rFromSeed; }
         init { MetricsCounters.register(Counter::class.java) }
     }
 
-    private val impreciseNow = Instant.now()
-    private val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-    private val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)
-    private var limit = 0
-    private var maxCountPerHost = 0
-    private var groupMode: GroupMode? = null
+    private var limit = Int.MAX_VALUE
+    private var maxCountPerHost = 100000
     private val hostNames: Multiset<String> = LinkedHashMultiset.create()
     private lateinit var batchId: String
+    private lateinit var groupMode: GroupMode
     private lateinit var metricsSystem: MetricsSystem
     private var count = 0
 
     override fun setup(context: Context) {
-        val crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
-        batchId = jobConf[CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES]
+        val crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID)
+        batchId = jobConf.get(CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES)
         // Generate top N links only
         limit = jobConf.getUint(CapabilityTypes.GENERATE_TOP_N, Int.MAX_VALUE)
         limit /= context.numReduceTasks
@@ -94,7 +89,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
         for (row in rows) {
             val page = WebPage.box(url, row)
             try {
-                if (limit in 1..count) {
+                if (count > limit) {
                     stop("Generated enough pages, quit generator")
                     break
                 }

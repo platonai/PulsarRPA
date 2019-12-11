@@ -20,9 +20,12 @@ import ai.platon.pulsar.common.CommonCounter
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls.reverseUrl
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper
+import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.graph.GraphGroupKey
@@ -34,54 +37,99 @@ import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import java.io.IOException
 
-internal class InGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, GraphGroupKey, WebGraphWritable>() {
-    val LOG = LoggerFactory.getLogger(InGraphUpdateMapper::class.java)
+internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, GraphGroupKey, WebGraphWritable>() {
+    val LOG = LoggerFactory.getLogger(Out2InUpdateMapper::class.java)
 
     companion object {
-        enum class Counter {
-            mMapped, mNewMapped, mNoInLinks, mNotUpdated, mUrlFiltered, mTooDeep;
-            init { MetricsCounters.register(javaClass) }
-        }
+        enum class Counter {mMapped, mNewMapped, mNotFetched, mNotParsed, mNoLinks, mTooDeep}
+        init { MetricsCounters.register(Counter::class.java) }
     }
 
+    private var maxDistance = AppConstants.DISTANCE_INFINITE
+    private val maxLiveLinks = 10000
+    private var limit = Int.MAX_VALUE
+    private var count = 0
+    private lateinit var scoringFilters: ScoringFilters
+
+    // Reuse local variables for optimization
     private lateinit var graphGroupKey: GraphGroupKey
     private lateinit var webGraphWritable: WebGraphWritable
 
     public override fun setup(context: Context) {
         val crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
+        limit = jobConf.getInt(CapabilityTypes.LIMIT, -1)
+        maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
+        scoringFilters = getBean(ScoringFilters::class.java)
         graphGroupKey = GraphGroupKey()
-        webGraphWritable = WebGraphWritable(null, WebGraphWritable.OptimizeMode.IGNORE_SOURCE, jobConf.unbox())
+        webGraphWritable = WebGraphWritable(null, WebGraphWritable.OptimizeMode.IGNORE_TARGET, jobConf.unbox())
+
         LOG.info(Params.format(
                 "className", this.javaClass.simpleName,
-                "crawlId", crawlId
+                "crawlId", crawlId,
+                "maxDistance", maxDistance,
+                "maxLiveLinks", maxLiveLinks,
+                "ioSerialization", jobConf["io.serializations"],
+                "limit", limit
         ))
     }
 
     override fun map(reversedUrl: String, row: GWebPage, context: Context) {
         metricsCounters.increase(CommonCounter.mRows)
-
         val page = WebPage.box(reversedUrl, row, true)
+        val url = page.url
         if (!shouldProcess(page)) {
             return
         }
-        val graph = WebGraph()
-        val v2 = WebVertex(page)
-        /* A loop in the graph */
-        graph.addEdgeLenient(v2, v2, page.score.toDouble())
-        page.inlinks.forEach { (key, _) -> graph.addEdgeLenient(WebVertex(key), v2) }
-        graph.incomingEdgesOf(v2).forEach { writeAsSubGraph(it, graph) }
 
+        val graph = WebGraph()
+        val v1 = WebVertex(page)
+        /* A loop in the graph */
+        graph.addEdgeLenient(v1, v1, page.score.toDouble())
+        // Never create rows deeper then max distance, they can never be fetched
+        if (page.distance < maxDistance) {
+            page.liveLinks.values.sortedBy { it.order }.take(maxLiveLinks).forEach {
+                addEdge(v1, HypeLink.box(it), graph)
+            }
+            scoringFilters.distributeScoreToOutlinks(page, graph, graph.outgoingEdgesOf(v1), graph.outDegreeOf(v1))
+            metricsCounters.increase(Counter.mNewMapped, graph.outDegreeOf(v1) - 1)
+        }
+
+        graph.outgoingEdgesOf(v1).forEach { writeAsSubGraph(it, graph) }
         metricsCounters.increase(CommonCounter.mPersist)
-        metricsCounters.increase(Counter.mNewMapped, graph.inDegreeOf(v2))
+    }
+
+    /**
+     * Add a new WebEdge and set all inherited parameters from referrer page.
+     */
+    private fun addEdge(v1: WebVertex, link: HypeLink, graph: WebGraph): WebEdge {
+        val edge = graph.addEdgeLenient(v1, WebVertex(link.url))
+        val page = v1.webPage
+        // All inherited parameters from referrer page are set here
+        edge.options = page.options
+        edge.anchor = link.anchor
+        edge.order = link.order
+        return edge
     }
 
     private fun shouldProcess(page: WebPage): Boolean {
-        if (!page.hasMark(Mark.UPDATEOUTG)) {
-            metricsCounters.increase(Counter.mNotUpdated)
-            // return false;
+        if (!page.hasMark(Mark.FETCH)) {
+            metricsCounters.increase(Counter.mNotFetched)
+            return false
         }
-        if (page.inlinks.isEmpty()) {
-            metricsCounters.increase(Counter.mNoInLinks)
+
+        if (!page.hasMark(Mark.PARSE)) {
+            metricsCounters.increase(Counter.mNotParsed)
+            return false
+        }
+
+        if (page.distance > maxDistance) {
+            metricsCounters.increase(Counter.mTooDeep)
+            return false
+        }
+
+        if (count++ > limit) {
+            stop("Hit limit, stop")
+            return false
         }
         return true
     }
@@ -90,22 +138,18 @@ internal class InGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebPage,
      * The following graph shows the in-link graph. Every reduce group contains a center vertex and a batch of edges.
      * The center vertex has a web page inside, and the edges has in-link information.
      *
-     *
-     * <pre>
-     * v1
-     * ^
-     * |
-     * v2 <- vc -> v3
-     * / \
-     * v  v
+     *  v1
+     *  |
+     *  v
+     * v2 -> vc <- v3
+     * ^ ^
+     * /  \
      * v4  v5
-    </pre> *
      */
     private fun writeAsSubGraph(edge: WebEdge, graph: WebGraph) {
         try {
             val subGraph = WebGraph.of(edge, graph)
-            // int score = graph.getEdgeWeight(edge) - edge.getTargetWebPage().getFetchPriority();
-            graphGroupKey.reset(reverseUrl(edge.sourceUrl), graph.getEdgeWeight(edge))
+            graphGroupKey.reset(reverseUrl(edge.targetUrl), graph.getEdgeWeight(edge))
             webGraphWritable.reset(subGraph)
             // noinspection unchecked
             context.write(graphGroupKey, webGraphWritable)

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.jobs.app.parse
+package ai.platon.pulsar.jobs.parse
 
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.AppConstants

@@ -34,24 +34,25 @@ import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
 import ai.platon.pulsar.persist.graph.WebVertex
 import ai.platon.pulsar.persist.io.WebGraphWritable
+import ai.platon.pulsar.persist.metadata.CrawlVariables
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.util.*
-import java.util.function.Consumer
 
-class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
+class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
+    private val LOG = LoggerFactory.getLogger(Out2InUpdateReducer::class.java)
+
     private enum class PageExistence {
         PASSED, LOADED, CREATED
     }
 
-    private val impreciseNow = Instant.now()
-    private var maxInLinks = 0
     private lateinit var fetchSchedule: FetchSchedule
     private lateinit var scoringFilters: ScoringFilters
     private lateinit var updateComponent: UpdateComponent
     private lateinit var webDb: WebDb
     private lateinit var metricsSystem: MetricsSystem
+    private var maxInLinks = 0
+    private var ignoreInGraph = false
 
     override fun setup(context: Context) {
         fetchSchedule = applicationContext.getBean("fetchSchedule", FetchSchedule::class.java)
@@ -62,8 +63,9 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
         updateComponent = applicationContext.getBean(UpdateComponent::class.java)
 
         // getPulsarReporter().setLog(LOG_ADDITIVITY);
-        val crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
+        val crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID)
         maxInLinks = jobConf.getInt(CapabilityTypes.UPDATE_MAX_INLINKS, 1000)
+        ignoreInGraph = jobConf.getBoolean(CapabilityTypes.UPDATE_IGNORE_IN_GRAPH, false)
 
         Params.of(
                 "className", this.javaClass.simpleName,
@@ -84,7 +86,7 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
 
     /**
      * We get a list of score datum who are inlinks to a webpage after partition,
-     * so the dbupdate phrase calculates the scores of all pages
+     * so the db-update phrase calculates the scores of all pages
      *
      *
      * The following graph shows the in-link graph. Every reduce group contains a center vertex and a batch of edges.
@@ -121,7 +123,10 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
         }
         // 1. update depth, 2. update in-links, 3. update score from in-coming pages
         updateGraph(graph)
+
+        updateMetadata(page)
         updateMarks(page)
+
         context.write(reversedUrl, page.unbox())
         metricsCounters.increase(CommonCounter.rPersist)
     }
@@ -144,14 +149,15 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
         for (graphWritable in subGraphs) {
             assert(graphWritable.optimizeMode == WebGraphWritable.OptimizeMode.IGNORE_TARGET)
             val subGraph = graphWritable.get()
-            subGraph.edgeSet().forEach(Consumer { edge: WebEdge ->
+            subGraph.edgeSet().forEach { edge: WebEdge ->
                 if (edge.isLoop) {
                     focus.webPage = edge.sourceWebPage
                 }
                 // log.info("MultiMetadata " + url + "\t<-\t" + edge.getMetadata());
                 graph.addEdgeLenient(edge.source, focus, subGraph.getEdgeWeight(edge)).metadata = edge.metadata
-            })
+            }
         }
+
         if (focus.hasWebPage()) {
             focus.webPage.variables[PulsarParams.VAR_PAGE_EXISTENCE] = PageExistence.PASSED
             metricsCounters.increase(UpdateComponent.Companion.Counter.rPassed)
@@ -159,11 +165,14 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
             val page = loadOrCreateWebPage(url)
             focus.webPage = page
         }
+
         graph.focus = focus
         return graph
     }
 
     /**
+     * Update vertices by incoming edges
+     *
      * <pre>
      * v1
      * |
@@ -172,7 +181,8 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
      * ^          ^
      * /           \
      * v4           v5
-    </pre> *
+    </pre>
+     *
      */
     private fun updateGraph(graph: WebGraph) {
         val focus = graph.focus
@@ -182,27 +192,33 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
         var smallestDepth = focusedPage.distance
         var shallowestEdge: WebEdge? = null
         val anchors: MutableSet<CharSequence> = HashSet()
+
         for (incomingEdge in incomingEdges) {
             if (incomingEdge.isLoop) {
                 continue
             }
+
             // log.info(incomingEdge.toString());
             /* Update in-links */
             if (focusedPage.inlinks.size <= maxInLinks) {
                 focusedPage.inlinks[incomingEdge.sourceUrl] = incomingEdge.anchor
             }
+
             if (incomingEdge.anchor.isNotEmpty() && anchors.size < 10) {
                 anchors.add(incomingEdge.anchor)
             }
+
             val incomingPage = incomingEdge.sourceWebPage
             if (incomingPage.distance + 1 < smallestDepth) {
                 smallestDepth = incomingPage.distance + 1
                 shallowestEdge = incomingEdge
             }
         }
+
         if (focusedPage.distance != AppConstants.DISTANCE_INFINITE && smallestDepth < focusedPage.distance) {
             metricsSystem.debugDepthUpdated(focusedPage.distance.toString() + " -> " + smallestDepth + ", " + focus.url)
         }
+
         if (shallowestEdge != null) {
             val incomingPage = shallowestEdge.sourceWebPage
             focusedPage.referrer = incomingPage.url
@@ -214,10 +230,12 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
             focusedPage.anchorOrder = shallowestEdge.order
             updateDepthCounter(smallestDepth, focusedPage)
         }
+
         // Anchor can be used to determine the article title
         if (anchors.isNotEmpty()) {
             focusedPage.setInlinkAnchors(anchors)
         }
+
         /* Update score */
         scoringFilters.updateScore(focusedPage, graph, incomingEdges)
     }
@@ -232,20 +250,20 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
         // TODO: Is datastore.get a distributed operation? And is there a local cache?
         // TODO: distinct url and baseUrl, the url passed by OutGraphUpdateMapper might be the original baseUrl
         val loadedPage = webDb.get(url)
-        val page: WebPage
+        val page: WebPage = loadedPage?:createNewRow(url)
+
         // Page is already in the db
         if (loadedPage != null) {
-            page = loadedPage
             page.variables[PulsarParams.VAR_PAGE_EXISTENCE] = PageExistence.LOADED
             metricsCounters.increase(UpdateComponent.Companion.Counter.rLoaded)
         } else { // Here we create a new web page from outlink
-            page = createNewRow(url)
             page.variables[PulsarParams.VAR_PAGE_EXISTENCE] = PageExistence.CREATED
             metricsCounters.increase(UpdateComponent.Companion.Counter.rCreated)
             if (CrawlFilter.sniffPageCategory(url).isDetail) {
                 metricsCounters.increase(UpdateComponent.Companion.Counter.rNewDetail)
             }
         }
+
         return page
     }
 
@@ -259,17 +277,32 @@ class OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraph
     private fun updateMarks(page: WebPage) {
         val marks = page.marks
         marks.putIfNotNull(Mark.UPDATEOUTG, marks[Mark.PARSE])
+
+        if (ignoreInGraph) {
+            val retiredMarks = listOf(
+                    Mark.INJECT,
+                    Mark.GENERATE,
+                    Mark.FETCH,
+                    Mark.PARSE,
+                    Mark.INDEX
+            )
+            marks.removeAll(retiredMarks)
+        }
+    }
+
+    private fun updateMetadata(page: WebPage) {
+        if (ignoreInGraph) {
+            // Clear temporary metadata
+            page.metadata.remove(CrawlVariables.REDIRECT_DISCOVERED)
+            page.metadata.remove(CapabilityTypes.GENERATE_TIME)
+        }
     }
 
     private fun updateDepthCounter(depth: Int, page: WebPage) {
-        val pageExistence = page.variables[PulsarParams.VAR_PAGE_EXISTENCE, PageExistence.PASSED]
+        val pageExistence = page.variables.get(PulsarParams.VAR_PAGE_EXISTENCE, PageExistence.PASSED)
         if (pageExistence != PageExistence.CREATED) {
             metricsCounters.increase(UpdateComponent.Companion.Counter.rDepthUp)
         }
         CounterUtils.increaseRDepth(depth, metricsCounters)
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(OutGraphUpdateReducer::class.java)
     }
 }

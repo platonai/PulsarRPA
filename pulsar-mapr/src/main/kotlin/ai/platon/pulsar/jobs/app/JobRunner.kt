@@ -7,7 +7,7 @@ import ai.platon.pulsar.jobs.app.fetch.FetchJob
 import ai.platon.pulsar.jobs.app.generate.GenerateJob
 import ai.platon.pulsar.jobs.app.homepage.TopPageHomeUpdateJob
 import ai.platon.pulsar.jobs.app.inject.InjectJob
-import ai.platon.pulsar.jobs.app.parse.ParserJob
+import ai.platon.pulsar.jobs.parse.ParserJob
 import ai.platon.pulsar.jobs.app.update.InGraphUpdateJob
 import ai.platon.pulsar.jobs.app.update.OutGraphUpdateJob
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
@@ -50,7 +50,6 @@ class JobRunner {
     private fun runJob(args: Array<String>) {
         val jobName = args.intersect(jobs.keys).lastOrNull()?:"homepage"
         val args2 = args.filterNot { it == jobName }.toTypedArray()
-        // TODO: use a PulsarJobAutoConfiguration
         AppContextAwareJob.run(jobs[jobName], args2)
     }
 }
