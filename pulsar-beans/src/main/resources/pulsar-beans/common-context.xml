@@ -19,10 +19,10 @@
     </bean>
 
     <!--System counters -->
-    <bean id="pulsarCounters" class="ai.platon.pulsar.common.MetricsCounters"/>
+    <bean id="metricsCounters" class="ai.platon.pulsar.common.MetricsCounters"/>
 
     <!--System metrics -->
-    <bean id="pulsarMetrics" class="ai.platon.pulsar.common.MetricsSystem" destroy-method="close">
+    <bean id="metricsSystem" class="ai.platon.pulsar.common.MetricsSystem" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -38,7 +38,7 @@
 
     <bean id="fetchTaskTracker" class="ai.platon.pulsar.crawl.fetch.FetchTaskTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
-        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 

@@ -92,7 +92,7 @@ class FetchJob : AppContextAwareJob() {
         if (options.isHelp) {
             return 0
         }
-        run(options.toParams())
+        run(Params.EMPTY_PARAMS)
         return 0
     }
 }

@@ -221,6 +221,11 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-schedule</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-index</artifactId>
                 <version>${project.version}</version>
             </dependency>

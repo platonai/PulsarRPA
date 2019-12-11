@@ -211,7 +211,7 @@ public interface CapabilityTypes {
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
-    String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.required.property.names";
+    String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
      * Selenium
      */
@@ -291,6 +291,15 @@ public interface CapabilityTypes {
      */
     String UPDATE_MAX_INLINKS = "update.max.inlinks";
     String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
+
+    String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
+    String SCHEDULE_DEC_RATE = "db.fetch.schedule.adaptive.dec_rate";
+    String SCHEDULE_MIN_INTERVAL = "db.fetch.schedule.adaptive.min_interval";
+    String SCHEDULE_MAX_INTERVAL = "db.fetch.schedule.adaptive.max_interval";
+    String SCHEDULE_SEED_MAX_INTERVAL = "db.fetch.schedule.adaptive.seed_max_interval";
+    String SCHEDULE_SYNC_DELTA = "db.fetch.schedule.adaptive.sync_delta";
+    String SCHEDULE_SYNC_DELTA_RATE = "db.fetch.schedule.adaptive.sync_delta_rate";
+
     /**
      * Scoring
      */

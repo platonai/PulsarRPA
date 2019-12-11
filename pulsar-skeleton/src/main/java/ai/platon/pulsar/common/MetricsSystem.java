@@ -11,6 +11,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +50,7 @@ public class MetricsSystem implements AutoCloseable {
     private String hostname;
     private String jobName;
     private String reportSuffix;
+    @Nullable
     private WebDb webDb;
     private WeakPageIndexer weakIndexer;
     private String urlPrefix;
@@ -56,7 +58,8 @@ public class MetricsSystem implements AutoCloseable {
     // We need predictable iteration order, LinkedHashSet is all right
     private Set<CharSequence> metricsPageUrls = new LinkedHashSet<>();
     private Map<String, WebPage> metricsPages = new HashMap<>();
-    public MetricsSystem(WebDb webDb, ImmutableConfig conf) {
+
+    public MetricsSystem(@Nullable WebDb webDb, ImmutableConfig conf) {
         this.conf = conf;
         this.hostname = NetUtil.getHostname();
         this.jobName = conf.get(CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm"));
@@ -77,18 +80,21 @@ public class MetricsSystem implements AutoCloseable {
         this.weakIndexer = new WeakPageIndexer(AppConstants.CRAWL_LOG_HOME_URL, webDb);
     }
 
+    @Nullable
     public WebDb getWebDb() {
         return webDb;
     }
 
     public void commit() {
         // TODO : save only if dirty
-        metricsPages.forEach((url, value) -> webDb.put(value));
-        webDb.flush();
+        if (webDb != null) {
+            metricsPages.forEach((url, value) -> webDb.put(value));
+            webDb.flush();
+        }
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         commit();
 
         if (!metricsPageUrls.isEmpty()) {

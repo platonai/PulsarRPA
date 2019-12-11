@@ -52,7 +52,7 @@ class GenerateComponent(
         val urlNormalizers: UrlNormalizers,
         val scoringFilters: ScoringFilters,
         val fetchSchedule: FetchSchedule,
-        val pulsarMetrics: MetricsSystem,
+        val metricsSystem: MetricsSystem,
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized {
@@ -282,7 +282,7 @@ class GenerateComponent(
             increaseMDaysLater(hours.toInt() / 24, metricsCounters)
             if (page.isSeed) {
                 metricsCounters.increase(Counter.mSeedLater)
-                pulsarMetrics.debugFetchLaterSeeds(page)
+                metricsSystem.debugFetchLaterSeeds(page)
             }
         }
 

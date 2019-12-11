@@ -5,132 +5,103 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package ai.platon.pulsar.crawl.schedule
 
-package ai.platon.pulsar.crawl.schedule;
-
-import ai.platon.pulsar.common.MetricsSystem;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.persist.CrawlStatus;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.metadata.Mark;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
-
-import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_DEFAULT_INTERVAL;
-import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_INTERVAL;
+import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.persist.CrawlStatus
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.Mark
+import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 /**
  * This class provides common methods for implementations of
- * {@link FetchSchedule}.
+ * [FetchSchedule].
  *
  * @author Andrzej Bialecki
  */
-public abstract class AbstractFetchSchedule implements FetchSchedule {
-    protected static final Logger LOG = LoggerFactory.getLogger(AbstractFetchSchedule.class);
+abstract class AbstractFetchSchedule(
+        var conf: ImmutableConfig,
+        var metricsSystem: MetricsSystem
+) : FetchSchedule {
+    private var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
+    private var maxInterval = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(90))
+    private val impreciseNow = Instant.now()
 
-    protected ImmutableConfig conf;
-    protected MetricsSystem metricsSystem;
-    protected Duration defaultInterval;
-    protected Duration maxInterval;
-
-    private Instant impreciseNow = Instant.now();
-
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        defaultInterval = conf.getDuration(FETCH_DEFAULT_INTERVAL, Duration.ofDays(30));
-        maxInterval = conf.getDuration(FETCH_MAX_INTERVAL, Duration.ofDays(90));
-    }
-
-    @Override
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public Params getParams() {
+    override fun getParams(): Params {
         return Params.of(
                 "defaultInterval", defaultInterval,
                 "maxInterval", maxInterval
-        );
-    }
-
-    public MetricsSystem getPulsarMetrics() {
-        return metricsSystem;
-    }
-
-    public void setPulsarMetrics(MetricsSystem metricsSystem) {
-        this.metricsSystem = metricsSystem;
+        )
     }
 
     /**
      * Initialize fetch schedule related data. Implementations should at least set
-     * the <code>fetchTime</code> and <code>fetchInterval</code>. The default
-     * implementation sets the <code>fetchTime</code> to now, using the default
-     * <code>fetchInterval</code>.
+     * the `fetchTime` and `fetchInterval`. The default
+     * implementation sets the `fetchTime` to now, using the default
+     * `fetchInterval`.
      *
      * @param page
      */
-    @Override
-    public void initializeSchedule(WebPage page) {
-        page.setFetchTime(impreciseNow);
-        page.setFetchInterval(defaultInterval);
-        page.setFetchRetries(0);
-        page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
+    override fun initializeSchedule(page: WebPage) {
+        page.fetchTime = impreciseNow
+        page.fetchInterval = defaultInterval
+        page.fetchRetries = 0
+        page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
     }
 
     /**
-     * Sets the <code>fetchInterval</code> and <code>fetchTime</code> on a
+     * Sets the `fetchInterval` and `fetchTime` on a
      * successfully fetched page. NOTE: this implementation resets the retry
      * counter - extending classes should call super.setFetchSchedule() to
      * preserve this behavior.
      */
-    @Override
-    public void setFetchSchedule(WebPage page, Instant prevFetchTime,
-                                 Instant prevModifiedTime, Instant fetchTime, Instant modifiedTime, int state) {
-        page.setFetchRetries(0);
+    override fun setFetchSchedule(
+            page: WebPage, prevFetchTime: Instant,
+            prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {
+        page.fetchRetries = 0
     }
 
     /**
      * This method specifies how to schedule refetching of pages marked as GONE.
      * Default implementation increases fetchInterval by 50% but the value may
-     * never exceed <code>maxInterval</code>.
+     * never exceed `maxInterval`.
      *
      * @param page
      * @return adjusted page information, including all original information.
      * NOTE: this may be a different instance than
      */
-    @Override
-    public void setPageGoneSchedule(WebPage page, Instant prevFetchTime,
-                                    Instant prevModifiedTime, Instant fetchTime) {
-        long prevInterval = page.getFetchInterval(TimeUnit.SECONDS);
-        float newInterval = prevInterval;
-
+    override fun setPageGoneSchedule(
+            page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
+        val prevInterval = page.getFetchInterval(TimeUnit.SECONDS)
+        var newInterval = prevInterval.toFloat()
         // no page is truly GONE ... just increase the interval by 50%
         // and try much later.
-        if (newInterval < maxInterval.getSeconds()) {
-            newInterval = prevInterval * 1.5f;
+        newInterval = if (newInterval < maxInterval.seconds) {
+            prevInterval * 1.5f
         } else {
-            newInterval = maxInterval.getSeconds() * 0.9f;
+            maxInterval.seconds * 0.9f
         }
 
-        page.setFetchInterval(newInterval);
-        page.setFetchTime(fetchTime.plus(page.getFetchInterval()));
+        page.setFetchInterval(newInterval)
+        page.fetchTime = fetchTime.plus(page.fetchInterval)
     }
 
     /**
@@ -143,10 +114,9 @@ public abstract class AbstractFetchSchedule implements FetchSchedule {
      * @param prevModifiedTime previous modified time
      * @param fetchTime        current fetch time
      */
-    @Override
-    public void setPageRetrySchedule(WebPage page, Instant prevFetchTime, Instant prevModifiedTime, Instant fetchTime) {
-        page.setFetchTime(fetchTime.plus(1, ChronoUnit.DAYS));
-        page.setFetchRetries(page.getFetchRetries() + 1);
+    override fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
+        page.fetchTime = fetchTime.plus(1, ChronoUnit.DAYS)
+        page.fetchRetries = page.fetchRetries + 1
     }
 
     /**
@@ -154,9 +124,8 @@ public abstract class AbstractFetchSchedule implements FetchSchedule {
      *
      * @return the date as a long.
      */
-    @Override
-    public Instant calculateLastFetchTime(WebPage page) {
-        return page.getFetchTime().minus(page.getFetchInterval());
+    override fun calculateLastFetchTime(page: WebPage): Instant {
+        return page.fetchTime.minus(page.fetchInterval)
     }
 
     /**
@@ -164,32 +133,29 @@ public abstract class AbstractFetchSchedule implements FetchSchedule {
      * in the current fetchlist. NOTE: a true return value does not guarantee that
      * the page will be fetched, it just allows it to be included in the further
      * selection process based on scores. The default implementation checks
-     * <code>fetchTime</code>, if it is higher than the
+     * `fetchTime`, if it is higher than the
      *
      * @param page    Web page to fetch
      * @param curTime reference time (usually set to the time when the fetchlist
-     *                generation process was started).
+     * generation process was started).
      * @return true, if the page should be considered for inclusion in the current
      * fetchlist, otherwise false.
      */
-    @Override
-    public boolean shouldFetch(WebPage page, Instant curTime) {
+    override fun shouldFetch(page: WebPage, curTime: Instant): Boolean {
         if (page.hasMark(Mark.INACTIVE)) {
-            return false;
+            return false
         }
-
         // Pages are never truly GONE - we have to check them from time to time.
         // pages with too long fetchInterval are adjusted so that they fit within
         // maximum fetchInterval (batch retention period).
-        Instant fetchTime = page.getFetchTime();
+        val fetchTime = page.fetchTime
         if (curTime.plus(maxInterval).isBefore(fetchTime)) {
-            if (page.getFetchInterval().compareTo(maxInterval) > 0) {
-                page.setFetchInterval(maxInterval.getSeconds() * 0.9f);
+            if (page.fetchInterval > maxInterval) {
+                page.setFetchInterval(maxInterval.seconds * 0.9f)
             }
-            page.setFetchTime(curTime);
+            page.fetchTime = curTime
         }
-
-        return fetchTime.isBefore(curTime);
+        return fetchTime.isBefore(curTime)
     }
 
     /**
@@ -198,33 +164,30 @@ public abstract class AbstractFetchSchedule implements FetchSchedule {
      *
      * @param page
      * @param asap if true, force refetch as soon as possible - this sets the
-     *             fetchTime to now. If false, force refetch whenever the next fetch
-     *             time is set.
+     * fetchTime to now. If false, force refetch whenever the next fetch
+     * time is set.
      */
-    @Override
-    public void forceRefetch(WebPage page, boolean asap) {
+    override fun forceRefetch(page: WebPage, asap: Boolean) {
         if (page.hasMark(Mark.INACTIVE)) {
-            return;
+            return
         }
-
         // reduce fetchInterval so that it fits within the max value
-        if (page.getFetchInterval().compareTo(maxInterval) > 0) {
-            page.setFetchInterval(maxInterval.getSeconds() * 0.9f);
+        if (page.fetchInterval > maxInterval) {
+            page.setFetchInterval(maxInterval.seconds * 0.9f)
         }
-
-        page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
-        page.setFetchRetries(0);
-        page.setSignature("".getBytes());
-        page.setModifiedTime(Instant.EPOCH);
+        page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
+        page.fetchRetries = 0
+        page.setSignature("".toByteArray())
+        page.modifiedTime = Instant.EPOCH
         if (asap) {
-            page.setFetchTime(Instant.now());
+            page.fetchTime = Instant.now()
         }
     }
 
-    protected void updateRefetchTime(WebPage page, Duration interval, Instant fetchTime, Instant prevModifiedTime, Instant modifiedTime) {
-        page.setFetchInterval(interval);
-        page.setFetchTime(fetchTime.plus(interval));
-        page.setPrevModifiedTime(prevModifiedTime);
-        page.setModifiedTime(modifiedTime);
+    protected fun updateRefetchTime(page: WebPage, interval: Duration?, fetchTime: Instant, prevModifiedTime: Instant?, modifiedTime: Instant?) {
+        page.fetchInterval = interval
+        page.fetchTime = fetchTime.plus(interval)
+        page.prevModifiedTime = prevModifiedTime
+        page.modifiedTime = modifiedTime
     }
 }

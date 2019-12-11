@@ -16,6 +16,7 @@
  */
 package jobs
 
+import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.component.FetchComponent.Companion.updateContent
@@ -110,7 +111,7 @@ class TestMonitorScoringFilter {
     @Throws(Exception::class)
     fun setUp() {
         scoringFilter = MonitorScoringFilter(conf)
-        fetchSchedule = DefaultFetchSchedule(conf)
+        fetchSchedule = DefaultFetchSchedule(conf, MetricsSystem(null, conf))
         val scoreInjected = 1.0f
         LOG.info("scoreInjected : $scoreInjected")
 

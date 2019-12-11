@@ -45,6 +45,8 @@ import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -101,18 +103,15 @@ public abstract class PulsarJob implements PulsarJobBase {
         initMapper(job, fields, outKeyClass, outValueClass, mapperClass, partitionerClass, null, reuseObjects);
     }
 
-    public static <K, V> void initMapper(Job job,
-                                         Collection<GWebPage.Field> fields,
-                                         Class<K> outKeyClass,
-                                         Class<V> outValueClass,
-                                         Class<? extends GoraMapper<String, GWebPage, K, V>> mapperClass,
-                                         Class<? extends Partitioner<K, V>> partitionerClass,
-                                         Filter<String, GWebPage> filter, boolean reuseObjects)
+    public static <K, V> void initMapper(@Nonnull Job job,
+                                         @Nonnull Collection<GWebPage.Field> fields,
+                                         @Nonnull Class<K> outKeyClass,
+                                         @Nonnull Class<V> outValueClass,
+                                         @Nonnull Class<? extends GoraMapper<String, GWebPage, K, V>> mapperClass,
+                                         @Nullable Class<? extends Partitioner<K, V>> partitionerClass,
+                                         @Nullable Filter<String, GWebPage> filter, boolean reuseObjects)
             throws ClassNotFoundException, IOException {
         DataStore<String, GWebPage> store = GoraStorage.createDataStore(job.getConfiguration(), String.class, GWebPage.class);
-        if (store == null) {
-            throw new RuntimeException("Could not create datastore");
-        }
 
         Query<String, GWebPage> query = store.newQuery();
         query.setFields(toStringArray(fields));
@@ -276,6 +275,7 @@ public abstract class PulsarJob implements PulsarJobBase {
         this.jobConf = new MutableConfig(jobConf);
     }
 
+    @Nullable
     public MapFieldValueFilter<String, GWebPage> getBatchIdFilter(String batchId) {
         if (batchId == null || batchId.equals(ALL_BATCHES)) {
             return null;

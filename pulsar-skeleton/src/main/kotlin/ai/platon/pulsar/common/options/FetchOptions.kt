@@ -52,10 +52,6 @@ class FetchOptions(conf: ImmutableConfig) {
     @Parameter(names = ["-help", "-h"], help = true, description = "Print this help text")
     var isHelp = false
 
-    init {
-        conf[CapabilityTypes.BATCH_ID]?.let { batchId.add(it) }
-    }
-
     fun parse(args: Array<String>) {
         val jc = JCommander(this)
 
@@ -69,16 +65,18 @@ class FetchOptions(conf: ImmutableConfig) {
 
         if (isHelp) {
             jc.usage()
-        } else {
-            if (batchId.isEmpty()) {
-                batchId.add(AppFiles.readBatchIdOrDefault(AppConstants.ALL_BATCHES))
-            }
-            indexerUrl = StringUtils.stripEnd(indexerUrl, "/")
-            val indexerHost = URLUtil.getHostName(indexerUrl)
-            if (indexerHost == null) {
-                indexerCollection = indexerUrl
-                indexerUrl = null
-            }
+            exitProcess(0)
+        }
+
+        if (batchId.isEmpty()) {
+            batchId.add(AppFiles.readBatchIdOrDefault(AppConstants.ALL_BATCHES))
+        }
+
+        indexerUrl = StringUtils.stripEnd(indexerUrl, "/")
+        val indexerHost = URLUtil.getHostName(indexerUrl)
+        if (indexerHost == null) {
+            indexerCollection = indexerUrl
+            indexerUrl = null
         }
     }
 

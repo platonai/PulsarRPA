@@ -29,8 +29,8 @@
         <constructor-arg ref="urlNormalizers"/>
         <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="fetchSchedule"/>
-        <constructor-arg ref="pulsarMetrics"/>
-        <constructor-arg ref="pulsarCounters"/>
+        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="metricsCounters"/>
     </bean>
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
@@ -63,8 +63,8 @@
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="scoringFilters"/>
-        <constructor-arg ref="pulsarMetrics"/>
-        <constructor-arg ref="pulsarCounters"/>
+        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent">
@@ -83,7 +83,7 @@
 
     <bean id="taskMonitor" class="ai.platon.pulsar.crawl.fetch.TaskMonitor" destroy-method="close">
         <constructor-arg ref="fetchTaskTracker"/>
-        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -91,7 +91,7 @@
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="jitIndexer"/>
         <constructor-arg ref="taskMonitor"/>
-        <constructor-arg ref="pulsarMetrics"/>
+        <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 

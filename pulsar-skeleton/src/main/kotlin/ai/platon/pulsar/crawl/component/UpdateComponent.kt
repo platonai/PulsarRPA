@@ -46,7 +46,7 @@ class UpdateComponent(
         val webDb: WebDb,
         val fetchSchedule: FetchSchedule,
         val scoringFilters: ScoringFilters,
-        val pulsarMetrics: MetricsSystem,
+        val metricsSystem: MetricsSystem,
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized {
@@ -122,7 +122,7 @@ class UpdateComponent(
                     "brokenSubEntity", brokenSubEntityLastRound
             ).formatAsLine()
 
-            pulsarMetrics.reportBrokenEntity(page.url, message)
+            metricsSystem.reportBrokenEntity(page.url, message)
             LOG.warn(message)
         }
     }
@@ -190,7 +190,7 @@ class UpdateComponent(
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
                     metricsCounters.increase(Counter.rBadModTime)
-                    pulsarMetrics.reportBadModifiedTime(Params.of(
+                    metricsSystem.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,
                             "PMT", prevModifiedTime, "MT", modifiedTime,
                             "HMT", page.headers.lastModified,
