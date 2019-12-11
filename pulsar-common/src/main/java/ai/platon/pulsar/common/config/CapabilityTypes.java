@@ -290,7 +290,7 @@ public interface CapabilityTypes {
      * DbUpdater parameters
      */
     String UPDATE_MAX_INLINKS = "update.max.inlinks";
-    String UPDATE_IGNORE_IN_GRAPH = "update.ignore.in.graph";
+    String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
     /**
      * Scoring
      */

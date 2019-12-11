@@ -52,7 +52,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
     private lateinit var webDb: WebDb
     private lateinit var metricsSystem: MetricsSystem
     private var maxInLinks = 0
-    private var ignoreInGraph = false
+    private var ignoreIn2OutGraph = false
 
     override fun setup(context: Context) {
         fetchSchedule = applicationContext.getBean("fetchSchedule", FetchSchedule::class.java)
@@ -65,7 +65,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         // getPulsarReporter().setLog(LOG_ADDITIVITY);
         val crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID)
         maxInLinks = jobConf.getInt(CapabilityTypes.UPDATE_MAX_INLINKS, 1000)
-        ignoreInGraph = jobConf.getBoolean(CapabilityTypes.UPDATE_IGNORE_IN_GRAPH, false)
+        ignoreIn2OutGraph = jobConf.getBoolean(CapabilityTypes.UPDATE_IGNORE_IN2OUT_GRAPH, false)
 
         Params.of(
                 "className", this.javaClass.simpleName,
@@ -278,7 +278,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         val marks = page.marks
         marks.putIfNotNull(Mark.UPDATEOUTG, marks[Mark.PARSE])
 
-        if (ignoreInGraph) {
+        if (ignoreIn2OutGraph) {
             val retiredMarks = listOf(
                     Mark.INJECT,
                     Mark.GENERATE,
@@ -291,7 +291,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
     }
 
     private fun updateMetadata(page: WebPage) {
-        if (ignoreInGraph) {
+        if (ignoreIn2OutGraph) {
             // Clear temporary metadata
             page.metadata.remove(CrawlVariables.REDIRECT_DISCOVERED)
             page.metadata.remove(CapabilityTypes.GENERATE_TIME)

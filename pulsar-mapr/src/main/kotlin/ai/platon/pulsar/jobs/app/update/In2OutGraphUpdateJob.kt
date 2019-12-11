@@ -34,7 +34,7 @@ class InGraphUpdateJob : WebGraphUpdateJob() {
         val fields = getFields(currentJob)
         PulsarJob.initMapper(currentJob, fields, GraphGroupKey::class.java, WebGraphWritable::class.java,
                 In2OutGraphUpdateMapper::class.java, getBatchIdFilter(options.batchId[0]))
-        PulsarJob.initReducer(currentJob, In2OutGraphhUpdateReducer::class.java)
+        PulsarJob.initReducer(currentJob, In2OutGraphUpdateReducer::class.java)
     }
 }
 

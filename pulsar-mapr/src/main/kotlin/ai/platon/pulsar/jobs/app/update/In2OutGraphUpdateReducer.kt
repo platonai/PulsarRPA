@@ -37,7 +37,7 @@ import ai.platon.pulsar.persist.metadata.CrawlVariables
 import ai.platon.pulsar.persist.metadata.Mark
 import com.google.common.collect.Lists
 
-internal class In2OutGraphhUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
+internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
     private lateinit var webDb: WebDb
     private lateinit var metricsSystem: MetricsSystem
     private lateinit var updateComponent: UpdateComponent
@@ -139,7 +139,7 @@ internal class In2OutGraphhUpdateReducer : AppContextAwareGoraReducer<GraphGroup
         var totalUpdates = 0
         for (outgoingEdge in graph.outgoingEdgesOf(focus)) {
             if (outgoingEdge.isLoop) {
-                // a loop graph is a graph which has only one vertex and one edge
+                // a loop edge is a edge which has only one vertex
                 continue
             }
 
