@@ -66,6 +66,7 @@ class JITIndexer(
 
     override fun getParams(): Params {
         return Params.of(
+                "isEnabled", isEnabled,
                 "batchSize", batchSize,
                 "indexThreadCount", indexThreadCount,
                 "minTextLength", minTextLength

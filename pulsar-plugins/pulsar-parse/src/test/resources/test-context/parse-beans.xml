@@ -5,20 +5,22 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <bean id="config" class="ai.platon.pulsar.common.config.ImmutableConfig">
+    <bean id="conf" class="ai.platon.pulsar.common.config.ImmutableConfig">
         <constructor-arg value="test-context" />
     </bean>
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb">
-        <constructor-arg value="config" />
+        <constructor-arg value="conf" />
     </bean>
 
-    <bean id="metaTagsParser" class="ai.platon.pulsar.parse.metatags.MetaTagsParser"/>
+    <bean id="metaTagsParser" class="ai.platon.pulsar.parse.metatags.MetaTagsParser">
+        <constructor-arg value="conf" />
+    </bean>
 
     <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.BoilerpipeFilter">
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters">
@@ -28,18 +30,19 @@
                 <ref bean="boilerpipeFilter" />
             </list>
         </constructor-arg>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="htmlParser" class="ai.platon.pulsar.parse.html.HtmlParser">
-        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parseFilters"/>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="tikaParser" class="ai.platon.pulsar.parse.tika.TikaParser">
+        <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parseFilters"/>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="parserFactory" class="ai.platon.pulsar.crawl.parse.ParserFactory">
@@ -50,12 +53,22 @@
                 <ref bean="jsParseFilter"/>
             </list>
         </constructor-arg>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser">
+        <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
-        <constructor-arg ref="config"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="crawlFilters" class="ai.platon.pulsar.crawl.filter.CrawlFilters">
+        <constructor-arg>
+            <list>
+            </list>
+        </constructor-arg>
+        <constructor-arg value="default"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
 </beans>

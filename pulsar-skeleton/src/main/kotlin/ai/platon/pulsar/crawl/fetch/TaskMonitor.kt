@@ -10,9 +10,8 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
-import ai.platon.pulsar.crawl.data.PoolId
-import ai.platon.pulsar.crawl.data.PoolQueue
-import ai.platon.pulsar.crawl.data.TaskPool
+import ai.platon.pulsar.crawl.fetch.data.PoolId
+import ai.platon.pulsar.crawl.fetch.data.PoolQueue
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.TreeMultimap

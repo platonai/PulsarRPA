@@ -6,29 +6,35 @@ import ai.platon.pulsar.crawl.filter.CrawlFilters;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Map;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Ignore
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {"classpath:/test-context/filter-beans.xml"})
 public class TestCrawlFilter {
 
-    MutableConfig conf;
     private String[] detailUrls = {
             "http://mall.jumei.com/product_200918.html?from=store_lancome_list_items_7_4"
     };
+
+    @Autowired
+    MutableConfig conf;
+    @Autowired
     private CrawlFilters crawlFilters;
 
     @Before
     public void setUp() throws IOException {
         String crawlFilterRules = "{}";
-        conf = new MutableConfig();
         conf.set(CrawlFilters.CRAWL_FILTER_RULES, crawlFilterRules);
-        crawlFilters = new CrawlFilters(conf);
     }
 
     @Test
@@ -37,9 +43,9 @@ public class TestCrawlFilter {
 
         System.out.println(keyRange);
 
-        assertTrue(keyRange.get("com.jumei.mall:http").equals("com.jumei.mall:http/\uFFFF"));
-        assertTrue(keyRange.get("com.jumei.lancome:http/search.html").equals("com.jumei.lancome:http/search.html\uFFFF"));
-        assertFalse(keyRange.get("com.jumei.lancome:http/search.html").equals("com.jumei.lancome:http/search.html\\uFFFF"));
+        assertEquals("com.jumei.mall:http/\uFFFF", keyRange.get("com.jumei.mall:http"));
+        assertEquals("com.jumei.lancome:http/search.html\uFFFF", keyRange.get("com.jumei.lancome:http/search.html"));
+        assertNotEquals("com.jumei.lancome:http/search.html\\uFFFF", keyRange.get("com.jumei.lancome:http/search.html"));
 
         for (String detailUrl : detailUrls) {
             assertTrue(crawlFilters.testKeyRangeSatisfied(Urls.reverseUrl(detailUrl)));
@@ -51,7 +57,7 @@ public class TestCrawlFilter {
         String[] keyRange = crawlFilters.getMaxReversedKeyRange();
         System.out.println(keyRange[0] + ", " + keyRange[1]);
 
-        assertTrue('\uFFFF' - 'a' == 65438);
+        assertEquals(65438, '\uFFFF' - 'a');
 
         for (String detailUrl : detailUrls) {
             detailUrl = Urls.reverseUrl(detailUrl);

@@ -199,14 +199,14 @@ class TestPrimerParser {
     }
 
     @Autowired
-    private val immutableConfig: ImmutableConfig? = null
-    private var primerParser: PrimerParser? = null
+    private lateinit var immutableConfig: ImmutableConfig
     private val testBaseHrefURLs = arrayOfNulls<URL>(testPages.size)
-    private var conf: MutableConfig? = null
+    private val conf = MutableConfig(immutableConfig)
+    private lateinit var primerParser: PrimerParser
+
     @Before
     fun setup() {
-        conf = MutableConfig(immutableConfig)
-        conf!!.setBoolean("parser.html.form.use_action", true)
+        conf.setBoolean("parser.html.form.use_action", true)
         primerParser = PrimerParser(conf)
         val parser = DOMFragmentParser()
         try {
@@ -231,7 +231,7 @@ class TestPrimerParser {
             setup()
         }
         for (i in testPages.indices) {
-            val text = primerParser!!.getPageText(testDOMs[i])
+            val text = primerParser.getPageText(testDOMs[i]!!)
             Assert.assertEquals(answerText[i], text)
         }
     }
@@ -242,7 +242,7 @@ class TestPrimerParser {
             setup()
         }
         for (i in testPages.indices) {
-            val title = primerParser!!.getPageTitle(testDOMs[i])
+            val title = primerParser.getPageTitle(testDOMs[i]!!)
             Assert.assertEquals(answerTitle[i], title)
         }
     }
@@ -253,9 +253,9 @@ class TestPrimerParser {
             setup()
         }
         for (i in testPages.indices) {
-            conf!!.setBoolean("parser.html.form.use_action", i != SKIP)
-            primerParser!!.setConf(conf)
-            val hypeLinks = primerParser!!.getLinks(testBaseHrefURLs[i], testDOMs[i])
+            conf.setBoolean("parser.html.form.use_action", i != SKIP)
+            // primerParser.setConf(conf)
+            val hypeLinks = primerParser.getLinks(testBaseHrefURLs[i], testDOMs[i])
             compareLinks(Lists.newArrayList(*answerHypeLinks[i]), hypeLinks, i)
         }
     }

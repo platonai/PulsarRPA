@@ -33,11 +33,13 @@ import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
 import org.jsoup.Jsoup
 import org.jsoup.helper.W3CDom
+import org.slf4j.LoggerFactory
 import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
@@ -53,13 +55,14 @@ class HtmlParser(
         private val parseFilters: ParseFilters,
         private val conf: ImmutableConfig
 ) : Parser {
+    private val LOG = LoggerFactory.getLogger(HtmlParser::class.java)
     private val parserImpl = conf[CapabilityTypes.PARSE_HTML_IMPL, "neko"]
     private val defaultCharEncoding = conf[CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8"]
     private val cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT]
     private val primerParser = PrimerParser(conf)
 
     init {
-        Parser.LOG.info(params.formatAsLine())
+        LOG.info(params.formatAsLine())
     }
 
     override fun getParams(): Params {
@@ -97,11 +100,23 @@ class HtmlParser(
             return parseResult
         }
 
-        val parseContext = ParseContext(page, metaTags, documentFragment, parseResult)
-        parseLinks(baseURL, parseContext)
-        page.pageTitle = primerParser.getPageTitle(documentFragment)
-        page.pageText = primerParser.getPageText(documentFragment)
+        val parseContext = ParseContext(page, parseResult, metaTags, documentFragment)
 
+        // TODO: for NativeBrowser mode, we can
+        if (page.fetchMode == FetchMode.NATIVE_RENDERER) {
+            // the native renderer may have done the parsing work
+        }
+
+        val usePrimerParser = conf.getBoolean("parse.user.primer.parser", false)
+        if (usePrimerParser) {
+            // Apply the primer parser to get links
+            // TODO: check if it's better to just use Jsoup
+            primerParser.parseLinks(baseURL, parseContext, crawlFilters)
+            page.pageTitle = primerParser.getPageTitle(documentFragment)
+            page.pageText = primerParser.getPageText(documentFragment)
+        }
+
+        // TODO: a better place to do this
         page.pageModel.clear()
         parseFilters.filter(parseContext)
 
@@ -117,27 +132,6 @@ class HtmlParser(
             metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
         return metaTags
-    }
-
-    private fun parseLinks(baseURLHint: URL, parseContext: ParseContext) {
-        var baseURL: URL? = baseURLHint
-        var url = parseContext.url
-        url = crawlFilters.normalizeToEmpty(url)
-        if (url.isEmpty()) {
-            return
-        }
-
-        val docRoot = parseContext.documentFragment
-        val parseResult = parseContext.parseResult
-        if (!parseContext.metaTags.noFollow) {
-            // okay to follow links
-            val baseURLFromTag = primerParser.getBaseURL(docRoot)
-            baseURL = baseURLFromTag ?: baseURL
-            primerParser.getLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
-        }
-
-        parseContext.page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
-        parseContext.page.variables[PulsarParams.VAR_LINKS_COUNT] = parseResult.hypeLinks.size
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {

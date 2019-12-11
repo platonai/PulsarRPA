@@ -20,13 +20,8 @@ public class TestAutomatonUrlFilter extends RegexUrlFilterBaseTest {
         super(SAMPLES_DIR);
     }
 
-    protected UrlFilter getURLFilter(Reader rules) {
-        try {
-            return new AutomatonUrlFilter(rules);
-        } catch (IOException e) {
-            fail(e.toString());
-            return null;
-        }
+    protected UrlFilter getURLFilter(Reader reader) {
+        return new AutomatonUrlFilter(reader, conf);
     }
 
     @Test

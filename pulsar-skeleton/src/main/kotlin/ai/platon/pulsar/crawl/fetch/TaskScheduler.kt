@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.JobInitialized
-import ai.platon.pulsar.crawl.data.PoolId
+import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.PageParser

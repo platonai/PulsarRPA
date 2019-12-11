@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.component.FetchComponent
-import ai.platon.pulsar.crawl.data.PoolId
+import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode

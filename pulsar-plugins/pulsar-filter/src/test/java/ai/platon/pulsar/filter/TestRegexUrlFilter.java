@@ -36,12 +36,7 @@ public class TestRegexUrlFilter extends RegexUrlFilterBaseTest {
 
     @Override
     protected UrlFilter getURLFilter(Reader reader) {
-        try {
-            return new RegexUrlFilter(reader);
-        } catch (IOException e) {
-            fail(e.toString());
-            return null;
-        }
+        return new RegexUrlFilter(reader, conf);
     }
 
     @Test

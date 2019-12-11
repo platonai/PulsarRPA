@@ -67,10 +67,12 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
         if (!generateComponent.shouldFetch(url, reversedUrl, page)) {
             return
         }
+
         // metricsSystem.report(page);
         val sortScore = scoringFilters.generatorSortValue(page, 1.0f)
         page.sortScore = sortScore.toString()
         output(SelectorEntry(url, sortScore), page, context)
+
         updateStatus(page)
     }
 
@@ -83,9 +85,11 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
         if (page.isSeed) {
             metricsCounters.increase(GenerateComponent.Companion.Counter.mSeeds)
         }
+
         if (page.pageCategory.isDetail || CrawlFilter.sniffPageCategory(page.url).isDetail) {
             metricsCounters.increase(CommonCounter.mDetail)
         }
+
         CounterUtils.increaseMDepth(page.distance, metricsCounters)
         if (!page.isSeed) {
             val createTime = page.createTime

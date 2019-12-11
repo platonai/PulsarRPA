@@ -3,11 +3,11 @@ package ai.platon.pulsar.persist.metadata;
 import javax.annotation.Nonnull;
 
 /**
- * TODO: Auto detect fetch mode. First try native, and then try selenium, if there is no differences, use native mode
+ * TODO: Auto detect fetch mode: first try native, and then try selenium, if there is no differences, use native mode
  * TODO: FetchMode seems can be merged into BrowserType
  */
 public enum FetchMode {
-    UNKNOWN, AUTO, NATIVE, PROXY, CROWDSOURCING, SELENIUM;
+    UNKNOWN, AUTO, NATIVE, PROXY, CROWDSOURCING, SELENIUM, NATIVE_RENDERER;
 
     @Nonnull
     public static FetchMode fromString(String s) {

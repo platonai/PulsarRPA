@@ -147,26 +147,31 @@ class GenerateComponent(
      * TODO : We may move some filters to hbase query filters directly
      * TODO : Move to CrawlFilter
      */
-    fun shouldFetch(url_: String, reversedUrl: String, page: WebPage): Boolean {
-        var url: String? = url_
+    fun shouldFetch(url: String, reversedUrl: String, page: WebPage): Boolean {
+        var u: String? = url
         if (reGenerateSeeds && page.isSeed) {
             return true
         }
+
         val distance = page.distance
         if (!checkFetchSchedule(page)) {
             return false
         }
-        if (!checkHost(url)) {
+
+        if (!checkHost(u)) {
             return false
         }
-        if (bannedUrls.contains(url)) {
+
+        if (bannedUrls.contains(u)) {
             metricsCounters.increase(Counter.mBanned)
             return false
         }
+
         if (unreachableHosts.contains(URLUtil.getHost(page.url, groupMode))) {
             metricsCounters.increase(Counter.mHostGone)
             return false
         }
+
         if (page.hasMark(Mark.GENERATE)) {
             metricsCounters.increase(Counter.mGenerated)
             /*
@@ -196,18 +201,21 @@ class GenerateComponent(
                 // re-generate
             }
         } // if
+
         val distanceBias = 0
         // Filter on distance
         if (distance > maxDistance + distanceBias) {
             metricsCounters.increase(Counter.mTooDeep)
             return false
         }
+
         // TODO : Url range filtering should be applied to HBase query filter
         // key before start key
         if (!CrawlFilter.keyGreaterEqual(reversedUrl, keyRange[0])) {
             metricsCounters.increase(Counter.mBeforeStart)
             return false
         }
+
         // key after end key, finish the mapper
         if (!CrawlFilter.keyLessEqual(reversedUrl, keyRange[1])) {
             //      stop("Complete mapper, reason : hit end key " + reversedUrl
@@ -215,23 +223,28 @@ class GenerateComponent(
 //          + ", diff : " + reversedUrl.compareTo(keyRange[1]));
             return false
         }
+
         // key not fall in key ranges
         if (!crawlFilters.testKeyRangeSatisfied(reversedUrl)) {
             metricsCounters.increase(Counter.mNotInRange)
             return false
         }
+
         // If filtering is on don't generate URLs that don't pass UrlFilters
-        if (normalise) {
-            url = urlNormalizers.normalize(url, UrlNormalizers.SCOPE_GENERATE_HOST_COUNT)
+        if (normalise && u != null) {
+            u = urlNormalizers.normalize(u, UrlNormalizers.SCOPE_GENERATE_HOST_COUNT)
         }
-        if (url == null) {
+
+        if (u == null) {
             metricsCounters.increase(Counter.mNotNormal)
             return false
         }
-        if (filter && urlFilters.filter(url) == null) {
+
+        if (filter && urlFilters.filter(u) == null) {
             metricsCounters.increase(Counter.mUrlFiltered)
             return false
         }
+
         return true
     }
 

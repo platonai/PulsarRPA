@@ -104,7 +104,7 @@ class TikaParser(
             pageTitle = primerParser.getPageTitle(root) // extract title
         }
         if (!metaTags.noFollow) { // okay to follow links
-            val baseTag = primerParser.getBaseURL(root)
+            val baseTag = primerParser.getBaseURLFromTag(root)
             primerParser.getLinks(baseTag ?: base, hypeLinks, root, null)
         }
         page.setPageTitle(pageTitle)
@@ -127,7 +127,7 @@ class TikaParser(
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
             parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
-        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, metaTags, root, parseResult))
+        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult, metaTags, root))
         if (metaTags.noCache) { // not okay to cache
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }

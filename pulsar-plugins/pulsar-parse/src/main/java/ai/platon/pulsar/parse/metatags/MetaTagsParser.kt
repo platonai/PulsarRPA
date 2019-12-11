@@ -38,7 +38,7 @@ class MetaTagsParser(val conf: ImmutableConfig) : ParseFilter {
 
     override fun filter(parseContext: ParseContext) {
         val page = parseContext.page
-        val metaTags = parseContext.metaTags
+        val metaTags = parseContext.metaTags?:return
         val generalMetaTags = metaTags.generalTags
         for (tagName in generalMetaTags.names()) { // multiple values of a metadata field are separated by '\t' in persist.
             val sb = StringBuilder()
