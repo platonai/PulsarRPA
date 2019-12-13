@@ -1,36 +1,31 @@
-package ai.platon.pulsar.crawl.scoring.io;
+package ai.platon.pulsar.crawl.scoring.io
 
-import ai.platon.pulsar.common.ScoreVector;
-import ai.platon.pulsar.crawl.scoring.NamedScoreVector;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import ai.platon.pulsar.common.ScoreVector
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
+import org.apache.hadoop.io.Text
+import org.apache.hadoop.io.Writable
+import java.io.DataInput
+import java.io.DataOutput
+import java.io.IOException
 
 /**
  * Created by vincent on 17-4-20.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-public class ScoreVectorWritable implements Writable {
-    private ScoreVector scoreVector;
-
-    public ScoreVectorWritable(ScoreVector scoreVector) {
-        this.scoreVector = scoreVector;
+class ScoreVectorWritable(var scoreVector: ScoreVector) : Writable {
+    fun get(): ScoreVector {
+        return scoreVector
     }
 
-    public ScoreVector get() {
-        return scoreVector;
+    @Throws(IOException::class)
+    override fun write(out: DataOutput) {
+        out.writeInt(scoreVector.dimension)
+        Text.writeString(out, scoreVector.toString())
     }
 
-    public void write(DataOutput out) throws IOException {
-        out.writeInt(scoreVector.getDimension());
-        Text.writeString(out, scoreVector.toString());
-    }
-
-    public void readFields(DataInput in) throws IOException {
-        int arity = in.readInt();
-        scoreVector = NamedScoreVector.parse(Text.readString(in));
+    @Throws(IOException::class)
+    override fun readFields(input: DataInput) {
+        val arity = input.readInt()
+        scoreVector = ScoreVector.parse(Text.readString(input))
     }
 }

@@ -14,50 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.scoring.link;
+package ai.platon.pulsar.scoring.link
 
-import ai.platon.pulsar.common.ScoreVector;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.crawl.scoring.ScoringFilter;
-import ai.platon.pulsar.persist.WebPage;
+import ai.platon.pulsar.common.ScoreVector
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.index.IndexDocument
+import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.persist.WebPage
 
-public class LinkAnalysisScoringFilter implements ScoringFilter {
-
-    private ImmutableConfig conf;
-    private float normalizedScore = 1.00f;
-
-    public LinkAnalysisScoringFilter() {
+class LinkAnalysisScoringFilter(conf: ImmutableConfig) : ScoringFilter {
+    private val normalizedScore = conf.getFloat("link.analyze.normalize.score", 1.00f)
+    override fun getParams(): Params {
+        return Params()
     }
 
-    public LinkAnalysisScoringFilter(ImmutableConfig conf) {
-        reload(conf);
+    override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
+        return ScoreVector("1", (page.score * initSort).toInt())
     }
 
-    @Override
-    public Params getParams() {
-        return new Params();
-    }
-
-    @Override
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        normalizedScore = conf.getFloat("link.analyze.normalize.score", 1.00f);
-    }
-
-    @Override
-    public ScoreVector generatorSortValue(WebPage page, float initSort) {
-        return new ScoreVector("1", (int) (page.getScore() * initSort));
-    }
-
-    @Override
-    public float indexerScore(String url, IndexDocument doc, WebPage page, float initScore) {
-        return (normalizedScore * page.getScore());
+    override fun indexerScore(url: String, doc: IndexDocument, page: WebPage, initScore: Float): Float {
+        return normalizedScore * page.score
     }
 }

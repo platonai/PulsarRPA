@@ -25,24 +25,10 @@ import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-open class ContentAnalysisScoringFilter(conf: ImmutableConfig) : ScoringFilter {
-
-    var config: ImmutableConfig
-
-    init {
-        this.config = conf
-    }
+open class ContentAnalysisScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
 
     override fun getParams(): Params {
         return Params()
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        this.config = conf
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return config
     }
 
     override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {

@@ -38,6 +38,8 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * This plugin implements a variant of an Online Page Importance Computation
@@ -45,44 +47,26 @@ import java.time.temporal.ChronoUnit
  * Abiteboul, Serge and Preda, Mihai and Cobena, Gregory (2003), Adaptive
  * On-Line Page Importance Computation .
  */
-class MonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFilter(conf) {
-    private val LOG = LoggerFactory.getLogger(MonitorScoringFilter::class.java)
+class ProductMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFilter(conf) {
+    private val LOG = LoggerFactory.getLogger(ProductMonitorScoringFilter::class.java)
 
-    private var topN: Int = 0
-    private var priorPageRate: Float = 0f
-    private var maxPriorPages: Int = 0
-    private var priorPages = 0
+    private val topN = conf.getInt(GENERATE_TOP_N, Integer.MAX_VALUE)
+    private val priorPageRate = conf.getFloat(GENERATE_DETAIL_PAGE_RATE, 0.80f)
+    private val maxPriorPages = (topN * priorPageRate).roundToInt()
 
-    private var scorePower: Float = 0f
-    private var internalScoreFactor: Float = 0f
-    private var externalScoreFactor: Float = 0f
+    private val scorePower = conf.getFloat("index.score.power", 0.5f)
+    private val internalScoreFactor = conf.getFloat("db.score.link.internal", 1.0f)
+    private val externalScoreFactor = conf.getFloat("db.score.link.external", 1.0f)
 
-    private var errorCounterDivisor: Int = 0
-    private var webGraphScoreDivisor: Int = 0
-    private var contentScoreDivisor: Int = 0
+    private val errorCounterDivisor = conf.getInt(SCORE_SORT_ERROR_COUNTER_DIVISOR, 20)
+    private val webGraphScoreDivisor = conf.getInt(SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR, 20)
+    private val contentScoreDivisor = conf.getInt(SCORE_SORT_CONTENT_SCORE_DIVISOR, 20)
 
     private val impreciseNow = Instant.now()
     private val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
     private val impreciseLocalNow = LocalDateTime.now()
 
-    init {
-        reload(conf)
-    }
-
-    override fun reload(conf: ImmutableConfig) {
-        super.reload(conf)
-
-        scorePower = conf.getFloat("index.score.power", 0.5f)
-        internalScoreFactor = conf.getFloat("db.score.link.internal", 1.0f)
-        externalScoreFactor = conf.getFloat("db.score.link.external", 1.0f)
-        errorCounterDivisor = conf.getInt(SCORE_SORT_ERROR_COUNTER_DIVISOR, 20)
-        webGraphScoreDivisor = conf.getInt(SCORE_SORT_WEB_GRAPH_SCORE_DIVISOR, 20)
-        contentScoreDivisor = conf.getInt(SCORE_SORT_CONTENT_SCORE_DIVISOR, 20)
-
-        topN = conf.getInt(GENERATE_TOP_N, Integer.MAX_VALUE)
-        priorPageRate = conf.getFloat(GENERATE_DETAIL_PAGE_RATE, 0.80f)
-        maxPriorPages = Math.round(topN * priorPageRate)
-    }
+    private var priorPages = 0
 
     override fun getParams(): Params {
         return Params.of(
@@ -222,9 +206,9 @@ class MonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFilter
     }
 
     /** Increase the score by a sum of inlinked scores.  */
-    override fun updateScore(page: WebPage, graph: WebGraph, inLinkEdges: Collection<WebEdge>) {
+    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
         var inLinkScore = 0.0f
-        for (edge in inLinkEdges) {
+        for (edge in incomingEdges) {
             if (!edge.isLoop) {
                 inLinkScore += graph.getEdgeWeight(edge).toFloat()
             }
@@ -273,7 +257,7 @@ class MonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFilter
     }
 
     /** Dampen the boost value by scorePower.  */
-    override fun indexerScore(url: String, doc: IndexDocument, row: WebPage, initScore: Float): Float {
-        return Math.pow(row.score.toDouble(), scorePower.toDouble()).toFloat() * initScore
+    override fun indexerScore(url: String, doc: IndexDocument, page: WebPage, initScore: Float): Float {
+        return page.score.pow(scorePower) * initScore
     }
 }

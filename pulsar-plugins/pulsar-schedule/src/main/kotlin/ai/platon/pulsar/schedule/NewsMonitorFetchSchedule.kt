@@ -17,6 +17,7 @@
 
 package ai.platon.pulsar.schedule
 
+import ai.platon.pulsar.common.DateTimeUtil.*
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.config.AppConstants.TCP_IP_STANDARDIZED_TIME
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
@@ -30,7 +31,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.time.temporal.ChronoUnit.DAYS
 
 /**
  * This class implements an adaptive re-fetch algorithm.
@@ -43,18 +43,15 @@ import java.time.temporal.ChronoUnit.DAYS
  *
  * @author Vincent Zhang
  */
-class MonitorFetchSchedule(
+class NewsMonitorFetchSchedule(
         conf: ImmutableConfig,
         metricsSystem: MetricsSystem
 ): AdaptiveFetchSchedule(conf, metricsSystem) {
-    private val DAY = 24L
-    private val MONTH = DAY * 30
-    private val YEAR = DAY * 365
 
     private val impreciseNow = Instant.now()
     private val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
-    private val middleNight = LocalDateTime.now().truncatedTo(DAYS)
-    private val middleNightInstant = Instant.now().truncatedTo(DAYS)
+    private val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+    private val middleNightInstant = Instant.now().truncatedTo(ChronoUnit.DAYS)
     // Check semi-inactive pages at 1 o'clock at night
     private val semiInactivePageCheckTime = middleNight.plusHours(25)
 
@@ -129,13 +126,13 @@ class MonitorFetchSchedule(
         }
 
         val hours = ChronoUnit.HOURS.between(modifiedTime, fetchTime)
-        if (hours <= 1 * DAY) {
+        if (hours <= 1 * HOURS_OF_DAY) {
             // There are updates today, keep re-fetch the page in every crawl loop
             interval = MIN_INTERVAL
-        } else if (hours <= 3 * DAY) {
+        } else if (hours <= 3 * HOURS_OF_DAY) {
             // If there is not updates in 24 hours but there are updates in 72 hours, re-fetch the page a hour later
             interval = Duration.ofHours(1)
-        } else if (hours <= 3 * MONTH) {
+        } else if (hours <= 3 * HOURS_OF_MONTH) {
             // If there is no any updates in 72 hours but has updates in 3 month,
             // check the page at least 1 hour later and increase fetch interval time by time
             val inc = (interval.seconds * INC_RATE).toLong()
@@ -145,7 +142,7 @@ class MonitorFetchSchedule(
                 interval = Duration.ofHours(1)
             }
 
-            if (hours < 10 * DAY) {
+            if (hours < 10 * HOURS_OF_DAY) {
                 // No longer than SEED_MAX_INTERVAL
                 if (interval > SEED_MAX_INTERVAL) {
                     interval = SEED_MAX_INTERVAL
@@ -154,7 +151,7 @@ class MonitorFetchSchedule(
                 // The page is
                 metricsSystem.reportFetchSchedule(page, false)
             }
-        } else if (hours > 10 * YEAR) {
+        } else if (hours > 10 * HOURS_OF_YEAR) {
             // Longer than 10 years, it's very likely the publishTime/modifiedTime is wrong
             metricsSystem.reportFetchSchedule(page, false)
             return super.getFetchInterval(page, fetchTime, modifiedTime, state)

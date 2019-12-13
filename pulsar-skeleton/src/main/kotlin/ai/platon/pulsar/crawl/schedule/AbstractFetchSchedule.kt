@@ -184,7 +184,7 @@ abstract class AbstractFetchSchedule(
         }
     }
 
-    protected fun updateRefetchTime(page: WebPage, interval: Duration?, fetchTime: Instant, prevModifiedTime: Instant?, modifiedTime: Instant?) {
+    protected fun updateRefetchTime(page: WebPage, interval: Duration, fetchTime: Instant, prevModifiedTime: Instant, modifiedTime: Instant) {
         page.fetchInterval = interval
         page.fetchTime = fetchTime.plus(interval)
         page.prevModifiedTime = prevModifiedTime

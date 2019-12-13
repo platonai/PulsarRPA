@@ -19,10 +19,12 @@ import java.util.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class SeedBuilder(
-        private val scoreFilters: ScoringFilters = ScoringFilters(),
-        private val conf: ImmutableConfig = ImmutableConfig()
+        private val scoreFilters: ScoringFilters,
+        private val conf: ImmutableConfig
 ) : Parameterized {
     private val impreciseNow = Instant.now()
+
+    constructor(conf: ImmutableConfig): this(ScoringFilters(conf), conf)
 
     override fun getParams(): Params {
         return Params.of("injectTime", DateTimeUtil.format(impreciseNow))

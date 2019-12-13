@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
             .filter { it.isNotEmpty() && !it.startsWith("#") }
             .sorted().distinct()
     context.getBean(WebDb::class.java).use { webDb ->
-        val injectComponent = InjectComponent(SeedBuilder(), webDb, conf)
+        val injectComponent = InjectComponent(SeedBuilder(conf), webDb, conf)
         injectComponent.injectAll(*configuredUrls.toTypedArray())
         injectComponent.commit()
     }

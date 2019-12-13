@@ -1,160 +1,130 @@
-package ai.platon.pulsar.scoring.opic; /**
+package ai.platon.pulsar.scoring.opic
+
+import ai.platon.pulsar.common.ScoreVector
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.index.IndexDocument
+import ai.platon.pulsar.crawl.scoring.ScoringFilter
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.graph.WebEdge
+import ai.platon.pulsar.persist.graph.WebGraph
+import java.net.MalformedURLException
+import java.net.URL
+import kotlin.math.pow
+
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import ai.platon.pulsar.common.ScoreVector;
-import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.Params;
-import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.crawl.scoring.ScoringFilter;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.graph.WebEdge;
-import ai.platon.pulsar.persist.graph.WebGraph;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collection;
-
 /**
  * This plugin implements a variant of an Online Page Importance Computation
- * (OPIC) score, described in this paper: <a
- * href="http://www2003.org/cdrom/papers/refereed/p007/p7-abiteboul.html"/>
+ * (OPIC) score, described in this paper: [](http://www2003.org/cdrom/papers/refereed/p007/p7-abiteboul.html)
  * Abiteboul, Serge and Preda, Mihai and Cobena, Gregory (2003), Adaptive
- * On-Line Page Importance Computation </a>.
+ * On-Line Page Importance Computation .
  *
  * @author Andrzej Bialecki
  */
-public class OPICScoringFilter implements ScoringFilter {
+class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
+    private val scorePower = conf.getFloat("index.score.power", 0.5f)
+    private val internalScoreFactor = conf.getFloat("db.score.link.internal", 1.0f)
+    private val externalScoreFactor = conf.getFloat("db.score.link.external", 1.0f)
 
-    private ImmutableConfig conf;
-    private float scorePower;
-    private float internalScoreFactor;
-    private float externalScoreFactor;
-
-    public OPICScoringFilter() {
-    }
-
-    public OPICScoringFilter(ImmutableConfig conf) {
-        reload(conf);
-    }
-
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        scorePower = conf.getFloat("index.score.power", 0.5f);
-        internalScoreFactor = conf.getFloat("db.score.link.internal", 1.0f);
-        externalScoreFactor = conf.getFloat("db.score.link.external", 1.0f);
-    }
-
-    public Params getParams() {
+    override fun getParams(): Params {
         return Params.of(
                 "scorePower", scorePower,
                 "internalScoreFactor", internalScoreFactor,
                 "externalScoreFactor", externalScoreFactor
-        );
+        )
     }
 
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public void injectedScore(WebPage page) {
-        float score = page.getScore();
-        page.setCash(score);
+    override fun injectedScore(page: WebPage) {
+        val score = page.score
+        page.cash = score
     }
 
     /**
      * Set to 0.0f (unknown value) - inlink contributions will bring it to a
      * correct level. Newly discovered pages have at least one inlink.
      */
-    @Override
-    public void initialScore(WebPage row) {
-        row.setScore(0.0f);
-        row.setCash(0.0f);
+    override fun initialScore(row: WebPage) {
+        row.score = 0.0f
+        row.cash = 0.0f
     }
 
     /**
-     * Use {@link WebPage#getScore()}.
+     * Use [WebPage.getScore].
      */
-    @Override
-    public ScoreVector generatorSortValue(WebPage row, float initSort) {
-        return new ScoreVector("1", (int) (initSort * row.getScore()));
+    override fun generatorSortValue(row: WebPage, initSort: Float): ScoreVector {
+        return ScoreVector("1", (initSort * row.score).toInt())
     }
 
     /**
      * Increase the score by a sum of inlinked scores.
      */
-    @Override
-    public void updateScore(WebPage page, WebGraph graph, Collection<WebEdge> inLinkEdges) {
-        float inLinkScore = 0.0f;
-        for (WebEdge edge : inLinkEdges) {
-            if (!edge.isLoop()) {
-                inLinkScore += graph.getEdgeWeight(edge);
+    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
+        var inLinkScore = 0.0f
+        for (edge in incomingEdges) {
+            if (!edge.isLoop) {
+                inLinkScore += graph.getEdgeWeight(edge).toFloat()
             }
         }
-
-        page.setScore(page.getScore() + inLinkScore);
-        page.setCash(page.getCash() + inLinkScore);
+        page.score = page.score + inLinkScore
+        page.cash = page.cash + inLinkScore
     }
 
     /**
      * Get cash on hand, divide it by the number of outlinks and apply.
      */
-    @Override
-    public void distributeScoreToOutlinks(WebPage page, WebGraph graph, Collection<WebEdge> outgoingEdges, int allCount) {
-        float cash = page.getCash();
-        if (cash == 0) {
-            return;
+    override fun distributeScoreToOutlinks(page: WebPage, graph: WebGraph, outgoingEdges: Collection<WebEdge>, allCount: Int) {
+        val cash = page.cash
+        if (cash == 0f) {
+            return
         }
-
         // TODO: count filtered vs. all count for outlinks
-        float scoreUnit = cash / allCount;
+        val scoreUnit = cash / allCount
         // internal and external score factor
-        float internalScore = scoreUnit * internalScoreFactor;
-        float externalScore = scoreUnit * externalScoreFactor;
-        for (WebEdge edge : outgoingEdges) {
-            if (edge.isLoop()) {
-                continue;
+        val internalScore = scoreUnit * internalScoreFactor
+        val externalScore = scoreUnit * externalScoreFactor
+        for (edge in outgoingEdges) {
+            if (edge.isLoop) {
+                continue
             }
-
-            double score = graph.getEdgeWeight(edge);
-
+            val score = graph.getEdgeWeight(edge)
             try {
-                String toHost = new URL(edge.getTargetUrl()).getHost();
-                String fromHost = new URL(page.getUrl()).getHost();
-
-                if (toHost.equalsIgnoreCase(fromHost)) {
-                    graph.setEdgeWeight(edge, score + internalScore);
+                val toHost = URL(edge.targetUrl).host
+                val fromHost = URL(page.url).host
+                if (toHost.equals(fromHost, ignoreCase = true)) {
+                    graph.setEdgeWeight(edge, score + internalScore)
                 } else {
-                    graph.setEdgeWeight(edge, score + externalScore);
+                    graph.setEdgeWeight(edge, score + externalScore)
                 }
-            } catch (MalformedURLException e) {
-                LOG.error("Failed to distribute score ..." + e.toString());
-                graph.setEdgeWeight(edge, score + externalScore);
+            } catch (e: MalformedURLException) {
+                ScoringFilter.LOG.error("Failed to distribute score ...$e")
+                graph.setEdgeWeight(edge, score + externalScore)
             }
         }
-
-        page.setCash(0.0f);
+        page.cash = 0.0f
     }
 
     /**
      * Dampen the boost value by scorePower.
      */
-    public float indexerScore(String url, IndexDocument doc, WebPage row, float initScore) {
-        return (float) Math.pow(row.getScore(), scorePower) * initScore;
+    override fun indexerScore(url: String, doc: IndexDocument, row: WebPage, initScore: Float): Float {
+        return row.score.toDouble().pow(scorePower.toDouble()).toFloat() * initScore
     }
+
 }

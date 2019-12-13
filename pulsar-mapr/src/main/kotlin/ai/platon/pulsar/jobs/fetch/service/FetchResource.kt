@@ -24,7 +24,7 @@ class FetchResource {
     private val taskSchedulers: TaskSchedulers? = null
 
     @GET
-    @Path("/schedule/{count}")
+    @Path("/{count}")
     fun getFetchItems(@PathParam("count") count: Int): List<FetchTask.Key> {
         var count = count
         val keys = Lists.newArrayList<FetchTask.Key>()

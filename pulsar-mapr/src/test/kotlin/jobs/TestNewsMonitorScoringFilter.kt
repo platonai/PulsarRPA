@@ -33,7 +33,7 @@ import ai.platon.pulsar.persist.graph.WebGraph
 import ai.platon.pulsar.persist.graph.WebVertex
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata
-import ai.platon.pulsar.scoring.MonitorScoringFilter
+import ai.platon.pulsar.scoring.NewsMonitorScoringFilter
 import com.google.common.collect.Lists
 import org.junit.Assert
 import org.junit.Before
@@ -45,7 +45,6 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.function.Consumer
 import java.util.stream.Collectors
-import java.util.stream.Stream
 
 /**
  * JUnit test for `MonitorScoringFilter`. For an example set of URLs, we
@@ -56,9 +55,9 @@ import java.util.stream.Stream
  * in the map are compared to our correct scores and a boolean result is
  * returned.
  */
-class TestMonitorScoringFilter {
+class TestNewsMonitorScoringFilter {
     companion object {
-        val LOG = LoggerFactory.getLogger(TestMonitorScoringFilter::class.java)
+        val LOG = LoggerFactory.getLogger(TestNewsMonitorScoringFilter::class.java)
         private val df = DecimalFormat("#.###")
         private val seedUrls = arrayOf("http://a.com", "http://b.com", "http://c.com")
         // An example web graph; shows websites as connected nodes
@@ -102,7 +101,7 @@ class TestMonitorScoringFilter {
 
     private val conf = ImmutableConfig()
     private val ROUND = 10
-    private lateinit var scoringFilter: MonitorScoringFilter
+    private lateinit var scoringFilter: NewsMonitorScoringFilter
     private lateinit var fetchSchedule: FetchSchedule
 
     private var rows: MutableMap<String, WebPage> = mutableMapOf()
@@ -110,13 +109,10 @@ class TestMonitorScoringFilter {
     @Before
     @Throws(Exception::class)
     fun setUp() {
-        scoringFilter = MonitorScoringFilter(conf)
+        scoringFilter = NewsMonitorScoringFilter(conf)
         fetchSchedule = DefaultFetchSchedule(conf, MetricsSystem(null, conf))
         val scoreInjected = 1.0f
         LOG.info("scoreInjected : $scoreInjected")
-
-        scoringFilter.reload(conf)
-        // Inject simulation
 
         seedUrls.map { WebPage.newWebPage(it) }
                 .onEach { it.score = scoreInjected }

@@ -33,6 +33,10 @@ public class DateTimeUtil {
     public static SimpleDateFormat PATH_SAFE_FORMAT_3 = new SimpleDateFormat("MMdd.HHmm");
     public static SimpleDateFormat PATH_SAFE_FORMAT_4 = new SimpleDateFormat("MMdd.HHmmss");
 
+    public static long HOURS_OF_DAY = 24L;
+    public static long HOURS_OF_MONTH = HOURS_OF_DAY * 30;
+    public static long HOURS_OF_YEAR = HOURS_OF_DAY * 365;
+
     public static Instant ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365));
 
     public static String format(long time) {

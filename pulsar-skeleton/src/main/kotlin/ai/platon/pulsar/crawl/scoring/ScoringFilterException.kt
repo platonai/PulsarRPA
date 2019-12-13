@@ -14,30 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.crawl.scoring;
+package ai.platon.pulsar.crawl.scoring
 
 /**
  * Specialized exception for errors during scoring.
  *
  * @author Andrzej Bialecki
  */
-@SuppressWarnings("serial")
-public class ScoringFilterException extends Exception {
-
-    public ScoringFilterException() {
-        super();
-    }
-
-    public ScoringFilterException(String message) {
-        super(message);
-    }
-
-    public ScoringFilterException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ScoringFilterException(Throwable cause) {
-        super(cause);
-    }
-
+class ScoringFilterException : Exception {
+    constructor() : super()
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable) : super(message, cause)
+    constructor(cause: Throwable) : super(cause)
 }

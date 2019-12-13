@@ -187,10 +187,10 @@ class CrawlFilter(val conf: ImmutableConfig) {
                 StringUtils.countMatches(url, "/") <= 3 -> { // http://t.tt/12345678
                     pageCategory = PageCategory.INDEX
                 }
-                Stream.of(*INDEX_PAGE_URL_PATTERNS).anyMatch { pattern: Pattern -> pattern.matcher(url).matches() } -> {
+                INDEX_PAGE_URL_PATTERNS.any { it.matcher(url).matches() } -> {
                     pageCategory = PageCategory.INDEX
                 }
-                Stream.of(*DETAIL_PAGE_URL_PATTERNS).anyMatch { pattern: Pattern -> pattern.matcher(url).matches() } -> {
+                DETAIL_PAGE_URL_PATTERNS.any { it.matcher(url).matches() } -> {
                     pageCategory = PageCategory.DETAIL
                 }
                 SEARCH_PAGE_URL_PATTERN.matcher(url).matches() -> {
