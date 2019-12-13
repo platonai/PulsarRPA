@@ -12,9 +12,9 @@ public class ScoreEntry implements Comparable<ScoreEntry> {
 
     public static final int DEFAULT_DIGITS = 5;
 
-    private String name = "";
-    private int priority = 0;
-    private int value = 0;
+    private String name;
+    private int priority;
+    private int value;
     // Reserved for optimization
     private int digits = DEFAULT_DIGITS;
 

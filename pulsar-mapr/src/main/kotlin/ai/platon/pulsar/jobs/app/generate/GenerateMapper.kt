@@ -49,14 +49,14 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
 
         Params.of(
                 "className", this.javaClass.simpleName,
-                "ignoreExternalLinks", jobConf[CapabilityTypes.PARSE_IGNORE_EXTERNAL_LINKS],
-                "maxUrlLength", jobConf[CapabilityTypes.PARSE_MAX_URL_LENGTH],
-                "defaultAnchorLenMin", jobConf[CapabilityTypes.PARSE_MIN_ANCHOR_LENGTH],
-                "defaultAnchorLenMax", jobConf[CapabilityTypes.PARSE_MAX_ANCHOR_LENGTH],
+                "ignoreExternalLinks", jobConf.get(CapabilityTypes.PARSE_IGNORE_EXTERNAL_LINKS),
+                "maxUrlLength", jobConf.get(CapabilityTypes.PARSE_MAX_URL_LENGTH),
+                "defaultAnchorLenMin", jobConf.get(CapabilityTypes.PARSE_MIN_ANCHOR_LENGTH),
+                "defaultAnchorLenMax", jobConf.get(CapabilityTypes.PARSE_MAX_ANCHOR_LENGTH),
                 "unreachableHosts", unreachableHosts.size
         )
-                .merge(scoringFilters.params)
                 .merge(generateComponent.params)
+                .merge(scoringFilters.params)
                 .withLogger(LOG).info()
     }
 
@@ -69,9 +69,10 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
         }
 
         // metricsSystem.report(page);
-        val sortScore = scoringFilters.generatorSortValue(page, 1.0f)
-        page.sortScore = sortScore.toString()
-        output(SelectorEntry(url, sortScore), page, context)
+        val selectorEntry = SelectorEntry(url, scoringFilters.generatorSortValue(page, 1.0f))
+        page.sortScore = selectorEntry.sortScore
+
+        output(selectorEntry, page, context)
 
         updateStatus(page)
     }
@@ -92,9 +93,8 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
 
         CounterUtils.increaseMDepth(page.distance, metricsCounters)
         if (!page.isSeed) {
-            val createTime = page.createTime
-            val createdDays = Duration.between(createTime, startTime).toDays()
-            CounterUtils.increaseMDays(createdDays, metricsCounters)
+            val pendingDays = Duration.between(page.createTime, startTime).toDays()
+            CounterUtils.increaseMDays(pendingDays, metricsCounters)
         }
         metricsCounters.increase(CommonCounter.mPersist)
     }

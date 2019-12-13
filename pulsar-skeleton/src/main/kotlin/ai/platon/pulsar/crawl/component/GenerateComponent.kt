@@ -50,7 +50,6 @@ class GenerateComponent(
         val webDb: WebDb,
         val urlFilters: UrlFilters,
         val urlNormalizers: UrlNormalizers,
-        val scoringFilters: ScoringFilters,
         val fetchSchedule: FetchSchedule,
         val metricsSystem: MetricsSystem,
         val metricsCounters: MetricsCounters,
@@ -132,7 +131,6 @@ class GenerateComponent(
                         "lowGeneratedRowsRate", lowGeneratedRowsRate,
                         "lowGeneratedRows", lowGeneratedRows,
                         "fetchSchedule", fetchSchedule.javaClass.name,
-                        "scoringFilters", scoringFilters,
                         "urlNormalizers", urlNormalizers,
                         "urlFilters", urlFilters,
                         "crawlFilters", crawlFilters,
@@ -140,7 +138,6 @@ class GenerateComponent(
                         "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
                         "unreachableHosts", unreachableHosts.size
                 ))
-                .merge(scoringFilters.params)
     }
 
     /**

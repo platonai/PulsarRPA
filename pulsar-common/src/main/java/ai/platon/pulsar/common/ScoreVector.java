@@ -9,7 +9,8 @@ import java.util.*;
 /**
  * Created by vincent on 17-4-20.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
- * <p>
+ *
+ * TODO: Use bigint
  */
 public class ScoreVector implements Comparable<ScoreVector> {
 
@@ -86,7 +87,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
         return new ScoreVector(entries.size(), entries);
     }
 
-    public static ScoreVector combine(ScoreVector... scores) {
+    public static ScoreVector add(ScoreVector... scores) {
         List<ScoreEntry> entries = new ArrayList<>();
         for (ScoreVector score : scores) {
             entries.addAll(score.entries);

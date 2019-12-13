@@ -27,7 +27,6 @@
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="urlFilters"/>
         <constructor-arg ref="urlNormalizers"/>
-        <constructor-arg ref="scoringFilters"/>
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="metricsCounters"/>

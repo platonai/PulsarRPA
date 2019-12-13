@@ -170,14 +170,17 @@ class CrawlFilter(val conf: ImmutableConfig) {
                 Pattern.compile(".+(detail|item|article|book|good|product|thread|view|post|content|/20[012][0-9]/{0,1}[01][0-9]/|/20[012]-[0-9]{0,1}-[01][0-9]/|/\\d{2,}/\\d{5,}|\\d{7,}).+")
         )
         var MEDIA_PAGE_URL_PATTERN = Pattern.compile(".+(pic|picture|photo|avatar|photoshow|video).+")
+
         /**
          * A simple regex rule to sniff the possible category of a web page
          */
         fun sniffPageCategory(urlString: String): PageCategory {
-            var pageCategory = PageCategory.UNKNOWN
-            if (StringUtils.isEmpty(urlString)) {
-                return pageCategory
+            if (urlString.isEmpty()) {
+                return PageCategory.UNKNOWN
             }
+
+            var pageCategory = PageCategory.UNKNOWN
+
             val url = urlString.toLowerCase()
             // Notice : ***DO KEEP*** the right order
             when {

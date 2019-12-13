@@ -6,17 +6,17 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestNamedScoreVector {
+public class TestFixedNamedScoreVector {
 
-    private NamedScoreVector score = new NamedScoreVector();
+    private FixedNamedScoreVector score = new FixedNamedScoreVector();
 
     @Before
     public void setup() {
-        score.setValue(NamedScoreVector.Name.refIndexErrDensity, 10);
-        score.setValue(NamedScoreVector.Name.refParseErrDensity, 8);
-        score.setValue(NamedScoreVector.Name.modifyTime, -8);
-        score.setValue(NamedScoreVector.Name.modifyTime, -2);
-        score.setValue(NamedScoreVector.Name.contentScore, 2201);
+        score.setValue(Name.refIndexErrDensity, 10);
+        score.setValue(Name.refParseErrDensity, 8);
+        score.setValue(Name.modifyTime, -8);
+        score.setValue(Name.modifyTime, -2);
+        score.setValue(Name.contentScore, 2201);
     }
 
     @Test

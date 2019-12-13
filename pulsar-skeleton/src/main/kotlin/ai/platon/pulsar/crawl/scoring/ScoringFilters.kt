@@ -25,9 +25,7 @@ import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge
 import ai.platon.pulsar.persist.graph.WebGraph
-import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.stream.Collectors
 
 class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf: ImmutableConfig) : ScoringFilter {
     private val scoringFilters = ArrayList<ScoringFilter>()
@@ -47,9 +45,11 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
      */
     override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
         var score = ScoreVector(0)
-        for (filter in scoringFilters) {
-            score = filter.generatorSortValue(page, initSort)
+
+        scoringFilters.forEach {
+            score = it.generatorSortValue(page, initSort)
         }
+
         return score
     }
 
@@ -57,29 +57,25 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
      * Calculate a new initial score, used when adding newly discovered pages.
      */
     override fun initialScore(page: WebPage) {
-        for (filter in scoringFilters) {
-            filter.initialScore(page)
-        }
+        scoringFilters.forEach { it.initialScore(page) }
     }
 
     /**
      * Calculate a new initial score, used when injecting new pages.
      */
     override fun injectedScore(page: WebPage) {
-        for (filter in scoringFilters) {
-            filter.injectedScore(page)
+        scoringFilters.forEach { it.injectedScore(page) }
+    }
+
+    override fun distributeScoreToOutlinks(page: WebPage, graph: WebGraph, outgoingEdges: Collection<WebEdge>, allCount: Int) {
+        scoringFilters.forEach {
+            it.distributeScoreToOutlinks(page, graph, outgoingEdges, allCount)
         }
     }
 
-    override fun distributeScoreToOutlinks(page: WebPage, graph: WebGraph, outLinkEdges: Collection<WebEdge>, allCount: Int) {
-        for (filter in scoringFilters) {
-            filter.distributeScoreToOutlinks(page, graph, outLinkEdges, allCount)
-        }
-    }
-
-    override fun updateScore(page: WebPage, graph: WebGraph, inLinkEdges: Collection<WebEdge>) {
-        for (filter in scoringFilters) {
-            filter.updateScore(page, graph, inLinkEdges)
+    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
+        scoringFilters.forEach {
+            it.updateScore(page, graph, incomingEdges)
         }
     }
 
@@ -91,17 +87,13 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
 
     override fun indexerScore(url: String, doc: IndexDocument, page: WebPage, initScore: Float): Float {
         var score = initScore
-        for (filter in scoringFilters) {
-            score = filter.indexerScore(url, doc, page, score)
+        scoringFilters.forEach {
+            score = it.indexerScore(url, doc, page, score)
         }
         return score
     }
 
     override fun toString(): String {
         return scoringFilters.joinToString { it.javaClass.simpleName }
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(ScoringFilters::class.java)
     }
 }

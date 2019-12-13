@@ -25,7 +25,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.index.IndexDocument
-import ai.platon.pulsar.crawl.scoring.NamedScoreVector
+import ai.platon.pulsar.crawl.scoring.FixedNamedScoreVector
+import ai.platon.pulsar.crawl.scoring.Name
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebEdge
@@ -113,31 +114,30 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
         val refExtractErrDensity = if (refExtractErr == 0f) 0f else fetchCount / refExtractErr / errorCounterDivisor.toFloat()
         val refIndexErrDensity = if (refIndexErr == 0f) 0f else fetchCount / refIndexErr / errorCounterDivisor.toFloat()
 
-        val score = NamedScoreVector()
+        val score = FixedNamedScoreVector()
 
-        score.setValue(NamedScoreVector.Name.priority, priority)
-        score.setValue(NamedScoreVector.Name.distance, -distance)
+        score.setValue(Name.priority, priority)
+        score.setValue(Name.distance, -distance)
 
         // Do not care about create time if it's created longer than 3 days
         if (createdDays <= 3) {
             // yyyyMMddHH format is OK to convert to a int
-            score.setValue(NamedScoreVector.Name.createTime,
-                    NumberUtils.toInt(DateTimeUtil.format(createTime, "yyyyMMddHH"), 0))
+            score.setValue(Name.createTime, DateTimeUtil.format(createTime, "yyyyMMddHH").toInt())
         }
 
-        score.setValue(NamedScoreVector.Name.contentScore, initSort * page.contentScore / contentScoreDivisor)
-        score.setValue(NamedScoreVector.Name.webGraphScore, initSort * page.score / webGraphScoreDivisor)
+        score.setValue(Name.contentScore, initSort * page.contentScore / contentScoreDivisor)
+        score.setValue(Name.webGraphScore, initSort * page.score / webGraphScoreDivisor)
 
-        score.setValue(NamedScoreVector.Name.refFetchErrDensity, refFetchErrDensity)
-        score.setValue(NamedScoreVector.Name.refParseErrDensity, refParseErrDensity)
-        score.setValue(NamedScoreVector.Name.refExtractErrDensity, refExtractErrDensity)
-        score.setValue(NamedScoreVector.Name.refIndexErrDensity, refIndexErrDensity)
+        score.setValue(Name.refFetchErrDensity, refFetchErrDensity)
+        score.setValue(Name.refParseErrDensity, refParseErrDensity)
+        score.setValue(Name.refExtractErrDensity, refExtractErrDensity)
+        score.setValue(Name.refIndexErrDensity, refIndexErrDensity)
 
         // yyyyMMddHH format is OK to convert to a int
-        score.setValue(NamedScoreVector.Name.modifyTime,
+        score.setValue(Name.modifyTime,
                 NumberUtils.toInt(DateTimeUtil.format(modifiedTime, "yyyyMMddHH"), 0))
 
-        score.setValue(NamedScoreVector.Name.inlinkOrder, -inlinkOrder)
+        score.setValue(Name.anchorOrder, -inlinkOrder)
 
         return score
     }

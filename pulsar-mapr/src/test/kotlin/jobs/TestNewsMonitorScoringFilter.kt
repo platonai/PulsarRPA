@@ -180,13 +180,16 @@ class TestNewsMonitorScoringFilter {
                     "round", round,
                     "rows", rows.size,
                     "vertices", graph.vertexSet().size,
-                    "vertices(hasWebPage)", graph.vertexSet().stream().filter { obj: WebVertex -> obj.hasWebPage() }.count(),
+                    "vertices(hasWebPage)", graph.vertexSet().filter { it.hasWebPage() }.size,
                     "edges", graph.edgeSet().size.toString() + " : "
-                    + graph.edgeSet().stream().map { obj: WebEdge -> obj.toString() }.collect(Collectors.joining(", "))
+                    + graph.edgeSet().joinToString { it.toString() }
             ).withLogger(LOG).info(true)
-            /* OutGraphUpdateJob simulation */ // 1. distribute score to outLinks
-            graph.vertexSet().filter { it.hasWebPage() }
-                    .forEach { scoringFilter.distributeScoreToOutlinks(it.webPage, graph, graph.outgoingEdgesOf(it), graph.outDegreeOf(it)) }
+
+            /* OutGraphUpdateJob simulation */
+            // 1. distribute score to outLinks
+            graph.vertexSet().filter { it.hasWebPage() }.forEach {
+                scoringFilter.distributeScoreToOutlinks(it.webPage, graph, graph.outgoingEdgesOf(it), graph.outDegreeOf(it))
+            }
             // 2. update score for all rows
             graph.vertexSet().filter { it.hasWebPage() }.forEach {
                 scoringFilter.updateScore(it.webPage, graph, graph.incomingEdgesOf(it))
@@ -194,7 +197,7 @@ class TestNewsMonitorScoringFilter {
             // 3. update marks
             graph.vertexSet().filter { it.hasWebPage() }.forEach { it.webPage.marks.put(Mark.UPDATEOUTG, batchId) }
             // 4. generate new rows
-            val newRows: Map<String, WebPage> = graph.vertexSet()
+            val newRows = graph.vertexSet()
                     .filter { !it.hasWebPage() }
                     .map { v: WebVertex -> createNewRow(v.url) }
                     .associateBy { it.url }

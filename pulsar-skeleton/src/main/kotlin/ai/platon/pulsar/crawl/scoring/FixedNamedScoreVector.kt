@@ -2,15 +2,31 @@ package ai.platon.pulsar.crawl.scoring
 
 import ai.platon.pulsar.common.ScoreEntry
 import ai.platon.pulsar.common.ScoreVector
-import java.util.*
-import java.util.stream.Collectors
-import java.util.stream.Stream
+
+/**
+ * All available parameters to calculate a page's score, eg, score to evaluate the most important N pages.
+ * We use enum ordinal as the priority for simplification (smaller ordinal means higher priority).
+ * To change one parameter's priority, just change it's order in the following enum definition.
+ */
+enum class Name {
+    priority,  // bigger better
+    distance,  // smaller better
+    createTime,  // bigger better, limited
+    contentScore,  // bigger better
+    webGraphScore,  // bigger better
+    refFetchErrDensity,  // smaller better
+    refParseErrDensity,  // smaller better
+    refExtractErrDensity,  // smaller better
+    refIndexErrDensity,  // smaller better
+    modifyTime,  // bigger better
+    anchorOrder  // smaller better
+}
 
 /**
  * Created by vincent on 17-4-20.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class NamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, SCORE_ENTRIES.map { it.clone() }.sortedBy { it.priority }) {
+class FixedNamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, createSortedScoreEntries()) {
     constructor(vararg values: Int) : this() {
         setValue(*values)
     }
@@ -31,25 +47,6 @@ class NamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, SCORE_ENTRIES.map { i
         setValue(name, value.toInt())
     }
 
-    /**
-     * All available parameters to calculate a page's score, eg, score to evaluate the most important N pages.
-     * We use enum ordinal as the priority for simplification (smaller ordinal means higher priority).
-     * To change one parameter's priority, just change it's order in the following enum definition.
-     */
-    enum class Name {
-        priority,  // bigger better
-        distance,  // smaller better
-        createTime,  // bigger better, limited
-        contentScore,  // bigger better
-        webGraphScore,  // bigger better
-        refFetchErrDensity,  // smaller better
-        refParseErrDensity,  // smaller better
-        refExtractErrDensity,  // smaller better
-        refIndexErrDensity,  // smaller better
-        modifyTime,  // bigger better
-        inlinkOrder  // smaller better
-    }
-
     companion object {
         val PRIORITY = createScoreEntry(Name.priority)
         val DISTANCE = createScoreEntry(Name.distance)
@@ -61,7 +58,7 @@ class NamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, SCORE_ENTRIES.map { i
         val REF_EXTRACT_ERROR_DENSITY = createScoreEntry(Name.refExtractErrDensity)
         val REF_INDEX_ERROR_DENSITY = createScoreEntry(Name.refIndexErrDensity)
         val MODIFY_TIME = createScoreEntry(Name.modifyTime)
-        val INLINK_ORDER = createScoreEntry(Name.inlinkOrder)
+        val INLINK_ORDER = createScoreEntry(Name.anchorOrder)
         val SCORE_ENTRIES = arrayOf(
                 PRIORITY,
                 DISTANCE,
@@ -74,6 +71,10 @@ class NamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, SCORE_ENTRIES.map { i
                 REF_INDEX_ERROR_DENSITY,
                 MODIFY_TIME,
                 INLINK_ORDER)
+
+        fun createSortedScoreEntries(): List<ScoreEntry> {
+            return SCORE_ENTRIES.map { it.clone() }.sortedBy { it.priority }
+        }
 
         /**
          * Enum ordinal is the priority in reversed order

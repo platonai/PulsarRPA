@@ -1,10 +1,8 @@
 package ai.platon.pulsar.jobs.common;
 
 import ai.platon.pulsar.common.ScoreVector;
-import ai.platon.pulsar.crawl.scoring.io.ScoreVectorWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.hadoop.io.WritableComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,49 +18,46 @@ public class SelectorEntry implements WritableComparable<SelectorEntry> {
 
     public static final Logger LOG = LoggerFactory.getLogger(SelectorEntry.class);
 
-    static {
-        WritableComparator.define(SelectorEntry.class, new SelectorEntryComparator());
-    }
-
     private String url;
-    private ScoreVector score;
+    private String sortScore;
+
     public SelectorEntry() {
 
     }
 
-    public SelectorEntry(String url, int score) {
+    public SelectorEntry(String url, int sortScore) {
         this.url = url;
-        this.score = new ScoreVector("1", score);
+        this.sortScore = new ScoreVector("1", sortScore).toString();
     }
 
-    public SelectorEntry(String url, ScoreVector score) {
+    public SelectorEntry(String url, ScoreVector sortScore) {
         this.url = url;
-        this.score = score;
+        this.sortScore = sortScore.toString();
+    }
+
+    public SelectorEntry(String url, String sortScore) {
+        this.url = url;
+        this.sortScore = sortScore;
     }
 
     public String getUrl() {
         return url;
     }
 
-    public ScoreVector getScore() {
-        return score;
+    public String getSortScore() {
+        return sortScore;
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         url = Text.readString(in);
-        ScoreVectorWritable scoreVectorWritable = new ScoreVectorWritable(score);
-        scoreVectorWritable.readFields(in);
-        score = scoreVectorWritable.get();
-
-//    log.info(url);
-//    log.info("readFields : " + score.toString());
+        sortScore = Text.readString(in);
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         Text.writeString(out, url);
-        new ScoreVectorWritable(score).write(out);
+        Text.writeString(out, sortScore);
     }
 
     @Override
@@ -70,7 +65,7 @@ public class SelectorEntry implements WritableComparable<SelectorEntry> {
         final int prime = 31;
         int result = 1;
         result = prime * result + url.hashCode();
-        result = prime * result + score.hashCode();
+        result = prime * result + sortScore.hashCode();
         return result;
     }
 
@@ -89,13 +84,7 @@ public class SelectorEntry implements WritableComparable<SelectorEntry> {
      */
     @Override
     public int compareTo(SelectorEntry se) {
-        int comp = -score.compareTo(se.score);
+        int comp = -sortScore.compareTo(se.sortScore);
         return comp != 0 ? comp : url.compareTo(se.url);
-    }
-
-    public static class SelectorEntryComparator extends WritableComparator {
-        public SelectorEntryComparator() {
-            super(SelectorEntry.class, true);
-        }
     }
 }
