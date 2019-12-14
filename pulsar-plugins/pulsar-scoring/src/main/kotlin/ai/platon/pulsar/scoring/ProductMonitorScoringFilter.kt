@@ -35,6 +35,9 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
         )
     }
 
+    /**
+     *
+     * */
     override fun injectedScore(page: WebPage) {
         page.cash = page.score
     }
@@ -53,7 +56,7 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
     /**
      * Called in generate phrase
      * */
-    override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
+    override fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
         val score = FixedNamedScoreVector()
 
         score.setValue(Name.priority, calculatePriority(page))
@@ -65,7 +68,7 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
     }
 
     private fun calculatePriority(page: WebPage): Int {
-        return when {
+        val priority = when {
             page.isSeed -> {
                 SEED_PRIORITY
             }
@@ -77,14 +80,16 @@ class ProductMonitorScoringFilter(conf: ImmutableConfig) : ScoringFilter {
             }
             else -> 0
         }
+
+        return priority
     }
 
     private fun isIndex(page: WebPage): Boolean {
-        return page.pageCategory.isIndex || CrawlFilter.sniffPageCategory(page.url).isIndex
+        return page.pageCategory.isIndex || CrawlFilter.getPageCategory(page.url).isIndex
     }
 
     private fun isDetail(page: WebPage): Boolean {
-        return page.pageCategory.isDetail || CrawlFilter.sniffPageCategory(page.url).isDetail
+        return page.pageCategory.isDetail || CrawlFilter.getPageCategory(page.url).isDetail
     }
 
     companion object {

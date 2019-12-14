@@ -32,9 +32,6 @@ import ai.platon.pulsar.persist.metadata.Mark
 import com.google.common.collect.LinkedHashMultiset
 import com.google.common.collect.Multiset
 import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 /**
  * Reduce class for generate
@@ -133,7 +130,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
         if (page.isSeed) {
             metricsCounters.increase(Counter.rSeeds)
         }
-        if (page.pageCategory.isDetail || CrawlFilter.sniffPageCategory(page.url).isDetail) {
+        if (page.pageCategory.isDetail || CrawlFilter.guessPageCategory(page.url).isDetail) {
             metricsCounters.increase(CommonCounter.rDetail)
         }
         metricsCounters.increase(CommonCounter.rPersist)

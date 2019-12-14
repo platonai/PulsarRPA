@@ -23,7 +23,6 @@ import com.google.gson.GsonBuilder
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Node
 import java.util.*
-import java.util.stream.Stream
 
 /**
  * TODO : need full unit test
@@ -201,7 +200,7 @@ class CrawlFilters(
         if (url == null) {
             return false
         }
-        val pageType = CrawlFilter.sniffPageCategory(url)
+        val pageType = CrawlFilter.guessPageCategory(url)
         if (pageType == PageCategory.DETAIL) {
             return true
         }
@@ -215,7 +214,7 @@ class CrawlFilters(
 
     fun veryLikelyBeIndexUrl(url: String?): Boolean {
         if (url == null) return false
-        val pageType = CrawlFilter.sniffPageCategory(url)
+        val pageType = CrawlFilter.guessPageCategory(url)
         if (pageType.isIndex) {
             return true
         }
@@ -229,7 +228,7 @@ class CrawlFilters(
 
     fun veryLikelyBeMediaUrl(url: String?): Boolean {
         if (url == null) return false
-        val pageType = CrawlFilter.sniffPageCategory(url)
+        val pageType = CrawlFilter.guessPageCategory(url)
         if (pageType == PageCategory.MEDIA) {
             return true
         }
@@ -248,7 +247,7 @@ class CrawlFilters(
         if (url == null) {
             return false
         }
-        val pageType = CrawlFilter.sniffPageCategory(url)
+        val pageType = CrawlFilter.guessPageCategory(url)
         if (pageType == PageCategory.SEARCH) {
             return true
         }
@@ -270,7 +269,6 @@ class CrawlFilters(
     }
 
     companion object {
-        @JvmField
         val LOG = LoggerFactory.getLogger(CrawlFilters::class.java)
         const val CRAWL_FILTER_RULES = "crawl.filter.rules"
     }

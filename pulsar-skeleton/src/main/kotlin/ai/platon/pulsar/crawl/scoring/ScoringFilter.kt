@@ -64,8 +64,8 @@ interface ScoringFilter : Parameterized {
      * @param page     page row. Modifications will be persisted.
      * @param initSort initial sort value, or a value from previous filters in chain
      */
-    fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
-        return ScoreVector("1", (page.score * initSort).toInt())
+    fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
+        return ScoreVector.ZERO
     }
 
     /**

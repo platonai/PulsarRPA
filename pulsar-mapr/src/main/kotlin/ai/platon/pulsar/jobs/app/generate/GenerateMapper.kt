@@ -64,6 +64,7 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
         metricsCounters.increase(CommonCounter.mRows)
         val page = WebPage.box(reversedUrl, row, true)
         val url = page.url
+
         if (!generateComponent.shouldFetch(url, reversedUrl, page)) {
             return
         }
@@ -87,7 +88,7 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
             metricsCounters.increase(GenerateComponent.Companion.Counter.mSeeds)
         }
 
-        if (page.pageCategory.isDetail || CrawlFilter.sniffPageCategory(page.url).isDetail) {
+        if (page.pageCategory.isDetail || CrawlFilter.guessPageCategory(page.url).isDetail) {
             metricsCounters.increase(CommonCounter.mDetail)
         }
 

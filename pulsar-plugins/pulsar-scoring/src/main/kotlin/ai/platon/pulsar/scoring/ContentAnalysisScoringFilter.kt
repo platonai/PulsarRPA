@@ -31,10 +31,6 @@ open class ContentAnalysisScoringFilter(val conf: ImmutableConfig) : ScoringFilt
         return Params()
     }
 
-    override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
-        return ScoreVector("1", (page.score * initSort).toInt())
-    }
-
     /**
      * Increase the score by a sum of inlinked scores.
      */

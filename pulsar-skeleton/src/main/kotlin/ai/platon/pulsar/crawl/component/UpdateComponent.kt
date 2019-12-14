@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
-import java.util.function.Consumer
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -74,7 +73,7 @@ class UpdateComponent(
         pageCounters.increase(PageCounters.Ref.page)
         page.updateRefContentPublishTime(outgoingPage.contentPublishTime)
 
-        if (outgoingPage.pageCategory.isDetail || CrawlFilter.sniffPageCategory(outgoingPage.url).isDetail) {
+        if (outgoingPage.pageCategory.isDetail || CrawlFilter.guessPageCategory(outgoingPage.url).isDetail) {
             pageCounters.increase(PageCounters.Ref.ch, outgoingPage.contentTextLen)
             pageCounters.increase(PageCounters.Ref.article)
         }

@@ -259,7 +259,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         } else { // Here we create a new web page from outlink
             page.variables[PulsarParams.VAR_PAGE_EXISTENCE] = PageExistence.CREATED
             metricsCounters.increase(UpdateComponent.Companion.Counter.rCreated)
-            if (CrawlFilter.sniffPageCategory(url).isDetail) {
+            if (CrawlFilter.guessPageCategory(url).isDetail) {
                 metricsCounters.increase(UpdateComponent.Companion.Counter.rNewDetail)
             }
         }

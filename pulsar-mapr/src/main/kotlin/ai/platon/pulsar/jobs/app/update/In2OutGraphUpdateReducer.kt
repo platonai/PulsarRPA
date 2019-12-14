@@ -35,7 +35,6 @@ import ai.platon.pulsar.persist.graph.WebVertex
 import ai.platon.pulsar.persist.io.WebGraphWritable
 import ai.platon.pulsar.persist.metadata.CrawlVariables
 import ai.platon.pulsar.persist.metadata.Mark
-import com.google.common.collect.Lists
 
 internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWritable, String, GWebPage>() {
     private lateinit var webDb: WebDb
@@ -153,7 +152,7 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
             if (outgoingPage.pageCategory.isDetail) {
                 ++totalUpdates
             } else if (outgoingPage.pageCategory.isUnknown) {
-                if (CrawlFilter.sniffPageCategory(outgoingPage.url).isDetail) {
+                if (CrawlFilter.guessPageCategory(outgoingPage.url).isDetail) {
                     // TODO: make sure page category is calculated
                     ++totalUpdates
                 }

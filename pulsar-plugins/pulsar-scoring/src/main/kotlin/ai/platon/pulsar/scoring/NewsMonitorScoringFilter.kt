@@ -91,7 +91,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
         row.cash = 0.0f
     }
 
-    override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
+    override fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
         val priority = calculatePriority(page)
         val distance = page.distance
         val createTime = page.createTime
@@ -125,8 +125,11 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
             score.setValue(Name.createTime, DateTimeUtil.format(createTime, "yyyyMMddHH").toInt())
         }
 
-        score.setValue(Name.contentScore, initSort * page.contentScore / contentScoreDivisor)
-        score.setValue(Name.webGraphScore, initSort * page.score / webGraphScoreDivisor)
+        // TODO: use initSort
+//        score.setValue(Name.contentScore, initSort * page.contentScore / contentScoreDivisor)
+//        score.setValue(Name.webGraphScore, initSort * page.score / webGraphScoreDivisor)
+        score.setValue(Name.contentScore, page.contentScore / contentScoreDivisor)
+        score.setValue(Name.webGraphScore, page.score / webGraphScoreDivisor)
 
         score.setValue(Name.refFetchErrDensity, refFetchErrDensity)
         score.setValue(Name.refParseErrDensity, refParseErrDensity)
@@ -166,7 +169,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
         // raise priority for detail pages
         if (!page.isSeed) {
             if (page.fetchCount == 0 && priorPages < maxPriorPages) {
-                val isDetail = page.pageCategory.isDetail || CrawlFilter.sniffPageCategory(page.url).isDetail
+                val isDetail = page.pageCategory.isDetail || CrawlFilter.guessPageCategory(page.url).isDetail
                 if (createdDays == 0L) {
                     // Pages created today has the highest priority
                     priority += if (isDetail) 300 else 200
@@ -207,15 +210,9 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
 
     /** Increase the score by a sum of inlinked scores.  */
     override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
-        var inLinkScore = 0.0f
-        for (edge in incomingEdges) {
-            if (!edge.isLoop) {
-                inLinkScore += graph.getEdgeWeight(edge).toFloat()
-            }
-        }
-
-        page.score = page.score + inLinkScore
-        page.cash = page.cash + inLinkScore
+        val score = incomingEdges.sumByDouble { if (it.isLoop) 0.0 else graph.getEdgeWeight(it) }.toFloat()
+        page.score = page.score + score
+        page.cash = page.cash + score
     }
 
     /** Get cash on hand, divide it by the number of outlinks and apply.  */

@@ -29,10 +29,6 @@ class LinkAnalysisScoringFilter(conf: ImmutableConfig) : ScoringFilter {
         return Params()
     }
 
-    override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
-        return ScoreVector("1", (page.score * initSort).toInt())
-    }
-
     override fun indexerScore(url: String, doc: IndexDocument, page: WebPage, initScore: Float): Float {
         return normalizedScore * page.score
     }

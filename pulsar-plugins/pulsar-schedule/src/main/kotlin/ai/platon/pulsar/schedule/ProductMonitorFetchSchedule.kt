@@ -60,10 +60,10 @@ class ProductMonitorFetchSchedule(
     }
 
     private fun isIndexPage(page: WebPage): Boolean {
-        return page.pageCategory.isIndex || CrawlFilter.sniffPageCategory(page.url).isIndex
+        return page.pageCategory.isIndex || CrawlFilter.guessPageCategory(page.url).isIndex
     }
 
     private fun isDetailPage(page: WebPage): Boolean {
-        return page.pageCategory.isDetail || CrawlFilter.sniffPageCategory(page.url).isDetail
+        return page.pageCategory.isDetail || CrawlFilter.guessPageCategory(page.url).isDetail
     }
 }

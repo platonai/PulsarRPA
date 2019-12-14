@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -107,6 +106,7 @@ class HtmlParser(
             // the native renderer may have done the parsing work
         }
 
+        // TODO: should be move it to a ParseFilter?
         val usePrimerParser = conf.getBoolean("parse.user.primer.parser", false)
         if (usePrimerParser) {
             // Apply the primer parser to get links
@@ -116,7 +116,7 @@ class HtmlParser(
             page.pageText = primerParser.getPageText(documentFragment)
         }
 
-        // TODO: a better place to do this
+        // TODO: a better place to init page model
         page.pageModel.clear()
         parseFilters.filter(parseContext)
 

@@ -43,7 +43,7 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
     /**
      * Calculate a sort value for Generate.
      */
-    override fun generatorSortValue(page: WebPage, initSort: Float): ScoreVector {
+    override fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
         var score = ScoreVector(0)
 
         scoringFilters.forEach {

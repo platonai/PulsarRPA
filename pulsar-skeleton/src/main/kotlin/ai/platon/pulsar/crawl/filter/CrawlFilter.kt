@@ -18,28 +18,30 @@ package ai.platon.pulsar.crawl.filter
 
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls.reverseUrl
-import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.conf.Configured
+import org.slf4j.LoggerFactory
 import org.w3c.dom.Node
 import java.util.regex.Pattern
-import java.util.stream.Stream
 
 /**
  * TODO : configurable
  */
 class CrawlFilter(val conf: ImmutableConfig) {
-    var pageType = PageCategory.UNKNOWN
+    val pageType = PageCategory.UNKNOWN
     var urlFilter: String? = null
+        private set
     var textFilter: TextFilter? = null
+        private set
     var blockFilter: BlockFilter? = null
+        private set
     var startKey: String? = null
+        private set
     var endKey: String? = null
+        private set
     var reversedStartKey: String? = null
         private set
     var reversedEndKey: String? = null
@@ -113,6 +115,7 @@ class CrawlFilter(val conf: ImmutableConfig) {
         if (text == null) {
             return false
         }
+
         return if (textFilter == null) {
             true
         } else textFilter!!.test(text)
@@ -151,7 +154,8 @@ class CrawlFilter(val conf: ImmutableConfig) {
     }
 
     companion object {
-        val LOG = CrawlFilters.LOG
+        val LOG = LoggerFactory.getLogger(CrawlFilter::class.java)
+
         /**
          * TODO : use suffix-urlfilter instead
          */
@@ -160,49 +164,64 @@ class CrawlFilter(val conf: ImmutableConfig) {
          * The follow patterns are simple rule to indicate a url's category, this is a very simple solution, and the result is
          * not accurate
          */
-        var INDEX_PAGE_URL_PATTERNS = arrayOf(
+        val INDEX_PAGE_URL_PATTERNS = arrayOf(
                 Pattern.compile(".+tieba.baidu.com/.+search.+"),
                 Pattern.compile(".+(index|list|tags|chanel).+")
         )
-        var SEARCH_PAGE_URL_PATTERN = Pattern.compile(".+(search|query|select).+")
-        var DETAIL_PAGE_URL_PATTERNS = arrayOf(
+        val SEARCH_PAGE_URL_PATTERN = Pattern.compile(".+(search|query|select).+")
+        val DETAIL_PAGE_URL_PATTERNS = arrayOf(
                 Pattern.compile(".+tieba.baidu.com/p/(\\d+)"),
                 Pattern.compile(".+(detail|item|article|book|good|product|thread|view|post|content|/20[012][0-9]/{0,1}[01][0-9]/|/20[012]-[0-9]{0,1}-[01][0-9]/|/\\d{2,}/\\d{5,}|\\d{7,}).+")
         )
-        var MEDIA_PAGE_URL_PATTERN = Pattern.compile(".+(pic|picture|photo|avatar|photoshow|video).+")
+        val MEDIA_PAGE_URL_PATTERN = Pattern.compile(".+(pic|picture|photo|avatar|photoshow|video).+")
+
+        // TODO: move to config file
+        fun getPageCategory(url: String): PageCategory {
+            if (url.contains("amazon.com")) {
+                if (url.contains("/s?i=")) {
+                    return PageCategory.INDEX
+                } else if (url.contains("/dp/")) {
+                    return PageCategory.DETAIL
+                }
+            }
+
+            return PageCategory.UNKNOWN
+        }
 
         /**
          * A simple regex rule to sniff the possible category of a web page
          */
-        fun sniffPageCategory(urlString: String): PageCategory {
-            if (urlString.isEmpty()) {
+        fun guessPageCategory(url: String): PageCategory {
+            if (url.isEmpty()) {
                 return PageCategory.UNKNOWN
             }
 
             var pageCategory = PageCategory.UNKNOWN
 
-            val url = urlString.toLowerCase()
+            val u = url.toLowerCase()
             // Notice : ***DO KEEP*** the right order
             when {
-                url.endsWith("/") -> {
+                u.endsWith("/") -> {
                     pageCategory = PageCategory.INDEX
                 }
-                StringUtils.countMatches(url, "/") <= 3 -> { // http://t.tt/12345678
+                StringUtils.countMatches(u, "/") <= 3 -> {
+                    // http://t.tt/12345678
                     pageCategory = PageCategory.INDEX
                 }
-                INDEX_PAGE_URL_PATTERNS.any { it.matcher(url).matches() } -> {
+                INDEX_PAGE_URL_PATTERNS.any { it.matcher(u).matches() } -> {
                     pageCategory = PageCategory.INDEX
                 }
-                DETAIL_PAGE_URL_PATTERNS.any { it.matcher(url).matches() } -> {
+                DETAIL_PAGE_URL_PATTERNS.any { it.matcher(u).matches() } -> {
                     pageCategory = PageCategory.DETAIL
                 }
-                SEARCH_PAGE_URL_PATTERN.matcher(url).matches() -> {
+                SEARCH_PAGE_URL_PATTERN.matcher(u).matches() -> {
                     pageCategory = PageCategory.SEARCH
                 }
-                MEDIA_PAGE_URL_PATTERN.matcher(url).matches() -> {
+                MEDIA_PAGE_URL_PATTERN.matcher(u).matches() -> {
                     pageCategory = PageCategory.MEDIA
                 }
             }
+
             return pageCategory
         }
 

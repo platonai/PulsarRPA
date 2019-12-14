@@ -140,8 +140,9 @@ class GenerateJob : AppContextAwareJob() {
         options.parse(args)
 
         if (!options.isHelp) {
-            run(options.toParams())
+            run(Params.EMPTY_PARAMS)
         }
+
         return 0
     }
 }

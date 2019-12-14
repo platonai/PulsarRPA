@@ -60,30 +60,18 @@ class OPICScoringFilter(val conf: ImmutableConfig) : ScoringFilter {
      * Set to 0.0f (unknown value) - inlink contributions will bring it to a
      * correct level. Newly discovered pages have at least one inlink.
      */
-    override fun initialScore(row: WebPage) {
-        row.score = 0.0f
-        row.cash = 0.0f
-    }
-
-    /**
-     * Use [WebPage.getScore].
-     */
-    override fun generatorSortValue(row: WebPage, initSort: Float): ScoreVector {
-        return ScoreVector("1", (initSort * row.score).toInt())
+    override fun initialScore(page: WebPage) {
+        page.score = 0.0f
+        page.cash = 0.0f
     }
 
     /**
      * Increase the score by a sum of inlinked scores.
      */
     override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
-        var inLinkScore = 0.0f
-        for (edge in incomingEdges) {
-            if (!edge.isLoop) {
-                inLinkScore += graph.getEdgeWeight(edge).toFloat()
-            }
-        }
-        page.score = page.score + inLinkScore
-        page.cash = page.cash + inLinkScore
+        val score = incomingEdges.sumByDouble { if (it.isLoop) 0.0 else graph.getEdgeWeight(it) }.toFloat()
+        page.score = page.score + score
+        page.cash = page.cash + score
     }
 
     /**

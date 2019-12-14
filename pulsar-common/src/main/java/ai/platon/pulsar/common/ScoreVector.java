@@ -10,12 +10,12 @@ import java.util.*;
  * Created by vincent on 17-4-20.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  *
- * TODO: Use bigint
  */
 public class ScoreVector implements Comparable<ScoreVector> {
 
     // Reserved
     private int dimension;
+    // TODO: Use bigint
     private ArrayList<ScoreEntry> entries;
 
     public static ScoreVector ZERO = new ScoreVector(0);
