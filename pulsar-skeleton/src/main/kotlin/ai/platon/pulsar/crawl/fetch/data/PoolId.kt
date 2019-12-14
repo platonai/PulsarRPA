@@ -7,19 +7,13 @@ import java.net.URL
  */
 class PoolId(val priority: Int, val protocol: String, val host: String) : Comparable<PoolId> {
 
-    // private final String browser;
-
     constructor(priority: Int, url: URL): this(priority, url.protocol, url.host)
 
-    val url get() = "$protocol://$host"
-
-    override fun equals(obj: Any?): Boolean {
-        if (obj !is PoolId) return false
-
-        val other = obj as PoolId?
-        return (priority == other!!.priority
+    override fun equals(other: Any?): Boolean {
+        return other is PoolId
+                && priority == other.priority
                 && protocol == other.protocol
-                && host == other.host)
+                && host == other.host
     }
 
     override fun compareTo(other: PoolId): Int {
@@ -39,6 +33,6 @@ class PoolId(val priority: Int, val protocol: String, val host: String) : Compar
     }
 
     override fun toString(): String {
-        return "<$priority, $url>"
+        return "<$priority, $protocol://$host>"
     }
 }

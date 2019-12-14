@@ -11,7 +11,7 @@ public class TestScoreVector {
 
     @Test
     public void testStringFormat() {
-        FixedNamedScoreVector score = new FixedNamedScoreVector();
+        NamedScoreVector score = new NamedScoreVector();
         score.setValue(3, 10);
         score.setValue(1, 8);
         score.setValue(6, -8);

@@ -26,10 +26,8 @@ enum class Name {
  * Created by vincent on 17-4-20.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class FixedNamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, createSortedScoreEntries()) {
-    constructor(vararg values: Int) : this() {
-        setValue(*values)
-    }
+class NamedScoreVector(entries: List<ScoreEntry>) : ScoreVector(entries.size, entries) {
+    constructor(): this(createSortedScoreEntries())
 
     operator fun get(name: Name): ScoreEntry {
         return get(name.ordinal)
@@ -58,8 +56,8 @@ class FixedNamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, createSortedScor
         val REF_EXTRACT_ERROR_DENSITY = createScoreEntry(Name.refExtractErrDensity)
         val REF_INDEX_ERROR_DENSITY = createScoreEntry(Name.refIndexErrDensity)
         val MODIFY_TIME = createScoreEntry(Name.modifyTime)
-        val INLINK_ORDER = createScoreEntry(Name.anchorOrder)
-        val SCORE_ENTRIES = arrayOf(
+        val ANCHOR_ORDER = createScoreEntry(Name.anchorOrder)
+        val DEFAULT_SCORE_ENTRIES = arrayOf(
                 PRIORITY,
                 DISTANCE,
                 CREATE_TIME,
@@ -70,17 +68,28 @@ class FixedNamedScoreVector() : ScoreVector(SCORE_ENTRIES.size, createSortedScor
                 REF_EXTRACT_ERROR_DENSITY,
                 REF_INDEX_ERROR_DENSITY,
                 MODIFY_TIME,
-                INLINK_ORDER)
+                ANCHOR_ORDER)
+
+        val ZERO = NamedScoreVector(createSortedScoreEntries(0))
+        val ONE = NamedScoreVector(createSortedScoreEntries(1))
 
         fun createSortedScoreEntries(): List<ScoreEntry> {
-            return SCORE_ENTRIES.map { it.clone() }.sortedBy { it.priority }
+            return createSortedScoreEntries(0)
+        }
+
+        fun createSortedScoreEntries(defaultValue: Int): List<ScoreEntry> {
+            return DEFAULT_SCORE_ENTRIES.map { it.clone().also { it.value = defaultValue } }.sortedBy { it.priority }
         }
 
         /**
          * Enum ordinal is the priority in reversed order
          */
         fun createScoreEntry(name: Name): ScoreEntry {
-            return ScoreEntry(name.name, name.ordinal, 0, ScoreEntry.DEFAULT_DIGITS)
+            return ScoreEntry(name.name, name.ordinal)
+        }
+
+        fun createScoreEntry(name: Name, value: Int): ScoreEntry {
+            return ScoreEntry(name.name, name.ordinal, value)
         }
 
         fun createScoreEntry(name: Name, value: Int, digits: Int): ScoreEntry {

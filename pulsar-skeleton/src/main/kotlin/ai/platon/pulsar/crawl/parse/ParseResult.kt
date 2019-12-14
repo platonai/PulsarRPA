@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -23,20 +24,19 @@ import org.jsoup.nodes.Document
 import java.util.*
 
 class ParseResult : ParseStatus {
-    val hypeLinks = ArrayList<HypeLink>()
-    var document: Document? = null
+    val hypeLinks = mutableSetOf<HypeLink>()
+    var document: FeaturedDocument? = null
     var parser: Parser? = null
 
-    constructor() : super(NOTPARSED, SUCCESS_OK) {}
-    constructor(majorCode: Short, minorCode: Int) : super(majorCode, minorCode) {}
-    constructor(majorCode: Short, minorCode: Int, message: String?) : super(majorCode, minorCode, message) {}
+    constructor() : super(NOTPARSED, SUCCESS_OK)
+    constructor(majorCode: Short, minorCode: Int) : super(majorCode, minorCode)
+    constructor(majorCode: Short, minorCode: Int, message: String?) : super(majorCode, minorCode, message)
 
     companion object {
         fun failed(minorCode: Int, message: String?): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, minorCode, message)
         }
 
-        @JvmStatic
         fun failed(e: Throwable): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, ParseStatusCodes.FAILED_EXCEPTION, e.message)
         }

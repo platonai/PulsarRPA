@@ -57,7 +57,7 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
         }
     }
 
-    private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hypeLinks: MutableList<HypeLink>) {
+    private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hypeLinks: MutableSet<HypeLink>) {
         if (n is Element) {
             val name = n.getNodeName()
             if (name.equals("script", ignoreCase = true)) {

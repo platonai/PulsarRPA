@@ -51,8 +51,9 @@ class JsoupParser(
      */
     @JvmOverloads
     @Throws(IOException::class)
-    fun extractAll(options: EntityOptions = build()): List<FieldCollection> { // No rules
+    fun extractAll(options: EntityOptions = build()): List<FieldCollection> {
         if (!options.hasRules()) {
+            // No rules
             return entities
         }
         val fields = extract(options)

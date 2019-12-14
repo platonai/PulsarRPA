@@ -5,6 +5,7 @@ import org.apache.commons.math3.analysis.function.Sigmoid;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by vincent on 17-4-20.
@@ -67,6 +68,12 @@ public class ScoreVector implements Comparable<ScoreVector> {
         }
         this.dimension = dimension;
         entries = new ArrayList<>(scores);
+    }
+
+    public static ScoreVector create(ScoreVector template) {
+        List<ScoreEntry> newEntries = template.entries.stream().map(ScoreEntry::clone).collect(Collectors.toList());
+        newEntries.forEach(scoreEntry -> scoreEntry.setValue(0));
+        return new ScoreVector(template.dimension, newEntries);
     }
 
     public static ScoreVector parse(String multiValueScore) throws IllegalFormatException {
@@ -134,8 +141,14 @@ public class ScoreVector implements Comparable<ScoreVector> {
         return entries.get(i);
     }
 
+    @Override
+    public ScoreVector clone() {
+        List<ScoreEntry> newEntries = entries.stream().map(ScoreEntry::clone).collect(Collectors.toList());
+        return new ScoreVector(dimension, newEntries);
+    }
+
     /**
-     * TODO: numeric overflow
+     * TODO: numeric overflow, use bigint
      * */
     public double toDouble() {
         // TODO: normalization

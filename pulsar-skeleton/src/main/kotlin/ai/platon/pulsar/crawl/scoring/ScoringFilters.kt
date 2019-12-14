@@ -41,19 +41,6 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
     }
 
     /**
-     * Calculate a sort value for Generate.
-     */
-    override fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
-        var score = ScoreVector(0)
-
-        scoringFilters.forEach {
-            score = it.generatorSortValue(page, initSort)
-        }
-
-        return score
-    }
-
-    /**
      * Calculate a new initial score, used when adding newly discovered pages.
      */
     override fun initialScore(page: WebPage) {
@@ -65,6 +52,19 @@ class ScoringFilters(scoringFilters: List<ScoringFilter> = emptyList(), val conf
      */
     override fun injectedScore(page: WebPage) {
         scoringFilters.forEach { it.injectedScore(page) }
+    }
+
+    /**
+     * Calculate a sort value for Generate.
+     */
+    override fun generatorSortValue(page: WebPage, initSort: ScoreVector): ScoreVector {
+        var score = initSort
+
+        scoringFilters.forEach {
+            score = it.generatorSortValue(page, score)
+        }
+
+        return score
     }
 
     override fun distributeScoreToOutlinks(page: WebPage, graph: WebGraph, outgoingEdges: Collection<WebEdge>, allCount: Int) {

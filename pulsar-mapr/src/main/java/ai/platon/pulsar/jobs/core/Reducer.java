@@ -132,7 +132,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
         completed = true;
     }
 
-    protected MetricsCounters getPulsarCounters() {
+    protected MetricsCounters getMetricsCounters() {
         return metricsCounters;
     }
 

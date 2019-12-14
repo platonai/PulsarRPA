@@ -6,9 +6,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestFixedNamedScoreVector {
+public class TestNamedScoreVector {
 
-    private FixedNamedScoreVector score = new FixedNamedScoreVector();
+    private NamedScoreVector score = new NamedScoreVector();
 
     @Before
     public void setup() {

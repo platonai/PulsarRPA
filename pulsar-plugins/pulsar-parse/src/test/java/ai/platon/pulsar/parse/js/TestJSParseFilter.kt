@@ -55,19 +55,17 @@ class TestJSParseFilter {
 // ./src/plugin/parse-js/build.xml during plugin compilation.
     private val sampleFiles = arrayOf("parse_pure_js_test.js", "parse_embedded_js_test.html")
     @Autowired
-    private val immutableConfig: ImmutableConfig? = null
-    private var conf: MutableConfig? = null
+    private lateinit var immutableConfig: ImmutableConfig
+    private lateinit var conf: MutableConfig
+
     @Before
     fun setUp() {
-        conf = MutableConfig(immutableConfig)
-        conf!!["file.content.limit"] = "-1"
+        conf = immutableConfig.toMutableConfig()
+        conf["file.content.limit"] = "-1"
     }
 
-    @Throws(ProtocolException::class, ParseException::class, IOException::class)
-    fun getHypeLink(sampleFiles: Array<String>): ArrayList<HypeLink> {
-        val urlString: String
-        val parseResult: ParseResult
-        urlString = "file:" + sampleDir + fileSeparator + sampleFiles[0]
+    fun getHypeLink(sampleFiles: Array<String>): MutableSet<HypeLink> {
+        val urlString = "file:" + sampleDir + fileSeparator + sampleFiles[0]
         val file = File(urlString)
         val bytes = ByteArray(file.length().toInt())
         val dip = DataInputStream(FileInputStream(file))
@@ -76,10 +74,12 @@ class TestJSParseFilter {
         val page = WebPage.newWebPage(urlString)
         page.location = urlString
         page.setContent(bytes)
+
         val mutil = MimeUtil(conf)
         val mime = mutil.getMimeType(file)
         page.contentType = mime
-        parseResult = PageParser(conf!!).parse(page)
+
+        val parseResult = PageParser(conf).parse(page)
         return parseResult.hypeLinks
     }
 

@@ -27,25 +27,22 @@ class FetchThread(
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>
 ): Thread(), Comparable<FetchThread> {
 
-    private val LOG = LoggerFactory.getLogger(FetchThread::class.java)
+    private val log = LoggerFactory.getLogger(FetchThread::class.java)
 
-    private val id: Int
+    private val id: Int = instanceSequence.incrementAndGet()
 
     /**
      * Fix the thread to a specified queue as possible as we can
      */
-    private val currPriority = -1
-    private var currQueueId: PoolId? = null
+    private var currPoolId: PoolId? = null
     private val halted = AtomicBoolean(false)
-    private val servedHosts = TreeSet<PoolId>()
+    private val servedPoolIds = TreeSet<PoolId>()
     private var taskCount = 0
 
     val isHalted: Boolean
         get() = halted.get()
 
     init {
-        this.id = instanceSequence.incrementAndGet()
-
         this.isDaemon = true
         this.name = javaClass.simpleName + "-" + id
     }
@@ -59,7 +56,7 @@ class FetchThread(
         try {
             join()
         } catch (e: InterruptedException) {
-            LOG.error(e.toString())
+            log.error(e.toString())
         }
     }
 
@@ -70,24 +67,27 @@ class FetchThread(
 
         try {
             while (!fetchMonitor.isMissionComplete && !isHalted) {
-                task = schedule()
+                task = doSchedule()
 
                 if (task == null) {
                     sleepAndRecord()
                     continue
                 }
 
-                // TODO: is there a better place to set fetch mode?
-                task.page?.fetchMode = fetchMonitor.options.fetchMode
+                log.trace("Ready to fetch task from pool {}", task.poolId)
                 val page = fetchOne(task)
                 if (page.isNotNil) {
+                    if (log.isInfoEnabled) {
+                        log.info(FetchComponent.getFetchCompleteReport(page))
+                    }
+
                     write(page.key, page)
                 }
 
                 ++taskCount
             } // while
         } catch (e: Throwable) {
-            LOG.error("Unexpected throwable : " + StringUtil.stringifyException(e))
+            log.error("Unexpected throwable : " + StringUtil.stringifyException(e))
         } finally {
             if (task != null) {
                 taskScheduler.finishUnchecked(task)
@@ -95,23 +95,23 @@ class FetchThread(
 
             fetchMonitor.unregisterFetchThread(this)
 
-            LOG.info("Thread #{} finished", getId())
+            log.info("Thread #{} finished", getId())
         }
     }
 
     fun report() {
-        if (servedHosts.isEmpty()) {
+        if (servedPoolIds.isEmpty()) {
             return
         }
 
         val report = StringBuilder()
-        report.appendln(String.format("Thread #%d served %d tasks for %d hosts : \n", getId(), taskCount, servedHosts.size))
+        report.appendln(String.format("Thread #%d served %d tasks for %d hosts : \n", getId(), taskCount, servedPoolIds.size))
 
-        servedHosts.map { Urls.reverseHost(it.url) }.sorted().map { Urls.unreverseHost(it) }
+        servedPoolIds.map { Urls.reverseHost("${it.protocol}://${it.host}") }.sorted().map { Urls.unreverseHost(it) }
                 .joinTo(report, "\n") { String.format("%1$40s", it) }
         report.appendln()
 
-        LOG.info(report.toString())
+        log.info(report.toString())
     }
 
     private fun sleepAndRecord() {
@@ -124,7 +124,7 @@ class FetchThread(
         fetchMonitor.unregisterIdleThread(this)
     }
 
-    private fun schedule(): FetchTask? {
+    private fun doSchedule(): FetchTask? {
         var fetchTask: FetchTask? = null
 
         val fetchMode = fetchMonitor.options.fetchMode
@@ -138,23 +138,31 @@ class FetchThread(
                 }
 
                 if (fetchTask == null) {
-                    LOG.warn("Bad fetch item id {}-{}", response.queueId, response.itemId)
+                    log.warn("Bad fetch item id {}-{}", response.queueId, response.itemId)
                 }
             }
         } else {
-            fetchTask = if (currQueueId == null) {
+            fetchTask = if (currPoolId == null) {
                 taskScheduler.schedule()
             } else {
-                taskScheduler.schedule(currQueueId)
+                taskScheduler.schedule(currPoolId)
             }
 
             if (fetchTask != null) {
+                val poolId = fetchTask.poolId
+                servedPoolIds.add(poolId)
+
                 // the next time, we fetch items from the same queue as this time
-                currQueueId = PoolId(fetchTask.priority, fetchTask.protocol, fetchTask.host)
-                servedHosts.add(currQueueId!!)
+                currPoolId = poolId
             } else {
                 // The current queue is empty, fetch item from top queue the next time
-                currQueueId = null
+                currPoolId = null
+            }
+        }
+
+        if (fetchTask != null) {
+            if (fetchMode != fetchTask.page.fetchMode) {
+                log.error("FetchTask.page.fetchMode {} is not expected {}", fetchMode, fetchTask.page.fetchMode)
             }
         }
 
@@ -162,14 +170,11 @@ class FetchThread(
     }
 
     private fun fetchOne(task: FetchTask): WebPage {
-        val page = task.page?:return WebPage.NIL
+        fetchComponent.fetchContent(task.page)
 
-        fetchComponent.fetchContent(page)
+        taskScheduler.finish(task.poolId, task.itemId)
 
-        val queueId = PoolId(task.priority, task.protocol, task.host)
-        taskScheduler.finish(queueId, task.itemId)
-
-        return page
+        return task.page
     }
 
     private fun write(key: String, page: WebPage) {
@@ -177,11 +182,11 @@ class FetchThread(
             // the page is fetched and status are updated, write to the file system
             context.write(key, page.unbox())
         } catch (e: IOException) {
-            LOG.error("Failed to write to hdfs - {}", StringUtil.stringifyException(e))
+            log.error("Failed to write to hdfs - {}", StringUtil.stringifyException(e))
         } catch (e: InterruptedException) {
-            LOG.error("Interrupted - {}", StringUtil.stringifyException(e))
+            log.error("Interrupted - {}", StringUtil.stringifyException(e))
         } catch (e: Throwable) {
-            LOG.error(StringUtil.stringifyException(e))
+            log.error(StringUtil.stringifyException(e))
         }
     }
 

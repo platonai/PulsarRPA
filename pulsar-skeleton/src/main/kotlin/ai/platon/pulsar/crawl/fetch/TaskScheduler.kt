@@ -18,7 +18,6 @@ import com.google.common.util.concurrent.AtomicDouble
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.nio.file.Path
 import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
@@ -43,7 +42,7 @@ class TaskScheduler(
             var pendingFetchItems: Int
     )
 
-
+    private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
     val id: Int = objectSequence.getAndIncrement()
     private val metricsCounters = MetricsCounters()
 
@@ -52,7 +51,7 @@ class TaskScheduler(
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
      */
-    private var bandwidth = 1024 * 1024 * conf.getInt("fetcher.net.bandwidth.m", BANDWIDTH_INFINITE)
+    private var bandwidth = 1024 * 1024 * conf.getInt(FETCH_NET_BANDWIDTH_M, BANDWIDTH_INFINITE_M)
     private var skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true)
     private var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, false)
 
@@ -73,7 +72,7 @@ class TaskScheduler(
     private val lastTaskFinishTime = AtomicLong(startTime)
 
     // Statistics
-    private val totalBytes = AtomicLong(0)        // total fetched bytes
+    private val totalBytes = AtomicLong(0)     // total fetched bytes
     private val totalPages = AtomicInteger(0)  // total fetched pages
     private val fetchErrors = AtomicInteger(0) // total fetch fetchErrors
 
@@ -84,7 +83,7 @@ class TaskScheduler(
     /**
      * Output
      */
-    private var outputDir: Path = AppPaths.REPORT_DIR
+    private var outputDir = AppPaths.REPORT_DIR
 
     /**
      * The reprUrl is the representative url of a redirect, we save a reprUrl for each thread
@@ -94,15 +93,12 @@ class TaskScheduler(
      */
     private val reprUrls = ConcurrentSkipListMap<Long, String>()
 
-    val unparsableTypes: Set<CharSequence>
-        get() = pageParser.unparsableTypes
-
     override fun setup(jobConf: ImmutableConfig) {
         indexJIT = jobConf.getBoolean(INDEXER_JIT, false)
         // Parser setting
         parse = indexJIT || conf.getBoolean(PARSE_PARSE, true)
 
-        LOG.info(params.format())
+        log.info(params.format())
     }
 
     override fun getParams(): Params {
@@ -143,11 +139,10 @@ class TaskScheduler(
     }
 
     /**
-     * Schedule a queue with the given priority and given queueId
+     * Schedule a queue with the given priority and given poolId
      */
-    @JvmOverloads
-    fun schedule(queueId: PoolId? = null): FetchTask? {
-        val fetchTasks = schedule(queueId, 1)
+    fun schedule(poolId: PoolId? = null): FetchTask? {
+        val fetchTasks = schedule(poolId, 1)
         return if (fetchTasks.isEmpty()) null else fetchTasks.iterator().next()
     }
 
@@ -162,23 +157,25 @@ class TaskScheduler(
      * Null queue id means the queue with top priority
      * Consume a fetch item and try to download the target web page
      */
-    fun schedule(queueId: PoolId?, number: Int): List<FetchTask> {
+    fun schedule(poolId: PoolId?, number: Int): List<FetchTask> {
         var num = number
         if (num <= 0) {
-            LOG.warn("Required no fetch item")
+            log.warn("Required no fetch item")
             return ArrayList()
         }
 
-        val fetchTasks = ArrayList<FetchTask>(num)
-        if (tasksMonitor.pendingTaskCount().toDouble() * averagePageSize.get() * 8.0 > 30 * this.bandwidth) {
-            LOG.info("Bandwidth exhausted, slows down the scheduling")
-            return fetchTasks
+        if (tasksMonitor.pendingTaskCount() * averagePageSize.get() * 8.0 > 30 * this.bandwidth) {
+            log.info("Bandwidth exhausted, slows down the scheduling")
+            return listOf()
         }
 
+        val fetchTasks = ArrayList<FetchTask>(num)
         while (num-- > 0) {
-            val fetchTask = if (queueId == null) tasksMonitor.consume() else tasksMonitor.consume(queueId)
+            val fetchTask = tasksMonitor.consume(poolId)
             if (fetchTask != null) {
                 fetchTasks.add(fetchTask)
+            } else {
+                tasksMonitor.maintain()
             }
         }
 
@@ -203,16 +200,16 @@ class TaskScheduler(
      *
      * Multiple threaded, non-synchronized class member variables are not allowed inside this method.
      */
-    fun finish(queueId: PoolId, itemId: Int) {
-        val fetchTask = tasksMonitor.findPendingTask(queueId, itemId)
+    fun finish(poolId: PoolId, itemId: Int) {
+        val fetchTask = tasksMonitor.findPendingTask(poolId, itemId)
 
         if (fetchTask == null) {
             // Can not find task to finish, The queue might be retuned or cleared up
-            LOG.info("Can not find task to finish <{}, {}>", queueId, itemId)
+            log.warn("Failed to finish fetch task <{}, {}>", poolId, itemId)
             return
         }
 
-        val page = fetchTask.page?:return
+        val page = fetchTask.page
         val protocolStatus = page.protocolStatus
         try {
             // un-block queue
@@ -223,20 +220,12 @@ class TaskScheduler(
             if (protocolStatus === ProtocolStatus.STATUS_RETRY) {
                 tasksMonitor.produce(fetchTask)
             }
-        } catch (t: Throwable) {
-            LOG.error("Unexpected error for " + fetchTask.url + StringUtil.stringifyException(t))
+        } catch (e: Throwable) {
+            log.error("Unexpected error - {} | {}", e, fetchTask.urlString)
 
-            tasksMonitor.finish(fetchTask)
+            tasksMonitor.finishAsap(fetchTask)
             fetchErrors.incrementAndGet()
             metricsCounters.increase(CommonCounter.errors)
-
-            try {
-                handleResult(fetchTask, CrawlStatus.STATUS_RETRY)
-            } catch (e: IOException) {
-                LOG.error("Unexpected fetcher exception, " + StringUtil.stringifyException(e))
-            } finally {
-                tasksMonitor.finish(fetchTask)
-            }
         } finally {
             lastTaskFinishTime.set(System.currentTimeMillis())
         }
@@ -250,16 +239,16 @@ class TaskScheduler(
     }
 
     override fun close() {
-        LOG.info("[Destruction] Closing TaskScheduler #$id")
+        log.info("[Destruction] Closing TaskScheduler #$id")
 
         val border = StringUtils.repeat('.', 40)
-        LOG.info(border)
-        LOG.info("[Final Report - " + DateTimeUtil.now() + "]")
+        log.info(border)
+        log.info("[Final Report - " + DateTimeUtil.now() + "]")
 
         report()
 
-        LOG.info("[End Report]")
-        LOG.info(border)
+        log.info("[End Report]")
+        log.info(border)
     }
 
     /**
@@ -331,12 +320,10 @@ class TaskScheduler(
         return status.toString()
     }
 
-    @Throws(IOException::class)
     private fun handleResult(fetchTask: FetchTask, crawlStatus: CrawlStatus) {
-        val url = fetchTask.url
         val page = fetchTask.page
 
-        metricsSystem.debugFetchHistory(page!!, crawlStatus)
+        metricsSystem.debugFetchHistory(page, crawlStatus)
 
         if (parse && crawlStatus.isFetched) {
             val parseResult = pageParser.parse(page)
@@ -363,13 +350,11 @@ class TaskScheduler(
 
         // Remove content if storingContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
-        if (page.content != null) {
-            if (!storingContent) {
-                if (!page.isSeed) {
-                    page.setContent(ByteArray(0))
-                } else if (page.fetchCount > 2) {
-                    page.setContent(ByteArray(0))
-                }
+        if (page.content != null && !storingContent) {
+            if (!page.isSeed) {
+                page.setContent(ByteArray(0))
+            } else if (page.fetchCount > 2) {
+                page.setContent(ByteArray(0))
             }
         }
 
@@ -391,7 +376,7 @@ class TaskScheduler(
         reprUrl = URLUtil.chooseRepr(reprUrl, newUrl, temp)
 
         if (reprUrl.length < SHORTEST_VALID_URL_LENGTH) {
-            LOG.warn("reprUrl is too short")
+            log.warn("reprUrl is too short")
             return
         }
 
@@ -411,11 +396,11 @@ class TaskScheduler(
         reprUrl = URLUtil.chooseRepr(reprUrl, newUrl, temp)
 
         if (reprUrl.length < SHORTEST_VALID_URL_LENGTH) {
-            LOG.warn("reprUrl is too short")
+            log.warn("reprUrl is too short")
             return reprUrl
         }
 
-        page.setReprUrl(reprUrl)
+        page.reprUrl = reprUrl
         reprUrls[threadId] = reprUrl
 
         return reprUrl
@@ -438,8 +423,8 @@ class TaskScheduler(
     }
 
     private fun logFetchFailure(message: String) {
-        if (!message.isEmpty()) {
-            LOG.warn("Fetch failed, $message")
+        if (message.isNotEmpty()) {
+            log.warn("Fetch failed, $message")
         }
 
         fetchErrors.incrementAndGet()
@@ -447,19 +432,16 @@ class TaskScheduler(
     }
 
     private fun report() {
-        if (unparsableTypes.isNotEmpty()) {
+        if (pageParser.unparsableTypes.isNotEmpty()) {
             var report = ""
-            val hosts = unparsableTypes.sortedBy { it.toString() }.joinToString("\n") { it }
+            val hosts = pageParser.unparsableTypes.sortedBy { it.toString() }.joinToString("\n") { it }
             report += hosts
             report += "\n"
-            LOG.info("# UnparsableTypes : \n$report")
+            log.info("# Un-parsable types : \n$report")
         }
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(FetchMonitor::class.java)
-        val PROTOCOL_REDIR = "protocol"
-
         enum class Counter {
             rMbytes, unknowHosts, rowsInjected,
             rReadyTasks, rPendingTasks, rFinishedTasks,

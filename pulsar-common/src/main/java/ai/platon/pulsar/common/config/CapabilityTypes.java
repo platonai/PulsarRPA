@@ -194,6 +194,7 @@ public interface CapabilityTypes {
     String FETCH_MAX_RETRY = "db.fetch.retry.max";
     String FETCH_STORE_CONTENT = "fetch.store.content";
     String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
+    String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
     String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
     String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";

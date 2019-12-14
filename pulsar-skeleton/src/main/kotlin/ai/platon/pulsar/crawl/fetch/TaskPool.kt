@@ -110,8 +110,8 @@ class TaskPool(val id: PoolId,
     }
 
     /** Produce a task to this queue. Retired queues do not accept any tasks  */
-    fun produce(task: FetchTask?) {
-        if (task == null || status != Status.ACTIVITY) {
+    fun produce(task: FetchTask) {
+        if (status != Status.ACTIVITY) {
             return
         }
 
@@ -275,7 +275,7 @@ class TaskPool(val id: PoolId,
         val now = Instant.now()
         val report = pendingTasks.values.take(threshold)
                 .joinToString("\n", "Clearing slow pending items : ")
-                { it.url + " : " + Duration.between(it.pendingStart, now) }
+                { it.urlString + " : " + Duration.between(it.pendingStart, now) }
         LOG.info(report)
 
         pendingTasks.clear()
@@ -283,17 +283,17 @@ class TaskPool(val id: PoolId,
         return count
     }
 
-    fun dump() {
+    fun dump(drop: Boolean) {
         LOG.info("Dump pool - " + params.formatAsLine())
 
-        if (readyTasks.isNotEmpty()) {
+        if (drop && readyTasks.isNotEmpty()) {
             var i = 0
             val limit = 20
             var report = "Drop the following tasks : "
 
             var fetchTask: FetchTask? = readyTasks.poll()
             while (fetchTask != null && ++i <= limit) {
-                report += "  " + i + ". " + fetchTask.url + "\t"
+                report += "  " + i + ". " + fetchTask.urlString + "\t"
                 fetchTask = readyTasks.poll()
             }
 

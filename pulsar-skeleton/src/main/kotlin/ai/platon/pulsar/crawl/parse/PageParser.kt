@@ -127,15 +127,12 @@ class PageParser(
     }
 
     // TODO: optimization
-    private fun filterLinks(page: WebPage, unfilteredLinks: List<HypeLink>): List<HypeLink> {
-        var sequence = 0
+    private fun filterLinks(page: WebPage, unfilteredLinks: Set<HypeLink>): Set<HypeLink> {
         return unfilteredLinks.asSequence()
                 .filter { linkFilter.asPredicate(page).test(it) } // filter out invalid urls
-                .onEach { it.order = ++sequence } // links added later, crawls earlier
                 .sortedByDescending { it.anchor.length } // longer anchor comes first
-                .distinct()
                 .take(maxParsedLinks)
-                .toList()
+                .toSet()
     }
 
     private fun doParse(page: WebPage): ParseResult {
@@ -227,7 +224,7 @@ class PageParser(
         }
     }
 
-    private fun processLinks(page: WebPage, unfilteredLinks: ArrayList<HypeLink>) {
+    private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HypeLink>) {
         val hypeLinks = filterLinks(page, unfilteredLinks)
         page.setLiveLinks(hypeLinks)
         page.addHyperLinks(hypeLinks)

@@ -148,11 +148,11 @@ class PoolQueue: AbstractQueue<TaskPool>() {
         return queue
     }
 
-    fun dump(limit: Int) {
+    fun dump(limit: Int, drop: Boolean) {
         LOG.info("Report fetch queue status. "
                 + "Active : " + activeQueues.size + ", inactive : " + inactiveQueues.size + " ...")
-        activeQueues.values.take(limit).filter{ it.hasTasks() }.forEach { it.dump() }
-        inactiveQueues.values.take(limit).filter { it.hasPendingTasks() }.forEach { it.dump() }
+        activeQueues.values.take(limit).filter { it.hasTasks() }.forEach { it.dump(drop) }
+        inactiveQueues.values.take(limit).filter { it.hasPendingTasks() }.forEach { it.dump(drop) }
     }
 
     companion object {

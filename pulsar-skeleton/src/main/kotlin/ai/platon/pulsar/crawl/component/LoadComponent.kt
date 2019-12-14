@@ -9,6 +9,8 @@ import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.crawl.component.FetchComponent.Companion.getBatchCompleteReport
+import ai.platon.pulsar.crawl.component.FetchComponent.Companion.getFetchCompleteReport
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -41,8 +43,6 @@ class LoadComponent(
         val updateComponent: UpdateComponent
 ) {
     companion object {
-        val LOG = LoggerFactory.getLogger(LoadComponent::class.java)
-
         const val FETCH_REASON_DO_NOT_FETCH = 0
         const val FETCH_REASON_NEW_PAGE = 1
         const val FETCH_REASON_EXPIRED = 2
@@ -68,7 +68,9 @@ class LoadComponent(
         }
     }
 
-    private val fetchTaskTracker = fetchComponent.fetchTaskTracker
+    private val log = LoggerFactory.getLogger(LoadComponent::class.java)
+
+    private val fetchTaskTracker get() = fetchComponent.fetchTaskTracker
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -160,8 +162,8 @@ class LoadComponent(
             val opt = normUrl.options
             var page = webDb.getOrNil(url, opt.shortenKey)
             val reason = getFetchReason(page, opt)
-            if (LOG.isTraceEnabled) {
-                LOG.trace("Fetch reason: {} | {} {}", getFetchReason(reason), url, opt)
+            if (log.isTraceEnabled) {
+                log.trace("Fetch reason: {} | {} {}", getFetchReason(reason), url, opt)
             }
             val status = page.protocolStatus
             when (reason) {
@@ -180,11 +182,11 @@ class LoadComponent(
                     if (status.isSuccess) {
                         knownPages.add(page)
                     } else {
-                        LOG.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
+                        log.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
                     }
                 }
                 else -> {
-                    LOG.error("Unknown fetch reason {} | {} {}", reason, url, opt)
+                    log.error("Unknown fetch reason {} | {} {}", reason, url, opt)
                 }
             }
         }
@@ -193,7 +195,7 @@ class LoadComponent(
             return knownPages
         }
 
-        LOG.debug("Fetching {} urls with options {}", pendingUrls.size, options)
+        log.debug("Fetching {} urls with options {}", pendingUrls.size, options)
         val updatedPages: Collection<WebPage>
         updatedPages = try {
             globalFetchingUrls.addAll(pendingUrls)
@@ -208,9 +210,10 @@ class LoadComponent(
 
         updatedPages.forEach { update(it, options) }
         knownPages.addAll(updatedPages)
-        if (LOG.isInfoEnabled) {
-            logBatchComplete(updatedPages, startTime)
+        if (log.isInfoEnabled) {
+            log.info("{}", getBatchCompleteReport(updatedPages, startTime))
         }
+
         return knownPages
     }
 
@@ -236,14 +239,14 @@ class LoadComponent(
 
     private fun loadOne(normUrl: NormUrl): WebPage {
         if (normUrl.isInvalid) {
-            LOG.warn("Malformed url | {}", normUrl)
+            log.warn("Malformed url | {}", normUrl)
             return WebPage.NIL
         }
 
         val url = normUrl.url
         val opt = normUrl.options
         if (globalFetchingUrls.contains(url)) {
-            LOG.debug("Load later, it's fetching by someone else | {}", url)
+            log.debug("Load later, it's fetching by someone else | {}", url)
             // TODO: wait for finish?
             return WebPage.NIL
         }
@@ -251,7 +254,7 @@ class LoadComponent(
         val ignoreQuery = opt.shortenKey
         var page = webDb.getOrNil(url, ignoreQuery)
         val reason = getFetchReason(page, opt)
-        LOG.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.url, opt)
+        log.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.url, opt)
         if (reason == FETCH_REASON_TEMP_MOVED) {
             return redirect(page, opt)
         }
@@ -262,14 +265,17 @@ class LoadComponent(
             if (page.isNil) {
                 page = WebPage.newWebPage(url, ignoreQuery)
             }
+
             page = fetchComponent.initFetchEntry(page, opt)
             // LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
             globalFetchingUrls.add(url)
             page = fetchComponent.fetchContent(page)
             globalFetchingUrls.remove(url)
+
             update(page, opt)
-            if (LOG.isInfoEnabled) {
-                LOG.info(getPageCompleteReport(page))
+
+            if (log.isInfoEnabled) {
+                log.info(getFetchCompleteReport(page))
             }
         }
 
@@ -306,7 +312,7 @@ class LoadComponent(
         if (page.isNil) {
             return FETCH_REASON_NEW_PAGE
         } else if (page.isInternal) {
-            LOG.warn("Do not fetch, page is internal, {}", url)
+            log.warn("Do not fetch, page is internal, {}", url)
             return FETCH_REASON_DO_NOT_FETCH
         }
 
@@ -318,7 +324,7 @@ class LoadComponent(
         } else if (protocolStatus.isFailed) {
             // Page is fetched last time, but failed, if retry is not allowed, just return the failed page
             if (!options.retry) {
-                LOG.warn("Ignore failed page, last status: {} | {} {}", page.protocolStatus, page.url, page.options)
+                log.warn("Ignore failed page, last status: {} | {} {}", page.protocolStatus, page.url, page.options)
                 return FETCH_REASON_DO_NOT_FETCH
             }
         }
@@ -326,7 +332,7 @@ class LoadComponent(
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            LOG.warn("Invalid last fetch time: {}, last status: {}", lastFetchTime, page.protocolStatus)
+            log.warn("Invalid last fetch time: {}, last status: {}", lastFetchTime, page.protocolStatus)
         }
 
         // if (now > lastTime + expires), it's expired
@@ -354,12 +360,12 @@ class LoadComponent(
         var page = page_
         val reprUrl = page.reprUrl
         if (reprUrl.equals(page.url, ignoreCase = true)) {
-            LOG.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
+            log.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
             return page
         }
 
         if (options.noRedirect) {
-            LOG.warn("Redirect is prohibit, url: $reprUrl")
+            log.warn("Redirect is prohibit, url: $reprUrl")
             return page
         }
 
@@ -367,10 +373,11 @@ class LoadComponent(
         options.noRedirect = true
         val redirectedPage = load(reprUrl, options)
         options.noRedirect = false
-        if (options.hardRedirect) { // soft redirect
+        if (options.hardRedirect) {
             page = redirectedPage
         } else {
-            page.setContent(redirectedPage.content)
+            // soft redirect
+            page.content = redirectedPage.content
         }
 
         return page
@@ -378,7 +385,7 @@ class LoadComponent(
 
     private fun update(page: WebPage, options: LoadOptions) {
         val protocolStatus = page.protocolStatus
-        if (protocolStatus.isFailed) { // Follow redirection
+        if (protocolStatus.isFailed) {
             updateComponent.updateFetchSchedule(page)
             return
         }
@@ -388,8 +395,8 @@ class LoadComponent(
                     options.query,
                     options.reparseLinks,
                     options.noFilter)
-            if (LOG.isTraceEnabled) {
-                LOG.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getReport())
+            if (log.isTraceEnabled) {
+                log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getReport())
             }
         }
 
@@ -400,43 +407,10 @@ class LoadComponent(
             if (!options.lazyFlush) {
                 flush()
             }
-            if (LOG.isTraceEnabled) {
-                LOG.trace("Persisted {} | {}", StringUtil.readableByteCount(page.contentBytes.toLong()), page.url)
+            if (log.isTraceEnabled) {
+                log.trace("Persisted {} | {}", StringUtil.readableByteCount(page.contentBytes.toLong()), page.url)
             }
         }
-    }
-
-    private fun logBatchComplete(pages: Collection<WebPage>, startTime: Instant) {
-        val elapsed = DateTimeUtil.elapsedTime(startTime)
-        val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
-        val sb = StringBuilder(message)
-        val i = AtomicInteger()
-        pages.forEach { sb.append(i.incrementAndGet()).append(".\t").append(getPageCompleteReport(it)).append('\n') }
-        LOG.info(sb.toString())
-    }
-
-    private fun getPageCompleteReport(page: WebPage): String {
-        val bytes = page.contentBytes
-        if (bytes < 0) {
-            return ""
-        }
-        val responseTime = page.metadata[Name.RESPONSE_TIME]
-        val proxy = page.metadata[Name.PROXY]
-        val jsData = page.browserJsData
-        var jsSate = ""
-        if (jsData != null) {
-            val (ni, na, nnm, nst) = jsData.lastStat
-            jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
-        }
-        val fmt = "Fetched%s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
-        return String.format(fmt,
-                StringUtil.readableByteCount(bytes.toLong(), 7, false),
-                DateTimeUtil.readableDuration(responseTime),
-                if (proxy == null) "" else " via $proxy",
-                page.fetchCount,
-                jsSate,
-                page.url
-        )
     }
 
     /**

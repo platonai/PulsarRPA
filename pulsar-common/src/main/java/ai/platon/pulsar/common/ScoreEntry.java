@@ -22,6 +22,10 @@ public class ScoreEntry implements Comparable<ScoreEntry> {
         this(name, 0, value, DEFAULT_DIGITS);
     }
 
+    public ScoreEntry(String name, int priority, int value) {
+        this(name, priority, value, DEFAULT_DIGITS);
+    }
+
     public ScoreEntry(String name, int priority, int value, int digits) {
         this.name = name;
         this.priority = priority;

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.scoring.opic
 
-import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.index.IndexDocument
@@ -30,6 +29,7 @@ import kotlin.math.pow
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * This plugin implements a variant of an Online Page Importance Computation
  * (OPIC) score, described in this paper: [](http://www2003.org/cdrom/papers/refereed/p007/p7-abiteboul.html)

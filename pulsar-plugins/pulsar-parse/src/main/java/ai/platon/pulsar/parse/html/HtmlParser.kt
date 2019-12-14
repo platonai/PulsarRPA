@@ -30,6 +30,7 @@ import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -38,6 +39,7 @@ import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
 import org.jsoup.Jsoup
 import org.jsoup.helper.W3CDom
+import org.jsoup.nodes.Document
 import org.slf4j.LoggerFactory
 import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
@@ -50,14 +52,12 @@ import java.net.URL
  * Html parser
  */
 class HtmlParser(
-        private val crawlFilters: CrawlFilters,
         private val parseFilters: ParseFilters,
         private val conf: ImmutableConfig
 ) : Parser {
     private val LOG = LoggerFactory.getLogger(HtmlParser::class.java)
-    private val parserImpl = conf[CapabilityTypes.PARSE_HTML_IMPL, "neko"]
-    private val defaultCharEncoding = conf[CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8"]
-    private val cachingPolicy = conf[CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT]
+    private val defaultCharEncoding = conf.get(CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8")
+    private val cachingPolicy = conf.get(CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private val primerParser = PrimerParser(conf)
 
     init {
@@ -67,7 +67,6 @@ class HtmlParser(
     override fun getParams(): Params {
         return Params.of(
                 "className", this.javaClass.simpleName,
-                "parserImpl", parserImpl,
                 "defaultCharEncoding", defaultCharEncoding,
                 "cachingPolicy", cachingPolicy,
                 "parseFilters", parseFilters
@@ -75,7 +74,8 @@ class HtmlParser(
     }
 
     override fun parse(page: WebPage): ParseResult {
-        return try { // The base url is set by protocol. Might be different from url if the request redirected.
+        return try {
+            // The base url is set by protocol. Might be different from url if the request redirected.
             doParse(page)
         } catch (e: MalformedURLException) {
             failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
@@ -92,32 +92,24 @@ class HtmlParser(
             primerParser.detectEncoding(page)
         }
 
-        val documentFragment = parse(baseUrl, page.contentAsSaxInputSource)
+        val (document, documentFragment) = parseJsoup(baseUrl, page.contentAsSaxInputSource)
         val metaTags = parseMetaTags(baseURL, documentFragment, page)
         val parseResult = initParseResult(metaTags)
         if (parseResult.isFailed) {
             return parseResult
         }
 
-        val parseContext = ParseContext(page, parseResult, metaTags, documentFragment)
+        page.pageTitle = primerParser.getPageTitle(documentFragment)
+        page.pageModel.clear()
+
+        val parseContext = ParseContext(page, parseResult, metaTags, documentFragment, FeaturedDocument(document))
 
         // TODO: for NativeBrowser mode, we can
         if (page.fetchMode == FetchMode.NATIVE_RENDERER) {
             // the native renderer may have done the parsing work
         }
 
-        // TODO: should be move it to a ParseFilter?
-        val usePrimerParser = conf.getBoolean("parse.user.primer.parser", false)
-        if (usePrimerParser) {
-            // Apply the primer parser to get links
-            // TODO: check if it's better to just use Jsoup
-            primerParser.parseLinks(baseURL, parseContext, crawlFilters)
-            page.pageTitle = primerParser.getPageTitle(documentFragment)
-            page.pageText = primerParser.getPageText(documentFragment)
-        }
-
         // TODO: a better place to init page model
-        page.pageModel.clear()
         parseFilters.filter(parseContext)
 
         return parseContext.parseResult
@@ -149,22 +141,14 @@ class HtmlParser(
         return parseResult
     }
 
-    @Throws(Exception::class)
-    private fun parse(baseUri: String, input: InputSource): DocumentFragment {
-        return if (parserImpl.equals("neko", ignoreCase = true)) {
-            parseNeko(baseUri, input)
-        } else {
-            parseJsoup(baseUri, input)
-        }
-    }
-
     @Throws(IOException::class)
-    private fun parseJsoup(baseUri: String, input: InputSource): DocumentFragment {
+    private fun parseJsoup(baseUri: String, input: InputSource): Pair<Document, DocumentFragment> {
         val doc = Jsoup.parse(input.byteStream, input.encoding, baseUri)
-        val dom = W3CDom()
-        return dom.fromJsoup(doc).createDocumentFragment()
+        val documentFragment = W3CDom().fromJsoup(doc).createDocumentFragment()
+        return doc to documentFragment
     }
 
+    @Deprecated(message = "Use jsoup instead")
     @Throws(Exception::class)
     private fun parseNeko(baseUri: String, input: InputSource): DocumentFragment {
         val parser = DOMFragmentParser()

@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.component.GenerateComponent
 import ai.platon.pulsar.crawl.filter.CrawlFilter
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.core.AppContextAwareGoraMapper
@@ -70,7 +71,7 @@ class GenerateMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry
         }
 
         // metricsSystem.report(page);
-        val selectorEntry = SelectorEntry(url, scoringFilters.generatorSortValue(page, 1.0f))
+        val selectorEntry = SelectorEntry(url, scoringFilters.generatorSortValue(page, NamedScoreVector.ONE))
         page.sortScore = selectorEntry.sortScore
 
         output(selectorEntry, page, context)

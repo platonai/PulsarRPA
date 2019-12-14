@@ -25,7 +25,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.index.IndexDocument
-import ai.platon.pulsar.crawl.scoring.FixedNamedScoreVector
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.Name
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
@@ -114,7 +114,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
         val refExtractErrDensity = if (refExtractErr == 0f) 0f else fetchCount / refExtractErr / errorCounterDivisor.toFloat()
         val refIndexErrDensity = if (refIndexErr == 0f) 0f else fetchCount / refIndexErr / errorCounterDivisor.toFloat()
 
-        val score = FixedNamedScoreVector()
+        val score = NamedScoreVector()
 
         score.setValue(Name.priority, priority)
         score.setValue(Name.distance, -distance)

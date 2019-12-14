@@ -127,7 +127,7 @@ class PrimerParser(conf: ImmutableConfig) {
      * Parse links use [PrimerParser]
      * TODO: If we are using native browser mode, the link parsing can be done inside the browser
      * */
-    fun parseLinks(baseURLHint: URL, parseContext: ParseContext, crawlFilters: CrawlFilters) {
+    fun collectLinks(baseURLHint: URL, parseContext: ParseContext, crawlFilters: CrawlFilters) {
         crawlFilters.normalizeToNull(parseContext.url)?:return
 
         val docRoot = parseContext.documentFragment?:return
@@ -136,7 +136,7 @@ class PrimerParser(conf: ImmutableConfig) {
         if (metaTags != null && !metaTags.noFollow) {
             // okay to follow links
             val baseURL = getBaseURLFromTag(docRoot) ?: baseURLHint
-            getLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
+            collectLinks(baseURL, parseResult.hypeLinks, docRoot, crawlFilters)
         }
 
         parseContext.page.increaseImpreciseLinkCount(parseResult.hypeLinks.size)
@@ -345,15 +345,15 @@ class PrimerParser(conf: ImmutableConfig) {
      * which contain only single nested links and empty text nodes (this is a
      * common DOM-fixup artifact, at least with nekohtml).
      */
-    fun getLinks(base: URL, root: Node): ArrayList<HypeLink> {
-        return getLinks(base, root, null)
+    fun collectLinks(base: URL, root: Node): MutableSet<HypeLink> {
+        return collectLinks(base, root, null)
     }
 
-    fun getLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): ArrayList<HypeLink> {
-        return getLinks(base, ArrayList(), root, crawlFilters)
+    fun collectLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): MutableSet<HypeLink> {
+        return collectLinks(base, mutableSetOf(), root, crawlFilters)
     }
 
-    fun getLinks(base: URL, hypeLinks: ArrayList<HypeLink>, root: Node, crawlFilters: CrawlFilters?): ArrayList<HypeLink> {
+    fun collectLinks(base: URL, hypeLinks: MutableSet<HypeLink>, root: Node, crawlFilters: CrawlFilters?): MutableSet<HypeLink> {
         val walker = NodeWalker(root)
         while (walker.hasNext()) {
             val currentNode = walker.nextNode()
@@ -368,7 +368,7 @@ class PrimerParser(conf: ImmutableConfig) {
         return hypeLinks
     }
 
-    private fun getLinksStep2(base: URL, hypeLinks: ArrayList<HypeLink>, root: Node, crawlFilters: CrawlFilters?) {
+    private fun getLinksStep2(base: URL, hypeLinks: MutableSet<HypeLink>, root: Node, crawlFilters: CrawlFilters?) {
         val walker = NodeWalker(root)
         // log.debug("Get hypeLinks for " + DomUtil.getPrettyName(root));
         while (walker.hasNext()) {

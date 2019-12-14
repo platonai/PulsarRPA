@@ -17,6 +17,7 @@
 package jobs
 
 import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.component.FetchComponent.Companion.updateContent
@@ -26,6 +27,7 @@ import ai.platon.pulsar.crawl.component.FetchComponent.Companion.updateStatus
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.graph.WebEdge
@@ -134,7 +136,8 @@ class TestNewsMonitorScoringFilter {
                 page.batchId = batchId
                 // assertEquals(1.0f, page.getScore(), 1.0e-10);
                 val initSortScore = calculateInitSortScore(page)
-                val sortScore = scoringFilter.generatorSortValue(page, initSortScore)
+                val scoreVector = NamedScoreVector(NamedScoreVector.createSortedScoreEntries(initSortScore))
+                val sortScore = scoringFilter.generatorSortValue(page, scoreVector)
                 page.marks.put(Mark.GENERATE, batchId)
                 // assertEquals(10001.0f, sortScore, 1.0e-10);
                 Params.of("url", page.url, "sortScore", sortScore).withLogger(LOG).info(true)
@@ -233,10 +236,10 @@ class TestNewsMonitorScoringFilter {
         return page
     }
 
-    private fun calculateInitSortScore(page: WebPage): Float {
+    private fun calculateInitSortScore(page: WebPage): Int {
         val raise = false
-        val factor = if (raise) 1.0f else 0.0f
+        val factor = if (raise) 1 else 0
         val depth = page.distance
-        return 10000.0f - 100 * depth + factor * 100000.0f
+        return 10000 - 100 * depth + factor * 100000
     }
 }

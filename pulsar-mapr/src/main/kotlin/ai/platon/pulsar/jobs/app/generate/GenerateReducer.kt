@@ -123,8 +123,8 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
         CounterUtils.increaseRDepth(page.distance, metricsCounters)
         if (!page.isSeed) {
             val createTime = page.createTime
-            val createdDays = Duration.between(createTime, startTime).toDays()
-            CounterUtils.increaseRDays(createdDays, metricsCounters)
+            val pendingDays = Duration.between(createTime, startTime).toDays()
+            CounterUtils.increaseRDays(pendingDays, metricsCounters)
         }
         // double check (depth == 0 or has IS-SEED metadata) , can be removed later
         if (page.isSeed) {
@@ -143,6 +143,6 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
 
     private fun addGeneratedHosts(host: String) {
         hostNames.add(host)
-        pulsarCounters.setValue(Counter.rHosts, hostNames.entrySet().size)
+        metricsCounters.setValue(Counter.rHosts, hostNames.entrySet().size)
     }
 }

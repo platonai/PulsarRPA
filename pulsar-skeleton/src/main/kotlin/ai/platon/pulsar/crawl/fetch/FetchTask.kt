@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
 import java.net.URL
 import java.time.Instant
@@ -15,25 +16,22 @@ interface IFetchEntry {
 /**
  * This class described the item to be fetched.
  */
-class FetchTask(
+class FetchTask private constructor(
         jobID: Int,
-        priority: Int,
-        protocol: String,
-        host: String,
-        var page: WebPage?,
-        u: URL
+        val priority: Int,
+        val protocol: String,
+        val host: String,
+        val page: WebPage,
+        val url: URL
 ) : Comparable<FetchTask> {
-    val key: Key = Key(jobID, priority, protocol, host, u.toString())
-    var pendingStart = Instant.EPOCH
-
-    val priority: Int get() = key.priority
-    val protocol: String get() = key.protocol
-    val host: String get() = key.host
-    val itemId: Int get() = key.itemId
-    val url: String get() = key.url
+    val key = Key(jobID, priority, protocol, host, url.toString())
+    val itemId get() = key.itemId
+    val urlString get() = key.url
+    val poolId get() = PoolId(priority, protocol, host)
+    var pendingStart = Instant.EPOCH!!
 
     override fun toString(): String {
-        return "[itemId=" + key.itemId + ", priority=" + key.priority + ", url=" + key.url + "]"
+        return "<itemId=" + key.itemId + ", priority=" + key.priority + ", url=" + key.url + ">"
     }
 
     override fun compareTo(other: FetchTask): Int {
@@ -82,7 +80,6 @@ class FetchTask(
             return if (proto == null || host.isEmpty()) {
                 null
             } else FetchTask(jobId, priority, proto.toLowerCase(), host.toLowerCase(), page, u)
-
         }
     }
 }

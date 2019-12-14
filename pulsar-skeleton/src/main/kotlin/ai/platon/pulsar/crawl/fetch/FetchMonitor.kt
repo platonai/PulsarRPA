@@ -37,7 +37,7 @@ class FetchMonitor(
         private val jitIndexer: JITIndexer,
         private val immutableConfig: ImmutableConfig
 ) : Parameterized, Configurable, JobInitialized, AutoCloseable {
-
+    private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
     private val id = instanceSequence.incrementAndGet()
     private val taskScheduler = taskSchedulers.first // TODO: multiple task schedulers are not supported
 
@@ -78,7 +78,7 @@ class FetchMonitor(
     /**
      * Index server
      */
-    private var indexServer = immutableConfig.get(INDEXER_HOSTNAME, DEFAULT_INDEX_SERVER_HOSTNAME)
+    private var indexServerHost = immutableConfig.get(INDEXER_HOSTNAME, DEFAULT_INDEX_SERVER_HOSTNAME)
     private var indexServerPort = immutableConfig.getInt(INDEXER_PORT, DEFAULT_INDEX_SERVER_PORT)
 
     /**
@@ -122,7 +122,7 @@ class FetchMonitor(
 
         generateFinishCommand()
 
-        LOG.info(params.format())
+        log.info(params.format())
     }
 
     fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
@@ -179,7 +179,7 @@ class FetchMonitor(
             Files.write(finishScript, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
             Files.setPosixFilePermissions(finishScript, PosixFilePermissions.fromString("rwxrw-r--"))
         } catch (e: IOException) {
-            LOG.error(e.toString())
+            log.error(e.toString())
         }
     }
 
@@ -215,7 +215,7 @@ class FetchMonitor(
 
     override fun close() {
         try {
-            LOG.info("[Destruction] Closing FetchMonitor #$id")
+            log.info("[Destruction] Closing FetchMonitor #$id")
 
             feedThreads.forEach { it.exitAndJoin() }
             activeFetchThreads.forEach { it.exitAndJoin() }
@@ -223,7 +223,7 @@ class FetchMonitor(
 
             Files.deleteIfExists(finishScript)
         } catch (e: Throwable) {
-            LOG.error(StringUtil.stringifyException(e))
+            log.error(StringUtil.stringifyException(e))
         }
     }
 
@@ -280,7 +280,7 @@ class FetchMonitor(
     @Throws(IOException::class)
     private fun startCheckAndReportLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         if (checkInterval.seconds < 5) {
-            LOG.warn("Check frequency is too high, it might cause a serious performance problem")
+            log.warn("Check frequency is too high, it might cause a serious performance problem")
         }
 
         do {
@@ -292,7 +292,7 @@ class FetchMonitor(
             context.status = statusString
 
             /* And also log it */
-            LOG.info(statusString)
+            log.info(statusString)
 
             val now = Instant.now()
             val jobTime = Duration.between(startTime, now)
@@ -307,7 +307,7 @@ class FetchMonitor(
              * Dump the remainder fetch items if feeder thread is no available and fetch item is few
              * */
             if (taskMonitor.taskCount() <= FETCH_TASK_REMAINDER_NUMBER) {
-                LOG.info("Totally remains only " + taskMonitor.taskCount() + " tasks")
+                log.info("Totally remains only " + taskMonitor.taskCount() + " tasks")
                 handleFewFetchItems()
             }
 
@@ -323,7 +323,7 @@ class FetchMonitor(
              * Halt command is received
              * */
             if (isHalt) {
-                LOG.info("Received halt command, exit the job ...")
+                log.info("Received halt command, exit the job ...")
                 break
             }
 
@@ -332,7 +332,7 @@ class FetchMonitor(
              * */
             if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
                 handleFinishJobCommand()
-                LOG.info("Find finish-job command, exit the job ...")
+                log.info("Find finish-job command, exit the job ...")
                 halt()
                 break
             }
@@ -341,13 +341,13 @@ class FetchMonitor(
                * All fetch tasks are finished
                * */
             if (isMissionComplete) {
-                LOG.info("All done, exit the job ...")
+                log.info("All done, exit the job ...")
                 break
             }
 
             if (jobTime.seconds > fetchJobTimeout.seconds) {
                 handleJobTimeout()
-                LOG.info("Hit fetch job timeout " + jobTime.seconds + "s, exit the job ...")
+                log.info("Hit fetch job timeout " + jobTime.seconds + "s, exit the job ...")
                 break
             }
 
@@ -356,12 +356,12 @@ class FetchMonitor(
              * */
             if (idleTime.seconds > fetchTaskTimeout.seconds) {
                 handleFetchTaskTimeout()
-                LOG.info("Hit fetch task timeout " + idleTime.seconds + "s, exit the job ...")
+                log.info("Hit fetch task timeout " + idleTime.seconds + "s, exit the job ...")
                 break
             }
 
-            if (jitIndexer.isEnabled && !NetUtil.testHttpNetwork(indexServer, indexServerPort)) {
-                LOG.warn("Lost index server, exit the job")
+            if (jitIndexer.isEnabled && !jitIndexer.isIndexServerAvailable()) {
+                log.warn("Lost index server, exit the job")
                 break
             }
         } while (!activeFetchThreads.isEmpty())
@@ -385,7 +385,7 @@ class FetchMonitor(
 
         val threads = activeFetchThreads.size
 
-        LOG.warn("Aborting with $threads hung threads")
+        log.warn("Aborting with $threads hung threads")
 
         dumpFetchThreads()
     }
@@ -393,19 +393,19 @@ class FetchMonitor(
     /**
      * Dump fetch threads
      */
-    fun dumpFetchThreads() {
-        LOG.info("Fetch threads : active : " + activeFetchThreads.size + ", idle : " + idleFetchThreads.size)
+    private fun dumpFetchThreads() {
+        log.info("Fetch threads : active : " + activeFetchThreads.size + ", idle : " + idleFetchThreads.size)
 
         val report = activeFetchThreads.filter { it.isAlive }
                 .map { it.stackTrace }
                 .flatMap { it.asList() }
                 .joinToString("\n") { it.toString() }
 
-        LOG.info(report)
+        log.info(report)
     }
 
     private fun handleFewFetchItems() {
-        taskMonitor.dump(FETCH_TASK_REMAINDER_NUMBER)
+        taskMonitor.dump(FETCH_TASK_REMAINDER_NUMBER, false)
     }
 
     private fun handleFinishJobCommand() {
@@ -441,7 +441,7 @@ class FetchMonitor(
             // Clear slowest pools
             removedSlowTasks = taskMonitor.tryClearSlowestQueue()
 
-            LOG.info(Params.formatAsLine(
+            log.info(Params.formatAsLine(
                     "Unaccepted throughput", "clearing slowest pool, ",
                     "lowThoCount", lowThoCount,
                     "maxLowThoCount", maxLowThoCount,
@@ -456,7 +456,7 @@ class FetchMonitor(
         if (totalLowThoCount > maxTotalLowThoCount) {
             // Clear all pools
             removedSlowTasks = taskMonitor.clearReadyTasks()
-            LOG.info(Params.formatAsLine(
+            log.info(Params.formatAsLine(
                     "Unaccepted throughput", "all pools are cleared",
                     "lowThoCount", lowThoCount,
                     "maxLowThoCount", maxLowThoCount,
@@ -469,7 +469,6 @@ class FetchMonitor(
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(FetchMonitor::class.java)
         private val instanceSequence = AtomicInteger(0)
     }
 }

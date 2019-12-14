@@ -18,6 +18,8 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.AppConstants
@@ -31,11 +33,13 @@ import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
+import ai.platon.pulsar.persist.metadata.Name
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by vincent on 17-5-1.
@@ -260,8 +264,8 @@ open class FetchComponent(
             updateContent(page, content, null)
         }
 
-        private fun updateContent(page: WebPage, content: Content?, contentType: String?) {
-            var contentType = contentType
+        private fun updateContent(page: WebPage, content: Content?, contentType_: String?) {
+            var contentType = contentType_
             if (content == null) {
                 return
             }
@@ -288,6 +292,39 @@ open class FetchComponent(
             }
             page.fetchTime = newFetchTime
             page.putFetchTimeHistory(newFetchTime)
+        }
+
+        fun getFetchCompleteReport(page: WebPage): String {
+            val bytes = page.contentBytes
+            if (bytes < 0) {
+                return ""
+            }
+            val responseTime = page.metadata[Name.RESPONSE_TIME]
+            val proxy = page.metadata[Name.PROXY]
+            val jsData = page.browserJsData
+            var jsSate = ""
+            if (jsData != null) {
+                val (ni, na, nnm, nst) = jsData.lastStat
+                jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
+            }
+            val fmt = "Fetched%s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
+            return String.format(fmt,
+                    StringUtil.readableByteCount(bytes.toLong(), 7, false),
+                    DateTimeUtil.readableDuration(responseTime),
+                    if (proxy == null) "" else " via $proxy",
+                    page.fetchCount,
+                    jsSate,
+                    page.url
+            )
+        }
+
+        fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant): StringBuilder {
+            val elapsed = DateTimeUtil.elapsedTime(startTime)
+            val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
+            val sb = StringBuilder(message)
+            val i = AtomicInteger()
+            pages.forEach { sb.append(i.incrementAndGet()).append(".\t").append(getFetchCompleteReport(it)).append('\n') }
+            return sb
         }
     }
 }

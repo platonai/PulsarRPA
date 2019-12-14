@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.CommonCounter
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.jobs.common.SelectorEntry
 import ai.platon.pulsar.jobs.common.URLPartitioner.SelectorEntryPartitioner
@@ -45,14 +46,14 @@ class SeedHomeUpdateJob : HomePageUpdateJob() {
     }
 
     class SeedIndexMapper : AppContextAwareGoraMapper<String, GWebPage, SelectorEntry, GWebPage>() {
-        private var scoringFilters: ScoringFilters? = null
+        private lateinit var scoringFilters: ScoringFilters
         @Throws(IOException::class, InterruptedException::class)
         public override fun setup(context: Context) {
             scoringFilters = applicationContext.getBean(ScoringFilters::class.java)
             Params.of(
                     "className", this.javaClass.simpleName,
                     "scoringFilters", scoringFilters)
-                    .merge(scoringFilters!!.params)
+                    .merge(scoringFilters.params)
                     .withLogger(LOG).info()
         }
 
@@ -63,7 +64,7 @@ class SeedHomeUpdateJob : HomePageUpdateJob() {
             if (!page.isSeed) {
                 return
             }
-            val sortScore = scoringFilters!!.generatorSortValue(page, 1.0f)
+            val sortScore = scoringFilters.generatorSortValue(page, NamedScoreVector.ONE)
             context.write(SelectorEntry(url, sortScore), page.unbox())
             metricsCounters.increase(CommonCounter.mPersist)
         }

@@ -53,7 +53,7 @@ public class ParseStatus implements ParseStatusCodes {
         this.parseStatus = GParseStatus.newBuilder().build();
         setMajorCode(majorCode);
         setMinorCode(minorCode);
-        getArgs().put(getMinorName(minorCode), message);
+        getArgs().put(getMinorName(minorCode), message == null ? "(unknown)" : message);
     }
 
     private ParseStatus(GParseStatus parseStatus) {

@@ -1,13 +1,11 @@
 package ai.platon.pulsar.crawl.fetch.indexer
 
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
-import ai.platon.pulsar.common.config.Configurable
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
@@ -38,6 +36,12 @@ class JITIndexer(
 
     var isEnabled: Boolean = false
         private set
+
+    /**
+     * Index server
+     */
+    val indexServerHost = conf.get(CapabilityTypes.INDEXER_HOSTNAME, AppConstants.DEFAULT_INDEX_SERVER_HOSTNAME)
+    val indexServerPort = conf.getInt(CapabilityTypes.INDEXER_PORT, AppConstants.DEFAULT_INDEX_SERVER_PORT)
 
     private var batchSize: Int = conf.getInt("index.index.batch.size", 2000)
     var indexThreadCount: Int = conf.getInt("index.index.thread.count", 1)
@@ -71,6 +75,10 @@ class JITIndexer(
                 "indexThreadCount", indexThreadCount,
                 "minTextLength", minTextLength
         )
+    }
+
+    fun isIndexServerAvailable(): Boolean {
+        return NetUtil.testHttpNetwork(indexServerHost, indexServerPort)
     }
 
     internal fun registerFetchThread(indexThread: IndexThread) {
@@ -146,7 +154,7 @@ class JITIndexer(
                 return
             }
 
-            val url = fetchTask.url
+            val url = fetchTask.urlString
             val reverseUrl = Urls.reverseUrl(url)
             val page = fetchTask.page
 

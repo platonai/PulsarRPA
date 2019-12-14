@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory
  * Creates and caches [ParseFilter] implementing plugins.
  */
 class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfig) {
-    var LOG = LoggerFactory.getLogger(ParseFilters::class.java)
+    private val log = LoggerFactory.getLogger(ParseFilters::class.java)
 
     /**
      * Run all defined filters.
@@ -41,7 +42,7 @@ class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfi
                     // TODO: choose one: do something, break or continue?
                 }
             } catch (e: Throwable) {
-                LOG.warn(e.toString())
+                log.warn(StringUtil.stringifyException(e))
             }
         }
     }

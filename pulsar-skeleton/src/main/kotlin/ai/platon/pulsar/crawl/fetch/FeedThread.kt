@@ -75,8 +75,7 @@ class FeedThread(
                 while (taskCount < batchSize && currentIter.hasNext() && hasMore) {
                     val entry = currentIter.next()
                     val page = entry.page
-                    val url = page.url
-                    tasksMonitor.produce(context.jobId, url, page)
+                    tasksMonitor.produce(context.jobId, page)
 
                     ++totalTaskCount
                     ++taskCount
@@ -92,7 +91,7 @@ class FeedThread(
                 Params.of(
                         "Round", round,
                         "batchSize", batchSize,
-                        "feededTasks", taskCount,
+                        "feedTasks", taskCount,
                         "totalTaskCount", totalTaskCount,
                         "readyTasks", tasksMonitor.readyTaskCount(),
                         "fetchThreads", fetchThreads

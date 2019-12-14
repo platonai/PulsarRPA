@@ -34,7 +34,8 @@
     <logger name="ai.platon.pulsar.cli.shell" level="INFO"/>
     <logger name="ai.platon.pulsar.crawl" level="INFO"/>
     <logger name="ai.platon.pulsar.net" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.component" level="INFO"/>
+    <logger name="ai.platon.pulsar.crawl.component" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.crawl.fetch" level="TRACE"/>
 
     <logger name="org.apache.gora" level="ERROR"/>
     <logger name="org.apache.hadoop.mapreduce.Job" level="WARN"/>

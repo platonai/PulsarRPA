@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.parse.html
 
 import ai.platon.pulsar.crawl.parse.ParseResult
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import org.w3c.dom.DocumentFragment
 
@@ -12,7 +13,8 @@ class ParseContext(
         val page: WebPage,
         val parseResult: ParseResult,
         val metaTags: HTMLMetaTags? = null,
-        val documentFragment: DocumentFragment? = null
+        val documentFragment: DocumentFragment? = null, // deprecated, may not support in further version. just use jsoup
+        val document: FeaturedDocument? = null
 ) {
     val url get() = page.url
 }

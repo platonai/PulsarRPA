@@ -18,36 +18,40 @@
 package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
-
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /* An hype link in a page. */
 public class HypeLink implements Comparable<HypeLink> {
 
     private GHypeLink hypeLink;
 
-    private HypeLink(GHypeLink hypeLink) {
+    private HypeLink(@NotNull GHypeLink hypeLink) {
         this.hypeLink = hypeLink;
     }
 
-    public HypeLink(String url, String anchor) {
+    public HypeLink(@NotNull String url) {
+        this(url, null);
+    }
+
+    public HypeLink(@NotNull String url, @Nullable String anchor) {
+        this(url, anchor, 0);
+    }
+
+    public HypeLink(@NotNull String url, @Nullable String anchor, int order) {
         hypeLink = new GHypeLink();
         hypeLink.setUrl(url);
         hypeLink.setAnchor(anchor);
-        hypeLink.setOrder(0);
+        hypeLink.setOrder(order);
     }
 
-    public HypeLink(String url) {
-        this(url, "");
-    }
-
-    @Nonnull
-    public static HypeLink box(GHypeLink hypeLink) {
+    @NotNull
+    public static HypeLink box(@NotNull GHypeLink hypeLink) {
         return new HypeLink(hypeLink);
     }
 
-    @Nonnull
-    public static HypeLink parse(String link) {
+    @NotNull
+    public static HypeLink parse(@NotNull String link) {
         String[] linkAnchor = link.split("\\s+");
         if (linkAnchor.length == 1) {
             return new HypeLink(linkAnchor[0]);
@@ -72,11 +76,13 @@ public class HypeLink implements Comparable<HypeLink> {
         hypeLink.setUrl(url);
     }
 
+    @NotNull
     public String getAnchor() {
-        return hypeLink.getAnchor().toString();
+        CharSequence anchor = hypeLink.getAnchor();
+        return anchor == null ? "" : anchor.toString();
     }
 
-    public void setAnchor(String anchor) {
+    public void setAnchor(@NotNull String anchor) {
         hypeLink.setAnchor(anchor);
     }
 
@@ -103,7 +109,7 @@ public class HypeLink implements Comparable<HypeLink> {
     }
 
     @Override
-    public int compareTo(@Nonnull HypeLink hypeLink) {
+    public int compareTo(@NotNull HypeLink hypeLink) {
         int r = getUrl().compareTo(hypeLink.getUrl());
         if (r == 0) {
             r = getAnchor().compareTo(hypeLink.getAnchor());

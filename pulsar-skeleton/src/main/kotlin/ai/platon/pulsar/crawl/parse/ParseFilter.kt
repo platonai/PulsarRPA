@@ -32,8 +32,4 @@ interface ParseFilter : Parameterized {
      * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
      */
     fun filter(parseContext: ParseContext)
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(ParseFilter::class.java)
-    }
 }
