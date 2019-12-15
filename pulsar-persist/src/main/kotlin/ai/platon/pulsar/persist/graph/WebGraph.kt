@@ -8,6 +8,7 @@ import java.io.StringWriter
 import java.io.Writer
 import java.util.*
 import java.util.function.Consumer
+import kotlin.IllegalStateException
 
 /**
  * Created by vincent on 16-12-21.
@@ -25,19 +26,26 @@ class WebGraph : DirectedWeightedPseudograph<WebVertex, WebEdge> {
             field = focus
         }
 
-    constructor() : super(WebEdge::class.java) {}
+    constructor() : super(WebEdge::class.java)
+
     constructor(sourceVertex: WebVertex, targetVertex: WebVertex) : super(WebEdge::class.java) {
         addEdgeLenient(sourceVertex, targetVertex, 0.0)
     }
 
     fun addOrUpdateWebVertex(vertex: WebVertex): WebVertex {
-        var v = vertex
-        val added = addVertex(v)
+        val added = addVertex(vertex)
+
         if (!added) {
-            v = find(v)
-            v.page = v.page
+            val v = find(vertex)
+            if (v != null) {
+                v.page = vertex.page
+                return v
+            } else {
+                throw IllegalStateException("Vertex must be in the graph | ${vertex.url}")
+            }
         }
-        return v
+
+        return vertex
     }
 
     @JvmOverloads
@@ -60,21 +68,22 @@ class WebGraph : DirectedWeightedPseudograph<WebVertex, WebEdge> {
     }
 
     fun combine(otherGraph: WebGraph): WebGraph {
-        otherGraph.vertexSet().forEach(Consumer { vertex: WebVertex -> addOrUpdateWebVertex(vertex) })
-        otherGraph.edgeSet().forEach(Consumer { edge: WebEdge -> addEdge(edge, otherGraph) })
+        otherGraph.vertexSet().forEach { addOrUpdateWebVertex(it) }
+        otherGraph.edgeSet().forEach { addEdge(it, otherGraph) }
         return this
     }
 
-    fun find(vertex: WebVertex?): WebVertex {
-        return CollectionUtils.find<WebVertex>(vertexSet()) { v: WebVertex -> v.equals(vertex) }
+    fun find(vertex: WebVertex): WebVertex? {
+        return vertexSet().firstOrNull { it == vertex }
     }
 
-    fun find(url: String): WebVertex {
-        return CollectionUtils.find<WebVertex>(vertexSet()) { v: WebVertex -> v.url == url }
+    fun find(url: String): WebVertex? {
+        return vertexSet().firstOrNull { it.url == url }
     }
 
-    fun firstEdge(): WebEdge {
-        return edgeSet().iterator().next()!!
+    fun firstEdge(): WebEdge? {
+        val it = edgeSet().iterator()
+        return it.takeIf { it.hasNext() }?.next()
     }
 
     override fun toString(): String {

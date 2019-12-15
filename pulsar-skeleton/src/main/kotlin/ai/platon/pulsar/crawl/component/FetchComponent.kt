@@ -60,7 +60,6 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetch(url: String): WebPage {
-        Objects.requireNonNull(url)
         return fetchContent(WebPage.newWebPage(url, false))
     }
 
@@ -72,8 +71,6 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetch(url: String, options: LoadOptions): WebPage {
-        Objects.requireNonNull(url)
-        Objects.requireNonNull(options)
         return fetchContent(createFetchEntry(url, options))
     }
 
@@ -104,20 +101,24 @@ open class FetchComponent(
             updateStatus(page, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND)
             return page
         }
+
         val output = protocol.getProtocolOutput(page)
         return processProtocolOutput(page, output)
     }
 
     protected fun shouldFetch(url: String?): Boolean {
         var code = 0
+
         if (fetchTaskTracker.isFailed(url!!)) {
             code = 2
         } else if (fetchTaskTracker.isTimeout(url)) {
             code = 3
         }
+
         if (code > 0 && LOG.isDebugEnabled) {
             LOG.debug("Not fetching page, reason #{}, url: {}", code, url)
         }
+
         return code == 0
     }
 
@@ -128,6 +129,7 @@ open class FetchComponent(
             LOG.warn("No content for " + page.configuredUrl)
             return page
         }
+
         val headers = page.headers
         output.headers.asMultimap().entries().forEach { headers.put(it.key, it.value) }
         val protocolStatus = output.status
@@ -141,9 +143,11 @@ open class FetchComponent(
             }
             return page
         }
+
         if (LOG.isTraceEnabled) {
             LOG.trace("Fetch failed, status: {}, url: {}", protocolStatus, page.configuredUrl)
         }
+
         when (minorCode) {
             ProtocolStatus.MOVED, ProtocolStatus.TEMP_MOVED -> {
                 val crawlStatus = handleTmpMove(page, protocolStatus)
@@ -177,6 +181,7 @@ open class FetchComponent(
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
             }
         }
+
         return page
     }
 

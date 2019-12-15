@@ -48,6 +48,8 @@ class PageParser(
         val pulsarCounters: MetricsCounters,
         private val conf: ImmutableConfig
 ) : ReloadableParameterized {
+    private val log = LoggerFactory.getLogger(PageParser::class.java)
+
     val unparsableTypes = Collections.synchronizedSet(HashSet<CharSequence>())
     private var maxParsedLinks = 0
     /**
@@ -199,16 +201,8 @@ class PageParser(
             page.prevSignature = prevSig
         }
         page.setSignature(signature.calculate(page))
-        // Collect links
-        // TODO : check the no-follow html tag directive
-        val follow = (!page.metadata.contains(Name.NO_FOLLOW)
-                || page.isSeed
-                || page.hasMark(Mark.INJECT)
-                || page.metadata.contains(Name.FORCE_FOLLOW)
-                || page.variables.contains(Name.FORCE_FOLLOW.name))
-        if (follow) {
-            processLinks(page, parseResult.hypeLinks)
-        }
+
+        processLinks(page, parseResult.hypeLinks)
     }
 
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
@@ -225,9 +219,21 @@ class PageParser(
     }
 
     private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HypeLink>) {
-        val hypeLinks = filterLinks(page, unfilteredLinks)
-        page.setLiveLinks(hypeLinks)
-        page.addHyperLinks(hypeLinks)
+        // Collect links
+        // TODO : check the no-follow html tag directive
+        val follow = (!page.metadata.contains(Name.NO_FOLLOW)
+                || page.isSeed
+                || page.hasMark(Mark.INJECT)
+                || page.metadata.contains(Name.FORCE_FOLLOW)
+                || page.variables.contains(Name.FORCE_FOLLOW.name))
+        if (follow) {
+            // val hypeLinks = filterLinks(page, unfilteredLinks)
+            // TODO: too many filters, hard to debug, move all filters to a single filter, or just do it in ParserFilter
+            val hypeLinks = unfilteredLinks
+            // log.debug("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
+            page.setLiveLinks(hypeLinks)
+            page.addHyperLinks(hypeLinks)
+        }
     }
 
     // 0 : "notparsed", 1 : "success", 2 : "failed"

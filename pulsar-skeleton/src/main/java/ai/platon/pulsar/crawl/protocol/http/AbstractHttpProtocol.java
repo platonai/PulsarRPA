@@ -162,7 +162,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     // Inherited Javadoc
     public void setConf(ImmutableConfig jobConf) {
         this.conf = jobConf;
-        this.defaultFetchMode = jobConf.getEnum(FETCH_MODE, FetchMode.NATIVE);
+        this.defaultFetchMode = jobConf.getEnum(FETCH_MODE, FetchMode.SELENIUM);
 
         // TODO: be consistent with WebDriverQueues
         this.proxyHost = jobConf.get("http.proxy.host");

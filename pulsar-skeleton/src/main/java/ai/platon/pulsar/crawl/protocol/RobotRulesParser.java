@@ -112,11 +112,11 @@ public abstract class RobotRulesParser implements Configurable {
 
     private void refresh() {
         // Grab the agent names we advertise to robots files.
-        String agentName = conf.get("http.agent.name");
-        if (agentName == null || (agentName = agentName.trim()).isEmpty()) {
+        String ua = conf.get("http.agent.name", "").trim();
+        if (ua.isEmpty()) {
             LOG.warn("Agent name not configured!");
         }
-        agentNames = agentName;
+        agentNames = ua;
 
         // If there are any other agents specified, append those to the list of
         // agents
@@ -126,7 +126,7 @@ public abstract class RobotRulesParser implements Configurable {
             StringBuilder sb = new StringBuilder(agentNames);
             while (tok.hasMoreTokens()) {
                 String str = tok.nextToken().trim();
-                if (str.equals("*") || str.equals(agentName)) {
+                if (str.equals("*") || str.equals(agentNames)) {
                     // skip wildcard "*" or agent name itself
                 } else {
                     sb.append(",").append(str);

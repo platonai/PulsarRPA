@@ -66,6 +66,8 @@ public class CrawlMarks {
         marks.forEach(this::remove);
     }
 
+    public void clear() { marks.clear(); }
+
     public Map<String, String> asStringMap() {
         return marks.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString(), (e, e2) -> e));

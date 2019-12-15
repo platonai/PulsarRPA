@@ -88,8 +88,9 @@ public class ProtocolFactory implements AutoCloseable {
     @Nullable
     public Protocol getProtocol(WebPage page) {
         FetchMode mode = page.getFetchMode();
-        if (mode == null) {
-            LOG.warn("Fetch mode is not set");
+        if (mode == null || mode == FetchMode.UNKNOWN) {
+            LOG.warn("Fetch mode is not set, use selenium as the default");
+            mode = FetchMode.SELENIUM;
         }
 
         Protocol protocol;

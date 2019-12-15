@@ -18,7 +18,6 @@ import java.util.*
 /**
  * Created by vincent on 16-9-14.
  *
- *
  * General parser, Css selector, XPath selector, Regex and Scent selectors are supported
  */
 class JsoupParser(
