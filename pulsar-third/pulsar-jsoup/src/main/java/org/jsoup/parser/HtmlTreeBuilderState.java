@@ -1,7 +1,12 @@
 package org.jsoup.parser;
 
 import org.jsoup.internal.StringUtil;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 
 import java.util.ArrayList;
 

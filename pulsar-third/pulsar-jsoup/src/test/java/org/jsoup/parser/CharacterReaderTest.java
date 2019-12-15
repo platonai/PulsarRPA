@@ -5,7 +5,9 @@ import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.StringReader;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for character reader.

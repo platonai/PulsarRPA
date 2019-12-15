@@ -17,7 +17,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import com.google.common.util.concurrent.AtomicDouble
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
@@ -315,7 +314,7 @@ class TaskScheduler(
 
         status.append(readyFetchItems).append(" ready ")
         status.append(pendingFetchItems).append(" pending ")
-        status.append("URLs in ").append(tasksMonitor.queueCount).append(" queues")
+        status.append("URLs in ").append(tasksMonitor.poolCount).append(" queues")
 
         return status.toString()
     }

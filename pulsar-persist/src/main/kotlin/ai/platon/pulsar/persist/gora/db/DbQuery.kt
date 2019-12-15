@@ -6,117 +6,61 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package ai.platon.pulsar.persist.gora.db;
+ */
+package ai.platon.pulsar.persist.gora.db
 
-import org.apache.avro.util.Utf8;
+import ai.platon.pulsar.common.config.AppConstants
+import org.apache.avro.util.Utf8
+import java.util.*
 
-import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Set;
+class DbQuery {
+    private var crawlId: String? = null
+    private var batchId = Utf8(AppConstants.ALL_BATCHES)
+    var startUrl: String? = null
+    var endUrl: String? = null
+    var urlFilter = "+."
+    var start = 0L
+    var limit = 100L
+    var fields: HashSet<String> = HashSet()
 
-import static ai.platon.pulsar.common.config.AppConstants.ALL_BATCHES;
-
-public class DbQuery {
-
-    private String crawlId;
-    private Utf8 batchId = new Utf8(ALL_BATCHES);
-    private String startUrl;
-    private String endUrl;
-    private String urlFilter = "+.";
-    private Long start = 0L;
-    private Long limit = 100L;
-    private Set<String> fields = new HashSet<>();
-
-    private DbQuery() {
+    private constructor() {}
+    constructor(startUrl: String) {
+        this.startUrl = startUrl
+        endUrl = null
     }
 
-    public DbQuery(String startUrl) {
-        this.startUrl = startUrl;
-        this.endUrl = null;
+    constructor(startUrl: String, endUrl: String?) {
+        this.startUrl = startUrl
+        this.endUrl = endUrl
     }
 
-    public DbQuery(String startUrl, String endUrl) {
-        this.startUrl = startUrl;
-        this.endUrl = endUrl;
+    constructor(crawlId: String, batchId: String, startUrl: String? = null, endUrl: String? = null) {
+        this.crawlId = crawlId
+        this.batchId = Utf8(batchId)
+        this.startUrl = startUrl
+        this.endUrl = endUrl
     }
 
-    public DbQuery(String crawlId, String batchId, String startUrl, String endUrl) {
-        this.crawlId = crawlId;
-        this.batchId = new Utf8(batchId);
-        this.startUrl = startUrl;
-        this.endUrl = endUrl;
+    fun getCrawlId(): String {
+        return if (crawlId == null) "" else crawlId!!
     }
 
-    @Nonnull
-    public String getCrawlId() {
-        return crawlId == null ? "" : crawlId;
+    fun setCrawlId(crawlId: String) {
+        this.crawlId = crawlId
     }
 
-    public void setCrawlId(String crawlId) {
-        this.crawlId = crawlId;
+    fun getBatchId(): CharSequence {
+        return batchId
     }
 
-    public CharSequence getBatchId() {
-        return batchId;
-    }
-
-    public void setBatchId(CharSequence batchId) {
-        this.batchId = new Utf8(batchId.toString());
-    }
-
-    public String getStartUrl() {
-        return startUrl;
-    }
-
-    public void setStartUrl(String startUrl) {
-        this.startUrl = startUrl;
-    }
-
-    public String getEndUrl() {
-        return endUrl;
-    }
-
-    public void setEndUrl(String endUrl) {
-        this.endUrl = endUrl;
-    }
-
-    public String getUrlFilter() {
-        return urlFilter;
-    }
-
-    public void setUrlFilter(String urlFilter) {
-        this.urlFilter = urlFilter;
-    }
-
-    public Long getStart() {
-        return start;
-    }
-
-    public void setStart(Long start) {
-        this.start = start;
-    }
-
-    public Long getLimit() {
-        return limit;
-    }
-
-    public void setLimit(Long limit) {
-        this.limit = limit;
-    }
-
-    public Set<String> getFields() {
-        return fields;
-    }
-
-    public void setFields(Set<String> fields) {
-        this.fields = fields;
+    fun setBatchId(batchId: CharSequence) {
+        this.batchId = Utf8(batchId.toString())
     }
 }

@@ -13,8 +13,7 @@ class ParseContext(
         val page: WebPage,
         val parseResult: ParseResult,
         val metaTags: HTMLMetaTags? = null,
-        val documentFragment: DocumentFragment? = null, // deprecated, may not support in further version. just use jsoup
+        // deprecated, may not support in further version. Use jsoup instead
+        val documentFragment: DocumentFragment? = null,
         val document: FeaturedDocument? = null
-) {
-    val url get() = page.url
-}
+)

@@ -62,7 +62,7 @@ import java.util.*
  *
  *
  *
- * Several scopes have been defined, and various PulsarConstants cli will attempt using
+ * Several scopes have been defined, and various AppConstants cli will attempt using
  * scope-specific normalizers first (and fall back to default config if
  * scope-specific configuration is missing).
  *

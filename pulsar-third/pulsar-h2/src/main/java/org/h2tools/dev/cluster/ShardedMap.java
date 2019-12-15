@@ -9,6 +9,8 @@ import org.h2.mvstore.DataUtils;
 import org.h2.mvstore.type.DataType;
 import org.h2.mvstore.type.ObjectDataType;
 
+import java.util.*;
+
 /**
  * A sharded map. It is typically split into multiple sub-maps that don't have
  * overlapping keys.

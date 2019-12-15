@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 
 internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, GraphGroupKey, WebGraphWritable>() {
-    val LOG = LoggerFactory.getLogger(Out2InUpdateMapper::class.java)
+    private val log = LoggerFactory.getLogger(Out2InUpdateMapper::class.java)
 
     companion object {
         enum class Counter {mMapped, mNewMapped, mNotFetched, mNotParsed, mNoLinks, mTooDeep}
@@ -52,7 +52,6 @@ internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, 
     private lateinit var scoringFilters: ScoringFilters
 
     // Reuse local variables for optimization
-    private lateinit var graphGroupKey: GraphGroupKey
     private lateinit var webGraphWritable: WebGraphWritable
 
     public override fun setup(context: Context) {
@@ -60,10 +59,9 @@ internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, 
         limit = jobConf.getInt(CapabilityTypes.LIMIT, -1)
         maxDistance = jobConf.getUint(CapabilityTypes.CRAWL_MAX_DISTANCE, AppConstants.DISTANCE_INFINITE)
         scoringFilters = getBean(ScoringFilters::class.java)
-        graphGroupKey = GraphGroupKey()
-        webGraphWritable = WebGraphWritable(null, WebGraphWritable.OptimizeMode.IGNORE_TARGET, jobConf.unbox())
+        webGraphWritable = WebGraphWritable(WebGraph.EMPTY, WebGraphWritable.OptimizeMode.IGNORE_TARGET, jobConf.unbox())
 
-        LOG.info(Params.format(
+        log.info(Params.format(
                 "className", this.javaClass.simpleName,
                 "crawlId", crawlId,
                 "maxDistance", maxDistance,
@@ -76,7 +74,6 @@ internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, 
     override fun map(reversedUrl: String, row: GWebPage, context: Context) {
         metricsCounters.increase(CommonCounter.mRows)
         val page = WebPage.box(reversedUrl, row, true)
-        val url = page.url
         if (!shouldProcess(page)) {
             return
         }
@@ -85,6 +82,7 @@ internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, 
         val v1 = WebVertex(page)
         /* A loop in the graph */
         graph.addEdgeLenient(v1, v1, page.score.toDouble())
+
         // Never create rows deeper then max distance, they can never be fetched
         if (page.distance < maxDistance) {
             page.liveLinks.values.sortedBy { it.order }.take(maxLiveLinks).forEach {
@@ -103,9 +101,8 @@ internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, 
      */
     private fun addEdge(v1: WebVertex, link: HypeLink, graph: WebGraph): WebEdge {
         val edge = graph.addEdgeLenient(v1, WebVertex(link.url))
-        val page = v1.webPage
         // All inherited parameters from referrer page are set here
-        edge.options = page.options
+        edge.options = v1.page!!.options
         edge.anchor = link.anchor
         edge.order = link.order
         return edge
@@ -149,14 +146,14 @@ internal class Out2InUpdateMapper : AppContextAwareGoraMapper<String, GWebPage, 
     private fun writeAsSubGraph(edge: WebEdge, graph: WebGraph) {
         try {
             val subGraph = WebGraph.of(edge, graph)
-            graphGroupKey.reset(reverseUrl(edge.targetUrl), graph.getEdgeWeight(edge))
+            val graphGroupKey = GraphGroupKey(reverseUrl(edge.targetUrl), graph.getEdgeWeight(edge))
             webGraphWritable.reset(subGraph)
             // noinspection unchecked
             context.write(graphGroupKey, webGraphWritable)
         } catch (e: IOException) {
-            LOG.error("Failed to write to hdfs. " + StringUtil.stringifyException(e))
+            log.error("Failed to write to HDFS. \n{}", StringUtil.stringifyException(e))
         } catch (e: InterruptedException) {
-            LOG.error("Failed to write to hdfs. " + StringUtil.stringifyException(e))
+            log.error("Failed to write to HDFS, interrupted. \n{}", StringUtil.stringifyException(e))
         }
     }
 }

@@ -17,13 +17,17 @@
  * limitations under the License.
  */
 
+package ai.platon.pulsar.examples.spider
+
 import ai.platon.pulsar.common.URLUtil
-import ai.platon.pulsar.common.config.PulsarConstants.DISTANCE_INFINITE
+import ai.platon.pulsar.common.config.AppConstants.DISTANCE_INFINITE
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.IndexComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.PageCounters
@@ -37,7 +41,7 @@ import java.util.*
 import java.util.stream.Collectors.joining
 
 class SpiderSimulator(
-        val conf: ai.platon.pulsar.common.config.ImmutableConfig,
+        val conf: ImmutableConfig,
         var scoringFilters: ScoringFilters,
         var fetchSchedule: FetchSchedule,
         var seedBuilder: SeedBuilder,
@@ -74,7 +78,7 @@ class SpiderSimulator(
                 .map { generate(batchId, it) }
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.GENERATE) }
-                .subList(0, limit)
+                .take(limit)
                 .map { fetchComponent.fetchContent(it) }
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.FETCH) }
@@ -82,11 +86,11 @@ class SpiderSimulator(
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.PARSE) }
                 // .map(indexComponent.dryRunIndex(it))
-                .map { WebVertex(it) }
+                .map { WebVertex(it.url, it) }
                 .map { WebGraph(it, it) }
                 .reduce { g, g2 -> g.combine(g2) }
                 .vertexSet()
-                .map { it.webPage }
+                .mapNotNull { it.page }
                 .map { updateOutGraphMapper(it) }
                 .map { updateOutGraphReducerBuildGraph(it) }
                 .onEach { report(it) }
@@ -114,7 +118,7 @@ class SpiderSimulator(
             edge.order = page.anchorOrder
         }
 
-        scoringFilters.distributeScoreToOutlinks(v1.webPage, graph, graph.outgoingEdgesOf(v1), graph.outDegreeOf(v1))
+        scoringFilters.distributeScoreToOutlinks(v1.page!!, graph, graph.outgoingEdgesOf(v1), graph.outDegreeOf(v1))
 
         return page
     }
@@ -129,8 +133,8 @@ class SpiderSimulator(
                 .filter { !it.isLoop }
                 .map { it.target }
                 .filter { !it.hasWebPage() }
-                .onEach { it.webPage = createOrLoad(batchId, it.url) }
-                .forEach { store.put(it.webPage.url, it.webPage) }
+                .onEach { it.page = createOrLoad(batchId, it.url) }
+                .forEach { it.page?.let { p -> store.put(p.url, p) } }
 
         return page
     }
@@ -142,27 +146,23 @@ class SpiderSimulator(
         val focus = graph.find(page.url)
 
         // Update distance
-        val distance = graph.incomingEdgesOf(focus).stream()
+        val distance = graph.incomingEdgesOf(focus)
+                .asSequence()
                 .filter { !it.isLoop }
-                .map { it.source }
-                .map { it.webPage }
-                .filter { Objects.nonNull(it) }
-                .mapToInt { it.distance }
-                .min().orElse(DISTANCE_INFINITE)
+                .mapNotNull { it.source.page?.distance }
+                .min()?:2
         page.distance = distance + 1
 
         // Update anchor
         val edge = graph.incomingEdgesOf(focus)
-                .filter { !it.isLoop }
-                .sortedBy { it.sourceWebPage.distance }
-                .firstOrNull() ?: return page
+                .filter { !it.isLoop }.minBy { it.sourceWebPage!!.distance } ?: return page
 
         page.anchor = edge.anchor
         page.options = edge.options
         page.anchorOrder = edge.order
 
         // Update score
-        scoringFilters.updateScore(focus.webPage, graph, graph.incomingEdgesOf(focus))
+        scoringFilters.updateScore(focus.page!!, graph, graph.incomingEdgesOf(focus))
 
         page.marks.put(Mark.UPDATEOUTG, batchId)
 
@@ -173,7 +173,7 @@ class SpiderSimulator(
         val graph = graphs[page.batchId] ?: return page
         val focus = graph.find(page.url)
 
-        page.inlinks.keys.forEach { graph.addEdgeLenient(WebVertex(it), focus) }
+        page.inlinks.keys.forEach { graph.addEdgeLenient(WebVertex(it.toString()), focus) }
 
         return page
     }
@@ -194,12 +194,12 @@ class SpiderSimulator(
                     val p2 = it.targetWebPage
 
                     // Update by out-links
-                    p1.updateRefContentPublishTime(p2.contentPublishTime)
+                    p1!!.updateRefContentPublishTime(p2!!.contentPublishTime)
                     p1.pageCounters.increase(PageCounters.Ref.ch, p2.contentTextLen)
                     p1.pageCounters.increase(PageCounters.Ref.article)
                 }
 
-        scoringFilters.updateContentScore(focus.webPage)
+        scoringFilters.updateContentScore(focus.page!!)
 
         fetchSchedule.setFetchSchedule(page,
                 page.prevFetchTime, page.prevModifiedTime,
@@ -214,7 +214,7 @@ class SpiderSimulator(
     private fun generate(batchId: String, page: WebPage): WebPage {
         page.batchId = batchId
 
-        scoringFilters.generatorSortValue(page, 1.0f)
+        scoringFilters.generatorSortValue(page, NamedScoreVector.ONE)
         page.marks.put(Mark.GENERATE, page.batchId)
 
         return page
@@ -224,7 +224,7 @@ class SpiderSimulator(
         val graph = graphs[batchId]
         val vertex = graph!!.find(url)
         if (vertex.hasWebPage()) {
-            return vertex.webPage
+            return vertex.page!!
         }
 
         val page = WebPage.newWebPage(url, false)
@@ -246,7 +246,7 @@ class SpiderSimulator(
 
     fun report(vertex: WebVertex) {
         if (vertex.hasWebPage()) {
-            report(vertex.webPage)
+            report(vertex.page!!)
         } else {
             ai.platon.pulsar.common.config.Params.of("url", vertex.url).withLogger(LOG).info(true)
         }
@@ -300,7 +300,7 @@ fun main(args: Array<String>) {
         return
     }
 
-    val applicationContext = ClassPathXmlApplicationContext("classpath:/context/tools-context.xml")
+    val applicationContext = ClassPathXmlApplicationContext("classpath:/pulsar-beans/app-context.xml")
     val spiderSimulator = applicationContext.getBean(SpiderSimulator::class.java)
     spiderSimulator.crawl(listOf(url), maxRound)
     spiderSimulator.report()

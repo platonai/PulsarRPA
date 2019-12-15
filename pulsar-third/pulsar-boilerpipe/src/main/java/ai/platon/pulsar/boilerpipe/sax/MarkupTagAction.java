@@ -6,6 +6,7 @@ import ai.platon.pulsar.boilerpipe.document.TextBlock;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**

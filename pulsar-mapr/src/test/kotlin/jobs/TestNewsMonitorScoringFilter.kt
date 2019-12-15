@@ -17,7 +17,6 @@
 package jobs
 
 import ai.platon.pulsar.common.MetricsSystem
-import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.component.FetchComponent.Companion.updateContent
@@ -146,29 +145,31 @@ class TestNewsMonitorScoringFilter {
                 updateStatus(page, CrawlStatus.STATUS_FETCHED, ProtocolStatus.STATUS_SUCCESS)
                 updateContent(page, Content(page.url, page.url, "".toByteArray(), "text/html",
                         SpellCheckedMultiMetadata(), conf))
-                updateFetchTime(page, now.minus(60 - round * 2.toLong(), ChronoUnit.MINUTES))
+                updateFetchTime(page, now.minus(60L - round * 2, ChronoUnit.MINUTES))
                 updateMarks(page)
                 // Re-publish the article
-                val publishTime = now.minus(30 - round * 2.toLong(), ChronoUnit.HOURS)
+                val publishTime = now.minus(30L - round * 2, ChronoUnit.HOURS)
                 page.modifiedTime = publishTime
                 page.updateContentPublishTime(publishTime)
 
                 page.setLiveLinks(linkGraph[page.url]!!.map { HypeLink(it) }.toList())
-                Assert.assertEquals(publishTime, page.contentPublishTime)
+                Assert.assertEquals(publishTime.truncatedTo(ChronoUnit.SECONDS), page.contentPublishTime.truncatedTo(ChronoUnit.SECONDS))
             }.associateByTo(mutableMapOf()) { it.url }
 
             //      assertEquals(3, rows.size());
             /* Build the web graph */
             // 1. Add all vertices
             val graph = WebGraph()
-            rows.values.forEach(Consumer { page: WebPage? -> graph.addVertex(WebVertex(page)) })
+            rows.values.forEach { graph.addVertex(WebVertex(it)) }
             // 2. Build all links as edges
             val vertices: Collection<WebVertex> = graph.vertexSet().stream().filter { obj: WebVertex -> obj.hasWebPage() }.collect(Collectors.toList())
-            vertices.forEach(Consumer { v1: WebVertex ->
-                v1.webPage.liveLinks.values
-                        .forEach(Consumer { l: GHypeLink -> graph.addEdgeLenient(v1, WebVertex(l.url)).anchor = l.anchor.toString() })
+            vertices.forEach { v1: WebVertex ->
+                val page = v1.page
+                page?.liveLinks?.values?.forEach {
+                    val edge = graph.addEdgeLenient(v1, WebVertex(it.url.toString()))
+                    edge.anchor = it.anchor?.toString()?:""
+                }
             }
-            )
 
             //      for (WebVertex v1 : graph.vertexSet()) {
             //        for (WebVertex v2 : graph.vertexSet()) {
@@ -191,14 +192,14 @@ class TestNewsMonitorScoringFilter {
             /* OutGraphUpdateJob simulation */
             // 1. distribute score to outLinks
             graph.vertexSet().filter { it.hasWebPage() }.forEach {
-                scoringFilter.distributeScoreToOutlinks(it.webPage, graph, graph.outgoingEdgesOf(it), graph.outDegreeOf(it))
+                scoringFilter.distributeScoreToOutlinks(it.page!!, graph, graph.outgoingEdgesOf(it), graph.outDegreeOf(it))
             }
             // 2. update score for all rows
             graph.vertexSet().filter { it.hasWebPage() }.forEach {
-                scoringFilter.updateScore(it.webPage, graph, graph.incomingEdgesOf(it))
+                scoringFilter.updateScore(it.page!!, graph, graph.incomingEdgesOf(it))
             }
             // 3. update marks
-            graph.vertexSet().filter { it.hasWebPage() }.forEach { it.webPage.marks.put(Mark.UPDATEOUTG, batchId) }
+            graph.vertexSet().filter { it.hasWebPage() }.forEach { it.page!!.marks.put(Mark.UPDATEOUTG, batchId) }
             // 4. generate new rows
             val newRows = graph.vertexSet()
                     .filter { !it.hasWebPage() }
@@ -211,8 +212,8 @@ class TestNewsMonitorScoringFilter {
                     .filter { it.hasSourceWebPage() }
                     .filter { it.hasTargetWebPage() }
                     .forEach { edge: WebEdge ->
-                        val p1 = edge.sourceWebPage
-                        val p2 = edge.targetWebPage
+                        val p1 = edge.sourceWebPage!!
+                        val p2 = edge.targetWebPage!!
                         // Update by out-links
                         p1.updateRefContentPublishTime(p2.contentPublishTime)
                         p1.pageCounters.increase(PageCounters.Ref.ch, 1000 * round)
@@ -223,7 +224,7 @@ class TestNewsMonitorScoringFilter {
             graph.vertexSet()
                     .filter { it.hasWebPage() }
                     // .filter(v -> v.getUrl().contains("a.com"))
-                    .map { it.webPage }
+                    .map { it.page }
                     .forEach { LOG.info(it.toString()) }
         }
     }

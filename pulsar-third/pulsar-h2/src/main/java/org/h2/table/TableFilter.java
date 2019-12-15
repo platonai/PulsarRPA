@@ -16,6 +16,7 @@ import org.h2.expression.Comparison;
 import org.h2.expression.ConditionAndOr;
 import org.h2.expression.Expression;
 import org.h2.expression.ExpressionColumn;
+import org.h2.index.*;
 import org.h2.message.DbException;
 import org.h2.result.Row;
 import org.h2.result.SearchRow;

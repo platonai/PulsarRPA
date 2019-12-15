@@ -1,8 +1,8 @@
 package org.jsoup.safety;
 
-import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.Jsoup;
 import org.jsoup.TextUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Entities;

@@ -113,14 +113,16 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
      */
     private fun doReduce(key: GraphGroupKey, subGraphs: Iterable<WebGraphWritable>, context: Context) {
         metricsCounters.increase(CommonCounter.rRows)
-        val reversedUrl = key.reversedUrl
+        val reversedUrl = key.reversedUrl.toString()
         val url = unreverseUrl(reversedUrl)
         val graph = buildGraph(url, subGraphs)
-        val page = graph.focus.webPage ?: return
+        val page = graph.focus?.page ?: return
+
         if (page.url != url || page.key != reversedUrl) {
             LOG.error("Inconsistent url : $url")
             return
         }
+
         // 1. update depth, 2. update in-links, 3. update score from in-coming pages
         updateGraph(graph)
 
@@ -148,10 +150,10 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         val focus = WebVertex(url)
         for (graphWritable in subGraphs) {
             assert(graphWritable.optimizeMode == WebGraphWritable.OptimizeMode.IGNORE_TARGET)
-            val subGraph = graphWritable.get()
+            val subGraph = graphWritable.graph
             subGraph.edgeSet().forEach { edge: WebEdge ->
                 if (edge.isLoop) {
-                    focus.webPage = edge.sourceWebPage
+                    focus.page = edge.sourceWebPage
                 }
                 // log.info("MultiMetadata " + url + "\t<-\t" + edge.getMetadata());
                 graph.addEdgeLenient(edge.source, focus, subGraph.getEdgeWeight(edge)).metadata = edge.metadata
@@ -159,11 +161,11 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         }
 
         if (focus.hasWebPage()) {
-            focus.webPage.variables[PulsarParams.VAR_PAGE_EXISTENCE] = PageExistence.PASSED
+            focus.page!!.variables[PulsarParams.VAR_PAGE_EXISTENCE] = PageExistence.PASSED
             metricsCounters.increase(UpdateComponent.Companion.Counter.rPassed)
         } else {
             val page = loadOrCreateWebPage(url)
-            focus.webPage = page
+            focus.page = page
         }
 
         graph.focus = focus
@@ -186,7 +188,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
      */
     private fun updateGraph(graph: WebGraph) {
         val focus = graph.focus
-        val focusedPage = focus.webPage
+        val focusedPage = focus?.page?:return
         val incomingEdges = graph.incomingEdgesOf(focus)
         focusedPage.inlinks.clear()
         var smallestDepth = focusedPage.distance
@@ -208,7 +210,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
                 anchors.add(incomingEdge.anchor)
             }
 
-            val incomingPage = incomingEdge.sourceWebPage
+            val incomingPage = incomingEdge.sourceWebPage!!
             if (incomingPage.distance + 1 < smallestDepth) {
                 smallestDepth = incomingPage.distance + 1
                 shallowestEdge = incomingEdge
@@ -220,7 +222,7 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         }
 
         if (shallowestEdge != null) {
-            val incomingPage = shallowestEdge.sourceWebPage
+            val incomingPage = shallowestEdge.sourceWebPage!!
             focusedPage.referrer = incomingPage.url
             focusedPage.distance = smallestDepth
             // Do we have this field?

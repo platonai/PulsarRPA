@@ -34,18 +34,18 @@ internal class Out2InUpdateCombiner : Reducer<GraphGroupKey, WebGraphWritable, G
 
     override fun setup(context: Context) {
         conf = context.configuration
-        webGraphWritable = WebGraphWritable(null, WebGraphWritable.OptimizeMode.IGNORE_TARGET, conf)
+        webGraphWritable = WebGraphWritable(WebGraph.EMPTY, WebGraphWritable.OptimizeMode.IGNORE_TARGET, conf)
         Params.of(
                 "className", this.javaClass.simpleName
         ).withLogger(LOG).info()
     }
 
-    override fun reduce(key: GraphGroupKey?, subGraphs: Iterable<WebGraphWritable>, context: Context) {
+    override fun reduce(key: GraphGroupKey, subGraphs: Iterable<WebGraphWritable>, context: Context) {
         val graph = WebGraph()
         try {
             for (graphWritable in subGraphs) {
-                edgeCountBeforeCombine += graphWritable.get().edgeSet().size
-                graph.combine(graphWritable.get())
+                edgeCountBeforeCombine += graphWritable.graph.edgeSet().size
+                graph.combine(graphWritable.graph)
             }
             edgeCountAfterCombine += graph.edgeSet().size
             context.write(key, webGraphWritable.reset(graph))

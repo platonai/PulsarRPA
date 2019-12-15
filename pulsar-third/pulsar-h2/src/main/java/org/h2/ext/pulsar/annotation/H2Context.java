@@ -1,5 +1,7 @@
 package org.h2.ext.pulsar.annotation;
 
+import java.lang.annotation.*;
+
 /**
  * This annotation is used to inject information into a class
  * field, bean property or method parameter.

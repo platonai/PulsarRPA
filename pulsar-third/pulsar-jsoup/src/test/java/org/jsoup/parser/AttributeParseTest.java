@@ -1,11 +1,15 @@
 package org.jsoup.parser;
 
+import java.util.List;
+
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.*;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Attributes;
+import org.jsoup.nodes.BooleanAttribute;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.junit.Assert.*;
 

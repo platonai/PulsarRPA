@@ -11,6 +11,7 @@ import org.h2.util.NetUtils;
 import org.h2.util.StatementBuilder;
 import org.h2.util.StringUtils;
 
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 

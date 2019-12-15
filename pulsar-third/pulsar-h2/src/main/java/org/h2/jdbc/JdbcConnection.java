@@ -7,18 +7,21 @@ package org.h2.jdbc;
 
 import org.h2.api.ErrorCode;
 import org.h2.command.CommandInterface;
+import org.h2.engine.*;
 import org.h2.message.DbException;
 import org.h2.message.TraceObject;
 import org.h2.result.ResultInterface;
 import org.h2.util.CloseWatcher;
 import org.h2.util.JdbcUtils;
 import org.h2.util.Utils;
+import org.h2.value.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 

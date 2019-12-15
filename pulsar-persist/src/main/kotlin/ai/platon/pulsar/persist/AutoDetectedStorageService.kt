@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * TODO: Try spring boot
  */
 class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
+    private val log = LoggerFactory.getLogger(AutoDetectedStorageService::class.java)
+
     val storeClassName: String = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> = detectDataStoreClass(conf)
     val pageStore: DataStore<String, GWebPage>
@@ -47,14 +49,10 @@ class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
     }
 
     companion object {
-
-        private val log = LoggerFactory.getLogger(AutoDetectedStorageService::class.java)
-        // const val SPRING_EMBEDDED_MONGO_AUTO_CONFIGURATION = "org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration"
-
         /**
          * Return the DataStore persistent class used to persist WebPage.
          *
-         * @param conf PulsarConstants configuration
+         * @param conf AppConstants configuration
          * @return the DataStore persistent class
          */
         fun detectDataStoreClassName(conf: ImmutableConfig): String {
@@ -74,7 +72,7 @@ class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
         /**
          * Return the DataStore persistent class used to persist WebPage.
          *
-         * @param conf PulsarConstants configuration
+         * @param conf AppConstants configuration
          * @return the DataStore persistent class
          */
         @Throws(ClassNotFoundException::class)

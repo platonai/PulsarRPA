@@ -14,6 +14,7 @@ import org.h2.util.Tool;
 import java.io.IOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;
+import java.sql.*;
 
 /**
  * Creates a cluster from a standalone database.

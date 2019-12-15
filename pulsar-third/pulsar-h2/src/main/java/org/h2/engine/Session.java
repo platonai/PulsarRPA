@@ -6,6 +6,7 @@
 package org.h2.engine;
 
 import org.h2.api.ErrorCode;
+import org.h2.command.*;
 import org.h2.command.ddl.Analyze;
 import org.h2.command.dml.Query;
 import org.h2.command.dml.SetTypes;
@@ -32,7 +33,9 @@ import org.h2.table.TableFilter;
 import org.h2.table.TableType;
 import org.h2.util.New;
 import org.h2.util.SmallLRUCache;
+import org.h2.value.*;
 
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**

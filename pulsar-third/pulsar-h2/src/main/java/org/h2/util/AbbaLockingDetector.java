@@ -9,6 +9,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.*;
 
 /**
  * Utility to detect AB-BA deadlocks.

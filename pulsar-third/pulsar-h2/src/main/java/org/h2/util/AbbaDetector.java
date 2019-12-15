@@ -5,6 +5,8 @@
  */
 package org.h2.util;
 
+import java.util.*;
+
 /**
  * Utility to detect AB-BA deadlocks.
  */

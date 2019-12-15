@@ -9,6 +9,7 @@ import org.h2.command.Parser;
 import org.h2.util.New;
 import org.h2.util.StringUtils;
 
+import java.sql.*;
 import java.util.ArrayList;
 
 /**

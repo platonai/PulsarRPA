@@ -14,6 +14,8 @@ import org.h2tools.jaqu.Table.JQTable;
 import org.h2tools.jaqu.util.WeakIdentityHashMap;
 
 import javax.sql.DataSource;
+import java.sql.*;
+import java.util.*;
 
 /**
  * This class represents a connection to a database.

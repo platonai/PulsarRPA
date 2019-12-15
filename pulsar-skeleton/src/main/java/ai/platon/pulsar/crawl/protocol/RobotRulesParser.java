@@ -37,7 +37,7 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-// PulsarConstants imports
+// AppConstants imports
 // Commons Logging imports
 
 /**

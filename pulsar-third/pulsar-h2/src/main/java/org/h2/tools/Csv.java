@@ -15,6 +15,8 @@ import org.h2.util.JdbcUtils;
 import org.h2.util.New;
 import org.h2.util.StringUtils;
 
+import java.io.*;
+import java.sql.*;
 import java.util.ArrayList;
 
 /**

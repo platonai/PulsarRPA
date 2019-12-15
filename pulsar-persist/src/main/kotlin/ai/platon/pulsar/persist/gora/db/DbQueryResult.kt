@@ -6,30 +6,26 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package ai.platon.pulsar.persist.gora.db;
+ */
+package ai.platon.pulsar.persist.gora.db
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Lists
+import java.util.*
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-public class DbQueryResult {
-    private List<Map<String, Object>> values = Lists.newLinkedList();
-
-    public List<Map<String, Object>> getValues() {
-        return Collections.unmodifiableList(values);
+class DbQueryResult {
+    private val values: MutableList<Map<String, Any>> = Lists.newLinkedList()
+    fun getValues(): List<Map<String, Any>> {
+        return Collections.unmodifiableList(values)
     }
 
-    public void addValue(Map<String, Object> next) {
-        values.add(next);
+    fun addValue(next: Map<String, Any>) {
+        values.add(next)
     }
 }

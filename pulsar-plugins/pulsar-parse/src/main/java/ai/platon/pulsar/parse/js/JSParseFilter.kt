@@ -53,7 +53,7 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
         val documentFragment = parseContext.documentFragment
         val metaTags = parseContext.metaTags
         if (documentFragment != null && metaTags != null) {
-            walk(documentFragment, metaTags, parseContext.url, parseContext.parseResult.hypeLinks)
+            walk(documentFragment, metaTags, parseContext.page.url, parseContext.parseResult.hypeLinks)
         }
     }
 

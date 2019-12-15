@@ -10,6 +10,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.h2.api.ErrorCode;
 import org.h2.engine.Database;
 import org.h2.engine.Session;
+import org.h2.index.*;
 import org.h2.message.DbException;
 import org.h2.mvstore.db.TransactionStore.Transaction;
 import org.h2.mvstore.db.TransactionStore.TransactionMap;

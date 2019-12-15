@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.options
 
+import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -20,8 +21,8 @@ class UpdateOptions(args: Array<String>, conf: ImmutableConfig) : CommonOptions(
 
     init {
         crawlId = conf.get(CapabilityTypes.STORAGE_CRAWL_ID)
-//        val bid = conf.get(CapabilityTypes.BATCH_ID, AppFiles.readBatchIdOrDefault("all"))
-//        batchId.add(bid)
+        val bid = conf.get(CapabilityTypes.BATCH_ID, AppFiles.readBatchIdOrDefault("all"))
+        batchId.add(bid)
     }
 
     override fun getParams(): Params {

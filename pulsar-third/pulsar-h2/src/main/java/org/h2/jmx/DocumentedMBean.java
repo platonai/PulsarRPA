@@ -7,6 +7,7 @@ package org.h2.jmx;
 
 import org.h2.util.Utils;
 
+import javax.management.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Properties;

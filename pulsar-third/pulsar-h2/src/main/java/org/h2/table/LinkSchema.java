@@ -10,6 +10,8 @@ import org.h2.tools.SimpleResultSet;
 import org.h2.util.JdbcUtils;
 import org.h2.util.StringUtils;
 
+import java.sql.*;
+
 /**
  * A utility class to create table links for a whole schema.
  */

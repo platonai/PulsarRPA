@@ -18,6 +18,7 @@ import org.h2.util.StringUtils;
 import org.h2.util.Utils;
 
 import java.io.IOException;
+import java.util.*;
 
 /**
  * Encapsulates the connection settings, including user name and password.

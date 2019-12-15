@@ -14,7 +14,9 @@ import org.h2.security.SHA256;
 import org.h2.store.Data;
 import org.h2.store.DataReader;
 import org.h2.tools.SimpleResultSet;
+import org.h2.util.*;
 
+import java.io.*;
 import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.Socket;

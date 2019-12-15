@@ -4,6 +4,8 @@ import org.h2.api.ErrorCode;
 import org.h2.command.dml.Query;
 import org.h2.command.dml.Select;
 import org.h2.command.dml.SelectOrderBy;
+import org.h2.engine.*;
+import org.h2.expression.*;
 import org.h2.message.DbException;
 import org.h2.message.Trace;
 import org.h2.schema.Schema;
@@ -12,6 +14,7 @@ import org.h2.table.Column;
 import org.h2.table.TableFilter;
 import org.h2.util.MathUtils;
 import org.h2.util.StringUtils;
+import org.h2.value.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;

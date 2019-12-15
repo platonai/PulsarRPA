@@ -15,12 +15,15 @@ import org.h2.engine.SysProperties;
 import org.h2.expression.Expression;
 import org.h2.message.DbException;
 import org.h2.security.SHA256;
+import org.h2.store.*;
 import org.h2.store.fs.FileUtils;
 import org.h2.tools.CompressTool;
 import org.h2.util.IOUtils;
 import org.h2.util.SmallLRUCache;
 import org.h2.util.TempFileDeleter;
 import org.h2.value.CompareMode;
+
+import java.io.*;
 
 /**
  * This class is the base for RunScriptCommand and ScriptCommand.

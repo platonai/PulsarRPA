@@ -40,7 +40,7 @@ public class RuntimeUtils {
 
     /**
      * Check local command file to see if there are pending commands
-     * Supported local file commands can be found in PulsarConstants CMD_*
+     * Supported local file commands can be found in AppConstants CMD_*
      * General command options are supported:
      * -keep: the command should be always keep in the file and execute every time the command file is checked,
      *          otherwise the command is executed only
@@ -51,7 +51,7 @@ public class RuntimeUtils {
 
     /**
      * Check local command file to see if there are pending commands
-     * Supported local file commands can be found in PulsarConstants CMD_*
+     * Supported local file commands can be found in AppConstants CMD_*
      * General command options are supported:
      * -keep: the command should be always keep in the file and execute every time the command file is checked,
      *          otherwise the command is executed only

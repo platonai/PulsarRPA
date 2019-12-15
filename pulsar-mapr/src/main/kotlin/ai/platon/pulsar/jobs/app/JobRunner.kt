@@ -8,8 +8,8 @@ import ai.platon.pulsar.jobs.app.generate.GenerateJob
 import ai.platon.pulsar.jobs.app.homepage.TopPageHomeUpdateJob
 import ai.platon.pulsar.jobs.app.inject.InjectJob
 import ai.platon.pulsar.jobs.parse.ParserJob
-import ai.platon.pulsar.jobs.app.update.InGraphUpdateJob
-import ai.platon.pulsar.jobs.app.update.OutGraphUpdateJob
+import ai.platon.pulsar.jobs.app.update.In2OutGraphUpdateJob
+import ai.platon.pulsar.jobs.app.update.Out2InGraphUpdateJob
 import ai.platon.pulsar.jobs.core.AppContextAwareJob
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
@@ -30,8 +30,8 @@ class JobRunner {
             "generate" to GenerateJob(),
             "homepage" to TopPageHomeUpdateJob(),
             "parse" to ParserJob(),
-            "updateingraph" to InGraphUpdateJob(),
-            "updateoutgraph" to OutGraphUpdateJob()
+            "updateingraph" to In2OutGraphUpdateJob(),
+            "updateoutgraph" to Out2InGraphUpdateJob()
     )
 
     @Bean

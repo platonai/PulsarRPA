@@ -330,11 +330,11 @@ public class WebPage {
     /**
      * All options are saved here, including crawl options, link options, entity options and so on
      */
-    public CharSequence getOptions() {
+    public String getOptions() {
         return page.getOptions() == null ? "" : page.getOptions().toString();
     }
 
-    public void setOptions(CharSequence options) {
+    public void setOptions(String options) {
         page.setOptions(options);
     }
 

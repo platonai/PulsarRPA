@@ -21,7 +21,7 @@ package ai.platon.pulsar.crawl.filter
 import org.slf4j.LoggerFactory
 
 /**
- * Interface used to limit which URLs enter PulsarConstants. Used by the injector and the
+ * Interface used to limit which URLs enter AppConstants. Used by the injector and the
  * db updater.
  */
 interface UrlFilter {

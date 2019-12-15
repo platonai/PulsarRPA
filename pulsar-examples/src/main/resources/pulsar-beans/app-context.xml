@@ -7,4 +7,14 @@
 
     <import resource="classpath:/pulsar-beans/components-context.xml"/>
 
+    <bean id="spiderSimulator" class="ai.platon.pulsar.examples.spider.SpiderSimulator">
+        <constructor-arg ref="conf" />
+        <constructor-arg ref="scoringFilters" />
+        <constructor-arg ref="fetchSchedule" />
+        <constructor-arg ref="seedBuilder" />
+        <constructor-arg ref="fetchComponent" />
+        <constructor-arg ref="parseComponent" />
+        <constructor-arg ref="indexComponent" />
+    </bean>
+
 </beans>

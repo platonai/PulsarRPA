@@ -16,7 +16,9 @@ import org.h2.store.FileStoreInputStream;
 import org.h2.store.FileStoreOutputStream;
 import org.h2.store.fs.FileUtils;
 import org.h2.table.Column;
+import org.h2.util.*;
 
+import java.io.*;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 

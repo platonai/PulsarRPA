@@ -2,9 +2,9 @@ package ai.platon.pulsar.dom.nodes.node.ext
 
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_HIDDEN
-import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_HIDDEN
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
@@ -76,9 +76,9 @@ val nilDocument = Document.createShell("")
 
 val Document.isNil get() = this === nilDocument
 
-val Document.pulsarMetaElement get() = getElementById("#${PulsarConstants.PULSAR_META_INFORMATION_ID}")
+val Document.pulsarMetaElement get() = getElementById("#${AppConstants.PULSAR_META_INFORMATION_ID}")
 
-val Document.pulsarScriptElement get() = getElementById("#${PulsarConstants.PULSAR_SCRIPT_SECTION_ID}")
+val Document.pulsarScriptElement get() = getElementById("#${AppConstants.PULSAR_SCRIPT_SECTION_ID}")
 
 val Document.pulsarScript get() = ownerDocument.pulsarScriptElement.text()
 

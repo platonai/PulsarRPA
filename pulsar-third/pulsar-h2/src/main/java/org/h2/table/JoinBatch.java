@@ -8,9 +8,7 @@ package org.h2.table;
 import org.h2.command.dml.Query;
 import org.h2.command.dml.Select;
 import org.h2.command.dml.SelectUnion;
-import org.h2.index.BaseIndex;
-import org.h2.index.Cursor;
-import org.h2.index.IndexLookupBatch;
+import org.h2.index.*;
 import org.h2.message.DbException;
 import org.h2.result.ResultInterface;
 import org.h2.result.Row;
@@ -21,6 +19,7 @@ import org.h2.util.New;
 import org.h2.value.Value;
 import org.h2.value.ValueLong;
 
+import java.util.*;
 import java.util.concurrent.Future;
 
 /**

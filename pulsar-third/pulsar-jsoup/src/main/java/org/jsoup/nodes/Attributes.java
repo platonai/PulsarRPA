@@ -1,11 +1,19 @@
 package org.jsoup.nodes;
 
 import org.jsoup.SerializationException;
-import org.jsoup.helper.Validate;
 import org.jsoup.internal.StringUtil;
+import org.jsoup.helper.Validate;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.jsoup.internal.Normalizer.lowerCase;
 

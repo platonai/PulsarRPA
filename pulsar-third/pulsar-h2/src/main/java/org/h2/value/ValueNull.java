@@ -12,6 +12,7 @@ import org.h2.table.Column;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.sql.*;
 
 /**
  * Implementation of NULL. NULL is not a regular data type.

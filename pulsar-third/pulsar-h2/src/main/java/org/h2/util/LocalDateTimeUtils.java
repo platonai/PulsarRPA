@@ -9,6 +9,7 @@ package org.h2.util;
 
 import org.h2.api.TimestampWithTimeZone;
 import org.h2.message.DbException;
+import org.h2.value.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -3,9 +3,9 @@ package ai.platon.pulsar.dom
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_NODE_FEATURE_CALCULATOR
+import ai.platon.pulsar.common.config.AppConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
-import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
-import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*

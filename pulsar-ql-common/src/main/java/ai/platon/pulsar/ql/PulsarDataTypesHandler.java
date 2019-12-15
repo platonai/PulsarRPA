@@ -6,6 +6,7 @@ import org.h2.api.CustomDataTypesHandler;
 import org.h2.api.ErrorCode;
 import org.h2.message.DbException;
 import org.h2.store.DataHandler;
+import org.h2.value.*;
 import org.jsoup.nodes.Element;
 
 import java.sql.Types;

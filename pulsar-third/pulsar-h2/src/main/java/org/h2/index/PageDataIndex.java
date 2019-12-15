@@ -25,6 +25,8 @@ import org.h2.util.New;
 import org.h2.value.Value;
 import org.h2.value.ValueNull;
 
+import java.util.*;
+
 /**
  * The scan index allows to access a row by key. It can be used to iterate over
  * all rows of a table. Each regular table has one such object, even if no

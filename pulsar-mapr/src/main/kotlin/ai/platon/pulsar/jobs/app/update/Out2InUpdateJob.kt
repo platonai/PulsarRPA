@@ -24,7 +24,7 @@ import ai.platon.pulsar.persist.graph.GraphGroupKey.*
 import ai.platon.pulsar.persist.io.WebGraphWritable
 import kotlin.system.exitProcess
 
-class OutGraphUpdateJob: WebGraphUpdateJob() {
+class Out2InGraphUpdateJob: WebGraphUpdateJob() {
 
     public override fun initJob() {
         // Partition by {url}, sort by {url,score} and group by {url}.
@@ -44,6 +44,6 @@ class OutGraphUpdateJob: WebGraphUpdateJob() {
 
 fun main(args: Array<String>) {
     JobEnv.initialize()
-    val res = AppContextAwareJob.run(OutGraphUpdateJob(), args)
+    val res = AppContextAwareJob.run(Out2InGraphUpdateJob(), args)
     exitProcess(res)
 }

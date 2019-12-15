@@ -62,10 +62,10 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
 
     private fun doReduce(key: GraphGroupKey, subGraphs: Iterable<WebGraphWritable>, context: Context) {
         metricsCounters.increase(CommonCounter.rRows)
-        val reversedUrl = key.reversedUrl
+        val reversedUrl = key.reversedUrl.toString()
         val url = unreverseUrl(reversedUrl)
         val graph = buildGraph(url, subGraphs)
-        val page = graph.focus.webPage
+        val page = graph.focus?.page
         if (page == null) {
             metricsCounters.increase(UpdateComponent.Companion.Counter.rNotExist)
             return
@@ -103,10 +103,10 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
 
         for (graphWritable in subGraphs) {
             assert(graphWritable.optimizeMode == WebGraphWritable.OptimizeMode.IGNORE_SOURCE)
-            val subGraph = graphWritable.get()
+            val subGraph = graphWritable.graph
             subGraph.edgeSet().forEach {
                 if (it.isLoop) {
-                    focus.webPage = it.targetWebPage
+                    focus.page = it.targetWebPage
                 }
                 graph.addEdgeLenient(focus, it.target, subGraph.getEdgeWeight(it))
             }
@@ -117,7 +117,7 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
             val page = webDb.get(url)
             // Page is always in the db, because it's the page who introduces this page
             if (page != null) {
-                focus.webPage = page
+                focus.page = page
                 metricsCounters.increase(UpdateComponent.Companion.Counter.rLoaded)
             }
         } else {
@@ -134,7 +134,7 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
      */
     private fun updateGraph(graph: WebGraph): Boolean {
         val focus = graph.focus
-        val page = focus.webPage
+        val page = focus?.page?:return false
         var totalUpdates = 0
         for (outgoingEdge in graph.outgoingEdgesOf(focus)) {
             if (outgoingEdge.isLoop) {
@@ -143,7 +143,7 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
             }
 
             /* Update outlink page */
-            val outgoingPage = outgoingEdge.targetWebPage
+            val outgoingPage = outgoingEdge.targetWebPage?:return false
             val lastPageCounters = page.pageCounters.clone()
 
             updateComponent.updateByOutgoingPage(page, outgoingPage)

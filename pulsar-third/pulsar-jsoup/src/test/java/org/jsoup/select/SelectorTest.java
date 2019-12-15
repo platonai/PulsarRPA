@@ -1,8 +1,8 @@
 package org.jsoup.select;
 
-import org.jsoup.Jsoup;
 import org.jsoup.MultiLocaleRule;
 import org.jsoup.MultiLocaleRule.MultiLocaleTest;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.Rule;

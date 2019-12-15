@@ -16,6 +16,7 @@ import org.h2.result.SortOrder;
 import org.h2.store.DataHandler;
 import org.h2.tools.SimpleResultSet;
 import org.h2.util.JdbcUtils;
+import org.h2.value.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

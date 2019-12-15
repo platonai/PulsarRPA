@@ -42,13 +42,11 @@ internal class In2OutGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebP
         init { MetricsCounters.register(Counter::class.java) }
     }
 
-    private lateinit var graphGroupKey: GraphGroupKey
     private lateinit var webGraphWritable: WebGraphWritable
 
     public override fun setup(context: Context) {
         val crawlId = jobConf[CapabilityTypes.STORAGE_CRAWL_ID]
-        graphGroupKey = GraphGroupKey()
-        webGraphWritable = WebGraphWritable(null, WebGraphWritable.OptimizeMode.IGNORE_SOURCE, jobConf.unbox())
+        webGraphWritable = WebGraphWritable(WebGraph.EMPTY, WebGraphWritable.OptimizeMode.IGNORE_SOURCE, jobConf.unbox())
         LOG.info(Params.format(
                 "className", this.javaClass.simpleName,
                 "crawlId", crawlId
@@ -67,7 +65,7 @@ internal class In2OutGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebP
         val v2 = WebVertex(page)
         /* A loop in the graph */
         graph.addEdgeLenient(v2, v2, page.score.toDouble())
-        page.inlinks.forEach { (key, _) -> graph.addEdgeLenient(WebVertex(key), v2) }
+        page.inlinks.forEach { (key, _) -> graph.addEdgeLenient(WebVertex(key.toString()), v2) }
         graph.incomingEdgesOf(v2).forEach { writeAsSubGraph(it, graph) }
 
         metricsCounters.increase(CommonCounter.mPersist)
@@ -104,7 +102,7 @@ internal class In2OutGraphUpdateMapper : AppContextAwareGoraMapper<String, GWebP
         try {
             val subGraph = WebGraph.of(edge, graph)
             // int score = graph.getEdgeWeight(edge) - edge.getTargetWebPage().getFetchPriority();
-            graphGroupKey.reset(reverseUrl(edge.sourceUrl), graph.getEdgeWeight(edge))
+            val graphGroupKey = GraphGroupKey(reverseUrl(edge.sourceUrl), graph.getEdgeWeight(edge))
             webGraphWritable.reset(subGraph)
             // noinspection unchecked
             context.write(graphGroupKey, webGraphWritable)

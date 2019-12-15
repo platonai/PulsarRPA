@@ -19,6 +19,8 @@ import org.h2.util.StatementBuilder;
 import org.h2.value.CompareMode;
 import org.h2.value.Value;
 
+import java.util.*;
+
 /**
  * A index condition object is made for each condition that can potentially use
  * an index. This class does not extend expression, but in general there is one

@@ -56,11 +56,13 @@ class JsoupParser(
             // No rules
             return entities
         }
+
         val fields = extract(options)
         if (!fields.isEmpty()) {
             entities.add(fields)
             extract(options.collectionOptions)
         }
+
         return entities
     }
 

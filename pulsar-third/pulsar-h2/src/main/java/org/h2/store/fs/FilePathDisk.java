@@ -11,6 +11,7 @@ import org.h2.message.DbException;
 import org.h2.util.IOUtils;
 import org.h2.util.New;
 
+import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;

@@ -9,6 +9,7 @@ import org.h2.api.ErrorCode;
 import org.h2.command.Prepared;
 import org.h2.engine.Database;
 import org.h2.engine.Session;
+import org.h2.expression.*;
 import org.h2.message.DbException;
 import org.h2.result.ResultInterface;
 import org.h2.result.ResultTarget;

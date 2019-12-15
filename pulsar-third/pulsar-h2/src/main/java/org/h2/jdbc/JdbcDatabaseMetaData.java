@@ -14,7 +14,7 @@ import org.h2.tools.SimpleResultSet;
 import org.h2.util.StatementBuilder;
 import org.h2.util.StringUtils;
 
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
 

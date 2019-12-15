@@ -5,6 +5,7 @@
  */
 package org.h2tools.dev.util;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 

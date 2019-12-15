@@ -1,6 +1,6 @@
 package ai.platon.pulsar.dom.model
 
-import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
+import ai.platon.pulsar.common.config.AppConstants.NIL_PAGE_URL
 import java.util.*
 
 val METADATA = FragmentCategory("Metadata")

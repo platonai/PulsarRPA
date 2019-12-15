@@ -21,6 +21,7 @@ import org.h2.table.TableFilter;
 import org.h2.util.New;
 import org.h2.util.StatementBuilder;
 import org.h2.util.StringUtils;
+import org.h2.value.*;
 
 import java.util.ArrayList;
 import java.util.Collections;

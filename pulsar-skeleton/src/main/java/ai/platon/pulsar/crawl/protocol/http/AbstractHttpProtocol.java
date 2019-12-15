@@ -107,9 +107,9 @@ public abstract class AbstractHttpProtocol implements Protocol {
     protected int maxContent = 1024 * 1024;
 
     /**
-     * The PulsarConstants 'User-Agent' request header
+     * The AppConstants 'User-Agent' request header
      */
-    protected String userAgent = NetUtil.getAgentString("Pulsar", null, "PulsarConstants",
+    protected String userAgent = NetUtil.getAgentString("Pulsar", null, "AppConstants",
             "http://pulsar.platon.ai/bot.html", "agent@pulsar.platon.ai");
 
     /**
@@ -474,7 +474,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     /**
-     * Value of "Accept-Language" request header sent by PulsarConstants.
+     * Value of "Accept-Language" request header sent by AppConstants.
      *
      * @return The value of the header "Accept-Language" header.
      */

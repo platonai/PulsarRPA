@@ -5,6 +5,8 @@
  */
 package org.h2tools.dev.util;
 
+import java.io.*;
+
 /**
  * Filter full thread dumps from a log file.
  */

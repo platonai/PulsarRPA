@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.crawl.protocol.http;
 
-// PulsarConstants imports
+// AppConstants imports
 
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 

@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2SessionFactory
@@ -66,7 +66,7 @@ abstract class TestBase {
             history.add(0, "-- Time: $startTime")
             val sqls = history.joinToString("\n") { it }
             val ident = DateTimeUtil.now("MMdd.HH")
-            val path = AppPaths.get(PulsarConstants.PULSAR_DEFAULT_TMP_DIR, "history", "sql-history-$ident.sql")
+            val path = AppPaths.get(AppConstants.PULSAR_DEFAULT_TMP_DIR, "history", "sql-history-$ident.sql")
             Files.createDirectories(path.parent)
             AppFiles.saveTo(sqls, path, deleteIfExists = true)
 

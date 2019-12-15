@@ -10,8 +10,7 @@ import org.h2.engine.SysProperties;
 import org.h2.message.DbException;
 import org.h2.store.fs.FileUtils;
 
-import java.io.EOFException;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * This utility class contains input/output functions.

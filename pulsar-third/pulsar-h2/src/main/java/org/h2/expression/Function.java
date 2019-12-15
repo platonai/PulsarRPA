@@ -20,14 +20,19 @@ import org.h2.security.BlockCipher;
 import org.h2.security.CipherFactory;
 import org.h2.security.SHA256;
 import org.h2.store.fs.FileUtils;
+import org.h2.table.*;
 import org.h2.tools.CompressTool;
 import org.h2.tools.Csv;
+import org.h2.util.*;
+import org.h2.value.*;
 
+import java.io.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 

@@ -13,6 +13,7 @@ import org.h2.util.IOUtils;
 import org.h2.util.Task;
 import org.h2.value.Value;
 
+import java.io.*;
 import java.sql.Blob;
 import java.sql.SQLException;
 

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
+import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.WebPageFormatter

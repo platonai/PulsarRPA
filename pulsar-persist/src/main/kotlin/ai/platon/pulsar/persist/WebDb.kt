@@ -170,8 +170,8 @@ class WebDb(
     fun query(query: DbQuery): Iterator<WebPage> {
         val goraQuery = store.newQuery()
 
-        val startKey: String? = reverseUrlOrNull(query.startUrl)
-        var endKey: String? = reverseUrlOrNull(query.endUrl)
+        val startKey = query.startUrl?.let { reverseUrlOrNull(it) }
+        var endKey = query.endUrl?.let { reverseUrlOrNull(it) }
 
         // The placeholder is used to mark the last character, it's required for serialization, especially for json format
         if (endKey != null) {

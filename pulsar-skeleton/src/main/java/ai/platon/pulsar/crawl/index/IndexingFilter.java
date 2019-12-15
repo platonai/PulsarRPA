@@ -9,7 +9,7 @@ import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// PulsarConstants imports
+// AppConstants imports
 
 /**
  * Extension point for indexing. Permits one to add metadata to the indexed

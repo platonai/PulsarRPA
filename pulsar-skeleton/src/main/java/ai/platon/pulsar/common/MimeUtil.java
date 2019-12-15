@@ -124,7 +124,7 @@ public final class MimeUtil {
      * @param typeName
      *          The original mime type, returned from a {@link ProtocolOutput}.
      * @param url
-     *          The given @see url, that PulsarConstants was trying to text.
+     *          The given @see url, that AppConstants was trying to text.
      * @param data
      *          The byte data, returned from the text, if any.
      * @return The correctly, automatically guessed {@link MimeType} name.

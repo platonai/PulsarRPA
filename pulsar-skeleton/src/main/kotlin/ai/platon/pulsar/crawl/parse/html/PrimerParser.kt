@@ -45,7 +45,7 @@ import java.util.*
  * such as getLiveLinks, getPageText, etc.
  */
 class PrimerParser(conf: ImmutableConfig) {
-    private val LOG = LoggerFactory.getLogger(Parser::class.java)
+    private val log = LoggerFactory.getLogger(Parser::class.java)
 
     private var encodingDetector = EncodingDetector(conf)
     private val linkParams = HashMap<String, LinkParams>()
@@ -84,7 +84,7 @@ class PrimerParser(conf: ImmutableConfig) {
             page.encoding = encoding
             page.encodingClues = encodingDetector.cluesAsString
         } else {
-            LOG.warn("Failed to detect encoding, url: " + page.url)
+            log.warn("Failed to detect encoding, url: " + page.url)
         }
     }
 
@@ -124,11 +124,11 @@ class PrimerParser(conf: ImmutableConfig) {
     }
 
     /**
-     * Parse links use [PrimerParser]
+     * Collect links use [PrimerParser]
      * TODO: If we are using native browser mode, the link parsing can be done inside the browser
      * */
     fun collectLinks(baseURLHint: URL, parseContext: ParseContext, crawlFilters: CrawlFilters) {
-        crawlFilters.normalizeToNull(parseContext.url)?:return
+        crawlFilters.normalizeToNull(parseContext.page.url)?:return
 
         val docRoot = parseContext.documentFragment?:return
         val parseResult = parseContext.parseResult
@@ -361,7 +361,7 @@ class PrimerParser(conf: ImmutableConfig) {
                 getLinksStep2(base, hypeLinks, currentNode, crawlFilters)
                 walker.skipChildren()
             } else {
-                LOG.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
+                log.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
             }
         }
 
@@ -374,7 +374,7 @@ class PrimerParser(conf: ImmutableConfig) {
         while (walker.hasNext()) {
             val currentNode = walker.nextNode()
             if (crawlFilters != null && crawlFilters.isDisallowed(currentNode)) {
-                LOG.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
+                log.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
                 walker.skipChildren()
                 continue
             }

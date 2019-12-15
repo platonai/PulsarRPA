@@ -9,6 +9,7 @@ import org.h2.api.ErrorCode;
 import org.h2.command.ddl.CreateSynonymData;
 import org.h2.command.ddl.CreateTableData;
 import org.h2.constraint.Constraint;
+import org.h2.engine.*;
 import org.h2.index.Index;
 import org.h2.message.DbException;
 import org.h2.message.Trace;

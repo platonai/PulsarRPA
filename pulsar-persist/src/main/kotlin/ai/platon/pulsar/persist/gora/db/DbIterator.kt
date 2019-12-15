@@ -6,81 +6,66 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package ai.platon.pulsar.persist.gora.db;
+ */
+package ai.platon.pulsar.persist.gora.db
 
-import ai.platon.pulsar.persist.WebDb;
-import ai.platon.pulsar.persist.WebPage;
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import org.apache.gora.query.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.apache.gora.query.Result
+import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.function.Predicate
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.function.Predicate;
+class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
+    private val log = LoggerFactory.getLogger(WebDb::class.java)
 
-public class DbIterator implements Iterator<WebPage> {
+    private var nextPage: WebPage? = null
+    private var filter: Predicate<WebPage>? = null
 
-    public static final Logger LOG = LoggerFactory.getLogger(WebDb.class);
-
-    private Result<String, GWebPage> result;
-    private WebPage nextPage;
-    private Predicate<WebPage> filter;
-
-    public DbIterator() {
-    }
-
-    public DbIterator(Result<String, GWebPage> result) {
-        Objects.requireNonNull(result);
-
-        this.result = result;
+    init {
         try {
-            moveToNext();
-        } catch (Exception e) {
-            LOG.error("Failed to create read iterator!" + e);
+            moveToNext()
+        } catch (e: Exception) {
+            log.error("Failed to create read iterator!$e")
         }
     }
 
-    public void setFilter(Predicate<WebPage> filter) {
-        this.filter = filter;
+    fun setFilter(filter: Predicate<WebPage>) {
+        this.filter = filter
     }
 
-    @Override
-    public boolean hasNext() {
-        return nextPage != null;
+    override fun hasNext(): Boolean {
+        return nextPage != null
     }
 
-    @Override
-    public WebPage next() {
-        WebPage page = nextPage;
-
+    override fun next(): WebPage {
         try {
-            moveToNext();
-
+            moveToNext()
             if (!hasNext()) {
-                result.close();
+                result?.close()
             }
-        } catch (Exception e) {
-            LOG.error("Failed to move to the next record" + e);
+        } catch (e: Exception) {
+            log.error("Failed to move to the next record$e")
         }
 
-        return page;
+        return nextPage?:WebPage.NIL
     }
 
-    private void moveToNext() throws Exception {
-        nextPage = null;
-        while (nextPage == null && result.next()) {
-            WebPage page = WebPage.box(result.getKey(), result.get(), true);
-            if (filter == null || filter.test(page)) {
-                nextPage = page;
+    @Throws(Exception::class)
+    private fun moveToNext() {
+        nextPage = null
+        while (nextPage == null && result!!.next()) {
+            val page = WebPage.box(result!!.key, result!!.get(), true)
+            if (filter == null || filter!!.test(page)) {
+                nextPage = page
             }
         }
     }

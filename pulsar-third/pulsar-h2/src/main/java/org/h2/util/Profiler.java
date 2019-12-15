@@ -5,7 +5,9 @@
  */
 package org.h2.util;
 
+import java.io.*;
 import java.lang.instrument.Instrumentation;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**

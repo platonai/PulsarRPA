@@ -1,6 +1,7 @@
 package ai.platon.pulsar.boilerpipe.extractors;
 
 import ai.platon.pulsar.boilerpipe.document.TextDocument;
+import ai.platon.pulsar.boilerpipe.filters.heuristics.*;
 import ai.platon.pulsar.boilerpipe.filters.simple.BoilerplateBlockFilter;
 import ai.platon.pulsar.boilerpipe.filters.simple.LabeledFieldExtractorFilter;
 import ai.platon.pulsar.boilerpipe.filters.simple.RegexFieldExtractorFilter;

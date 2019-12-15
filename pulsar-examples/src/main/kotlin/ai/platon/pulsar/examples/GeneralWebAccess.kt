@@ -5,9 +5,9 @@ import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
-import ai.platon.pulsar.common.config.PulsarConstants
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.persist.WebPageFormatter
 import com.google.common.collect.Lists
@@ -227,8 +227,8 @@ class GeneralWebAccess: WebAccess() {
 
     fun localFileCommand() {
         while (true) {
-            if (RuntimeUtils.hasLocalFileCommand(PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
-                println("Execute local file command: " + PulsarConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
+            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
+                println("Execute local file command: " + AppConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
             }
             Thread.sleep(5000)
         }

@@ -5,6 +5,8 @@
  */
 package org.h2tools.dev.util;
 
+import java.io.*;
+
 /**
  * Convert a list of thread dumps into one line per thread.
  */

@@ -10,6 +10,7 @@ import org.h2.mvstore.db.MVTable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.management.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;

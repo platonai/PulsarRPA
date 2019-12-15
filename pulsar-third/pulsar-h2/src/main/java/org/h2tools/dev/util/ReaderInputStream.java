@@ -7,6 +7,8 @@ package org.h2tools.dev.util;
 
 import org.h2.engine.Constants;
 
+import java.io.*;
+
 /**
  * The reader input stream wraps a reader and convert the character to the UTF-8
  * format.
