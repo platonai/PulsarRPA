@@ -53,7 +53,7 @@ class FetchReducer : AppContextAwareGoraReducer<IntWritable, FetchEntryWritable,
             fetchServer?.shutdownNow()
             fetchMonitor.close()
         } catch (e: Throwable) {
-            LOG.error(StringUtil.stringifyException(e))
+            log.error(StringUtil.stringifyException(e))
         }
     }
 }

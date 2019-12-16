@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.io
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.graph.WebGraph
 import org.apache.gora.util.IOUtils
 import org.apache.hadoop.conf.Configuration
@@ -14,8 +15,8 @@ import java.io.IOException
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class WebGraphWritable(
-        var graph: WebGraph,
-        val conf: Configuration
+        var graph: WebGraph = WebGraph.EMPTY,
+        var conf: Configuration = ImmutableConfig.EMPTY.unbox()
 ) : Writable {
     var optimizeMode = OptimizeMode.NONE
         private set

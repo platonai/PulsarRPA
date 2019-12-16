@@ -8,20 +8,15 @@ import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.nodes.count
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.dom.select.collectIf
-import ai.platon.pulsar.dom.select.collectIfTo
-import ai.platon.pulsar.dom.select.first
-import ai.platon.pulsar.dom.select.firstOrNull
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.PageCategory
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import java.io.IOException
+import org.slf4j.LoggerFactory
 
 /**
  * Created by vincent on 16-9-14.
@@ -39,6 +34,8 @@ class ExtractFilter(
         enum class Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
         init { MetricsCounters.register(Counter::class.java) }
     }
+
+    private var log = LoggerFactory.getLogger(ExtractFilter::class.java)
 
     fun filter(page: WebPage, parseResult: ParseResult) {
         filter(ParseContext(page, parseResult))
@@ -105,13 +102,63 @@ class ExtractFilter(
     }
 
     private fun extractAmazonIndexLinks(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {
-        document.document.body().forEachElement {
-            if (it.isList) {
-                if (it.width > 500 && it.height > 1000) {
+        // log.debug("Parsing amazon page | {}", page.url)
+
+        val numImg = document.document.body().count {
+            it.isImage && it.parent().width in 150..350 && it.parent().height in 150..350
+        }
+        if (numImg > 50) {
+            log.debug("Find a index page | {}", page.url)
+            page.pageCategory = PageCategory.INDEX
+        }
+
+        var order = 0
+        document.document.body().forEachElement { block ->
+            if (block.id() == "leftNav") {
+                return@forEachElement
+            }
+            if (block.right < 200) {
+                return@forEachElement
+            }
+            if (!block.isBlock) {
+                return@forEachElement
+            }
+
+            if (block.hasClass("a-breadcrumb")) {
+                var categoryOrder = 0
+                block.forEachElement {
+                    if (it.isAnchor) {
+                        val href = it.attr("abs:href")
+                        if (href.contains("amazon.com")) {
+                            val anchor = it.immutableText + " cat:y"
+                            val hypeLink = HypeLink(href, anchor, ++categoryOrder)
+                            parseResult.hypeLinks.add(hypeLink)
+                            log.debug("Find category link | {}", hypeLink)
+                        }
+                    }
+                }
+            }
+
+            if (block.isImage && block.hasClass("a-dynamic-image")) {
+                page.pageCategory = PageCategory.DETAIL
+            }
+
+            if (block.isList) {
+                if (block.width >= 500 && block.height > 1000) {
                     page.pageCategory = PageCategory.INDEX
-                    it.collectIf {
-                        it is Element && it.tagName() == "a" && it.className().contains("a-link-normal")
-                    }.mapTo(parseResult.hypeLinks) { HypeLink(it.attr("abs:href"), it.immutableText, it.sequence) }
+                }
+
+                if (block.width >= 500 && block.childNodeSize() >= 8) {
+                    block.forEachElement { e ->
+                        if (e.tagName() == "a" && e.hasClass("a-link-normal")) {
+                            val href = e.attr("abs:href")
+                            // println("${order + 1}.\t$href")
+                            if (href.contains("amazon.com")) {
+                                val hypeLink = HypeLink(href, e.immutableText, ++order)
+                                parseResult.hypeLinks.add(hypeLink)
+                            }
+                        }
+                    }
                 }
             }
         }

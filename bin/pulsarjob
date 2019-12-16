@@ -16,6 +16,13 @@
 # limitations under the License.
 #
 
+bin=$(dirname "$0")
+bin=$(cd "$bin">/dev/null || exit; pwd)
+
+ . "$bin"/include/pulsar-config.sh
+
+bin="$PULSAR_HOME"/bin
+
 function printUsage() {
   echo "Usage: pulsarjob [options...] <COMMAND> [<args>]"
   echo "where COMMAND is one of:"

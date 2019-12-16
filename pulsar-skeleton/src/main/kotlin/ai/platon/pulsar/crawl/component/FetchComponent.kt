@@ -106,10 +106,10 @@ open class FetchComponent(
         return processProtocolOutput(page, output)
     }
 
-    protected fun shouldFetch(url: String?): Boolean {
+    protected fun shouldFetch(url: String): Boolean {
         var code = 0
 
-        if (fetchTaskTracker.isFailed(url!!)) {
+        if (fetchTaskTracker.isFailed(url)) {
             code = 2
         } else if (fetchTaskTracker.isTimeout(url)) {
             code = 3
@@ -276,7 +276,7 @@ open class FetchComponent(
 
         @JvmStatic
         @JvmOverloads
-        fun updateFetchTime(page: WebPage, newFetchTime: Instant? = Instant.now()) {
+        fun updateFetchTime(page: WebPage, newFetchTime: Instant = Instant.now()) {
             val lastFetchTime = page.fetchTime
             if (lastFetchTime.isBefore(newFetchTime)) {
                 page.prevFetchTime = lastFetchTime

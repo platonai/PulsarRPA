@@ -267,14 +267,16 @@ class PageParser(
             val url = page.url
             val inHeaderSize = page.headers.contentLength
             if (inHeaderSize < 0) {
-                LOG.debug("HttpHeaders.CONTENT_LENGTH is not available | $url")
+                LOG.trace("HttpHeaders.CONTENT_LENGTH is not available | $url")
                 return false
             }
+
             val content = page.content
             if (content == null) {
                 LOG.debug("Page content is null, url: $url")
                 return false
             }
+
             val actualSize = content.limit()
             return inHeaderSize > actualSize
         }

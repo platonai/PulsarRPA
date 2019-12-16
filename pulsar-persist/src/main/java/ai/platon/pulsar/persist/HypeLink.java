@@ -122,6 +122,6 @@ public class HypeLink implements Comparable<HypeLink> {
 
     @Override
     public String toString() {
-        return getUrl() + " " + getAnchor();
+        return getUrl() + " " + getAnchor() + " odr:" + getOrder();
     }
 }

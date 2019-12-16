@@ -42,7 +42,7 @@ class HomePageUpdateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage
     override fun cleanup(context: Context) {
         commit()
         val message = "Total $count index pages, indexed in $pageNo pages"
-        LOG.info(message)
+        log.info(message)
     }
 
     private fun commit() {

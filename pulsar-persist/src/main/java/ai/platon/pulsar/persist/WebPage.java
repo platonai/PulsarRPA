@@ -158,7 +158,7 @@ public class WebPage {
         page.setLocation(url);
         page.setVolatileConfig(volatileConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
-        page.setCreateTime(impreciseNow);
+        page.setCreateTime(Instant.now());
         page.setScore(0);
         page.setFetchCount(0);
 
@@ -184,7 +184,7 @@ public class WebPage {
         WebPage page = WebPage.newWebPage(url, false);
 
         page.setLocation(url);
-        page.setModifiedTime(impreciseNow);
+        page.setModifiedTime(Instant.now());
         page.setFetchTime(Instant.parse("3000-01-01T00:00:00Z"));
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());
         page.setFetchPriority(FETCH_PRIORITY_MIN);

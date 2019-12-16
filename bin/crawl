@@ -21,17 +21,13 @@
 # UNLIKE THE PULSAR ALL-IN-ONE-CRAWL COMMAND THIS SCRIPT DOES THE LINK INVERSION AND
 # INDEXING FOR EACH BATCH
 
-echo "Crawl tools are not available now"
-echo "Try the following: "
-echo "bin/pulsar server"
-
-[[ 2 > 1 ]] && exit
-
-bin="`dirname "$0"`"
-bin="`cd "$bin"; pwd`"
+bin=$(dirname "$0")
+bin=$(cd "$bin">/dev/null || exit; pwd)
 
  . "$bin"/include/pulsar-config.sh
  . "$bin"/include/pulsar-common.sh
+
+bin="$PULSAR_HOME"/bin
 
 #############################################
 # MODIFY THE PARAMETERS BELOW TO YOUR NEEDS #
@@ -44,7 +40,7 @@ ignoreExternalLinks=true
 # max out links per page collected each time
 maxLinks=500
 # index pages just after it's fetched
-indexJIT=true
+indexJIT=false
 # Adds <days> to the current time to facilitate
 # crawling urls already fetched sooner then
 # db.default.fetch.interval.
@@ -58,11 +54,11 @@ fi
 
 # and the total number of available tasks
 # sets Hadoop parameter "mapreduce.job.reduces"
-numTasks=`expr $numSlaves \* 2`
+numTasks=$(expr "$numSlaves" \* 2)
 
 # number of urls to fetch in one iteration
 # It's depend on how fast do you want to finish the fetch loop
-batchSize=`expr $numTasks \* 1000`
+batchSize=$(expr "$numTasks" \* 1000)
 if [ -n "$BATCH_SIZE" ]; then
  batchSize=$BATCH_SIZE
 fi
@@ -172,11 +168,11 @@ if [ ! -e "$PULSAR_HOME/logs" ]; then
 fi
 
 # determines whether mode based on presence of job file
-if [ ${PULSAR_RUNTIME_MODE} == "DISTRIBUTE" ]; then
+if [ "${PULSAR_RUNTIME_MODE}" == "DISTRIBUTE" ]; then
   # check that hadoop can be found on the path
   if [ $(which hadoop | wc -l ) -eq 0 ]; then
     echo "Can't find Hadoop executable. Add HADOOP_HOME/bin to the path or run in local mode."
-    exit -1;
+    exit
   fi
 fi
 
@@ -188,7 +184,8 @@ if ( ! __check_master_available ); then
 #  else
 #    . "$bin"/start-pulsar.sh
 #  fi
-    . "$bin"/start-pulsar.sh
+    # . "$bin"/start-pulsar.sh
+    echo "Pulsar master is not unavailable for now"
 fi
 
 # initial injection
@@ -205,22 +202,26 @@ do
      exit 0
   fi
 
-  if ( ! __check_index_server_available ); then
-    exit 1
-  fi
+#  if ( ! __check_index_server_available ); then
+#    exit 1
+#  fi
 
   echo -e "\n\n\n"
-  echo `date` ": Iteration $a of $LIMIT"
+  echo "$(date)" ": Iteration $a of $LIMIT"
 
-  batchId=`date +%s`-$RANDOM
+  batchId=$(date +%s)-$RANDOM
 
   echo "Generating : "
   # generate_args=(${commonOptions[@]}  "-D crawl.round=$a" -batchId $batchId -reGen -topN $batchSize -adddays $addDays -crawlId "$CRAWL_ID")
-  __run_pulsar_job ${PULSAR_SCRIPT_OPTIONS[@]} generate -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" -batchId "$batchId" -reGen -topN ${batchSize} -adddays ${addDays} -crawlId "$CRAWL_ID"
+  __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" generate -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" -batchId "$batchId" -reGen -topN ${batchSize} -adddays ${addDays} -crawlId "$CRAWL_ID"
 
   if [[ "$indexJIT" == "true" ]]; then
   echo "Fetching : "
-    __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" fetch -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -resume -strictDf -index -indexer "$INDEXER" -crawlId "$CRAWL_ID"
+    if [[ "$INDEX" == "" ]]; then
+      __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" fetch -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -resume -strictDf -crawlId "$CRAWL_ID"
+    else
+      __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" fetch -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -resume -strictDf -index -indexer "$INDEXER" -crawlId "$CRAWL_ID"
+    fi
   else
     echo "Fetching : "
     __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" fetch -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -resume -strictDf -crawlId "$CRAWL_ID"

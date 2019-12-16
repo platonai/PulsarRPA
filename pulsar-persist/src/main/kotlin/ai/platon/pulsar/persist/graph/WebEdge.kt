@@ -45,8 +45,9 @@ class WebEdge(
         return metadata[k.text()] != null
     }
 
-    val isLoop: Boolean
-        get() = source == target
+    val isLoop: Boolean get() = source == target
+
+    val isNotLoop: Boolean get() = !isLoop
 
     /**
      * Retrieves the source of this edge.

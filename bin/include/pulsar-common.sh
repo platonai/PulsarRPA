@@ -3,14 +3,14 @@
 function __run_pulsar_job {
   # run $bin/pulsar, exit if exit value indicates error
 
-  echo "$PULSARJOB $@" ; # echo command and arguments
+  echo "$PULSARJOB" "$@" ; # echo command and arguments
   "$PULSARJOB" "$@"
 
   RETCODE=$?
   if [ $RETCODE -ne 0 ]
   then
       echo "Error running:"
-      echo "  $PULSARJOB $@"
+      echo "  $PULSARJOB" "$@"
       echo "Failed with exit value $RETCODE."
       exit $RETCODE
   fi
@@ -20,13 +20,13 @@ function __is_crawl_loop_stopped {
   STOP=0
   if [ -e ".STOP" ] || [ -e ".KEEP_STOP" ]; then
    if [ -e ".STOP" ]; then
-     mv .STOP ".STOP_EXECUTED_`date +%Y%m%d.%H%M%S`"
+     mv .STOP ".STOP_EXECUTED_$(date +%Y%m%d.%H%M%S)"
    fi
 
     STOP=1
   fi
 
-  (( $STOP==1 )) && return 0 || return 1
+  (( $STOP == 1 )) && return 0 || return 1
 }
 
 function __check_index_server_available {
@@ -64,10 +64,10 @@ function __check_master_available
 
 function __check_pid_before_start() {
     #ckeck if the process is not running
-    mkdir -p ${PULSAR_PID_DIR}
-    if [ -f $pid ]; then
-      if kill -0 `cat $pid` > /dev/null 2>&1; then
-        echo $command running as process `cat $pid`.  Stop it first.
+    mkdir -p "${PULSAR_PID_DIR}"
+    if [ -f "$pid" ]; then
+      if kill -0 "$(cat $pid)" > /dev/null 2>&1; then
+        echo "$command" running as process "$(cat $pid)".  Stop it first.
         exit 1
       fi
     fi

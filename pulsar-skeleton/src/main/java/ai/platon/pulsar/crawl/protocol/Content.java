@@ -34,6 +34,7 @@ public final class Content {
     private String baseUrl;
     private byte[] content;
     private String contentType;
+    // TODO: when metadata is used?
     private MultiMetadata metadata;
     private MimeUtil mimeTypes;
 
@@ -48,7 +49,14 @@ public final class Content {
      *
      * BaseUrl may be different from url, it's generally normalized.
      */
-    public Content(String url, String baseUrl, @Nullable byte[] content, String contentType, MultiMetadata metadata, ImmutableConfig conf) {
+    public Content(
+            String url,
+            String baseUrl,
+            @Nullable byte[] content,
+            String contentType,
+            MultiMetadata metadata,
+            ImmutableConfig conf
+    ) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(baseUrl);
         Objects.requireNonNull(metadata);
@@ -122,6 +130,7 @@ public final class Content {
 
     /**
      * Other protocol-specific data.
+     * TODO: when metadata are copy to WebPage?
      */
     public MultiMetadata getMetadata() {
         return metadata;

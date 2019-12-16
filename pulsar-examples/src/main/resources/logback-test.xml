@@ -33,7 +33,7 @@
     <logger name="ai.platon.pulsar.crawl.component" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG" />
 
-    <logger name="ai.platon.pulsar.parse.html" level="INFO" />
+    <logger name="ai.platon.pulsar.parse.html" level="DEBUG" />
     <logger name="ai.platon.pulsar.cli.shell" level="DEBUG" />
 
     <logger name="com.ning.http.client" level="DEBUG"/>

@@ -1,7 +1,9 @@
 package ai.platon.pulsar.persist.io
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.persist.graph.WebGraph
 import ai.platon.pulsar.persist.graph.WebVertex
 import org.apache.gora.util.IOUtils
 import org.apache.hadoop.conf.Configuration
@@ -18,7 +20,7 @@ import java.util.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class WebVertexWritable(
-        val conf: Configuration
+        var conf: Configuration = ImmutableConfig.EMPTY.unbox()
 ) : Writable {
     lateinit var vertex: WebVertex
 

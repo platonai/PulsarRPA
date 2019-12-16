@@ -34,7 +34,7 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_CRAWL_ID;
 
 public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer<K1, V1, K2, V2> implements Configurable {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(Reducer.class.getName());
+    protected static final Logger log = LoggerFactory.getLogger(Reducer.class.getName());
 
     protected Context context;
 
@@ -59,7 +59,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
         String crawlId = jobConf.get(STORAGE_CRAWL_ID);
         String batchId = jobConf.get(BATCH_ID);
 
-        LOG.info(Params.formatAsLine(
+        log.info(Params.formatAsLine(
                 "---- reducer setup ", " ----",
                 "className", this.getClass().getSimpleName(),
                 "startTime", DateTimeUtil.format(startTime),
@@ -82,7 +82,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
 
             cleanupContext(context);
         } catch (Throwable e) {
-            LOG.error(StringUtils.stringifyException(e));
+            log.error(StringUtils.stringifyException(e));
         } finally {
             afterCleanup(context);
         }
@@ -101,7 +101,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
         context.setStatus(metricsCounters.getStatus(true));
         pulsarReporter.stopReporter();
 
-        LOG.info(Params.formatAsLine(
+        log.info(Params.formatAsLine(
                 "---- reducer cleanup ", " ----",
                 "className", this.getClass().getSimpleName(),
                 "startTime", DateTimeUtil.format(startTime),
@@ -119,7 +119,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
     }
 
     protected void abort(String error) {
-        LOG.error(error);
+        log.error(error);
         completed = true;
     }
 
@@ -128,7 +128,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
     }
 
     protected void stop(String info) {
-        LOG.info(info);
+        log.info(info);
         completed = true;
     }
 

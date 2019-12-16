@@ -64,7 +64,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
         groupMode = jobConf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
         metricsSystem = applicationContext.getBean(MetricsSystem::class.java)
 
-        LOG.info(Params.format(
+        log.info(Params.format(
                 "className", this.javaClass.simpleName,
                 "crawlId", crawlId,
                 "batchId", batchId,
@@ -94,7 +94,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
                 addGeneratedHosts(host)
                 
                 if (hostNames.count(host) > maxCountPerHost) {
-                    LOG.warn("Too many urls in host {}, ignore ...", host)
+                    log.warn("Too many urls in host {}, ignore ...", host)
                     break
                 }
                 
@@ -107,7 +107,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
                 writeBatchId(batchId)
                 metricsSystem.debugSortScore(page)
             } catch (e: Throwable) {
-                LOG.error(StringUtil.stringifyException(e))
+                log.error(StringUtil.stringifyException(e))
             }
         } // for
     }
@@ -137,7 +137,7 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
     }
 
     override fun cleanup(context: Context) {
-        LOG.info("Generated total " + hostNames.elementSet().size + " hosts/domains")
+        log.info("Generated total " + hostNames.elementSet().size + " hosts/domains")
         metricsSystem.reportGeneratedHosts(hostNames.elementSet())
     }
 

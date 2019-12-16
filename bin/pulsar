@@ -78,8 +78,8 @@ done
 COMMAND=$1
 shift
 
-bin=`dirname "$0"`
-bin=`cd "$bin">/dev/null; pwd`
+bin=$(dirname "$0")
+bin=$(cd "$bin">/dev/null || exit; pwd)
 
  . "$bin"/include/pulsar-config.sh
 

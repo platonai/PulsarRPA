@@ -62,6 +62,10 @@ public class CrawlStatus implements CrawlStatusCodes {
         return status == CrawlStatus.FETCHED;
     }
 
+    public boolean isUnFetched() {
+        return status == CrawlStatus.UNFETCHED;
+    }
+
     @Override
     public boolean equals(Object o) {
         return o instanceof CrawlStatus && status == ((CrawlStatus) o).getCode();

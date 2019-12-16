@@ -28,18 +28,22 @@ import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.inject.SeedBuilder
+import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
+import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebGraph
 import ai.platon.pulsar.persist.graph.WebVertex
 import ai.platon.pulsar.persist.metadata.Mark
+import ai.platon.pulsar.persist.metadata.MultiMetadata
 import org.apache.avro.util.Utf8
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
+import java.time.Instant
 import java.util.*
 import java.util.stream.Collectors.joining
 
@@ -55,12 +59,12 @@ class SpiderSimulator(
 ) {
     private val log = LoggerFactory.getLogger(SpiderSimulator::class.java)
 
-    private lateinit var store: MutableMap<String, WebPage>
-    private val graphs = HashMap<String, WebGraph>()
+    private val store = mutableMapOf<String, WebPage>()
+    private val graphs = mutableMapOf<String, WebGraph>()
 
     // Inject simulation
     fun inject(seedUrls: List<String>) {
-        store = seedUrls.map { seedBuilder.create(it, "") }.associateBy { it.url }.toMutableMap()
+        seedUrls.map { seedBuilder.create(it, "") }.associateByTo(store) { it.url }
     }
 
     /**
@@ -75,7 +79,7 @@ class SpiderSimulator(
 
     private fun crawlOneLoop(round: Int) {
         val batchId = round.toString()
-        val limit = 3
+        val limit = 5
 
         println("Batch #$batchId ===============================================")
         val pages = store.values
@@ -97,9 +101,9 @@ class SpiderSimulator(
                 .vertexSet()
                 .mapNotNull { it.page }
                 .map { out2InGraphUpdateMapper(it) }
-                .map { out2InGraphUpdateMapper2(it) }
+                .onEach { out2InGraphUpdateMapper2(it) }
                 .onEach { report(it) }
-                .map { out2InGraphUpdateReducer(it) }
+                .map { out2InGraphUpdateReducer(batchId, it) }
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.UPDATEOUTG) }
                 .map { in2OutGraphUpdateMapper(it) }
@@ -111,22 +115,30 @@ class SpiderSimulator(
 
     // Generate simulation
     private fun generate(batchId: String, page: WebPage): WebPage {
-        page.batchId = batchId
+        if (!fetchSchedule.shouldFetch(page, Instant.now())) {
+            return page
+        }
 
         scoringFilters.generatorSortValue(page, NamedScoreVector.ONE)
-        page.marks.put(Mark.GENERATE, page.batchId)
+        page.marks.put(Mark.GENERATE, batchId)
+        require(page.marks[Mark.GENERATE].toString() == batchId)
+        // page.fetchTime = Instant.now()
+
+        page.batchId = batchId
 
         return page
     }
 
     private fun fetch(batchId: String, page: WebPage): WebPage {
-        val p = loadComponent.load(page.url)
-        p.marks.putIfNotNull(Mark.FETCH, p.marks[Mark.GENERATE])
-        return p
+        // val p = loadComponent.load(page.url)
+        fetchComponent.fetchContent(page)
+        require(page.marks[Mark.FETCH]?.toString() == batchId)
+
+        return page
     }
 
     private fun parse(batchId: String, page: WebPage) {
-        val p = parseComponent.parse(page)
+        parseComponent.parse(page)
         page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
     }
 
@@ -152,7 +164,7 @@ class SpiderSimulator(
         return page
     }
 
-    private fun out2InGraphUpdateMapper2(page: WebPage): WebPage {
+    private fun out2InGraphUpdateMapper2(page: WebPage): List<WebPage> {
         val batchId = page.batchId
         require(batchId.isNotBlank())
         val graph = graphs[batchId]
@@ -160,20 +172,28 @@ class SpiderSimulator(
         val focus = graph.find(page.url)
         require(focus != null)
 
+        if (page.liveLinks.isNotEmpty()) {
+            require(graph.outgoingEdgesOf(focus).isNotEmpty())
+        }
+
         // Create new rows from outlinks
-        graph.outgoingEdgesOf(focus)
+        val pages = graph.outgoingEdgesOf(focus)
                 .filter { !it.isLoop }
                 .map { it.target }
                 .filter { !it.hasWebPage() }
                 .onEach { it.page = loadOrCreate(batchId, it.url) }
-                .forEach { it.page?.let { p -> store.put(p.url, p) } }
+                .mapNotNull { it.page }
 
-        return page
+        pages.forEach { store.put(it.url, it) }
+
+        val numNewPages = pages.count { it.crawlStatus.isUnFetched }
+
+        log.info("Created {} new pages", numNewPages)
+
+        return pages
     }
 
-    private fun out2InGraphUpdateReducer(page: WebPage): WebPage {
-        val batchId = page.batchId
-        require(batchId.isNotBlank())
+    private fun out2InGraphUpdateReducer(batchId: String, page: WebPage): WebPage {
         val graph = graphs[batchId]
         require(graph != null)
         val focus = graph.find(page.url)
@@ -184,7 +204,7 @@ class SpiderSimulator(
                 .asSequence()
                 .filter { !it.isLoop }
                 .mapNotNull { it.source.page?.distance }
-                .min()?:2
+                .min()?:-1
         page.distance = distance + 1
 
         // Update anchor
@@ -204,8 +224,10 @@ class SpiderSimulator(
     }
 
     private fun in2OutGraphUpdateMapper(page: WebPage): WebPage {
-        val graph = graphs[page.batchId] ?: return page
-        val focus = graph.find(page.url) ?: return page
+        val graph = graphs[page.batchId]
+        require(graph != null)
+        val focus = graph.find(page.url)
+        require(focus != null)
 
         page.inlinks.keys.forEach { graph.addEdgeLenient(WebVertex(it.toString()), focus) }
 
@@ -215,12 +237,18 @@ class SpiderSimulator(
     /* InGraphUpdateJob simulation */
     // Update by in-links
     private fun in2OutGraphUpdateReducer(page: WebPage): WebPage {
-        val graph = graphs[page.batchId] ?: return page
-        val focus = graph.find(page.url) ?: return page
+        val graph = graphs[page.batchId]
+        require(graph != null)
+        val focus = graph.find(page.url)
+        require(focus != null)
+
+        if (page.liveLinks.isNotEmpty()) {
+            require(graph.outgoingEdgesOf(focus).isNotEmpty())
+        }
 
         // Update by in-links
         graph.outgoingEdgesOf(focus)
-                .filter { !it.isLoop && it.hasSourceWebPage() && it.hasTargetWebPage() }
+                .filter { !it.isLoop && it.hasTargetWebPage() }
                 .forEach {
                     val p1 = it.sourceWebPage!!
                     val p2 = it.targetWebPage!!
@@ -236,9 +264,12 @@ class SpiderSimulator(
         fetchSchedule.setFetchSchedule(page,
                 page.prevFetchTime, page.prevModifiedTime,
                 page.fetchTime, page.modifiedTime, page.crawlStatus.code)
+        require(!fetchSchedule.shouldFetch(page, Instant.now()))
 
+        val mark = page.marks[Mark.UPDATEOUTG]
+        require(mark.toString() == page.batchId)
         page.marks.clear()
-        page.marks.put(Mark.UPDATEING, page.batchId)
+        page.marks.put(Mark.UPDATEING, mark)
 
         return page
     }
@@ -260,9 +291,8 @@ class SpiderSimulator(
     fun report(graph: WebGraph) {
         Params.of(
                 "vertices", graph.vertexSet().size,
-                "vertices(hasWebPage)", graph.vertexSet().stream().filter { it.hasWebPage() }.count(),
-                "edges", graph.edgeSet().size.toString() + " : " + graph.edgeSet().stream().map { it.toString() }
-                .collect(joining(", "))
+                "vertices(hasWebPage)", graph.vertexSet().count { it.hasWebPage() },
+                "edges", graph.edgeSet().size.toString() + " : " + graph.edgeSet().joinToString { it.toString() }
         ).withLogger(log).info(true)
     }
 
@@ -279,17 +309,17 @@ class SpiderSimulator(
                 "batchId", page.batchId,
                 "fetchCount", page.fetchCount,
                 "distance", page.distance,
-                "anchor", page.anchorOrder,
+                "anchorOrder", page.anchorOrder,
                 "refCounters", page.pageCounters,
                 "liveLinks", page.liveLinks.size,
                 "inlinks", page.inlinks.size,
-                "marks", page.marks.unbox().keys.map { it.toString() }.joinToString(),
+                "marks", page.marks.unbox().keys.joinToString { it.toString() },
                 "url", page.url
         ).withLogger(log).info(true)
     }
 
     fun report() {
-        store.values.forEach { page -> log.info(metricsSystem.getPageReport(page)) }
+        store.values.forEach { metricsSystem.reportFetchSchedule(it, true) }
     }
 }
 
@@ -321,5 +351,5 @@ fun main(args: Array<String>) {
     val applicationContext = ClassPathXmlApplicationContext("classpath:/pulsar-beans/app-context.xml")
     val spiderSimulator = applicationContext.getBean(SpiderSimulator::class.java)
     spiderSimulator.crawl(listOf(url), maxRound)
-    // spiderSimulator.report()
+    spiderSimulator.report()
 }

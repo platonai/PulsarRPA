@@ -10,6 +10,7 @@ bin/crawl conf/alternatives/information/cluster @conf/alternatives/information/s
 bin/crawl conf/alternatives/information/local @conf/alternatives/information/local/seeds/sxrb.txt information_tmp http://master:8983/solr/information_tmp/ 4
 # crawl under local mode. Use default config dir, no injection, crawl id, indexer url and limit are given
 bin/crawl default false information_tmp http://master:8983/solr/information_tmp/ 1
+bin/crawl default false information_tmp 1
 
 # inject a seed
 bin/pulsarjob inject http://www.sxrb.com/sxxww/

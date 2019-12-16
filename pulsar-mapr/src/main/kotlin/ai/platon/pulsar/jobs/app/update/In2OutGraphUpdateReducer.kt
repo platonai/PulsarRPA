@@ -49,14 +49,14 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
         Params.of(
                 "className", this.javaClass.simpleName,
                 "crawlId", crawlId
-        ).merge(updateComponent.params).withLogger(LOG).info()
+        ).merge(updateComponent.params).withLogger(log).info()
     }
 
     override fun reduce(key: GraphGroupKey, values: Iterable<WebGraphWritable>, context: Context) {
         try {
             doReduce(key, values, context)
         } catch (e: Throwable) {
-            LOG.error(StringUtil.stringifyException(e))
+            log.error(StringUtil.stringifyException(e))
         }
     }
 
