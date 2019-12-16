@@ -248,20 +248,6 @@ open class FetchComponent(
         fun updateMarks(page: WebPage) {
             val marks = page.marks
             marks.putIfNotNull(Mark.FETCH, marks[Mark.GENERATE])
-
-            val isIndexItemMode = false // TODO: more research about Index Item mode
-            if (isIndexItemMode) {
-                marks.putIfNotNull(Mark.UPDATEING, marks[Mark.UPDATEOUTG])
-                val retiredMarks: List<Mark> = Lists.newArrayList(
-                        Mark.INJECT,
-                        Mark.GENERATE,
-                        Mark.FETCH,
-                        Mark.PARSE,
-                        Mark.INDEX,
-                        Mark.UPDATEOUTG
-                )
-                marks.removeAll(retiredMarks)
-            }
         }
 
         @JvmStatic

@@ -33,6 +33,12 @@ install_chrome_driver() {
         CHROME_DRIVER_VERSION=2.46
     elif [[ "$CHROME_VERSION" == "73" ]]; then
         CHROME_DRIVER_VERSION=73.0.3683.20
+    elif [[ "$CHROME_VERSION" == "77" ]]; then
+        CHROME_DRIVER_VERSION=77.0.3865.40
+    elif [[ "$CHROME_VERSION" == "78" ]]; then
+        CHROME_DRIVER_VERSION=78.0.3904.105
+    elif [[ "$CHROME_VERSION" == "79" ]]; then
+        CHROME_DRIVER_VERSION=79.0.3945.36
     fi
 
     if [[ "$CHROME_DRIVER_VERSION" == "" ]]; then

@@ -37,6 +37,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebGraph
 import ai.platon.pulsar.persist.graph.WebVertex
 import ai.platon.pulsar.persist.metadata.Mark
+import org.apache.avro.util.Utf8
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.util.*
@@ -82,11 +83,10 @@ class SpiderSimulator(
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.GENERATE) }
                 .take(limit)
-                .map { fetchComponent.fetchContent(it) }
-//                .map { loadComponent.load(it.url) }
+                .map { fetch(it.batchId, it) }
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.FETCH) }
-                .onEach { parseComponent.parse(it) }
+                .onEach { parse(it.batchId, it) }
                 .filter { it.batchId == batchId }
                 .filter { it.marks.contains(Mark.PARSE) }
                 // .map(indexComponent.dryRunIndex(it))
@@ -117,6 +117,17 @@ class SpiderSimulator(
         page.marks.put(Mark.GENERATE, page.batchId)
 
         return page
+    }
+
+    private fun fetch(batchId: String, page: WebPage): WebPage {
+        val p = loadComponent.load(page.url)
+        p.marks.putIfNotNull(Mark.FETCH, p.marks[Mark.GENERATE])
+        return p
+    }
+
+    private fun parse(batchId: String, page: WebPage) {
+        val p = parseComponent.parse(page)
+        page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
     }
 
     private fun out2InGraphUpdateMapper(page: WebPage): WebPage {
@@ -233,13 +244,12 @@ class SpiderSimulator(
     }
 
     private fun loadOrCreate(batchId: String, url: String): WebPage? {
-        val graph = graphs[batchId]
-        val vertex = graph?.find(url)
-        if (vertex != null && vertex.hasWebPage()) {
-            return vertex.page!!
+        var page = store.get(url)
+        if (page != null) {
+            return page
         }
 
-        val page = WebPage.newWebPage(url, false)
+        page = WebPage.newWebPage(url, false)
 
         fetchSchedule.initializeSchedule(page)
         scoringFilters.initialScore(page)
