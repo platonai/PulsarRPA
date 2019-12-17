@@ -113,18 +113,6 @@
         </profile>
 
         <profile>
-            <id>mapr</id>
-            <activation>
-                <property>
-                    <name>active-mapr</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-mapr</module>
-            </modules>
-        </profile>
-
-        <profile>
             <id>examples</id>
             <activation>
                 <property>
@@ -191,11 +179,6 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-skeleton</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-mapr</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
