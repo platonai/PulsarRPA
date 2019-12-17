@@ -35,8 +35,8 @@ class TaskScheduler(
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     data class Status(
-            var pagesThoRate: Float,
-            var bytesThoRate: Float,
+            var pagesThoRate: Double,
+            var bytesThoRate: Double,
             var readyFetchItems: Int,
             var pendingFetchItems: Int
     )
@@ -66,18 +66,23 @@ class TaskScheduler(
     private var threadsPerQueue: Int = conf.getInt(FETCH_THREADS_PER_QUEUE, 1)
 
     // Timer
-    private val startTime = System.currentTimeMillis() // Start time of fetcher run
-    private val lastTaskStartTime = AtomicLong(startTime)
-    private val lastTaskFinishTime = AtomicLong(startTime)
+    private val startTime = Instant.now() // Start time of fetcher run
+    var lastTaskStartTime = startTime
+        private set
+    var lastTaskFinishTime = startTime
+        private set
 
     // Statistics
     private val totalBytes = AtomicLong(0)     // total fetched bytes
     private val totalPages = AtomicInteger(0)  // total fetched pages
     private val fetchErrors = AtomicInteger(0) // total fetch fetchErrors
 
-    private val averagePageThroughput = AtomicDouble(0.01)
-    private val averageBytesThroughput = AtomicDouble(0.01)
-    private val averagePageSize = AtomicDouble(0.0)
+    var averagePageThroughput = 0.01
+        private set
+    var averageBytesThroughput = 0.01
+        private set
+    var averagePageSize = 0.0
+        private set
 
     /**
      * Output
@@ -121,18 +126,6 @@ class TaskScheduler(
 
     val name: String get() = javaClass.simpleName + "-" + id
 
-    fun getAveragePageThroughput(): Double {
-        return averagePageThroughput.get()
-    }
-
-    fun getAverageBytesThroughput(): Double {
-        return averageBytesThroughput.get()
-    }
-
-    fun getLastTaskFinishTime(): Instant {
-        return Instant.ofEpochMilli(lastTaskFinishTime.get())
-    }
-
     fun produce(result: FetchJobForwardingResponse) {
         fetchResultQueue.add(result)
     }
@@ -142,7 +135,7 @@ class TaskScheduler(
      */
     fun schedule(poolId: PoolId? = null): FetchTask? {
         val fetchTasks = schedule(poolId, 1)
-        return if (fetchTasks.isEmpty()) null else fetchTasks.iterator().next()
+        return fetchTasks.firstOrNull()
     }
 
     /**
@@ -163,7 +156,7 @@ class TaskScheduler(
             return ArrayList()
         }
 
-        if (tasksMonitor.pendingTaskCount() * averagePageSize.get() * 8.0 > 30 * this.bandwidth) {
+        if (tasksMonitor.pendingTaskCount() * averagePageSize * 8.0 > 30 * this.bandwidth) {
             log.info("Bandwidth exhausted, slows down the scheduling")
             return listOf()
         }
@@ -179,7 +172,7 @@ class TaskScheduler(
         }
 
         if (fetchTasks.isNotEmpty()) {
-            lastTaskStartTime.set(System.currentTimeMillis())
+            lastTaskStartTime = Instant.now()
         }
 
         return fetchTasks
@@ -190,7 +183,7 @@ class TaskScheduler(
      */
     fun finishUnchecked(fetchTask: FetchTask) {
         tasksMonitor.finish(fetchTask)
-        lastTaskFinishTime.set(System.currentTimeMillis())
+        lastTaskFinishTime = Instant.now()
         metricsCounters.increase(Counter.rFinishedTasks)
     }
 
@@ -226,7 +219,7 @@ class TaskScheduler(
             fetchErrors.incrementAndGet()
             metricsCounters.increase(CommonCounter.errors)
         } finally {
-            lastTaskFinishTime.set(System.currentTimeMillis())
+            lastTaskFinishTime = Instant.now()
         }
     }
 
@@ -265,7 +258,7 @@ class TaskScheduler(
         } catch (ignored: InterruptedException) {
         }
 
-        val reportIntervalSec = reportInterval.seconds.toFloat()
+        val reportIntervalSec = reportInterval.seconds.toDouble()
         val pagesThoRate = (totalPages.get() - pagesLastSec) / reportIntervalSec
         val bytesThoRate = (totalBytes.get() - bytesLastSec) / reportIntervalSec
 
@@ -285,32 +278,31 @@ class TaskScheduler(
         return Status(pagesThoRate, bytesThoRate, readyFetchItems, pendingFetchItems)
     }
 
-    fun getStatusString(status: Status): String {
-        return getStatusString(status.pagesThoRate, status.bytesThoRate, status.readyFetchItems, status.pendingFetchItems)
+    fun format(status: Status): String {
+        return format(status.pagesThoRate, status.bytesThoRate, status.readyFetchItems, status.pendingFetchItems)
     }
 
-    private fun getStatusString(pagesThroughput: Float, bytesThroughput: Float, readyFetchItems: Int, pendingFetchItems: Int): String {
+    private fun format(pagesThroughput: Double, bytesThroughput: Double, readyFetchItems: Int, pendingFetchItems: Int): String {
         val df = DecimalFormat("0.0")
 
-        this.averagePageSize.set((bytesThroughput / pagesThroughput).toDouble())
+        averagePageSize = 1.0 * bytesThroughput / pagesThroughput
 
         val status = StringBuilder()
-        val elapsed = (System.currentTimeMillis() - startTime) / 1000
+        val elapsed = Duration.between(startTime, Instant.now()).seconds
 
-        // status.append(idleFetchThreadCount).append("/").append(activeFetchThreadCount).append(" idle/active threads, ");
         status.append(totalPages).append(" pages, ").append(fetchErrors).append(" errors, ")
 
         // average speed
-        averagePageThroughput.set(1.0 * totalPages.get() / elapsed)
-        status.append(df.format(averagePageThroughput.get())).append(" ")
+        averagePageThroughput = 1.0 * totalPages.get() / elapsed
+        status.append(df.format(averagePageThroughput)).append(" ")
         // instantaneous speed
-        status.append(df.format(pagesThroughput.toDouble())).append(" pages/s, ")
+        status.append(df.format(pagesThroughput)).append(" pages/s, ")
 
         // average speed
-        averageBytesThroughput.set(1.0 * totalBytes.get() / elapsed)
-        status.append(df.format(averageBytesThroughput.get() * 8.0 / 1024)).append(" ")
+        averageBytesThroughput = 1.0 * totalBytes.get() / elapsed
+        status.append(df.format(averageBytesThroughput * 8.0 / 1024)).append(" ")
         // instantaneous speed
-        status.append(df.format(bytesThroughput * 8.0 / 1024)).append(" kb/s, ")
+        status.append(df.format(bytesThroughput * 8.0 / 1024)).append(" Kb/s, ")
 
         status.append(readyFetchItems).append(" ready ")
         status.append(pendingFetchItems).append(" pending ")

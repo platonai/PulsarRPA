@@ -407,7 +407,7 @@ class WebDriverPool(
 
         // Proxy is enabled by default
         var proxyEntry: ProxyEntry? = null
-        if (env.useProxy) {
+        if (ProxyPool.isProxyEnabled()) {
             proxyEntry = setProxy(capabilities)
         }
 

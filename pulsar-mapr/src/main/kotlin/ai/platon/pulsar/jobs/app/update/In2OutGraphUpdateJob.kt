@@ -33,7 +33,7 @@ class In2OutGraphUpdateJob : WebGraphUpdateJob() {
         currentJob.setGroupingComparatorClass(UrlOnlyComparator::class.java)
         val fields = getFields(currentJob)
         PulsarJob.initMapper(currentJob, fields, GraphGroupKey::class.java, WebGraphWritable::class.java,
-                In2OutGraphUpdateMapper::class.java, getBatchIdFilter(options.batchId[0]))
+                In2OutGraphUpdateMapper::class.java, getBatchIdFilter(options.batchId))
         PulsarJob.initReducer(currentJob, In2OutGraphUpdateReducer::class.java)
     }
 }

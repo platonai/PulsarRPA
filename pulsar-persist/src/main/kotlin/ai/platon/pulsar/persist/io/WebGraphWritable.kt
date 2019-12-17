@@ -16,7 +16,7 @@ import java.io.IOException
  */
 class WebGraphWritable(
         var graph: WebGraph = WebGraph.EMPTY,
-        var conf: Configuration = ImmutableConfig.EMPTY.unbox()
+        var conf: Configuration = ImmutableConfig.DEFAULT.unbox()
 ) : Writable {
     var optimizeMode = OptimizeMode.NONE
         private set
@@ -28,6 +28,10 @@ class WebGraphWritable(
     fun reset(graph: WebGraph): WebGraphWritable {
         this.graph = graph
         return this
+    }
+
+    fun get(): WebGraph {
+        return graph
     }
 
     @Throws(IOException::class)
@@ -81,6 +85,7 @@ class WebGraphWritable(
                 target = IOUtils.deserialize(conf, input, null, WebVertexWritable::class.java)
                 if (isLoop) source = target
             }
+
             val edge = graph.addEdgeLenient(source.vertex, target.vertex, weight)
             edge.options = options
             edge.anchor = anchor

@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory
 
 abstract class WebGraphUpdateJob : AppContextAwareJob() {
     companion object {
-        val LOG = LoggerFactory.getLogger(WebGraphUpdateJob::class.java)
+        val log = LoggerFactory.getLogger(WebGraphUpdateJob::class.java)
         val unrelatedFields = arrayOf(GWebPage.Field.CONTENT,
                 GWebPage.Field.PAGE_TEXT,
                 GWebPage.Field.CONTENT_TEXT,
@@ -44,10 +44,10 @@ abstract class WebGraphUpdateJob : AppContextAwareJob() {
 
     public override fun setup(params: Params) {
         jobConf[CapabilityTypes.STORAGE_CRAWL_ID] = options.crawlId
-        jobConf[CapabilityTypes.BATCH_ID] = options.batchId[0]
+        jobConf[CapabilityTypes.BATCH_ID] = options.batchId
         jobConf.setInt(CapabilityTypes.LIMIT, options.limit)
 
-        LOG.info(Params.format(
+        log.info(Params.format(
                 "className", this.javaClass.simpleName,
                 "round", options.round,
                 "crawlId", options.crawlId,

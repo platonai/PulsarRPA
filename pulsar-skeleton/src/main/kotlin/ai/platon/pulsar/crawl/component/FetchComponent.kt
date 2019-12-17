@@ -225,7 +225,9 @@ open class FetchComponent(
 
     private fun updatePage(page: WebPage, content: Content?, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
         updateStatus(page, crawlStatus, protocolStatus)
-        updateContent(page, content)
+        if (content != null) {
+            updateContent(page, content)
+        }
         updateFetchTime(page)
         updateMarks(page)
     }
@@ -251,15 +253,13 @@ open class FetchComponent(
         }
 
         @JvmStatic
-        fun updateContent(page: WebPage, content: Content?) {
+        fun updateContent(page: WebPage, content: Content) {
             updateContent(page, content, null)
         }
 
-        private fun updateContent(page: WebPage, content: Content?, contentType_: String?) {
-            var contentType = contentType_
-            if (content == null) {
-                return
-            }
+        private fun updateContent(page: WebPage, content: Content, contentTypeHint: String?) {
+            var contentType = contentTypeHint
+
             page.location = content.baseUrl
             page.setContent(content.content)
             if (contentType != null) {

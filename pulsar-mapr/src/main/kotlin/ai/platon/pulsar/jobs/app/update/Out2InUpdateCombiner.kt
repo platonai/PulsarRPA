@@ -44,8 +44,8 @@ internal class Out2InUpdateCombiner : Reducer<GraphGroupKey, WebGraphWritable, G
         val graph = WebGraph()
         try {
             for (graphWritable in subGraphs) {
-                edgeCountBeforeCombine += graphWritable.graph.edgeSet().size
-                graph.combine(graphWritable.graph)
+                edgeCountBeforeCombine += graphWritable.get().edgeSet().size
+                graph.combine(graphWritable.get())
             }
             edgeCountAfterCombine += graph.edgeSet().size
             context.write(key, webGraphWritable.reset(graph))

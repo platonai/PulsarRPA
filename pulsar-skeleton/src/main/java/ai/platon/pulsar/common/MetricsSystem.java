@@ -15,20 +15,14 @@ import javax.annotation.Nullable;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -270,20 +264,13 @@ public class MetricsSystem implements AutoCloseable {
 
     public void writeReport(String report, String fileSuffix, boolean printPath) {
         Path reportFile = Paths.get(reportDir.toString(), fileSuffix);
-        writeReport(reportFile, report, printPath);
+        writeReportInternal(reportFile, report, printPath);
     }
 
-    public synchronized void writeReport(Path reportFile, String report, boolean printPath) {
-        try {
-            if (!Files.exists(reportFile)) {
-                Files.createDirectories(reportFile.getParent());
-                Files.createFile(reportFile);
-            }
-
-            BufferedWriter writer = Files.newBufferedWriter(reportFile, StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+    private synchronized void writeReportInternal(Path reportFile, String report, boolean printPath) {
+        OpenOption[] options = { StandardOpenOption.CREATE, StandardOpenOption.APPEND };
+        try(BufferedWriter writer = Files.newBufferedWriter(reportFile, StandardCharsets.UTF_8, options)) {
             writer.write(report);
-
-            writer.flush();
         } catch (IOException e) {
             LOG.error("Failed to write report : " + e.toString());
         }

@@ -48,10 +48,12 @@ class FetchReducer : AppContextAwareGoraReducer<IntWritable, FetchEntryWritable,
         fetchMonitor.start(reducerContext)
     }
 
-    override fun cleanup(context: Context) {
+    override fun cleanupContext(context: Context) {
         try {
             fetchServer?.shutdownNow()
             fetchMonitor.close()
+
+            super.cleanupContext(context)
         } catch (e: Throwable) {
             log.error(StringUtil.stringifyException(e))
         }

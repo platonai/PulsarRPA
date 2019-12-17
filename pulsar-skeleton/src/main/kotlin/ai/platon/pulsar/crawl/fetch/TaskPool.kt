@@ -31,6 +31,7 @@ class TaskPool(val id: PoolId,
                /** Once timeout, the pending items should be put to the ready queue again  */
                private val pendingTimeout: Duration
 ) : Comparable<TaskPool>, Parameterized {
+    private val log = LoggerFactory.getLogger(TaskPool::class.java)
 
     /** Hold all tasks ready to fetch  */
     private val readyTasks = LinkedList<FetchTask>()
@@ -116,7 +117,7 @@ class TaskPool(val id: PoolId,
         }
 
         if (task.priority != id.priority || task.host != id.host) {
-            LOG.error("Queue id mismatches with FetchTask #$task")
+            log.error("Queue id mismatches with FetchTask #$task")
         }
 
         readyTasks.add(task)
@@ -276,7 +277,7 @@ class TaskPool(val id: PoolId,
         val report = pendingTasks.values.take(threshold)
                 .joinToString("\n", "Clearing slow pending items : ")
                 { it.urlString + " : " + Duration.between(it.pendingStart, now) }
-        LOG.info(report)
+        log.info(report)
 
         pendingTasks.clear()
 
@@ -284,7 +285,7 @@ class TaskPool(val id: PoolId,
     }
 
     fun dump(drop: Boolean) {
-        LOG.info("Dump pool - " + params.formatAsLine())
+        log.info("Dump pool - " + params.formatAsLine())
 
         if (drop && readyTasks.isNotEmpty()) {
             var i = 0
@@ -297,7 +298,7 @@ class TaskPool(val id: PoolId,
                 fetchTask = readyTasks.poll()
             }
 
-            LOG.info(report)
+            log.info(report)
         }
     }
 
@@ -329,7 +330,6 @@ class TaskPool(val id: PoolId,
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(TaskPool::class.java)
         const val RECENT_TASKS_COUNT_LIMIT = 100
     }
 }

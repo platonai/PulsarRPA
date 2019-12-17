@@ -1,10 +1,8 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_CAPACITY
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_POLLING_INTERVAL
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -31,8 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  * This might take a long time, so it should be run in a separate thread
 */
 class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseable {
-    private enum class ResourceType { PROVIDER, PROXY }
-
     private val pollingInterval: Duration = conf.getDuration(PROXY_POOL_POLLING_INTERVAL, Duration.ofSeconds(10))
     private val capacity: Int = conf.getInt(PROXY_POOL_CAPACITY, 1000)
     private val lastModifiedTimes = mutableMapOf<Path, Instant>()
@@ -238,7 +234,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     }
 
     override fun toString(): String {
-        val sb = StringBuilder();
+        val sb = StringBuilder()
         String.format("Total %d, free: %d, working: %d, gone: %d",
                 proxyEntries.size,
                 freeProxies.size,
@@ -388,6 +384,31 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
                 return ENABLED_PROVIDER_DIR.toFile().listFiles()?.isNotEmpty()?:false
             } catch (e: IOException) {
                 log.error("Failed to list files in $ENABLED_PROVIDER_DIR", e)
+            }
+
+            return false
+        }
+
+        /**
+         * Proxy system can be enabled/disabled at runtime
+         * */
+        fun isProxyEnabled(): Boolean {
+            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_ENABLE_PROXY)) {
+                return true
+            }
+
+            // explicit set system environment property
+            val useProxy = System.getProperty(CapabilityTypes.PROXY_USE_PROXY)
+            if (useProxy != null) {
+                when (useProxy) {
+                    "yes" -> return true
+                    "no" -> return false
+                }
+            }
+
+            // if no one set the proxy availability explicitly, but we have providers, use it
+            if (hasEnabledProvider()) {
+                return true
             }
 
             return false

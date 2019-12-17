@@ -53,7 +53,7 @@ class FetchJob : AppContextAwareJob() {
     public override fun setup(params: Params) {
         // Recomputed config variables, this config will be passed to Mapper and Reducer
         jobConf[STORAGE_CRAWL_ID] = options.crawlId
-        jobConf[BATCH_ID] = options.batchId[0]
+        jobConf[BATCH_ID] = options.batchId
         jobConf.setEnum(FETCH_MODE, options.fetchMode)
         jobConf[FETCH_CRAWL_PATH_STRATEGY] = if (options.strictDf) CRAWL_STRICT_DEPTH_FIRST else CRAWL_DEPTH_FIRST
         jobConf.setInt(FETCH_THREADS_FETCH, options.numFetchThreads)
@@ -75,7 +75,7 @@ class FetchJob : AppContextAwareJob() {
     public override fun initJob() {
         // For politeness, don't permit parallel execution of a single task
         currentJob.setReduceSpeculativeExecution(false)
-        val batchId = options.batchId[0]
+        val batchId = options.batchId
         LOG.info("Applying batch id filter $batchId")
         val batchIdFilter = getBatchIdFilter(batchId)
         PulsarJob.initMapper(currentJob, FIELDS, IntWritable::class.java, FetchEntryWritable::class.java,

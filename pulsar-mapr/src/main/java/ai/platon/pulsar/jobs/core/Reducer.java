@@ -43,7 +43,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
      * */
     protected ImmutableConfig jobConf;
     protected MetricsCounters metricsCounters;
-    protected MetricsReporter pulsarReporter;
+    protected MetricsReporter metricsReporter;
 
     protected boolean completed = false;
 
@@ -54,7 +54,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
         this.jobConf = new ImmutableConfig(context.getConfiguration());
 
         this.metricsCounters = new MetricsCounters();
-        this.pulsarReporter = new MetricsReporter(context.getJobName(), metricsCounters, jobConf, context);
+        this.metricsReporter = new MetricsReporter(context.getJobName(), metricsCounters, jobConf, context);
 
         String crawlId = jobConf.get(STORAGE_CRAWL_ID);
         String batchId = jobConf.get(BATCH_ID);
@@ -99,7 +99,7 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
 
     protected void afterCleanup(Context context) {
         context.setStatus(metricsCounters.getStatus(true));
-        pulsarReporter.stopReporter();
+        metricsReporter.stopReporter();
 
         log.info(Params.formatAsLine(
                 "---- reducer cleanup ", " ----",
@@ -136,8 +136,8 @@ public class Reducer<K1, V1, K2, V2> extends org.apache.hadoop.mapreduce.Reducer
         return metricsCounters;
     }
 
-    protected MetricsReporter getPulsarReporter() {
-        return pulsarReporter;
+    protected MetricsReporter getMetricsReporter() {
+        return metricsReporter;
     }
 
     @Override

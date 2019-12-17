@@ -1,11 +1,10 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.persist.gora.GoraStorage
 import org.slf4j.LoggerFactory
@@ -52,7 +51,7 @@ class PulsarEnv {
         init {
             // prerequisite system properties
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
-            setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml")
+            setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
             setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
             setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, AppConstants.H2_SESSION_FACTORY)
 
@@ -90,42 +89,6 @@ class PulsarEnv {
             return
         }
 
-        // Internal proxy server blocks can not be closed by spring, the reason should be investigated
-//        applicationContext.use { it.close() }
-
         active.set(false)
-    }
-
-    /**
-     * Proxy system can be enabled/disabled at runtime
-     * */
-    val useProxy: Boolean get() {
-        if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_ENABLE_PROXY)) {
-            return true
-        }
-
-        // explicit set system environment property
-        var useProxy = System.getProperty(PROXY_USE_PROXY)
-        if (useProxy != null) {
-            when (useProxy) {
-                "yes" -> return true
-                "no" -> return false
-            }
-        }
-
-        useProxy = unmodifiedConfig.get(PROXY_USE_PROXY)
-        if (useProxy != null) {
-            when (useProxy) {
-                "yes" -> return true
-                "no" -> return false
-            }
-        }
-
-        // if no one set the proxy availability explicitly, but we have providers, use it
-        if (ProxyPool.hasEnabledProvider()) {
-            return true
-        }
-
-        return false
     }
 }

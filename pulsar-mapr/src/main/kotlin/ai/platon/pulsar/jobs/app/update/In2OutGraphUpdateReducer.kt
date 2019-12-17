@@ -103,12 +103,15 @@ internal class In2OutGraphUpdateReducer : AppContextAwareGoraReducer<GraphGroupK
 
         for (graphWritable in subGraphs) {
             assert(graphWritable.optimizeMode == WebGraphWritable.OptimizeMode.IGNORE_SOURCE)
-            val subGraph = graphWritable.graph
-            subGraph.edgeSet().forEach {
-                if (it.isLoop) {
-                    focus.page = it.targetWebPage
+            val subGraph = graphWritable.get()
+            subGraph.edgeSet().forEach { edge ->
+                if (edge.isLoop) {
+                    focus.page = edge.targetWebPage
+                } else {
+                    require(!edge.source.hasWebPage())
                 }
-                graph.addEdgeLenient(focus, it.target, subGraph.getEdgeWeight(it))
+
+                graph.addEdgeLenient(focus, edge.target, subGraph.getEdgeWeight(edge))
             }
         }
 

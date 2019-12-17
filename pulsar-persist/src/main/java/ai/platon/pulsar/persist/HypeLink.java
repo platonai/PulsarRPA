@@ -21,6 +21,8 @@ import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 /* An hype link in a page. */
 public class HypeLink implements Comparable<HypeLink> {
 
@@ -34,11 +36,15 @@ public class HypeLink implements Comparable<HypeLink> {
         this(url, null);
     }
 
+    // TODO: anchor can be nullable
     public HypeLink(@NotNull String url, @Nullable String anchor) {
         this(url, anchor, 0);
     }
 
+    // TODO: anchor can be nullable
     public HypeLink(@NotNull String url, @Nullable String anchor, int order) {
+        Objects.requireNonNull(url);
+
         hypeLink = new GHypeLink();
         hypeLink.setUrl(url);
         hypeLink.setAnchor(anchor);
@@ -82,7 +88,7 @@ public class HypeLink implements Comparable<HypeLink> {
         return anchor == null ? "" : anchor.toString();
     }
 
-    public void setAnchor(@NotNull String anchor) {
+    public void setAnchor(@Nullable String anchor) {
         hypeLink.setAnchor(anchor);
     }
 

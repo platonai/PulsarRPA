@@ -23,7 +23,6 @@ class AppMonitor(
     private val log = LoggerFactory.getLogger(AppMonitor::class.java)
     private var lastIPSReport = ""
 
-    private val env = PulsarEnv.initialize()
     private var monitorThread = Thread(this::update)
     private val loopStarted = AtomicBoolean()
     private val isIdle get() = webDriverPool.isIdle
@@ -40,10 +39,6 @@ class AppMonitor(
     override fun close() {
         if (closed.getAndSet(true)) {
             return
-        }
-
-        if (internalProxyServer.isEnabled) {
-            internalProxyServer.use { it.close() }
         }
 
         monitorThread.interrupt()
@@ -87,7 +82,7 @@ class AppMonitor(
             }
         }
 
-        if (env.useProxy) {
+        if (ProxyPool.isProxyEnabled()) {
             monitorProxySystem(tick)
         }
     }

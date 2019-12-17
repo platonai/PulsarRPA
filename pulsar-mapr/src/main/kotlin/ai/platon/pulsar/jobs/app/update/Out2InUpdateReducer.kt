@@ -149,12 +149,15 @@ class Out2InUpdateReducer : AppContextAwareGoraReducer<GraphGroupKey, WebGraphWr
         val graph = WebGraph()
         val focus = WebVertex(url)
         for (graphWritable in subGraphs) {
-            assert(graphWritable.optimizeMode == WebGraphWritable.OptimizeMode.IGNORE_TARGET)
+            require(graphWritable.optimizeMode == WebGraphWritable.OptimizeMode.IGNORE_TARGET)
             val subGraph = graphWritable.graph
             subGraph.edgeSet().forEach { edge: WebEdge ->
                 if (edge.isLoop) {
                     focus.page = edge.sourceWebPage
+                } else {
+                    require(!edge.target.hasWebPage())
                 }
+
                 // log.info("MultiMetadata " + url + "\t<-\t" + edge.getMetadata());
                 graph.addEdgeLenient(edge.source, focus, subGraph.getEdgeWeight(edge)).metadata = edge.metadata
             }

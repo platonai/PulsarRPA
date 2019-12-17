@@ -34,9 +34,9 @@ function printUsage() {
   echo "  parse               Parse URLs marked during fetch"
   echo "  updateoutgraph      Update outgoing vertices in web graph"
   echo "  updateingraph       Update incoming vertices in web graph"
-  echo "  updateseedsindex    Update secondary index for seed pages"
-  echo "  updatetoppageindex  Update secondary index for top pages"
-  echo "  samplejob           Run a minimal sample job"
+#  echo "  updateseedsindex    Update secondary index for seed pages"
+#  echo "  updatetoppageindex  Update secondary index for top pages"
+  # echo "  samplejob           Run a minimal sample job"
   echo
   echo "Options: "
   echo "  -c, --config     Config dir"
@@ -112,8 +112,8 @@ if [ -d "$PULSAR_CONF_DIR" ]; then
 fi
 
 CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/cli.jar"
-MODULE=pulsar-mapr
-CLASS=ai.platon.pulsar.jobs.app.JobRunnerKt
+export MODULE=pulsar-mapr
+export CLASS=ai.platon.pulsar.jobs.app.JobRunnerKt
 
 if [ "$PULSAR_RUNTIME_MODE" == "CLUSTER_JOB" ]; then
  # cluster mode, just pull the job file into hadoop, and exit

@@ -8,7 +8,7 @@ if [ "$PULSAR_RUNTIME_MODE" == "DEVELOPMENT" ]; then
   done
 
   for f in "$PULSAR_HOME/$MODULE"/target/*.jar; do
-    [[ ! sed-$f =~ -job.jar$ ]] && CLASSPATH=${CLASSPATH}:$f;
+    [[ ! sed-$f =~ -job.jar$ ]] && [[ ! sed-$f =~ -sources.jar$ ]] && CLASSPATH=${CLASSPATH}:$f;
   done
 elif [ "$PULSAR_RUNTIME_MODE" == "ASSEMBLY" ]; then
   # binary mode
@@ -28,10 +28,10 @@ fi
 
 PID="$PULSAR_PID_DIR/pulsar-$PULSAR_IDENT_STRING-$COMMAND.pid"
 
-if [ "$COMMAND" = "master" ]; then
-  PULSAR_LOG_PREFIX=pulsar-$PULSAR_IDENT_STRING-$COMMAND-$HOSTNAME
+if [[ "$CLASS" == *"JobRunner"* ]]; then
+  PULSAR_LOG_PREFIX="pulsar-$PULSAR_IDENT_STRING-$COMMAND-$HOSTNAME"
 else
-  PULSAR_LOG_PREFIX="pulsar-$PULSAR_IDENT_STRING-all-$HOSTNAME"
+  PULSAR_LOG_PREFIX=pulsar-$PULSAR_IDENT_STRING-all-$HOSTNAME
 fi
 
 PULSAR_LOGFILE="$PULSAR_LOG_PREFIX.log"
@@ -57,41 +57,42 @@ fi
 
 export CLASSPATH
 if [[ $VERBOSE_LEVEL == "1" ]]; then
-  echo $CLASSPATH
+  echo "$CLASSPATH"
 fi
 
 JAVA="$JAVA_HOME/bin/java"
 
 # fix for the external Xerces lib issue with SAXParserFactory
 # PULSAR_OPTS=(-Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl "${PULSAR_OPTS[@]}")
-EXEC_CALL=("$JAVA" -Dproc_$COMMAND "-XX:OnOutOfMemoryError=\"kill -9 %p\"" $JAVA_HEAP_MAX "${PULSAR_OPTS[@]}")
+# EXEC_CALL=("$JAVA" -Dproc_"$COMMAND" "-XX:OnOutOfMemoryError=\"kill -9 %p\"" "$JAVA_HEAP_MAX" "${PULSAR_OPTS[@]}")
+EXEC_CALL=("$JAVA" -Dproc_"$COMMAND" "${PULSAR_OPTS[@]}")
 
 MESSAGES=(
 "============ Pulsar Runtime ================"
-"\n`date`"
+"\n$(date)"
 "\nCommand: $COMMAND"
 "\nHostname: $(hostname)"
 "\nVersion: " $("${PULSAR_HOME}"/bin/version)
 "\nConfiguration directories: $PULSAR_CONF_DIR <= $PULSAR_PRIME_CONF_DIR, $PULSAR_EXTRA_CONF_DIR"
-"\nWorking directory: `pwd`"
-"\nPulsar home: " $PULSAR_HOME
+"\nWorking directory: $(pwd)"
+"\nPulsar home: " "$PULSAR_HOME"
 "\nLog file: $loglog" "\n"
-"\nCommand Line: " ${EXEC_CALL[@]} $CLASS $@ "\n"
+"\nCommand Line: " "${EXEC_CALL[@]}" "$CLASS" "$@" "\n"
 )
 
 if [[ $VERBOSE_LEVEL == "1" ]]; then
   echo -e "${MESSAGES[@]}"
 fi
-if [ ! -e $logout ]; then
-  touch $logout
+if [ ! -e "$logout" ]; then
+  touch "$logout"
 fi
-echo -e "${MESSAGES[@]}" >> $logout
-echo $COMMAND > $logcmd
+echo -e "${MESSAGES[@]}" >> "$logout"
+echo "$COMMAND" > "$logcmd"
 
 # run it
 if [[ "$RUN_AS_DAEMON" == "true" ]]; then
-  exec "${EXEC_CALL[@]}" $CLASS "$@" >> $logout 2>&1 &
-  echo $! > $PID
+  exec "${EXEC_CALL[@]}" "$CLASS" "$@" >> "$logout" 2>&1 &
+  echo $! > "$PID"
 else
-  exec "${EXEC_CALL[@]}" $CLASS "$@"
+  exec "${EXEC_CALL[@]}" "$CLASS" "$@"
 fi

@@ -48,8 +48,9 @@ public class AppContextAwareGoraReducer<K1, V1, K2, V2 extends Persistent>
      * Destroy all beans before PulsarJob do the cleanup
      */
     @Override
-    protected void cleanupContext(Context context) {
+    protected void cleanupContext(Context context) throws Exception {
         applicationContext.close();
+        super.cleanupContext(context);
     }
 
     public Object getBean(String name) throws BeansException {

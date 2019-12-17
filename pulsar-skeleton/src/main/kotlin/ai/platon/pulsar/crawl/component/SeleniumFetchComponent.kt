@@ -58,7 +58,7 @@ internal class BatchFetchContext(
     val numPendingTasks get() = pendingTasks.size
 
     // Submit all tasks
-    var round: Long = 0
+    var round = 0L
 
     val status = BatchStat()
     var idleSeconds = 0

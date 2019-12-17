@@ -27,16 +27,16 @@ class FeedThread(
 ) : Thread(), Comparable<FeedThread>, Parameterized {
     private val LOG = LoggerFactory.getLogger(FeedThread::class.java)
 
-    private val id: Int = instanceSequence.incrementAndGet()
-    private val checkInterval: Duration = Duration.ofSeconds(2)
-    private var fetchThreads: Int = conf.getUint(FETCH_THREADS_FETCH, 10)!!
+    private val id = instanceSequence.incrementAndGet()
+    private val checkInterval = Duration.ofSeconds(2)
+    private var fetchThreads = conf.getUint(FETCH_THREADS_FETCH, 10)!!
     private val fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofMinutes(30))
-    private var jobDeadline: Instant = Instant.now().plus(fetchJobTimeout)
-    private var initBatchSize: Int = conf.getUint(FETCH_FEEDER_INIT_BATCH_SIZE, fetchThreads)!!
+    private var jobDeadline = Instant.now().plus(fetchJobTimeout)
+    private var initBatchSize = conf.getUint(FETCH_FEEDER_INIT_BATCH_SIZE, fetchThreads)!!
     private val completed = AtomicBoolean(false)
 
     private lateinit var currentIter: Iterator<IFetchEntry>
-    private var totalTaskCount = 0
+    private var totalFeeded = 0
 
     val isCompleted: Boolean
         get() = completed.get()
@@ -56,6 +56,10 @@ class FeedThread(
         )
     }
 
+    fun halt() {
+        completed.set(true)
+    }
+
     override fun run() {
         fetchMonitor.registerFeedThread(this)
 
@@ -71,14 +75,14 @@ class FeedThread(
             while (!isCompleted && Instant.now().isBefore(jobDeadline) && hasMore) {
                 ++round
 
-                var taskCount = 0
-                while (taskCount < batchSize && currentIter.hasNext() && hasMore) {
+                var feededInRound = 0
+                while (feededInRound < batchSize && currentIter.hasNext() && hasMore) {
                     val entry = currentIter.next()
                     val page = entry.page
                     tasksMonitor.produce(context.jobId, page)
 
-                    ++totalTaskCount
-                    ++taskCount
+                    ++totalFeeded
+                    ++feededInRound
 
                     if (!currentIter.hasNext()) {
                         hasMore = context.nextKey()
@@ -88,14 +92,9 @@ class FeedThread(
                     }
                 }
 
-                Params.of(
-                        "Round", round,
-                        "batchSize", batchSize,
-                        "feedTasks", taskCount,
-                        "totalTaskCount", totalTaskCount,
-                        "readyTasks", tasksMonitor.readyTaskCount(),
-                        "fetchThreads", fetchThreads
-                ).withLogger(LOG).debug(true)
+                if (round % 5 == 0 && LOG.isInfoEnabled) {
+                    logAndReport(round, batchSize, feededInRound)
+                }
 
                 try {
                     sleep(checkInterval.toMillis())
@@ -108,13 +107,13 @@ class FeedThread(
 
             tasksMonitor.setFeederCompleted()
         } catch (e: Throwable) {
-            LOG.error("Feeder error reading input, record $totalTaskCount", e)
+            LOG.error("Feeder error reading input, record $totalFeeded", e)
         } finally {
             fetchMonitor.unregisterFeedThread(this)
         }
 
         LOG.info("Feeder finished. Feed " + round + " rounds, Last feed batch size : "
-                + batchSize + ", feed total " + totalTaskCount + " records. ")
+                + batchSize + ", feed total " + totalFeeded + " records. ")
     }
 
     fun exitAndJoin() {
@@ -126,30 +125,43 @@ class FeedThread(
         }
     }
 
-    private fun adjustFeedBatchSize(batchSize_: Float): Float {
-        var batchSize = batchSize_
+    private fun logAndReport(round: Int, batchSize: Float, feededInRound: Int) {
+        Params.of(
+                "Feed round", round,
+                "batchSize", batchSize,
+                "feededInRound", feededInRound,
+                "totalFeeded", totalFeeded,
+                "readyTasks", tasksMonitor.readyTaskCount(),
+                "pendingTasks", tasksMonitor.pendingTaskCount(),
+                "finishedTasks", tasksMonitor.finishedTaskCount(),
+                "fetchThreads", fetchThreads
+        ).withLogger(LOG).info(true)
+    }
+
+    private fun adjustFeedBatchSize(batchSize: Float): Float {
+        var bsiz = batchSize
         // TODO : Why readyTasks is always be very small?
         val readyTasks = tasksMonitor.readyTaskCount()
-        val pagesThroughput = taskScheduler.getAveragePageThroughput()
+        val pagesThroughput = taskScheduler.averagePageThroughput
         val recentPages = pagesThroughput * checkInterval.seconds
         // TODO : Every batch size should be greater than pages fetched during last wait interval
 
-        if (batchSize <= 1) {
-            batchSize = 1f
+        if (bsiz <= 1) {
+            bsiz = 1f
         }
 
         if (readyTasks <= fetchThreads) {
             // No ready tasks, increase batch size
-            batchSize += (batchSize * 0.2).toFloat()
+            bsiz += (bsiz * 0.2).toFloat()
         } else if (readyTasks <= 2 * fetchThreads) {
             // Too many ready tasks, decrease batch size
-            batchSize -= (batchSize * 0.2).toFloat()
+            bsiz -= (bsiz * 0.2).toFloat()
         } else {
             // Ready task number is OK, do not feed this time
-            batchSize = 0f
+            bsiz = 0f
         }
 
-        return batchSize
+        return bsiz
     }
 
     @Throws(IOException::class, InterruptedException::class)

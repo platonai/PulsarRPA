@@ -103,7 +103,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.FetchMonitor" destroy-method="close">
+    <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.FetchMonitor" destroy-method="close" depends-on="internalProxyServer">
         <constructor-arg ref="batchFetchComponent"/>
         <constructor-arg ref="taskMonitor"/>
         <constructor-arg ref="taskSchedulers"/>

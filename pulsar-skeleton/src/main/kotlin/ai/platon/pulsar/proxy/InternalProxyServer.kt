@@ -44,7 +44,6 @@ class InternalProxyServer(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(InternalProxyServer::class.java)
-    private val env = PulsarEnv.initialize()
 
     private var runningWithoutProxy = false
     private var forwardServer: HttpProxyServer? = null
@@ -62,7 +61,7 @@ class InternalProxyServer(
     private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)
     private val httpProxyServerConfig = HttpProxyServerConfig()
 
-    val isEnabled get() = env.useProxy && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
+    val isEnabled get() = ProxyPool.isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
     val isDisabled get() = !isEnabled
     val port = INTERNAL_PROXY_SERVER_PORT
     val totalConnects = AtomicInteger()
@@ -88,6 +87,11 @@ class InternalProxyServer(
     fun start() {
         if (isDisabled) {
             log.warn("IPS is disabled")
+            return
+        }
+
+        if (NetUtil.testTcpNetwork("127.0.0.1", INTERNAL_PROXY_SERVER_PORT)) {
+            log.info("IPS is already started at $INTERNAL_PROXY_SERVER_PORT, ignore this time")
             return
         }
 

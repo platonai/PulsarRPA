@@ -29,12 +29,12 @@ import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlFilters
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
-import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -90,6 +90,9 @@ class GenerateComponent(
     private var lowGeneratedRows: Int = -1
 
     init {
+        arrayOf(PATH_BANNED_URLS, PATH_UNREACHABLE_HOSTS).forEach {
+            it.takeIf { !Files.exists(it) }?.let { Files.createFile(it) }
+        }
         // TODO : move to a filter
         bannedUrls.addAll(FSUtils.readAllLinesSilent(PATH_BANNED_URLS, conf))
         unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS))

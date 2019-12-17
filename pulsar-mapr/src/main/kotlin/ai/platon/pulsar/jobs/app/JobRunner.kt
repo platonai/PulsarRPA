@@ -22,16 +22,16 @@ import org.springframework.context.annotation.Bean
 
 @SpringBootApplication
 class JobRunner {
-    val log = LoggerFactory.getLogger(JobRunner::class.java)
+    private val log = LoggerFactory.getLogger(JobRunner::class.java)
 
     val jobs = mapOf(
             "inject" to InjectJob(),
             "fetch" to FetchJob(),
             "generate" to GenerateJob(),
-            "homepage" to TopPageHomeUpdateJob(),
             "parse" to ParserJob(),
+            "updateoutgraph" to Out2InGraphUpdateJob(),
             "updateingraph" to In2OutGraphUpdateJob(),
-            "updateoutgraph" to Out2InGraphUpdateJob()
+            "homepage" to TopPageHomeUpdateJob()
     )
 
     @Bean

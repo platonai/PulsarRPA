@@ -13,7 +13,6 @@ class JobEnv {
 
         init {
             setPropertyIfAbsent(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, "mapr-conf")
-            setPropertyIfAbsent(CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
             setPropertyIfAbsent(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.JOB_CONTEXT_CONFIG_LOCATION)
 
             PulsarEnv.initialize()

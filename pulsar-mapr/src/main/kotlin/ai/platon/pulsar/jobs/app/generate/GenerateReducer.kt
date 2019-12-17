@@ -17,7 +17,7 @@
 package ai.platon.pulsar.jobs.app.generate
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.AppFiles.writeBatchId
+import ai.platon.pulsar.common.AppFiles.writeLastBatchId
 import ai.platon.pulsar.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.Urls.reverseUrl
 import ai.platon.pulsar.common.config.AppConstants
@@ -64,6 +64,9 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
         groupMode = jobConf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
         metricsSystem = applicationContext.getBean(MetricsSystem::class.java)
 
+        // Write the generated batch id to last-batch-id file
+        writeLastBatchId(batchId)
+
         log.info(Params.format(
                 "className", this.javaClass.simpleName,
                 "crawlId", crawlId,
@@ -97,14 +100,12 @@ class GenerateReducer : AppContextAwareGoraReducer<SelectorEntry, GWebPage, Stri
                     log.warn("Too many urls in host {}, ignore ...", host)
                     break
                 }
-                
+
                 updatePage(page)
                 context.write(reverseUrl(url), page.unbox())
                 ++count
                 updateStatus(page, context)
-                
-                // Write the generated batch id to last-batch-id file
-                writeBatchId(batchId)
+
                 metricsSystem.debugSortScore(page)
             } catch (e: Throwable) {
                 log.error(StringUtil.stringifyException(e))

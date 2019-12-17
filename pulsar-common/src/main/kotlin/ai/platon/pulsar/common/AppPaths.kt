@@ -48,6 +48,7 @@ object AppPaths {
     @JvmField
     val PATH_UNREACHABLE_HOSTS = get(REPORT_DIR,  "unreachable-hosts.txt")
 
+    // TODO: distinct tmp dir and home dir
     private val tmpDirStr get() = TMP_DIR.toString()
     private val homeDirStr get() = HOME_DIR.toString()
 

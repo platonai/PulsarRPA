@@ -112,7 +112,7 @@ object AppFiles {
     }
 
     @Throws(IOException::class)
-    fun writeBatchId(batchId: String): Path {
+    fun writeLastBatchId(batchId: String): Path {
         val path = AppPaths.PATH_LAST_BATCH_ID
 
         if (batchId.isNotEmpty()) {

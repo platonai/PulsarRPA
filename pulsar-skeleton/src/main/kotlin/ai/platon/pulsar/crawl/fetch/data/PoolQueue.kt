@@ -105,12 +105,12 @@ class PoolQueue: AbstractQueue<TaskPool>() {
      * 1. the queue is too slow, or
      * 2. all tasks are done
      */
-    fun disable(queue: TaskPool) {
-        priorityActiveQueues.remove(queue)
-        activeQueues.remove(queue.id)
+    fun disable(pool: TaskPool) {
+        priorityActiveQueues.remove(pool)
+        activeQueues.remove(pool.id)
 
-        queue.disable()
-        inactiveQueues[queue.id] = queue
+        pool.disable()
+        inactiveQueues[pool.id] = pool
     }
 
     fun hasPriorPendingTasks(priority: Int): Boolean {

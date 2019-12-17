@@ -31,7 +31,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="internalProxyServer" class="ai.platon.pulsar.proxy.InternalProxyServer" destroy-method="close">
+    <bean id="internalProxyServer" class="ai.platon.pulsar.proxy.InternalProxyServer" init-method="start" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>

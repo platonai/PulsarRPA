@@ -175,7 +175,6 @@ class FetchMonitor(
         val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
 
         try {
-            Files.createDirectories(finishScript.parent)
             Files.write(finishScript, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
             Files.setPosixFilePermissions(finishScript, PosixFilePermissions.fromString("rwxrw-r--"))
         } catch (e: IOException) {
@@ -228,6 +227,7 @@ class FetchMonitor(
     }
 
     fun halt() {
+        feedThreads.forEach { it.halt() }
         isHalt = true
     }
 
@@ -286,7 +286,7 @@ class FetchMonitor(
         do {
             val status = taskScheduler.waitAndReport(checkInterval)
 
-            val statusString = taskScheduler.getStatusString(status)
+            val statusString = taskScheduler.format(status)
 
             /* Status string shows in yarn admin ui */
             context.status = statusString
@@ -296,7 +296,7 @@ class FetchMonitor(
 
             val now = Instant.now()
             val jobTime = Duration.between(startTime, now)
-            val idleTime = Duration.between(taskScheduler.getLastTaskFinishTime(), now)
+            val idleTime = Duration.between(taskScheduler.lastTaskFinishTime, now)
 
             /*
              * Check if any fetch tasks are hung
@@ -328,18 +328,18 @@ class FetchMonitor(
             }
 
             /*
-             * Read local filesystem for control commands
+             * Read local file for control commands
              * */
             if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
                 handleFinishJobCommand()
-                log.info("Find finish-job command, exit the job ...")
+                log.info("Found finish-job command, exit the job ...")
                 halt()
                 break
             }
 
             /*
-               * All fetch tasks are finished
-               * */
+             * All fetch tasks are finished
+             * */
             if (isMissionComplete) {
                 log.info("All done, exit the job ...")
                 break
@@ -376,7 +376,6 @@ class FetchMonitor(
 
     /**
      * Check if some threads are hung. If so, we should stop the main fetch loop
-     * should we stop the main fetch loop
      */
     private fun handleFetchTaskTimeout() {
         if (activeFetchThreads.isEmpty()) {

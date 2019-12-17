@@ -141,11 +141,11 @@ fi
 
 PULSAR_SCRIPT_OPTIONS=()
 if [ "$ENTERPRISE_EDITION" == "true" ]; then
-  PULSAR_SCRIPT_OPTIONS=(${PULSAR_SCRIPT_OPTIONS[@]} --enterprise)
+  PULSAR_SCRIPT_OPTIONS=("${PULSAR_SCRIPT_OPTIONS[@]}" --enterprise)
 fi
 
 if [ "$VERBOSE_LEVEL" == "1" ]; then
-  PULSAR_SCRIPT_OPTIONS=(${PULSAR_SCRIPT_OPTIONS[@]} --verbose)
+  PULSAR_SCRIPT_OPTIONS=("${PULSAR_SCRIPT_OPTIONS[@]}" --verbose)
 fi
 
 # note that some of the options listed here could be set in the
@@ -229,8 +229,10 @@ do
     echo "Parsing : "
     __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" parse -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -crawlId "$CRAWL_ID"
 
-    echo "Indexing : "
-    __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" index -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -indexer "$INDEXER" -crawlId "$CRAWL_ID"
+    if [[ "$INDEX" == "" ]]; then
+      echo "Indexing : "
+      __run_pulsar_job "${PULSAR_SCRIPT_OPTIONS[@]}" index -D crawl.round="$a" "${COMMAND_OPTIONS[@]}" "$batchId" -indexer "$INDEXER" -crawlId "$CRAWL_ID"
+    fi
   fi
 
   echo "Updating outgoing pages : "

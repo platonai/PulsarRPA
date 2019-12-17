@@ -17,10 +17,10 @@ import kotlin.system.exitProcess
 
 @Parameters(commandNames = ["FetchJob"], commandDescription = "The most important switches for fetch jobs.")
 class FetchOptions(conf: ImmutableConfig) {
-    @Parameter(description = "[batchId], If not specified, use last generated batch id.")
-    var batchId: MutableList<String> = arrayListOf()
+    @Parameter(names = [PulsarParams.ARG_BATCH_ID], description = "If not specified, use last generated batch id.")
+    var batchId = conf.get(CapabilityTypes.BATCH_ID, defaultBatchId)
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The id to prefix the schemas to operate on")
-    var crawlId: String = conf.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
+    var crawlId = conf.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
     @Parameter(names = [PulsarParams.ARG_FETCH_MODE], description = "Fetch mode")
     var fetchMode = conf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.SELENIUM)
     @Parameter(names = [PulsarParams.ARG_STRICT_DF], description = "If true, crawl the web using strict depth-first strategy")
@@ -68,10 +68,6 @@ class FetchOptions(conf: ImmutableConfig) {
             exitProcess(0)
         }
 
-        if (batchId.isEmpty()) {
-            batchId.add(AppFiles.readBatchIdOrDefault(AppConstants.ALL_BATCHES))
-        }
-
         indexerUrl = StringUtils.stripEnd(indexerUrl, "/")
         val indexerHost = URLUtil.getHostName(indexerUrl)
         if (indexerHost == null) {
@@ -84,7 +80,7 @@ class FetchOptions(conf: ImmutableConfig) {
         return Params.of(
                 PulsarParams.ARG_ROUND, round,
                 PulsarParams.ARG_CRAWL_ID, crawlId,
-                PulsarParams.ARG_BATCH_ID, batchId[0],
+                PulsarParams.ARG_BATCH_ID, batchId,
                 PulsarParams.ARG_FETCH_MODE, fetchMode,
                 PulsarParams.ARG_STRICT_DF, strictDf,
                 PulsarParams.ARG_THREADS, numFetchThreads.takeIf { it > 0 },
@@ -96,5 +92,9 @@ class FetchOptions(conf: ImmutableConfig) {
                 PulsarParams.ARG_ZK, zkHostString,
                 PulsarParams.ARG_COLLECTION, indexerCollection
         )
+    }
+
+    companion object {
+        val defaultBatchId = AppFiles.readBatchIdOrDefault(AppConstants.ALL_BATCHES)
     }
 }

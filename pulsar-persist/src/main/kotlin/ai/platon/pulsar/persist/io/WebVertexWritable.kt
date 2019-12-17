@@ -20,12 +20,16 @@ import java.util.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class WebVertexWritable(
-        var conf: Configuration = ImmutableConfig.EMPTY.unbox()
+        var conf: Configuration = ImmutableConfig.DEFAULT.unbox()
 ) : Writable {
-    lateinit var vertex: WebVertex
+    var vertex: WebVertex = WebVertex(WebPage.NIL.url)
 
     constructor(vertex: WebVertex, conf: Configuration): this(conf) {
         this.vertex = vertex
+    }
+
+    fun get(): WebVertex {
+        return vertex
     }
 
     @Throws(IOException::class)

@@ -121,7 +121,7 @@ class SeleniumEngine(
         private val fetchTaskTracker: FetchTaskTracker,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
-    val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
+    private val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
     private val monthDay = DateTimeUtil.now("MMdd")
 

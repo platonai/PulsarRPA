@@ -259,7 +259,7 @@
               "namespace": "ai.platon.pulsar.persist.gora.generated",
               "fields" : [
                 {"name": "url","type": "string","default": ""},
-                {"name": "anchor","type": "string","default": ""},
+                {"name": "anchor", "type": ["null", "string"], "default": null},
                 {"name": "order","type": "int","default": 0}
               ]
             }

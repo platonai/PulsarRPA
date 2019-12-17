@@ -6,6 +6,8 @@ public class ImmutableConfig extends AbstractConfiguration {
 
     public static final ImmutableConfig EMPTY = new ImmutableConfig(false);
 
+    public static final ImmutableConfig DEFAULT = new ImmutableConfig(new Configuration());
+
     public ImmutableConfig() {
     }
 
