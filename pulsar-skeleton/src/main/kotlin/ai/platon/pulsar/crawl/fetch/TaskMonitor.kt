@@ -71,7 +71,11 @@ class TaskMonitor(
     /**
      * The maximal number of threads allowed to access a task pool
      */
-    private var poolThreads: Int = 5
+    private var numPoolThreads: Int = 5
+    /**
+     * Fetch threads
+     */
+    private var initFetchThreadCount: Int = conf.getInt(FETCH_THREADS_FETCH, 10)
 
     /**
      * Once timeout, the pending items should be put to the ready pool again.
@@ -83,8 +87,8 @@ class TaskMonitor(
     override fun setup(jobConf: ImmutableConfig) {
         this.options = FetchOptions(jobConf)
 
-        poolThreads = if (options.fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE
-        else jobConf.getInt(FETCH_THREADS_PER_QUEUE, 5)
+        numPoolThreads = if (options.fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE
+        else options.numPoolThreads
 
         log.info(params.format())
     }
@@ -92,7 +96,8 @@ class TaskMonitor(
     override fun getParams(): Params {
         return Params.of(
                 "className", this.javaClass.simpleName,
-                "poolThreads", poolThreads,
+                "numPoolThreads", numPoolThreads,
+                "initFetchThreadCount", initFetchThreadCount,
                 "groupMode", groupMode,
                 "crawlDelay", crawlDelay,
                 "minCrawlDelay", minCrawlDelay,
@@ -455,11 +460,13 @@ class TaskMonitor(
     private fun createFetchQueue(poolId: PoolId): TaskPool {
         val pool = TaskPool(poolId,
                 groupMode,
-                poolThreads,
-                crawlDelay!!,
-                minCrawlDelay!!,
+                numPoolThreads,
+                crawlDelay,
+                minCrawlDelay,
                 poolPendingTimeout)
+
         log.info("FetchQueue created : $pool")
+
         return pool
     }
 

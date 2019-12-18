@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
@@ -14,6 +12,7 @@ import java.util.*
 import kotlin.math.abs
 
 class GenerateOptions(val conf: ImmutableConfig) {
+    // TODO: crawlId is not used since AutoStorageService is started after Option parsing
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The crawl id, (default : \"storage.crawl.id\").")
     var crawlId: String = conf[CapabilityTypes.STORAGE_CRAWL_ID, ""]
     @Parameter(names = [PulsarParams.ARG_BATCH_ID], description = "The batch id")
@@ -37,7 +36,6 @@ class GenerateOptions(val conf: ImmutableConfig) {
     var isHelp = false
 
     fun parse(args: Array<String>) {
-        crawlId = conf[CapabilityTypes.STORAGE_CRAWL_ID]
         val jc = JCommander(this)
         try {
             jc.parse(*args)

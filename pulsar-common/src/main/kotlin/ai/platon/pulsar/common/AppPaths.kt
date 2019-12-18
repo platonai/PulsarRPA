@@ -32,6 +32,8 @@ object AppPaths {
     @JvmField
     val REPORT_DIR = get(TMP_DIR, "report")
     @JvmField
+    val SCRIPT_DIR = get(TMP_DIR, "scripts")
+    @JvmField
     val TEST_DIR = get(TMP_DIR, "test")
 
     @JvmField
@@ -53,7 +55,7 @@ object AppPaths {
     private val homeDirStr get() = HOME_DIR.toString()
 
     init {
-        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, REPORT_DIR, TEST_DIR).forEach {
+        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR).forEach {
             if (!Files.exists(it)) {
                 Files.createDirectories(it)
             }

@@ -97,6 +97,8 @@ public abstract class AbstractConfiguration {
             return;
         }
 
+        // read system properties
+
         if (!preferredDir.isEmpty()) {
             conf.set(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
         }

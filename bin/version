@@ -2,7 +2,7 @@
 
 if [ "$PULSAR_HOME" = "" ]; then
    # shellcheck source=bin/include/pulsar-config.sh
-   . "$(dirname "$0")"/include/pulsar-config.sh
+   . ./include/pulsar-config.sh
 fi
 
 VERSION="v$(cat "$PULSAR_HOME"/VERSION)-snapshot"

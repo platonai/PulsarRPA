@@ -29,11 +29,7 @@ class PoolQueue: AbstractQueue<TaskPool>() {
                     .joinToString("\n") { it.costReport }
         }
 
-    override fun add(taskPool: TaskPool?): Boolean {
-        if (taskPool == null) {
-            return false
-        }
-
+    override fun add(taskPool: TaskPool): Boolean {
         priorityActiveQueues.add(taskPool)
         activeQueues[taskPool.id] = taskPool
 

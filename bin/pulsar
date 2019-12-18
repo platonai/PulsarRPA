@@ -38,11 +38,6 @@ MODULE=
 while [[ $# -gt 0 ]]
 do
 case $1 in
-    -c|--config)
-        shift
-        PULSAR_EXTRA_CONF_DIR=$1
-        shift
-        ;;
     -m|--module)
         shift
         MODULE=$1
@@ -78,10 +73,7 @@ done
 COMMAND=$1
 shift
 
-bin=$(dirname "$0")
-bin=$(cd "$bin">/dev/null || exit; pwd)
-
- . "$bin"/include/pulsar-config.sh
+ . ./include/pulsar-config.sh
 
 bin="$PULSAR_HOME"/bin
 
@@ -125,7 +117,7 @@ fi
 
 if [[ "$PULSAR_RUNTIME_MODE" == "PACKED" ]]; then
  # cluster mode, just pull the job file into hadoop, and exit
- . "$bin"/include/run-cluster.sh
+ . ./include/run-cluster.sh
 else
- . "$bin"/include/run-local.sh
+ . ./include/run-local.sh
 fi

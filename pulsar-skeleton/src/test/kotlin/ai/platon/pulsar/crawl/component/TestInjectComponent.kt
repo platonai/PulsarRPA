@@ -13,11 +13,12 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 fun main(args: Array<String>) {
-    val opts = InjectOptions(args)
-    opts.parseOrExit()
     val context: ApplicationContext = ClassPathXmlApplicationContext(
             System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION))
     val conf = context.getBean(MutableConfig::class.java)
+
+    val opts = InjectOptions(args, conf)
+    opts.parseOrExit()
     conf.setIfNotEmpty(CapabilityTypes.STORAGE_CRAWL_ID, opts.crawlId)
     var seeds = opts.seeds[0]
     if (seeds.startsWith("@")) {

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.PulsarParams
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import com.beust.jcommander.Parameter
 import java.util.*
@@ -9,7 +11,9 @@ import java.util.*
  * Command options for inject tasks.
  * Expect the list option which specify the seed or seed file, the @ sign is not supported
  */
-class InjectOptions(args: Array<String>) : CommonOptions(args) {
+class InjectOptions(args: Array<String>, conf: ImmutableConfig) : CommonOptions(args) {
+    @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The crawl id, (default : \"storage.crawl.id\").")
+    var crawlId: String = conf[CapabilityTypes.STORAGE_CRAWL_ID, ""]
     @Parameter(description = "<seeds> \nSeed urls. You can use {@code @FILE} syntax to read from file.")
     var seeds: List<String> = ArrayList()
     @Parameter(names = [PulsarParams.ARG_LIMIT], description = "task limit")

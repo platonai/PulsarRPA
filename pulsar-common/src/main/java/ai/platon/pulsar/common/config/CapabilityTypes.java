@@ -30,7 +30,7 @@ public interface CapabilityTypes {
     String PULSAR_CONFIG_DIR = "pulsar.configuration.dir";
     String PULSAR_CONFIG_ID = "pulsar.config.id";
     String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
-    String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "pulsar.config.resources";
+    String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
     String PARAM_HOME_DIR = "pulsar.home.dir";
     String PARAM_TMP_DIR = "pulsar.tmp.dir";
@@ -176,11 +176,12 @@ public interface CapabilityTypes {
     String FETCH_TASK_TIMEOUT = "fetch.task.timeout";
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
     String FETCH_SERVER_REQUIRED = "fetch.fetch.server.required";
+    // TODO: name "queue" has changed to be "pool"
     String FETCH_QUEUE_MODE = "fetch.queue.mode";
     String FETCH_QUEUE_USE_HOST_SETTINGS = "fetch.queue.use.host.settings";
     String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
     String FETCH_FEEDER_INIT_BATCH_SIZE = "fetch.feeder.init.batch.size";
-    String FETCH_THREADS_PER_QUEUE = "fetch.threads.per.queue";
+    String FETCH_THREADS_PER_POOL = "fetch.threads.per.pool";
     String FETCH_THROUGHPUT_THRESHOLD_PAGES = "fetch.throughput.threshold.pages";
     String FETCH_THROUGHPUT_THRESHOLD_SEQENCE = "fetch.throughput.threshold.sequence";
     String FETCH_THROUGHPUT_CHECK_INTERVAL = "fetch.throughput.check.interval";

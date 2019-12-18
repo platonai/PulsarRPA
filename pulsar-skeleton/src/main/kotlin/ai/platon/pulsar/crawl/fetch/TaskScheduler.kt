@@ -59,12 +59,6 @@ class TaskScheduler(
     // Parser setting
     private var parse: Boolean = false
 
-    /**
-     * Fetch threads
-     */
-    private var initFetchThreadCount: Int = conf.getInt(FETCH_THREADS_FETCH, 10)
-    private var threadsPerQueue: Int = conf.getInt(FETCH_THREADS_PER_QUEUE, 1)
-
     // Timer
     private val startTime = Instant.now() // Start time of fetcher run
     var lastTaskStartTime = startTime
@@ -108,17 +102,11 @@ class TaskScheduler(
     override fun getParams(): Params {
         return Params.of(
                 "className", this.javaClass.simpleName,
-
                 "id", id,
-
                 "bandwidth", StringUtil.readableByteCount(bandwidth.toLong()),
-                "initFetchThreadCount", initFetchThreadCount,
-                "threadsPerQueue", threadsPerQueue,
-
                 "skipTruncated", skipTruncated,
                 "parse", parse,
                 "storingContent", storingContent,
-
                 "indexJIT", indexJIT,
                 "outputDir", outputDir
         )

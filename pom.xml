@@ -18,7 +18,6 @@
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
         <version>1</version>
-        <relativePath>./platon/pom.xml</relativePath>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
@@ -29,8 +28,7 @@
     <name>Pulsar</name>
 
     <modules>
-        <module>platon</module>
-        <module>pulsar-common</module>
+       <module>pulsar-common</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>
         <module>pulsar-beans</module>

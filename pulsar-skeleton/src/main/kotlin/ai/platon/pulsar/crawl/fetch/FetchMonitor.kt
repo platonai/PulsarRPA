@@ -24,6 +24,7 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -152,6 +153,8 @@ class FetchMonitor(
                 "taskSchedulers", taskSchedulers.name,
                 "taskScheduler", taskScheduler.name,
 
+                "fetchThreads", options.numFetchThreads,
+                "poolThreads", options.numPoolThreads,
                 "fetchJobTimeout", fetchJobTimeout,
                 "fetchTaskTimeout", fetchTaskTimeout,
                 "poolPendingTimeout", poolPendingTimeout,
@@ -261,6 +264,7 @@ class FetchMonitor(
 
     private fun startFetchThreads(threadCount: Int, context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         for (i in 0 until threadCount) {
+            log.info("Starting {}/{} fetch threads", i + 1, threadCount)
             val fetchThread = FetchThread(fetchComponent, this, taskScheduler, immutableConfig, context)
             fetchThread.start()
         }
@@ -364,7 +368,7 @@ class FetchMonitor(
                 log.warn("Lost index server, exit the job")
                 break
             }
-        } while (!activeFetchThreads.isEmpty())
+        } while (activeFetchThreads.isNotEmpty())
     }
 
     /**
