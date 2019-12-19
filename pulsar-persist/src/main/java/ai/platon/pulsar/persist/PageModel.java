@@ -2,6 +2,8 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup;
 import org.apache.commons.collections4.CollectionUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class PageModel {
         return fieldGroups;
     }
 
+    @Nullable
     public FieldGroup first() {
         return isEmpty() ? null : get(0);
     }
@@ -43,6 +46,7 @@ public class PageModel {
         fieldGroups.add(i, fieldGroup.unbox());
     }
 
+    @NotNull
     public FieldGroup emplace(long id, long parentId, String group, Map<CharSequence, CharSequence> fields) {
         FieldGroup fieldGroup = FieldGroup.newFieldGroup(id, group, parentId);
         fieldGroup.setFields(fields);

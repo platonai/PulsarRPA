@@ -337,13 +337,13 @@ class PulsarContext: AutoCloseable {
     fun parse(page: WebPage): FeaturedDocument {
         ensureRunning()
         val parser = JsoupParser(page, unmodifiedConfig)
-        return FeaturedDocument(parser.parse())
+        return parser.parse()
     }
 
     fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument {
         ensureRunning()
         val parser = JsoupParser(page, mutableConfig)
-        return FeaturedDocument(parser.parse())
+        return parser.parse()
     }
 
     fun persist(page: WebPage) {

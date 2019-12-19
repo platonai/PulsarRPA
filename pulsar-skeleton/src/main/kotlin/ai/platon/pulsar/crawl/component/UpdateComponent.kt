@@ -75,12 +75,12 @@ class UpdateComponent(
 
         if (outgoingPage.pageCategory.isDetail || CrawlFilter.guessPageCategory(outgoingPage.url).isDetail) {
             pageCounters.increase(PageCounters.Ref.ch, outgoingPage.contentTextLen)
-            pageCounters.increase(PageCounters.Ref.article)
+            pageCounters.increase(PageCounters.Ref.item)
         }
 
-        val outPageCounters = outgoingPage.pageCounters
-        val missingFields = outPageCounters.get(Self.missingFields)
-        val brokenSubEntity = outPageCounters.get(Self.brokenSubEntity)
+        val outgoingPageCounters = outgoingPage.pageCounters
+        val missingFields = outgoingPageCounters.get(Self.missingFields)
+        val brokenSubEntity = outgoingPageCounters.get(Self.brokenSubEntity)
 
         pageCounters.increase(PageCounters.Ref.missingFields, missingFields)
         pageCounters.increase(PageCounters.Ref.brokenEntity, if (missingFields > 0) 1 else 0)
@@ -88,9 +88,7 @@ class UpdateComponent(
 
         if (outgoingPage.protocolStatus.isFailed) {
             page.deadLinks.add(outgoingPage.url)
-            if (LOG.isDebugEnabled) {
-                LOG.debug("Failed to fetch out page: " + outgoingPage.url + " <= " + page.url)
-            }
+            metricsSystem.debugDeadOutgoingPage(outgoingPage.url, page)
         }
 
         scoringFilters.updateContentScore(page)

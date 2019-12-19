@@ -4,10 +4,10 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil.testNetwork
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
@@ -23,7 +23,6 @@ import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.getBean
 import java.io.File
 import java.lang.Long.MAX_VALUE
 import java.time.Duration

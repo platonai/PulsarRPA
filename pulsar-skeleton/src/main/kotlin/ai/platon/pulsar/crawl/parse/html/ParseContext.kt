@@ -15,5 +15,5 @@ class ParseContext(
         val metaTags: HTMLMetaTags? = null,
         // deprecated, may not support in further version. Use jsoup instead
         val documentFragment: DocumentFragment? = null,
-        val document: FeaturedDocument? = null
+        var document: FeaturedDocument? = null
 )

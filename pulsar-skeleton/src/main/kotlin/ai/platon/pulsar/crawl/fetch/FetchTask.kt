@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
@@ -77,7 +77,8 @@ class FetchTask private constructor(
             val proto = u.protocol
             val host = URLUtil.getHost(u, groupMode)
 
-            return if (proto == null || host.isEmpty()) {
+            return if (proto == null || host == null || host.isEmpty()) {
+                // TODO: report the exception
                 null
             } else FetchTask(jobId, priority, proto.toLowerCase(), host.toLowerCase(), page, u)
         }

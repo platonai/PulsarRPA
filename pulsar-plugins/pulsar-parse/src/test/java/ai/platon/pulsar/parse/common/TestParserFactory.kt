@@ -52,7 +52,7 @@ class TestParserFactory {
     @Test
     @Throws(Exception::class)
     fun testGetParsers() {
-        var parsers = parserFactory!!.getParsers("text/html", "http://foo.com")
+        var parsers = parserFactory.getParsers("text/html", "http://foo.com")
         Assert.assertNotNull(parsers)
         Assert.assertEquals(1, parsers.size.toLong())
         Assert.assertEquals("ai.platon.pulsar.parse.html.HtmlParser", parsers[0].javaClass.name)

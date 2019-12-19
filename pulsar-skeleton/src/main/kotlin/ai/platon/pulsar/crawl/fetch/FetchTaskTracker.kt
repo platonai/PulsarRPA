@@ -9,6 +9,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -114,7 +116,7 @@ class FetchTaskTracker(
      */
     fun trackHostGone(url: String): Boolean {
         val host = URLUtil.getHost(url, groupMode)
-        if (host.isEmpty()) {
+        if (host == null || host.isEmpty()) {
             LOG.warn("Malformed url | <{}>", url)
             return false
         }
@@ -143,7 +145,7 @@ class FetchTaskTracker(
         val url = page.url
         val host = URLUtil.getHost(url, groupMode)
 
-        if (host.isEmpty()) {
+        if (host == null || host.isEmpty()) {
             LOG.warn("Bad host in url : $url")
             return
         }

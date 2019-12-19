@@ -125,7 +125,7 @@ public class PageCounters {
      * Counters accumulated by the page itself
      */
     public enum Self {
-        noArticle,
+        noItem,
         fetchErr, parseErr, extractErr, indexErr,
         missingFields, brokenSubEntity
     }
@@ -136,7 +136,7 @@ public class PageCounters {
     public enum Ref {
         fetchErr, parseErr, extractErr, indexErr,
         link,
-        ch, article, page,
+        ch, a, img, item, page,
         entity, subEntity,
         missingEntity, missingFields, brokenEntity, brokenSubEntity,
         missingEntityLastRound, missingFieldsLastRound, brokenEntityLastRound, brokenSubEntityLastRound

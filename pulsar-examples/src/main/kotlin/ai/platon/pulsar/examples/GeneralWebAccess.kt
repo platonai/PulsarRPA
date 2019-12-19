@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.RuntimeUtils
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER

@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
@@ -16,7 +17,7 @@ import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.dom.Documents
-import ai.platon.pulsar.persist.BrowserJsData
+import ai.platon.pulsar.persist.data.BrowserJsData
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -309,6 +310,8 @@ class SeleniumEngine(
         val batchId = task.batchId
         val page = task.page
         // page.location is the last working address, and page.url is the permanent internal address
+
+        // TODO: redirection (inside browser) is not handled
         val url = page.url
         var location = page.location
         if (location.isBlank()) {
@@ -622,7 +625,6 @@ class SeleniumEngine(
         headers.put(CONTENT_ENCODING, "UTF-8")
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
         headers.put(Q_RESPONSE_TIME, System.currentTimeMillis().toString())
-        headers.put(Q_WEB_DRIVER, driver.javaClass.name)
 
         when (driver.driver) {
             is ChromeDriver -> page.lastBrowser = BrowserType.CHROME

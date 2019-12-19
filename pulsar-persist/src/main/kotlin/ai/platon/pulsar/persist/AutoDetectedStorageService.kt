@@ -30,7 +30,12 @@ class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
 
     init {
         try {
-            pageStore = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java, pageStoreClass)
+            pageStore = GoraStorage.createDataStore(
+                    conf.unbox(),
+                    String::class.java,
+                    GWebPage::class.java,
+                    pageStoreClass
+            )
         } catch (e: ClassNotFoundException) {
             log.error(StringUtil.stringifyException(e))
             throw RuntimeException(e.message)

@@ -21,9 +21,10 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.URLUtil.GroupMode
+import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.common.JobInitialized
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlFilters
@@ -148,7 +149,7 @@ class GenerateComponent(
      * TODO : Move to CrawlFilter
      */
     fun shouldFetch(url: String, reversedUrl: String, page: WebPage): Boolean {
-        var u: String? = url
+        val u: String = url
         if (reGenerateSeeds && page.isSeed) {
             return true
         }
@@ -230,17 +231,18 @@ class GenerateComponent(
             return false
         }
 
+        var u2: String? = u
         // If filtering is on don't generate URLs that don't pass UrlFilters
-        if (normalise && u != null) {
-            u = urlNormalizers.normalize(u, UrlNormalizers.SCOPE_GENERATE_HOST_COUNT)
+        if (normalise) {
+            u2 = urlNormalizers.normalize(u, UrlNormalizers.SCOPE_GENERATE_HOST_COUNT)
         }
 
-        if (u == null) {
+        if (u2 == null) {
             metricsCounters.increase(Counter.mNotNormal)
             return false
         }
 
-        if (filter && urlFilters.filter(u) == null) {
+        if (filter && urlFilters.filter(u2) == null) {
             metricsCounters.increase(Counter.mUrlFiltered)
             return false
         }
@@ -290,9 +292,9 @@ class GenerateComponent(
     }
 
     // Check Host
-    private fun checkHost(url: String?): Boolean {
+    private fun checkHost(url: String): Boolean {
         val host = URLUtil.getHost(url, groupMode)
-        if (host.isEmpty()) {
+        if (host == null || host.isEmpty()) {
             metricsCounters.increase(Counter.mUrlMalformed)
             return false
         }

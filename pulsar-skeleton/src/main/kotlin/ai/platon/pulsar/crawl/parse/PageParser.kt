@@ -19,9 +19,11 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.MetricsCounters
+import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.crawl.common.JobInitialized
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.signature.Signature
@@ -34,29 +36,32 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.collections.LinkedHashSet
 
 class PageParser(
         val crawlFilters: CrawlFilters,
         val parserFactory: ParserFactory,
         val signature: Signature,
-        val pulsarCounters: MetricsCounters,
+        val metricsCounters: MetricsCounters,
+        val metricsSystem: MetricsSystem,
         private val conf: ImmutableConfig
-) : ReloadableParameterized {
+) : Parameterized, JobInitialized, AutoCloseable {
+
+    enum class Counter { notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed }
+    init { MetricsCounters.register(Counter::class.java) }
+
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
     val unparsableTypes = Collections.synchronizedSet(HashSet<CharSequence>())
-    private var maxParsedLinks = 0
+    private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
      * Parser timeout set to 30 sec by default. Set -1 (or any negative int) to deactivate
      */
-    private lateinit var maxParseTime: Duration
-    lateinit var linkFilter: LinkFilter
+    private val maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
+    val linkFilter = LinkFilter(crawlFilters, conf)
     // TODO: merge with GlobalExecutor
     private var executorService: ExecutorService? = null
 
@@ -68,11 +73,21 @@ class PageParser(
             ParserFactory(conf),
             TextMD5Signature(),
             MetricsCounters(),
+            MetricsSystem(conf),
             conf
     )
 
-    override fun getConf(): ImmutableConfig {
-        return conf
+    init {
+        if (maxParseTime.seconds > 0) {
+            val threadFactory = ThreadFactoryBuilder().setNameFormat("parser-%d").setDaemon(true).build()
+            executorService = Executors.newCachedThreadPool(threadFactory)
+        }
+
+        params.merge(linkFilter.params).withLogger(LOG).info(true)
+    }
+
+    override fun setup(jobConf: ImmutableConfig) {
+
     }
 
     override fun getParams(): Params {
@@ -82,20 +97,8 @@ class PageParser(
         )
     }
 
-    override fun reload(conf: ImmutableConfig) {
-        maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
-        maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
-        linkFilter = LinkFilter(crawlFilters, conf)
-        if (maxParseTime.seconds > 0) {
-            val threadFactory = ThreadFactoryBuilder().setNameFormat("parser-%d").setDaemon(true).build()
-            executorService = Executors.newCachedThreadPool(threadFactory)
-        }
-        params.merge(linkFilter.params).withLogger(LOG).info(true)
-    }
-
     /**
-     * Parses given web page and stores parsed content within page. Puts a
-     * meta-redirect to outlinks.
+     * Parses given web page and stores parsed content within page. Puts a meta-redirect to outlinks.
      *
      * @param page The web page
      * @return ParseResult
@@ -116,6 +119,7 @@ class PageParser(
                 updateCounters(parseResult)
 
                 if (parseResult.isSuccess) {
+                    metricsSystem.debugExtractedFields(page)
                     page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
                 }
             }
@@ -203,6 +207,9 @@ class PageParser(
         page.setSignature(signature.calculate(page))
 
         processLinks(page, parseResult.hypeLinks)
+
+        // collect page features to better detect page types
+        parseResult.domStatistics?.let { metricsSystem.reportDOMStatistics(page, it) }
     }
 
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
@@ -245,12 +252,12 @@ class PageParser(
             }
         }
         if (counter != null) {
-            pulsarCounters.increase(counter)
+            metricsCounters.increase(counter)
         }
     }
 
-    enum class Counter {
-        notFetched, alreadyParsed, truncated, notParsed, parseSuccess, parseFailed
+    override fun close() {
+        metricsSystem.reportLabeledHyperLinks(ParseResult.labeledHypeLinks)
     }
 
     companion object {
@@ -280,13 +287,5 @@ class PageParser(
             val actualSize = content.limit()
             return inHeaderSize > actualSize
         }
-
-        init {
-            MetricsCounters.register(Counter::class.java)
-        }
-    }
-
-    init {
-        reload(conf)
     }
 }

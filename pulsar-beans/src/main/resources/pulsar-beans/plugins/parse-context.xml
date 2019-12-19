@@ -42,7 +42,11 @@
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="extractorFilter" class="ai.platon.pulsar.parse.html.ExtractFilter">
+    <bean id="extractorFilter" class="ai.platon.pulsar.parse.html.PrimerExtractor">
+        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+    <bean id="extractorAmazonFilter" class="ai.platon.pulsar.parse.html.sites.AmazonExtractor">
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -52,16 +56,18 @@
 <!--                <ref bean="jsParseFilter" />-->
 <!--                <ref bean="boilerpipeFilter" />-->
                 <ref bean="extractorFilter" />
+                <ref bean="extractorAmazonFilter"/>
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser">
+    <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser" destroy-method="close">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>
         <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 

@@ -20,7 +20,7 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -34,11 +34,9 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
-import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -237,6 +235,7 @@ open class FetchComponent(
     companion object {
         @JvmField
         val LOG = LoggerFactory.getLogger(FetchComponent::class.java)
+
         @JvmStatic
         fun updateStatus(page: WebPage, crawlStatus: CrawlStatus?, protocolStatus: ProtocolStatus?) {
             page.crawlStatus = crawlStatus
@@ -267,6 +266,7 @@ open class FetchComponent(
             } else {
                 contentType = content.contentType
             }
+
             if (contentType != null) {
                 page.contentType = contentType
             } else {
@@ -290,6 +290,7 @@ open class FetchComponent(
             if (bytes < 0) {
                 return ""
             }
+
             val responseTime = page.metadata[Name.RESPONSE_TIME]
             val proxy = page.metadata[Name.PROXY]
             val jsData = page.browserJsData
@@ -298,14 +299,17 @@ open class FetchComponent(
                 val (ni, na, nnm, nst) = jsData.lastStat
                 jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
             }
-            val fmt = "Fetched%s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
+
+            val redirected = page.url != page.baseUrl
+            val url = if (redirected) page.baseUrl else page.url
+            val fmt = "Fetched %s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
             return String.format(fmt,
                     StringUtil.readableByteCount(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",
                     page.fetchCount,
                     jsSate,
-                    page.url
+                    if (redirected) "[R] $url" else url
             )
         }
 

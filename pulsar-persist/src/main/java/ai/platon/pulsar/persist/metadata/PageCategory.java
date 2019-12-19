@@ -6,7 +6,7 @@ package ai.platon.pulsar.persist.metadata;
  * TODO: Remove to namespace
  */
 public enum PageCategory {
-    INDEX, DETAIL, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;
+    INDEX, DETAIL, REVIEW, PROFILE, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;
 
     public boolean is(PageCategory pageCategory) {
         return pageCategory == this;
@@ -18,6 +18,14 @@ public enum PageCategory {
 
     public boolean isDetail() {
         return this == DETAIL;
+    }
+
+    public boolean isReview() {
+        return this == REVIEW;
+    }
+
+    public boolean isProfile() {
+        return this == PROFILE;
     }
 
     public boolean isSearch() {

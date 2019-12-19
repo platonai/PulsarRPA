@@ -21,6 +21,21 @@
     <artifactId>pulsar-persist</artifactId>
     <name>Pulsar Persist</name>
 
+    <build>
+        <plugins>
+            <!-- Intellij idea can not recognize gora-maven-plugin -->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.gora</groupId>-->
+<!--                <artifactId>gora-maven-plugin</artifactId>-->
+<!--                <version>${gora.version}</version>-->
+<!--                <configuration>-->
+<!--                    <sourceDirectory>${basedir}/src/resources/avro</sourceDirectory>-->
+<!--                    <outputDirectory>${basedir}/src/main/java</outputDirectory>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+        </plugins>
+    </build>
+
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.JobInitialized
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
@@ -14,7 +15,6 @@ import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.persist.*
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
-import com.google.common.util.concurrent.AtomicDouble
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.text.DecimalFormat
@@ -31,7 +31,7 @@ class TaskScheduler(
         val tasksMonitor: TaskMonitor,
         val metricsSystem: MetricsSystem,
         val pageParser: PageParser,
-        var jitIndexer: JITIndexer,
+        val jitIndexer: JITIndexer,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     data class Status(
@@ -60,7 +60,7 @@ class TaskScheduler(
     private var parse: Boolean = false
 
     // Timer
-    private val startTime = Instant.now() // Start time of fetcher run
+    private val startTime = Instant.now()!! // Start time of fetcher run
     var lastTaskStartTime = startTime
         private set
     var lastTaskFinishTime = startTime
@@ -302,7 +302,7 @@ class TaskScheduler(
     private fun handleResult(fetchTask: FetchTask, crawlStatus: CrawlStatus) {
         val page = fetchTask.page
 
-        metricsSystem.debugFetchHistory(page, crawlStatus)
+        metricsSystem.debugFetchHistory(page)
 
         if (parse && crawlStatus.isFetched) {
             val parseResult = pageParser.parse(page)
@@ -422,13 +422,12 @@ class TaskScheduler(
 
     companion object {
         enum class Counter {
-            rMbytes, unknowHosts, rowsInjected,
+            rMbytes, unknowHosts,
             rReadyTasks, rPendingTasks, rFinishedTasks,
             rPagesTho, rMbTho, rRedirect,
             rSeeds,
             rParseFailed, rNoParse,
-            rIndexed, rNotIndexed,
-            rDepthUp
+            rIndexed, rNotIndexed
         }
 
         init { MetricsCounters.register(Counter::class.java) }

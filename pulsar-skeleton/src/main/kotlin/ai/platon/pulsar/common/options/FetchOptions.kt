@@ -2,15 +2,17 @@ package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.metadata.FetchMode
-import com.beust.jcommander.*
+import com.beust.jcommander.JCommander
+import com.beust.jcommander.Parameter
+import com.beust.jcommander.ParameterException
+import com.beust.jcommander.Parameters
 import org.apache.commons.lang3.StringUtils
-import java.util.*
 import kotlin.system.exitProcess
 
 @Parameters(commandNames = ["FetchJob"], commandDescription = "The most important switches for fetch jobs.")

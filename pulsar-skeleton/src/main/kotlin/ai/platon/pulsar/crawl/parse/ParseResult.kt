@@ -16,23 +16,32 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.PipelineStatus
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import org.jsoup.nodes.Document
+import ai.platon.pulsar.persist.data.DomStatistics
+import ai.platon.pulsar.persist.data.LabeledHyperLink
 import java.util.*
+import kotlin.collections.HashSet
 
 class ParseResult : ParseStatus {
     val hypeLinks = mutableSetOf<HypeLink>()
-    var document: FeaturedDocument? = null
+    var domStatistics: DomStatistics? = null
     var parser: Parser? = null
+    var pipelineStatus = PipelineStatus.CONTINUE
+
+    val shouldContinue get() = pipelineStatus == PipelineStatus.CONTINUE
+    val shouldBreak get() = pipelineStatus == PipelineStatus.BREAK
 
     constructor() : super(NOTPARSED, SUCCESS_OK)
     constructor(majorCode: Short, minorCode: Int) : super(majorCode, minorCode)
     constructor(majorCode: Short, minorCode: Int, message: String?) : super(majorCode, minorCode, message)
 
     companion object {
+        val labeledHypeLinks = Collections.synchronizedSet(HashSet<LabeledHyperLink>())
+
         fun failed(minorCode: Int, message: String?): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, minorCode, message)
         }

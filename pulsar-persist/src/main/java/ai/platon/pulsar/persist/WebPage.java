@@ -26,6 +26,7 @@ import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.*;
+import ai.platon.pulsar.persist.data.BrowserJsData;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -734,7 +735,7 @@ public class WebPage {
     }
 
     /**
-     * category : index, detail, media, search
+     * category : index, detail, review, media, search, etc
      */
     public void setPageCategory(PageCategory pageCategory) {
         page.setPageCategory(pageCategory.name());

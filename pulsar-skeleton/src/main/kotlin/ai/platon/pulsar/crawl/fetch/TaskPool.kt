@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.fetch.data.PoolId

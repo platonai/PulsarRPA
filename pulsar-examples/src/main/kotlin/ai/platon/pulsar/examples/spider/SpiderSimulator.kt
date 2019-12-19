@@ -20,7 +20,7 @@
 package ai.platon.pulsar.examples.spider
 
 import ai.platon.pulsar.common.MetricsSystem
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.AppConstants.DISTANCE_INFINITE
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
@@ -256,7 +256,7 @@ class SpiderSimulator(
                     // Update by out-links
                     p1.updateRefContentPublishTime(p2.contentPublishTime)
                     p1.pageCounters.increase(PageCounters.Ref.ch, p2.contentTextLen)
-                    p1.pageCounters.increase(PageCounters.Ref.article)
+                    p1.pageCounters.increase(PageCounters.Ref.item)
                 }
 
         scoringFilters.updateContentScore(focus.page!!)

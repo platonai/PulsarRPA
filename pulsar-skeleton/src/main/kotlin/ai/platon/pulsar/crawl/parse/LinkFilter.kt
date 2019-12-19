@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.URLUtil
-import ai.platon.pulsar.common.URLUtil.GroupMode
+import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -79,7 +79,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
             return 112
         }
         val destHost = URLUtil.getHost(url, groupMode)
-        if (destHost.isEmpty()) {
+        if (destHost == null || destHost.isEmpty()) {
             return 104
         }
         if (ignoreExternalLinks && sourceHost != destHost) {

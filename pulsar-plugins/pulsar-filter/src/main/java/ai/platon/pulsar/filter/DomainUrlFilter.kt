@@ -18,7 +18,7 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.UrlFilter
@@ -28,27 +28,17 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 /**
- *
- *
  * Filters URLs based on a file containing domain suffixes, domain names, and
  * hostnames. Only a url that matches one of the suffixes, domains, or hosts
  * present in the file is allowed.
- *
- *
- *
- *
  *
  * Urls are checked in order of domain suffix, domain name, and hostname against
  * entries in the domain file. The domain file would be setup as follows with
  * one entry per line:
  *
- *
  * <pre>
  * com apache.org www.apache.org
-</pre> *
- *
- *
- *
+    </pre> *
  *
  * The first line is an example of a filter that would allow all .com domains.
  * The second line allows all urls from apache.org and all of its subdomains
@@ -57,20 +47,10 @@ import java.util.*
  * entries are from more general to more specific with the more general
  * overridding the more specific.
  *
- *
- *
  * The domain file defaults to domain-urlfilter.txt in the classpath but can be
  * overridden using the:
  *
- *
- *
- *
- * property "urlfilter.domain.file" in ./conf/pulsar-*.xml, and
- *
- *
- * attribute "file" in plugin.xml of this plugin
- *
- *
+ * property "urlfilter.domain.file" in ./conf/pulsar-*.xml, and * attribute "file" in plugin.xml of this plugin
  */
 class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
     private val domainSet: MutableSet<String> = LinkedHashSet()
@@ -88,7 +68,8 @@ class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
         try {
             // match for suffix, domain, and host in that order. more general will
             // override more specific
-            val domain = URLUtil.getDomainName(url).toLowerCase().trim { it <= ' ' }
+            var domain = URLUtil.getDomainName(url)?:return null
+            domain = domain.toLowerCase().trim { it <= ' ' }
             val host = URLUtil.getHostName(url)
             var suffix: String? = null
             val domainSuffix = URLUtil.getDomainSuffix(tlds, url)

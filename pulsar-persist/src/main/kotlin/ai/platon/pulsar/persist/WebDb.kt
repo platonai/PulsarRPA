@@ -16,7 +16,7 @@ class WebDb(
         val storeService: AutoDetectedStorageService
 ): AutoCloseable {
 
-    val log = LoggerFactory.getLogger(WebDb::class.java)
+    private val log = LoggerFactory.getLogger(WebDb::class.java)
 
     val store: DataStore<String, GWebPage> get() = storeService.pageStore
     val schemaName: String get() = store.schemaName
@@ -67,7 +67,7 @@ class WebDb(
 
     @JvmOverloads
     fun put(page: WebPage, replaceIfExists: Boolean = false): Boolean {
-        return putInteranl(page, replaceIfExists)
+        return putInternal(page, replaceIfExists)
     }
 
     /**
@@ -75,7 +75,7 @@ class WebDb(
      * There are comments in gora-hbase-0.6.1, HBaseStore.java, line 259:
      * "HBase sometimes does not delete arbitrarily"
      */
-    private fun putInteranl(page: WebPage, replaceIfExists: Boolean): Boolean {
+    private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
         // Never update NIL page
         if (page.isNil) {
             return false

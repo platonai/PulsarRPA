@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.PipelineStatus
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
@@ -34,17 +35,22 @@ class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfi
      */
     fun filter(parseContext: ParseContext) {
         // loop on each filter
-        for (parseFilter in parseFilters) {
-            try {
-                parseFilter.filter(parseContext)
-
-                if (parseContext.parseResult.isSuccess) {
-                    // TODO: choose one: do something, break or continue?
-                }
-            } catch (e: Throwable) {
-                log.warn(StringUtil.stringifyException(e))
+        parseFilters.forEach {
+            val shouldContinue = filterSilence(it, parseContext)
+            if (!shouldContinue) {
+                return@forEach
             }
         }
+    }
+
+    private fun filterSilence(parseFilter: ParseFilter, parseContext: ParseContext): Boolean {
+        try {
+            parseFilter.filter(parseContext)
+        } catch (e: Throwable) {
+            log.warn(StringUtil.stringifyException(e))
+        }
+
+        return parseContext.parseResult.shouldContinue
     }
 
     override fun toString(): String {

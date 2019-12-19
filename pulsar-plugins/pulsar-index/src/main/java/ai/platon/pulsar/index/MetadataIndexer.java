@@ -18,7 +18,7 @@
 package ai.platon.pulsar.index;
 
 import ai.platon.pulsar.common.DateTimeUtil;
-import ai.platon.pulsar.common.URLUtil;
+import ai.platon.pulsar.crawl.common.URLUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.index.IndexDocument;
@@ -101,7 +101,7 @@ public class MetadataIndexer implements IndexingFilter {
         try {
             URL u = new URL(url);
 
-            String domain = URLUtil.getDomainName(u);
+            String domain = URLUtil.INSTANCE.getDomainName(u);
 
             doc.add("url", url);
             doc.add("domain", domain);

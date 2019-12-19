@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.MetricsSystem
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -224,7 +224,8 @@ class TaskMonitor(
         }
 
         val url = task.urlString
-        if (taskTracker.isGone(URLUtil.getHostName(url)) || taskTracker.isGone(url)) {
+        val host = URLUtil.getHostName(url)
+        if (host == null || taskTracker.isGone(host) || taskTracker.isGone(url)) {
             log.warn("Ignore unreachable url (indicate task.getHost() failed) | {}", url)
             return
         }

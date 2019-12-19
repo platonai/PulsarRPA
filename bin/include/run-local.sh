@@ -10,6 +10,7 @@ if [ "$PULSAR_RUNTIME_MODE" == "DEVELOPMENT" ]; then
   for f in "$PULSAR_HOME/$MODULE"/target/*.jar; do
     [[ ! sed-$f =~ -job.jar$ ]] && [[ ! sed-$f =~ -sources.jar$ ]] && CLASSPATH=${CLASSPATH}:$f;
   done
+
 elif [ "$PULSAR_RUNTIME_MODE" == "ASSEMBLY" ]; then
   # binary mode
   for f in "$PULSAR_HOME"/*.jar; do

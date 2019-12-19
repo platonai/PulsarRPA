@@ -20,7 +20,7 @@ import com.google.common.collect.Lists
 import java.util.*
 
 class DbQueryResult {
-    private val values: MutableList<Map<String, Any>> = Lists.newLinkedList()
+    private val values: MutableList<Map<String, Any>> = mutableListOf()
     fun getValues(): List<Map<String, Any>> {
         return Collections.unmodifiableList(values)
     }

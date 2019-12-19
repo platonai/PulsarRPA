@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.scoring
 
-import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.scoring.ScoringFilter
@@ -45,7 +44,7 @@ open class ContentAnalysisScoringFilter(val conf: ImmutableConfig) : ScoringFilt
 
         val pageCounters = page.pageCounters
         val re = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.entity)
-        val ra = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.article)
+        val ra = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
         val rc = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.ch)
         var days = ChronoUnit.DAYS.between(page.refContentPublishTime, Instant.now())
         if (days > 10 * 365 || days < 0) {

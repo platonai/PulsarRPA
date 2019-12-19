@@ -50,7 +50,7 @@ class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
         try {
             moveToNext()
             if (!hasNext()) {
-                result?.close()
+                result.close()
             }
         } catch (e: Exception) {
             log.error("Failed to move to the next record$e")
@@ -62,9 +62,10 @@ class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
     @Throws(Exception::class)
     private fun moveToNext() {
         nextPage = null
-        while (nextPage == null && result!!.next()) {
-            val page = WebPage.box(result!!.key, result!!.get(), true)
-            if (filter == null || filter!!.test(page)) {
+        while (nextPage == null && result.next()) {
+            val page = WebPage.box(result.key, result.get(), true)
+            val f = filter
+            if (f == null || f.test(page)) {
                 nextPage = page
             }
         }

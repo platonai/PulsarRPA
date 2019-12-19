@@ -79,7 +79,7 @@ class NewsMonitorFetchSchedule(
             interval = Duration.ofDays(365 * 10L)
             page.marks.put(Mark.INACTIVE, YES_STRING)
         } else if (newModifiedTime.isAfter(middleNightInstant) && newModifiedTime.isAfter(prevModifiedTime)) {
-            val refArticles = page.pageCounters.get<PageCounters.Ref>(PageCounters.Ref.article)
+            val refArticles = page.pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
             val fetchCount = page.fetchCount
             if (refArticles > fetchCount / 10 - 1) {
                 // There are still bugs for modify time calculation
@@ -115,9 +115,9 @@ class NewsMonitorFetchSchedule(
         var interval = page.fetchInterval
         val pageCounters = page.pageCounters
         // int noArticles = pageCounters.get(PageCounters.Self.noArticle);
-        val refArticles = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.article)
+        val refArticles = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
         if (fetchCount > 5 && refArticles == 0) {
-            pageCounters.increase<PageCounters.Self>(PageCounters.Self.noArticle)
+            pageCounters.increase<PageCounters.Self>(PageCounters.Self.noItem)
             metricsSystem.reportFetchSchedule(page, false)
             // Check it at 1 o'clock next night, decrease fetch frequency if no articles
             interval = Duration.between(LocalDateTime.now(), semiInactivePageCheckTime)
@@ -170,7 +170,7 @@ class NewsMonitorFetchSchedule(
         var interval = Duration.between(LocalDateTime.now(), semiInactivePageCheckTime).plusHours(fetchCount.toLong())
 
         val pageCounters = page.pageCounters
-        val refArticles = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.article)
+        val refArticles = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
         if (fetchCount > 3 && distance < maxDistance && refArticles == 0) {
             interval = interval.plusDays(fetchCount.toLong())
         }
