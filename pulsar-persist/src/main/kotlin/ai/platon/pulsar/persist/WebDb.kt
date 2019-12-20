@@ -3,6 +3,7 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.reverseUrlOrNull
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
@@ -11,18 +12,14 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
 
-class WebDb(
-        val conf: ImmutableConfig,
-        val storeService: AutoDetectedStorageService
-): AutoCloseable {
+class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     private val log = LoggerFactory.getLogger(WebDb::class.java)
 
-    val store: DataStore<String, GWebPage> get() = storeService.pageStore
-    val schemaName: String get() = store.schemaName
-
-    // required by Jvm language
-    constructor(conf: ImmutableConfig): this(conf, AutoDetectedStorageService(conf))
+    val store: DataStore<String, GWebPage>
+        get() = AutoDetectedStorageService.create(conf).pageStore
+    val schemaName: String
+        get() = store.schemaName
 
     /**
      * Returns the WebPage corresponding to the given url.

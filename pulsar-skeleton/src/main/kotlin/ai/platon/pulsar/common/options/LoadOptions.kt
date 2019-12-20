@@ -236,6 +236,10 @@ open class LoadOptions: CommonOptions {
         return other is LoadOptions && other.toString() == toString()
     }
 
+    override fun hashCode(): Int {
+        return toString().hashCode()
+    }
+
     /**
      * Create a new LoadOptions
      * */

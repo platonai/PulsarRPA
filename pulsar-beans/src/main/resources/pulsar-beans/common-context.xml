@@ -7,15 +7,9 @@
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
-    <!--Big Data Storage -->
-    <bean id="storageService" class="ai.platon.pulsar.persist.AutoDetectedStorageService" destroy-method="close">
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <!--Web Page Database -->
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
-        <constructor-arg ref="storageService" />
     </bean>
 
     <!--System counters -->

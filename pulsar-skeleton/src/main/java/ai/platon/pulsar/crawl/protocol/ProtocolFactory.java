@@ -17,7 +17,6 @@
 
 package ai.platon.pulsar.crawl.protocol;
 
-import ai.platon.pulsar.common.ObjectCache;
 import ai.platon.pulsar.common.ResourceLoader;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
@@ -25,11 +24,11 @@ import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -72,11 +71,6 @@ public class ProtocolFactory implements AutoCloseable {
 
         LOG.info(protocols.keySet().stream()
                 .collect(Collectors.joining(", ", "Supported protocols: ", "")));
-    }
-
-    @Deprecated
-    public static ProtocolFactory create(ImmutableConfig conf) {
-        return ObjectCache.get(conf).computeIfAbsent(ProtocolFactory.class, c -> new ProtocolFactory(conf));
     }
 
     /**

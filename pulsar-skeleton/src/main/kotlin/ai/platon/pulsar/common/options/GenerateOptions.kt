@@ -11,12 +11,14 @@ import java.time.Duration
 import java.util.*
 import kotlin.math.abs
 
-class GenerateOptions(val conf: ImmutableConfig) {
+class GenerateOptions(argv: Array<String>, val conf: ImmutableConfig): CommonOptions(argv) {
     // TODO: crawlId is not used since AutoStorageService is started after Option parsing
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The crawl id, (default : \"storage.crawl.id\").")
     var crawlId: String = conf[CapabilityTypes.STORAGE_CRAWL_ID, ""]
     @Parameter(names = [PulsarParams.ARG_BATCH_ID], description = "The batch id")
     var batchId = generateBatchId()
+    @Parameter(names = [PulsarParams.ARG_ROUND], description = "The crawl round")
+    var round = 1
     @Parameter(names = ["-reGen"], description = "Re generate pages")
     var reGenerate = false
     @Parameter(names = ["-reSeeds"], description = "Re-generate all seeds")
@@ -32,22 +34,8 @@ class GenerateOptions(val conf: ImmutableConfig) {
     var adddays: Long = 0
     @Parameter(names = [PulsarParams.ARG_LIMIT], description = "task limit")
     var limit = Int.MAX_VALUE
-    @Parameter(names = ["-help", "-h"], help = true, description = "print the help information")
-    var isHelp = false
 
-    fun parse(args: Array<String>) {
-        val jc = JCommander(this)
-        try {
-            jc.parse(*args)
-        } catch (e: ParameterException) {
-            println(e.toString())
-            println("Try '-h' or '-help' for more information.")
-            System.exit(0)
-        }
-        if (isHelp) {
-            jc.usage()
-        }
-    }
+    constructor(conf: ImmutableConfig): this(arrayOf(), conf)
 
     fun toParams(): Params {
         return Params.of(

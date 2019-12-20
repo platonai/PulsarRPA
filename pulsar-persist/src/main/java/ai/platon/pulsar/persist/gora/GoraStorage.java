@@ -22,7 +22,7 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.*;
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class GoraStorage {
-    public static final Logger LOG = LoggerFactory.getLogger(GoraStorage.class);
+    public static final Logger log = LoggerFactory.getLogger(GoraStorage.class);
 
     // load properties from gora.properties
     public static Properties properties = DataStoreFactory.createProps();
@@ -75,7 +75,7 @@ public class GoraStorage {
             Params.of(
                     "Backend data store", dataStore.getClass().getSimpleName(),
                     "realSchema", dataStore.getSchemaName()
-            ).withLogger(LOG).info(true);
+            ).withLogger(log).info(true);
 
             return dataStore;
         }

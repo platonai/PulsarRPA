@@ -85,6 +85,7 @@ class TaskMonitor(
     val poolCount get() = taskPools.size
 
     override fun setup(jobConf: ImmutableConfig) {
+        // TODO: just parse from command line
         this.options = FetchOptions(jobConf)
 
         numPoolThreads = if (options.fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE

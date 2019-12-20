@@ -1,7 +1,6 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.RuntimeUtils
-import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -9,7 +8,6 @@ import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.gora.persistency.Persistent
 import org.apache.gora.store.DataStore
-import org.apache.gora.util.GoraException
 import org.apache.hadoop.conf.Configuration
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -18,32 +16,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Created by vincent on 19-1-19.
  * Copyright @ 2013-2019 Platon AI. All rights reserved
  *
- * TODO: Try spring boot
  */
-class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
+class AutoDetectedStorageService private constructor(conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(AutoDetectedStorageService::class.java)
 
     val storeClassName: String = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> = detectDataStoreClass(conf)
-    val pageStore: DataStore<String, GWebPage>
+    val pageStore: DataStore<String, GWebPage> = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java, pageStoreClass)
     val isClosed = AtomicBoolean()
-
-    init {
-        try {
-            pageStore = GoraStorage.createDataStore(
-                    conf.unbox(),
-                    String::class.java,
-                    GWebPage::class.java,
-                    pageStoreClass
-            )
-        } catch (e: ClassNotFoundException) {
-            log.error(StringUtil.stringifyException(e))
-            throw RuntimeException(e.message)
-        } catch (e: GoraException) {
-            log.error(StringUtil.stringifyException(e))
-            throw RuntimeException(e.message)
-        }
-    }
 
     override fun close() {
         if (isClosed.getAndSet(true)) {
@@ -54,6 +34,17 @@ class AutoDetectedStorageService(conf: ImmutableConfig): AutoCloseable {
     }
 
     companion object {
+
+        private var instance: AutoDetectedStorageService? = null
+
+        // TODO: in MapR, should be initialized after Job/Map/Reduer initialization since crawlId can be passed from command line
+        fun create(initializeConf: ImmutableConfig): AutoDetectedStorageService {
+            if (instance == null) {
+                instance = AutoDetectedStorageService(initializeConf)
+            }
+            return instance!!
+        }
+
         /**
          * Return the DataStore persistent class used to persist WebPage.
          *

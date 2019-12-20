@@ -257,7 +257,7 @@ public interface CapabilityTypes {
     String GENERATE_FILTER = "generate.filter";
     String GENERATE_NORMALISE = "generate.normalise";
     String GENERATE_MAX_TASKS_PER_HOST = "generate.max.tasks.per.host";
-    String GENERATE_COUNT_MODE = "generate.count.mode";
+    String GENERATE_SITE_GROUP_MODE = "generate.count.mode";
     String GENERATE_TOP_N = "generate.topN";
     String GENERATE_LAST_GENERATED_ROWS = "generate.last.generated.rows";
     String GENERATE_CUR_TIME = "generate.curr.time";

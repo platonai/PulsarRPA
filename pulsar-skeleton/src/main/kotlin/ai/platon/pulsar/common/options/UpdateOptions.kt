@@ -7,8 +7,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import com.beust.jcommander.Parameter
-import java.util.*
-import kotlin.math.abs
 
 /**
  * Command options for [WebGraphUpdateJob].
@@ -23,6 +21,8 @@ class UpdateOptions(args: Array<String>, conf: ImmutableConfig) : CommonOptions(
     var round = conf.getInt(CapabilityTypes.CRAWL_ROUND, 1)
     @Parameter(names = [PulsarParams.ARG_LIMIT], description = "Update job limit")
     var limit = conf.getInt(CapabilityTypes.LIMIT, Int.MAX_VALUE)
+
+    constructor(conf: ImmutableConfig): this(arrayOf(), conf)
 
     override fun getParams(): Params {
         return Params.of(

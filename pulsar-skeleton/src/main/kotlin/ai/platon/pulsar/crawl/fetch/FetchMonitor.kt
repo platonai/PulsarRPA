@@ -116,6 +116,7 @@ class FetchMonitor(
         taskMonitor.setup(jobConf)
         taskScheduler.setup(jobConf)
 
+        // TODO: just parse from command line
         this.options = FetchOptions(jobConf)
 
         this.jobName = jobConf.get(PARAM_JOB_NAME, "UNKNOWN")
