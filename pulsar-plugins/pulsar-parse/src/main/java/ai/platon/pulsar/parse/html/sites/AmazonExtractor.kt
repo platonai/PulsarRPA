@@ -61,7 +61,7 @@ class AmazonExtractor(
     private fun processAmazon(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {
         val url = page.url
 
-        // log.debug("Parsing amazon page | {}", url)
+        // TODO: can be collected in js side
         val stat = DomStatistics()
 
         document.document.body().forEachElement { e ->

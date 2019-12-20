@@ -60,12 +60,25 @@ __utils__.navigateTo = function(selector, sourceLocation, maxRound = 30) {
 
 __utils__.createPulsarDataIfAbsent = function() {
     if (!document.pulsarData) {
+        var location = "";
+        if (window.location instanceof Location) {
+            location = window.location.href
+        } else {
+            location = window.location
+        }
+
         document.pulsarData = {
             status: { n: 0, scroll: 0, idl: 0, st: "", r: "" },
             initStat: null,
             lastStat: {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
             lastD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
-            initD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
+            initD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
+            urls: {
+                URL: document.URL,
+                baseURI: document.baseURI,
+                location: location,
+                documentURI: document.documentURI
+            }
         };
     }
 };

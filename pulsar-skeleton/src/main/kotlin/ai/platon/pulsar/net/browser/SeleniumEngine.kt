@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.FetchComponent
@@ -16,17 +17,14 @@ import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.dom.Documents
-import ai.platon.pulsar.persist.data.BrowserJsData
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.data.BrowserJsData
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.proxy.InternalProxyServer
-import com.google.common.net.InternetDomainName
-import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
@@ -36,7 +34,6 @@ import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -100,9 +97,14 @@ private data class VisitResult(
 }
 
 class IncompleteContentException: Exception {
+    var status: ProtocolStatus = ProtocolStatus.STATUS_EXCEPTION
+    var content: String = ""
+
     constructor() : super() {}
 
-    constructor(message: String) : super(message) {}
+    constructor(message: String, status: ProtocolStatus, content: String) : super(message) {
+        this.content = content
+    }
 
     constructor(message: String, cause: Throwable) : super(message, cause) {}
 
@@ -120,11 +122,10 @@ class SeleniumEngine(
         private val driverPool: WebDriverPool,
         private val internalProxyServer: InternalProxyServer,
         private val fetchTaskTracker: FetchTaskTracker,
+        private val metricsSystem: MetricsSystem,
         private val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
-
-    private val monthDay = DateTimeUtil.now("MMdd")
 
     private val libJs = browserControl.parseLibJs(false)
     private val clientJs = browserControl.parseJs(false)
@@ -179,7 +180,7 @@ class SeleniumEngine(
                 log.warn("Round {} retrying another Web driver ... | {}", i, task.url)
             }
 
-            val driver = driverPool.poll(task.priority, task.volatileConfig)?: continue
+            val driver = driverPool.poll(task.priority, task.volatileConfig) ?: continue
             driver.incognito = task.incognito
             try {
                 result = doRetrieveContent(task, driver)
@@ -271,7 +272,7 @@ class SeleniumEngine(
             response = null
             exception = e
             if (isISPEnabled) {
-                log.info("Received an incomplete page, change proxy {} and try again | {}", proxyEntry?.display, task.url)
+                log.info("Got an incomplete page, change proxy {} and try again | {}", proxyEntry?.display, task.url)
                 internalProxyServer.proxyExpired()
             } else {
                 driverRetired = true
@@ -293,12 +294,18 @@ class SeleniumEngine(
     private fun handleIncompleteContent(task: FetchTask, driver: ManagedWebDriver, e: IncompleteContentException) {
         val proxyEntry = driver.proxyEntry
         val domain = task.domain
+
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Content incomplete. driver: {} domain: {}({}) proxy: {} - {}",
+            log.warn("[INCOMPLETE CONTENT] - driver: {} domain: {}({}) proxy: {} - {}",
                     driver, domain, count, proxyEntry.display, StringUtil.simplifyException(e))
         } else {
-            log.warn("Content incomplete - {}", StringUtil.simplifyException(e))
+            log.warn("[INCOMPLETE CONTENT] - {}", StringUtil.simplifyException(e))
+        }
+
+        if (log.isInfoEnabled) {
+            val path = AppFiles.export(e.status, e.content, task.page)
+            log.info("Incomplete page is exported to $path")
         }
 
         // delete all cookie, change proxy, and retry
@@ -313,10 +320,7 @@ class SeleniumEngine(
 
         // TODO: redirection (inside browser) is not handled
         val url = page.url
-        var location = page.location
-        if (location.isBlank()) {
-            location = url
-        }
+        val location = page.location.takeIf { it.isNotBlank() }?:url
         if (url != location) {
             log.warn("Page location does't match url | {} - {}", url, location)
         }
@@ -334,6 +338,15 @@ class SeleniumEngine(
             val result = visit(task, driver.driver, driverConfig)
             status = result.protocolStatus
             jsData = result.jsData
+            if (jsData != null) {
+                // page.baseUrl = jsData.urls.baseURI
+                page.location = jsData.urls.location
+                if (url != location) {
+                    // redirection
+                    metricsSystem.debugRedirect(url, jsData.urls)
+                }
+            }
+
             // TODO: handle with frames
             // driver.switchTo().frame(1);
 
@@ -348,7 +361,7 @@ class SeleniumEngine(
         } catch (e: org.openqa.selenium.UnhandledAlertException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_RETRY
-            log.warn(StringUtil.simplifyException(e)?:"UnhandledAlertException")
+            log.warn(StringUtil.simplifyException(e) ?: "UnhandledAlertException")
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             // failed to wait for body
             status = ProtocolStatus.STATUS_BROWSER_RETRY
@@ -418,11 +431,11 @@ class SeleniumEngine(
                 "might be caused by network/proxy | $url"
 
         if (length < 100 && pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1) {
-            throw IncompleteContentException(message)
+            throw IncompleteContentException(message, status, pageSource)
         }
 
         if (page.fetchCount > 0 && aveLength > 100_1000 && length < 0.1 * aveLength) {
-            throw IncompleteContentException(message)
+            throw IncompleteContentException(message, status, pageSource)
         }
 
         val stat = task.stat
@@ -436,13 +449,13 @@ class SeleniumEngine(
                         "batch average: $readableBatchAveLength" +
                         "might be caused by network/proxy | $url"
 
-                throw IncompleteContentException(message)
+                throw IncompleteContentException(message, status, pageSource)
             }
         }
     }
 
     private fun handleTimeout(startTime: Long,
-            pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
+                              pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
         val length = pageSource.length
         // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
         var newStatus = status
@@ -456,7 +469,7 @@ class SeleniumEngine(
                     status.minorName, DateTimeUtil.elapsedTime(startTime),
                     StringUtil.readableByteCount(length.toLong()), page.url)
         } else {
-            log.warn("Incomplete page {} {} | {}", status.minorName, integrity.second, page.url)
+            log.warn("[INCOMPLETE CONTENT] {} {} | {}", status.minorName, integrity.second, page.url)
             handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
         }
 
@@ -511,7 +524,7 @@ class SeleniumEngine(
 
     @Throws(WebDriverException::class)
     private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
-        val jsExecutor = driver as? JavascriptExecutor?: return VisitResult.canceled
+        val jsExecutor = driver as? JavascriptExecutor ?: return VisitResult.canceled
 
         var status = ProtocolStatus.STATUS_SUCCESS
         val pageLoadTimeout = driverConfig.pageLoadTimeout.seconds
@@ -617,7 +630,11 @@ class SeleniumEngine(
     }
 
     private fun getPageSourceSilently(driver: ManagedWebDriver): String {
-        return try { driver.driver.pageSource } catch (e: Throwable) { "" }
+        return try {
+            driver.driver.pageSource
+        } catch (e: Throwable) {
+            ""
+        }
     }
 
     private fun handleFetchFinish(page: WebPage, driver: ManagedWebDriver, headers: MultiMetadata) {
@@ -653,10 +670,10 @@ class SeleniumEngine(
 
     private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver): String {
         val sb = replaceHTMLCharset(pageSource, charsetPattern)
-        val content = sb.toString();
+        val content = sb.toString()
 
         if (log.isDebugEnabled && content.isNotEmpty()) {
-            export(sb, status, content, page)
+            AppFiles.export(sb, status, content, page)
 
             if (log.isTraceEnabled) {
                 takeScreenshot(content.length, page, driver.driver as RemoteWebDriver)
@@ -666,31 +683,12 @@ class SeleniumEngine(
         return content
     }
 
-    private fun export(sb: StringBuilder, status: ProtocolStatus, content: String, page: WebPage) {
-        val document = Documents.parse(content, page.baseUrl)
-        document.absoluteLinks()
-        val prettyHtml = document.prettyHtml
-
-        sb.setLength(0)
-        sb.append(status.minorName).append('/').append(monthDay)
-        if (prettyHtml.length < 2000) {
-            sb.append("/a").append(prettyHtml.length / 500 * 500)
-        } else {
-            sb.append("/b").append(prettyHtml.length / 20000 * 20000)
-        }
-
-        val ident = sb.toString()
-        val path = export(page, prettyHtml.toByteArray(), ident)
-
-        page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
-    }
-
     private fun takeScreenshot(contentLength: Int, page: WebPage, driver: RemoteWebDriver) {
         if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
             try {
                 if (contentLength > 100) {
                     val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                    export(page, bytes, ".png")
+                    AppFiles.export(page, bytes, ".png")
                 }
             } catch (e: Exception) {
                 log.warn("Cannot take screenshot, page length {} | {}", contentLength, page.url)
@@ -730,17 +728,6 @@ class SeleniumEngine(
         // TODO: handle proxy
 
         return DriverConfig(pageLoadTimeout, scriptTimeout, scrollDownCount, scrollDownWait)
-    }
-
-    private fun export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
-        val browser = page.lastBrowser.name.toLowerCase()
-
-        val u = Urls.getURLOrNull(page.url)?: return AppPaths.TMP_DIR
-        val domain = if (StringUtil.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
-        val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
-        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), "original", browser, domain, filename)
-        AppFiles.saveTo(content, path, true)
-        return path
     }
 
     override fun close() {

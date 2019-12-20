@@ -7,7 +7,8 @@ data class BrowserJsData(
         val initStat: Stat = Stat(),
         val lastStat: Stat = Stat(),
         val initD: Stat = Stat(),
-        val lastD: Stat = Stat()
+        val lastD: Stat = Stat(),
+        val urls: Urls = Urls()
 ) {
     data class Status(
             val n: Int = 0,
@@ -24,6 +25,13 @@ data class BrowserJsData(
             val nst: Int = 0,
             val w: Int = 0,
             val h: Int = 0
+    )
+
+    data class Urls(
+            val URL: String = "",
+            val baseURI: String = "",
+            val location: String = "",
+            val documentURI: String = ""
     )
 
     override fun toString(): String {

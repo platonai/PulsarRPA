@@ -10,6 +10,7 @@ import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.data.BrowserJsData
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.data.DomStatistics
 import ai.platon.pulsar.persist.data.LabeledHyperLink
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.lang.StringBuilder
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -208,7 +210,18 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         writeLineTo(report, "depth-updated.txt")
     }
 
-    fun reportFlawyParsedPage(page: WebPage, verbose: Boolean) {
+    fun debugRedirect(url: String, urls: BrowserJsData.Urls) {
+        val report = StringBuilder()
+        report.appendln(url)
+                .append("URL: ").append(urls.URL)
+                .append("baseURI: ").append(urls.baseURI)
+                .append("documentURI: ").append(urls.documentURI)
+                .append("location: ").append(urls.location)
+                .append("\n\n\n")
+        writeLineTo(report.toString(), "redirect.txt")
+    }
+
+    fun reportFlawParsedPage(page: WebPage, verbose: Boolean) {
         val report = getFlawParsedPageReport(page, verbose)
         writeLineTo(report, "parse-flaw.txt")
     }

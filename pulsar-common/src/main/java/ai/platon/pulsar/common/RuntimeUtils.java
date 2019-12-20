@@ -62,6 +62,10 @@ public class RuntimeUtils {
         if (Files.exists(COMMAND_FILE)) {
             try {
                 synchronized (COMMAND_FILE_LOCKER) {
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("Checking LFC " + command + " with interval " + checkInterval);
+                    }
+
                     long modified = COMMAND_FILE.toFile().lastModified();
                     if (modified - commandFileLastModified >= checkInterval.toMillis()) {
                         commandFileLastModified = modified;
@@ -69,7 +73,7 @@ public class RuntimeUtils {
                         List<String> lines = Files.readAllLines(COMMAND_FILE);
                         exist = lines.stream().anyMatch(line -> line.startsWith(command));
                         if (exist) {
-                            if (!StringUtils.containsIgnoreCase(command, " -keep")) {
+                            if (!StringUtils.containsIgnoreCase(command, " -perm")) {
                                 lines.remove(command);
                                 Files.write(COMMAND_FILE, lines);
                             }

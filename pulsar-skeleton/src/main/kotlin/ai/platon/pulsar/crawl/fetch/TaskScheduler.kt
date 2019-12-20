@@ -318,7 +318,7 @@ class TaskScheduler(
             }
 
             if (parseResult.minorCode != ParseStatus.SUCCESS_OK) {
-                metricsSystem.reportFlawyParsedPage(page, true)
+                metricsSystem.reportFlawParsedPage(page, true)
             }
 
             if (jitIndexer.isEnabled && parseResult.isSuccess) {

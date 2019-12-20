@@ -56,6 +56,7 @@
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="internalProxyServer"/>
+        <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 
