@@ -38,7 +38,6 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.roundToLong
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -81,13 +80,13 @@ class FetchResult(
         var response: Response
 )
 
-private class RetrieveContentResult(
+class RetrieveContentResult(
         var response: Response? = null,
         var exception: Exception? = null,
         var driverRetired: Boolean = false
 )
 
-private data class VisitResult(
+data class VisitResult(
         val protocolStatus: ProtocolStatus,
         val jsData: BrowserJsData? = null
 ) {
@@ -117,26 +116,26 @@ class IncompleteContentException: Exception {
  *
  * Note: SeleniumEngine should be process scope
  */
-class SeleniumEngine(
+open class SeleniumEngine(
         browserControl: BrowserControl,
-        private val driverPool: WebDriverPool,
-        private val internalProxyServer: InternalProxyServer,
-        private val fetchTaskTracker: FetchTaskTracker,
-        private val metricsSystem: MetricsSystem,
-        private val immutableConfig: ImmutableConfig
+        protected val driverPool: WebDriverPool,
+        protected val internalProxyServer: InternalProxyServer,
+        protected val fetchTaskTracker: FetchTaskTracker,
+        protected val metricsSystem: MetricsSystem,
+        protected val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
-    private val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
+    protected val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-    private val libJs = browserControl.parseLibJs(false)
-    private val clientJs = browserControl.parseJs(false)
-    private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
-    private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    private var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
-    private val defaultDriverConfig = DriverConfig(immutableConfig)
-    private val maxCookieView = 40
-    private val isISPEnabled get() = internalProxyServer.isEnabled
-    private val closed = AtomicBoolean(false)
-    private val isClosed get() = closed.get()
+    protected val libJs = browserControl.parseLibJs(false)
+    protected val clientJs = browserControl.parseJs(false)
+    protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
+    protected var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
+    protected var fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
+    protected val defaultDriverConfig = DriverConfig(immutableConfig)
+    protected val maxCookieView = 40
+    protected val isISPEnabled get() = internalProxyServer.isEnabled
+    protected val closed = AtomicBoolean(false)
+    protected val isClosed get() = closed.get()
 
     init {
         instanceCount.incrementAndGet()
@@ -203,7 +202,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun afterRetrieveContent(task: FetchTask, driver: ManagedWebDriver, result: RetrieveContentResult) {
+    open fun afterRetrieveContent(task: FetchTask, driver: ManagedWebDriver, result: RetrieveContentResult) {
         if (task.deleteAllCookies) {
             log.info("Deleting all cookies after task {}-{} under {}", task.batchId, task.taskId, task.domain)
             driver.deleteAllCookiesSilently()
@@ -291,29 +290,14 @@ class SeleniumEngine(
         return RetrieveContentResult(response, exception, driverRetired)
     }
 
-    private fun handleIncompleteContent(task: FetchTask, driver: ManagedWebDriver, e: IncompleteContentException) {
-        val proxyEntry = driver.proxyEntry
-        val domain = task.domain
-
-        if (proxyEntry != null) {
-            val count = proxyEntry.servedDomains.count(domain)
-            log.warn("[INCOMPLETE CONTENT] - driver: {} domain: {}({}) proxy: {} - {}",
-                    driver, domain, count, proxyEntry.display, StringUtil.simplifyException(e))
-        } else {
-            log.warn("[INCOMPLETE CONTENT] - {}", StringUtil.simplifyException(e))
-        }
-
-        if (log.isInfoEnabled) {
-            val path = AppFiles.export(e.status, e.content, task.page)
-            log.info("Incomplete page is exported to $path")
-        }
-
+    open fun handleIncompleteContent(task: FetchTask, driver: ManagedWebDriver, e: IncompleteContentException) {
+        log.warn("[INCOMPLETE CONTENT] - {}", StringUtil.simplifyException(e))
         // delete all cookie, change proxy, and retry
-        log.info("Deleting all cookies under {}", domain)
+        log.info("Deleting all cookies under {}", task.domain)
         driver.deleteAllCookiesSilently()
     }
 
-    private fun visitPageAndRetrieveContent(driver: ManagedWebDriver, task: FetchTask): Response {
+    open fun visitPageAndRetrieveContent(driver: ManagedWebDriver, task: FetchTask): Response {
         val batchId = task.batchId
         val page = task.page
         // page.location is the last working address, and page.url is the permanent internal address
@@ -343,7 +327,7 @@ class SeleniumEngine(
                 page.location = jsData.urls.location
                 if (url != location) {
                     // redirection
-                    metricsSystem.debugRedirect(url, jsData.urls)
+                    metricsSystem.debugRedirects(url, jsData.urls)
                 }
             }
 
@@ -411,7 +395,7 @@ class SeleniumEngine(
     /**
      * Eager update web page, the status is incomplete but required by callbacks
      * */
-    private fun eagerUpdateWebPage(page: WebPage, response: Response, conf: ImmutableConfig) {
+    open fun eagerUpdateWebPage(page: WebPage, response: Response, conf: ImmutableConfig) {
         page.protocolStatus = response.status
         val bytes = response.content
         val contentType = response.getHeader(HttpHeaders.CONTENT_TYPE)
@@ -419,94 +403,31 @@ class SeleniumEngine(
         FetchComponent.updateContent(page, content)
     }
 
-    private fun checkContentIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask) {
-        val url = page.url
-        val length = pageSource.length.toLong()
-        val aveLength = page.aveContentBytes.toLong()
-        val readableLength = StringUtil.readableByteCount(length)
-        val readableAveLength = StringUtil.readableByteCount(aveLength)
+    open fun checkContentIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask) {
 
-        var message = "Retrieved: (only) $readableLength, " +
-                "history average: $readableAveLength, " +
-                "might be caused by network/proxy | $url"
-
-        if (length < 100 && pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1) {
-            throw IncompleteContentException(message, status, pageSource)
-        }
-
-        if (page.fetchCount > 0 && aveLength > 100_1000 && length < 0.1 * aveLength) {
-            throw IncompleteContentException(message, status, pageSource)
-        }
-
-        val stat = task.stat
-        if (status.isSuccess && stat != null) {
-            val batchAveLength = stat.averagePageSize.roundToLong()
-            if (stat.numSuccessTasks > 3 && batchAveLength > 10_000 && length < batchAveLength / 10) {
-                val readableBatchAveLength = StringUtil.readableByteCount(batchAveLength)
-
-                message = "Retrieved: (only) $readableLength, " +
-                        "history average: $readableAveLength, " +
-                        "batch average: $readableBatchAveLength" +
-                        "might be caused by network/proxy | $url"
-
-                throw IncompleteContentException(message, status, pageSource)
-            }
-        }
     }
 
-    private fun handleTimeout(startTime: Long,
-                              pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
-        val length = pageSource.length
-        // The javascript set data-error flag to indicate if the vision information of all DOM nodes are calculated
-        var newStatus = status
-        val integrity = checkHtmlIntegrity(pageSource)
-        if (integrity.first) {
-            newStatus = ProtocolStatus.STATUS_SUCCESS
-        }
-
-        if (newStatus.isSuccess) {
-            log.info("HTML is integral but {} occurs after {} with {} | {}",
-                    status.minorName, DateTimeUtil.elapsedTime(startTime),
-                    StringUtil.readableByteCount(length.toLong()), page.url)
-        } else {
-            log.warn("[INCOMPLETE CONTENT] {} {} | {}", status.minorName, integrity.second, page.url)
-            handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
-        }
-
-        return newStatus
+    open fun handleTimeout(
+            startTime: Long,
+            pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
+        handleWebDriverTimeout(page.url, startTime, pageSource, driverConfig)
+        return status
     }
 
-    private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
-        val p1 = pageSource.indexOf("<body")
-        if (p1 <= 0) return false to "NO_BODY_START"
-        val p2 = pageSource.indexOf(">", p1)
-        if (p2 < p1) return false to "NO_BODY_END"
-        // no any link, it's incomplete
-        val p3 = pageSource.indexOf("<a", p2)
-        if (p3 < p2) return false to "NO_ANCHOR"
-
-        // TODO: optimization using region match
-        val bodyTag = pageSource.substring(p1, p2)
-        val r = bodyTag.contains("data-error=\"0\"")
-        if (!r) {
-            return false to "NO_JS_OK"
-        }
-
-        return true to "OK"
-    }
-
-    private fun visit(task: FetchTask, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
+    fun visit(task: FetchTask, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
         val taskId = task.taskId
         val url = task.url
         val page = task.page
 
-        log.info("Fetching task {}/{} in thd#{}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
-                taskId, task.batchSize,
-                Thread.currentThread().id,
-                driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
-                page.configuredUrl,
-                driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
-        )
+        if (log.isTraceEnabled) {
+            log.trace("Fetching task {}/{} in thd#{}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
+                    taskId, task.batchSize,
+                    Thread.currentThread().id,
+                    driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
+                    page.configuredUrl,
+                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
+            )
+        }
 
         val timeouts = driver.manage().timeouts()
         timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
@@ -523,7 +444,7 @@ class SeleniumEngine(
     }
 
     @Throws(WebDriverException::class)
-    private fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
+    open fun executeJs(url: String, driver: WebDriver, driverConfig: DriverConfig): VisitResult {
         val jsExecutor = driver as? JavascriptExecutor ?: return VisitResult.canceled
 
         var status = ProtocolStatus.STATUS_SUCCESS
@@ -587,7 +508,7 @@ class SeleniumEngine(
         return VisitResult(status)
     }
 
-    private fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {
+    open fun performScrollDown(driver: WebDriver, driverConfig: DriverConfig) {
         val scrollDownCount = driverConfig.scrollDownCount.toLong()
         val scrollDownWait = driverConfig.scrollInterval
         val timeout = scrollDownCount * scrollDownWait.toMillis() + 3 * 1000
@@ -608,7 +529,7 @@ class SeleniumEngine(
     /**
      * Perform click on the selected element and wait for the new page location
      * */
-    private fun performJsClick(selector: String, driver: ManagedWebDriver, driverConfig: DriverConfig): String {
+    open fun performJsClick(selector: String, driver: ManagedWebDriver, driverConfig: DriverConfig): String {
         val timeout = driverConfig.pageLoadTimeout
         val scrollWait = FluentWait<WebDriver>(driver.driver)
                 .withTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
@@ -629,7 +550,7 @@ class SeleniumEngine(
         return ""
     }
 
-    private fun getPageSourceSilently(driver: ManagedWebDriver): String {
+    open fun getPageSourceSilently(driver: ManagedWebDriver): String {
         return try {
             driver.driver.pageSource
         } catch (e: Throwable) {
@@ -637,7 +558,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun handleFetchFinish(page: WebPage, driver: ManagedWebDriver, headers: MultiMetadata) {
+    open fun handleFetchFinish(page: WebPage, driver: ManagedWebDriver, headers: MultiMetadata) {
         // The page content's encoding is already converted to UTF-8 by Web driver
         headers.put(CONTENT_ENCODING, "UTF-8")
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
@@ -653,7 +574,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun handleFetchSuccess(batchId: Int) {
+    open fun handleFetchSuccess(batchId: Int) {
         val t = fetchTaskTracker
         t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
         t.totalSuccessCount.incrementAndGet()
@@ -668,7 +589,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver): String {
+    open fun handlePageSource(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver): String {
         val sb = replaceHTMLCharset(pageSource, charsetPattern)
         val content = sb.toString()
 
@@ -683,7 +604,7 @@ class SeleniumEngine(
         return content
     }
 
-    private fun takeScreenshot(contentLength: Int, page: WebPage, driver: RemoteWebDriver) {
+    open fun takeScreenshot(contentLength: Int, page: WebPage, driver: RemoteWebDriver) {
         if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
             try {
                 if (contentLength > 100) {
@@ -696,7 +617,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
+    open fun handleWebDriverTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
         val elapsed = Duration.ofMillis(System.currentTimeMillis() - startTime)
         if (log.isDebugEnabled) {
             log.debug("Selenium timeout,  elapsed {} length {} drivers: {}/{}/{} timeouts: {}/{}/{} | {}",
@@ -710,7 +631,7 @@ class SeleniumEngine(
         }
     }
 
-    private fun getDriverConfig(config: ImmutableConfig): DriverConfig {
+    open fun getDriverConfig(config: ImmutableConfig): DriverConfig {
         // Page load timeout
         val pageLoadTimeout = config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, defaultDriverConfig.pageLoadTimeout)
         // Script timeout
@@ -737,6 +658,6 @@ class SeleniumEngine(
     }
 
     companion object {
-        private var instanceCount = AtomicInteger()
+        open var instanceCount = AtomicInteger()
     }
 }

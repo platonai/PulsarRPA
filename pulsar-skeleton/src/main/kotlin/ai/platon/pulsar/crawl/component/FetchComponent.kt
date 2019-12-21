@@ -302,8 +302,10 @@ open class FetchComponent(
 
             val redirected = page.url != page.baseUrl
             val url = if (redirected) page.baseUrl else page.url
-            val fmt = "Fetched %s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
+            val mark = page.pageCategory.symbol()
+            val fmt = "Fetched %s %s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
             return String.format(fmt,
+                    mark,
                     StringUtil.readableByteCount(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",

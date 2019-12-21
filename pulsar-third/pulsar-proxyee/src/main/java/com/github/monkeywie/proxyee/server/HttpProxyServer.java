@@ -30,10 +30,10 @@ import java.security.cert.X509Certificate;
 
 public class HttpProxyServer implements AutoCloseable {
 
-  private static String now = DateTimeUtil.now("yyyyMMdd");
-  private static Path path = AppPaths.INSTANCE.get("proxy", "logs", "proxy-" + now + ".log");
+  public static String NOW = DateTimeUtil.now("yyyyMMdd");
+  public static Path PATH = AppPaths.INSTANCE.get("proxy", "logs", "proxy-" + NOW + ".log");
   // there are too many disconnect/timeout warnings, we write them into another file
-  public static SimpleLogger LOG = new SimpleLogger(path, SimpleLogger.INFO);
+  public static SimpleLogger LOG = new SimpleLogger(PATH, SimpleLogger.INFO);
 
   // http代理隧道握手成功
   public final static HttpResponseStatus SUCCESS = new HttpResponseStatus(200, "Connection established");

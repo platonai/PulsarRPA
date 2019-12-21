@@ -1,7 +1,6 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
@@ -18,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference
  * Holds all the runtime environment objects for a running Pulsar instance
  * All the threads shares the same PulsarEnv.
  *
- * TODO: make it compatible with spring boot
+ * TODO: make it compatible with spring
  */
 class PulsarEnv {
     companion object {

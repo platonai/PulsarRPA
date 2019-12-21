@@ -33,7 +33,8 @@ class AmazonExtractor(
 
     companion object {
         val indexLinkPattens = arrayOf("&node=\\d+").map { it.toRegex() }
-        val reviewLinkPieces = arrayOf("customer-reviews", "/review/", "create-review")
+        val detailLinkPattens = arrayOf("/gp/slredirect/").map { it.toRegex() }
+        val reviewLinkPieces = arrayOf("customer-reviews", "product-reviews", "/review/", "create-review")
         val profileLinkPieces = arrayOf("/profile/")
     }
 
@@ -109,7 +110,9 @@ class AmazonExtractor(
             }
         }
 
-        if (indexLinkPattens.any { url.contains(it) }) {
+        if (detailLinkPattens.any { url.contains(it) }) {
+            page.pageCategory = PageCategory.DETAIL
+        } else if (indexLinkPattens.any { url.contains(it) }) {
             page.pageCategory = PageCategory.INDEX
         } else if (reviewLinkPieces.any { url.contains(it) }) {
             page.pageCategory = PageCategory.REVIEW

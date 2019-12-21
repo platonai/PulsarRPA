@@ -236,8 +236,9 @@ open class LoadOptions: CommonOptions {
         return other is LoadOptions && other.toString() == toString()
     }
 
+    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode but none of the fileds is initialized
     override fun hashCode(): Int {
-        return toString().hashCode()
+        return super.hashCode()
     }
 
     /**

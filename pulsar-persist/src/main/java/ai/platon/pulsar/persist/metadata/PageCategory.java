@@ -3,7 +3,6 @@ package ai.platon.pulsar.persist.metadata;
 /**
  * Created by vincent on 16-12-18.
  * <p>
- * TODO: Remove to namespace
  */
 public enum PageCategory {
     INDEX, DETAIL, REVIEW, PROFILE, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;
@@ -50,5 +49,20 @@ public enum PageCategory {
 
     public boolean isUnknown() {
         return this == UNKNOWN;
+    }
+
+    public String symbol() {
+        String n = "U";
+        if (this == INDEX)        return "I";
+        else if (this == DETAIL)  return "D";
+        else if (this == REVIEW)  return "R";
+        else if (this == PROFILE) return "P";
+        else if (this == SEARCH)  return "S";
+        else if (this == MEDIA)   return "M";
+        else if (this == BBS)     return "B";
+        else if (this == TIEBA)   return "T";
+        else if (this == BLOG)    return "BG";
+        else if (this == UNKNOWN) return "U";
+        return n;
     }
 }

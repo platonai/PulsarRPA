@@ -11,14 +11,13 @@ import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.data.BrowserJsData
-import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.data.DomStatistics
 import ai.platon.pulsar.persist.data.LabeledHyperLink
+import ai.platon.pulsar.persist.metadata.PageCategory
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.lang.StringBuilder
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -126,10 +125,6 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         return report
     }
 
-    fun reportRedirects(redirectString: String?) {
-        // writeReport(redirectString, "fetch-redirects-" + reportSuffix + ".txt");
-    }
-
     fun reportPageFromSeedersist(report: String) { // String reportString = seedUrl + " -> " + url + "\n";
         writeLineTo(report, "fetch-urls-from-seed-persist.txt")
     }
@@ -156,11 +151,27 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     }
 
     fun debugExtractedFields(page: WebPage) {
-        val prefix = page.url + "\n"
-        val postfix = "\n\n"
+        val sb = StringBuilder()
+        sb.appendln("-----------------")
+        sb.appendln(page.url)
         val fields = page.pageModel.first()?.fields ?: return
-        val report = fields.entries.joinToString("\n", prefix, postfix) { "${it.key}: ${it.value}" }
-        writeLineTo(report, "page-extracted-fields.txt")
+        fields.entries.joinTo(sb, "\n") {
+            String.format("%30s: %s", it.key, it.value)
+        }
+        sb.appendln()
+
+        // show all javascript DOM urls, we should know the exact differences between them
+        val urls = page.browserJsData?.urls
+        if (urls != null) {
+            sb.append("URL:         ").appendln(urls.URL)
+            sb.append("baseURI:     ").appendln(urls.baseURI)
+            sb.append("documentURI: ").appendln(urls.documentURI)
+            sb.append("location:    ").appendln(urls.location)
+        }
+
+        sb.append("\n").append("Total ${fields.size} fields")
+        sb.append("\n\n")
+        writeLineTo(sb.toString(), "page-extracted-fields.txt")
     }
 
     fun reportGeneratedHosts(hostNames: Set<String>) {
@@ -173,8 +184,8 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     }
 
     fun reportDOMStatistics(page: WebPage, stat: DomStatistics) {
-        val report = String.format("%-7s | a:%-4d i:%-4d mi:%-4d ai:%-4d ia:%-4d | %s",
-                page.pageCategory,
+        val report = String.format("%s | a:%-4d i:%-4d mi:%-4d ai:%-4d ia:%-4d | %s",
+                page.pageCategory.symbol(),
                 stat.anchor, stat.img, stat.mediumImg, stat.anchorImg, stat.imgAnchor,
                 page.url)
 
@@ -210,15 +221,19 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         writeLineTo(report, "depth-updated.txt")
     }
 
-    fun debugRedirect(url: String, urls: BrowserJsData.Urls) {
+    fun debugRedirects(url: String, urls: BrowserJsData.Urls) {
         val report = StringBuilder()
         report.appendln(url)
-                .append("URL: ").append(urls.URL)
-                .append("baseURI: ").append(urls.baseURI)
-                .append("documentURI: ").append(urls.documentURI)
-                .append("location: ").append(urls.location)
+                .append("URL:         ").appendln(urls.URL)
+                .append("baseURI:     ").appendln(urls.baseURI)
+                .append("documentURI: ").appendln(urls.documentURI)
+                .append("location:    ").appendln(urls.location)
                 .append("\n\n\n")
         writeLineTo(report.toString(), "redirect.txt")
+    }
+
+    fun reportRedirects(report: String) {
+        writeLineTo(report, "fetch-redirects-txt")
     }
 
     fun reportFlawParsedPage(page: WebPage, verbose: Boolean) {

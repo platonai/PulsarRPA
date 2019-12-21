@@ -1,12 +1,10 @@
 package ai.platon.pulsar.proxy
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.SimpleLogger
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.config.AppConstants.CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE
-import ai.platon.pulsar.common.config.AppConstants.INTERNAL_PROXY_SERVER_PORT
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.NoProxyException
@@ -28,6 +26,7 @@ import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.HttpResponse
 import io.netty.util.ResourceLeakDetector
 import org.slf4j.LoggerFactory
+import org.springframework.util.SocketUtils
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -54,16 +53,17 @@ class InternalProxyServer(
     private val connected = AtomicBoolean()
     private val lock: Lock = ReentrantLock()
     private val connectedCond: Condition = lock.newCondition()
-    private var waitForReadyTimeout = Duration.ofMinutes(2)
+    private var waitForReadyTimeout = Duration.ofMinutes(1)
     private var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5))
 
-    private val bossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 5)
-    private val workerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 20)
+    private val numBossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 1)
+    private val numWorkerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 2)
     private val httpProxyServerConfig = HttpProxyServerConfig()
 
     val isEnabled get() = ProxyPool.isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
     val isDisabled get() = !isEnabled
-    val port = INTERNAL_PROXY_SERVER_PORT
+    var port = -1
+        private set
     val totalConnects = AtomicInteger()
     val numRunningTasks = AtomicInteger()
     var lastActiveTime = Instant.now()
@@ -79,8 +79,8 @@ class InternalProxyServer(
         private set
 
     init {
-        httpProxyServerConfig.bossGroupThreads = bossGroupThreads
-        httpProxyServerConfig.workerGroupThreads = workerGroupThreads
+        httpProxyServerConfig.bossGroupThreads = numBossGroupThreads
+        httpProxyServerConfig.workerGroupThreads = numWorkerGroupThreads
         httpProxyServerConfig.isHandleSsl = false
     }
 
@@ -90,10 +90,10 @@ class InternalProxyServer(
             return
         }
 
-        if (NetUtil.testTcpNetwork("127.0.0.1", INTERNAL_PROXY_SERVER_PORT)) {
-            log.info("IPS is already started at $INTERNAL_PROXY_SERVER_PORT, ignore this time")
-            return
-        }
+//        if (NetUtil.testTcpNetwork("127.0.0.1", INTERNAL_PROXY_SERVER_PORT)) {
+//            log.info("IPS is already started at $INTERNAL_PROXY_SERVER_PORT, ignore this time")
+//            return
+//        }
 
         if (loopStarted.compareAndSet(false, true)) {
             loopThread.isDaemon = true
@@ -161,7 +161,7 @@ class InternalProxyServer(
             try {
                 waitAndCheck(tick)
             } catch (e: Throwable) {
-                log.error("Unexpected error - ", e)
+                log.error("Unexpected error: ", e)
             }
         }
 
@@ -302,14 +302,15 @@ class InternalProxyServer(
             return
         }
 
+        port = SocketUtils.findAvailableTcpPort(INTERNAL_PROXY_SERVER_PORT_BASE)
         if (log.isTraceEnabled) {
             log.trace("Ready to start IPS at {} with {}",
-                    INTERNAL_PROXY_SERVER_PORT,
+                    port,
                     if (proxy != null) " <${proxy.display}>" else "no proxy")
         }
 
         val server = initForwardProxyServer(proxy)
-        val thread = Thread { server.start(INTERNAL_PROXY_SERVER_PORT) }
+        val thread = Thread { server.start(port) }
         thread.isDaemon = true
         thread.start()
 
@@ -332,7 +333,7 @@ class InternalProxyServer(
         }
 
         log.info("IPS is started at {} with {}",
-                INTERNAL_PROXY_SERVER_PORT,
+                port,
                 if (proxy != null) "external proxy <${proxy.display}>" else "no proxy")
     }
 
@@ -441,7 +442,7 @@ class InternalProxyServer(
     }
 
     companion object {
-        val PROXY_LOG = HttpProxyServer.LOG
+        val PROXY_LOG = SimpleLogger(HttpProxyServer.PATH, SimpleLogger.INFO)
     }
 }
 

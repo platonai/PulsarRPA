@@ -82,6 +82,7 @@ class TestPrimerExtractor : HtmlParserTestBase() {
 
         assertTrue(parseResult.isParsed)
         val fieldGroup = page.pageModel.first()
+        requireNotNull(fieldGroup)
         val fields = fieldGroup.fields
         assertTrue(fields.containsKey("title"))
         assertTrue(fields.containsKey("info"))
@@ -114,6 +115,8 @@ class TestPrimerExtractor : HtmlParserTestBase() {
         assertTrue(!page.pageModel.isEmpty)
 
         val fieldGroup = page.pageModel.first()
+        requireNotNull(fieldGroup)
+
         val fields = fieldGroup.fields
         fields.forEach { (t, u) ->
             println("$t\t$u")

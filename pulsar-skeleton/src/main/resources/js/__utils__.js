@@ -662,8 +662,6 @@ __utils__.generateMetadata = function() {
     ele.setAttribute("id", META_INFORMATION_ID);
     ele.setAttribute("domain", document.domain);
     ele.setAttribute("version", DATA_VERSION);
-    ele.setAttribute("url", document.URL);
-    ele.setAttribute("base-uri", document.baseURI);
     ele.setAttribute("view-port", config.viewPortWidth + "x" + config.viewPortHeight);
     ele.setAttribute("code-structure", CODE_STRUCTURE_SCHEMA_STRING);
     ele.setAttribute("vision-schema", VISION_SCHEMA_STRING);
