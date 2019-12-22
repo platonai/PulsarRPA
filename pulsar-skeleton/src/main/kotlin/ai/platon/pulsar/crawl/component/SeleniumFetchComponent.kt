@@ -126,7 +126,7 @@ class SeleniumFetchComponent(
             task.deleteAllCookies = true
             task.closeBrowsers = true
         }
-        return seleniumEngine.fetchTaskInternal(task).response
+        return seleniumEngine.fetchTask(task).response
     }
 
     fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
@@ -234,7 +234,7 @@ class SeleniumFetchComponent(
 
         try {
             cx.beforeFetch(page)
-            return seleniumEngine.fetchTaskInternal(task)
+            return seleniumEngine.fetchTask(task)
         } finally {
             // TODO: page is not updated
             cx.afterFetch(page)

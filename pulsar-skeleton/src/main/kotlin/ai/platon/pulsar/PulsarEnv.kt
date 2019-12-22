@@ -7,11 +7,41 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.persist.gora.GoraStorage
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationListener
+import org.springframework.context.event.ContextClosedEvent
+import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.context.event.ContextStartedEvent
+import org.springframework.context.event.ContextStoppedEvent
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+
+// TODO: add event handlers instead of PulsarEnv like global context, spring context should be the only global context
+class AppRefreshedEventHandler : ApplicationListener<ContextRefreshedEvent> {
+    override fun onApplicationEvent(event: ContextRefreshedEvent) {
+        println("ContextRefreshedEvent Received")
+    }
+}
+
+class AppStartEventHandler : ApplicationListener<ContextStartedEvent> {
+    override fun onApplicationEvent(event: ContextStartedEvent) {
+        println("ContextStartedEvent Received")
+    }
+}
+
+class AppStopEventHandler : ApplicationListener<ContextStoppedEvent> {
+    override fun onApplicationEvent(event: ContextStoppedEvent) {
+        println("ContextStoppedEvent Received")
+    }
+}
+
+class AppCloseEventHandler : ApplicationListener<ContextClosedEvent> {
+    override fun onApplicationEvent(event: ContextClosedEvent) {
+        println("ContextClosedEvent Received")
+    }
+}
 
 /**
  * Holds all the runtime environment objects for a running Pulsar instance

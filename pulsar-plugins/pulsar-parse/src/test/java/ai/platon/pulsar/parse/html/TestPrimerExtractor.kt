@@ -24,7 +24,7 @@ import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupUtils
 import ai.platon.pulsar.crawl.parse.html.ParseContext
-import ai.platon.pulsar.persist.FieldGroupFormatter
+import ai.platon.pulsar.persist.model.FieldGroupFormatter
 import org.jsoup.Jsoup
 import org.junit.Ignore
 import org.junit.Test

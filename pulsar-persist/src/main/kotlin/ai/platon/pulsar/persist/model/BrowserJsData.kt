@@ -1,4 +1,4 @@
-package ai.platon.pulsar.persist.data
+package ai.platon.pulsar.persist.model
 
 import com.google.gson.Gson
 
@@ -27,6 +27,7 @@ data class BrowserJsData(
             val h: Int = 0
     )
 
+    // NOTE: it seems they are all the same
     data class Urls(
             val URL: String = "",
             val baseURI: String = "",

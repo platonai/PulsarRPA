@@ -1,4 +1,4 @@
-package ai.platon.pulsar.persist.data
+package ai.platon.pulsar.persist.model
 
 data class DomStatistics(
     var img: Int = 0,

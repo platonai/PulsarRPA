@@ -1,73 +1,64 @@
-package ai.platon.pulsar.persist;
+package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.gora.generated.GFieldGroup;
-import org.apache.commons.collections4.CollectionUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.Map;
+import ai.platon.pulsar.persist.gora.generated.GFieldGroup
+import org.apache.commons.collections4.CollectionUtils
 
 /**
  * Created by vincent on 17-8-3.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
- * <p>
+ *
+ *
  * The core concept of Document Data Model, DDM
  */
-public class PageModel {
-    private List<GFieldGroup> fieldGroups;
-
-    private PageModel(List<GFieldGroup> fieldGroups) {
-        this.fieldGroups = fieldGroups;
+class PageModel private constructor(private val fieldGroups: MutableList<GFieldGroup>) {
+    fun unbox(): List<GFieldGroup> {
+        return fieldGroups
     }
 
-    public static PageModel box(List<GFieldGroup> fieldGroups) {
-        return new PageModel(fieldGroups);
+    fun first(): FieldGroup? {
+        return if (isEmpty) null else get(0)
     }
 
-    public List<GFieldGroup> unbox() {
-        return fieldGroups;
+    operator fun get(i: Int): FieldGroup {
+        return FieldGroup.box(fieldGroups[i])
     }
 
-    @Nullable
-    public FieldGroup first() {
-        return isEmpty() ? null : get(0);
+    fun add(fieldGroup: FieldGroup): Boolean {
+        return fieldGroups.add(fieldGroup.unbox())
     }
 
-    public FieldGroup get(int i) {
-        return FieldGroup.box(fieldGroups.get(i));
+    fun add(i: Int, fieldGroup: FieldGroup) {
+        fieldGroups.add(i, fieldGroup.unbox())
     }
 
-    public boolean add(FieldGroup fieldGroup) {
-        return fieldGroups.add(fieldGroup.unbox());
+    fun emplace(id: Long, parentId: Long, group: String, fields: Map<String, String>): FieldGroup {
+        val fieldGroup = FieldGroup.newFieldGroup(id, group, parentId)
+        fieldGroup.fields = fields
+        add(fieldGroup)
+        return fieldGroup
     }
 
-    public void add(int i, FieldGroup fieldGroup) {
-        fieldGroups.add(i, fieldGroup.unbox());
+    val isEmpty: Boolean
+        get() = fieldGroups.isEmpty()
+
+    fun size(): Int {
+        return fieldGroups.size
     }
 
-    @NotNull
-    public FieldGroup emplace(long id, long parentId, String group, Map<CharSequence, CharSequence> fields) {
-        FieldGroup fieldGroup = FieldGroup.newFieldGroup(id, group, parentId);
-        fieldGroup.setFields(fields);
-        add(fieldGroup);
-        return fieldGroup;
+    fun clear() {
+        fieldGroups.clear()
     }
 
-    public boolean isEmpty() {
-        return fieldGroups.isEmpty();
+    fun findById(id: Long): FieldGroup? {
+        val gFieldGroup = CollectionUtils.find(fieldGroups) { fg: GFieldGroup -> fg.id == id }
+        return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
     }
 
-    public int size() {
-        return fieldGroups.size();
+    companion object {
+        @JvmStatic
+        fun box(fieldGroups: MutableList<GFieldGroup>): PageModel {
+            return PageModel(fieldGroups)
+        }
     }
 
-    public void clear() {
-        fieldGroups.clear();
-    }
-
-    public FieldGroup findById(long id) {
-        GFieldGroup gFieldGroup = CollectionUtils.find(fieldGroups, fg -> fg.getId() == id);
-        return gFieldGroup == null ? null : FieldGroup.box(gFieldGroup);
-    }
 }

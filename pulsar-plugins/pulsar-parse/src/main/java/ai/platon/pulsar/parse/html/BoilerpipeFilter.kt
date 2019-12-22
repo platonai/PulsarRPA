@@ -34,6 +34,8 @@ import org.apache.commons.logging.LogFactory
  * Parse html document into fields
  */
 class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
+    private val log = LogFactory.getLog(BoilerpipeFilter::class.java.name)
+
     private val primerParser = PrimerParser(conf)
 
     override fun filter(parseContext: ParseContext) {
@@ -46,7 +48,7 @@ class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
     /**
      * Extract the page into fields
      */
-    fun extract(page: WebPage, encoding: String?): TextDocument? {
+    fun extract(page: WebPage, encoding: String): TextDocument? {
         val doc = extract(page) ?: return null
         page.contentTitle = doc.contentTitle
         page.contentText = doc.textContent
@@ -60,7 +62,7 @@ class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
 
     private fun extract(page: WebPage): TextDocument? {
         if (page.content == null) {
-            LOG.warn("Can not extract page without content, url : " + page.url)
+            log.warn("Can not extract page without content, url : " + page.url)
             return null
         }
 
@@ -74,13 +76,9 @@ class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
             extractor.process(doc)
             return doc
         } catch (e: ProcessingException) {
-            LOG.warn("Failed to extract text content by boilerpipe, " + e.message)
+            log.warn("Failed to extract text content by boilerpipe, " + e.message)
         }
 
         return null
-    }
-
-    companion object {
-        private val LOG = LogFactory.getLog(BoilerpipeFilter::class.java.name)
     }
 }

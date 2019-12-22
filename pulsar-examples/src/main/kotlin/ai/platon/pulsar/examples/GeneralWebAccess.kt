@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
 import java.net.URL
 

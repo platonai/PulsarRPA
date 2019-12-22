@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.db.DbQueryResult
 import org.slf4j.LoggerFactory

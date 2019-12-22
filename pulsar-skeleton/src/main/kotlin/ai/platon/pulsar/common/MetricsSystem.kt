@@ -10,10 +10,9 @@ import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.data.BrowserJsData
-import ai.platon.pulsar.persist.data.DomStatistics
-import ai.platon.pulsar.persist.data.LabeledHyperLink
-import ai.platon.pulsar.persist.metadata.PageCategory
+import ai.platon.pulsar.persist.model.BrowserJsData
+import ai.platon.pulsar.persist.model.DomStatistics
+import ai.platon.pulsar.persist.model.LabeledHyperLink
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import org.slf4j.LoggerFactory
@@ -24,8 +23,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.text.DecimalFormat
-import java.time.Duration
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -161,12 +158,16 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         sb.appendln()
 
         // show all javascript DOM urls, we should know the exact differences between them
+        // they look like all the same
         val urls = page.browserJsData?.urls
         if (urls != null) {
-            sb.append("URL:         ").appendln(urls.URL)
-            sb.append("baseURI:     ").appendln(urls.baseURI)
-            sb.append("documentURI: ").appendln(urls.documentURI)
-            sb.append("location:    ").appendln(urls.location)
+            sb.append('\n')
+            // NOTE: it seems they are all the same
+            val location = urls.location
+            if (location != page.url)         sb.append("location:    ").appendln(location)
+            if (urls.URL != location)         sb.append("URL:         ").appendln(urls.URL)
+            if (urls.baseURI != location)     sb.append("baseURI:     ").appendln(urls.baseURI)
+            if (urls.documentURI != location) sb.append("documentURI: ").appendln(urls.documentURI)
         }
 
         sb.append("\n").append("Total ${fields.size} fields")
@@ -175,12 +176,11 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     }
 
     fun reportGeneratedHosts(hostNames: Set<String>) {
-        var report = ("# Total " + hostNames.size + " hosts generated : \n")
-        report += hostNames.asSequence()
+        val report = StringBuilder("# Total " + hostNames.size + " hosts generated : \n")
+        hostNames.asSequence()
                 .map { Urls.reverseHost(it) }.sorted().map { Urls.unreverseHost(it) }
-                .map { String.format("%40s", it) }
-                .joinToString("\n") { it }
-        writeLineTo(report, "generate-hosts.txt")
+                .joinTo(report, "\n") { String.format("%40s", it) }
+        writeLineTo(report.toString(), "generate-hosts.txt")
     }
 
     fun reportDOMStatistics(page: WebPage, stat: DomStatistics) {
@@ -229,7 +229,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
                 .append("documentURI: ").appendln(urls.documentURI)
                 .append("location:    ").appendln(urls.location)
                 .append("\n\n\n")
-        writeLineTo(report.toString(), "redirect.txt")
+        writeLineTo(report.toString(), "browser-redirects.txt")
     }
 
     fun reportRedirects(report: String) {
@@ -315,24 +315,26 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     }
 
     private inner class PageReport(page: WebPage) {
-        private val prevFetchTime: Instant
-        private val fetchTime: Instant
-        private val fetchInterval: Duration
-        private val distance: Int
-        private val fetchCount: Int
-        private val contentPublishTime: Instant
-        private val refContentPublishTime: Instant
-        private val pageCategory: PageCategory
-        private val refArticles: Int
-        private val refChars: Int
-        private val contentScore: Double
-        private val score: Double
-        private val cash: Double
-        private val url: String
+        private val prevFetchTime = page.prevFetchTime
+        private val fetchTime = page.fetchTime
+        private val fetchInterval = page.fetchInterval
+        private val distance = page.distance
+        private val fetchCount = page.fetchCount
+        private val contentPublishTime = page.contentPublishTime
+        private val refContentPublishTime = page.refContentPublishTime
+        private val pageCategory = page.pageCategory
+        private val refArticles = page.pageCounters.get(PageCounters.Ref.item)
+        private val refChars = page.pageCounters.get(PageCounters.Ref.ch)
+        private val contentScore = page.contentScore.toDouble()
+        private val score = page.score.toDouble()
+        private val cash = page.cash.toDouble()
+        private val url = page.url
+
         override fun toString(): String {
             val pattern = "yyyy-MM-dd HH:mm:ss"
             val fetchTimeString = (DateTimeUtil.format(prevFetchTime, pattern) + "->" + DateTimeUtil.format(fetchTime, pattern)
                     + "," + DurationFormatUtils.formatDuration(fetchInterval.toMillis(), "DdTH:mm:ss"))
+
             val params = Params.of(
                     "T", fetchTimeString,
                     "DC", "$distance,$fetchCount",
@@ -342,24 +344,8 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
                     "S", df.format(contentScore) + "," + df.format(score) + "," + df.format(cash),
                     "U", StringUtils.substring(url, 0, 80)
             ).withKVDelimiter(":")
-            return params.formatAsLine()
-        }
 
-        init {
-            prevFetchTime = page.prevFetchTime
-            fetchTime = page.fetchTime
-            fetchInterval = page.fetchInterval
-            distance = page.distance
-            fetchCount = page.fetchCount
-            contentPublishTime = page.contentPublishTime
-            refContentPublishTime = page.refContentPublishTime
-            pageCategory = page.pageCategory
-            refArticles = page.pageCounters.get(PageCounters.Ref.item)
-            refChars = page.pageCounters.get(PageCounters.Ref.ch)
-            contentScore = page.contentScore.toDouble()
-            score = page.score.toDouble()
-            cash = page.cash.toDouble()
-            url = page.url
+            return params.formatAsLine()
         }
     }
 

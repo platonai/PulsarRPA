@@ -6,389 +6,342 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package ai.platon.pulsar.persist;
+ */
+package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.gora.generated.GHypeLink;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.generated.GFieldGroup
+import ai.platon.pulsar.persist.gora.generated.GHypeLink
+import com.google.gson.GsonBuilder
+import org.apache.commons.lang3.StringUtils
+import org.apache.hadoop.hbase.util.Bytes
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.*
+import java.util.function.Consumer
+import java.util.stream.Collectors
 
-import javax.annotation.Nonnull;
-import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.stream.Collectors;
-
-public class WebPageFormatter {
-
-    private boolean withText = false;
-    private boolean withContent = false;
-    private boolean withLinks = false;
-    private boolean withFields = false;
-    private boolean withEntities = false;
-    private WebPage page;
-    private ZoneId zoneId;
-
-    public WebPageFormatter(WebPage page) {
-        Objects.requireNonNull(page);
-        this.page = page;
-        this.zoneId = page.getZoneId();
+class WebPageFormatter(page: WebPage) {
+    private var withText = false
+    private var withContent = false
+    private var withLinks = false
+    private var withFields = false
+    private var withEntities = false
+    private val page: WebPage
+    private val zoneId: ZoneId
+    fun withText(withText: Boolean): WebPageFormatter {
+        this.withText = withText
+        return this
     }
 
-    public WebPageFormatter withText(boolean withText) {
-        this.withText = withText;
-        return this;
+    fun withText(): WebPageFormatter {
+        withText = true
+        return this
     }
 
-    public WebPageFormatter withText() {
-        this.withText = true;
-        return this;
+    fun withContent(withContent: Boolean): WebPageFormatter {
+        this.withContent = withContent
+        return this
     }
 
-    public WebPageFormatter withContent(boolean withContent) {
-        this.withContent = withContent;
-        return this;
+    fun withContent(): WebPageFormatter {
+        withContent = true
+        return this
     }
 
-    public WebPageFormatter withContent() {
-        this.withContent = true;
-        return this;
+    fun withLinks(withLinks: Boolean): WebPageFormatter {
+        this.withLinks = withLinks
+        return this
     }
 
-    public WebPageFormatter withLinks(boolean withLinks) {
-        this.withLinks = withLinks;
-        return this;
+    fun withLinks(): WebPageFormatter {
+        withLinks = true
+        return this
     }
 
-    public WebPageFormatter withLinks() {
-        this.withLinks = true;
-        return this;
+    fun withFields(withFields: Boolean): WebPageFormatter {
+        this.withFields = withFields
+        return this
     }
 
-    public WebPageFormatter withFields(boolean withFields) {
-        this.withFields = withFields;
-        return this;
+    fun withFields(): WebPageFormatter {
+        withFields = true
+        return this
     }
 
-    public WebPageFormatter withFields() {
-        this.withFields = true;
-        return this;
+    fun withEntities(withEntities: Boolean): WebPageFormatter {
+        this.withEntities = withEntities
+        return this
     }
 
-    public WebPageFormatter withEntities(boolean withEntities) {
-        this.withEntities = withEntities;
-        return this;
+    fun withEntities(): WebPageFormatter {
+        withEntities = true
+        return this
     }
 
-    public WebPageFormatter withEntities() {
-        this.withEntities = true;
-        return this;
-    }
-
-    public Map<String, Object> toMap() {
-        Map<String, Object> fields = new LinkedHashMap<>();
-
-    /* General */
-        fields.put("key", page.getKey());
-        fields.put("url", page.getUrl());
-        fields.put("options", page.getOptions());
-        fields.put("isSeed", page.isSeed());
-        fields.put("createTime", format(page.getCreateTime()));
-        fields.put("distance", page.getDistance());
-
-        /* Fetch */
-        fields.put("crawlStatus", page.getCrawlStatus().toString());
-        fields.put("protocolStatus", page.getProtocolStatus().getName());
-        fields.put("protocolStatusMessage", page.getProtocolStatus().toString());
-        if (page.getContent() != null) {
-            fields.put("contentLength", page.getContent().array().length);
+    fun toMap(): Map<String, Any> {
+        val fields: MutableMap<String, Any> = LinkedHashMap()
+        /* General */fields["key"] = page.key
+        fields["url"] = page.url
+        fields["options"] = page.options
+        fields["isSeed"] = page.isSeed
+        fields["createTime"] = format(page.createTime)
+        fields["distance"] = page.distance
+        /* Fetch */fields["crawlStatus"] = page.crawlStatus.toString()
+        fields["protocolStatus"] = page.protocolStatus.name
+        fields["protocolStatusMessage"] = page.protocolStatus.toString()
+        if (page.content != null) {
+            fields["contentLength"] = page.content!!.array().size
         }
-        fields.put("fetchCount", page.getFetchCount());
-        fields.put("fetchPriority", page.getFetchPriority());
-        fields.put("fetchInterval", page.getFetchInterval().toString());
-        fields.put("retriesSinceFetch", page.getFetchRetries());
-        fields.put("prevFetchTime", format(page.getPrevFetchTime()));
-        fields.put("fetchTime", format(page.getFetchTime()));
-        fields.put("prevModifiedTime", format(page.getPrevModifiedTime()));
-        fields.put("modifiedTime", format(page.getModifiedTime()));
-        fields.put("baseUrl", page.getLocation());
-        fields.put("reprUrl", page.getReprUrl());
-        fields.put("batchId", page.getBatchId());
-
-        /* Parse */
-        fields.put("parseStatus", page.getParseStatus().getName());
-        fields.put("parseStatusMessage", page.getParseStatus().toString());
-        fields.put("encoding", page.getEncoding());
-        fields.put("prevSignature", page.getPrevSignatureAsString());
-        fields.put("signature", page.getSignatureAsString());
-        fields.put("pageCategory", page.getPageCategory().name());
-        fields.put("prevContentPublishTime", format(page.getPrevContentPublishTime()));
-        fields.put("contentPublishTime", format(page.getContentPublishTime()));
-        fields.put("prevContentModifiedTime", format(page.getPrevContentModifiedTime()));
-        fields.put("contentModifiedTime", format(page.getContentModifiedTime()));
-
-        fields.put("prevRefContentPublishTime", format(page.getPrevRefContentPublishTime()));
-        fields.put("refContentPublishTime", format(page.getRefContentPublishTime()));
-
+        fields["fetchCount"] = page.fetchCount
+        fields["fetchPriority"] = page.fetchPriority
+        fields["fetchInterval"] = page.fetchInterval.toString()
+        fields["retriesSinceFetch"] = page.fetchRetries
+        fields["prevFetchTime"] = format(page.prevFetchTime)
+        fields["fetchTime"] = format(page.fetchTime)
+        fields["prevModifiedTime"] = format(page.prevModifiedTime)
+        fields["modifiedTime"] = format(page.modifiedTime)
+        fields["baseUrl"] = page.location
+        fields["reprUrl"] = page.reprUrl
+        fields["batchId"] = page.batchId
+        /* Parse */fields["parseStatus"] = page.parseStatus.name
+        fields["parseStatusMessage"] = page.parseStatus.toString()
+        fields["encoding"] = page.encoding?:""
+        fields["prevSignature"] = page.prevSignatureAsString
+        fields["signature"] = page.signatureAsString
+        fields["pageCategory"] = page.pageCategory.name
+        fields["prevContentPublishTime"] = format(page.prevContentPublishTime)
+        fields["contentPublishTime"] = format(page.contentPublishTime)
+        fields["prevContentModifiedTime"] = format(page.prevContentModifiedTime)
+        fields["contentModifiedTime"] = format(page.contentModifiedTime)
+        fields["prevRefContentPublishTime"] = format(page.prevRefContentPublishTime)
+        fields["refContentPublishTime"] = format(page.refContentPublishTime)
         // May be too long
-        // fields.put("inlinkAnchors", page.getInlinkAnchors());
-        fields.put("pageTitle", page.getPageTitle());
-        fields.put("contentTitle", page.getContentTitle());
-        fields.put("inlinkAnchor", page.getAnchor());
-        fields.put("title", page.sniffTitle());
-
-    /* Score */
-        fields.put("contentScore", String.valueOf(page.getContentScore()));
-        fields.put("score", String.valueOf(page.getScore()));
-        fields.put("cash", String.valueOf(page.getCash()));
-
-        fields.put("marks", page.getMarks().asStringMap());
-        fields.put("pageCounters", page.getPageCounters().asStringMap());
-        fields.put("metadata", page.getMetadata().asStringMap());
-        fields.put("headers", page.getHeaders().asStringMap());
-
-        fields.put("linkCount", page.getLinks().size());
-        fields.put("vividLinkCount", page.getVividLinks().size());
-        fields.put("liveLinkCount", page.getLiveLinks().size());
-        fields.put("deadLinkCount", page.getDeadLinks().size());
-        fields.put("inlinkCount", page.getInlinks().size());
-
-        fields.put("linksMessage", "Total "
-                + page.getLinks().size() + " links, "
-                + page.getVividLinks().size() + " vivid links, "
-                + page.getLiveLinks().size() + " live links, "
-                + page.getDeadLinks().size() + " dead links, "
-                + page.getInlinks().size() + " inlinks");
-
+// fields.put("inlinkAnchors", page.getInlinkAnchors());
+        fields["pageTitle"] = page.pageTitle
+        fields["contentTitle"] = page.contentTitle
+        fields["inlinkAnchor"] = page.anchor
+        fields["title"] = page.sniffTitle()
+        /* Score */fields["contentScore"] = page.contentScore.toString()
+        fields["score"] = page.score.toString()
+        fields["cash"] = page.cash.toString()
+        fields["marks"] = page.marks.asStringMap()
+        fields["pageCounters"] = page.pageCounters.asStringMap()
+        fields["metadata"] = page.metadata.asStringMap()
+        fields["headers"] = page.headers.asStringMap()
+        fields["linkCount"] = page.links.size
+        fields["vividLinkCount"] = page.vividLinks.size
+        fields["liveLinkCount"] = page.liveLinks.size
+        fields["deadLinkCount"] = page.deadLinks.size
+        fields["inlinkCount"] = page.inlinks.size
+        fields["linksMessage"] = ("Total "
+                + page.links.size + " links, "
+                + page.vividLinks.size + " vivid links, "
+                + page.liveLinks.size + " live links, "
+                + page.deadLinks.size + " dead links, "
+                + page.inlinks.size + " inlinks")
         if (withLinks) {
-            fields.put("links", page.getLinks().stream().map(Object::toString).collect(Collectors.toList()));
-            fields.put("vividLinks", page.getVividLinks().values().stream().map(CharSequence::toString).collect(Collectors.toList()));
-            fields.put("liveLinks", page.getLiveLinks().values().stream().map(l -> HypeLink.box(l).toString()).collect(Collectors.toList()));
-            fields.put("deadLinks", page.getDeadLinks().stream().map(CharSequence::toString).collect(Collectors.toList()));
-            fields.put("inlinks", page.getInlinks().entrySet().stream()
-                    .map(il -> il.getKey() + "\t" + il.getValue()).collect(Collectors.joining("\n")));
+            fields["links"] = page.links.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
+            fields["vividLinks"] = page.vividLinks.values.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
+            fields["liveLinks"] = page.liveLinks.values.stream().map { l: GHypeLink? -> HypeLink.box(l!!).toString() }.collect(Collectors.toList())
+            fields["deadLinks"] = page.deadLinks.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
+            fields["inlinks"] = page.inlinks.entries.stream()
+                    .map { il: Map.Entry<CharSequence, CharSequence> -> il.key.toString() + "\t" + il.value }.collect(Collectors.joining("\n"))
         }
-
         if (withText) {
-            fields.put("contentText", page.getContentText());
-            fields.put("pageText", page.getPageText());
+            fields["contentText"] = page.contentText
+            fields["pageText"] = page.pageText
         }
-
-        if (withContent && page.getContent() != null) {
-            fields.put("content", page.getContentAsString());
+        if (withContent && page.content != null) {
+            fields["content"] = page.contentAsString
         }
-
         if (withEntities) {
-            List<Map<String, Object>> pageEntities = page.getPageModel().unbox().stream()
-                    .map(fg -> new FieldGroupFormatter(fg).getFields())
-                    .collect(Collectors.toList());
-            fields.put("pageEntities", pageEntities);
+            val pageEntities = page.pageModel.unbox().stream()
+                    .map { fg: GFieldGroup? -> FieldGroupFormatter(fg!!).fields }
+                    .collect(Collectors.toList())
+            fields["pageEntities"] = pageEntities
         }
-
-        return fields;
+        return fields
     }
 
     /**
      * TODO: Optimization
      */
-    public Map<String, Object> toMap(Set<String> fields) {
-        return toMap().entrySet().stream().filter(e -> fields.contains(e.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    fun toMap(fields: Set<String>): Map<String, Any> {
+        return toMap().entries.filter { fields.contains(it.key) }.associate { it.key to it.value }
     }
 
-    @Nonnull
-    public String format() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("url:\t" + page.getUrl() + "\n")
-                .append("baseUrl:\t" + page.getLocation() + "\n")
-                .append("batchId:\t" + page.getBatchId() + "\n")
-                .append("crawlStatus:\t" + page.getCrawlStatus() + "\n")
-                .append("protocolStatus:\t" + page.getProtocolStatus() + "\n")
-                .append("depth:\t" + page.getDistance() + "\n")
-                .append("pageCategory:\t" + page.getPageCategory() + "\n")
-                .append("fetchCount:\t" + page.getFetchCount() + "\n")
-                .append("fetchPriority:\t" + page.getFetchPriority() + "\n")
-                .append("fetchInterval:\t" + page.getFetchInterval() + "\n")
-                .append("retriesSinceFetch:\t" + page.getFetchRetries() + "\n");
-
+    fun format(): String {
+        val sb = StringBuilder()
+        sb.append("url:\t" + page.url + "\n")
+                .append("baseUrl:\t" + page.location + "\n")
+                .append("batchId:\t" + page.batchId + "\n")
+                .append("crawlStatus:\t" + page.crawlStatus + "\n")
+                .append("protocolStatus:\t" + page.protocolStatus + "\n")
+                .append("depth:\t" + page.distance + "\n")
+                .append("pageCategory:\t" + page.pageCategory + "\n")
+                .append("fetchCount:\t" + page.fetchCount + "\n")
+                .append("fetchPriority:\t" + page.fetchPriority + "\n")
+                .append("fetchInterval:\t" + page.fetchInterval + "\n")
+                .append("retriesSinceFetch:\t" + page.fetchRetries + "\n")
         sb.append("\n")
-                .append("options:\t" + page.getOptions() + "\n");
-
+                .append("options:\t" + page.options + "\n")
         sb.append("\n")
-                .append("createTime:\t" + format(page.getCreateTime()) + "\n")
-                .append("prevFetchTime:\t" + format(page.getPrevFetchTime()) + "\n")
-                .append("fetchTime:\t" + format(page.getFetchTime()) + "\n")
-                .append("prevModifiedTime:\t" + format(page.getPrevModifiedTime()) + "\n")
-                .append("modifiedTime:\t" + format(page.getModifiedTime()) + "\n")
-                .append("prevContentModifiedTime:\t" + format(page.getPrevContentModifiedTime()) + "\n")
-                .append("contentModifiedTime:\t" + format(page.getContentModifiedTime()) + "\n")
-                .append("prevContentPublishTime:\t" + format(page.getPrevContentPublishTime()) + "\n")
-                .append("contentPublishTime:\t" + format(page.getContentPublishTime()) + "\n");
-
+                .append("createTime:\t" + format(page.createTime) + "\n")
+                .append("prevFetchTime:\t" + format(page.prevFetchTime) + "\n")
+                .append("fetchTime:\t" + format(page.fetchTime) + "\n")
+                .append("prevModifiedTime:\t" + format(page.prevModifiedTime) + "\n")
+                .append("modifiedTime:\t" + format(page.modifiedTime) + "\n")
+                .append("prevContentModifiedTime:\t" + format(page.prevContentModifiedTime) + "\n")
+                .append("contentModifiedTime:\t" + format(page.contentModifiedTime) + "\n")
+                .append("prevContentPublishTime:\t" + format(page.prevContentPublishTime) + "\n")
+                .append("contentPublishTime:\t" + format(page.contentPublishTime) + "\n")
         sb.append("\n")
-                .append("prevRefContentPublishTime:\t" + format(page.getPrevRefContentPublishTime()) + "\n")
-                .append("refContentPublishTime:\t" + format(page.getRefContentPublishTime()) + "\n");
-
+                .append("prevRefContentPublishTime:\t" + format(page.prevRefContentPublishTime) + "\n")
+                .append("refContentPublishTime:\t" + format(page.refContentPublishTime) + "\n")
         sb.append("\n")
-                .append("pageTitle:\t" + page.getPageTitle() + "\n")
-                .append("contentTitle:\t" + page.getContentTitle() + "\n")
-                .append("anchor:\t" + page.getAnchor() + "\n")
-                .append("title:\t" + page.sniffTitle() + "\n");
-
+                .append("pageTitle:\t" + page.pageTitle + "\n")
+                .append("contentTitle:\t" + page.contentTitle + "\n")
+                .append("anchor:\t" + page.anchor + "\n")
+                .append("title:\t" + page.sniffTitle() + "\n")
         sb.append("\n")
-                .append("parseStatus:\t" + page.getParseStatus().toString() + "\n")
-                .append("prevSignature:\t" + page.getPrevSignatureAsString() + "\n")
-                .append("signature:\t" + page.getSignatureAsString() + "\n")
-                .append("contentScore:\t" + page.getContentScore() + "\n")
-                .append("score:\t" + page.getScore() + "\n")
-                .append("cash:\t" + page.getCash() + "\n");
-
-        if (page.getReprUrl() != null) {
-            sb.append("\n\n").append("reprUrl:\t" + page.getReprUrl() + "\n");
+                .append("parseStatus:\t" + page.parseStatus.toString() + "\n")
+                .append("prevSignature:\t" + page.prevSignatureAsString + "\n")
+                .append("signature:\t" + page.signatureAsString + "\n")
+                .append("contentScore:\t" + page.contentScore + "\n")
+                .append("score:\t" + page.score + "\n")
+                .append("cash:\t" + page.cash + "\n")
+        if (page.reprUrl != null) {
+            sb.append("\n\n").append("reprUrl:\t" + page.reprUrl + "\n")
         }
-
-        CrawlMarks crawlMarks = page.getMarks();
+        val crawlMarks = page.marks
         if (!crawlMarks.unbox().isEmpty()) {
-            sb.append("\n");
-            crawlMarks.unbox().forEach((key, value) -> sb.append("mark " + key.toString() + ":\t" + value + "\n"));
+            sb.append("\n")
+            crawlMarks.unbox().forEach { (key: CharSequence, value: CharSequence) -> sb.append("mark $key:\t$value\n") }
         }
-
-        if (!page.getPageCounters().unbox().isEmpty()) {
-            sb.append("\n");
-            page.getPageCounters().unbox().forEach((key, value) -> sb.append("counter " + key.toString() + " : " + value + "\n"));
+        if (!page.pageCounters.unbox().isEmpty()) {
+            sb.append("\n")
+            page.pageCounters.unbox().forEach { (key: CharSequence, value: Int) -> sb.append("counter $key : $value\n") }
         }
-
-        Map<String, String> metadata = page.getMetadata().asStringMap();
+        val metadata = page.metadata.asStringMap()
         if (!metadata.isEmpty()) {
-            sb.append("\n");
-            metadata.entrySet().stream().filter(e -> !e.getValue().startsWith("meta_"))
-                    .forEach(e -> sb.append("metadata " + e.getKey() + ":\t" + e.getValue() + "\n"));
-
-            metadata.entrySet().stream().filter(e -> e.getValue().startsWith("meta_"))
-                    .forEach(e -> sb.append("metadata " + e.getKey() + ":\t" + e.getValue() + "\n"));
+            sb.append("\n")
+            metadata.entries.stream().filter { e: Map.Entry<String, String> -> !e.value.startsWith("meta_") }
+                    .forEach { e: Map.Entry<String, String> -> sb.append("metadata " + e.key + ":\t" + e.value + "\n") }
+            metadata.entries.stream().filter { e: Map.Entry<String, String> -> e.value.startsWith("meta_") }
+                    .forEach { e: Map.Entry<String, String> -> sb.append("metadata " + e.key + ":\t" + e.value + "\n") }
         }
-
-        Map<CharSequence, CharSequence> headers = page.getHeaders().unbox();
+        val headers = page.headers.unbox()
         if (headers != null && !headers.isEmpty()) {
-            sb.append("\n");
-            headers.forEach((key, value) -> sb.append("header " + key + ":\t" + value + "\n"));
+            sb.append("\n")
+            headers.forEach { (key: CharSequence, value: CharSequence) -> sb.append("header $key:\t$value\n") }
         }
-
-        sb.append("\n");
-        sb.append("Total " + page.getLinks().size() + " links, ")
-                .append(page.getVividLinks().size() + " vivid links, ")
-                .append(page.getLiveLinks().size() + " live links, ")
-                .append(page.getDeadLinks().size() + " dead links, ")
-                .append(page.getInlinks().size() + " inlinks\n");
-
+        sb.append("\n")
+        sb.append("Total " + page.links.size + " links, ")
+                .append(page.vividLinks.size.toString() + " vivid links, ")
+                .append(page.liveLinks.size.toString() + " live links, ")
+                .append(page.deadLinks.size.toString() + " dead links, ")
+                .append(page.inlinks.size.toString() + " inlinks\n")
         if (withLinks) {
-            sb.append("\n");
-            sb.append("links:\n");
-            page.getLinks().forEach(l -> sb.append("links:\t" + l + "\n"));
-            sb.append("vividLinks:\n");
-            page.getVividLinks().forEach((k, v) -> sb.append("liveLinks:\t" + k + "\t" + v + "\n"));
-            sb.append("liveLinks:\n");
-            page.getLiveLinks().values().forEach(e -> sb.append("liveLinks:\t" + e.getUrl() + "\t" + e.getAnchor() + "\n"));
-            sb.append("deadLinks:\n");
-            page.getDeadLinks().forEach(l -> sb.append("deadLinks:\t" + l + "\n"));
-            sb.append("inlinks:\n");
-            page.getInlinks().entrySet().forEach(e -> sb.append("inlink:\t" + e.getKey() + "\t" + e.getValue() + "\n"));
+            sb.append("\n")
+            sb.append("links:\n")
+            page.links.forEach(Consumer { l: CharSequence -> sb.append("links:\t$l\n") })
+            sb.append("vividLinks:\n")
+            page.vividLinks.forEach { (k: CharSequence, v: CharSequence) -> sb.append("liveLinks:\t$k\t$v\n") }
+            sb.append("liveLinks:\n")
+            page.liveLinks.values.forEach(Consumer { e: GHypeLink -> sb.append("liveLinks:\t" + e.url + "\t" + e.anchor + "\n") })
+            sb.append("deadLinks:\n")
+            page.deadLinks.forEach(Consumer { l: CharSequence -> sb.append("deadLinks:\t$l\n") })
+            sb.append("inlinks:\n")
+            page.inlinks.entries.forEach(Consumer<Map.Entry<CharSequence, CharSequence>> { e: Map.Entry<CharSequence, CharSequence> -> sb.append("inlink:\t" + e.key + "\t" + e.value + "\n") })
         }
-
         if (withContent) {
-            ByteBuffer content = page.getContent();
+            val content = page.content
             if (content != null) {
-                sb.append("\n");
-                sb.append("contentType:\t" + page.getContentType() + "\n")
+                sb.append("\n")
+                sb.append("contentType:\t" + page.contentType + "\n")
                         .append("content:START>>>\n")
                         .append(Bytes.toString(content.array()))
-                        .append("\n<<<END:content\n");
+                        .append("\n<<<END:content\n")
             }
         }
-
         if (withText) {
-            if (page.getContentText().length() > 0) {
-                sb.append("\n");
+            if (page.contentText.length > 0) {
+                sb.append("\n")
                 sb.append("contentText:START>>>\n")
-                        .append(page.getContentText())
-                        .append("\n<<<END:contentText\n");
+                        .append(page.contentText)
+                        .append("\n<<<END:contentText\n")
             }
-
-            if (page.getPageText().length() > 0) {
+            if (page.pageText.length > 0) {
                 sb.append("pageText:START>>>\n")
-                        .append(page.getPageText())
-                        .append("\n<<<END:pageText\n");
+                        .append(page.pageText)
+                        .append("\n<<<END:pageText\n")
             }
         }
-
         if (withEntities) {
             sb.append("\n")
-                    .append("entityField:START>>>\n");
-            page.getPageModel().unbox().stream()
-                    .map(fg -> new FieldGroupFormatter(fg).getFields())
-                    .flatMap(m -> m.entrySet().stream())
-                    .forEach(e -> sb.append(e.getKey() + ": " + e.getValue()));
-            sb.append("\n<<<END:pageText\n");
+                    .append("entityField:START>>>\n")
+            page.pageModel.unbox().stream()
+                    .map { fg: GFieldGroup? -> FieldGroupFormatter(fg!!).fields }
+                    .flatMap { m: Map<String, Any> -> m.entries.stream() }
+                    .forEach { e: Map.Entry<String, Any> -> sb.append(e.key + ": " + e.value) }
+            sb.append("\n<<<END:pageText\n")
         }
-
-        sb.append("\n");
-        return sb.toString();
+        sb.append("\n")
+        return sb.toString()
     }
 
-    public Document createDocument() {
-        Document doc = Document.createShell(page.getLocation());
-
-        doc.head().appendElement("title").appendText(page.getPageTitle());
-        doc.body().appendElement("h1").appendText(page.getContentTitle());
+    fun createDocument(): Document {
+        val doc = Document.createShell(page.location)
+        doc.head().appendElement("title").appendText(page.pageTitle)
+        doc.body().appendElement("h1").appendText(page.contentTitle)
         doc.body().appendElement("div")
                 .attr("class", "content")
-                .append(page.getContentText());
-        createLinksElement(doc.body());
-
-        return doc;
+                .append(page.contentText)
+        createLinksElement(doc.body())
+        return doc
     }
 
-    public void createLinksElement(Element parent) {
-        Element links = parent.appendElement("div")
+    fun createLinksElement(parent: Element) {
+        val links = parent.appendElement("div")
                 .attr("class", "links")
-                .appendElement("ul");
-
-        int i = 0;
-        for (GHypeLink l : page.getLiveLinks().values()) {
-            ++i;
-
-            String text = StringUtils.isBlank(l.getAnchor()) ? String.valueOf(i) : l.getAnchor().toString();
+                .appendElement("ul")
+        var i = 0
+        for (l in page.liveLinks.values) {
+            ++i
+            val text = if (StringUtils.isBlank(l.anchor)) i.toString() else l.anchor.toString()
             links.appendElement("li")
-                    .appendElement("a").attr("href", l.getUrl().toString()).appendText(text);
+                    .appendElement("a").attr("href", l.url.toString()).appendText(text)
         }
     }
 
-    public String toJson() {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(toMap());
+    fun toJson(): String {
+        val gson = GsonBuilder().setPrettyPrinting().create()
+        return gson.toJson(toMap())
     }
 
-    @Nonnull
-    private String format(@Nonnull Instant instant) {
-        return LocalDateTime.ofInstant(instant, zoneId).toString();
+    private fun format(instant: Instant): String {
+        return LocalDateTime.ofInstant(instant, zoneId).toString()
     }
 
-    @Override
-    public String toString() {
-        return format();
+    override fun toString(): String {
+        return format()
+    }
+
+    init {
+        Objects.requireNonNull(page)
+        this.page = page
+        zoneId = page.zoneId
     }
 }

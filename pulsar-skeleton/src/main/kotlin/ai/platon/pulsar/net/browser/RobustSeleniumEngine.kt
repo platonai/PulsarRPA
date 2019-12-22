@@ -1,43 +1,12 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.HttpHeaders.*
-import ai.platon.pulsar.common.config.AppConstants.CMD_WEB_DRIVER_CLOSE_ALL
-import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.files.ext.export
-import ai.platon.pulsar.common.proxy.NoProxyException
-import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.component.FetchComponent
-import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
-import ai.platon.pulsar.crawl.protocol.Content
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.data.BrowserJsData
-import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.persist.metadata.MultiMetadata
-import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.proxy.InternalProxyServer
-import org.apache.commons.lang.StringUtils
-import org.openqa.selenium.JavascriptExecutor
-import org.openqa.selenium.OutputType
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebDriverException
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.remote.RemoteWebDriver
-import org.openqa.selenium.support.ui.FluentWait
-import org.slf4j.LoggerFactory
-import java.time.Duration
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToLong
 
 /**

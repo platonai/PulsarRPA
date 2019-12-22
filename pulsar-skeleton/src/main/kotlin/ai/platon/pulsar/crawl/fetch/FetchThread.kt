@@ -74,7 +74,10 @@ class FetchThread(
                     continue
                 }
 
-                log.trace("Ready to fetch task from pool {}", task.poolId)
+                if (log.isTraceEnabled) {
+                    log.trace("Ready to fetch task from pool {}", task.poolId)
+                }
+
                 val page = fetchOne(task)
                 if (page.isNotNil) {
                     if (log.isInfoEnabled) {

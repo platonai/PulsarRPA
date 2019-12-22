@@ -97,6 +97,7 @@ class JsoupParser(
             rules.cssRules.forEach { (key: String, value: String) -> extract(key, value, ele, fields) }
             entities.add(fields)
         }
+
         return entities
     }
 

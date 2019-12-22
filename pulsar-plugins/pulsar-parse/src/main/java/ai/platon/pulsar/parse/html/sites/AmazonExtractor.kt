@@ -14,8 +14,8 @@ import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.PageCategory
-import ai.platon.pulsar.persist.data.DomStatistics
-import ai.platon.pulsar.persist.data.LabeledHyperLink
+import ai.platon.pulsar.persist.model.DomStatistics
+import ai.platon.pulsar.persist.model.LabeledHyperLink
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 
@@ -32,10 +32,12 @@ class AmazonExtractor(
 ) : ParseFilter {
 
     companion object {
-        val indexLinkPattens = arrayOf("&node=\\d+").map { it.toRegex() }
-        val detailLinkPattens = arrayOf("/gp/slredirect/").map { it.toRegex() }
+        val indexLinkPattens = arrayOf(".+&node=\\d+.+").map { it.toRegex() }
+        val detailLinkPattens = arrayOf(".+(/gp/slredirect/).+", ".+(/dp/).+").map { it.toRegex() }
+        val offerListLinkPatterns = arrayOf(".+/gp/offer-listing/.+").map { it.toRegex() }
         val reviewLinkPieces = arrayOf("customer-reviews", "product-reviews", "/review/", "create-review")
         val profileLinkPieces = arrayOf("/profile/")
+        val videoLinkPieces = arrayOf("/vdp/")
     }
 
     private var log = LoggerFactory.getLogger(AmazonExtractor::class.java)
@@ -82,25 +84,27 @@ class AmazonExtractor(
             }
 
             if (e.id() == "leftNav") {
-                collectSearchNavigateLinks(e)
+                collectLabeledHyperLinks(e, "SER")
                 return@forEachElement
             }
+
             // filter out searching area
             if (e.right < 200) {
                 return@forEachElement
             }
+
             if (!e.isBlock && e.tagName() !in arrayOf("a", "img")) {
                 return@forEachElement
             }
 
             // detect breadcrumb area
             if (e.hasClass("a-breadcrumb")) {
-                collectCategoryNavigateLinks(e)
+                collectLabeledHyperLinks(e, "CAT")
             }
 
             // detect detail page
             if (!page.pageCategory.isDetail) {
-                checkPageCategoryIsDetail(page, e)
+                checkIsDetailPage(page, e)
             }
 
             if (e.isList) {
@@ -110,9 +114,9 @@ class AmazonExtractor(
             }
         }
 
-        if (detailLinkPattens.any { url.contains(it) }) {
+        if (detailLinkPattens.any { url.matches(it) }) {
             page.pageCategory = PageCategory.DETAIL
-        } else if (indexLinkPattens.any { url.contains(it) }) {
+        } else if (indexLinkPattens.any { url.matches(it) }) {
             page.pageCategory = PageCategory.INDEX
         } else if (reviewLinkPieces.any { url.contains(it) }) {
             page.pageCategory = PageCategory.REVIEW
@@ -123,7 +127,7 @@ class AmazonExtractor(
         }
 
         if (page.pageCategory.isDetail) {
-            extractAmazonItemPage(page, document, parseResult)
+            extractAmazonDetailPage(page, document)
         }
 
         if (page.pageCategory.isIndex || page.pageCategory.isDetail) {
@@ -131,7 +135,7 @@ class AmazonExtractor(
             document.document.forEachElement { e ->
                 if (e.isList && e.width >= 500 && e.childNodeSize() >= 8) {
                     e.forEachElement {
-                        collectHyperLinks(e, ++order, parseResult)
+                        collectHyperLinks(it, ++order, parseResult)
                     }
                 }
             }
@@ -144,14 +148,21 @@ class AmazonExtractor(
         if (ele.isAnchor && ele.hasClass("a-link-normal")) {
             val href = ele.attr("abs:href")
             // println("${order + 1}.\t$href")
-            if (href.contains(domain) && !href.contains("/vdp/")) {
+            if (linkFilter(href)) {
                 val hypeLink = HypeLink(href, ele.text(), order)
                 parseResult.hypeLinks.add(hypeLink)
             }
         }
     }
 
-    private fun collectSearchNavigateLinks(root: Element) {
+    private fun linkFilter(href: String): Boolean {
+        if (!href.contains(domain)) return false
+        if (videoLinkPieces.any { href.contains(it) }) return false
+
+        return true
+    }
+
+    private fun collectLabeledHyperLinks(root: Element, label: String) {
         var order = 0
         root.forEachElement {
             if (it.isAnchor) {
@@ -159,57 +170,65 @@ class AmazonExtractor(
                 if (href.contains(domain)) {
                     val anchor = it.text()
                     val depth = it.depth - root.depth
-                    val labeledLink = LabeledHyperLink("SER", depth, ++order, anchor, href)
+                    val labeledLink = LabeledHyperLink(label, depth, ++order, anchor, href)
                     ParseResult.labeledHypeLinks.add(labeledLink)
                 }
             }
         }
     }
 
-    private fun collectCategoryNavigateLinks(root: Element) {
-        var order = 0
-        root.forEachElement {
-            if (it.isAnchor) {
-                val href = it.attr("abs:href")
-                if (href.contains(domain)) {
-                    val anchor = it.text()
-                    val depth = it.depth - root.depth
-
-                    val labeledLink = LabeledHyperLink("CAT", depth, ++order, anchor, href)
-                    ParseResult.labeledHypeLinks.add(labeledLink)
-                }
-            }
-        }
-    }
-
-    private fun extractAmazonItemPage(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {
+    private fun extractAmazonDetailPage(page: WebPage, document: FeaturedDocument) {
         val body = document.body
-        val fields = HashMap<CharSequence, CharSequence>()
 
         val textExtractors = mapOf(
+                // breadcrumbs
                 "breadcrumbs" to "#wayfinding-breadcrumbs_container ul",
+                // title
                 "title" to "#productTitle",
+                // brand, MyPillow
                 "bylineInfo" to "#bylineInfo",
-                "averageCustomerReviews" to "#averageCustomerReviews_feature_div",
-                "averageCustomerReviews" to "#averageCustomerReviews",
-                "acrCustomerReviewText" to "#acrCustomerReviewText",
+                // #acrPopover[title], 4.3 out of 5 stars
+                "averageCustomerReviews" to "#averageCustomerReviews #acrPopover",
+                // 639 ratings
+                "acrCustomerReviewText" to "#averageCustomerReviews #acrCustomerReviewText",
+                // 74 answered questions
                 "askATF" to "#askATFLink",
+                //
                 "acBadge" to "#acBadge_feature_div .ac-for-text",
+                // $29.97
                 "price" to "#priceblock_ourprice",
-                "color" to "#variation_color_name",
+                // Taupe
+                "color" to "#variation_color_name > .a-row > span",
+                //
                 "style" to "#variation_style_name",
-                "features" to "#feature-bullets",
-                "compareLink" to "#HLCXComparisonJumplink_feature_div",
-                "olp-upd-new-used" to "#olp-upd-new-used"
+                //
+                "features" to "#feature-bullets ul",
+                //
+                "compareLink" to "#HLCXComparisonJumplink_feature_div a",
+                // big image
+                "bigImage" to "#imgTagWrapperId img",
+                // alternative images
+                "alternativeImages" to "#altImages",
+                // offering list
+                "offerListLink" to "#olp-upd-new a",
+                // add to cart link (no link, need rebuild it)
+                "addToCartLink" to "#add-to-cart-button",
+                // related products
+                "relatedProducts" to "#sims-consolidated-2_feature_div ul li",
+                // also view products
+                "alsoViewProducts" to "#sims-consolidated-2_feature_div ul li",
+                "" to "",
+                "" to ""
         )
 
-        textExtractors.entries.map { it.key to body.first(it.value) { it.text() } }
+        val fields = textExtractors.entries
+                .map { it.key to body.first(it.value) { it.text() } }
                 .filterNot { it.second.isNullOrBlank() }
-                .associateTo(fields) { it.first to it.second!! }
+                .associate { it.first to it.second!! }
         page.pageModel.emplace(0, 0, "item", fields)
     }
 
-    private fun checkPageCategoryIsDetail(page: WebPage, e: Element) {
+    private fun checkIsDetailPage(page: WebPage, e: Element) {
         if (e.isImage && e.hasClass("a-dynamic-image")) {
             page.pageCategory = PageCategory.DETAIL
         } else if (e.id() == "imgTagWrapperId" && e.height > 500) {

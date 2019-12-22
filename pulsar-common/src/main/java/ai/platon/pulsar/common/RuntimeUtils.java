@@ -69,6 +69,10 @@ public class RuntimeUtils {
      *          otherwise the command is executed only
      */
     public static boolean hasLocalFileCommand(String command, Duration checkInterval) {
+        if (!Files.exists(COMMAND_FILE)) {
+            return false;
+        }
+
         boolean exist = false;
 
         try {

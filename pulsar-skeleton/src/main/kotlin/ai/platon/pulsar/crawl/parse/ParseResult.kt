@@ -17,12 +17,11 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.PipelineStatus
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import ai.platon.pulsar.persist.data.DomStatistics
-import ai.platon.pulsar.persist.data.LabeledHyperLink
+import ai.platon.pulsar.persist.model.DomStatistics
+import ai.platon.pulsar.persist.model.LabeledHyperLink
 import java.util.*
 import kotlin.collections.HashSet
 

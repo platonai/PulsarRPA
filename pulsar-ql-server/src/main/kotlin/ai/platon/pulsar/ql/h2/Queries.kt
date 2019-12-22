@@ -3,7 +3,6 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.nodes.Anchor
@@ -12,7 +11,7 @@ import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.QuerySession
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
@@ -262,7 +261,7 @@ object Queries {
 
         val fields = WebPageFormatter(page).toMap()
         for (entry in fields.entries) {
-            val value = if (entry.value == null) null else entry.value.toString()
+            val value = entry.value.toString()
             rs.addRow(entry.key, value)
         }
 

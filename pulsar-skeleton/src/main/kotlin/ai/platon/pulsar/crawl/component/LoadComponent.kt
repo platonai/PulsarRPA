@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls.isValidUrl
 import ai.platon.pulsar.common.Urls.splitUrlArgs
@@ -14,9 +13,8 @@ import ai.platon.pulsar.crawl.component.FetchComponent.Companion.getFetchComplet
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
-import ai.platon.pulsar.persist.metadata.Name
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.classification.InterfaceStability.Evolving
 import org.apache.hadoop.classification.InterfaceStability.Unstable
@@ -25,7 +23,6 @@ import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Collectors
 
 /**

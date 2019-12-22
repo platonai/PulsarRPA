@@ -13,8 +13,7 @@ import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.PageCategory
-import ai.platon.pulsar.persist.data.DomStatistics
+import ai.platon.pulsar.persist.model.DomStatistics
 import org.slf4j.LoggerFactory
 
 /**

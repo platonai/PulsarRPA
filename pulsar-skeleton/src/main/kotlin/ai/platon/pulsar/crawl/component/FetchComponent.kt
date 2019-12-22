@@ -300,17 +300,22 @@ open class FetchComponent(
                 jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
             }
 
-            val redirected = page.url != page.baseUrl
-            val url = if (redirected) page.baseUrl else page.url
+            val redirected = page.url != page.location
+            val url = if (redirected) page.location else page.url
             val mark = page.pageCategory.symbol()
-            val fmt = "Fetched %s %s in %8s" + (if (proxy == null) "%s" else "%26s") + ", fc:%2d %24s | %s"
+            val numFields = page.pageModel.first()?.fields?.size?:0
+            val proxyFmt = if (proxy == null) "%s" else "%26s"
+            val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
+            val fieldFmt = if (numFields == 0) "%s" else "%-3s"
+            val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
             return String.format(fmt,
                     mark,
                     StringUtil.readableByteCount(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",
-                    page.fetchCount,
                     jsSate,
+                    page.fetchCount,
+                    if (numFields == 0) "0" else numFields.toString(),
                     if (redirected) "[R] $url" else url
             )
         }
@@ -319,8 +324,8 @@ open class FetchComponent(
             val elapsed = DateTimeUtil.elapsedTime(startTime)
             val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
             val sb = StringBuilder(message)
-            val i = AtomicInteger()
-            pages.forEach { sb.append(i.incrementAndGet()).append(".\t").append(getFetchCompleteReport(it)).append('\n') }
+            var i = 0
+            pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it)).append('\n') }
             return sb
         }
     }

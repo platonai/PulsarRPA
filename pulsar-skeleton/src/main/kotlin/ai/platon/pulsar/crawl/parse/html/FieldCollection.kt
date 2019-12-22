@@ -8,7 +8,7 @@ import java.util.*
  *
  * TODO: bad to inherit from HashMap
  */
-class FieldCollection : HashMap<CharSequence, CharSequence>() {
+class FieldCollection : HashMap<String, String>() {
     var name: String? = null
         set(value) {
             field = value

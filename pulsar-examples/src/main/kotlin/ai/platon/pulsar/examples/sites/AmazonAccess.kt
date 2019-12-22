@@ -13,9 +13,13 @@ class AmazonAccess: WebAccess() {
         val homePage = load(url, args)
     }
 
+    fun bestSeller() {
+        val portalUrl = "https://www.amazon.com/Best-Sellers/zgbs/ref=zg_bs_unv_hg_0_1063236_2"
+        i.load(portalUrl)
+    }
+
     fun smartHome() {
         val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
-
     }
 
     fun laptops() {

@@ -15,6 +15,9 @@ class InjectOptions(args: Array<String>, conf: ImmutableConfig) : CommonOptions(
     @Parameter(description = "<seeds> \nSeed urls. You can use {@code @FILE} syntax to read from file.")
     var seeds: List<String> = ArrayList()
 
+    @Parameter(names = ["-slashed"], description = "A url can be in multiple lines in seed file if slashed is true")
+    var slashed = false
+
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The crawl id, (default : \"storage.crawl.id\").")
     var crawlId: String = conf[CapabilityTypes.STORAGE_CRAWL_ID, ""]
     @Parameter(names = [PulsarParams.ARG_LIMIT], description = "task limit")
