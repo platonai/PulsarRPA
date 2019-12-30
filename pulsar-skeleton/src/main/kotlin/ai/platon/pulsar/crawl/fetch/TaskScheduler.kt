@@ -52,7 +52,7 @@ class TaskScheduler(
      */
     private var bandwidth = 1024 * 1024 * conf.getInt(FETCH_NET_BANDWIDTH_M, BANDWIDTH_INFINITE_M)
     private var skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true)
-    private var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, false)
+    private var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, true)
 
     // Indexer
     private var indexJIT: Boolean = false

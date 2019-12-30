@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.ReducerContext
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
@@ -81,7 +82,7 @@ class FetchThread(
                 val page = fetchOne(task)
                 if (page.isNotNil) {
                     if (log.isInfoEnabled) {
-                        log.info(FetchComponent.getFetchCompleteReport(page))
+                        log.info(MetricsSystem.getFetchCompleteReport(page))
                     }
 
                     write(page.key, page)

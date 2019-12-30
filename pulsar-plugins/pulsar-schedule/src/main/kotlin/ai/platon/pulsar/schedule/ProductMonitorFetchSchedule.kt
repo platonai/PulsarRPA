@@ -44,6 +44,8 @@ class ProductMonitorFetchSchedule(
         // 2. for every index page, re-fetch it every day
         // 3. for every detail page, we will re-fetch it 90 days later if there are enough resource
         // 4. for unknown pages, never fetch
+        // the page must be parsed
+
         val fetchInterval: Duration = when {
             page.isSeed -> Duration.ofDays(1L)
             isIndexPage(page) -> Duration.ofDays(1L)

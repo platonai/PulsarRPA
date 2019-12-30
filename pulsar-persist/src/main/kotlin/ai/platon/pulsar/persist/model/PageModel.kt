@@ -10,8 +10,19 @@ import org.apache.commons.collections4.CollectionUtils
  *
  * The core concept of Document Data Model, DDM
  */
-class PageModel private constructor(private val fieldGroups: MutableList<GFieldGroup>) {
+class PageModel(
+        private val fieldGroups: MutableList<GFieldGroup>
+) {
+    val isEmpty: Boolean
+        get() = fieldGroups.isEmpty()
+
+    val isNotEmpty: Boolean get() = !isEmpty
+
     fun unbox(): List<GFieldGroup> {
+        return fieldGroups
+    }
+
+    fun list(): List<GFieldGroup> {
         return fieldGroups
     }
 
@@ -31,15 +42,16 @@ class PageModel private constructor(private val fieldGroups: MutableList<GFieldG
         fieldGroups.add(i, fieldGroup.unbox())
     }
 
-    fun emplace(id: Long, parentId: Long, group: String, fields: Map<String, String>): FieldGroup {
-        val fieldGroup = FieldGroup.newFieldGroup(id, group, parentId)
+    fun emplace(id: Int, group: String, fields: Map<String, String>): FieldGroup {
+        return emplace(id, 0, group, fields)
+    }
+
+    fun emplace(id: Int, parentId: Int, group: String, fields: Map<String, String>): FieldGroup {
+        val fieldGroup = FieldGroup.newFieldGroup(id.toLong(), group, parentId.toLong())
         fieldGroup.fields = fields
         add(fieldGroup)
         return fieldGroup
     }
-
-    val isEmpty: Boolean
-        get() = fieldGroups.isEmpty()
 
     fun size(): Int {
         return fieldGroups.size
@@ -50,7 +62,7 @@ class PageModel private constructor(private val fieldGroups: MutableList<GFieldG
     }
 
     fun findById(id: Long): FieldGroup? {
-        val gFieldGroup = CollectionUtils.find(fieldGroups) { fg: GFieldGroup -> fg.id == id }
+        val gFieldGroup = fieldGroups.firstOrNull { it.id == id }
         return if (gFieldGroup == null) null else FieldGroup.box(gFieldGroup)
     }
 

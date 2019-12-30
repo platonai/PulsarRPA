@@ -44,8 +44,8 @@
 
   <property>
     <name>fetch.store.content</name>
-    <value>false</value>
-    <description>Page content is not stored because all pages are indexed.</description>
+    <value>true</value>
+    <description>Page content is stored by default.</description>
   </property>
 
   <property>

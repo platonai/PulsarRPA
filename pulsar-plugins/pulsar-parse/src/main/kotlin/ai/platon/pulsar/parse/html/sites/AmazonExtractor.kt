@@ -35,7 +35,9 @@ class AmazonExtractor(
         val indexLinkPattens = arrayOf(".+&node=\\d+.+").map { it.toRegex() }
         val detailLinkPattens = arrayOf(".+(/gp/slredirect/).+", ".+(/dp/).+").map { it.toRegex() }
         val offerListLinkPatterns = arrayOf(".+/gp/offer-listing/.+").map { it.toRegex() }
-        val reviewLinkPieces = arrayOf("customer-reviews", "product-reviews", "/review/", "create-review")
+        val reviewListLinkPieces = arrayOf("product-reviews")
+        val storeLinkPieces = arrayOf("customer-reviews", "product-reviews", "/review/")
+
         val profileLinkPieces = arrayOf("/profile/")
         val videoLinkPieces = arrayOf("/vdp/")
     }
@@ -64,6 +66,16 @@ class AmazonExtractor(
     private fun processAmazon(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {
         val url = page.url
 
+        // detect page category using url pattern
+        page.pageCategory = when {
+            detailLinkPattens.any { url.matches(it) } -> PageCategory.DETAIL
+            indexLinkPattens.any { url.matches(it) } -> PageCategory.INDEX
+            offerListLinkPatterns.any { url.matches(it) } -> PageCategory.OFFER_LIST
+            reviewListLinkPieces.any { url.contains(it) } -> PageCategory.REVIEW
+            profileLinkPieces.any { url.contains(it) } -> PageCategory.PROFILE
+            else -> PageCategory.UNKNOWN
+        }
+
         // TODO: can be collected in js side
         val stat = DomStatistics()
 
@@ -83,6 +95,7 @@ class AmazonExtractor(
                 ++stat.imgAnchor
             }
 
+            // ignore left nav
             if (e.id() == "leftNav") {
                 collectLabeledHyperLinks(e, "SER")
                 return@forEachElement
@@ -107,25 +120,20 @@ class AmazonExtractor(
                 checkIsDetailPage(page, e)
             }
 
+            // have a very large list area, it's a index
             if (e.isList) {
-                if (e.width >= 500 && e.height > 1000) {
+                if (e.width >= 500 && e.height > 1000 && e.numAnchors > 40 && e.numImages > 40) {
                     page.pageCategory = PageCategory.INDEX
                 }
             }
         }
 
-        if (detailLinkPattens.any { url.matches(it) }) {
-            page.pageCategory = PageCategory.DETAIL
-        } else if (indexLinkPattens.any { url.matches(it) }) {
-            page.pageCategory = PageCategory.INDEX
-        } else if (reviewLinkPieces.any { url.contains(it) }) {
-            page.pageCategory = PageCategory.REVIEW
-        } else if (profileLinkPieces.any { url.contains(it) }) {
-            page.pageCategory = PageCategory.PROFILE
-        } else if (!page.pageCategory.isDetail && stat.mediumImg > 50) {
+        // check if the page is an index page
+        if (!page.pageCategory.isDetail && stat.mediumImg > 50) {
             page.pageCategory = PageCategory.INDEX
         }
 
+        // check if the page is a detail page
         if (page.pageCategory.isDetail) {
             extractAmazonDetailPage(page, document)
         }
@@ -155,11 +163,17 @@ class AmazonExtractor(
         }
     }
 
-    private fun linkFilter(href: String): Boolean {
-        if (!href.contains(domain)) return false
-        if (videoLinkPieces.any { href.contains(it) }) return false
+    private fun linkFilter(url: String): Boolean {
+        if (!url.contains(domain)) return false
 
-        return true
+        if (detailLinkPattens.any { url.matches(it) }) {
+            return true
+        }
+        if (indexLinkPattens.any { url.matches(it) }) {
+            return true
+        }
+
+        return false
     }
 
     private fun collectLabeledHyperLinks(root: Element, label: String) {
@@ -200,32 +214,55 @@ class AmazonExtractor(
                 // Taupe
                 "color" to "#variation_color_name > .a-row > span",
                 //
-                "style" to "#variation_style_name",
-                //
-                "features" to "#feature-bullets ul",
-                //
-                "compareLink" to "#HLCXComparisonJumplink_feature_div a",
+                "style" to "#variation_style_name"
+        )
+
+        var id = 0
+        var fields = textExtractors.entries
+                .map { it.key to body.first(it.value) { it.text() } }
+                .filterNot { it.second.isNullOrBlank() }
+                .associate { it.first to it.second!! }
+        page.pageModel.emplace(++id, "product", fields)
+
+        val imagesExtractors = mapOf(
                 // big image
                 "bigImage" to "#imgTagWrapperId img",
                 // alternative images
-                "alternativeImages" to "#altImages",
+                "alternativeImages" to "#altImages"
+        )
+        fields = imagesExtractors.entries
+                .map { it.key to body.first(it.value) { it.attr("abs:src") } }
+                .filterNot { it.second.isNullOrBlank() }
+                .associate { it.first to it.second!! }
+        page.pageModel.emplace(++id, "images", fields)
+
+        val linksExtractors = mapOf(
+                //
+                "compareLink" to "#HLCXComparisonJumplink_feature_div a",
                 // offering list
-                "offerListLink" to "#olp-upd-new a",
+                "offerListLink" to "#olp-upd-new a"
+        )
+        fields = linksExtractors.entries
+                .map { it.key to body.first(it.value) { it.attr("abs:href") } }
+                .filterNot { it.second.isNullOrBlank() }
+                .associate { it.first to it.second!! }
+        page.pageModel.emplace(++id, "links", fields)
+
+        val listExtractors = mapOf(
+                //
+                "features" to "#feature-bullets ul",
                 // add to cart link (no link, need rebuild it)
                 "addToCartLink" to "#add-to-cart-button",
                 // related products
                 "relatedProducts" to "#sims-consolidated-2_feature_div ul li",
                 // also view products
-                "alsoViewProducts" to "#sims-consolidated-2_feature_div ul li",
-                "" to "",
-                "" to ""
+                "alsoViewProducts" to "#sims-consolidated-2_feature_div ul li"
         )
-
-        val fields = textExtractors.entries
+        fields = listExtractors.entries
                 .map { it.key to body.first(it.value) { it.text() } }
                 .filterNot { it.second.isNullOrBlank() }
                 .associate { it.first to it.second!! }
-        page.pageModel.emplace(0, 0, "item", fields)
+        page.pageModel.emplace(++id, "list", fields)
     }
 
     private fun checkIsDetailPage(page: WebPage, e: Element) {

@@ -284,49 +284,5 @@ open class FetchComponent(
             page.fetchTime = newFetchTime
             page.putFetchTimeHistory(newFetchTime)
         }
-
-        fun getFetchCompleteReport(page: WebPage): String {
-            val bytes = page.contentBytes
-            if (bytes < 0) {
-                return ""
-            }
-
-            val responseTime = page.metadata[Name.RESPONSE_TIME]
-            val proxy = page.metadata[Name.PROXY]
-            val jsData = page.browserJsData
-            var jsSate = ""
-            if (jsData != null) {
-                val (ni, na, nnm, nst) = jsData.lastStat
-                jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
-            }
-
-            val redirected = page.url != page.location
-            val url = if (redirected) page.location else page.url
-            val mark = page.pageCategory.symbol()
-            val numFields = page.pageModel.first()?.fields?.size?:0
-            val proxyFmt = if (proxy == null) "%s" else "%26s"
-            val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
-            val fieldFmt = if (numFields == 0) "%s" else "%-3s"
-            val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
-            return String.format(fmt,
-                    mark,
-                    StringUtil.readableByteCount(bytes.toLong(), 7, false),
-                    DateTimeUtil.readableDuration(responseTime),
-                    if (proxy == null) "" else " via $proxy",
-                    jsSate,
-                    page.fetchCount,
-                    if (numFields == 0) "0" else numFields.toString(),
-                    if (redirected) "[R] $url" else url
-            )
-        }
-
-        fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant): StringBuilder {
-            val elapsed = DateTimeUtil.elapsedTime(startTime)
-            val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
-            val sb = StringBuilder(message)
-            var i = 0
-            pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it)).append('\n') }
-            return sb
-        }
     }
 }

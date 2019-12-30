@@ -79,7 +79,7 @@ class PrimerExtractor(
         var brokenSubEntity = 0
         for (i in 1 until fieldCollections.size) {
             fieldCollection = fieldCollections[i]
-            pageModel.emplace(10000 + i.toLong(), majorGroup.id, "selector-sub", fieldCollection)
+            pageModel.emplace(10000 + i, majorGroup.id.toInt(), "selector-sub", fieldCollection)
             loss = fieldCollection.loss
             if (loss > 0) {
                 ++brokenSubEntity

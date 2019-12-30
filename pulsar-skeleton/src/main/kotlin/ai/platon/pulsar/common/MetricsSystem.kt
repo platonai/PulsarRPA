@@ -10,6 +10,7 @@ import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.BrowserJsData
 import ai.platon.pulsar.persist.model.DomStatistics
 import ai.platon.pulsar.persist.model.LabeledHyperLink
@@ -23,6 +24,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.text.DecimalFormat
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -148,13 +150,22 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     }
 
     fun debugExtractedFields(page: WebPage) {
+        if (page.pageModel.isEmpty) {
+            return
+        }
+
         val sb = StringBuilder()
         sb.appendln("-----------------")
         sb.appendln(page.url)
         val fields = page.pageModel.first()?.fields ?: return
-        fields.entries.joinTo(sb, "\n") {
-            String.format("%30s: %s", it.key, it.value)
+        page.pageModel.list().forEach {
+            sb.append("Group ").append(it.name)
+            it.fields.entries.joinTo(sb, "\n") {
+                String.format("%30s: %s", it.key, it.value)
+            }
+            sb.appendln()
         }
+
         sb.appendln()
 
         // show all javascript DOM urls, we should know the exact differences between them
@@ -222,13 +233,21 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     }
 
     fun debugRedirects(url: String, urls: BrowserJsData.Urls) {
-        val report = StringBuilder()
-        report.appendln(url)
-                .append("URL:         ").appendln(urls.URL)
-                .append("baseURI:     ").appendln(urls.baseURI)
-                .append("documentURI: ").appendln(urls.documentURI)
-                .append("location:    ").appendln(urls.location)
-                .append("\n\n\n")
+        val location = urls.location
+        if (location == url && urls.URL == url && urls.baseURI == url && urls.documentURI == url) {
+            // no redirect
+            return
+        }
+
+        val report = StringBuilder(url)
+
+        report.append('\n')
+        // NOTE: it seems they are all the same
+        if (location != url)              report.append("location:    ").appendln(location)
+        if (urls.URL != location)         report.append("URL:         ").appendln(urls.URL)
+        if (urls.baseURI != location)     report.append("baseURI:     ").appendln(urls.baseURI)
+        if (urls.documentURI != location) report.append("documentURI: ").appendln(urls.documentURI)
+
         writeLineTo(report.toString(), "browser-redirects.txt")
     }
 
@@ -323,7 +342,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         private val contentPublishTime = page.contentPublishTime
         private val refContentPublishTime = page.refContentPublishTime
         private val pageCategory = page.pageCategory
-        private val refArticles = page.pageCounters.get(PageCounters.Ref.item)
+        private val refItems = page.pageCounters.get(PageCounters.Ref.item)
         private val refChars = page.pageCounters.get(PageCounters.Ref.ch)
         private val contentScore = page.contentScore.toDouble()
         private val score = page.score.toDouble()
@@ -338,11 +357,11 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             val params = Params.of(
                     "T", fetchTimeString,
                     "DC", "$distance,$fetchCount",
-                    "PT", DateTimeUtil.isoInstantFormat(contentPublishTime.truncatedTo(ChronoUnit.SECONDS))
-                    + "," + DateTimeUtil.isoInstantFormat(refContentPublishTime.truncatedTo(ChronoUnit.SECONDS)),
-                    "C", "$refArticles,$refChars",
+                    "PT", DateTimeUtil.isoInstantFormat(contentPublishTime)
+                    + "," + DateTimeUtil.isoInstantFormat(refContentPublishTime),
+                    "C", "$refItems,$refChars",
                     "S", df.format(contentScore) + "," + df.format(score) + "," + df.format(cash),
-                    "U", StringUtils.substring(url, 0, 80)
+                    pageCategory.symbol(), StringUtils.substring(url, 0, 80)
             ).withKVDelimiter(":")
 
             return params.formatAsLine()
@@ -352,5 +371,49 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
     companion object {
         val LOG = LoggerFactory.getLogger(MetricsSystem::class.java)
         val REPORT_LOG = MetricsReporter.LOG_NON_ADDITIVITY
+
+        fun getFetchCompleteReport(page: WebPage): String {
+            val bytes = page.contentBytes
+            if (bytes < 0) {
+                return ""
+            }
+
+            val responseTime = page.metadata[Name.RESPONSE_TIME]
+            val proxy = page.metadata[Name.PROXY]
+            val jsData = page.browserJsData
+            var jsSate = ""
+            if (jsData != null) {
+                val (ni, na, nnm, nst) = jsData.lastStat
+                jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
+            }
+
+            val redirected = page.url != page.location
+            val url = if (redirected) page.location else page.url
+            val mark = page.pageCategory.symbol()
+            val numFields = page.pageModel.first()?.fields?.size?:0
+            val proxyFmt = if (proxy == null) "%s" else "%26s"
+            val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
+            val fieldFmt = if (numFields == 0) "%s" else "%-3s"
+            val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
+            return String.format(fmt,
+                    mark,
+                    StringUtil.readableByteCount(bytes.toLong(), 7, false),
+                    DateTimeUtil.readableDuration(responseTime),
+                    if (proxy == null) "" else " via $proxy",
+                    jsSate,
+                    page.fetchCount,
+                    if (numFields == 0) "0" else numFields.toString(),
+                    if (redirected) "[R] $url" else url
+            )
+        }
+
+        fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant): StringBuilder {
+            val elapsed = DateTimeUtil.elapsedTime(startTime)
+            val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
+            val sb = StringBuilder(message)
+            var i = 0
+            pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it)).append('\n') }
+            return sb
+        }
     }
 }

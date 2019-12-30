@@ -55,7 +55,7 @@ class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
         page.pageCategory = PageCategory.valueOf(doc.pageCategoryAsString)
         page.updateContentPublishTime(doc.publishTime)
         page.updateContentModifiedTime(doc.modifiedTime)
-        val id: Long = 1000
+        val id = 1000
         page.pageModel.emplace(id, 0, "boilerpipe", doc.fields)
         return doc
     }

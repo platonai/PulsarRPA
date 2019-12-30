@@ -1,5 +1,7 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.MetricsSystem.Companion.getBatchCompleteReport
+import ai.platon.pulsar.common.MetricsSystem.Companion.getFetchCompleteReport
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls.isValidUrl
 import ai.platon.pulsar.common.Urls.splitUrlArgs
@@ -8,13 +10,11 @@ import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.crawl.component.FetchComponent.Companion.getBatchCompleteReport
-import ai.platon.pulsar.crawl.component.FetchComponent.Companion.getFetchCompleteReport
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.classification.InterfaceStability.Evolving
 import org.apache.hadoop.classification.InterfaceStability.Unstable

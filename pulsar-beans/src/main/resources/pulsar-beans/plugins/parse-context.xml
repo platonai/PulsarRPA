@@ -46,17 +46,12 @@
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="extractorAmazonFilter" class="ai.platon.pulsar.parse.html.sites.AmazonExtractor">
-        <constructor-arg ref="metricsCounters"/>
-        <constructor-arg ref="conf"/>
-    </bean>
     <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters">
         <constructor-arg>
             <list>
 <!--                <ref bean="jsParseFilter" />-->
 <!--                <ref bean="boilerpipeFilter" />-->
                 <ref bean="extractorFilter" />
-                <ref bean="extractorAmazonFilter"/>
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>
