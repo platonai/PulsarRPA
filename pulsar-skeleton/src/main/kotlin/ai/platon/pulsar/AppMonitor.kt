@@ -90,7 +90,7 @@ class AppMonitor(
     private fun monitorProxySystem(tick: Int) {
         if (tick % 20 == 0) {
             // proxy system can be started and shutdown at runtime
-            if (!internalProxyServer.isLoopStarted) {
+            if (!internalProxyServer.isWatcherStarted) {
                 if (internalProxyServer.isEnabled) {
                     proxyPool.updateProxies(asap = true)
                     internalProxyServer.start()

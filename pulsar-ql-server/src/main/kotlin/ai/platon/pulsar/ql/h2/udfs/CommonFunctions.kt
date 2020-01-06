@@ -266,7 +266,7 @@ object CommonFunctions {
      * Set h2session scope configuration.
      *
      * SQL examples:
-     * `CALL setConf('fetch.page.load.timeout', '1d')`
+     * `CALL setConf('fetch.page.load.timeout', '1m')`
      * `CALL setConf('fetch.fetch.mode', 'NATIVE')`
      *
      * @param h2session The H2 session, auto injected by h2 runtime

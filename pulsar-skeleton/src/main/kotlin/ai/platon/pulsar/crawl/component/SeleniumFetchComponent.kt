@@ -12,6 +12,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.net.browser.FetchResult
 import ai.platon.pulsar.net.browser.FetchTask
 import ai.platon.pulsar.net.browser.SeleniumEngine
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.MultiMetadata
@@ -94,7 +95,7 @@ internal class BatchFetchContext(
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  *
- * Note: SeleniumEngine should be process scope
+ * Note: SeleniumEngine should be in process scope
  */
 class SeleniumFetchComponent(
         private val executor: GlobalExecutor,
@@ -126,7 +127,12 @@ class SeleniumFetchComponent(
             task.deleteAllCookies = true
             task.closeBrowsers = true
         }
-        return seleniumEngine.fetchTask(task).response
+
+        return try {
+            seleniumEngine.fetch(task).response
+        } catch (e: IllegalStateException) {
+            ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
+        }
     }
 
     fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
@@ -160,7 +166,7 @@ class SeleniumFetchComponent(
     }
 
     /**
-     * TODO: use [ai.platon.pulsar.crawl.fetch.FetchThread]
+     * TODO: merge with [ai.platon.pulsar.crawl.fetch.FetchThread]
      * */
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
         if (Iterables.isEmpty(pages)) {
@@ -174,8 +180,8 @@ class SeleniumFetchComponent(
         cx.beforeFetchAll(pages)
 
         // Submit all tasks
-        var taskId = 0
-        pages.associateTo(cx.pendingTasks) { it.url to executor.submit { doFetch(++taskId, it, cx) } }
+        var batchTaskId = 0
+        pages.associateTo(cx.pendingTasks) { it.url to executor.submit { doFetch(++batchTaskId, it, cx) } }
 
         val isLastTaskTimeout: (cx: BatchFetchContext) -> Boolean = {
             it.batchSize > 10 && it.pendingTasks.size == 1 && it.idleSeconds >= 30
@@ -224,17 +230,24 @@ class SeleniumFetchComponent(
         return cx.finishedTasks.values.map { it.response }
     }
 
-    private fun doFetch(taskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
-        val task = FetchTask(cx.batchId, taskId, cx.priority, page, cx.volatileConfig)
+    private fun doFetch(batchTaskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
+        val task = FetchTask(cx.batchId, nextTaskId, cx.priority, page, cx.volatileConfig)
         task.batchSize = cx.batchSize
+        task.batchTaskId = batchTaskId
+
         if (incognito) {
             task.deleteAllCookies = true
             task.closeBrowsers = true
         }
 
-        try {
+        return try {
             cx.beforeFetch(page)
-            return seleniumEngine.fetchTask(task)
+            seleniumEngine.fetch(task)
+        } catch (e: IllegalStateException) {
+            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
+        } catch (e: Throwable) {
+            log.warn("Unexpected exception", StringUtil.stringifyException(e))
+            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED))
         } finally {
             // TODO: page is not updated
             cx.afterFetch(page)
@@ -313,22 +326,18 @@ class SeleniumFetchComponent(
         } catch (e: java.util.concurrent.TimeoutException) {
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
             headers.put("EXCEPTION", e.toString())
-
             log.warn("Fetch resource timeout, {}", e)
         } catch (e: java.util.concurrent.ExecutionException) {
-            status = ProtocolStatus.STATUS_RETRY
+            status = ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL)
             headers.put("EXCEPTION", e.toString())
-
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         } catch (e: InterruptedException) {
-            status = ProtocolStatus.STATUS_RETRY
+            status = ProtocolStatus.retry(RetryScope.CRAWL_SOLUTION)
             headers.put("EXCEPTION", e.toString())
-
             log.warn("Interrupted when fetch resource {}", e)
         } catch (e: Exception) {
             status = ProtocolStatus.STATUS_EXCEPTION
             headers.put("EXCEPTION", e.toString())
-
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         }
 
@@ -398,7 +407,7 @@ class SeleniumFetchComponent(
         private val batchIdGen = AtomicInteger(0)
         val nextBatchId get() = batchIdGen.incrementAndGet()
 
-        private val taskIdGen = AtomicInteger(10000)
+        private val taskIdGen = AtomicInteger(0)
         val nextTaskId get() = taskIdGen.incrementAndGet()
     }
 }

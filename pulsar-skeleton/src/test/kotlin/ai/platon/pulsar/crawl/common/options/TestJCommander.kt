@@ -1,15 +1,13 @@
-package ai.platon.pulsar.crawl.common
+package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.PulsarOptions.Companion.split
 import ai.platon.pulsar.common.options.WeightedKeywordsConverter
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
-import org.junit.Assert
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals
-import kotlin.test.assertSame
 
 /**
  * Created by vincent on 16-7-20.

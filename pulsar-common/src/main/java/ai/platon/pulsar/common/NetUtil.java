@@ -65,12 +65,12 @@ public class NetUtil {
 
     public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
         boolean reachable = false;
-        Socket con = new Socket();
+        Socket socket = new Socket();
 
         try {
-            con.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
-            reachable = true;
-            con.close();
+            socket.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
+            reachable = socket.isConnected();
+            socket.close();
         } catch (Exception ignored) {
             // logger.warn("can not connect to " + ip + ":" + port);
         }

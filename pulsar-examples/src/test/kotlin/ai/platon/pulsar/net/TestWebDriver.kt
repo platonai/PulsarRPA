@@ -18,6 +18,9 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+/**
+ * TODO: move to pulsar-skeleton module
+ * */
 class TestWebDriver {
     companion object {
         val log = LoggerFactory.getLogger(TestWebDriver::class.java)
@@ -28,7 +31,7 @@ class TestWebDriver {
 
         val env = PulsarEnv.initialize()
         val conf = PulsarEnv.unmodifiedConfig
-        val pool = PulsarEnv.applicationContext.getBean(WebDriverPool::class.java)
+        val driverPool = PulsarEnv.applicationContext.getBean(WebDriverPool::class.java)
         var quitMultiThreadTesting = false
 
         @BeforeClass
@@ -60,42 +63,42 @@ class TestWebDriver {
     fun testWebDriverPool() {
         val workingDrivers = mutableListOf<ManagedWebDriver>()
         repeat(10) {
-            val driver = pool.poll(0, conf)
+            val driver = driverPool.poll(0, conf)
             if (driver != null) {
                 assertNotNull(driver)
                 workingDrivers.add(driver)
             }
         }
 
-        assertEquals(10, pool.workingSize)
-        assertEquals(0, pool.freeSize)
-        assertEquals(10, pool.aliveSize)
-        assertEquals(10, pool.totalSize)
+        assertEquals(10, driverPool.workingSize)
+        assertEquals(0, driverPool.freeSize)
+        assertEquals(10, driverPool.aliveSize)
+        assertEquals(10, driverPool.totalSize)
 
         workingDrivers.forEachIndexed { i, driver ->
-            if (i % 2 == 0) pool.offer(driver)
-            else pool.retire(driver, null)
+            if (i % 2 == 0) driver.retire()
+            driverPool.put(driver)
         }
 
-        assertEquals(0, pool.workingSize)
-        assertEquals(5, pool.freeSize)
+        assertEquals(0, driverPool.workingSize)
+        assertEquals(5, driverPool.freeSize)
         assertEquals(5, WebDriverPool.numRetired.get())
 
-        pool.closeAll()
+        driverPool.closeAll()
 
-        assertEquals(0, pool.workingSize)
-        assertEquals(0, pool.freeSize)
+        assertEquals(0, driverPool.workingSize)
+        assertEquals(0, driverPool.freeSize)
         assertEquals(10, WebDriverPool.numQuit.get())
 
-        pool.closeAll()
+        driverPool.closeAll()
 
-        assertEquals(0, pool.workingSize)
-        assertEquals(0, pool.freeSize)
+        assertEquals(0, driverPool.workingSize)
+        assertEquals(0, driverPool.freeSize)
         assertEquals(10, WebDriverPool.numQuit.get())
     }
 
     @Test
-    fun testWebDriverPoolMultThreaded() {
+    fun testWebDriverPoolMultiThreaded() {
         val workingDrivers = ArrayBlockingQueue<ManagedWebDriver>(30)
 
         val consumer = Thread {
@@ -105,7 +108,7 @@ class TestWebDriver {
                 }
 
                 if (workingDrivers.size < 20) {
-                    val driver = pool.poll(0, conf)
+                    val driver = driverPool.poll(0, conf)
                     if (driver != null) {
                         assertNotNull(driver)
                         workingDrivers.add(driver)
@@ -121,10 +124,11 @@ class TestWebDriver {
                 if (driver != null) {
                     if (i % 3 == 0) {
                         log.info("Offer {}", driver)
-                        pool.offer(driver)
+                        driverPool.put(driver)
                     } else {
                         log.info("Retire {}", driver)
-                        pool.retire(driver, null)
+                        driver.retire()
+                        driverPool.put(driver)
                     }
                 }
             }
@@ -133,8 +137,8 @@ class TestWebDriver {
         val closer = Thread {
             while (!quitMultiThreadTesting) {
                 log.info("Close all")
-                pool.closeAll()
-                pool.closeAll()
+                driverPool.closeAll()
+                driverPool.closeAll()
                 Thread.sleep(1000)
             }
         }

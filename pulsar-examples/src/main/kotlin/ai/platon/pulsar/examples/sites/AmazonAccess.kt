@@ -1,10 +1,13 @@
 package ai.platon.pulsar.examples.sites
 
+import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 
 class AmazonAccess: WebAccess() {
     val url = "https://www.amazon.com/"
-    val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \".s-result-item .a-section h2 a\""
+    val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
 
     fun load() {
         // TODO: click event support is required
@@ -31,9 +34,46 @@ class AmazonAccess: WebAccess() {
         val portalUrl = "https://www.amazon.com/s?i=specialty-aps&srs=13575748011&page=2&qid=1575032004&ref=lp_13575748011_pg_2"
         loadOutPages(portalUrl, loadOutPagesArgs)
     }
+
+    fun testIpLimit() {
+        val portalUrlBase = "https://www.amazon.com/s?i=specialty-aps&srs=13575748011&page=2&qid=1575032004&ref=lp_13575748011_pg_"
+        val portalUrls = IntRange(1, 20).map { "$portalUrlBase$it" }
+        val args = "-ic -i 1s -ii 1s -ol \"a[href~=/dp/]\""
+        val options = LoadOptions.parse(args)
+
+        var k = 0
+        portalUrls.forEach { portalUrl ->
+            val document = i.parse(i.load(portalUrl))
+            val links = document.select("a[href~=/dp/]") {
+                it.attr("abs:href").substringBeforeLast("#")
+            }.toSet()
+            links.forEachIndexed { i, l ->
+                println("$i\t$l")
+            }
+
+            val pages = i.loadOutPages(portalUrl, "a[href~=/dp/]", options)
+            if (pages.isEmpty()) return@forEach
+
+            k += pages.size
+            val lengths = pages.map { it.contentBytes.toLong() }.sortedDescending()
+                    .joinToString { StringUtil.readableByteCount(it) }
+            println(lengths)
+
+            val ds = SummaryStatistics()
+            pages.forEach { ds.addValue(it.contentBytes.toDouble()) }
+
+            // if the average length is less than 1M
+            if (ds.mean < 0.2 * 1e6) {
+                pages.forEach { i.export(it, "banned") }
+                println("Ip banned after $k pages")
+                return
+            }
+        }
+    }
 }
 
 fun main() {
     val access = AmazonAccess()
-    access.smartHomeLighting()
+    access.laptops()
+    access.testIpLimit()
 }

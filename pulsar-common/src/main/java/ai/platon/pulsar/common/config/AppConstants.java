@@ -35,6 +35,11 @@ public interface AppConstants {
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
     String JOB_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/job-context.xml";
 
+    /**
+     * The number of processors available to the Java virtual machine
+     */
+    int NCPU = Runtime.getRuntime().availableProcessors();
+
     String YES_STRING = "y";
 
     /** Don't show original forbidden content, but show summaries. */
@@ -126,8 +131,9 @@ public interface AppConstants {
     String CMD_ENABLE_PROXY = "use_proxy"; // keep consistent with linux system variable
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
-    String CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE = "force-IPS-idle";
+    String CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE = "IPS-force-idle";
     String CMD_INTERNAL_PROXY_SERVER_RECONNECT = "IPS-reconnect";
+    String CMD_INTERNAL_PROXY_SERVER_DISCONNECT = "IPS-disconnect";
 
     String CMD_WEB_DRIVER_CLOSE_ALL = "close-all-web-drivers";
     String CMD_WEB_DRIVER_DELETE_ALL_COOKIES = "delete-all-cookies";

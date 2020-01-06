@@ -22,13 +22,14 @@ fun AppFiles.export(sb: StringBuilder, status: ProtocolStatus, content: String, 
     val document = Documents.parse(content, page.baseUrl)
     document.absoluteLinks()
     val prettyHtml = document.prettyHtml
+    val length = prettyHtml.length
 
     sb.setLength(0)
     sb.append(status.minorName).append('/').append(monthDay)
-    if (prettyHtml.length < 2000) {
-        sb.append("/a").append(prettyHtml.length / 500 * 500)
+    if (length < 2000) {
+        sb.append("/a").append(length / 500 * 500)
     } else {
-        sb.append("/b").append(prettyHtml.length / 20000 * 20000)
+        sb.append("/b").append(length / 20000 * 20000)
     }
 
     val ident = sb.toString()
@@ -65,6 +66,6 @@ fun AppFiles.export(page: WebPage, ident: String = ""): Path {
 }
 
 fun AppFiles.export(doc: Document, ident: String = ""): Path {
-    val path = AppPaths.get(FILE_CACHE_DIR, ident, AppPaths.fromUri(doc.baseUri(), ".htm"))
+    val path = AppPaths.get(FILE_CACHE_DIR, ident, AppPaths.fromUri(doc.baseUri(), "", ".htm"))
     return AppFiles.saveTo(doc.outerHtml(), path)
 }

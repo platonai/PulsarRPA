@@ -557,8 +557,7 @@ public class WebPage {
      */
     public Instant getLastFetchTime(Instant now) {
         Instant lastFetchTime = getFetchTime();
-        // Minus 1 seconds to protect from inaccuracy
-        if (lastFetchTime.isAfter(now.plusSeconds(1))) {
+        if (lastFetchTime.isAfter(now)) {
             // updated by schedule
             lastFetchTime = getPrevFetchTime();
         }

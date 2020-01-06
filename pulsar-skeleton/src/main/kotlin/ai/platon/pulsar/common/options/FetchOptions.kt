@@ -28,8 +28,8 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
     @Parameter(names = [PulsarParams.ARG_REDUCER_TASKS], description = "Number of reducers")
     var numReduceTasks = conf.getInt(CapabilityTypes.MAPREDUCE_JOB_REDUCES, 1)
 
-    @Parameter(names = [PulsarParams.ARG_THREADS], description = "Number of fetch threads in each reducer")
-    var numFetchThreads = conf.getInt(CapabilityTypes.FETCH_THREADS_FETCH, 10)
+    @Parameter(names = [PulsarParams.ARG_THREADS], description = "Number of fetch threads in each reducer, auto detect if non-positive")
+    var numFetchThreads = conf.getInt(CapabilityTypes.FETCH_THREADS_FETCH, 0)
 
     @Parameter(names = [PulsarParams.ARG_POOL_THREADS], description = "Number of fetcher threads per queue")
     var numPoolThreads = conf.getInt(CapabilityTypes.FETCH_THREADS_PER_POOL, 10)

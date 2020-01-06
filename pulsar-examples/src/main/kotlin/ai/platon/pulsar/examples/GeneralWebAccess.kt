@@ -176,7 +176,7 @@ class GeneralWebAccess: WebAccess() {
         val options = LoadOptions.parse(args)
         val tasks = i.loadAll(seeds.values, options).flatMap { it.links }.map { it.toString() }
                 .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }.toList()
-        Lists.partition(tasks, PulsarEnv.NCPU).forEach { partition ->
+        Lists.partition(tasks, AppConstants.NCPU).forEach { partition ->
             partition.parallelStream().forEach { (_, urls) ->
                 pc.createSession().use {
                     it.loadAll(urls.distinct().shuffled().take(10), options)

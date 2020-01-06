@@ -54,6 +54,20 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
     }
 
     /**
+     * Constructs a new, empty data.
+     */
+    public MultiMetadata(String... kvs) {
+        int length = kvs.length;
+        if (length % 2 == 0) {
+            for (int i = 0; i < length; i += 2) {
+                put(kvs[i], kvs[1 + i]);
+            }
+        } else {
+            throw new IllegalArgumentException("Length of the variable argument 'kvs' must be an even number");
+        }
+    }
+
+    /**
      * Returns true if named value is multivalued.
      *
      * @param name name of data

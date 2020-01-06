@@ -18,8 +18,6 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.AppConstants
@@ -33,11 +31,9 @@ import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
-import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by vincent on 17-5-1.
@@ -95,7 +91,7 @@ open class FetchComponent(
         val protocol = protocolFactory.getProtocol(page)
 
         if (protocol == null) {
-            LOG.warn("No protocol found for {}", url)
+            LOG.warn("No protocol found | {}", url)
             updateStatus(page, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND)
             return page
         }
@@ -124,12 +120,11 @@ open class FetchComponent(
         val url = page.url
         val content = output.content
         if (content == null) {
-            LOG.warn("No content for " + page.configuredUrl)
+            LOG.warn("No content | " + page.configuredUrl)
             return page
         }
 
-        val headers = page.headers
-        output.headers.asMultimap().entries().forEach { headers.put(it.key, it.value) }
+        page.headers.putAll(output.headers.asMultimap())
         val protocolStatus = output.status
         val minorCode = protocolStatus.minorCode
         if (protocolStatus.isSuccess) {
@@ -143,7 +138,7 @@ open class FetchComponent(
         }
 
         if (LOG.isTraceEnabled) {
-            LOG.trace("Fetch failed, status: {}, url: {}", protocolStatus, page.configuredUrl)
+            LOG.trace("Fetch failed, status: {} | {}", protocolStatus, page.configuredUrl)
         }
 
         when (minorCode) {
@@ -151,8 +146,11 @@ open class FetchComponent(
                 val crawlStatus = handleTmpMove(page, protocolStatus)
                 updatePage(page, content, protocolStatus, crawlStatus)
             }
-            ProtocolStatus.RETRY, ProtocolStatus.BLOCKED, ProtocolStatus.CANCELED -> updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
-            ProtocolStatus.REQUEST_TIMEOUT, ProtocolStatus.THREAD_TIMEOUT, ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.DOCUMENT_READY_TIMEOUT -> {
+            ProtocolStatus.CANCELED -> {
+                // do nothing
+            }
+            ProtocolStatus.RETRY, ProtocolStatus.BLOCKED -> updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
+            ProtocolStatus.REQUEST_TIMEOUT, ProtocolStatus.THREAD_TIMEOUT, ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.DOM_TIMEOUT -> {
                 fetchTaskTracker.trackTimeout(url)
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
             }
@@ -277,10 +275,7 @@ open class FetchComponent(
         @JvmStatic
         @JvmOverloads
         fun updateFetchTime(page: WebPage, newFetchTime: Instant = Instant.now()) {
-            val lastFetchTime = page.fetchTime
-            if (lastFetchTime.isBefore(newFetchTime)) {
-                page.prevFetchTime = lastFetchTime
-            }
+            page.prevFetchTime = page.fetchTime
             page.fetchTime = newFetchTime
             page.putFetchTimeHistory(newFetchTime)
         }

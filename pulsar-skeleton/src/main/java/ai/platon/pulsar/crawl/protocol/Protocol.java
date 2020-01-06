@@ -34,7 +34,7 @@ import java.util.Collections;
  */
 public interface Protocol extends Configurable, AutoCloseable {
 
-    Logger LOG = LoggerFactory.getLogger(Protocol.class);
+    Logger log = LoggerFactory.getLogger(Protocol.class);
 
     default boolean supportParallel() {
         return false;

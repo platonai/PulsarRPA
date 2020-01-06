@@ -10,9 +10,11 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_H
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.component.BatchHandler
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL
+import java.time.Duration
 import java.util.zip.Deflater
 
 class BeforeBatchHandler: BatchHandler() {
@@ -51,6 +53,12 @@ open class WebAccess(
     val env = PulsarEnv.initialize()
     val pc = PulsarContext.getOrCreate()
     val i = pc.createSession()
+
+    init {
+        val ips = PulsarEnv.applicationContext.getBean(InternalProxyServer::class.java)
+        ips.idleTimeout = Duration.ofSeconds(120)
+        ips.showReport = true
+    }
 
     fun load(url: String, args: String) {
         load(url, LoadOptions.parse(args))

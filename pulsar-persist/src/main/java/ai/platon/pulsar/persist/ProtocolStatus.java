@@ -18,6 +18,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_HTTP_CODE = "httpCode";
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
     public static final String ARG_URL = "url";
+    public static final String ARG_RETRY_SCOPE = "scope";
 
     public static final short NOTFETCHED = 0;
     /**
@@ -37,9 +38,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
-    public static final ProtocolStatus STATUS_RETRY = ProtocolStatus.failed(RETRY);
-    public static final ProtocolStatus STATUS_INCOMPLETE_RETRY = ProtocolStatus.failed(DOCUMENT_INCOMPLETE);
-    public static final ProtocolStatus STATUS_BROWSER_RETRY = ProtocolStatus.failed(WEB_DRIVER_GONE);
+    // if a task is canceled, we do not save the WebPage, if a task is retry, all the metadata is saved
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
     public static final ProtocolStatus STATUS_EXCEPTION = ProtocolStatus.failed(EXCEPTION);
 
@@ -73,7 +72,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(CANCELED, "canceled");
         minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
         minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
-        minorCodes.put(DOCUMENT_READY_TIMEOUT, "document_ready_timeout");
+        minorCodes.put(DOM_TIMEOUT, "dom_timeout");
     }
 
     private GProtocolStatus protocolStatus;
@@ -106,6 +105,11 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public static String getMinorName(int code) {
         return minorCodes.getOrDefault(code, "unknown");
+    }
+
+    @Nonnull
+    public static ProtocolStatus retry(RetryScope scope) {
+        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope);
     }
 
     @Nonnull
@@ -160,6 +164,15 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public boolean isCanceled() {
         return getMinorCode() == CANCELED;
+    }
+
+    public boolean isRetry() {
+        return getMinorCode() == RETRY;
+    }
+
+    public boolean isRetry(RetryScope scope) {
+        RetryScope defaultScope = RetryScope.CRAWL_SOLUTION;
+        return getMinorCode() == RETRY && getArgOrDefault(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
     }
 
     public boolean isTempMoved() {

@@ -30,7 +30,7 @@ class FetchThread(
 
     private val log = LoggerFactory.getLogger(FetchThread::class.java)
 
-    private val id: Int = instanceSequence.incrementAndGet()
+    private val id = instanceSequence.incrementAndGet()
 
     /**
      * Fix the thread to a specified queue as possible as we can

@@ -26,7 +26,6 @@ import java.nio.file.StandardOpenOption
 import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
@@ -372,13 +371,13 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         val LOG = LoggerFactory.getLogger(MetricsSystem::class.java)
         val REPORT_LOG = MetricsReporter.LOG_NON_ADDITIVITY
 
-        fun getFetchCompleteReport(page: WebPage): String {
+        fun getFetchCompleteReport(page: WebPage, verbose: Boolean = false): String {
             val bytes = page.contentBytes
             if (bytes < 0) {
                 return ""
             }
 
-            val responseTime = page.metadata[Name.RESPONSE_TIME]
+            val responseTime = page.metadata[Name.RESPONSE_TIME]?:""
             val proxy = page.metadata[Name.PROXY]
             val jsData = page.browserJsData
             var jsSate = ""
@@ -395,7 +394,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
             val fieldFmt = if (numFields == 0) "%s" else "%-3s"
             val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
-            return String.format(fmt,
+            val report = String.format(fmt,
                     mark,
                     StringUtil.readableByteCount(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
@@ -405,14 +404,19 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
                     if (numFields == 0) "0" else numFields.toString(),
                     if (redirected) "[R] $url" else url
             )
+
+            return if (verbose) {
+                val link = AppPaths.symbolicLinkFromUri(page.url)
+                "$report | file://$link"
+            } else report
         }
 
-        fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant): StringBuilder {
+        fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant, verbose: Boolean = false): StringBuilder {
             val elapsed = DateTimeUtil.elapsedTime(startTime)
             val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
             val sb = StringBuilder(message)
             var i = 0
-            pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it)).append('\n') }
+            pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it, verbose)).append('\n') }
             return sb
         }
     }

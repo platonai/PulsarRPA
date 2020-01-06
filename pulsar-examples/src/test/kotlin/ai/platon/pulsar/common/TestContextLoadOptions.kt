@@ -1,4 +1,4 @@
-package ai.platon.pulsar.net.common
+package ai.platon.pulsar.common
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.AppPaths
@@ -11,7 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-class TestLoadOptions {
+class TestContextLoadOptions {
 
     init {
         System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
@@ -33,7 +33,7 @@ class TestLoadOptions {
     fun testOptions() {
         val args0 = Urls.splitUrlArgs(url).second
         val options = LoadOptions.parse("$args0 $args")
-        assertEquals(".products a", options.outlinkSelector)
+        assertEquals("\".products a\"", options.outlinkSelector)
 
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
         val options3 = options.mergeModified(options2)
@@ -85,6 +85,7 @@ class TestLoadOptions {
     fun testNormalizeOptions2() {
         val options = LoadOptions.parse(Urls.splitUrlArgs("$url $args -incognito -expires 1s -retry").second)
         val normUrl = i.normalize(url, options)
+
         val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"))
 
         assertOptions(normUrl2.options)
@@ -107,7 +108,7 @@ class TestLoadOptions {
 
     private fun assertOptions(options: LoadOptions) {
         assertTrue(options.incognito)
-        assertEquals(".products a", options.outlinkSelector)
+        assertEquals("\".products a\"", options.outlinkSelector)
         assertEquals(1, options.expires.seconds)
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)

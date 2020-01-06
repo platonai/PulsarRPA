@@ -8,7 +8,7 @@ data class BrowserJsData(
         val lastStat: Stat = Stat(),
         val initD: Stat = Stat(),
         val lastD: Stat = Stat(),
-        val urls: Urls = Urls()
+        var urls: Urls = Urls()
 ) {
     data class Status(
             val n: Int = 0,

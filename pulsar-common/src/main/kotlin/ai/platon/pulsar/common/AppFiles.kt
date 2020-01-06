@@ -136,7 +136,7 @@ object AppFiles {
      */
     fun createSharedFileTask(url: String) {
         try {
-            val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(url, ".task"))
+            val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(url, "", ".task"))
             Files.write(path, url.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
         } catch (e: IOException) {
             log.error(e.toString())
@@ -144,7 +144,7 @@ object AppFiles {
     }
 
     fun getCachedWebPage(url: String): String? {
-        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(url, ".htm"))
+        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(url, "", ".htm"))
         if (Files.notExists(path)) {
             return null
         }

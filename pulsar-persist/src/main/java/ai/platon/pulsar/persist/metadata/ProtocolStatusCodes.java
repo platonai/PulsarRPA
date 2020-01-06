@@ -100,7 +100,7 @@ public interface ProtocolStatusCodes {
     /**
      * Selenium web driver is timeout.
      */
-    int DOCUMENT_READY_TIMEOUT = 1472;
+    int DOM_TIMEOUT = 1472;
     /**
      * Selenium web driver is timeout.
      */

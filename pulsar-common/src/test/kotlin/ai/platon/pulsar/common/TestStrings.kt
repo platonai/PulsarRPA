@@ -23,4 +23,9 @@ class TestStrings {
                 .matches(".+(/dp/).+(&qid=\\d+).+".toRegex())
         }
     }
+
+    @Test
+    fun testReadableBytes() {
+        println(StringUtil.readableByteCount(1e6.toLong(), true))
+    }
 }

@@ -25,7 +25,9 @@ open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
         private val nodeFeatureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
+        // TODO: create only once, and use ReflectionUtils
         val nodeFeatureCalculator: NodeVisitor get() = nodeFeatureCalculatorClass.newInstance()
+        // Class.forName(nodeFeatureCalculatorClass.name)
 
         val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -42,7 +44,7 @@ open class FeaturedDocument(val document: Document) {
             return doc == NIL || doc.location == NIL.location
         }
         fun getExportFilename(uri: String): String {
-            return AppPaths.fromUri(uri, ".htm")
+            return AppPaths.fromUri(uri, "", ".htm")
         }
         fun getExportPath(url: String, ident: String): Path {
             return AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
@@ -63,6 +65,7 @@ open class FeaturedDocument(val document: Document) {
 
     init {
         if (features.isEmpty) {
+            // TODO: avoid reflection every time
             NodeTraversor.traverse(nodeFeatureCalculator, document)
         }
     }
@@ -166,7 +169,7 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun export(): Path {
-        val filename = AppPaths.fromUri(location, ".html")
+        val filename = AppPaths.fromUri(location, "", ".htm")
         val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "featured", filename)
         return exportTo(path)
     }

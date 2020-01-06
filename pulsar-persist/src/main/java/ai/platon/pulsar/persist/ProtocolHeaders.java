@@ -3,6 +3,7 @@ package ai.platon.pulsar.persist;
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.SParser;
+import com.google.common.collect.Multimap;
 import org.apache.oro.text.regex.*;
 
 import java.io.UnsupportedEncodingException;
@@ -71,6 +72,18 @@ public class ProtocolHeaders implements HttpHeaders {
 
     public void put(String name, String value) {
         headers.put(WebPage.u8(name), WebPage.u8(value));
+    }
+
+    public void putAll(Map<String, String> map) {
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public void putAll(Multimap<String, String> map) {
+        for (Map.Entry<String, String> entry : map.entries()) {
+            put(entry.getKey(), entry.getValue());
+        }
     }
 
     public void remove(String name) {

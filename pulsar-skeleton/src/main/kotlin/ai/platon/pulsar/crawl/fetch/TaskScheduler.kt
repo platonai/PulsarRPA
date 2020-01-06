@@ -197,7 +197,7 @@ class TaskScheduler(
 
             handleResult(fetchTask, CrawlStatus.STATUS_FETCHED)
 
-            if (protocolStatus === ProtocolStatus.STATUS_RETRY) {
+            if (protocolStatus.isRetry(RetryScope.FETCH_PROTOCOL)) {
                 tasksMonitor.produce(fetchTask)
             }
         } catch (e: Throwable) {

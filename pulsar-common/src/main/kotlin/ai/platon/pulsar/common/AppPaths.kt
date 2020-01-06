@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import com.google.common.net.InetAddresses
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -17,11 +16,17 @@ import java.util.*
  */
 object AppPaths {
     @JvmField
+    val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
+    @JvmField
     val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @JvmField
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @JvmField
     val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(AppConstants.PULSAR_DEFAULT_DATA_DIR)
+
+    // directory for symbolic links, this path should be as short as possible
+    @JvmField
+    val LINKS_DIR = get(SYS_TMP_DIR, "ln")
 
     @JvmField
     val CACHE_DIR = get(TMP_DIR, "cache")
@@ -48,14 +53,14 @@ object AppPaths {
     @JvmField
     val PATH_BANNED_URLS = get(REPORT_DIR, "banned-urls")
     @JvmField
-    val PATH_UNREACHABLE_HOSTS = get(REPORT_DIR,  "unreachable-hosts.txt")
+    val PATH_UNREACHABLE_HOSTS = get(REPORT_DIR, "unreachable-hosts.txt")
 
     // TODO: distinct tmp dir and home dir
     private val tmpDirStr get() = TMP_DIR.toString()
     private val homeDirStr get() = HOME_DIR.toString()
 
     init {
-        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR).forEach {
+        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, FILE_CACHE_DIR, LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR).forEach {
             if (!Files.exists(it)) {
                 Files.createDirectories(it)
             }
@@ -74,32 +79,26 @@ object AppPaths {
         return Paths.get(tmpDirStr, first.removePrefix(tmpDirStr), *more)
     }
 
-    fun fromUri(url: String, suffix: String = ""): String {
-        val u = Urls.getURLOrNull(url)
-        val path = when {
-            u == null -> "unknown-" + UUID.randomUUID().toString()
-            StringUtil.isIpLike(u.host) -> u.host.replace('.', '-') + "-" + DigestUtils.md5Hex(url)
-            else -> {
-                val domain = InternetDomainName.from(u.host).topPrivateDomain().toString()
-                domain.replace('.', '-') + "-" + DigestUtils.md5Hex(url)
-            }
-        }
-
-        return if (suffix.isNotEmpty()) path + suffix else path
+    fun random(prefix: String = "", suffix: String = ""): String {
+        return "$prefix${UUID.randomUUID()}$suffix"
     }
 
-    // use this version when tested
-    fun fromUri2(url: String, suffix: String = ""): String {
-        val u = Urls.getURLOrNull(url)?:return "unknown-" + UUID.randomUUID().toString()
+    fun hex(uri: String, prefix: String = "", suffix: String = ""): String {
+        val path = DigestUtils.md5Hex(uri)
+        return "$prefix$path$suffix"
+    }
+
+    fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
+        val u = Urls.getURLOrNull(uri) ?: return UUID.randomUUID().toString()
         var path = when {
             InetAddresses.isInetAddress(u.host) -> u.host
             else -> InternetDomainName.from(u.host).topPrivateDomain()
         }
-        path = path.toString().replace('.', '-') + "-" + DigestUtils.md5Hex(url)
-        return if (suffix.isNotEmpty()) path + suffix else path
+        path = path.toString().replace('.', '-') + "-" + DigestUtils.md5Hex(uri)
+        return "$prefix$path$suffix"
     }
 
-    fun relative(absolutePath: String): String {
-        return StringUtils.substringAfter(absolutePath, HOME_DIR.toString())
+    fun symbolicLinkFromUri(uri: String, prefix: String = "", suffix: String = ".htm"): Path {
+        return LINKS_DIR.resolve("$prefix${hex(uri)}$suffix")
     }
 }

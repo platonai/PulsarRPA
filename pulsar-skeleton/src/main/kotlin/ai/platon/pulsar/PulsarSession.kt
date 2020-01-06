@@ -189,9 +189,9 @@ open class PulsarSession(
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         val normUrl = normalize(portalUrl, options)
         val opt = normUrl.options
-        val links = parse(load(normUrl)).document.selectNotNull(cssQuery, 1, opt.topLinks) {
-            getLink(it, !opt.noNorm, opt.ignoreUrlQuery)
-        }
+        val links = parse(load(normUrl)).document.selectNotNull(cssQuery) {
+            getLink(it, !opt.noNorm, opt.ignoreUrlQuery)?.substringBeforeLast("#")
+        }.toSet().take(opt.topLinks)
 
         return loadAll(links, normUrl.options.createItemOption())
     }
@@ -324,13 +324,13 @@ open class PulsarSession(
 
     fun export(page: WebPage, ident: String = ""): Path {
         ensureRunning()
-        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(page.url, ".htm"))
+        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(page.url, "", ".htm"))
         return AppFiles.saveTo(page.contentAsString, path, true)
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
         ensureRunning()
-        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(doc.location, ".htm"))
+        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(doc.location, "", ".htm"))
         return AppFiles.saveTo(doc.prettyHtml, path, true)
     }
 

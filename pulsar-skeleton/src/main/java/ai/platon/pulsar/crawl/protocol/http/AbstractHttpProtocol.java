@@ -26,12 +26,15 @@ import ai.platon.pulsar.crawl.protocol.Content;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
 import ai.platon.pulsar.crawl.protocol.Response;
+import ai.platon.pulsar.persist.RetryScope;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import crawlercommons.robots.BaseRobotRules;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -57,9 +60,11 @@ public abstract class AbstractHttpProtocol implements Protocol {
     public static final int BUFFER_SIZE = 8 * 1024;
     private static final int MAX_REY_GUARD = 10;
 
+    private Logger log = LoggerFactory.getLogger(AbstractHttpProtocol.class);
+
     /**
      * The process environment
-     * */
+     */
     private PulsarEnv env = PulsarEnv.Companion.initialize();
     /**
      * Prevent multiple threads generate the same log unnecessary
@@ -126,10 +131,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
      */
     protected boolean useHttp11 = false;
     /**
-     * Response Time
-     */
-    protected boolean storeResponseTime = true;
-    /**
      * Which TLS/SSL protocols to support
      */
     protected Set<String> tlsPreferredProtocols;
@@ -159,7 +160,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
         return this.conf;
     }
 
-    // Inherited Javadoc
     public void setConf(ImmutableConfig jobConf) {
         this.conf = jobConf;
         this.defaultFetchMode = jobConf.getEnum(FETCH_MODE, FetchMode.SELENIUM);
@@ -185,7 +185,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
         this.accept = jobConf.get("http.accept", accept);
         this.mimeTypes = new MimeUtil(jobConf);
         this.useHttp11 = jobConf.getBoolean("http.useHttp11", false);
-        this.storeResponseTime = jobConf.getBoolean("http.store.responsetime", true);
         this.robots.setConf(jobConf);
 
         String[] protocols = jobConf.getStrings("http.tls.supported.protocols",
@@ -237,8 +236,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
         tlsPreferredProtocols = new HashSet<>(Arrays.asList(protocols));
         tlsPreferredCipherSuites = new HashSet<>(Arrays.asList(ciphers));
 
-        if (!parametersReported.get()) {
-            LOG.info(Params.formatAsLine(
+        if (parametersReported.compareAndSet(false, true)) {
+            log.info(Params.formatAsLine(
                     "defaultFetchMode", defaultFetchMode,
                     "proxyHost", proxyHost,
                     "proxyPort", proxyPort,
@@ -248,67 +247,69 @@ public abstract class AbstractHttpProtocol implements Protocol {
                     "httpAcceptLanguage", acceptLanguage,
                     "httpAccept", accept
             ));
-            parametersReported.set(true);
         }
     }
 
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         return pages.stream()
-                .map(page -> getResponseOrNull(page.getUrl(), page, false))
+                .map(page -> getResponseNoexcept(page.getUrl(), page, false))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * TODO: no access to WebPage in this layer
-     */
     public ProtocolOutput getProtocolOutput(WebPage page) {
         try {
-            Instant startTime = Instant.now();
-
-            // page.baseUrl is the last working address, and page.url is the permanent internal address
-            String location = page.getLocation();
-            if (location == null) {
-                location = page.getUrl();
-            }
-
-            Response response = null;
-            Throwable lastThrowable = null;
-            int tryCount = 0;
-            int maxTry = getMaxRetry(page);
-            while (response == null && tryCount < maxTry) {
-                try {
-                    if (tryCount > 0) {
-                        LOG.info("Fetching {} , retries: {}/{}", page.getUrl(), tryCount, maxTry);
-                    }
-
-                    response = getResponse(location, page, false);
-                } catch (Throwable e) {
-                    ++tryCount;
-                    response = null;
-                    lastThrowable = e;
-                    LOG.warn(StringUtil.stringifyException(e));
-                }
-            }
-
-            if (response == null) {
-                return getFailedResponse(lastThrowable, tryCount, maxTry);
-            }
-
-            if (this.storeResponseTime) {
-                storeResponseTime(startTime, page, response);
-            }
-
-            return getProtocolOutput(page.getUrl(), location, response);
+            return getProtocolOutputWithRetry(page);
+        } catch (MalformedURLException e) {
+            return new ProtocolOutput(STATUS_PROTO_NOT_FOUND);
         } catch (Throwable e) {
-            return new ProtocolOutput(null, new MultiMetadata(), ProtocolStatus.failed(e));
+            log.warn("Unexpected exception", e);
+            return new ProtocolOutput(ProtocolStatus.failed(e));
         }
+    }
+
+    private ProtocolOutput getProtocolOutputWithRetry(WebPage page) throws MalformedURLException {
+        Instant startTime = Instant.now();
+
+        // page.baseUrl is the last working address, and page.url is the permanent internal address
+        String location = page.getLocation();
+        if (location == null) {
+            location = page.getUrl();
+        }
+
+        Response response;
+        boolean retry = false;
+        Throwable lastThrowable = null;
+        int i = 0;
+        int maxTry = getMaxRetry(page);
+        do {
+            if (i > 0) {
+                log.info("Protocol retry: {}/{} | {}", i, maxTry, page.getUrl());
+            }
+
+            try {
+                response = getResponse(location, page, false);
+                retry = response == null || response.getStatus().isRetry(RetryScope.FETCH_PROTOCOL);
+            } catch (Throwable e) {
+                response = null;
+                lastThrowable = e;
+                log.warn("Unexpected protocol exception", e);
+            }
+        } while (retry && ++i < maxTry);
+
+        if (response == null) {
+            return getFailedResponse(lastThrowable, i, maxTry);
+        }
+
+        setResponseTime(startTime, page, response);
+
+        return transformProtocolOutput(page.getUrl(), location, response);
     }
 
     /**
      * TODO: do not translate status code, they are just OK to handle in FetchComponent
      * */
-    private ProtocolOutput getProtocolOutput(String url, String location, Response response) throws MalformedURLException {
+    private ProtocolOutput transformProtocolOutput(String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
         int httpCode = response.getCode();
@@ -354,35 +355,34 @@ public abstract class AbstractHttpProtocol implements Protocol {
             // handle redirection in the higher layer.
 
             // page.getMetadata().set(ARG_REDIRECT_TO_URL, url.toString());
-            status = ProtocolStatus.failed(code, ARG_HTTP_CODE, httpCode, ARG_URL, u, ARG_REDIRECT_TO_URL, u);
+            status = ProtocolStatus.failed(code, ARG_HTTP_CODE, httpCode, ARG_REDIRECT_TO_URL, u);
         } else if (httpCode == SC_BAD_REQUEST) {
-            LOG.warn("400 Bad request: " + u);
-            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            log.warn("400 Bad request | {}", u);
+            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == SC_UNAUTHORIZED) {
             // requires authorization, but no valid auth provided.
-            status = ProtocolStatus.failed(ACCESS_DENIED, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(ACCESS_DENIED, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == SC_NOT_FOUND) {
             // GONE
-            status = ProtocolStatus.failed(NOTFOUND, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(NOTFOUND, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == SC_REQUEST_TIMEOUT) {
             // TIMEOUT
-            status = ProtocolStatus.failed(REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == SC_GONE) {
             // permanently GONE
-            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == THREAD_TIMEOUT) {
-            status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == WEB_DRIVER_TIMEOUT) {
-            status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
-        } else if (httpCode == DOCUMENT_READY_TIMEOUT) {
-            // TODO: the document is still analysable?
-            status = ProtocolStatus.failed(DOCUMENT_READY_TIMEOUT, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode);
+        } else if (httpCode == DOM_TIMEOUT) {
+            status = ProtocolStatus.failed(DOM_TIMEOUT, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == RETRY) {
-            status = ProtocolStatus.failed(RETRY, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(RETRY, ARG_HTTP_CODE, httpCode);
         } else if (httpCode == CANCELED) {
-            status = ProtocolStatus.failed(CANCELED, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(CANCELED, ARG_HTTP_CODE, httpCode);
         } else {
-            status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode, ARG_URL, u);
+            status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode);
         }
 
         return new ProtocolOutput(content, headers, status);
@@ -422,7 +422,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         return new ProtocolOutput(null, new MultiMetadata(), protocolStatus);
     }
 
-    private void storeResponseTime(Instant startTime, WebPage page, Response response) {
+    private void setResponseTime(Instant startTime, WebPage page, Response response) {
         Duration elapsedTime;
         FetchMode pageFetchMode = page.getFetchMode();
         if (pageFetchMode == FetchMode.CROWDSOURCING || pageFetchMode == FetchMode.SELENIUM) {
@@ -499,8 +499,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     public byte[] processGzipEncoded(byte[] compressed, URL url) throws IOException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("uncompressing....");
+        if (log.isTraceEnabled()) {
+            log.trace("uncompressing....");
         }
 
         byte[] content;
@@ -514,8 +514,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
             throw new IOException("unzipBestEffort returned null");
         }
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("fetched " + compressed.length
+        if (log.isTraceEnabled()) {
+            log.trace("fetched " + compressed.length
                     + " bytes of compressed content (expanded to " + content.length
                     + " bytes) from " + url);
         }
@@ -523,8 +523,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     public byte[] processDeflateEncoded(byte[] compressed, URL url) throws IOException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("inflating....");
+        if (log.isTraceEnabled()) {
+            log.trace("inflating....");
         }
 
         byte[] content = DeflateUtils.inflateBestEffort(compressed, getMaxContent());
@@ -533,8 +533,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
             throw new IOException("inflateBestEffort returned null");
         }
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("fetched " + compressed.length
+        if (log.isTraceEnabled()) {
+            log.trace("fetched " + compressed.length
                     + " bytes of compressed content (expanded to " + content.length
                     + " bytes) from " + url);
         }
@@ -544,7 +544,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     protected abstract Response getResponse(String url, WebPage page, boolean followRedirects) throws Exception;
 
     @Nullable
-    private Response getResponseOrNull(String url, WebPage page, boolean followRedirects) {
+    private Response getResponseNoexcept(String url, WebPage page, boolean followRedirects) {
         try {
             return getResponse(url, page, followRedirects);
         } catch (Exception e) {

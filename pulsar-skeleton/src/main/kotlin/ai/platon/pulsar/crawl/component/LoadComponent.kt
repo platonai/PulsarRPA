@@ -144,9 +144,6 @@ class LoadComponent(
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         val startTime = Instant.now()
 
-//        val filteredUrls: Set<NormUrl> = HashSet()
-//        CollectionUtils.collect(normUrls) { CollectionUtils.addIgnoreNull(filteredUrls, filterUrlToNull(it)) }
-
         val filteredUrls = normUrls.mapNotNullTo(HashSet()) { filterUrlToNull(it) }
 
         if (filteredUrls.isEmpty()) {
@@ -208,7 +205,8 @@ class LoadComponent(
         updatedPages.forEach { update(it, options) }
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
-            log.info("{}", getBatchCompleteReport(updatedPages, startTime))
+            val verbose = log.isDebugEnabled
+            log.info(getBatchCompleteReport(updatedPages, startTime, verbose).toString())
         }
 
         return knownPages
@@ -272,7 +270,8 @@ class LoadComponent(
             update(page, opt)
 
             if (log.isInfoEnabled) {
-                log.info(getFetchCompleteReport(page))
+                val verbose = log.isDebugEnabled
+                log.info(getFetchCompleteReport(page, verbose))
             }
         }
 
@@ -309,7 +308,7 @@ class LoadComponent(
         if (page.isNil) {
             return FETCH_REASON_NEW_PAGE
         } else if (page.isInternal) {
-            log.warn("Do not fetch, page is internal, {}", url)
+            log.warn("Do not fetch, page is internal | {}", url)
             return FETCH_REASON_DO_NOT_FETCH
         }
 
@@ -329,7 +328,9 @@ class LoadComponent(
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            log.warn("Invalid last fetch time: {}, last status: {}", lastFetchTime, page.protocolStatus)
+            log.warn("Page is fetched but last fetch time is illegal: {}, fc: {} fh: {} status: {}",
+                    lastFetchTime, page.fetchCount,
+                    page.getFetchTimeHistory(""), page.protocolStatus)
         }
 
         // if (now > lastTime + expires), it's expired
@@ -353,17 +354,21 @@ class LoadComponent(
         return FETCH_REASON_DO_NOT_FETCH
     }
 
-    private fun redirect(page_: WebPage, options: LoadOptions): WebPage {
-        var page = page_
-        val reprUrl = page.reprUrl
-        if (reprUrl.equals(page.url, ignoreCase = true)) {
-            log.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
+    private fun redirect(page: WebPage, options: LoadOptions): WebPage {
+        if (page.protocolStatus.isCanceled) {
             return page
+        }
+
+        var p = page
+        val reprUrl = p.reprUrl
+        if (reprUrl.equals(p.url, ignoreCase = true)) {
+            log.warn("Invalid reprUrl, cyclic redirection, url: $reprUrl")
+            return p
         }
 
         if (options.noRedirect) {
             log.warn("Redirect is prohibit, url: $reprUrl")
-            return page
+            return p
         }
 
         // do not run into a rabbit hole, never redirects here
@@ -371,16 +376,20 @@ class LoadComponent(
         val redirectedPage = load(reprUrl, options)
         options.noRedirect = false
         if (options.hardRedirect) {
-            page = redirectedPage
+            p = redirectedPage
         } else {
             // soft redirect
-            page.content = redirectedPage.content
+            p.content = redirectedPage.content
         }
 
-        return page
+        return p
     }
 
     private fun update(page: WebPage, options: LoadOptions) {
+        if (page.protocolStatus.isCanceled) {
+            return
+        }
+
         val protocolStatus = page.protocolStatus
         if (protocolStatus.isFailed) {
             updateComponent.updateFetchSchedule(page)
@@ -399,7 +408,7 @@ class LoadComponent(
 
         updateComponent.updateFetchSchedule(page)
 
-        if (!protocolStatus.isCanceled && options.persist) {
+        if (options.persist) {
             webDb.put(page)
             if (!options.lazyFlush) {
                 flush()

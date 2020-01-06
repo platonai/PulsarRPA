@@ -18,6 +18,7 @@
 package ai.platon.pulsar.common;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -67,7 +68,7 @@ public class DateTimeUtil {
         return StringUtils.removeStart(duration.toString(), "PT").toLowerCase();
     }
 
-    public static String readableDuration(String duration) {
+    public static String readableDuration(@NotNull String duration) {
         return StringUtils.removeStart(duration, "PT").toLowerCase();
     }
 

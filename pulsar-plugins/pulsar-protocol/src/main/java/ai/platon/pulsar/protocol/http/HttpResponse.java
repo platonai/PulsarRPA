@@ -30,6 +30,8 @@ import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.net.ssl.SSLSocket;
@@ -43,6 +45,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class HttpResponse implements Response {
+    private Logger log = LoggerFactory.getLogger(HttpResponse.class);
 
     private final AbstractHttpProtocol http;
     private final URL url;
@@ -66,8 +69,8 @@ public class HttpResponse implements Response {
             throw new HttpException("Unknown scheme (not http/https) for url:" + url);
         }
 
-        if (Protocol.LOG.isTraceEnabled()) {
-            Protocol.LOG.trace("fetching " + url);
+        if (Protocol.log.isTraceEnabled()) {
+            Protocol.log.trace("fetching " + url);
         }
 
         String path = "".equals(url.getFile()) ? "/" : url.getFile();
@@ -219,8 +222,8 @@ public class HttpResponse implements Response {
             if ("gzip".equals(contentEncoding) || "x-gzip".equals(contentEncoding)) {
                 content = http.processGzipEncoded(content, url);
             } else {
-                if (Http.LOG.isTraceEnabled()) {
-                    Http.LOG.trace("fetched " + content.length + " bytes from " + url);
+                if (log.isTraceEnabled()) {
+                    log.trace("fetched " + content.length + " bytes from " + url);
                 }
             }
 
@@ -238,10 +241,10 @@ public class HttpResponse implements Response {
             if (http.useProxyPool() && proxy != null) {
                 // put back the proxy resource, this is essential important!
                 if (fetchSuccess) {
-                    Http.LOG.debug("put back proxy {}", proxy);
+                    log.debug("put back proxy {}", proxy);
                     http.proxyPool().offer(proxy);
                 } else {
-                    Http.LOG.debug("retire proxy {}", proxy);
+                    log.debug("retire proxy {}", proxy);
                     http.proxyPool().retire(proxy);
                 }
             }
@@ -328,8 +331,8 @@ public class HttpResponse implements Response {
         ByteArrayOutputStream out = new ByteArrayOutputStream(Http.BUFFER_SIZE);
 
         while (!doneChunks) {
-            if (Http.LOG.isTraceEnabled()) {
-                Http.LOG.trace("Http: starting chunk");
+            if (log.isTraceEnabled()) {
+                log.trace("Http: starting chunk");
             }
 
             readLine(in, line, false);
@@ -343,8 +346,8 @@ public class HttpResponse implements Response {
                 chunkLenStr = line.toString();
             } else {
                 chunkLenStr = line.substring(0, pos);
-                if (Http.LOG.isTraceEnabled()) {
-                    Http.LOG.trace("got chunk-ext: " + line.substring(pos + 1));
+                if (log.isTraceEnabled()) {
+                    log.trace("got chunk-ext: " + line.substring(pos + 1));
                 }
             }
             chunkLenStr = chunkLenStr.trim();
@@ -471,7 +474,7 @@ public class HttpResponse implements Response {
                     processHeaderLine(line);
                 } catch (Exception e) {
                     // fixme:
-                    Http.LOG.error("Failed with the following exception: ", e);
+                    log.error("Failed with the following exception: ", e);
                 }
                 return;
             }

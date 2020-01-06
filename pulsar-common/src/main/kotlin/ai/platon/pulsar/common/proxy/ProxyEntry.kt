@@ -28,19 +28,24 @@ data class ProxyEntry(
         val declaredTTL: Instant? = null,
         var targetHost: String? = null
 ) : Comparable<ProxyEntry> {
-    val hostPort = "$host:$port"
+    val hostPort get() = "$host:$port"
     val display get() = "$host:$port" + ttlDuration?.let { "(${DateTimeUtil.readableDuration(it)})" }
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val testCount = AtomicInteger()
     val testTime = AtomicLong()
     val servedDomains = ConcurrentHashMultiset.create<String>()
-    var failedCount: Int = 0
+    // failed connection count
+    val failedCount = AtomicInteger()
+    // failed page count
+    val failedPageCount = AtomicInteger()
+    // success page count
+    val successPageCount = AtomicInteger()
     val speed: Double get() = (1000 * testTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 1000.0
     var availableTime: Instant = Instant.now()
     val ttl: Instant get() = declaredTTL ?: availableTime + PROXY_EXPIRED
     val ttlDuration: Duration? get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
-    val isGone get() = failedCount >= 3
+    val isGone get() = failedCount.get() >= 3
 
     fun willExpireAt(instant: Instant): Boolean {
         return ttl < instant
@@ -87,10 +92,10 @@ data class ProxyEntry(
         }
 
         if (!available) {
-            ++failedCount
+            failedCount.incrementAndGet()
         } else {
             // test if the proxy is expired
-            failedCount = 0
+            failedCount.set(0)
             refresh()
         }
 

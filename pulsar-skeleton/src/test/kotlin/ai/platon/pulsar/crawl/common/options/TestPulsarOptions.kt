@@ -1,4 +1,4 @@
-package ai.platon.pulsar.net.common
+package ai.platon.pulsar.crawl.common.options
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.*
@@ -106,6 +106,17 @@ class TestPulsarOptions {
         val args = "-en news -er #content -amin 3 -amax 100 -Fa=b"
         val options = EntityOptions.parse(args)
         println(options)
+    }
+
+    @Test
+    fun testQuotedArguments() {
+        val args = "-expires PT1S -incognito -outlinkSelector \".products a\" -retry"
+        val argv = PulsarOptions.split(args)
+        assertEquals("-expires", argv[0])
+        assertEquals("PT1S", argv[1])
+
+        assertEquals("-outlinkSelector", argv[3])
+        assertEquals("\".products a\"", argv[4])
     }
 
     @Test

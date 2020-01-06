@@ -60,10 +60,6 @@ class PulsarEnv {
         val applicationContext: ClassPathXmlApplicationContext
         val startTime = Instant.now()
         /**
-         * The number of processors available to the Java virtual machine
-         */
-        val NCPU = Runtime.getRuntime().availableProcessors()
-        /**
          * Gora properties
          * */
         val goraProperties: Properties
@@ -117,6 +113,8 @@ class PulsarEnv {
         if (closed.getAndSet(true)) {
             return
         }
+
+        applicationContext.close()
 
         active.set(false)
     }

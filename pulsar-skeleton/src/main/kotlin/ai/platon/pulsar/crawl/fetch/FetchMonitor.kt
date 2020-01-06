@@ -1,12 +1,9 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.config.Configurable
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.component.FetchComponent
@@ -14,6 +11,7 @@ import ai.platon.pulsar.crawl.fetch.indexer.IndexThread
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
+import org.apache.commons.lang3.SystemUtils
 import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -263,7 +261,12 @@ class FetchMonitor(
     }
 
     private fun startFetchThreads(threadCount: Int, context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        for (i in 0 until threadCount) {
+        var nThreads = threadCount
+        if (nThreads <= 0) {
+            nThreads = AppConstants.NCPU
+        }
+
+        for (i in 0 until nThreads) {
             log.info("Starting {}/{} fetch threads", i + 1, threadCount)
             val fetchThread = FetchThread(fetchComponent, this, taskScheduler, immutableConfig, context)
             fetchThread.start()

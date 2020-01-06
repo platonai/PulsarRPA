@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration scan="true" scanPeriod="15 seconds" debug="true">
-    <property name="log.dir" value="logs" />
-    <property name="log.file" value="pulsar-test.log" />
+    <property name="logging.dir" value="logs" />
+    <property name="logging.file" value="pulsar-test.log" />
 
     <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
         <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy-->
         <!--for further documentation-->
-        <File>${log.dir}/${log.file}</File>
+        <File>${logging.dir}/${logging.file}</File>
         <encoder>
             <!--<pattern>%d{ISO8601} %t %-5p %c{2} - %m%n</pattern>-->
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.dir}/${log.file}.%d{.yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${logging.dir}/${logging.file}.%d{.yyyy-MM-dd}</fileNamePattern>
         </rollingPolicy>
     </appender>
     <appender name="cmdstdout" class="ch.qos.logback.core.ConsoleAppender">

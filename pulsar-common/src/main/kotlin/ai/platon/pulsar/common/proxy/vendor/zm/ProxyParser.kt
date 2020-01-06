@@ -28,6 +28,10 @@ class ZMProxyParser: ProxyParser() {
     val dateTimeDetector = DateTimeDetector()
 
     override fun parse(text: String, format: String): List<ProxyEntry> {
+        return doParse(text, format)
+    }
+
+    private fun doParse(text: String, format: String): List<ProxyEntry> {
         if (format == "json") {
             val result = gson.fromJson(text, ProxyResult::class.java)
             if (result.success) {
@@ -39,6 +43,9 @@ class ZMProxyParser: ProxyParser() {
                     val link = "wapi.http.cnapi.cc/index/index/save_white?neek=76534&appkey=2d5f64c71bdf2b6e632f951c7aab2c9b&white=$ip"
                     log.warn(result.msg + " using the following link:\n$link")
                     throw ProxyVendorException("Proxy vendor exception, please add $ip to the vendor's while list")
+                } else if(result.code == 115) {
+                    // retry
+                    throw ProxyVendorException("Proxy vendor exception - $text")
                 } else {
                     throw ProxyVendorException("Proxy vendor exception - $text")
                 }

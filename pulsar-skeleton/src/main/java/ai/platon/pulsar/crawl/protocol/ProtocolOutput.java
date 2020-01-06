@@ -19,6 +19,8 @@ package ai.platon.pulsar.crawl.protocol;
 
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ProtocolOutput {
     private Content content;
@@ -26,18 +28,18 @@ public class ProtocolOutput {
     private ProtocolStatus status;
 
     public ProtocolOutput(Content content) {
-        this.content = content;
-        this.headers = new MultiMetadata();
-        this.status = ProtocolStatus.STATUS_SUCCESS;
+        this(content, new MultiMetadata(), ProtocolStatus.STATUS_SUCCESS);
     }
 
     public ProtocolOutput(Content content, MultiMetadata headers) {
-        this.content = content;
-        this.headers = headers;
-        this.status = ProtocolStatus.STATUS_SUCCESS;
+        this(content, headers, ProtocolStatus.STATUS_SUCCESS);
     }
 
-    public ProtocolOutput(Content content, MultiMetadata headers, ProtocolStatus status) {
+    public ProtocolOutput(ProtocolStatus status) {
+        this(null, new MultiMetadata(), status);
+    }
+
+    public ProtocolOutput(@Nullable Content content, @NotNull MultiMetadata headers, @NotNull ProtocolStatus status) {
         this.content = content;
         this.headers = headers;
         this.status = status;

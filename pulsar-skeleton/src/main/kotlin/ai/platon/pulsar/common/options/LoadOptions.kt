@@ -67,7 +67,7 @@ open class LoadOptions: CommonOptions {
     var scriptTimeout = Duration.ofSeconds(60)
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to be finished by selenium")
-    var pageLoadTimeout = Duration.ofSeconds(60)
+    var pageLoadTimeout = Duration.ofSeconds(120)
 
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,

@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.proxy.vendor
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import org.slf4j.LoggerFactory
 
-class ProxyVendorException : Exception {
+open class ProxyVendorException : Exception {
 
     constructor() : super() {}
 

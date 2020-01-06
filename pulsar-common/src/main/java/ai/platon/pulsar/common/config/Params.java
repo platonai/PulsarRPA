@@ -428,7 +428,9 @@ public class Params {
                     sb.append(kvDelimiter);
 
                     // quoted
-                    if (value.contains(kvDelimiter)) {
+                    // @see https://github.com/cbeust/jcommander/issues/458
+                    // JCommand no longer removing double quotes when parsing arguments
+                    if (value.contains(kvDelimiter) && !value.startsWith("\"") && !value.endsWith("\"")) {
                         sb.append('\"').append(value).append('\"');
                     } else {
                         sb.append(value);

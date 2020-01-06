@@ -94,7 +94,9 @@ object MathematicalSelector {
         }
 
         try {
-            return select(MathematicalQueryParser.parse(cssQuery.trim()), root)
+            // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
+            val q = cssQuery.trim().removeSurrounding("\"")
+            return select(MathematicalQueryParser.parse(q), root)
         } catch (e: SelectorParseException) {
             log.warn(e.message)
         }
