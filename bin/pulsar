@@ -24,6 +24,7 @@ function printUsage() {
   echo "  stop          Stop pulsar server safely"
   echo "  server        Run pulsar server with parameters"
   echo "  sql           Run h2 sql client"
+  echo "  example       Run a example program"
 
   echo
   echo "Options: "
@@ -73,7 +74,10 @@ done
 COMMAND=$1
 shift
 
- . ./include/pulsar-config.sh
+bin=$(dirname "$0")
+bin=$(cd "$bin">/dev/null || exit; pwd)
+
+ . "$bin"/include/pulsar-config.sh
 
 bin="$PULSAR_HOME"/bin
 
@@ -97,10 +101,10 @@ CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
 # Choose runnable
 if [[ "$COMMAND" = "start" ]] ; then
   export RUN_AS_DAEMON=true
-  $bin/pulsar server -tcp -web -webAllowOthers
+  "$bin"/pulsar server -tcp -web -webAllowOthers
   exit 0
 elif [[ "$COMMAND" = "stop" ]] ; then
-  $bin/pulsar server -tcpShutdown tcp://127.0.1.1:9092
+  "$bin"/pulsar server -tcpShutdown tcp://127.0.1.1:9092
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-app
@@ -108,6 +112,10 @@ elif [[ "$COMMAND" = "server" ]] ; then
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-app
   CLASS=ai.platon.pulsar.app.H2ShellKt
+elif [[ "$COMMAND" = "example" ]] ; then
+  MODULE=pulsar-examples
+  CLASS="ai.platon.pulsar.examples.$1"
+  shift
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else
@@ -115,9 +123,5 @@ else
   exit 0
 fi
 
-if [[ "$PULSAR_RUNTIME_MODE" == "PACKED" ]]; then
- # cluster mode, just pull the job file into hadoop, and exit
- . ./include/run-cluster.sh
-else
- . ./include/run-local.sh
-fi
+ . "$bin"/include/pulsar-common.sh
+ . "$bin"/include/run-local.sh

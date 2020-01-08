@@ -84,5 +84,5 @@ class AmazonAccess: WebAccess() {
 fun main() {
     val access = AmazonAccess()
     access.laptops()
-    access.testIpLimit()
+    // access.testIpLimit()
 }

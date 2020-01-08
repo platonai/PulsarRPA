@@ -9,9 +9,8 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.proxy.InternalProxyServer
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -31,38 +30,49 @@ class BrowserContext(
     private val log = LoggerFactory.getLogger(BrowserContext::class.java)!!
 
     private var fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+    private val pollingTimeout = Duration.ofMillis(500)
+
     private var nSignals = 0
     private var nWaits = 0
     private var nWaitsTimeout = 0
     private val nPending = AtomicInteger()
-    private val sponsorThreadId = AtomicLong()
+    private val nRunning = AtomicInteger()
+    private var sponsorThreadId = 0L
     private val lock = ReentrantLock()
-    private val condition = lock.newCondition()
+    private val notMaintain = lock.newCondition()
+    private val notBusy = lock.newCondition()
 
     fun run(task: FetchTask, browseAction: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
         val maxRetry = task.volatileConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, fetchMaxRetry)
         var result: BrowseResult
 
         var i = 0
+        var noGuard = false
         var retry: Boolean
         do {
             // wait for the browser context to be ready
+
             guard()
 
             if (i > 1) {
                 log.info("Round {} retrying new browser context ... | {}", i, task.url)
             }
 
+            nRunning.incrementAndGet()
             result = ips.runAnyway { runWithDriverPool(task, browseAction) }
+            nRunning.decrementAndGet()
+            if (nRunning.get() == 0) {
+                notBusy.signal()
+            }
 
             retry = result.response?.status?.isRetry(RetryScope.BROWSER_CONTEXT)?:false
             if (retry) {
                 if (i == 0) {
-                    resetIfNecessary()
+                    reset()
                 } else {
                     log.warn("Context reset is not allowed | {}", task.url)
                     retry = false
-                    result = BrowseResult(ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SOLUTION)))
+                    result = BrowseResult(ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)))
                 }
             }
         } while (retry && i++ < maxRetry && !Thread.currentThread().isInterrupted)
@@ -72,33 +82,32 @@ class BrowserContext(
 
     private fun guard() {
         val tid = Thread.currentThread().id
+        var nanos = pollingTimeout.toNanos()
 
         nPending.incrementAndGet()
         lock.withLock {
-            if (!sponsorThreadId.compareAndSet(tid, 0)) {
-                // TODO: sometimes no one issues the signal
-                val b = condition.await(1, TimeUnit.MINUTES)
-                ++nWaits
-                if (!b) {
-                    ++nWaitsTimeout
-                }
+            while (sponsorThreadId != 0L && sponsorThreadId != tid && nanos > 0) {
+                nanos = notMaintain.awaitNanos(nanos)
             }
         }
         nPending.decrementAndGet()
     }
 
-    private fun resetIfNecessary() {
+    private fun reset() {
         val tid = Thread.currentThread().id
 
         lock.withLock {
-            if (sponsorThreadId.compareAndSet(0, tid)) {
-                // This thread issues the first reset request, it will be the reset sponsor
-                log.info("Start resetting browser context - {}", formatStatus())
-                driverPool.resetContext()
-                condition.signalAll()
-                ++nSignals
-                log.info("Finish resetting browser context - {}", formatStatus())
-            }
+            sponsorThreadId = tid
+            notBusy.await()
+
+            // This thread issues the first reset request, it will be the reset sponsor
+            log.info("Start resetting browser context - {}", formatStatus())
+            driverPool.resetContext()
+            sponsorThreadId = 0
+
+            notMaintain.signalAll()
+            ++nSignals
+            log.info("Finish resetting browser context - {}", formatStatus())
         }
     }
 

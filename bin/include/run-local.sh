@@ -1,21 +1,10 @@
 #!/bin/bash
 
 # local mode, add class paths
-if [ "$PULSAR_RUNTIME_MODE" == "DEVELOPMENT" ]; then
+if [[ $PULSAR_RUNTIME_MODE == "DEVELOPMENT" ]]; then
   # development mode
-  for f in "$PULSAR_HOME/$MODULE"/lib/*.jar; do
-    CLASSPATH=${CLASSPATH}:$f;
-  done
-
-  for f in "$PULSAR_HOME/$MODULE"/target/*.jar; do
-    [[ ! sed-$f =~ -job.jar$ ]] && [[ ! sed-$f =~ -sources.jar$ ]] && CLASSPATH=${CLASSPATH}:$f;
-  done
-
-elif [ "$PULSAR_RUNTIME_MODE" == "ASSEMBLY" ]; then
-  # binary mode
-  for f in "$PULSAR_HOME"/*.jar; do
-    CLASSPATH=${CLASSPATH}:$f;
-  done
+  __dev_mode_enable_module "$MODULE"
+elif [[ $PULSAR_RUNTIME_MODE == "ASSEMBLY" ]]; then
 
   for f in "$PULSAR_HOME"/lib/*.jar; do
     CLASSPATH=${CLASSPATH}:$f;
@@ -25,6 +14,10 @@ elif [ "$PULSAR_RUNTIME_MODE" == "ASSEMBLY" ]; then
     CLASSPATH=${CLASSPATH}:$f;
   done
 
+  # binary mode
+  for f in "$PULSAR_HOME"/*.jar; do
+    CLASSPATH=${CLASSPATH}:$f;
+  done
 fi
 
 PID="$PULSAR_PID_DIR/pulsar-$PULSAR_IDENT_STRING-$COMMAND.pid"

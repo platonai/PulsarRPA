@@ -171,7 +171,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     }
 
     public boolean isRetry(RetryScope scope) {
-        RetryScope defaultScope = RetryScope.CRAWL_SOLUTION;
+        RetryScope defaultScope = RetryScope.CRAWL_SCHEDULE;
         return getMinorCode() == RETRY && getArgOrDefault(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
     }
 

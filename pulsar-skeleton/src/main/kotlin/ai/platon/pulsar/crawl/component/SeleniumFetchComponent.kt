@@ -350,7 +350,7 @@ class SeleniumFetchComponent(
             headers.put("EXCEPTION", e.toString())
             log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
         } catch (e: InterruptedException) {
-            status = ProtocolStatus.retry(RetryScope.CRAWL_SOLUTION)
+            status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
             headers.put("EXCEPTION", e.toString())
             log.warn("Interrupted when fetch resource {}", e)
         } catch (e: Exception) {

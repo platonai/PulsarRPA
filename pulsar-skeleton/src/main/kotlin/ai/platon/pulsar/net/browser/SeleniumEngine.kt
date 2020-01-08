@@ -375,7 +375,7 @@ open class SeleniumEngine(
                     // Web driver closed
                     if (message.contains("sleep interrupted")) {
                         log.warn("Interrupted waiting for DOM, sleep interrupted | {}", task.url)
-                        status = ProtocolStatus.retry(RetryScope.CRAWL_SOLUTION)
+                        status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
                     } else {
                         log.warn("Interrupted waiting for DOM | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
                     }
