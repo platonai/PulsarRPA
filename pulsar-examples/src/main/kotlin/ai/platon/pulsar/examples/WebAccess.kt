@@ -50,7 +50,7 @@ open class WebAccess(
 ) {
     val log = LoggerFactory.getLogger(WebAccess::class.java)
 
-    val env = PulsarEnv.initialize()
+    val env = PulsarEnv.get()
     val pc = PulsarContext.getOrCreate()
     val i = pc.createSession()
 

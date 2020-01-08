@@ -2,10 +2,12 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.persist.metadata.BrowserType
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
+import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -60,6 +62,16 @@ class ManagedWebDriver(
 
     val pageSource: String
         get() = try { driver.pageSource } catch (t: Throwable) { "(exception)" }
+
+    val browserType: BrowserType =
+            when (driver) {
+                is ChromeDriver -> BrowserType.CHROME
+//            is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
+                else -> {
+                    log.warn("Actual browser is set to be NATIVE by selenium engine")
+                    BrowserType.NATIVE
+                }
+            }
 
     fun get(url: String) {
         return driver.get(url)

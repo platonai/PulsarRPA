@@ -127,6 +127,15 @@ class WebDriverPool(
         }
     }
 
+    fun allocate(priority: Int, numInit: Int, conf: ImmutableConfig) {
+        val drivers = mutableListOf<ManagedWebDriver>()
+        var n = numInit
+        while (n-- > 0) {
+            poll(priority, conf)?.let { drivers.add(it) }
+        }
+        drivers.forEach { put(it) }
+    }
+
     fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
         var driver: ManagedWebDriver? = null
         var exception: Exception? = null
@@ -274,6 +283,9 @@ class WebDriverPool(
         }
     }
 
+    /**
+     * TODO: conf is not really used if the queue is not empty
+     * */
     private fun dequeue(group: Int, conf: ImmutableConfig): ManagedWebDriver? {
         val queue = freeDrivers.computeIfAbsent(group) { LinkedList() }
 

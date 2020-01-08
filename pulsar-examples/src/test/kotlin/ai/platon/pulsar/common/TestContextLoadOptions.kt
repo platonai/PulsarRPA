@@ -1,8 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
 import org.junit.Test
@@ -72,7 +70,7 @@ class TestContextLoadOptions {
         assertTrue(options.incognito)
         assertEquals(1, options.expires.seconds)
         assertTrue(options.preferParallel)
-        assertTrue(options.retry)
+        assertTrue(options.retryFailed)
     }
 
     @Test
@@ -113,7 +111,7 @@ class TestContextLoadOptions {
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)
         assertTrue(options.preferParallel)
-        assertTrue(options.retry)
+        assertTrue(options.retryFailed)
     }
 
     private fun assertOptionEquals(expected: String, actual: String, msg: String? = null) {

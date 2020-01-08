@@ -20,19 +20,34 @@ import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent;
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
 import ai.platon.pulsar.crawl.protocol.Response;
+import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class SeleniumProtocol extends ForwardingProtocol {
+
+    private Logger log = LoggerFactory.getLogger(SeleniumProtocol.class);
+
+    private AtomicReference<SeleniumFetchComponent> fetchComponent = new AtomicReference<>();
+
+    private AtomicBoolean closed = new AtomicBoolean();
 
     public SeleniumProtocol() {
     }
 
     @Override
     public void close() {
+        closed.set(true);
     }
 
     /**
@@ -50,14 +65,34 @@ public class SeleniumProtocol extends ForwardingProtocol {
 
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
-        SeleniumFetchComponent fetchComponent = PulsarEnv.Companion.getApplicationContext().getBean(SeleniumFetchComponent.class);
-        return fetchComponent.parallelFetchAllPages(pages, volatileConfig);
+        if (closed.get()) {
+            return Collections.emptyList();
+        }
+
+        try {
+            fetchComponent.compareAndSet(null, PulsarEnv.Companion.get().getBean(SeleniumFetchComponent.class));
+            return fetchComponent.get().parallelFetchAllPages(pages, volatileConfig);
+        } catch (Exception e) {
+            log.warn("Unexpected exception", e);
+        }
+
+        return Collections.emptyList();
     }
 
     @Override
     public Response getResponse(String url, WebPage page, boolean followRedirects) {
-        Response response = super.getResponse(url, page, followRedirects);
-        SeleniumFetchComponent fetchComponent = PulsarEnv.Companion.getApplicationContext().getBean(SeleniumFetchComponent.class);
-        return response != null ? response : fetchComponent.fetchContent(page);
+        if (closed.get()) {
+            return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
+        }
+
+        try {
+            fetchComponent.compareAndSet(null, PulsarEnv.Companion.get().getBean(SeleniumFetchComponent.class));
+            Response response = super.getResponse(url, page, followRedirects);
+            return response != null ? response : fetchComponent.get().fetchContent(page);
+        } catch (Exception e) {
+            log.warn("Unexpected exception", e);
+            // Unexpected exception, cancel the request, hope to retry in CRAWL_SOLUTION scope
+            return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
+        }
     }
 }

@@ -29,7 +29,7 @@ class TestWebDriver {
             System.setProperty(PROXY_USE_PROXY, "no")
         }
 
-        val env = PulsarEnv.initialize()
+        val env = PulsarEnv.get()
         val conf = PulsarEnv.unmodifiedConfig
         val driverPool = PulsarEnv.applicationContext.getBean(WebDriverPool::class.java)
         var quitMultiThreadTesting = false
@@ -41,7 +41,7 @@ class TestWebDriver {
 
         @AfterClass
         fun teardown() {
-            PulsarEnv.initialize().shutdown()
+            PulsarEnv.get().shutdown()
         }
     }
 

@@ -50,7 +50,7 @@ class PulsarContext: AutoCloseable {
     /**
      * The program environment
      * */
-    val env = PulsarEnv.initialize()
+    val env = PulsarEnv.get()
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */

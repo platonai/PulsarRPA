@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
     val application = SpringApplication(PulsarMaster::class.java)
 
     val event = ApplicationListener<ApplicationEnvironmentPreparedEvent> {
-        PulsarEnv.initialize()
+        PulsarEnv.get()
     }
     application.addListeners(event)
 

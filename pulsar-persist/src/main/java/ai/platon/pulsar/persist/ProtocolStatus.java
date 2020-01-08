@@ -231,10 +231,13 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     @Override
     public String toString() {
-        String args = getArgs().entrySet().stream().map(e -> e.getKey().toString() + ": " + e.getValue().toString())
-                .collect(Collectors.joining(", "));
-        return getName() +
-                " (" + getMajorCode() + "/" + getMinorCode() + ")" +
-                ", args=[" + args + "]";
-    }
+        String str = getName() + " (" + getMajorCode() + "/" + getMinorCode() + ")";
+        if (!getArgs().isEmpty()) {
+            String args = getArgs().entrySet().stream()
+                    .map(e -> e.getKey().toString() + ": " + e.getValue().toString())
+                    .collect(Collectors.joining(", "));
+            str += ", args=[" + args + "]";
+        }
+        return str;
+   }
 }

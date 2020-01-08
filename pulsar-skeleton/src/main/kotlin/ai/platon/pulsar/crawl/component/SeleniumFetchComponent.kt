@@ -12,8 +12,8 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.net.browser.FetchResult
 import ai.platon.pulsar.net.browser.FetchTask
 import ai.platon.pulsar.net.browser.SeleniumEngine
-import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
@@ -41,7 +41,7 @@ internal class BatchFetchContext(
         val pages: Iterable<WebPage>,
         val volatileConfig: VolatileConfig
 ) {
-    val startTime = Instant.now()
+    var startTime = Instant.now()
     val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
@@ -104,7 +104,8 @@ class SeleniumFetchComponent(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(SeleniumFetchComponent::class.java)!!
 
-    private val isClosed = AtomicBoolean()
+    private val driverPool = seleniumEngine.driverPool
+    private val closed = AtomicBoolean()
 
     fun fetch(url: String): Response {
         val volatileConfig = VolatileConfig(immutableConfig)
@@ -119,6 +120,10 @@ class SeleniumFetchComponent(
      * Fetch page content
      * */
     fun fetchContent(page: WebPage): Response {
+        if (closed.get()) {
+            return ForwardingResponse(page.url, ProtocolStatus.STATUS_CANCELED)
+        }
+
         val volatileConfig = page.volatileConfig ?: VolatileConfig(immutableConfig)
         val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
         val task = FetchTask(0, nextTaskId, priority, page, volatileConfig)
@@ -169,11 +174,14 @@ class SeleniumFetchComponent(
      * TODO: merge with [ai.platon.pulsar.crawl.fetch.FetchThread]
      * */
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        if (Iterables.isEmpty(pages)) {
+        if (closed.get() || Iterables.isEmpty(pages)) {
             return listOf()
         }
 
         val cx = BatchFetchContext(batchId, pages, volatileConfig)
+
+        // allocate drivers before batch fetch context timing, the allocation might take long time
+        allocateDriversIfNecessary(cx, volatileConfig)
 
         log.info("Start batch task {} with {} pages in parallel", batchId, cx.batchSize)
 
@@ -193,7 +201,7 @@ class SeleniumFetchComponent(
                 && cx.status.numFailedTasks <= cx.numAllowedFailures
                 && cx.idleSeconds < cx.idleTimeout.seconds
                 && !isLastTaskTimeout(cx)
-                && !isClosed.get()
+                && !closed.get()
                 && !Thread.currentThread().isInterrupted) {
             ++cx.round
 
@@ -228,6 +236,16 @@ class SeleniumFetchComponent(
         logBatchFinished(cx)
 
         return cx.finishedTasks.values.map { it.response }
+    }
+
+    private fun allocateDriversIfNecessary(cx: BatchFetchContext, volatileConfig: VolatileConfig) {
+        // allocate drivers before batch fetch context timing, the allocation might take long time
+        val requiredDrivers = cx.batchSize - driverPool.freeSize
+        if (requiredDrivers > 0) {
+            log.info("Allocating $requiredDrivers drivers")
+            driverPool.allocate(0, requiredDrivers, volatileConfig)
+            cx.startTime = Instant.now()
+        }
     }
 
     private fun doFetch(batchTaskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
@@ -398,7 +416,7 @@ class SeleniumFetchComponent(
     }
 
     override fun close() {
-        if (isClosed.getAndSet(true)) {
+        if (closed.getAndSet(true)) {
             return
         }
     }

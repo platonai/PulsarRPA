@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.setPropertyIfAbsent
 import ai.platon.pulsar.persist.gora.GoraStorage
 import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextClosedEvent
 import org.springframework.context.event.ContextRefreshedEvent
@@ -93,7 +94,7 @@ class PulsarEnv {
             active.set(true)
         }
 
-        fun initialize(): PulsarEnv {
+        fun get(): PulsarEnv {
             // TODO: is it necessary to keep an instance?
             synchronized(PulsarEnv::class.java) {
                 if (env.get() == null) {
@@ -103,6 +104,11 @@ class PulsarEnv {
                 return env.get()
             }
         }
+    }
+
+    @Throws(BeansException::class)
+    fun <T> getBean(requiredType: Class<T>): T {
+        return applicationContext.getBean(requiredType)
     }
 
     // other possible environment scope objects

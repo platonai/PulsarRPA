@@ -93,11 +93,11 @@ class BrowserContext(
         lock.withLock {
             if (sponsorThreadId.compareAndSet(0, tid)) {
                 // This thread issues the first reset request, it will be the reset sponsor
-                log.info("Start resetting browser context - ", formatStatus())
+                log.info("Start resetting browser context - {}", formatStatus())
                 driverPool.resetContext()
                 condition.signalAll()
                 ++nSignals
-                log.info("Finish resetting browser context - ", formatStatus())
+                log.info("Finish resetting browser context - {}", formatStatus())
             }
         }
     }

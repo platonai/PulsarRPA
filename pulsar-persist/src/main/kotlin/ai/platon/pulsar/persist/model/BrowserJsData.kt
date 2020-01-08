@@ -3,12 +3,12 @@ package ai.platon.pulsar.persist.model
 import com.google.gson.Gson
 
 data class BrowserJsData(
-        val status: Status = Status(),
-        val initStat: Stat = Stat(),
-        val lastStat: Stat = Stat(),
-        val initD: Stat = Stat(),
-        val lastD: Stat = Stat(),
-        var urls: Urls = Urls()
+        val status: Status? = Status(),
+        val initStat: Stat? = Stat(),
+        val lastStat: Stat? = Stat(),
+        val initD: Stat? = Stat(),
+        val lastD: Stat? = Stat(),
+        var urls: Urls? = Urls()
 ) {
     data class Status(
             val n: Int = 0,
@@ -36,10 +36,10 @@ data class BrowserJsData(
     )
 
     override fun toString(): String {
-        val s1 = initStat
-        val s2 = lastStat
-        val s3 = initD
-        val s4 = lastD
+        val s1 = initStat?:Stat()
+        val s2 = lastStat?:Stat()
+        val s3 = initD?:Stat()
+        val s4 = lastD?:Stat()
 
         val s = String.format(
                 "img: %s/%s/%s/%s, a: %s/%s/%s/%s, num: %s/%s/%s/%s, st: %s/%s/%s/%s, " +
@@ -52,7 +52,7 @@ data class BrowserJsData(
                 s1.h,   s2.h,   s3.h,   s4.h
         )
 
-        val st = status
+        val st = status?:Status()
         return String.format("n:%s scroll:%s st:%s r:%s idl:%s\t%s\t(is,ls,id,ld)",
                 st.n, st.scroll, st.st, st.r, st.idl, s)
     }

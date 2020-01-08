@@ -9,7 +9,6 @@ import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import org.apache.commons.collections4.CollectionUtils
 import org.apache.commons.lang3.StringUtils
 import java.util.*
 import java.util.concurrent.*
@@ -119,13 +118,13 @@ class BatchFetchComponent(
                 .mapNotNull { response -> pages[response.url]?.let { forwardResponse(protocol, response, it) } }
     }
 
-    private fun manualParallelFetchAll(urls: Iterable<String?>?, options: LoadOptions): Collection<WebPage> {
+    private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         if (LOG.isDebugEnabled) {
             LOG.debug("Manual parallel fetch urls")
         }
-        val executor = Executors.newWorkStealingPool(5)
-        val futures = CollectionUtils.collect(urls) { url: String? -> executor.submit(Callable { fetch(url!!, options) }) }
-        return CollectionUtils.collect(futures) { future: Future<WebPage> -> getResponse(future) }
+        // TODO: use GlobalExecutor
+        val executor = Executors.newWorkStealingPool()
+        return urls.map { executor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
     }
 
     /**

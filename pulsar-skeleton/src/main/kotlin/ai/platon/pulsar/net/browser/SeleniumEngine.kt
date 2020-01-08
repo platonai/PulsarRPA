@@ -17,10 +17,9 @@ import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
@@ -32,7 +31,6 @@ import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
-import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
@@ -119,7 +117,7 @@ data class VisitResult(
  */
 open class SeleniumEngine(
         browserControl: BrowserControl,
-        protected val driverPool: WebDriverPool,
+        val driverPool: WebDriverPool,
         protected val ips: InternalProxyServer,
         protected val fetchTaskTracker: FetchTaskTracker,
         protected val metricsSystem: MetricsSystem,
@@ -254,7 +252,7 @@ open class SeleniumEngine(
             // TODO: when this exception is thrown?
             log.warn(e.message)
             status = ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL)
-        } catch (e: ContextResetException) {
+        } catch (e: ai.platon.pulsar.net.browser.ContextResetException) {
             status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
         }
 
@@ -284,7 +282,8 @@ open class SeleniumEngine(
         }
 
         // Update headers, metadata, do the logging stuff
-        handleBrowseFinish(page, driver, headers)
+        page.lastBrowser = driver.browserType
+        handleBrowseFinish(page, headers)
         if (status.isSuccess) {
             handleBrowseSuccess(batchId)
         }
@@ -300,6 +299,7 @@ open class SeleniumEngine(
         return response
     }
 
+    @Throws(ContextResetException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
     private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: DriverConfig): VisitResult {
         checkState()
 
@@ -308,7 +308,7 @@ open class SeleniumEngine(
         val page = task.page
 
         if (log.isTraceEnabled) {
-            log.trace("Navigate {}/b{} in thd#{}, drivers: {}/{}/{} | {} | timeouts: {}/{}/{}",
+            log.trace("Navigate {}/{} in thd{}, drivers: {}/{}/{}(w/f/t) | {} | timeouts: {}/{}/{}",
                     taskId, task.batchSize,
                     Thread.currentThread().id,
                     driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
@@ -393,9 +393,6 @@ open class SeleniumEngine(
                     throw e
                 }
             }
-        } catch (e: Exception) {
-            log.warn("Unexpected exception | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
-            throw e
         }
 
         if (status != null) {
@@ -527,20 +524,11 @@ open class SeleniumEngine(
         return status
     }
 
-    protected open fun handleBrowseFinish(page: WebPage, driver: ManagedWebDriver, headers: MultiMetadata) {
+    protected open fun handleBrowseFinish(page: WebPage, headers: MultiMetadata) {
         // The page content's encoding is already converted to UTF-8 by Web driver
         headers.put(CONTENT_ENCODING, "UTF-8")
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
         headers.put(Q_RESPONSE_TIME, System.currentTimeMillis().toString())
-
-        when (driver.driver) {
-            is ChromeDriver -> page.lastBrowser = BrowserType.CHROME
-//            is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
-            else -> {
-                log.warn("Actual browser is set to be NATIVE by selenium engine")
-                page.lastBrowser = BrowserType.NATIVE
-            }
-        }
 
         val urls = page.browserJsData?.urls
         if (urls != null) {

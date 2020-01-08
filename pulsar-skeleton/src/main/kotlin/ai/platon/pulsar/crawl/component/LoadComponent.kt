@@ -3,17 +3,19 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.MetricsSystem.Companion.getBatchCompleteReport
 import ai.platon.pulsar.common.MetricsSystem.Companion.getFetchCompleteReport
 import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.Urls.isValidUrl
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
+import ai.platon.pulsar.persist.model.BrowserJsData
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.classification.InterfaceStability.Evolving
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Collectors
 
 /**
@@ -38,36 +41,16 @@ class LoadComponent(
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent,
         val updateComponent: UpdateComponent
-) {
+): AutoCloseable {
     companion object {
-        const val FETCH_REASON_DO_NOT_FETCH = 0
-        const val FETCH_REASON_NEW_PAGE = 1
-        const val FETCH_REASON_EXPIRED = 2
-        const val FETCH_REASON_SMALL_CONTENT = 3
-        const val FETCH_REASON_MISS_FIELD = 4
-        const val FETCH_REASON_TEMP_MOVED = 300
-        const val FETCH_REASON_RETRY_ON_FAILURE = 301
-
-        val fetchReasonCodes = HashMap<Int, String>()
         private val globalFetchingUrls = Collections.synchronizedSet(HashSet<String>())
-        fun getFetchReason(code: Int): String {
-            return fetchReasonCodes.getOrDefault(code, "unknown")
-        }
-
-        init {
-            fetchReasonCodes[FETCH_REASON_DO_NOT_FETCH] = "do_not_fetch"
-            fetchReasonCodes[FETCH_REASON_NEW_PAGE] = "new_page"
-            fetchReasonCodes[FETCH_REASON_EXPIRED] = "expired"
-            fetchReasonCodes[FETCH_REASON_SMALL_CONTENT] = "small"
-            fetchReasonCodes[FETCH_REASON_MISS_FIELD] = "miss_field"
-            fetchReasonCodes[FETCH_REASON_TEMP_MOVED] = "temp_moved"
-            fetchReasonCodes[FETCH_REASON_RETRY_ON_FAILURE] = "retry_on_failure"
-        }
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
 
     private val fetchTaskTracker get() = fetchComponent.fetchTaskTracker
+
+    private val closed = AtomicBoolean()
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -118,7 +101,7 @@ class LoadComponent(
      */
     fun load(link: GHypeLink, options: LoadOptions): WebPage {
         val page = load(link.url.toString(), options)
-        page.setAnchor(link.anchor.toString())
+        page.anchor = link.anchor.toString()
         return page
     }
 
@@ -142,6 +125,10 @@ class LoadComponent(
      * @return Pages for all urls.
      */
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        if (closed.get()) {
+            return listOf()
+        }
+
         val startTime = Instant.now()
 
         val filteredUrls = normUrls.mapNotNullTo(HashSet()) { filterUrlToNull(it) }
@@ -157,22 +144,30 @@ class LoadComponent(
             var page = webDb.getOrNil(url, opt.shortenKey)
             val reason = getFetchReason(page, opt)
             if (log.isTraceEnabled) {
-                log.trace("Fetch reason: {} | {} {}", getFetchReason(reason), url, opt)
+                log.trace("Fetch reason: {} | {} {}", FetchReason.toString(reason), url, opt)
             }
             val status = page.protocolStatus
             when (reason) {
-                FETCH_REASON_NEW_PAGE -> { pendingUrls.add(url) }
-                FETCH_REASON_EXPIRED -> { pendingUrls.add(url) }
-                FETCH_REASON_SMALL_CONTENT -> { pendingUrls.add(url) }
-                FETCH_REASON_MISS_FIELD -> { pendingUrls.add(url) }
-                FETCH_REASON_TEMP_MOVED -> {
+                FetchReason.NEW_PAGE -> {
+                    pendingUrls.add(url)
+                }
+                FetchReason.EXPIRED -> {
+                    pendingUrls.add(url)
+                }
+                FetchReason.SMALL_CONTENT -> {
+                    pendingUrls.add(url)
+                }
+                FetchReason.MISS_FIELD -> {
+                    pendingUrls.add(url)
+                }
+                FetchReason.TEMP_MOVED -> {
                     // TODO: batch redirect
                     page = redirect(page, opt)
                     if (status.isSuccess) {
                         knownPages.add(page)
                     }
                 }
-                FETCH_REASON_DO_NOT_FETCH -> {
+                FetchReason.DO_NOT_FETCH -> {
                     if (status.isSuccess) {
                         knownPages.add(page)
                     } else {
@@ -233,6 +228,11 @@ class LoadComponent(
     }
 
     private fun loadOne(normUrl: NormUrl): WebPage {
+        if (closed.get()) {
+            log.warn("Application closed | {}", normUrl)
+            return WebPage.NIL
+        }
+
         if (normUrl.isInvalid) {
             log.warn("Malformed url | {}", normUrl)
             return WebPage.NIL
@@ -249,23 +249,25 @@ class LoadComponent(
         val ignoreQuery = opt.shortenKey
         var page = webDb.getOrNil(url, ignoreQuery)
         val reason = getFetchReason(page, opt)
-        log.trace("Fetch reason: {}, url: {}, options: {}", getFetchReason(reason), page.url, opt)
-        if (reason == FETCH_REASON_TEMP_MOVED) {
+        log.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, opt)
+        if (reason == FetchReason.TEMP_MOVED) {
             return redirect(page, opt)
         }
 
-        val refresh = reason == FETCH_REASON_NEW_PAGE || reason == FETCH_REASON_EXPIRED
-                || reason == FETCH_REASON_SMALL_CONTENT || reason == FETCH_REASON_MISS_FIELD
+        val refresh = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
+                || reason == FetchReason.SMALL_CONTENT || reason == FetchReason.MISS_FIELD
         if (refresh) {
             if (page.isNil) {
                 page = WebPage.newWebPage(url, ignoreQuery)
             }
 
             page = fetchComponent.initFetchEntry(page, opt)
-            // LOG.debug("Fetching: {} | FetchMode: {}", page.getConfiguredUrl(), page.getFetchMode());
             globalFetchingUrls.add(url)
-            page = fetchComponent.fetchContent(page)
-            globalFetchingUrls.remove(url)
+            try {
+                page = fetchComponent.fetchContent(page)
+            } catch (t: Throwable) {
+                globalFetchingUrls.remove(url)
+            }
 
             update(page, opt)
 
@@ -300,58 +302,60 @@ class LoadComponent(
 
         // Might use UrlFilter/UrlNormalizer
 
-        return url.takeIf { isValidUrl(url) }
+        return Urls.getURLOrNull(url)?.toString()
     }
 
     private fun getFetchReason(page: WebPage, options: LoadOptions): Int {
-        val url = page.url
-        if (page.isNil) {
-            return FETCH_REASON_NEW_PAGE
-        } else if (page.isInternal) {
-            log.warn("Do not fetch, page is internal | {}", url)
-            return FETCH_REASON_DO_NOT_FETCH
-        }
-
         val protocolStatus = page.protocolStatus
-        if (protocolStatus.isNotFetched) {
-            return FETCH_REASON_NEW_PAGE
-        } else if (protocolStatus.isTempMoved) {
-            return FETCH_REASON_TEMP_MOVED
-        } else if (protocolStatus.isFailed) {
-            // Page is fetched last time, but failed, if retry is not allowed, just return the failed page
-            if (!options.retry) {
-                log.warn("Ignore failed page, last status: {} | {} {}", page.protocolStatus, page.url, page.options)
-                return FETCH_REASON_DO_NOT_FETCH
-            }
+
+        var reason = when {
+            closed.get() -> FetchReason.DO_NOT_FETCH
+            page.isNil -> FetchReason.NEW_PAGE
+            page.isInternal -> FetchReason.DO_NOT_FETCH
+            protocolStatus.isNotFetched -> FetchReason.NEW_PAGE
+            protocolStatus.isTempMoved -> FetchReason.TEMP_MOVED
+            protocolStatus.isFailed && !options.retryFailed -> FetchReason.DO_NOT_FETCH
+            else -> FetchReason.UNKNOWN
         }
 
+        if (reason == FetchReason.UNKNOWN) {
+            reason = getFetchReasonForExistPage(page, options)
+        }
+
+        return reason
+    }
+
+    private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
+        // Fetch a page already fetched before if necessary
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            log.warn("Page is fetched but last fetch time is illegal: {}, fc: {} fh: {} status: {}",
+            log.warn("Illegal last fetch time: {}, fc: {} fh: {} status: {}",
                     lastFetchTime, page.fetchCount,
                     page.getFetchTimeHistory(""), page.protocolStatus)
         }
 
         // if (now > lastTime + expires), it's expired
         if (now.isAfter(lastFetchTime.plus(options.expires))) {
-            return FETCH_REASON_EXPIRED
+            return FetchReason.EXPIRED
         }
+
         if (page.contentBytes < options.requireSize) {
-            return FETCH_REASON_SMALL_CONTENT
+            return FetchReason.SMALL_CONTENT
         }
 
         val jsData = page.browserJsData
         if (jsData != null) {
-            val (ni, na) = jsData.lastStat
+            val (ni, na) = jsData.lastStat ?: BrowserJsData.Stat()
             if (ni < options.requireImages) {
-                return FETCH_REASON_MISS_FIELD
+                return FetchReason.MISS_FIELD
             }
             if (na < options.requireAnchors) {
-                return FETCH_REASON_MISS_FIELD
+                return FetchReason.MISS_FIELD
             }
         }
-        return FETCH_REASON_DO_NOT_FETCH
+
+        return FetchReason.DO_NOT_FETCH
     }
 
     private fun redirect(page: WebPage, options: LoadOptions): WebPage {
@@ -518,6 +522,10 @@ class LoadComponent(
 
     fun flush() {
         webDb.flush()
+    }
+
+    override fun close() {
+        closed.set(true)
     }
 
     /**

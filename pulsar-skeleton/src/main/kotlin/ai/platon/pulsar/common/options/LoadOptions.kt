@@ -114,7 +114,7 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-retry", "--retry"],
             description = "Retry fetching the page if it's failed last time")
-    var retry = false
+    var retryFailed = false
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
             description = "If false, flush persisted pages into database as soon as possible")
     var lazyFlush = false

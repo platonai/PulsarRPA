@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.*
 import org.slf4j.LoggerFactory
 
 object WebTester {
-    private val env = PulsarEnv.initialize()
+    private val env = PulsarEnv.get()
     private val pc = PulsarContext.getOrCreate()
     private val i = pc.createSession()
     private val log = LoggerFactory.getLogger(WebAccess::class.java)
@@ -33,5 +33,5 @@ object WebTester {
 fun main() {
     WebTester.load()
 
-    PulsarEnv.initialize().shutdown()
+    PulsarEnv.get().shutdown()
 }

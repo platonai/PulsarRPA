@@ -41,8 +41,15 @@ class AmazonAccess: WebAccess() {
         val args = "-ic -i 1s -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
 
+        var round = 0
         var k = 0
         portalUrls.forEach { portalUrl ->
+            ++round
+
+            println("\n\n\n")
+            println("--------------------------")
+            println("Round $round")
+
             val document = i.parse(i.load(portalUrl))
             val links = document.select("a[href~=/dp/]") {
                 it.attr("abs:href").substringBeforeLast("#")
@@ -57,16 +64,18 @@ class AmazonAccess: WebAccess() {
             k += pages.size
             val lengths = pages.map { it.contentBytes.toLong() }.sortedDescending()
                     .joinToString { StringUtil.readableByteCount(it) }
-            println(lengths)
 
             val ds = SummaryStatistics()
             pages.forEach { ds.addValue(it.contentBytes.toDouble()) }
+            println("Page length report")
+            println(lengths)
+            println(ds.toString())
 
             // if the average length is less than 1M
             if (ds.mean < 0.2 * 1e6) {
                 pages.forEach { i.export(it, "banned") }
                 println("Ip banned after $k pages")
-                return
+                // return
             }
         }
     }

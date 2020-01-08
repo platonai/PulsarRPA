@@ -382,19 +382,22 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             val jsData = page.browserJsData
             var jsSate = ""
             if (jsData != null) {
-                val (ni, na, nnm, nst) = jsData.lastStat
+                val (ni, na, nnm, nst) = jsData.lastStat?:BrowserJsData.Stat()
                 jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
             }
 
             val redirected = page.url != page.location
-            val url = if (redirected) page.location else page.url
             val mark = page.pageCategory.symbol()
             val numFields = page.pageModel.first()?.fields?.size?:0
             val proxyFmt = if (proxy == null) "%s" else "%26s"
             val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
             val fieldFmt = if (numFields == 0) "%s" else "%-3s"
-            val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
-            val report = String.format(fmt,
+            val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt c:%-4d | %s"
+            val link = AppPaths.symbolicLinkFromUri(page.url)
+            val url = if (redirected) page.location else page.url
+            val readableUrl = if (redirected) "[R] $url" else url
+            val readableLinks = if (verbose) "file://$link | $readableUrl" else readableUrl
+            return String.format(fmt,
                     mark,
                     StringUtil.readableByteCount(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
@@ -402,13 +405,9 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
                     jsSate,
                     page.fetchCount,
                     if (numFields == 0) "0" else numFields.toString(),
-                    if (redirected) "[R] $url" else url
+                    page.protocolStatus.minorCode,
+                    readableLinks
             )
-
-            return if (verbose) {
-                val link = AppPaths.symbolicLinkFromUri(page.url)
-                "$report | file://$link"
-            } else report
         }
 
         fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant, verbose: Boolean = false): StringBuilder {

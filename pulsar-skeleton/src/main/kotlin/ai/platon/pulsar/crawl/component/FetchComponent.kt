@@ -34,6 +34,7 @@ import ai.platon.pulsar.persist.metadata.Mark
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Created by vincent on 17-5-1.
@@ -46,6 +47,8 @@ open class FetchComponent(
         val protocolFactory: ProtocolFactory,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
+
+    private val closed = AtomicBoolean()
 
     /**
      * Fetch a url
@@ -86,6 +89,10 @@ open class FetchComponent(
      * @return The fetch result
      */
     protected fun fetchContentInternal(page: WebPage): WebPage {
+        if (closed.get()) {
+            return page
+        }
+
         val url = page.url
         val u = getURLOrNull(url) ?: return WebPage.NIL
         val protocol = protocolFactory.getProtocol(page)
@@ -147,7 +154,8 @@ open class FetchComponent(
                 updatePage(page, content, protocolStatus, crawlStatus)
             }
             ProtocolStatus.CANCELED -> {
-                // do nothing
+                page.protocolStatus = protocolStatus
+                page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
             }
             ProtocolStatus.RETRY, ProtocolStatus.BLOCKED -> updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
             ProtocolStatus.REQUEST_TIMEOUT, ProtocolStatus.THREAD_TIMEOUT, ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.DOM_TIMEOUT -> {
@@ -228,7 +236,9 @@ open class FetchComponent(
         updateMarks(page)
     }
 
-    override fun close() {}
+    override fun close() {
+        closed.set(true)
+    }
 
     companion object {
         @JvmField

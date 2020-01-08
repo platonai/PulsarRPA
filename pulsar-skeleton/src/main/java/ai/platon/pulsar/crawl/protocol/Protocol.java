@@ -47,15 +47,15 @@ public interface Protocol extends Configurable, AutoCloseable {
         return Collections.emptyList();
     }
 
-    /*
-     * Returns the {@link Content} for a fetchlist entry.
+    /**
+     * Returns the {@link Content} for a fetch list entry.
      */
     ProtocolOutput getProtocolOutput(WebPage page);
 
     /**
      * Retrieve robot rules applicable for this url.
      *
-     * @param page
+     * @param page The Web page
      * @return robot rules (specific for this url or default), never null
      */
     BaseRobotRules getRobotRules(WebPage page);

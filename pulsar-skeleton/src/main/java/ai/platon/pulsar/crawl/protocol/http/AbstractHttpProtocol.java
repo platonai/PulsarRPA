@@ -41,10 +41,7 @@ import java.io.IOException;
 import java.net.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -62,10 +59,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
     private Logger log = LoggerFactory.getLogger(AbstractHttpProtocol.class);
 
-    /**
-     * The process environment
-     */
-    private PulsarEnv env = PulsarEnv.Companion.initialize();
+    private AtomicBoolean closed = new AtomicBoolean();
+
     /**
      * Prevent multiple threads generate the same log unnecessary
      */
@@ -252,6 +247,10 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
+        if (closed.get()) {
+            return Collections.emptyList();
+        }
+
         return pages.stream()
                 .map(page -> getResponseNoexcept(page.getUrl(), page, false))
                 .collect(Collectors.toList());
@@ -295,7 +294,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
                 lastThrowable = e;
                 log.warn("Unexpected protocol exception", e);
             }
-        } while (retry && ++i < maxTry);
+        } while (retry && ++i < maxTry && !closed.get());
 
         if (response == null) {
             return getFailedResponse(lastThrowable, i, maxTry);
@@ -555,6 +554,11 @@ public abstract class AbstractHttpProtocol implements Protocol {
     @Override
     public BaseRobotRules getRobotRules(WebPage page) {
         return robots.getRobotRulesSet(this, page.getUrl());
+    }
+
+    @Override
+    public void close() {
+        closed.set(true);
     }
 
     @Override
