@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
+import org.apache.commons.lang3.StringUtils
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
 import org.openqa.selenium.Capabilities
@@ -54,7 +55,7 @@ class WebDriverPool(
 
     companion object {
         private val instanceCounter = AtomicInteger()
-        private val pollingTimeout = Duration.ofMillis(500)
+        private val pollingTimeout = Duration.ofMillis(100)
         private val allDrivers = Collections.synchronizedMap(HashMap<Int, ManagedWebDriver>())
         // Every value collection is a first in, first out queue
         private val freeDrivers = mutableMapOf<Int, LinkedList<ManagedWebDriver>>()
@@ -62,8 +63,8 @@ class WebDriverPool(
         private val closingDrivers = AtomicBoolean()
         private val lock: Lock = ReentrantLock()
         private val notEmpty: Condition = lock.newCondition()
-        private val noWorker: Condition = lock.newCondition()
-        private val driversClosed = lock.newCondition()
+        private val notBusy: Condition = lock.newCondition()
+        private val notClosing: Condition = lock.newCondition()
 
         val numCrashed = AtomicInteger()
         val numRetired = AtomicInteger()
@@ -106,16 +107,7 @@ class WebDriverPool(
 
     val proxyEntry get() = ips.proxyEntry
 
-    fun resetContext() {
-        lock.withLock {
-            pauseAllWorkingDrivers()
-            deleteAllCookies()
-            changeProxy()
-            resumeAllDrivers()
-        }
-    }
-
-    inline fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
+    fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
         val driver = poll(priority, volatileConfig)
                 ?:throw WebDriverPoolExhaust("Web driver pool exhausted")
 
@@ -128,6 +120,11 @@ class WebDriverPool(
     }
 
     fun allocate(priority: Int, numInit: Int, conf: ImmutableConfig) {
+        ensureNotClosing()
+        if (isClosed) {
+            return
+        }
+
         val drivers = mutableListOf<ManagedWebDriver>()
         var n = numInit
         while (n-- > 0) {
@@ -136,15 +133,39 @@ class WebDriverPool(
         drivers.forEach { put(it) }
     }
 
+    fun reset() {
+        closeAll(incognito = true)
+    }
+
+    fun cancel(url: String) {
+        ensureNotClosing()
+        if (isClosed) {
+            return
+        }
+
+        lock.withLock {
+            workingDrivers.values.forEach {
+                if (it.currentUrl == url) {
+                    it.executeScript(";window.stop();")
+                }
+            }
+        }
+    }
+
     fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
+        ensureNotClosing()
+        if (isClosed) {
+            return null
+        }
+
         var driver: ManagedWebDriver? = null
         var exception: Exception? = null
-        var nanos = pollingTimeout.toNanos()
 
         try {
             lock.lockInterruptibly()
 
             driver = dequeue(priority, conf)
+            var nanos = pollingTimeout.toNanos()
             while (driver == null && nanos > 0) {
                 nanos = notEmpty.awaitNanos(nanos)
                 driver = dequeue(priority, conf)
@@ -182,8 +203,8 @@ class WebDriverPool(
     }
 
     private fun offer(driver: ManagedWebDriver) {
-        if (closingDrivers.get()) {
-            // closeAll is performing, the driver can be just throw away
+        ensureNotClosing()
+        if (isClosed) {
             return
         }
 
@@ -217,7 +238,7 @@ class WebDriverPool(
 
             workingDrivers.remove(driver.id)
             if (workingDrivers.isEmpty()) {
-                noWorker.signalAll()
+                notBusy.signalAll()
             }
         }
     }
@@ -227,8 +248,8 @@ class WebDriverPool(
     }
 
     private fun retire(driver: ManagedWebDriver, e: Exception?, external: Boolean = true) {
-        if (external && closingDrivers.get()) {
-            // closeAll is performing, the client can just throw away the driver
+        ensureNotClosing()
+        if (external && isClosed) {
             return
         }
 
@@ -249,7 +270,7 @@ class WebDriverPool(
             workingDrivers.remove(driver.id)
 
             if (workingDrivers.isEmpty()) {
-                noWorker.signalAll()
+                notBusy.signalAll()
             }
         }
 
@@ -266,9 +287,9 @@ class WebDriverPool(
 
         try {
             if (e != null) {
-                log.info("Quit retired driver {} - {}", driver, StringUtil.simplifyException(e))
+                log.info("Quit {} driver {} - {}", driver.status.name.toLowerCase(), driver, StringUtil.simplifyException(e))
             } else {
-                log.info("Quit retired driver {}", driver)
+                log.info("Quit {} driver {}", driver.status.name.toLowerCase(), driver)
             }
             // Quits this driver, close every associated window.
             driver.quit()
@@ -300,20 +321,42 @@ class WebDriverPool(
         return if (queue.isEmpty()) null else queue.remove()
     }
 
-    fun closeAll(maxWait: Long = 60L) {
+    fun closeAll(incognito: Boolean = true, exit: Boolean = false) {
+        ensureNotClosing()
+
         lock.withLock {
             closingDrivers.set(true)
-            if (workingSize > 0) {
-                noWorker.await(maxWait, TimeUnit.SECONDS)
+            var i = 0
+            while (workingSize > 0 && i++ < 120) {
+                notBusy.await(1, TimeUnit.SECONDS)
             }
+
+            if (incognito) {
+                deleteAllCookies()
+
+                if (!exit) {
+                    changeProxy()
+                }
+            }
+
             closeAllUnlocked()
             closingDrivers.set(false)
+            notClosing.signalAll()
         }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closeAll()
+            closeAll(exit = true)
+        }
+    }
+
+    private fun ensureNotClosing() {
+        var nanos = pollingTimeout.toNanos()
+        lock.withLock {
+            while (closingDrivers.get() && nanos > 0) {
+                nanos = notClosing.awaitNanos(nanos)
+            }
         }
     }
 
@@ -330,9 +373,8 @@ class WebDriverPool(
         }
 
         if (aliveSize >= capacity) {
-            log.warn("Too many web drivers ... cpu cores: {}, capacity: {}, free/working/total/crashed/retired: {}/{}/{}/{}/{}",
-                    AppConstants.NCPU, capacity,
-                    freeSize, workingSize, aliveSize, numCrashed.get(), numRetired.get())
+            log.warn("Too many web drivers. Cpu cores: {}, capacity: {}, {}",
+                    AppConstants.NCPU, capacity, formatStatus(verbose = false))
             return null
         }
 
@@ -408,7 +450,7 @@ class WebDriverPool(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
-        if (ips.waitUntilAvailable()) {
+        if (ips.ensureAvailable()) {
             // TODO: internal proxy server can be run at another host
             proxyEntry = ips.proxyEntry
             hostPort = "127.0.0.1:${ips.port}"
@@ -466,18 +508,13 @@ class WebDriverPool(
     private fun closeAllUnlocked() {
         if (allDrivers.isEmpty()) {
             if (aliveSize != 0) {
-                log.info("Illegal statement - total: {}, {}free: {}, working: {}, alive: {}, " +
-                        "crashed: {}, retired: {}, quit: {}, pageViews: {}",
-                        totalSize, freeSize, workingSize, aliveSize,
-                        numCrashed, numRetired, numQuit,
-                        pageViews
-                )
+                log.info("Illegal status - {}", formatStatus(verbose = true))
             }
 
             return
         }
 
-        log.info("Closing all web drivers ...")
+        log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
 
         freeDrivers.flatMap { it.value }.forEach { retire(it, null, external = false) }
         freeDrivers.forEach { it.value.clear() }
@@ -511,6 +548,19 @@ class WebDriverPool(
             } catch (e: Exception) {
                 log.error("Unexpected exception: {}", e)
             }
+        }
+    }
+
+    private fun formatStatus(verbose: Boolean = false): String {
+        if (verbose) {
+            return String.format("total: %d free: %d working: %d alive: %d" +
+                    " crashed: %d retired: %d quit: %d pageViews: %d",
+                    totalSize, freeSize, workingSize, aliveSize,
+                    numCrashed.get(), numRetired.get(), numQuit.get(), pageViews.get()
+            )
+        } else {
+            return String.format("%d/%d/%d/%d/%d (free/working/total/crashed/retired)",
+                    freeSize, workingSize, aliveSize, numCrashed.get(), numRetired.get())
         }
     }
 }

@@ -2,7 +2,6 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
@@ -27,96 +26,97 @@ class RobustSeleniumEngine(
     private val log = LoggerFactory.getLogger(RobustSeleniumEngine::class.java)!!
 
     /**
-     * Timeout when browse the page, it can be caused by javascript execution timeout, or sub resource loading timeout,
-     * the page can be good in such case, if so, the status can be modified to be success.
+     * Check if the html is integral without field extraction, a further html integrity checking can be applied after field
+     * extraction.
      * */
-    override fun handleBrowseTimeout(startTime: Long, pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
-        val length = pageSource.length
-        var newStatus = status
-        val result = checkHtmlIntegrity(pageSource)
-        if (result.first) {
-            newStatus = ProtocolStatus.STATUS_SUCCESS
-        }
-
-        if (newStatus.isSuccess) {
-            log.info("DOM is good though {} after {} with {} | {}",
-                    status.minorName, DateTimeUtil.elapsedTime(startTime),
-                    StringUtil.readableByteCount(length.toLong()), page.url)
-        } else {
-            val link = AppPaths.symbolicLinkFromUri(page.url)
-            log.info("DOM is bad {} after {} with {} | file://{}",
-                    status.minorName, DateTimeUtil.elapsedTime(startTime),
-                    StringUtil.readableByteCount(length.toLong()), link)
-        }
-
-        return newStatus
-    }
-
-    override fun checkPageSource(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): Int {
+    override fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
         val url = page.url
         val length = pageSource.length.toLong()
         val aveLength = page.aveContentBytes.toLong()
         val readableLength = StringUtil.readableByteCount(length)
         val readableAveLength = StringUtil.readableByteCount(aveLength)
-        var code = 0
+        var integrity = HtmlIntegrity.OK
+        var message = ""
 
-        var message = "Retrieved: (only) $readableLength, " +
-                "history average: $readableAveLength, " +
-                "might be caused by network/proxy | $url"
-
-        if (length < 100 && pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1) {
-            code = 1
-            handleIncompleteContent(task, message)
-            // throw IncompleteContentException(message, status, pageSource)
+        if (integrity.isOK && length < 100 && pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1) {
+            integrity = HtmlIntegrity.TOO_SMALL
         }
 
-        if (code == 0 && page.fetchCount > 0 && aveLength > 100_1000 && length < 0.1 * aveLength) {
-            handleIncompleteContent(task, message)
-            code = 2
+        if (integrity.isOK && length < 1_000_000 && isAmazonItemPage(page)) {
+            integrity = HtmlIntegrity.TOO_SMALL
+        }
+
+        if (integrity.isOK && page.fetchCount > 0 && aveLength > 1_000_000 && length < 0.1 * aveLength) {
+            integrity = HtmlIntegrity.TOO_SMALL_IN_HISTORY
         }
 
         val stat = task.stat
-        if (code == 0 && status.isSuccess && stat != null) {
+        if (integrity.isOK && status.isSuccess && stat != null) {
             val batchAveLength = stat.averagePageSize.roundToLong()
             if (stat.numSuccessTasks > 3 && batchAveLength > 10_000 && length < batchAveLength / 10) {
                 val readableBatchAveLength = StringUtil.readableByteCount(batchAveLength)
+                val fetchCount = page.fetchCount
+                message = "retrieved: $readableLength, batch: $readableBatchAveLength" +
+                        " history: $readableAveLength/$fetchCount ($integrity)"
 
-                message = "Retrieved: (only) $readableLength, " +
-                        "history average: $readableAveLength, " +
-                        "batch average: $readableBatchAveLength" +
-                        "might be caused by network/proxy | $url"
-
-                handleIncompleteContent(task, message)
-
-                code = 3
-                // throw IncompleteContentException(message, status, pageSource)
+                integrity = HtmlIntegrity.TOO_SMALL_IN_BATCH
             }
         }
 
-        if (code != 0) {
-            log.info(message)
+        if (integrity.isOK) {
+            integrity = checkHtmlIntegrity(pageSource)
         }
 
-        return code
+        if (integrity.isNotOK) {
+            if (message.isEmpty()) {
+                val fetchCount = page.fetchCount
+                message = "retrieved: $readableLength, history: $readableAveLength/$fetchCount ($integrity)"
+            }
+
+            logIncompleteContentPage(task, message)
+        }
+
+        return integrity
     }
 
-    private fun checkHtmlIntegrity(pageSource: String): Pair<Boolean, String> {
-        val p1 = pageSource.indexOf("<body")
-        if (p1 <= 0) return false to "NO_BODY_START"
-        val p2 = pageSource.indexOf(">", p1)
-        if (p2 < p1) return false to "NO_BODY_END"
-        // no any link, it's incomplete
-        val p3 = pageSource.indexOf("<a", p2)
-        if (p3 < p2) return false to "NO_ANCHOR"
+    /**
+     * Site specific, should be moved to a better place
+     * */
+    private fun isAmazonItemPage(page: WebPage): Boolean {
+        return page.url.contains("amazon.com") && page.url.contains("/dp/")
+    }
 
-        // TODO: optimization using region match
+    private fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
+        val p1 = pageSource.indexOf("<body")
+        if (p1 <= 0) return HtmlIntegrity.NO_BODY_START
+        val p2 = pageSource.indexOf(">", p1)
+        if (p2 < p1) return HtmlIntegrity.NO_BODY_END
+        // no any link, it's broken
+        val p3 = pageSource.indexOf("<a", p2)
+        if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
+
+        // TODO: optimize using region match
         val bodyTag = pageSource.substring(p1, p2)
         // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
         val r = bodyTag.contains("data-error=\"0\"")
         if (!r) {
-            return false to "NO_JS_OK"
+            return HtmlIntegrity.NO_JS_OK
         }
 
-        return true to "OK"
+        return HtmlIntegrity.OK
+    }
+
+    private fun logIncompleteContentPage(task: FetchTask, message: String) {
+        val proxyEntry = task.proxyEntry
+        val domain = task.domain
+        val link = AppPaths.symbolicLinkFromUri(task.url)
+
+        if (proxyEntry != null) {
+            val count = proxyEntry.servedDomains.count(domain)
+            log.warn("Page is broken - domain: {}({}) proxy: {} | {} | {}",
+                    domain, count, proxyEntry.display, message, link)
+        } else {
+            log.warn("Page is broken | {} | {}", message, link)
+        }
     }
 }

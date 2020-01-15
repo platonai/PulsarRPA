@@ -66,6 +66,12 @@ class TestAnything {
     }
 
     @Test
+    fun testA() {
+        println(1e6)
+        println(1_000_000)
+    }
+
+    @Test
     fun testNumber() {
         val a = 100000
         val b = 23

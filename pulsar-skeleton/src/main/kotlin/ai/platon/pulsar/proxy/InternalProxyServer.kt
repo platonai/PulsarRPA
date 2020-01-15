@@ -54,7 +54,8 @@ class InternalProxyServer(
     private val connectedLock: Lock = ReentrantLock()
     private val connectedCond: Condition = connectedLock.newCondition()
     private val disconnectedCond: Condition = connectedLock.newCondition()
-    private var waitForReadyTimeout = Duration.ofMinutes(1)
+    private val condPollingInterval = Duration.ofSeconds(1)
+    private val condTimeout = Duration.ofSeconds(60)
     var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5))
 
     private val numBossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 1)
@@ -115,12 +116,13 @@ class InternalProxyServer(
             throw NoProxyException("IPS is " + if (isClosed) "closed" else "disabled")
         }
 
-        if (!waitUntilAvailable()) {
-            throw NoProxyException("Failed to wait for IPS to run")
-        }
-
         idleTime = Duration.ZERO
         numRunningTasks.incrementAndGet()
+
+        if (!ensureAvailable()) {
+            throw NoProxyException("Failed to wait for IPS to be available")
+        }
+
         return try {
             task()
         } catch (e: Exception) {
@@ -131,7 +133,7 @@ class InternalProxyServer(
         }
     }
 
-    fun waitUntilAvailable(): Boolean {
+    fun ensureAvailable(): Boolean {
         if (isDisabled || isClosed) {
             return false
         }
@@ -144,8 +146,13 @@ class InternalProxyServer(
             log.info("Waiting for IPS to connect ...")
 
             try {
-                val success = connectedCond.await(waitForReadyTimeout.seconds, TimeUnit.SECONDS)
-                if (!success) {
+                var signaled = false
+                var retry = 0
+                while (!isClosed && !isConnected && retry++ < condTimeout.seconds) {
+                    signaled = connectedCond.await(condPollingInterval.seconds, TimeUnit.SECONDS)
+                    // require(isConnected)
+                }
+                if (!signaled && !isClosed) {
                     log.warn("Timeout to wait for IPS to be ready")
                 }
             } catch (e: InterruptedException) {
@@ -158,7 +165,14 @@ class InternalProxyServer(
     }
 
     fun changeProxyIfRunning(excludedProxy: ProxyEntry) {
-        waitUntilAvailable() // ensure there is no one else trying the re-connecting
+        if (isDisabled || isClosed) {
+            return
+        }
+
+        if (!ensureAvailable()) {
+            return
+        }
+
         if (excludedProxy == this.proxyEntry) {
             tryConnectToNext()
         }
@@ -283,6 +297,10 @@ class InternalProxyServer(
     }
 
     private fun tryConnectToNext() {
+        if (isClosed || isDisabled) {
+            return
+        }
+
         disconnect(notifyAll = false)
 
         val proxy = proxyPool.poll()
@@ -293,7 +311,7 @@ class InternalProxyServer(
 
     @Synchronized
     private fun connectTo(proxy: ProxyEntry?) {
-        if (isClosed) {
+        if (isClosed || isDisabled) {
             return
         }
 

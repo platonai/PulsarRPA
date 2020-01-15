@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-if [ "$PULSAR_HOME" = "" ]; then
-   # shellcheck source=bin/include/pulsar-config.sh
-   . ./include/pulsar-config.sh
-fi
+bin=$(dirname "$0")
+bin=$(cd "$bin">/dev/null || exit; pwd)
+
+ . "$bin"/include/pulsar-config.sh
 
 VERSION="v$(cat "$PULSAR_HOME"/VERSION)-snapshot"
 

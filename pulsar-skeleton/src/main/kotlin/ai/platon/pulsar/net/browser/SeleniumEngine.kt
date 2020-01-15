@@ -36,9 +36,12 @@ import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.time.Duration
+import java.time.Instant
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.HashSet
 
 data class DriverConfig(
         var pageLoadTimeout: Duration,
@@ -47,18 +50,12 @@ data class DriverConfig(
         var scrollInterval: Duration
 ) {
     constructor(config: ImmutableConfig) : this(
-            config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofSeconds(120)),
+            config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
             // wait page ready using script, so it can not smaller than pageLoadTimeout
             config.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
             config.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
             config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
     )
-}
-
-enum class FlowSate {
-    CONTINUE, BREAK;
-
-    val isContinue get() = this == CONTINUE
 }
 
 class FetchTask(
@@ -73,6 +70,7 @@ class FetchTask(
     val stat: BatchStat? = null
     var deleteAllCookies: Boolean = false
     var closeBrowsers: Boolean = false
+    val incognito get() = deleteAllCookies && closeBrowsers
     var proxyEntry: ProxyEntry? = null
     var retries = 0
 
@@ -106,7 +104,7 @@ class JsTask(
 data class VisitResult(
         var protocolStatus: ProtocolStatus,
         var jsData: BrowserJsData? = null,
-        var state: FlowSate = FlowSate.CONTINUE
+        var state: FlowState = FlowState.CONTINUE
 )
 
 /**
@@ -131,9 +129,11 @@ open class SeleniumEngine(
     private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     private val defaultDriverConfig = DriverConfig(immutableConfig)
     private val browserContext = BrowserContext(driverPool, ips, immutableConfig)
-    private val maxCookieView = 40
+    private val brokenPages = Collections.synchronizedSet(HashSet<String>())
+    private var brokenPageTrackTime = Instant.now()
     private val closed = AtomicBoolean(false)
     private val isClosed get() = closed.get()
+    private val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
 
     init {
         instanceCount.incrementAndGet()
@@ -173,13 +173,20 @@ open class SeleniumEngine(
         return FetchResult(task, response)
     }
 
+    fun cancel(url: String) {
+        driverPool.cancel(url)
+    }
+
     protected open fun browseWith(task: FetchTask, driver: ManagedWebDriver): BrowseResult {
         checkState()
 
-        ++task.retries
-
         var response: Response? = null
         var exception: Exception? = null
+
+        if (++task.retries > fetchMaxRetry) {
+            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE))
+            return BrowseResult(response, exception, driver)
+        }
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
@@ -221,13 +228,13 @@ open class SeleniumEngine(
     private fun browseWithMinorExceptionsHandled(task: FetchTask, driver: ManagedWebDriver): Response {
         checkState()
 
-        val startTime = System.currentTimeMillis()
+        val navigateTime = Instant.now()
 
         val batchId = task.batchId
         val page = task.page
 
         val driverConfig = getDriverConfig(task.volatileConfig)
-        val headers = MultiMetadata(Q_REQUEST_TIME, startTime.toString())
+        val headers = MultiMetadata(Q_REQUEST_TIME, navigateTime.toString())
 
         var status: ProtocolStatus
         var pageSource = ""
@@ -251,38 +258,41 @@ open class SeleniumEngine(
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            status = ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL)
+            status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
         } catch (e: ai.platon.pulsar.net.browser.ContextResetException) {
-            status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+            // TODO: Do not run context reset automatically for now, re-fetch broken pages it manually
+            // status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+            status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
         }
 
-        // Check quality of the page source, throw an exception if content is incomplete
-        var code = 0
+        // Check quality of the page source, throw an exception if content is broken
+        var integrity = HtmlIntegrity.OK
         if (pageSource.isNotEmpty()) {
-            code = checkPageSource(pageSource, page, status, task)
+            integrity = checkHtmlIntegrity(pageSource, page, status, task)
         }
 
         // Check browse timeout event, transform status to be success if the page source is good
-        val timeoutStatus = arrayOf(
-                ProtocolStatusCodes.WEB_DRIVER_TIMEOUT,
-                ProtocolStatusCodes.DOM_TIMEOUT
-        )
+        val timeoutStatus = arrayOf(ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.DOM_TIMEOUT)
         if (status.minorCode in timeoutStatus) {
-            status = handleBrowseTimeout(startTime, pageSource, status, page, driverConfig)
+            if (integrity.isOK) {
+                // fetch timeout but content is OK
+                status = ProtocolStatus.STATUS_SUCCESS
+            }
+            handleBrowseTimeout(navigateTime, pageSource, status, page, driverConfig)
         }
 
-        // Update page source, modify charset directive, do the caching stuff
-        if (code == 0) {
-            pageSource = handlePageSource(pageSource).toString()
-        }
         headers.put(CONTENT_LENGTH, pageSource.length.toString())
-
-        if (code != 0) {
-            status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+        if (integrity.isOK) {
+            // Update page source, modify charset directive, do the caching stuff
+            pageSource = handlePageSource(pageSource).toString()
+        } else {
+            // The page seems to be broken, retry it, if there are too many broken pages in a certain period, reset the browse context
+            status = handleBrokenPageSource(task, navigateTime)
         }
 
         // Update headers, metadata, do the logging stuff
         page.lastBrowser = driver.browserType
+        page.htmlIntegrity = integrity
         handleBrowseFinish(page, headers)
         if (status.isSuccess) {
             handleBrowseSuccess(batchId)
@@ -358,11 +368,11 @@ open class SeleniumEngine(
 
         try {
             action()
-            result.state = FlowSate.CONTINUE
+            result.state = FlowState.CONTINUE
         } catch (e: InterruptedException) {
             log.warn("Interrupted waiting for document | {}", task.url)
             status = ProtocolStatus.STATUS_CANCELED
-            result.state = FlowSate.BREAK
+            result.state = FlowState.BREAK
         } catch (e: WebDriverException) {
             val message = StringUtil.stringifyException(e)
             when {
@@ -379,14 +389,14 @@ open class SeleniumEngine(
                     } else {
                         log.warn("Interrupted waiting for DOM | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
                     }
-                    result.state = FlowSate.BREAK
+                    result.state = FlowState.BREAK
                 }
                 message.contains("Cannot read property") -> {
                     // unknown error: Cannot read property 'forEach' of null
                     log.warn("Javascript exception | {} {}", task.url, StringUtil.simplifyException(e))
                     // ignore script errors, document might lost data, but it's the page extractor's responsibility
                     status = ProtocolStatus.STATUS_SUCCESS
-                    result.state = FlowSate.CONTINUE
+                    result.state = FlowState.CONTINUE
                 }
                 else -> {
                     log.warn("Unexpected WebDriver exception | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
@@ -501,27 +511,31 @@ open class SeleniumEngine(
         return ""
     }
 
-    protected open fun checkPageSource(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): Int {
-        return 0
+    protected open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
+        return HtmlIntegrity.OK
     }
 
-    protected fun handleIncompleteContent(task: FetchTask, message: String) {
-        val proxyEntry = task.proxyEntry
-        val domain = task.domain
-        val link = AppPaths.symbolicLinkFromUri(task.url)
+    protected open fun handleBrowseTimeout(startTime: Instant, pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig) {
+        val length = pageSource.length
+        val elapsed = Duration.between(startTime, Instant.now())
 
-        if (proxyEntry != null) {
-            val count = proxyEntry.servedDomains.count(domain)
-            log.warn("INCOMPLETE - domain: {}({}) proxy: {} - {} | {}",
-                    domain, count, proxyEntry.display, message, link)
+        if (status.isSuccess) {
+            log.info("DOM is good though {} after {} with {} | {}",
+                    status.minorName, elapsed, StringUtil.readableByteCount(length.toLong()), page.url)
         } else {
-            log.warn("INCOMPLETE - {} | {}", message, link)
+            val link = AppPaths.symbolicLinkFromUri(page.url)
+            log.info("DOM is bad {} after {} with {} | file://{}",
+                    status.minorName, elapsed, StringUtil.readableByteCount(length.toLong()), link)
         }
-    }
 
-    protected open fun handleBrowseTimeout(startTime: Long, pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig): ProtocolStatus {
-        logBrowseTimeout(page.url, startTime, pageSource, driverConfig)
-        return status
+        if (log.isDebugEnabled) {
+            val link = AppPaths.symbolicLinkFromUri(page.url)
+            log.debug("Timeout after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
+                    elapsed, StringUtil.readableByteCount(pageSource.length.toLong()),
+                    driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
+                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
+                    link)
+        }
     }
 
     protected open fun handleBrowseFinish(page: WebPage, headers: MultiMetadata) {
@@ -559,6 +573,30 @@ open class SeleniumEngine(
         return replaceHTMLCharset(pageSource, charsetPattern)
     }
 
+    protected open fun handleBrokenPageSource(task: FetchTask, navigateTime: Instant): ProtocolStatus {
+        var status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+        if (task.retries > fetchMaxRetry) {
+            return status
+        }
+
+        brokenPages.add(task.url)
+
+        val resetThreshold = 1
+        val elapsed = Duration.between(brokenPageTrackTime, navigateTime)
+        val elapsedMinutes = elapsed.toMinutes()
+        val resetContext = elapsedMinutes <= 5 && brokenPages.size >= resetThreshold
+        if (resetContext) {
+            status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+        }
+
+        if (resetContext || elapsedMinutes > 5) {
+            brokenPages.clear()
+            brokenPageTrackTime = navigateTime
+        }
+
+        return status
+    }
+
     private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver) {
         if (log.isDebugEnabled && pageSource.isNotEmpty()) {
             val path = AppFiles.export(status, pageSource, page)
@@ -575,20 +613,8 @@ open class SeleniumEngine(
         }
     }
 
-    protected open fun logBrowseTimeout(url: String, startTime: Long, pageSource: String, driverConfig: DriverConfig) {
-        val elapsed = Duration.ofMillis(System.currentTimeMillis() - startTime)
-        if (log.isDebugEnabled) {
-            val link = AppPaths.symbolicLinkFromUri(url)
-            log.debug("Timeout after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
-                    elapsed, StringUtil.readableByteCount(pageSource.length.toLong()),
-                    driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
-                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
-                    link)
-        }
-    }
-
     /**
-     * Eager update web page, the status is incomplete but required by callbacks
+     * Eager update web page, the status is partial but required by callbacks
      * */
     private fun eagerUpdateWebPage(page: WebPage, response: Response, conf: ImmutableConfig) {
         page.protocolStatus = response.status

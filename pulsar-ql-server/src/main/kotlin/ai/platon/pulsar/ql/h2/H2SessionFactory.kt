@@ -87,12 +87,12 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun shutdown() {
-        PulsarEnv.initialize().shutdown()
+        PulsarEnv.get().shutdown()
     }
 
     @Synchronized
     fun shutdownNow() {
-        PulsarEnv.initialize().shutdown()
+        PulsarEnv.get().shutdown()
     }
 }
 

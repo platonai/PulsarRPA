@@ -1,13 +1,22 @@
 package ai.platon.pulsar.examples.sites
 
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.model.WebPageFormatter
+import ai.platon.pulsar.proxy.InternalProxyServer
+import com.google.common.collect.Lists
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
+import java.nio.file.Files
 
 class AmazonAccess: WebAccess() {
     val url = "https://www.amazon.com/"
     val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
+    var round = 0
+    var numTotalPages = 0
 
     fun load() {
         // TODO: click event support is required
@@ -36,53 +45,88 @@ class AmazonAccess: WebAccess() {
     }
 
     fun testIpLimit() {
-        val portalUrlBase = "https://www.amazon.com/s?i=specialty-aps&srs=13575748011&page=2&qid=1575032004&ref=lp_13575748011_pg_"
-        val portalUrls = IntRange(1, 20).map { "$portalUrlBase$it" }
-        val args = "-ic -i 1s -ii 1s -ol \"a[href~=/dp/]\""
+        val portalUrlTemplates = arrayOf(
+                "https://www.amazon.com/s?i=specialty-aps&srs=13575748011&page={{page}}&qid=1575032004&ref=lp_13575748011_pg_{{page}}",
+                "https://www.amazon.com/s?i=fashion-girls-intl-ship&bbn=16225020011&rh=n%3A7141123011%2Cn%3A16225020011%2Cn%3A3880961&page={{page}}&qid=1578841587&ref=sr_pg_{{page}}",
+                "https://www.amazon.com/s?i=fashion-boys-intl-ship&bbn=16225021011&rh=n%3A7141123011%2Cn%3A16225021011%2Cn%3A6358551011&page={{page}}&qid=1578842855&ref=sr_pg_{{page}}",
+                "https://www.amazon.com/s?i=pets-intl-ship&bbn=16225013011&rh=n%3A16225013011%2Cn%3A2975312011&page={{page}}&qid=1578842918&ref=sr_pg_{{page}}"
+        )
+
+        portalUrlTemplates.forEach {
+            testIpLimitOneColumn(it)
+        }
+    }
+
+    fun testIpLimitOneColumn(portalUrlTemplate: String) {
+        val portalUrls = IntRange(1, 10).map { portalUrlTemplate.replace("{{page}}", it.toString()) }
+        val args = "-i 1s -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
 
-        var round = 0
-        var k = 0
         portalUrls.forEach { portalUrl ->
             ++round
 
-            println("\n\n\n")
-            println("--------------------------")
-            println("Round $round")
+            log.info("\n\n\n--------------------------\nRound $round $portalUrl")
 
-            val document = i.parse(i.load(portalUrl))
-            val links = document.select("a[href~=/dp/]") {
+            val portalPage = i.load(portalUrl, options)
+            val portalDocument = i.parse(portalPage)
+            val links = portalDocument.select("a[href~=/dp/]") {
                 it.attr("abs:href").substringBeforeLast("#")
             }.toSet()
-            links.forEachIndexed { i, l ->
-                println("$i\t$l")
+
+            val sb = StringBuilder("\n")
+            links.forEachIndexed { j, l ->
+                sb.appendln(String.format("%-10s%s", "$j.", l))
+            }
+            log.info(sb.toString())
+            sb.setLength(0)
+
+            if (links.isEmpty()) {
+                log.info("Warning: No links")
+                val link = AppPaths.symbolicLinkFromUri(portalPage.url)
+                log.info("file://$link")
+                log.info("Page details: \n" + WebPageFormatter(portalPage))
             }
 
-            val pages = i.loadOutPages(portalUrl, "a[href~=/dp/]", options)
-            if (pages.isEmpty()) return@forEach
+            val itemOptions = options.createItemOption()
+            Lists.partition(links.toList(), 20).forEach { loadAll(it, itemOptions) }
 
-            k += pages.size
-            val lengths = pages.map { it.contentBytes.toLong() }.sortedDescending()
-                    .joinToString { StringUtil.readableByteCount(it) }
+            // TODO: re-fetch all broken pages
+        }
+    }
 
-            val ds = SummaryStatistics()
-            pages.forEach { ds.addValue(it.contentBytes.toDouble()) }
-            println("Page length report")
-            println(lengths)
-            println(ds.toString())
+    private fun loadAll(urls: List<String>, itemOptions: LoadOptions) {
+        val pages = i.loadAll(urls, itemOptions)
 
-            // if the average length is less than 1M
-            if (ds.mean < 0.2 * 1e6) {
-                pages.forEach { i.export(it, "banned") }
-                println("Ip banned after $k pages")
-                // return
-            }
+        if (pages.isEmpty()) return
+
+        numTotalPages += pages.size
+        val lengths = pages.map { it.contentBytes.toLong() }.sortedDescending()
+        val shortLengths = lengths.filter { it < 1e6 }
+
+        val ds = SummaryStatistics()
+        pages.forEach { ds.addValue(it.contentBytes.toDouble()) }
+        log.info("== Page length report ==")
+        val sb = StringBuilder("\n")
+        lengths.joinTo(sb) { StringUtil.readableByteCount(it) }
+        sb.appendln()
+        sb.append(ds)
+        log.info(sb.toString())
+
+        // half pages are less than 1M
+        if (shortLengths.size > 0.5 * lengths.size) {
+            val bannedIps = pages.filter { it.contentBytes < 1e6 }
+                    .mapNotNullTo(HashSet()) { it.metadata[Name.PROXY] }.joinToString { it }
+            log.info("Ip banned after $numTotalPages pages")
+            log.info("Ips banned: $bannedIps")
         }
     }
 }
 
 fun main() {
+    val archiveDir = AppPaths.TMP_ARCHIVE_DIR.resolve(DateTimeUtil.now("MMdd.HHmm"))
+    Files.move(AppPaths.WEB_CACHE_DIR, archiveDir)
+
     val access = AmazonAccess()
-    access.laptops()
-    // access.testIpLimit()
+    // access.laptops()
+    access.testIpLimit()
 }

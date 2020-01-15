@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.StringUtil
@@ -46,7 +47,7 @@ internal class BatchFetchContext(
     // The function must return in a reasonable time
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
     val checkInterval = Duration.ofSeconds(1)
-    val idleTimeout = Duration.ofMinutes(2)
+    val idleTimeout = Duration.ofMinutes(3)
     val batchSize = Iterables.size(pages)
     val numAllowedFailures = max(10, batchSize / 3)
 
@@ -317,10 +318,11 @@ class SeleniumFetchComponent(
 
         // if there are still pending tasks, cancel them
         cx.pendingTasks.forEach { it.value.cancel(true) }
-        cx.pendingTasks.forEach { (url, task) ->
+        cx.pendingTasks.forEach { (url, future) ->
             // Attempts to cancel execution of this task
             try {
-                val result = getFetchResult(url, task, cx.threadTimeout)
+                seleniumEngine.cancel(url)
+                val result = getFetchResult(url, future, cx.threadTimeout)
                 cx.finishedTasks[url] = result
             } catch (e: Throwable) {
                 log.error("Unexpected error {}", StringUtil.stringifyException(e))

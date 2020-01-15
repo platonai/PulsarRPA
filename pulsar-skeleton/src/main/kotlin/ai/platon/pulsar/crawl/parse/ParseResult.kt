@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.PipelineStatus
+import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -29,10 +29,10 @@ class ParseResult : ParseStatus {
     val hypeLinks = mutableSetOf<HypeLink>()
     var domStatistics: DomStatistics? = null
     var parser: Parser? = null
-    var pipelineStatus = PipelineStatus.CONTINUE
+    var flowStatus = FlowState.CONTINUE
 
-    val shouldContinue get() = pipelineStatus == PipelineStatus.CONTINUE
-    val shouldBreak get() = pipelineStatus == PipelineStatus.BREAK
+    val shouldContinue get() = flowStatus == FlowState.CONTINUE
+    val shouldBreak get() = flowStatus == FlowState.BREAK
 
     constructor() : super(NOTPARSED, SUCCESS_OK)
     constructor(majorCode: Short, minorCode: Int) : super(majorCode, minorCode)

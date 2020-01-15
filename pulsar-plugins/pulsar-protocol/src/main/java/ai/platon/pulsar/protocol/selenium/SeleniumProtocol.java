@@ -17,8 +17,10 @@
 package ai.platon.pulsar.protocol.selenium;
 
 import ai.platon.pulsar.PulsarEnv;
+import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
+import ai.platon.pulsar.crawl.component.FetchComponent;
 import ai.platon.pulsar.crawl.component.SeleniumFetchComponent;
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
 import ai.platon.pulsar.crawl.protocol.Response;
@@ -28,6 +30,8 @@ import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanCreationNotAllowedException;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -43,11 +47,6 @@ public class SeleniumProtocol extends ForwardingProtocol {
     private AtomicBoolean closed = new AtomicBoolean();
 
     public SeleniumProtocol() {
-    }
-
-    @Override
-    public void close() {
-        closed.set(true);
     }
 
     /**
@@ -70,8 +69,12 @@ public class SeleniumProtocol extends ForwardingProtocol {
         }
 
         try {
-            fetchComponent.compareAndSet(null, PulsarEnv.Companion.get().getBean(SeleniumFetchComponent.class));
-            return fetchComponent.get().parallelFetchAllPages(pages, volatileConfig);
+            SeleniumFetchComponent fc = getFetchComponent();
+            if (fc == null) {
+                return Collections.emptyList();
+            }
+
+            return fc.parallelFetchAllPages(pages, volatileConfig);
         } catch (Exception e) {
             log.warn("Unexpected exception", e);
         }
@@ -86,13 +89,39 @@ public class SeleniumProtocol extends ForwardingProtocol {
         }
 
         try {
-            fetchComponent.compareAndSet(null, PulsarEnv.Companion.get().getBean(SeleniumFetchComponent.class));
+            SeleniumFetchComponent fc = getFetchComponent();
+            if (fc == null) {
+                return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
+            }
+
             Response response = super.getResponse(url, page, followRedirects);
-            return response != null ? response : fetchComponent.get().fetchContent(page);
+            return response != null ? response : fc.fetchContent(page);
         } catch (Exception e) {
             log.warn("Unexpected exception", e);
             // Unexpected exception, cancel the request, hope to retry in CRAWL_SOLUTION scope
             return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
         }
+    }
+
+    @Override
+    public void close() {
+        closed.set(true);
+    }
+
+    private SeleniumFetchComponent getFetchComponent() {
+        if (closed.get() || !PulsarEnv.Companion.getApplicationContext().isActive()) {
+            return null;
+        }
+
+        PulsarEnv env = PulsarEnv.Companion.get();
+        try {
+            fetchComponent.compareAndSet(null, env.getBean(SeleniumFetchComponent.class));
+        } catch (BeansException e) {
+            log.warn("{}", StringUtil.simplifyException(e));
+            // find out the reason
+            throw e;
+        }
+
+        return fetchComponent.get();
     }
 }

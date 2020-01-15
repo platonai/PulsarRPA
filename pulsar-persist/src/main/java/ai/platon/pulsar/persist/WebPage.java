@@ -17,6 +17,7 @@
 package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
@@ -424,6 +425,14 @@ public class WebPage {
         getMetadata().set(Name.BROWSER, browser.name());
     }
 
+    public HtmlIntegrity getHtmlIntegrity() {
+        return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
+    }
+
+    public void setHtmlIntegrity(HtmlIntegrity integrity) {
+        getMetadata().set(Name.HTML_INTEGRITY, integrity.name());
+    }
+
     public int getFetchPriority() {
         return page.getFetchPriority() > 0 ? page.getFetchPriority() : FETCH_PRIORITY_DEFAULT;
     }
@@ -558,7 +567,7 @@ public class WebPage {
     public Instant getLastFetchTime(Instant now) {
         Instant lastFetchTime = getFetchTime();
         if (lastFetchTime.isAfter(now)) {
-            // updated by schedule
+            // fetch time is in the further, updated by schedule
             lastFetchTime = getPrevFetchTime();
         }
         return lastFetchTime;

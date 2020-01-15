@@ -18,9 +18,11 @@ object AppPaths {
     @JvmField
     val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
     @JvmField
-    val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
-    @JvmField
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
+    // TODO: check again whether we need a separate home dir
+    // val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
+    @JvmField
+    val HOME_DIR = TMP_DIR
     @JvmField
     val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(AppConstants.PULSAR_DEFAULT_DATA_DIR)
 
@@ -42,6 +44,11 @@ object AppPaths {
     val TEST_DIR = get(TMP_DIR, "test")
 
     @JvmField
+    val ARCHIVE_DIR = get(HOME_DIR, "archive")
+    @JvmField
+    val TMP_ARCHIVE_DIR = get(TMP_DIR, "archive")
+
+    @JvmField
     val PATH_LOCAL_COMMAND = get(TMP_DIR, "pulsar-commands")
     @JvmField
     val PATH_EMERGENT_SEEDS = get(TMP_DIR, "emergent-seeds")
@@ -60,7 +67,10 @@ object AppPaths {
     private val homeDirStr get() = HOME_DIR.toString()
 
     init {
-        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, FILE_CACHE_DIR, LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR).forEach {
+        arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, FILE_CACHE_DIR,
+                LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR,
+                ARCHIVE_DIR, TMP_ARCHIVE_DIR
+        ).forEach {
             if (!Files.exists(it)) {
                 Files.createDirectories(it)
             }
@@ -68,7 +78,7 @@ object AppPaths {
     }
 
     fun get(baseDirectory: Path, vararg more: String): Path {
-        return Paths.get(baseDirectory.toString(), *more)
+        return get(baseDirectory.toString(), *more)
     }
 
     fun get(first: String, vararg more: String): Path {

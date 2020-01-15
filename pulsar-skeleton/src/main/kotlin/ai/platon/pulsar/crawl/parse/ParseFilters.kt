@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.PipelineStatus
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext

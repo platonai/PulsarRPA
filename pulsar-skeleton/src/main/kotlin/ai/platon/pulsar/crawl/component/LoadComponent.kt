@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.MetricsSystem.Companion.getBatchCompleteReport
 import ai.platon.pulsar.common.MetricsSystem.Companion.getFetchCompleteReport
 import ai.platon.pulsar.common.StringUtil
@@ -32,7 +33,6 @@ import java.util.stream.Collectors
  * Created by vincent on 17-7-15.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  *
- *
  * Load pages from storage or fetch from the Internet if it's not fetched or expired
  */
 @Component
@@ -40,7 +40,8 @@ class LoadComponent(
         val webDb: WebDb,
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent,
-        val updateComponent: UpdateComponent
+        val updateComponent: UpdateComponent,
+        val metricsSystem: MetricsSystem
 ): AutoCloseable {
     companion object {
         private val globalFetchingUrls = Collections.synchronizedSet(HashSet<String>())
@@ -239,19 +240,19 @@ class LoadComponent(
         }
 
         val url = normUrl.url
-        val opt = normUrl.options
+        val options = normUrl.options
         if (globalFetchingUrls.contains(url)) {
             log.debug("Load later, it's fetching by someone else | {}", url)
             // TODO: wait for finish?
             return WebPage.NIL
         }
 
-        val ignoreQuery = opt.shortenKey
+        val ignoreQuery = options.shortenKey
         var page = webDb.getOrNil(url, ignoreQuery)
-        val reason = getFetchReason(page, opt)
-        log.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, opt)
+        val reason = getFetchReason(page, options)
+        log.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
-            return redirect(page, opt)
+            return redirect(page, options)
         }
 
         val refresh = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
@@ -261,7 +262,7 @@ class LoadComponent(
                 page = WebPage.newWebPage(url, ignoreQuery)
             }
 
-            page = fetchComponent.initFetchEntry(page, opt)
+            page = fetchComponent.initFetchEntry(page, options)
             globalFetchingUrls.add(url)
             try {
                 page = fetchComponent.fetchContent(page)
@@ -269,7 +270,7 @@ class LoadComponent(
                 globalFetchingUrls.remove(url)
             }
 
-            update(page, opt)
+            update(page, options)
 
             if (log.isInfoEnabled) {
                 val verbose = log.isDebugEnabled
@@ -330,9 +331,7 @@ class LoadComponent(
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            log.warn("Illegal last fetch time: {}, fc: {} fh: {} status: {}",
-                    lastFetchTime, page.fetchCount,
-                    page.getFetchTimeHistory(""), page.protocolStatus)
+            metricsSystem.debugIllegalLastFetchTime(page)
         }
 
         // if (now > lastTime + expires), it's expired

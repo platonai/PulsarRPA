@@ -57,6 +57,12 @@ class ManagedWebDriver(
         @Synchronized
         get() = StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
 
+    val currentUrlOrException: String
+        get() = driver.currentUrl
+
+    val currentUrl: String
+        get() = try { driver.currentUrl } catch (t: Throwable) { "" }
+
     val pageSourceOrException: String
         get() = driver.pageSource
 

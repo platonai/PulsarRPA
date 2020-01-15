@@ -71,6 +71,7 @@
         <constructor-arg ref="batchFetchComponent"/>
         <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="updateComponent"/>
+        <constructor-arg ref="metricsSystem"/>
     </bean>
 
     <bean id="jitIndexer" class="ai.platon.pulsar.crawl.fetch.indexer.JITIndexer" destroy-method="close">

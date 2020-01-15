@@ -120,8 +120,8 @@ class PulsarEnv {
             return
         }
 
-        applicationContext.close()
-
         active.set(false)
+
+        applicationContext.close()
     }
 }

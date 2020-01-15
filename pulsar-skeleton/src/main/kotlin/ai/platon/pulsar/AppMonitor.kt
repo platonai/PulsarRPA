@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * TODO: merge all monitor threads
  * */
 class AppMonitor(
-        val webDriverPool: WebDriverPool,
+        val driverPool: WebDriverPool,
         val proxyPool: ProxyPool,
         val internalProxyServer: InternalProxyServer,
         private val conf: ImmutableConfig
@@ -25,7 +25,7 @@ class AppMonitor(
 
     private var monitorThread = Thread(this::update)
     private val loopStarted = AtomicBoolean()
-    private val isIdle get() = webDriverPool.isIdle
+    private val isIdle get() = driverPool.isIdle
     private val closed = AtomicBoolean()
     private val isClosed get() = closed.get()
 
@@ -76,9 +76,9 @@ class AppMonitor(
 
         // check to close web drivers every minute
         if (tick % 60 == 0) {
-            if (isIdle && !webDriverPool.isAllEmpty) {
+            if (isIdle && !driverPool.isAllEmpty) {
                 log.info("The web driver pool is idle, closing all drivers ...")
-                webDriverPool.closeAll(maxWait = 0)
+                driverPool.closeAll(incognito = true)
             }
         }
 
@@ -112,7 +112,7 @@ class AppMonitor(
     }
 
     private fun report(round: Int) {
-        val p = webDriverPool
+        val p = driverPool
         val idleTime = DateTimeUtil.readableDuration(p.idleTime)
         log.info("WDM - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {} rounds: {}",
                 if (isIdle) "[Idle($idleTime)] " else "",

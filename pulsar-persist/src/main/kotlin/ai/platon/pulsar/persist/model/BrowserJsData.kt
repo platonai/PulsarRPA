@@ -8,6 +8,7 @@ data class BrowserJsData(
         val lastStat: Stat? = Stat(),
         val initD: Stat? = Stat(),
         val lastD: Stat? = Stat(),
+        @Transient
         var urls: Urls? = Urls()
 ) {
     data class Status(

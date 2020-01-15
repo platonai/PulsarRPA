@@ -12,6 +12,26 @@ val SYSTEM_AVAILABLE_CHARSETS = Charset.availableCharsets().values.joinToString(
 val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\\|?", "")
         .toPattern(Pattern.CASE_INSENSITIVE)
 
+enum class HtmlIntegrity {
+    OK, NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
+    TOO_SMALL, TOO_SMALL_IN_HISTORY, TOO_SMALL_IN_BATCH;
+
+    val isOK: Boolean get() = this == OK
+    val isNotOK: Boolean get() = !isOK
+
+    companion object {
+        fun fromString(s: String?): HtmlIntegrity {
+            return if (s == null || s.isEmpty()) {
+                OK
+            } else try {
+                valueOf(s.toUpperCase())
+            } catch (e: Throwable) {
+                OK
+            }
+        }
+    }
+}
+
 /**
  * Replace the charset to the target charset
  * */

@@ -61,6 +61,7 @@ abstract class AbstractFetchSchedule(
      * @param page
      */
     override fun initializeSchedule(page: WebPage) {
+        page.prevFetchTime = page.fetchTime
         page.fetchTime = impreciseNow
         page.fetchInterval = defaultInterval
         page.fetchRetries = 0
@@ -101,6 +102,7 @@ abstract class AbstractFetchSchedule(
         }
 
         page.setFetchInterval(newInterval)
+        page.prevFetchTime = page.fetchTime
         page.fetchTime = fetchTime.plus(page.fetchInterval)
     }
 
@@ -115,6 +117,7 @@ abstract class AbstractFetchSchedule(
      * @param fetchTime        current fetch time
      */
     override fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
+        page.prevFetchTime = page.fetchTime
         page.fetchTime = fetchTime.plus(1, ChronoUnit.DAYS)
         page.fetchRetries = page.fetchRetries + 1
     }
@@ -153,6 +156,7 @@ abstract class AbstractFetchSchedule(
             if (page.fetchInterval > maxInterval) {
                 page.setFetchInterval(maxInterval.seconds * 0.9f)
             }
+            page.prevFetchTime = page.fetchTime
             page.fetchTime = curTime
         }
         return fetchTime.isBefore(curTime)
@@ -179,6 +183,7 @@ abstract class AbstractFetchSchedule(
         page.fetchRetries = 0
         page.setSignature("".toByteArray())
         page.modifiedTime = Instant.EPOCH
+        page.prevFetchTime = page.fetchTime
         if (asap) {
             page.fetchTime = Instant.now()
         }
@@ -186,6 +191,7 @@ abstract class AbstractFetchSchedule(
 
     protected fun updateRefetchTime(page: WebPage, interval: Duration, fetchTime: Instant, prevModifiedTime: Instant, modifiedTime: Instant) {
         page.fetchInterval = interval
+        page.prevFetchTime = page.fetchTime
         page.fetchTime = fetchTime.plus(interval)
         page.prevModifiedTime = prevModifiedTime
         page.modifiedTime = modifiedTime

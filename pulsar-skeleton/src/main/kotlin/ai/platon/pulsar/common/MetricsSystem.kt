@@ -231,6 +231,18 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         writeLineTo(report, "depth-updated.txt")
     }
 
+    fun debugIllegalLastFetchTime(page: WebPage) {
+        val report = String.format("ft: {} lft: {}, fc: {} fh: {} status: {} mk: {}",
+                page.fetchTime,
+                page.getLastFetchTime(Instant.now()),
+                page.fetchCount,
+                page.getFetchTimeHistory(""),
+                page.protocolStatus,
+                page.marks)
+
+        writeLineTo(report, "illegal-last-fetch-time.txt")
+    }
+
     fun debugRedirects(url: String, urls: BrowserJsData.Urls) {
         val location = urls.location
         if (location == url && urls.URL == url && urls.baseURI == url && urls.documentURI == url) {

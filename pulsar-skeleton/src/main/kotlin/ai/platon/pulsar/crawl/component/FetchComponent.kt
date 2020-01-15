@@ -127,7 +127,7 @@ open class FetchComponent(
         val url = page.url
         val content = output.content
         if (content == null) {
-            LOG.warn("No content | " + page.configuredUrl)
+            LOG.warn("No content | {}", page.configuredUrl)
             return page
         }
 

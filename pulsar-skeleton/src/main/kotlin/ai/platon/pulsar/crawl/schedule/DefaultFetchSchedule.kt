@@ -39,6 +39,7 @@ class DefaultFetchSchedule(
     override fun setFetchSchedule(page: WebPage, prevFetchTime: Instant,
                                   prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {
         super.setFetchSchedule(page, prevFetchTime, prevModifiedTime, fetchTime, modifiedTime, state)
+        page.prevFetchTime = page.fetchTime
         page.fetchTime = fetchTime.plus(page.fetchInterval)
         page.modifiedTime = modifiedTime
         page.prevModifiedTime = prevModifiedTime

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.common.ContextResetGuard
+import ai.platon.pulsar.common.ContextResettableRunner
 import ai.platon.pulsar.common.ContextResettable
 import org.junit.Test
 import java.util.concurrent.Callable
@@ -10,26 +10,25 @@ import kotlin.random.Random
 import kotlin.test.assertEquals
 
 private class DummyRunnable(val round: Int) : ContextResettable {
-    private var _needReset = false
+    override var reset : Boolean = false
 
-    override val needReset get() = _needReset
-
-    override fun run(nRetry: Int) {
+    override fun run(nRedo: Int) {
         val rand = Random(System.currentTimeMillis()).nextInt(0, 100_000)
         TimeUnit.MILLISECONDS.sleep(1)
-        _needReset = nRetry == 0 && rand % 3 == 0
+        reset = nRedo == 0 && rand % 3 == 0
     }
 }
 
 /**
- * Test the condition with throw program model, this model is used by [BrowserContext]
+ * Test the context reset guard model
  * */
-class TestContextResetGuard {
+class TestContextResettableRunner {
 
     @Test
     fun test() {
         val executor = Executors.newFixedThreadPool(40)
-        val guard = ContextResetGuard()
+        val guard = ContextResettableRunner()
+        guard.debug = 1
         val tasks = IntRange(1, 100).map { round -> Callable { guard.run(DummyRunnable(round)) } }
         executor.invokeAll(tasks)
 

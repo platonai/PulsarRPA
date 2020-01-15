@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration scan="true" scanPeriod="15 seconds" debug="true">
+<configuration scan="true" scanPeriod="120 seconds" debug="false">
     <property name="logging.dir" value="logs" />
     <property name="logging.file" value="pulsar-test.log" />
 
@@ -27,8 +27,8 @@
     <logger name="ai.platon.pulsar" level="DEBUG" />
     <logger name="ai.platon.pulsar.ql" level="DEBUG" />
     <logger name="ai.platon.pulsar.net" level="DEBUG" />
-    <logger name="ai.platon.pulsar.net.browser" level="TRACE" />
-    <logger name="ai.platon.pulsar.proxy" level="TRACE" />
+    <logger name="ai.platon.pulsar.net.browser" level="DEBUG" />
+    <logger name="ai.platon.pulsar.proxy" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.component" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG" />

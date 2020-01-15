@@ -31,7 +31,7 @@ class AfterBatchHandler: BatchHandler() {
         val lengthAfterCompress = pages.asSequence()
                 .map { it.content?.array()?:"".toByteArray() }
                 .joinToString { StringUtil.readableByteCount(compress(it).second.toLong()) }
-        println("After fetching - Fetched $size pages, length: \n$length\n$lengthAfterCompress")
+        println("After fetching - Fetched $size pages\nLength: \n$length\nCompressed: \n$lengthAfterCompress")
     }
 
     fun compress(input: ByteArray): Pair<ByteArray, Int> {

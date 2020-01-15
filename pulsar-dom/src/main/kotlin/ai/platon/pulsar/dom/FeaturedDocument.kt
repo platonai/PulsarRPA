@@ -37,15 +37,18 @@ open class FeaturedDocument(val document: Document) {
             val document = Document.createShell(baseUri)
             return FeaturedDocument(document)
         }
+
         /**
          * An node is Nil, if it's owner document is nil
          * */
         fun isNil(doc: FeaturedDocument): Boolean {
             return doc == NIL || doc.location == NIL.location
         }
+
         fun getExportFilename(uri: String): String {
             return AppPaths.fromUri(uri, "", ".htm")
         }
+
         fun getExportPath(url: String, ident: String): Path {
             return AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
         }

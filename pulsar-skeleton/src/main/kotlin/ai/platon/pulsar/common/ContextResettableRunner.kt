@@ -1,6 +1,14 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.net.browser.BrowseResult
 import ai.platon.pulsar.net.browser.BrowserContext
+import ai.platon.pulsar.net.browser.SeleniumEngine
+import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.RetryScope
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
@@ -8,49 +16,64 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 interface ContextResettable {
-    val needReset: Boolean
-    fun run(nRetry: Int)
+    var reset: Boolean
+    fun run(nRedo: Int)
 }
 
 /**
  * Test the condition with throw program model, this model is used by [BrowserContext]
  * */
-class ContextResetGuard {
-    val pollingTimeout = Duration.ofMillis(500)
-    val maxRetry = 3
-    val nSignals = AtomicInteger()
-    val nWaits = AtomicInteger()
+class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextRestorer: () -> Unit = {}) {
+    private val log = LoggerFactory.getLogger(ContextResettableRunner::class.java)!!
+    private val pollingTimeout = Duration.ofMillis(100)
+    private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+
+    var debug = 0
+
+    /**
+     * Total tasks run
+     * */
+    val nRun = AtomicInteger()
     val nPending = AtomicInteger()
     val nRunning = AtomicInteger()
+    val nSignals = AtomicInteger()
+    val nWaits = AtomicInteger()
     val sponsorThreadId = AtomicLong()
 
     private val lock = ReentrantLock()
     private val notMaintain = lock.newCondition()
     private val notBusy = lock.newCondition()
+
     private var nLogLine = 0
 
     fun run(action: ContextResettable) {
         var i = 0
         var redo = false
         do {
+            nRun.incrementAndGet()
+
             // wait for the browser context to be ready
             guard()
 
             nRunning.incrementAndGet()
-            action.run(i)
-            nRunning.decrementAndGet()
-
-            if (nRunning.get() == 0) {
-                lock.withLock {
-                    notBusy.signal()
+            try {
+                action.run(i)
+            } catch (t: Throwable) {
+                throw t
+            } finally {
+                nRunning.decrementAndGet()
+                if (nRunning.get() == 0) {
+                    lock.withLock {
+                        notBusy.signal()
+                    }
                 }
             }
 
-            if (action.needReset) {
+            if (action.reset) {
                 reset()
                 redo = true
             }
-        } while (redo && ++i < maxRetry)
+        } while (redo && ++i < fetchMaxRetry)
     }
 
     private fun guard() {
@@ -88,7 +111,10 @@ class ContextResetGuard {
                     pr("notBusy-2", 1, "")
                 }
 
+                log.info(formatMessage("resetting"))
+
                 sponsoredTid = tid
+                contextRestorer()
 
                 pr("notMaint-1", 1, "")
                 notMaintain.signalAll()
@@ -101,11 +127,27 @@ class ContextResetGuard {
     }
 
     private fun pr(ident: String, round: Int, msg: String) {
+        if (debug < 1) {
+            return
+        }
+
         ++nLogLine
         val tid = Thread.currentThread().id
-        val s = String.format("$nLogLine.\t %10s %15s %-4d" +
-                " running: $nRunning pending: $nPending signals: $nSignals waits: $nWaits",
-                "[thr $tid/$sponsorThreadId]", ident, round)
+        val s = String.format("%-10s %-4d %10s %15s - running: %-4d pending: %-4d wait:%-4d run:%-4d signal:%-4d",
+                "$nLogLine.", round, "[thr $tid/$sponsorThreadId]", ident,
+                nRunning.get(), nPending.get(), nWaits.get(), nRun.get(), nSignals.get()
+        )
+
         if (msg.isNotBlank()) println("$s - $msg") else println(s)
+    }
+
+    private fun formatMessage(msg: String): String {
+        val tid = Thread.currentThread().id
+        val s = String.format("%s | running: %-4d pending: %-4d wait:%-4d run:%-4d signal:%-4d",
+                "[thr $tid/$sponsorThreadId]",
+                nRunning.get(), nPending.get(), nWaits.get(), nRun.get(), nSignals.get()
+        )
+
+        return if (msg.isNotBlank()) "$s | $msg" else s
     }
 }

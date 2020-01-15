@@ -36,7 +36,9 @@ public enum Name {
     REDIRECT_DISCOVERED("F_RD"),
     RESPONSE_TIME("F_RT"),
     BROWSER("F_BR"),
+    HTML_INTEGRITY("F_HI"),
     BROWSER_JS_DATA("F_JD"),
+    BROWSER_JS_URLS("F_JU"),
     PROXY("F_PX"),
 
     /**

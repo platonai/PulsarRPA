@@ -66,8 +66,8 @@ open class LoadOptions: CommonOptions {
             description = "The maximum time to perform javascript injected into selenium")
     var scriptTimeout = Duration.ofSeconds(60)
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to wait for a page to be finished by selenium")
-    var pageLoadTimeout = Duration.ofSeconds(120)
+            description = "The maximum time to wait for a page to finish from the first http request start")
+    var pageLoadTimeout = Duration.ofMinutes(3)
 
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
@@ -202,7 +202,6 @@ open class LoadOptions: CommonOptions {
 
         itemOptions.browser = itemBrowser
         if (itemOptions.browser == BrowserType.NATIVE) {
-            // TODO: merge browser and fetch mode
             itemOptions.fetchMode = FetchMode.NATIVE
         }
 
