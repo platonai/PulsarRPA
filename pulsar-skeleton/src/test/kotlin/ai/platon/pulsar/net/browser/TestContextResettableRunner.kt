@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.ContextResettableRunner
 import ai.platon.pulsar.common.ContextResettable
 import org.junit.Test
@@ -24,10 +25,12 @@ private class DummyRunnable(val round: Int) : ContextResettable {
  * */
 class TestContextResettableRunner {
 
+    val env = PulsarEnv.get()
+
     @Test
     fun test() {
         val executor = Executors.newFixedThreadPool(40)
-        val guard = ContextResettableRunner()
+        val guard = ContextResettableRunner(PulsarEnv.unmodifiedConfig)
         guard.debug = 1
         val tasks = IntRange(1, 100).map { round -> Callable { guard.run(DummyRunnable(round)) } }
         executor.invokeAll(tasks)

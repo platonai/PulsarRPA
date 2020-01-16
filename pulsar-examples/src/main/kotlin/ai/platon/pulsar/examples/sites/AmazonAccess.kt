@@ -1,22 +1,30 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.net.browser.WebDriverPool
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.collect.Lists
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import java.nio.file.Files
 
 class AmazonAccess: WebAccess() {
-    val url = "https://www.amazon.com/"
-    val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
-    var round = 0
-    var numTotalPages = 0
+    private val url = "https://www.amazon.com/"
+    private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
+    private var round = 0
+    private var numTotalPages = 0
+    private val driverPool = env.getBean(WebDriverPool::class.java)
+
+    init {
+        BrowserControl.imagesEnabled = false
+        BrowserControl.headless = true
+    }
 
     fun load() {
         // TODO: click event support is required
@@ -52,50 +60,64 @@ class AmazonAccess: WebAccess() {
                 "https://www.amazon.com/s?i=pets-intl-ship&bbn=16225013011&rh=n%3A16225013011%2Cn%3A2975312011&page={{page}}&qid=1578842918&ref=sr_pg_{{page}}"
         )
 
-        portalUrlTemplates.forEach {
-            testIpLimitOneColumn(it)
+        val portalUrls = portalUrlTemplates.flatMap { template ->
+            IntRange(1, 10).map { template.replace("{{page}}", it.toString()) }
+        }.shuffled()
+
+        portalUrls.forEach {
+            println(it)
+        }
+
+        portalUrls.forEach {
+            testIpLimit(it)
         }
     }
 
-    fun testIpLimitOneColumn(portalUrlTemplate: String) {
-        val portalUrls = IntRange(1, 10).map { portalUrlTemplate.replace("{{page}}", it.toString()) }
+    fun testIpLimit(portalUrl: String) {
         val args = "-i 1s -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
 
-        portalUrls.forEach { portalUrl ->
-            ++round
+        ++round
 
-            log.info("\n\n\n--------------------------\nRound $round $portalUrl")
+        log.info("\n\n\n--------------------------\nRound $round $portalUrl")
+        driverPool.reset()
+        driverPool.allocate(0, 20, i.volatileConfig)
+        log.info("== Driver pool report 1 ==")
+        driverPool.report()
 
-            val portalPage = i.load(portalUrl, options)
-            val portalDocument = i.parse(portalPage)
-            val links = portalDocument.select("a[href~=/dp/]") {
-                it.attr("abs:href").substringBeforeLast("#")
-            }.toSet()
+        val portalPage = i.load(portalUrl, options)
 
-            val sb = StringBuilder("\n")
-            links.forEachIndexed { j, l ->
-                sb.appendln(String.format("%-10s%s", "$j.", l))
-            }
-            log.info(sb.toString())
-            sb.setLength(0)
+        log.info("== Driver pool report 2 ==")
+        driverPool.report()
 
-            if (links.isEmpty()) {
-                log.info("Warning: No links")
-                val link = AppPaths.symbolicLinkFromUri(portalPage.url)
-                log.info("file://$link")
-                log.info("Page details: \n" + WebPageFormatter(portalPage))
-            }
+        val portalDocument = i.parse(portalPage)
+        val links = portalDocument.select("a[href~=/dp/]") {
+            it.attr("abs:href").substringBeforeLast("#")
+        }.toSet()
 
-            val itemOptions = options.createItemOption()
-            Lists.partition(links.toList(), 20).forEach { loadAll(it, itemOptions) }
-
-            // TODO: re-fetch all broken pages
+        val sb = StringBuilder("\n")
+        links.forEachIndexed { j, l ->
+            sb.appendln(String.format("%-10s%s", "$j.", l))
         }
-    }
+        log.info(sb.toString())
+        sb.setLength(0)
 
-    private fun loadAll(urls: List<String>, itemOptions: LoadOptions) {
-        val pages = i.loadAll(urls, itemOptions)
+        if (links.isEmpty()) {
+            log.info("Warning: No links")
+            val link = AppPaths.symbolicLinkFromUri(portalPage.url)
+            log.info("file://$link")
+            log.info("Page details: \n" + WebPageFormatter(portalPage))
+        }
+
+        val pages = mutableListOf<WebPage>()
+        val itemOptions = options.createItemOption()
+        Lists.partition(links.toList(), 20).forEach { urls ->
+            i.loadAll(urls, itemOptions).let { pages.addAll(it) }
+        }
+
+//        Lists.partition(links.toList(), 5).take(1).forEach { urls ->
+//            i.loadAll(urls, itemOptions).let { pages.addAll(it) }
+//        }
 
         if (pages.isEmpty()) return
 
@@ -105,8 +127,12 @@ class AmazonAccess: WebAccess() {
 
         val ds = SummaryStatistics()
         pages.forEach { ds.addValue(it.contentBytes.toDouble()) }
-        log.info("== Page length report ==")
-        val sb = StringBuilder("\n")
+
+        sb.setLength(0)
+        log.info("== Page report ==")
+        sb.append("\nStatus: ")
+        pages.joinTo(sb) { it.protocolStatus.name }
+        sb.append("\nLength: ")
         lengths.joinTo(sb) { StringUtil.readableByteCount(it) }
         sb.appendln()
         sb.append(ds)
@@ -119,6 +145,7 @@ class AmazonAccess: WebAccess() {
             log.info("Ip banned after $numTotalPages pages")
             log.info("Ips banned: $bannedIps")
         }
+        // TODO: re-fetch all broken pages
     }
 }
 

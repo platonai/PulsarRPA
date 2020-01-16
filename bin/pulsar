@@ -77,7 +77,7 @@ shift
 bin=$(dirname "$0")
 bin=$(cd "$bin">/dev/null || exit; pwd)
 
- . "$bin"/include/pulsar-config.sh
+source "$bin"/include/pulsar-config.sh
 
 bin="$PULSAR_HOME"/bin
 

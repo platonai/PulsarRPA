@@ -132,6 +132,7 @@ class BatchFetchComponent(
      */
     private fun forwardResponse(protocol: Protocol, response: Response, page: WebPage): WebPage {
         protocol.setResponse(response)
+        // run protocol.getProtocolOutput so the page have a chance to perform FETCH_PROTOCOL retry if necessary
         return processProtocolOutput(page, protocol.getProtocolOutput(page))
     }
 

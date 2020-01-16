@@ -234,7 +234,7 @@ open class SeleniumEngine(
         val page = task.page
 
         val driverConfig = getDriverConfig(task.volatileConfig)
-        val headers = MultiMetadata(Q_REQUEST_TIME, navigateTime.toString())
+        val headers = MultiMetadata(Q_REQUEST_TIME, navigateTime.toEpochMilli().toString())
 
         var status: ProtocolStatus
         var pageSource = ""
@@ -586,7 +586,9 @@ open class SeleniumEngine(
         val elapsedMinutes = elapsed.toMinutes()
         val resetContext = elapsedMinutes <= 5 && brokenPages.size >= resetThreshold
         if (resetContext) {
-            status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+            // TODO: browser resetting causes all fetch tasks blocked, it might be a serious problem, trying reset browse context in every time crawl round
+            // status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+            status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
         }
 
         if (resetContext || elapsedMinutes > 5) {

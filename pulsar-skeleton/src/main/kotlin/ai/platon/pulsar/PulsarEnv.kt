@@ -74,6 +74,8 @@ class PulsarEnv {
         private val active = AtomicBoolean()
         private val closed = AtomicBoolean()
 
+        val isActive get() = !closed.get() && applicationContext.isActive
+
         init {
             // prerequisite system properties
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
@@ -116,11 +118,11 @@ class PulsarEnv {
     // serializers, etc
 
     fun shutdown() {
+        active.set(false)
+
         if (closed.getAndSet(true)) {
             return
         }
-
-        active.set(false)
 
         applicationContext.close()
     }

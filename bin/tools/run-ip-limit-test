@@ -13,15 +13,15 @@ function __is_crawl_loop_stopped {
   (( $STOP == 1 )) && return 0 || return 1
 }
 
-bin=$(dirname "$0")
-bin=$(cd "$bin">/dev/null || exit; pwd)
+this=$(dirname "$0")
+bin=$(cd "$this/..">/dev/null || exit; pwd)
 
  # shellcheck source=bin/include/scent-config.sh
- . "$bin"/include/pulsar-config.sh
- # shellcheck source=bin/include/scent-common.sh
- . "$bin"/include/pulsar-common.sh
+source "$bin"/include/pulsar-config.sh
 
-LIMIT=1000
+bin="$PULSAR_HOME"/bin
+
+LIMIT=20
 # main loop : rounds of generate - fetch - parse - update
 for ((round=1; round <= LIMIT ; round++))
 do
@@ -30,5 +30,8 @@ do
      exit 0
   fi
 
-  . "bin"/pulsar example sites.AmazonAccessKt
+  echo ""
+  echo ""
+  echo "=================IP LIMIT TEST ROUND $round==================="
+  . "$bin"/pulsar example sites.AmazonAccessKt
 done

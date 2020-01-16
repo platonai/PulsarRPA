@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.MetricsSystem.Companion.getBatchCompleteReport
 import ai.platon.pulsar.common.MetricsSystem.Companion.getFetchCompleteReport
@@ -13,6 +14,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.persist.PageCounters.Self
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
@@ -126,7 +128,7 @@ class LoadComponent(
      * @return Pages for all urls.
      */
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        if (closed.get()) {
+        if (closed.get() || !PulsarEnv.isActive) {
             return listOf()
         }
 
@@ -229,7 +231,7 @@ class LoadComponent(
     }
 
     private fun loadOne(normUrl: NormUrl): WebPage {
-        if (closed.get()) {
+        if (closed.get() || !PulsarEnv.isActive) {
             log.warn("Application closed | {}", normUrl)
             return WebPage.NIL
         }
@@ -358,6 +360,11 @@ class LoadComponent(
     }
 
     private fun redirect(page: WebPage, options: LoadOptions): WebPage {
+        if (!PulsarEnv.isActive) {
+            page.protocolStatus = ProtocolStatus.STATUS_CANCELED
+            return page
+        }
+
         if (page.protocolStatus.isCanceled) {
             return page
         }
@@ -442,6 +449,10 @@ class LoadComponent(
             start: Int, limit: Int, loadOptions2: LoadOptions,
             query: String,
             logLevel: Int): Map<String, Any> {
+        if (!PulsarEnv.isActive) {
+            return mapOf()
+        }
+
         val persist = options.persist
         options.persist = false
         val persist2 = loadOptions2.persist

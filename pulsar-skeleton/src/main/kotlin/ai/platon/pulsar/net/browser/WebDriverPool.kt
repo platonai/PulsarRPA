@@ -152,17 +152,31 @@ class WebDriverPool(
         }
     }
 
+    fun report() {
+        lock.withLock {
+            allDrivers.values.forEach { driver ->
+                val cookies = driver.driver.manage().cookies.joinToString("\n") { it.toString() }
+                if (cookies.isNotBlank()) {
+                    log.debug("Cookies: >>>\n$cookies\n<<<")
+                } else {
+                    log.debug("No cookie")
+                }
+            }
+        }
+    }
+
     fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
         ensureNotClosing()
-        if (isClosed) {
-            return null
-        }
 
         var driver: ManagedWebDriver? = null
         var exception: Exception? = null
 
         try {
             lock.lockInterruptibly()
+
+            if (isClosed) {
+                return null
+            }
 
             driver = dequeue(priority, conf)
             var nanos = pollingTimeout.toNanos()
@@ -224,6 +238,10 @@ class WebDriverPool(
         }
 
         lock.withLock {
+            if (isClosed) {
+                return
+            }
+
             // it can be retired by close all
             if (driver.status == DriverStatus.FREE) {
                 val queue = freeDrivers[driver.priority]
@@ -321,33 +339,28 @@ class WebDriverPool(
         return if (queue.isEmpty()) null else queue.remove()
     }
 
-    fun closeAll(incognito: Boolean = true, exit: Boolean = false) {
+    fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
         ensureNotClosing()
 
         lock.withLock {
             closingDrivers.set(true)
-            var i = 0
-            while (workingSize > 0 && i++ < 120) {
-                notBusy.await(1, TimeUnit.SECONDS)
-            }
-
-            if (incognito) {
-                deleteAllCookies()
-
-                if (!exit) {
-                    changeProxy()
+            try {
+                var i = 0
+                while (workingSize > 0 && i++ < 120) {
+                    notBusy.await(1, TimeUnit.SECONDS)
                 }
-            }
 
-            closeAllUnlocked()
-            closingDrivers.set(false)
-            notClosing.signalAll()
+                closeAllUnlocked(incognito, processExit)
+            } finally {
+                closingDrivers.set(false)
+                notClosing.signalAll()
+            }
         }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closeAll(exit = true)
+            closeAll(processExit = true)
         }
     }
 
@@ -384,7 +397,7 @@ class WebDriverPool(
 
             val level = setLogLevel(driver.driver)
 
-            log.info("The {}th web driver is online, " +
+            log.trace("The {}th web driver is online, " +
                     "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
                     totalSize, driver.driver.javaClass.simpleName,
                     imagesEnabled, pageLoadStrategy, capacity, level)
@@ -467,7 +480,7 @@ class WebDriverPool(
         proxy.ftpProxy = hostPort
 
         capabilities.setCapability(CapabilityType.PROXY, proxy)
-        log.info("Use proxy {}", proxy)
+        log.trace("Use proxy {}", proxy)
 
         return proxyEntry
     }
@@ -505,7 +518,15 @@ class WebDriverPool(
         }
     }
 
-    private fun closeAllUnlocked() {
+    private fun closeAllUnlocked(incognito: Boolean = true, processExit: Boolean = false) {
+        if (incognito) {
+            deleteAllCookies()
+
+            if (!processExit) {
+                changeProxy()
+            }
+        }
+
         if (allDrivers.isEmpty()) {
             if (aliveSize != 0) {
                 log.info("Illegal status - {}", formatStatus(verbose = true))

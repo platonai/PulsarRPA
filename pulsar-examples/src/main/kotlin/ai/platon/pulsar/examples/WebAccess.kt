@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.component.BatchHandler
+import ai.platon.pulsar.net.browser.BatchHandler
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.proxy.InternalProxyServer
 import com.google.common.collect.Iterables
@@ -56,7 +56,7 @@ open class WebAccess(
 
     init {
         val ips = PulsarEnv.applicationContext.getBean(InternalProxyServer::class.java)
-        ips.idleTimeout = Duration.ofSeconds(120)
+        ips.idleTimeout = Duration.ofMinutes(5)
         ips.showReport = true
     }
 

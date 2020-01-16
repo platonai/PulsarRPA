@@ -113,10 +113,10 @@ class RobustSeleniumEngine(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Page is broken - domain: {}({}) proxy: {} | {} | {}",
-                    domain, count, proxyEntry.display, message, link)
+            log.warn("Page broken - domain: {}({}) proxy: {} | {} | {} | {}",
+                    domain, count, proxyEntry.display, message, link, task.url)
         } else {
-            log.warn("Page is broken | {} | {}", message, link)
+            log.warn("Page broken | {} | {} | {}", message, link, task.url)
         }
     }
 }

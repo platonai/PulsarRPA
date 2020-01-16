@@ -55,7 +55,7 @@ class InternalProxyServer(
     private val connectedCond: Condition = connectedLock.newCondition()
     private val disconnectedCond: Condition = connectedLock.newCondition()
     private val condPollingInterval = Duration.ofSeconds(1)
-    private val condTimeout = Duration.ofSeconds(60)
+    private val condTimeout = Duration.ofMinutes(2)
     var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5))
 
     private val numBossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 1)
@@ -152,7 +152,7 @@ class InternalProxyServer(
                     signaled = connectedCond.await(condPollingInterval.seconds, TimeUnit.SECONDS)
                     // require(isConnected)
                 }
-                if (!signaled && !isClosed) {
+                if (!signaled && !isClosed && !isConnected) {
                     log.warn("Timeout to wait for IPS to be ready")
                 }
             } catch (e: InterruptedException) {
@@ -192,7 +192,7 @@ class InternalProxyServer(
 
                 checkAndReport(tick)
             } catch (e: Throwable) {
-                log.error("Unexpected error: ", e)
+                log.error("Unexpected IPS error: ", e)
             }
         }
 

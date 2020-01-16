@@ -1,6 +1,5 @@
-package ai.platon.pulsar.crawl.component
+package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.GlobalExecutor
 import ai.platon.pulsar.common.StringUtil
@@ -10,9 +9,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.net.browser.FetchResult
-import ai.platon.pulsar.net.browser.FetchTask
-import ai.platon.pulsar.net.browser.SeleniumEngine
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -98,12 +94,12 @@ internal class BatchFetchContext(
  *
  * Note: SeleniumEngine should be in process scope
  */
-class SeleniumFetchComponent(
+class SeleniumFetcher(
         private val executor: GlobalExecutor,
         private val seleniumEngine: SeleniumEngine,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
-    val log = LoggerFactory.getLogger(SeleniumFetchComponent::class.java)!!
+    val log = LoggerFactory.getLogger(SeleniumFetcher::class.java)!!
 
     private val driverPool = seleniumEngine.driverPool
     private val closed = AtomicBoolean()
@@ -317,11 +313,13 @@ class SeleniumFetchComponent(
         logBatchAbort(cx)
 
         // if there are still pending tasks, cancel them
-        cx.pendingTasks.forEach { it.value.cancel(true) }
+        cx.pendingTasks.forEach {(url, future) ->
+            seleniumEngine.cancel(url)
+            future.cancel(true)
+        }
         cx.pendingTasks.forEach { (url, future) ->
             // Attempts to cancel execution of this task
             try {
-                seleniumEngine.cancel(url)
                 val result = getFetchResult(url, future, cx.threadTimeout)
                 cx.finishedTasks[url] = result
             } catch (e: Throwable) {

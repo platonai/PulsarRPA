@@ -270,12 +270,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
     private ProtocolOutput getProtocolOutputWithRetry(WebPage page) throws MalformedURLException {
         Instant startTime = Instant.now();
 
-        // page.baseUrl is the last working address, and page.url is the permanent internal address
-        String location = page.getLocation();
-        if (location == null) {
-            location = page.getUrl();
-        }
-
         Response response;
         boolean retry = false;
         Throwable lastThrowable = null;
@@ -287,7 +281,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
             }
 
             try {
-                response = getResponse(location, page, false);
+                response = getResponse(page.getUrl(), page, false);
                 retry = response == null || response.getStatus().isRetry(RetryScope.FETCH_PROTOCOL);
             } catch (Throwable e) {
                 response = null;
@@ -301,6 +295,12 @@ public abstract class AbstractHttpProtocol implements Protocol {
         }
 
         setResponseTime(startTime, page, response);
+
+        // page.baseUrl is the last working address, and page.url is the permanent internal address
+        String location = page.getLocation();
+        if (location == null) {
+            location = page.getUrl();
+        }
 
         return transformProtocolOutput(page.getUrl(), location, response);
     }
@@ -427,6 +427,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         if (pageFetchMode == FetchMode.CROWDSOURCING || pageFetchMode == FetchMode.SELENIUM) {
             long requestTime = NumberUtils.toLong(response.getHeader(Q_REQUEST_TIME), -1);
             long responseTime = NumberUtils.toLong(response.getHeader(Q_RESPONSE_TIME), -1);
+
             if (requestTime > 0 && responseTime > 0) {
                 elapsedTime = Duration.ofMillis(responseTime - requestTime);
             } else {

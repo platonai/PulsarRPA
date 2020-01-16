@@ -133,6 +133,13 @@ class ManagedWebDriver(
     @Synchronized
     fun deleteAllCookiesSilently() {
         try {
+            val names = driver.manage().cookies.map { it.name }
+            names.forEach { name ->
+                driver.manage().deleteCookieNamed(name)
+            }
+
+            log.debug("Deleted cookies: $names")
+
             driver.manage().deleteAllCookies()
         } catch (e: Throwable) {
             log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
@@ -148,6 +155,15 @@ class ManagedWebDriver(
             log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }
     }
+
+//    @Synchronized
+//    fun deleteCookieNamedSilently(name: String) {
+//        try {
+//            driver.manage().deleteCookieNamed(name)
+//        } catch (e: Throwable) {
+//            log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
+//        }
+//    }
 
     @Synchronized
     override fun equals(other: Any?): Boolean {

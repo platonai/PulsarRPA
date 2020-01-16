@@ -51,7 +51,6 @@ open class PulsarSession(
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
-    public val isClosed = closed.get()
 
     /**
      * Close objects when sessions closes
@@ -379,11 +378,16 @@ open class PulsarSession(
         return options
     }
 
-    private fun ensureRunning() {
-        if (closed.get()) {
-            throw IllegalStateException(
-                    """Cannot call methods on a closed PulsarSession.""")
+    private fun ensureRunning(): Boolean {
+        if (!PulsarEnv.isActive) {
+            return false
         }
+
+        if (closed.get()) {
+            return false
+        }
+
+        return true
     }
 
     companion object {
