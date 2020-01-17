@@ -80,15 +80,8 @@ class AmazonAccess: WebAccess() {
         ++round
 
         log.info("\n\n\n--------------------------\nRound $round $portalUrl")
-        driverPool.reset()
-        driverPool.allocate(0, 20, i.volatileConfig)
-        log.info("== Driver pool report 1 ==")
-        driverPool.report()
 
         val portalPage = i.load(portalUrl, options)
-
-        log.info("== Driver pool report 2 ==")
-        driverPool.report()
 
         val portalDocument = i.parse(portalPage)
         val links = portalDocument.select("a[href~=/dp/]") {
@@ -112,6 +105,7 @@ class AmazonAccess: WebAccess() {
         val pages = mutableListOf<WebPage>()
         val itemOptions = options.createItemOption()
         Lists.partition(links.toList(), 20).forEach { urls ->
+            driverPool.reset()
             i.loadAll(urls, itemOptions).let { pages.addAll(it) }
         }
 

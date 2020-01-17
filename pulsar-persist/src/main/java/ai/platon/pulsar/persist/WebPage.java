@@ -22,13 +22,14 @@ import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
+import ai.platon.pulsar.persist.model.ActiveDomUrls;
 import ai.platon.pulsar.persist.model.PageModel;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.*;
-import ai.platon.pulsar.persist.model.BrowserJsData;
+import ai.platon.pulsar.persist.model.ActiveDomMultiStatus;
 import ai.platon.pulsar.persist.model.WebPageFormatter;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
@@ -903,18 +904,34 @@ public class WebPage {
     // TODO: use a separate avro field to hold BROWSER_JS_DATA
     // TODO: it's very slow if deserialize from json every time
     @Nullable
-    public BrowserJsData getBrowserJsData() {
-        String json = getMetadata().get(Name.BROWSER_JS_DATA);
+    public ActiveDomMultiStatus getActiveDomMultiStatus() {
+        String json = getMetadata().get(Name.ACTIVE_DOM_MULTI_STATUS);
         if (json != null) {
-            return BrowserJsData.Companion.fromJson(json);
+            return ActiveDomMultiStatus.Companion.fromJson(json);
         }
-        
+
         return null;
     }
 
-    public void setBrowserJsData(BrowserJsData jsData) {
+    public void setActiveDomMultiStatus(ActiveDomMultiStatus jsData) {
         if (jsData != null) {
-            getMetadata().set(Name.BROWSER_JS_DATA, jsData.toJson());
+            getMetadata().set(Name.ACTIVE_DOM_MULTI_STATUS, jsData.toJson());
+        }
+    }
+
+    @Nullable
+    public ActiveDomUrls getActiveDomUrls() {
+        String json = getMetadata().get(Name.ACTIVE_DOM_URLS);
+        if (json != null) {
+            return ActiveDomUrls.Companion.fromJson(json);
+        }
+
+        return null;
+    }
+
+    public void setActiveDomUrls(ActiveDomUrls urls) {
+        if (urls != null) {
+            getMetadata().set(Name.ACTIVE_DOM_URLS, urls.toJson());
         }
     }
 

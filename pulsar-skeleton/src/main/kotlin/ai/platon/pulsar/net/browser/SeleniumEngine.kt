@@ -23,7 +23,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import ai.platon.pulsar.persist.model.BrowserJsData
+import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.proxy.InternalProxyServer
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang.StringUtils
@@ -103,7 +103,7 @@ class JsTask(
 
 data class VisitResult(
         var protocolStatus: ProtocolStatus,
-        var jsData: BrowserJsData? = null,
+        var activeDomMessage: ActiveDomMessage? = null,
         var state: FlowState = FlowState.CONTINUE
 )
 
@@ -242,7 +242,7 @@ open class SeleniumEngine(
         try {
             val result = navigateAndInteract(task, driver, driverConfig)
             status = result.protocolStatus
-            page.browserJsData = result.jsData
+            page.activeDomMultiStatus = result.activeDomMessage?.multiStatus
             pageSource = driver.pageSource
         } catch (e: org.openqa.selenium.ScriptTimeoutException) {
             // ignore script timeout, document might lost data, but it's the page extractor's responsibility
@@ -476,11 +476,10 @@ open class SeleniumEngine(
         val message = jsTask.driver.executeScript(clientJs)
 
         if (message is String) {
-            val jsData = BrowserJsData.fromJson(message)
+            result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
-                log.debug("{} | {}", jsData, jsTask.url)
+                log.debug("{} | {}", result.activeDomMessage?.multiStatus, jsTask.url)
             }
-            result.jsData = jsData
         }
     }
 
@@ -544,7 +543,7 @@ open class SeleniumEngine(
         headers.put(Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
         headers.put(Q_RESPONSE_TIME, System.currentTimeMillis().toString())
 
-        val urls = page.browserJsData?.urls
+        val urls = page.activeDomUrls
         if (urls != null) {
             page.location = urls.location
             if (page.url != page.location) {

@@ -18,7 +18,8 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
-import ai.platon.pulsar.persist.model.BrowserJsData
+import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
+import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.classification.InterfaceStability.Evolving
@@ -345,9 +346,9 @@ class LoadComponent(
             return FetchReason.SMALL_CONTENT
         }
 
-        val jsData = page.browserJsData
+        val jsData = page.activeDomMultiStatus
         if (jsData != null) {
-            val (ni, na) = jsData.lastStat ?: BrowserJsData.Stat()
+            val (ni, na) = jsData.lastStat ?: ActiveDomStat()
             if (ni < options.requireImages) {
                 return FetchReason.MISS_FIELD
             }

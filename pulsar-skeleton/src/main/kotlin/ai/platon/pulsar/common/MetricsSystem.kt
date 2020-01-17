@@ -11,9 +11,7 @@ import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.persist.model.BrowserJsData
-import ai.platon.pulsar.persist.model.DomStatistics
-import ai.platon.pulsar.persist.model.LabeledHyperLink
+import ai.platon.pulsar.persist.model.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DurationFormatUtils
 import org.slf4j.LoggerFactory
@@ -169,7 +167,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
 
         // show all javascript DOM urls, we should know the exact differences between them
         // they look like all the same
-        val urls = page.browserJsData?.urls
+        val urls = page.activeDomUrls
         if (urls != null) {
             sb.append('\n')
             // NOTE: it seems they are all the same
@@ -243,7 +241,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         writeLineTo(report, "illegal-last-fetch-time.txt")
     }
 
-    fun debugRedirects(url: String, urls: BrowserJsData.Urls) {
+    fun debugRedirects(url: String, urls: ActiveDomUrls) {
         val location = urls.location
         if (location == url && urls.URL == url && urls.baseURI == url && urls.documentURI == url) {
             // no redirect
@@ -391,10 +389,10 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
 
             val responseTime = page.metadata[Name.RESPONSE_TIME]?:""
             val proxy = page.metadata[Name.PROXY]
-            val jsData = page.browserJsData
+            val jsData = page.activeDomMultiStatus
             var jsSate = ""
             if (jsData != null) {
-                val (ni, na, nnm, nst) = jsData.lastStat?:BrowserJsData.Stat()
+                val (ni, na, nnm, nst) = jsData.lastStat?: ActiveDomStat()
                 jsSate = String.format(" i/a/nm/st:%d/%d/%d/%d", ni, na, nnm, nst)
             }
 

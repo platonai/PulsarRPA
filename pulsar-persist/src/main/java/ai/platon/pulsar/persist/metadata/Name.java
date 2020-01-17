@@ -37,8 +37,8 @@ public enum Name {
     RESPONSE_TIME("F_RT"),
     BROWSER("F_BR"),
     HTML_INTEGRITY("F_HI"),
-    BROWSER_JS_DATA("F_JD"),
-    BROWSER_JS_URLS("F_JU"),
+    ACTIVE_DOM_MULTI_STATUS("F_ADMS"),
+    ACTIVE_DOM_URLS("F_ADU"),
     PROXY("F_PX"),
 
     /**

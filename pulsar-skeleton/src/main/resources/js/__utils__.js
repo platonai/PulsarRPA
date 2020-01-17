@@ -23,7 +23,7 @@ __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
         __utils__.updatePulsarStat(true);
     }
 
-    let status = document.pulsarData.status;
+    let status = document.pulsarData.multiStatus;
     status.n += 1;
 
     // start count down latch
@@ -42,7 +42,7 @@ __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     }
 
     // The document is ready
-    return JSON.stringify(document.pulsarData.status)
+    return JSON.stringify(document.pulsarData.multiStatus)
 };
 
 /**
@@ -60,7 +60,7 @@ __utils__.navigateTo = function(selector, sourceLocation, maxRound = 30) {
 
 __utils__.createPulsarDataIfAbsent = function() {
     if (!document.pulsarData) {
-        var location = "";
+        let location = "";
         if (window.location instanceof Location) {
             location = window.location.href
         } else {
@@ -68,11 +68,13 @@ __utils__.createPulsarDataIfAbsent = function() {
         }
 
         document.pulsarData = {
-            status: { n: 0, scroll: 0, idl: 0, st: "", r: "" },
-            initStat: null,
-            lastStat: {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
-            lastD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
-            initD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
+            multiStatus: {
+                status: { n: 0, scroll: 0, idl: 0, st: "", r: "" },
+                initStat: null,
+                lastStat: {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
+                lastD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
+                initD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
+            },
             urls: {
                 URL: document.URL,
                 baseURI: document.baseURI,
@@ -120,8 +122,9 @@ __utils__.isActuallyReady = function() {
     }
 
     let ready = false;
-    let status = document.pulsarData.status;
-    let d = document.pulsarData.lastD;
+    let multiStatus = document.pulsarData.multiStatus;
+    let status = multiStatus.status;
+    let d = multiStatus.lastD;
 
     // all sub resources are loaded, the document is ready now
     if (status.st === "c") {
@@ -131,7 +134,7 @@ __utils__.isActuallyReady = function() {
     }
 
     // The DOM is very good for analysis, no wait for more information
-    let stat = document.pulsarData.lastStat;
+    let stat = multiStatus.lastStat;
     if (status.n > 20 && stat.h >= fineHeight && stat.na >= fineNumAnchor && stat.ni >= fineNumImage) {
         if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
             // DOM changed since last check, store the latest stat and return false to wait for the next check
@@ -149,8 +152,9 @@ __utils__.isActuallyReady = function() {
 
 __utils__.isIdle = function(init = false) {
     let idle = false;
-    let status = document.pulsarData.status;
-    let d = document.pulsarData.lastD;
+    let multiStatus = document.pulsarData.multiStatus;
+    let status = multiStatus.status;
+    let d = multiStatus.lastD;
     if (d.h < 10 && d.na === 0 && d.ni === 0 && d.nst === 0 && d.nnm === 0) {
         // DOM changed since last check, store the latest stat and return false to wait for the next check
         ++status.idl;
@@ -202,8 +206,10 @@ __utils__.updatePulsarStat = function(init = false) {
                     ele.setAttribute("_ps_lazy", "1")
                 }
 
-                let type = isNumberLike ? "nm" : "st";
-                ele.setAttribute("_ps_tp", type);
+                if (ele != null) {
+                    let type = isNumberLike ? "nm" : "st";
+                    ele.setAttribute("_ps_tp", type);
+                }
             }
         }
 
@@ -216,15 +222,16 @@ __utils__.updatePulsarStat = function(init = false) {
         return
     }
 
-    let initStat = document.pulsarData.initStat;
+    let multiStatus = document.pulsarData.multiStatus;
+    let initStat = multiStatus.initStat;
     if (!initStat) {
         initStat = { w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm };
-        document.pulsarData.initStat = initStat
+        multiStatus.initStat = initStat
     }
-    let lastStat = document.pulsarData.lastStat;
-    let lastStatus = document.pulsarData.status;
+    let lastStat = multiStatus.lastStat;
+    let lastStatus = multiStatus.status;
     let state = document.readyState.substr(0, 1);
-    let data = {
+    let newMultiStatus = {
         status: {n: lastStatus.n, scroll: lastStatus.scroll, idl: lastStatus.idl, st: state, r: lastStatus.r},
         lastStat: {w: width, h: height, na: na, ni: ni, nst: nst, nnm: nnm},
         // changes from last round
@@ -247,7 +254,7 @@ __utils__.updatePulsarStat = function(init = false) {
         }
     };
 
-    document.pulsarData = Object.assign(document.pulsarData, data)
+    document.pulsarData.multitatus = Object.assign(multiStatus, newMultiStatus)
 };
 
 __utils__.scrollToBottom = function() {
@@ -275,7 +282,7 @@ __utils__.scrollDownN = function(scrollCount = 5) {
         return false
     }
 
-    let status = document.pulsarData.status;
+    let status = document.pulsarData.multiStatus.status;
 
     window.scrollBy(0, 500);
     status.scroll += 1;
