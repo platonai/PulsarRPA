@@ -2,9 +2,14 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.ContextResettable
 import ai.platon.pulsar.common.ContextResettableRunner
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.proxy.InternalProxyServer
+import org.slf4j.LoggerFactory
 
 private class ContextResettableBrowseTask(
         val task: FetchTask,
@@ -34,7 +39,9 @@ class BrowserContext(
         val ips: InternalProxyServer,
         val immutableConfig: ImmutableConfig
 ) {
+    private val log = LoggerFactory.getLogger(BrowserContext::class.java)!!
     private val contextResettableRunner = ContextResettableRunner(immutableConfig) { driverPool.reset() }
+    private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
         val resettable = ContextResettableBrowseTask(task, browseFun, this)
@@ -47,8 +54,22 @@ class BrowserContext(
     }
 
     fun runInDriverPool(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
-        return driverPool.run(task.priority, task.volatileConfig) {
-            browseFun(task, it)
-        }
+        var result: BrowseResult
+        var response: Response = ForwardingResponse(task.url, ProtocolStatus.STATUS_SUCCESS)
+        var i = 0
+        do {
+            result = driverPool.run(task.priority, task.volatileConfig) {
+                browseFun(task, it)
+            }
+            result.response?.let { response = it }
+
+            if (i > 1) {
+                log.info("The ${i}th round re-fetch in driver | {}", task.url)
+            }
+
+            ++i
+        } while(task.retries < fetchMaxRetry && response.status.isRetry(RetryScope.WEB_DRIVER))
+
+        return result
     }
 }

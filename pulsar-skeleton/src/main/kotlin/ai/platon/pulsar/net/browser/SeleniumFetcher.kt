@@ -371,10 +371,10 @@ class SeleniumFetcher(
 
     private fun logTaskFailed(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
-            log.info("Batch {} round {} task failed, reason {}, {} in {}, total {} failed | {}",
+            log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
                     cx.batchId, String.format("%2d", cx.round),
-                    ProtocolStatus.getMinorName(response.code),
                     StringUtil.readableByteCount(response.length()), DateTimeUtil.readableDuration(elapsed),
+                    response.status,
                     cx.status.numFailedTasks,
                     url
             )

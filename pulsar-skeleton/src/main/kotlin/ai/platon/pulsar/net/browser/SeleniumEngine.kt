@@ -287,7 +287,7 @@ open class SeleniumEngine(
             pageSource = handlePageSource(pageSource).toString()
         } else {
             // The page seems to be broken, retry it, if there are too many broken pages in a certain period, reset the browse context
-            status = handleBrokenPageSource(task, navigateTime)
+            status = handleBrokenPageSource(task, integrity, navigateTime)
         }
 
         // Update headers, metadata, do the logging stuff
@@ -572,10 +572,14 @@ open class SeleniumEngine(
         return replaceHTMLCharset(pageSource, charsetPattern)
     }
 
-    protected open fun handleBrokenPageSource(task: FetchTask, navigateTime: Instant): ProtocolStatus {
+    protected open fun handleBrokenPageSource(task: FetchTask, htmlIntegrity: HtmlIntegrity, navigateTime: Instant): ProtocolStatus {
         var status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
         if (task.retries > fetchMaxRetry) {
             return status
+        }
+
+        if (htmlIntegrity == HtmlIntegrity.EMPTY || htmlIntegrity == HtmlIntegrity.EMPTY_BODY) {
+            return ProtocolStatus.retry(RetryScope.WEB_DRIVER)
         }
 
         brokenPages.add(task.url)

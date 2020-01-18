@@ -38,8 +38,13 @@ class RobustSeleniumEngine(
         var integrity = HtmlIntegrity.OK
         var message = ""
 
-        if (integrity.isOK && length < 100 && pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1) {
-            integrity = HtmlIntegrity.TOO_SMALL
+        if (length == 0L) {
+            integrity = HtmlIntegrity.EMPTY
+        }
+
+        // might be caused by web driver exception
+        if (integrity.isOK && isEmptyBody(pageSource)) {
+            integrity = HtmlIntegrity.EMPTY_BODY
         }
 
         if (integrity.isOK && length < 1_000_000 && isAmazonItemPage(page)) {
@@ -113,8 +118,8 @@ class RobustSeleniumEngine(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Page broken - domain: {}({}) proxy: {} | {} | {} | {}",
-                    domain, count, proxyEntry.display, message, link, task.url)
+            log.warn("Page broken | {} | domain: {}({}) proxy: {} | {} | {}",
+                    message, domain, count, proxyEntry.display, link, task.url)
         } else {
             log.warn("Page broken | {} | {} | {}", message, link, task.url)
         }

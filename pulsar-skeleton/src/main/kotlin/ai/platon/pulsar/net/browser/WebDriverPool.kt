@@ -139,11 +139,12 @@ class WebDriverPool(
 
     fun cancel(url: String) {
         ensureNotClosing()
-        if (isClosed) {
-            return
-        }
 
         lock.withLock {
+            if (isClosed) {
+                return
+            }
+
             workingDrivers.values.forEach {
                 if (it.currentUrl == url) {
                     it.executeScript(";window.stop();")
@@ -153,14 +154,19 @@ class WebDriverPool(
     }
 
     fun report() {
+        log.info(formatStatus(verbose = true))
+
         lock.withLock {
+            val sb = StringBuilder()
+
             allDrivers.values.forEach { driver ->
-                val cookies = driver.driver.manage().cookies.joinToString("\n") { it.toString() }
-                if (cookies.isNotBlank()) {
-                    log.debug("Cookies: >>>\n$cookies\n<<<")
-                } else {
-                    log.debug("No cookie")
-                }
+                driver.driver.manage().cookies.joinTo(sb, "Cookies in driver #${driver.id}: ") { it.toString() }
+            }
+
+            if (sb.isNotBlank()) {
+                log.info("Cookies: \n{}", sb)
+            } else {
+                log.info("All drivers have no cookie")
             }
         }
     }

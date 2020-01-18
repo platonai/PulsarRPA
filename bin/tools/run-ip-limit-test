@@ -21,7 +21,7 @@ source "$bin"/include/pulsar-config.sh
 
 bin="$PULSAR_HOME"/bin
 
-LIMIT=20
+LIMIT=2000
 # main loop : rounds of generate - fetch - parse - update
 for ((round=1; round <= LIMIT ; round++))
 do

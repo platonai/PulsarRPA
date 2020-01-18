@@ -13,7 +13,7 @@ val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\
         .toPattern(Pattern.CASE_INSENSITIVE)
 
 enum class HtmlIntegrity {
-    OK, NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
+    OK, EMPTY, EMPTY_BODY, NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
     TOO_SMALL, TOO_SMALL_IN_HISTORY, TOO_SMALL_IN_BATCH;
 
     val isOK: Boolean get() = this == OK
@@ -50,4 +50,20 @@ fun replaceHTMLCharset(pageSource: String, charsetPattern: Pattern, targetCharse
     sb.append(pageSource, pos, pageSource.length)
 
     return sb
+}
+
+fun hasHtmlTags(pageSource: String): Boolean {
+    return pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1
+}
+
+fun hasHeadTags(pageSource: String): Boolean {
+    return pageSource.indexOf("<head") != -1 && pageSource.lastIndexOf("</head>") != -1
+}
+
+fun hasBodyTags(pageSource: String): Boolean {
+    return pageSource.indexOf("<body") != -1 && pageSource.lastIndexOf("</body>") != -1
+}
+
+fun isEmptyBody(pageSource: String): Boolean {
+    return pageSource.indexOf("<body></body>") != -1
 }
