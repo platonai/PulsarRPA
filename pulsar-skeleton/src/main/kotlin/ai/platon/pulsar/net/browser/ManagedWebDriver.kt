@@ -124,6 +124,8 @@ class ManagedWebDriver(
 
     @Synchronized
     fun closeRedundantTabs() {
+        if (isQuit) return
+
         val handles = driver.windowHandles.size
         if (handles > 1) {
             driver.close()
@@ -132,6 +134,8 @@ class ManagedWebDriver(
 
     @Synchronized
     fun deleteAllCookiesSilently() {
+        if (isQuit) return
+
         try {
             val names = driver.manage().cookies.map { it.name }
             names.forEach { name ->
@@ -148,6 +152,8 @@ class ManagedWebDriver(
 
     @Synchronized
     fun deleteAllCookiesSilently(targetUrl: String) {
+        if (isQuit) return
+
         try {
             driver.get(targetUrl)
             driver.manage().deleteAllCookies()
@@ -155,15 +161,6 @@ class ManagedWebDriver(
             log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }
     }
-
-//    @Synchronized
-//    fun deleteCookieNamedSilently(name: String) {
-//        try {
-//            driver.manage().deleteCookieNamed(name)
-//        } catch (e: Throwable) {
-//            log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
-//        }
-//    }
 
     @Synchronized
     override fun equals(other: Any?): Boolean {

@@ -22,6 +22,8 @@ import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Manager all external proxies
@@ -36,6 +38,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     private val freeProxies = LinkedBlockingDeque<ProxyEntry>(capacity)
     private val workingProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
     private val unavailableProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
+    private val containerLock = ReentrantLock()
     private val closed = AtomicBoolean()
 
     val isClosed get() = closed.get()
@@ -58,15 +61,19 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     override val size get() = freeProxies.size
 
     override fun clear() {
-        freeProxies.clear()
-        workingProxies.clear()
+        containerLock.withLock {
+            freeProxies.clear()
+            workingProxies.clear()
+        }
     }
 
     override fun offer(proxyEntry: ProxyEntry): Boolean {
-        proxyEntry.refresh()
-        proxyEntries.add(proxyEntry)
-        workingProxies.remove(proxyEntry)
-        return freeProxies.offer(proxyEntry)
+        containerLock.withLock {
+            proxyEntry.refresh()
+            proxyEntries.add(proxyEntry)
+            workingProxies.remove(proxyEntry)
+            return freeProxies.offer(proxyEntry)
+        }
     }
 
     override fun poll(): ProxyEntry? {
@@ -94,8 +101,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
      * The proxy may be recovered later
      */
     fun retire(proxyEntry: ProxyEntry) {
-        workingProxies.remove(proxyEntry)
-        unavailableProxies.add(proxyEntry)
+        containerLock.withLock {
+            workingProxies.remove(proxyEntry)
+            unavailableProxies.add(proxyEntry)
+        }
     }
 
     /**
@@ -106,7 +115,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         var n = limit
         var recovered = 0
 
-        synchronized(unavailableProxies) {
+        containerLock.withLock {
             val it = unavailableProxies.iterator()
             while (!isClosed && n-- > 0 && it.hasNext()) {
                 val proxy = it.next()
@@ -230,7 +239,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             dump(path, proxies)
         }
 
-        log.info("Proxy pool dumped. {} | file://{}", this, currentArchiveDir)
+        log.info("{} | Dumped to file://{}", this, currentArchiveDir)
     }
 
     override fun toString(): String {

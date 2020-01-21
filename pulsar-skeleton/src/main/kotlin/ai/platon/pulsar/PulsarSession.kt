@@ -51,6 +51,7 @@ open class PulsarSession(
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
+    val isActive get() = !closed.get() && PulsarEnv.isActive
 
     /**
      * Close objects when sessions closes

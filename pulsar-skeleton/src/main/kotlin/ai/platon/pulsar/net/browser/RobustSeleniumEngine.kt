@@ -47,6 +47,10 @@ class RobustSeleniumEngine(
             integrity = HtmlIntegrity.EMPTY_BODY
         }
 
+        if (integrity.isOK && length < 1_000_000 && isAmazonRobotCheck(pageSource, page)) {
+            integrity = HtmlIntegrity.ROBOT_CHECK
+        }
+
         if (integrity.isOK && length < 1_000_000 && isAmazonItemPage(page)) {
             integrity = HtmlIntegrity.TOO_SMALL
         }
@@ -84,11 +88,20 @@ class RobustSeleniumEngine(
         return integrity
     }
 
+    private fun isAmazon(page: WebPage): Boolean {
+        return page.url.contains("amazon.com")
+    }
+
     /**
      * Site specific, should be moved to a better place
      * */
     private fun isAmazonItemPage(page: WebPage): Boolean {
-        return page.url.contains("amazon.com") && page.url.contains("/dp/")
+        return isAmazon(page) && page.url.contains("/dp/")
+    }
+
+    private fun isAmazonRobotCheck(pageSource: String, page: WebPage): Boolean {
+        //
+        return isAmazon(page) && pageSource.length < 150_000 && pageSource.contains("Type the characters you see in this image")
     }
 
     private fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {

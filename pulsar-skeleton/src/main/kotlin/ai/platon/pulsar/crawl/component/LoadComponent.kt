@@ -233,7 +233,7 @@ class LoadComponent(
 
     private fun loadOne(normUrl: NormUrl): WebPage {
         if (closed.get() || !PulsarEnv.isActive) {
-            log.warn("Application closed | {}", normUrl)
+            log.warn("This application is closed")
             return WebPage.NIL
         }
 

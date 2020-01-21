@@ -37,7 +37,6 @@ class BatchFetchComponent(
     /**
      * Parallel fetch all the urls
      *
-     *
      * Eager fetch only some urls to response as soon as possible, the rest urls will be fetched in background later
      *
      * @param urls    The urls to fetch
@@ -53,7 +52,6 @@ class BatchFetchComponent(
     /**
      * Group all urls by URL schema, and parallel fetch each group
      *
-     *
      * Eager fetch only some urls to response as soon as possible, the rest urls will be fetched in background later
      *
      * @param urls    The urls to fetch
@@ -64,7 +62,7 @@ class BatchFetchComponent(
         val pages: MutableList<WebPage> = ArrayList()
 //        val groupedUrls = optimizeBatchSize(Lists.newArrayList(urls), options).stream()
 //                .collect(Collectors.groupingBy { url: String? -> StringUtils.substringBefore(url, "://") })
-        val groupedUrls = optimizeBatchSize(urls, options).groupBy { StringUtils.substringBefore(it, "://") }
+        val groupedUrls = optimizeBatchSize(urls, options).groupBy { it.substringBefore("://") }
         groupedUrls.forEach { (key, gUrls) ->
             val protocol = protocolFactory.getProtocol(key)
             if (protocol != null) {
@@ -79,9 +77,7 @@ class BatchFetchComponent(
     /**
      * Fetch all urls, if allowParallel is true and the config suggests parallel is preferred, parallel fetch all items
      *
-     *
      * Eager fetch only some urls to response as soon as possible, the rest urls will be fetched in background later
-     *
      *
      * If the protocol supports native parallel, use the protocol's batch fetch method,
      * Or else parallel fetch pages in a ExecutorService
@@ -91,9 +87,7 @@ class BatchFetchComponent(
         return if (options.preferParallel) {
             parallelFetchAll(urls, options)
         } else {
-            optimizeBatchSize(urls, options).stream()
-                    .map { url: String? -> fetch(url!!, options) }
-                    .collect(Collectors.toList())
+            optimizeBatchSize(urls, options).map { fetch(it, options) }
         }
     }
 

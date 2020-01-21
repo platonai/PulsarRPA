@@ -405,12 +405,13 @@ class SeleniumFetcher(
         if (log.isInfoEnabled) {
             val elapsed = Duration.between(cx.startTime, Instant.now())
             val aveTime = elapsed.dividedBy(cx.batchSize.toLong())
-            log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}bps",
+            val speed = StringUtil.readableByteCount((1.0 * cx.status.totalBytes / elapsed.seconds).roundToLong())
+            log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}",
                     cx.batchId, cx.batchSize,
                     DateTimeUtil.readableDuration(elapsed),
                     DateTimeUtil.readableDuration(aveTime),
                     StringUtil.readableByteCount(cx.status.averagePageSize.roundToLong()),
-                    String.format("%,.3f", 1.0 * cx.status.totalBytes * 8 / elapsed.seconds)
+                    speed
             )
         }
     }

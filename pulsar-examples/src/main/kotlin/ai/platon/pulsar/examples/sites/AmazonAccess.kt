@@ -1,5 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.DateTimeUtil
@@ -73,7 +74,11 @@ class AmazonAccess: WebAccess() {
         }
     }
 
-    fun testIpLimit(portalUrl: String) {
+    private fun testIpLimit(portalUrl: String) {
+        if (!i.isActive) {
+            return
+        }
+
         val args = "-i 1s -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
 
@@ -113,7 +118,10 @@ class AmazonAccess: WebAccess() {
 //            i.loadAll(urls, itemOptions).let { pages.addAll(it) }
 //        }
 
-        if (pages.isEmpty()) return
+        if (pages.isEmpty()) {
+            log.info("No page fetched this round")
+            return
+        }
 
         numTotalPages += pages.size
         val lengths = pages.map { it.contentBytes.toLong() }.sortedDescending()

@@ -18,7 +18,8 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_HTTP_CODE = "httpCode";
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
     public static final String ARG_URL = "url";
-    public static final String ARG_RETRY_SCOPE = "scope";
+    public static final String ARG_RETRY_SCOPE = "rsp";
+    public static final String ARG_RETRY_REASON = "rrs";
 
     public static final short NOTFETCHED = 0;
     /**
@@ -110,6 +111,16 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     @Nonnull
     public static ProtocolStatus retry(RetryScope scope) {
         return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope);
+    }
+
+    @Nonnull
+    public static ProtocolStatus retry(RetryScope scope, Object reason) {
+        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope, ARG_RETRY_REASON, reason);
+    }
+
+    @Nonnull
+    public static ProtocolStatus cancel(Object... args) {
+        return failed(ProtocolStatusCodes.CANCELED, args);
     }
 
     @Nonnull

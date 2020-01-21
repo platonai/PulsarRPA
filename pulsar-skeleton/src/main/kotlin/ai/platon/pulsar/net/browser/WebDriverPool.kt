@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
 import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
@@ -13,7 +14,6 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.InternalProxyServer
-import org.apache.commons.lang3.StringUtils
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
 import org.openqa.selenium.Capabilities
@@ -25,6 +25,7 @@ import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
+import java.nio.file.Files
 import java.security.KeyManagementException
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
@@ -61,7 +62,7 @@ class WebDriverPool(
         private val freeDrivers = mutableMapOf<Int, LinkedList<ManagedWebDriver>>()
         private val workingDrivers = HashMap<Int, ManagedWebDriver>()
         private val closingDrivers = AtomicBoolean()
-        private val lock: Lock = ReentrantLock()
+        private val lock: Lock = ReentrantLock() // lock for containers
         private val notEmpty: Condition = lock.newCondition()
         private val notBusy: Condition = lock.newCondition()
         private val notClosing: Condition = lock.newCondition()
@@ -137,20 +138,20 @@ class WebDriverPool(
         closeAll(incognito = true)
     }
 
-    fun cancel(url: String) {
+    fun cancel(url: String): ManagedWebDriver? {
         ensureNotClosing()
 
+        var driver: ManagedWebDriver? = null
         lock.withLock {
             if (isClosed) {
-                return
+                return null
             }
 
-            workingDrivers.values.forEach {
-                if (it.currentUrl == url) {
-                    it.executeScript(";window.stop();")
-                }
-            }
+            driver = workingDrivers.values.firstOrNull { it.currentUrl == url }
         }
+
+        driver?.executeScriptSilently(";window.stop();")
+        return driver
     }
 
     fun report() {
@@ -512,6 +513,17 @@ class WebDriverPool(
         proxyEntry?.let { ips.changeProxyIfRunning(it) }
     }
 
+    private fun deleteBrowserCache() {
+        val dataFiles = Files.list(AppPaths.SYS_TMP_DIR).filter { it.fileName.startsWith(".org.chromium.Chromium") }
+        dataFiles.forEach {
+            try {
+                Files.deleteIfExists(it)
+            } catch (t: Throwable) {
+                log.warn("Unexpected exception. {}", t)
+            }
+        }
+    }
+
     private fun resumeAllDrivers() {
         workingDrivers.values.forEach {
             it.status = DriverStatus.WORKING
@@ -531,6 +543,9 @@ class WebDriverPool(
             if (!processExit) {
                 changeProxy()
             }
+
+            // browser cache can be useful
+            // deleteBrowserCache()
         }
 
         if (allDrivers.isEmpty()) {

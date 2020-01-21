@@ -174,7 +174,8 @@ open class SeleniumEngine(
     }
 
     fun cancel(url: String) {
-        driverPool.cancel(url)
+        val driver = driverPool.cancel(url)
+        // TODO: stop js timers, e.g. FluentWait
     }
 
     protected open fun browseWith(task: FetchTask, driver: ManagedWebDriver): BrowseResult {
@@ -579,7 +580,11 @@ open class SeleniumEngine(
         }
 
         if (htmlIntegrity == HtmlIntegrity.EMPTY || htmlIntegrity == HtmlIntegrity.EMPTY_BODY) {
-            return ProtocolStatus.retry(RetryScope.WEB_DRIVER)
+            return ProtocolStatus.retry(RetryScope.WEB_DRIVER, htmlIntegrity)
+        }
+
+        if (htmlIntegrity == HtmlIntegrity.ROBOT_CHECK) {
+            return ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE, htmlIntegrity)
         }
 
         brokenPages.add(task.url)
