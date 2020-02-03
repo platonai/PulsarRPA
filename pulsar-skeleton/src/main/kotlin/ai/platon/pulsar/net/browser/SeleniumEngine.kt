@@ -419,8 +419,8 @@ open class SeleniumEngine(
         val pageLoadTimeout = jsTask.driverConfig.pageLoadTimeout
 
         val documentWait = FluentWait<WebDriver>(jsTask.driver.driver)
-                .withTimeout(pageLoadTimeout.seconds, TimeUnit.SECONDS)
-                .pollingEvery(1, TimeUnit.SECONDS)
+                .withTimeout(pageLoadTimeout)
+                .pollingEvery(Duration.ofSeconds(1))
                 .ignoring(InterruptedException::class.java)
 
         // make sure the document is ready
@@ -453,10 +453,10 @@ open class SeleniumEngine(
 
         val scrollDownCount = jsTask.driverConfig.scrollDownCount.toLong()
         val scrollInterval = jsTask.driverConfig.scrollInterval
-        val timeout = scrollDownCount * scrollInterval.toMillis() + 3 * 1000
+        val scrollTimeout = scrollDownCount * scrollInterval.toMillis() + 3 * 1000
         val scrollWait = FluentWait<WebDriver>(jsTask.driver.driver)
-                .withTimeout(timeout, TimeUnit.MILLISECONDS)
-                .pollingEvery(scrollInterval.toMillis(), TimeUnit.MILLISECONDS)
+                .withTimeout(Duration.ofMillis(scrollTimeout))
+                .pollingEvery(scrollInterval)
                 .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         try {
@@ -490,10 +490,9 @@ open class SeleniumEngine(
     protected open fun jsClick(jsExecutor: JavascriptExecutor, selector: String, driver: ManagedWebDriver, driverConfig: DriverConfig): String {
         checkState()
 
-        val timeout = driverConfig.pageLoadTimeout
         val scrollWait = FluentWait<WebDriver>(driver.driver)
-                .withTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
-                .pollingEvery(1000, TimeUnit.MILLISECONDS)
+                .withTimeout(driverConfig.pageLoadTimeout)
+                .pollingEvery(Duration.ofSeconds(1))
                 .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         try {

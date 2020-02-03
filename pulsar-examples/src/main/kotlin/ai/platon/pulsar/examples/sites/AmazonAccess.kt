@@ -1,6 +1,5 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.DateTimeUtil
@@ -79,10 +78,10 @@ class AmazonAccess: WebAccess() {
             return
         }
 
+        ++round
+
         val args = "-i 1s -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
-
-        ++round
 
         log.info("\n\n\n--------------------------\nRound $round $portalUrl")
 
@@ -109,14 +108,12 @@ class AmazonAccess: WebAccess() {
 
         val pages = mutableListOf<WebPage>()
         val itemOptions = options.createItemOption()
+        var j = 0
         Lists.partition(links.toList(), 20).forEach { urls ->
             driverPool.reset()
+            println("----------------The ${++j}th batch in round ${round}-------------------------")
             i.loadAll(urls, itemOptions).let { pages.addAll(it) }
         }
-
-//        Lists.partition(links.toList(), 5).take(1).forEach { urls ->
-//            i.loadAll(urls, itemOptions).let { pages.addAll(it) }
-//        }
 
         if (pages.isEmpty()) {
             log.info("No page fetched this round")
@@ -153,9 +150,10 @@ class AmazonAccess: WebAccess() {
 
 fun main() {
     val archiveDir = AppPaths.TMP_ARCHIVE_DIR.resolve(DateTimeUtil.now("MMdd.HHmm"))
+    Files.deleteIfExists(archiveDir)
     Files.move(AppPaths.WEB_CACHE_DIR, archiveDir)
 
     val access = AmazonAccess()
-    // access.laptops()
-    access.testIpLimit()
+    access.laptops()
+    // access.testIpLimit()
 }

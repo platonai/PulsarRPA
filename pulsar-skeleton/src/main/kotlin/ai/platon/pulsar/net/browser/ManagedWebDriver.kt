@@ -98,6 +98,14 @@ class ManagedWebDriver(
         return null
     }
 
+    fun maximize() {
+        driver.manage().window().maximize()
+    }
+
+    fun scollDown() {
+
+    }
+
     @Synchronized
     fun pause() {
         status = DriverStatus.PAUSED

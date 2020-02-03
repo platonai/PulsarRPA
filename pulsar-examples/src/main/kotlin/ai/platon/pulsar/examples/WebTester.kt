@@ -6,10 +6,8 @@ import ai.platon.pulsar.common.*
 import org.slf4j.LoggerFactory
 
 object WebTester {
-    private val env = PulsarEnv.get()
-    private val pc = PulsarContext.getOrCreate()
-    private val i = pc.createSession()
     private val log = LoggerFactory.getLogger(WebAccess::class.java)
+    private val i = PulsarContext.getOrCreate().createSession()
 
     fun load() {
         val url = "https://www.finishline.com/store/men/shoes/_/N-1737dkj?mnid=men_shoes"

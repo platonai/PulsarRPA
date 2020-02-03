@@ -153,6 +153,9 @@ public interface AppConstants {
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
     int DEFAULT_INDEX_SERVER_PORT = 8183;
 
+    String DEFAULT_PUPPETEER_HTTP_SERVER = "127.0.0.1:8185";
+    String DEFAULT_PUPPETEER_HTTPS_SERVER = "127.0.0.1:8186";
+
     String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
 
     /**

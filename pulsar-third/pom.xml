@@ -33,10 +33,11 @@
                 </property>
             </activation>
             <modules>
-                <module>pulsar-boilerpipe</module>
-                <module>pulsar-jsoup</module>
-                <module>pulsar-h2</module>
-                <module>pulsar-proxyee</module>
+<!--                <module>pulsar-boilerpipe</module>-->
+<!--                <module>pulsar-jsoup</module>-->
+<!--                <module>pulsar-h2</module>-->
+<!--                <module>pulsar-proxyee</module>-->
+                <module>pulsar-chrome-devtools</module>
             </modules>
         </profile>
     </profiles>
@@ -61,6 +62,11 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-proxyee</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-chrome-devtools</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

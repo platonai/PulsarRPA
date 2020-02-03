@@ -20,6 +20,8 @@ import org.openqa.selenium.Capabilities
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.devtools.log.Log
+import org.openqa.selenium.devtools.network.Network
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -61,7 +63,7 @@ class WebDriverPool(
         // Every value collection is a first in, first out queue
         private val freeDrivers = mutableMapOf<Int, LinkedList<ManagedWebDriver>>()
         private val workingDrivers = HashMap<Int, ManagedWebDriver>()
-        private val closingDrivers = AtomicBoolean()
+        private var driversAreClosing = false
         private val lock: Lock = ReentrantLock() // lock for containers
         private val notEmpty: Condition = lock.newCondition()
         private val notBusy: Condition = lock.newCondition()
@@ -350,7 +352,7 @@ class WebDriverPool(
         ensureNotClosing()
 
         lock.withLock {
-            closingDrivers.set(true)
+            driversAreClosing = true
             try {
                 var i = 0
                 while (workingSize > 0 && i++ < 120) {
@@ -359,7 +361,7 @@ class WebDriverPool(
 
                 closeAllUnlocked(incognito, processExit)
             } finally {
-                closingDrivers.set(false)
+                driversAreClosing = false
                 notClosing.signalAll()
             }
         }
@@ -374,7 +376,7 @@ class WebDriverPool(
     private fun ensureNotClosing() {
         var nanos = pollingTimeout.toNanos()
         lock.withLock {
-            while (closingDrivers.get() && nanos > 0) {
+            while (driversAreClosing && nanos > 0) {
                 nanos = notClosing.awaitNanos(nanos)
             }
         }
@@ -437,12 +439,25 @@ class WebDriverPool(
         val browserType = getBrowserType(conf)
         val driver: WebDriver = when {
             browserType == BrowserType.CHROME -> {
+                // System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
                 ChromeDriver(BrowserControl.createChromeOptions(capabilities))
             }
             RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
                 defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
             }
             else -> defaultWebDriverClass.getConstructor().newInstance()
+        }
+
+        if (driver is ChromeDriver) {
+            val fakeAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36";
+            val devTools = driver.devTools
+            devTools.createSession()
+            devTools.send(Log.enable())
+            devTools.addListener(Log.entryAdded()) { e -> log.error(e.text) }
+            devTools.send(Network.setUserAgentOverride(fakeAgent, Optional.empty(), Optional.empty()))
+
+//            devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty()));
+//            devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
         }
 
         driver.manage().window().maximize()

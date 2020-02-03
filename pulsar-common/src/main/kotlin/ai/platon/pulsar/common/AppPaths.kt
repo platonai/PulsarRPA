@@ -42,6 +42,8 @@ object AppPaths {
     val SCRIPT_DIR = get(TMP_DIR, "scripts")
     @JvmField
     val TEST_DIR = get(TMP_DIR, "test")
+    @JvmField
+    val CHROME_TMP_DIR = get(TMP_DIR, "chrome")
 
     @JvmField
     val ARCHIVE_DIR = get(HOME_DIR, "archive")
@@ -68,7 +70,7 @@ object AppPaths {
 
     init {
         arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, FILE_CACHE_DIR,
-                LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR,
+                LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR, CHROME_TMP_DIR,
                 ARCHIVE_DIR, TMP_ARCHIVE_DIR
         ).forEach {
             if (!Files.exists(it)) {

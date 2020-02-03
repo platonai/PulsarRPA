@@ -90,6 +90,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             proxy = pollOne()
         }
 
+        if (proxy != null) {
+            Files.write(LATEST_AVAILABLE_PROXY, proxy.toString().toByteArray())
+        }
+
         return proxy
     }
 
@@ -372,12 +376,16 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         val ENABLED_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-enabled")
         val AVAILABLE_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-available")
         val ARCHIVE_DIR = AppPaths.get(BASE_DIR, "proxies-archived")
+        val LATEST_AVAILABLE_PROXY = AppPaths.get( "latest-available-proxy")
         val INIT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.HOME_DIR)
                 .map { Paths.get(it, "proxy.providers.txt") }
 
         init {
             arrayOf(ENABLED_PROVIDER_DIR, AVAILABLE_PROVIDER_DIR, ENABLED_PROXY_DIR, AVAILABLE_PROXY_DIR, ARCHIVE_DIR)
                     .forEach { Files.createDirectories(it) }
+            arrayOf(LATEST_AVAILABLE_PROXY).forEach {
+                if (!Files.exists(it)) Files.createFile(it)
+            }
 
             INIT_PROXY_PROVIDER_FILES.forEach {
                 if (Files.exists(it)) {

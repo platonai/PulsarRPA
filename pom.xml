@@ -109,6 +109,18 @@
         </profile>
 
         <profile>
+            <id>tools</id>
+            <activation>
+                <property>
+                    <name>active-tools</name>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-tools</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>app</id>
             <activation>
                 <property>
@@ -129,7 +141,6 @@
             </activation>
             <modules>
                 <module>pulsar-examples</module>
-                <module>pulsar-rest-example</module>
             </modules>
         </profile>
 
@@ -230,6 +241,13 @@
                 <artifactId>pulsar-proxyee</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-chrome-devtools</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-dom</artifactId>
