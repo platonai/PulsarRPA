@@ -5,10 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.persist.model.ActiveDomMessage
-import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang3.StringUtils
-import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver

@@ -15,16 +15,18 @@ open class BrowserControl(
         var jsDirectory: String = "js",
         immutableConfig: ImmutableConfig = ImmutableConfig()
 ) {
-    val log = LoggerFactory.getLogger(BrowserControl::class.java)!!
-
     var viewPort = Dimension(1920, 1080)
 
-    var headless = false
+    var headless = immutableConfig.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
     //
-    var imagesEnabled = true
+    var imagesEnabled = immutableConfig.getBoolean(CapabilityTypes.BROWSER_IMAGES_ENABLED, false)
 
     // We will wait for document ready manually using javascript
     var pageLoadStrategy = "none"
+
+    // The javascript to execute by Web browsers
+    var propertyNames = immutableConfig.getTrimmedStrings(
+            CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
     var pageLoadTimeout = immutableConfig.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
     var scriptTimeout = immutableConfig.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
@@ -33,22 +35,18 @@ open class BrowserControl(
 
     var clientJsVersion = "0.2.3"
 
-    private val jsParameters = mutableMapOf<String, Any>()
-    private var mainJs = ""
-    private var libJs = ""
-
     val scripts = mutableMapOf<String, String>()
 
     // Available user agents
     val userAgents = mutableListOf<String>()
 
+    private val jsParameters = mutableMapOf<String, Any>()
+    private var mainJs = ""
+    private var libJs = ""
+
     constructor(immutableConfig: ImmutableConfig): this(mapOf(), "js", immutableConfig)
 
     init {
-        // The javascript to execute by Web browsers
-        val propertyNames = immutableConfig.getTrimmedStrings(
-                CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
-
         mapOf(
                 "propertyNames" to propertyNames,
                 "viewPortWidth" to viewPort.width,

@@ -94,7 +94,7 @@ object CommonFunctions {
         }
 
         log.debug("Set browser to $browser")
-        return getAndSetConf(h2session, SELENIUM_BROWSER, browserType.name, ttl)
+        return getAndSetConf(h2session, BROWSER_TYPE, browserType.name, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
@@ -103,7 +103,7 @@ object CommonFunctions {
     fun unsetBrowser(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
         unsetFetchMode(h2session)
-        return session.volatileConfig.getAndUnset(SELENIUM_BROWSER)
+        return session.volatileConfig.getAndUnset(BROWSER_TYPE)
     }
 
     /**

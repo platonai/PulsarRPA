@@ -215,16 +215,19 @@ public interface CapabilityTypes {
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
+     * Browser control
+     */
+    String BROWSER_TYPE = "browser.type";
+    String BROWSER_INCOGNITO = "browser.incognito";
+    String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
+    String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
+    String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
+    /**
      * Selenium
      */
-    String SELENIUM_BROWSER = "selenium.browser";
-    String SELENIUM_BROWSER_INCOGNITO = "selenium.browser.incognito";
     String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
-    String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
     String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
     String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
-    String SELENIUM_WEB_DRIVER_DELETE_ALL_COOKIES = "selenium.web.driver.delete.all.cookies";
-
     /**
      * Proxy
      */

@@ -18,6 +18,7 @@
 package ai.platon.pulsar.common.config;
 
 import ai.platon.pulsar.common.SParser;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -97,8 +98,6 @@ public abstract class AbstractConfiguration {
             return;
         }
 
-        // read system properties
-
         if (!preferredDir.isEmpty()) {
             conf.set(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
         }
@@ -119,6 +118,13 @@ public abstract class AbstractConfiguration {
         }
 
         fullPathResources.forEach(conf::addResource);
+
+        // read system properties
+        System.getProperties().forEach((name, value) -> {
+            if (name instanceof String && value instanceof String) {
+                conf.set(name.toString(), value.toString());
+            }
+        });
 
         LOG.info(toString());
     }

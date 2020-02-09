@@ -124,7 +124,7 @@ class BrowserEmulateFetcher(
         val volatileConfig = page.volatileConfig ?: VolatileConfig(immutableConfig)
         val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
         val task = FetchTask(0, nextTaskId, priority, page, volatileConfig)
-        val incognito = volatileConfig.getBoolean(SELENIUM_BROWSER_INCOGNITO, false)
+        val incognito = volatileConfig.getBoolean(BROWSER_INCOGNITO, false)
         if (incognito) {
             task.deleteAllCookies = true
             task.closeBrowsers = true

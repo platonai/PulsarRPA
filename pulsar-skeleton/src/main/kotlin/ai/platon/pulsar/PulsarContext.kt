@@ -2,7 +2,7 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes.SELENIUM_BROWSER_INCOGNITO
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -154,7 +154,7 @@ class PulsarContext: AutoCloseable {
             options.volatileConfig = VolatileConfig(PulsarEnv.unmodifiedConfig)
         }
 
-        options.volatileConfig?.setBoolean(SELENIUM_BROWSER_INCOGNITO, options.incognito)
+        options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)
 
         return if (isItemOption) options.createItemOption() else options
     }

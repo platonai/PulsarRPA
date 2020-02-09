@@ -240,7 +240,7 @@ __utils__.updatePulsarStat = function(init = false) {
         }
     };
 
-    document.pulsarData.multitatus = Object.assign(multiStatus, newMultiStatus)
+    document.pulsarData.multiStatus = Object.assign(multiStatus, newMultiStatus)
 };
 
 __utils__.scrollToBottom = function() {

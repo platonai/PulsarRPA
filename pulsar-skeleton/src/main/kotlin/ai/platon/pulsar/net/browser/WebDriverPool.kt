@@ -34,8 +34,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.Condition
-import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import java.util.logging.Level
 import kotlin.collections.HashMap
@@ -75,7 +73,7 @@ class WebDriverPool(
 
     private val defaultWebDriverClass = conf.getClass(
             SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-    private val isHeadless = conf.getBoolean(SELENIUM_BROWSER_HEADLESS, true)
+    private val isHeadless = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
     private val isClosed = closed.get()
     val capacity: Int = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * AppConstants.NCPU).toInt())
@@ -501,8 +499,8 @@ class WebDriverPool(
      * Quality: chrome > htmlunit > native
      */
     private fun getBrowserType(mutableConfig: ImmutableConfig?): BrowserType {
-        return mutableConfig?.getEnum(SELENIUM_BROWSER, BrowserType.CHROME)
-                ?: conf.getEnum(SELENIUM_BROWSER, BrowserType.CHROME)
+        return mutableConfig?.getEnum(BROWSER_TYPE, BrowserType.CHROME)
+                ?: conf.getEnum(BROWSER_TYPE, BrowserType.CHROME)
     }
 
     private fun pauseAllWorkingDrivers() {

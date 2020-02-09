@@ -112,7 +112,11 @@ class ChromeDevtoolsDriver(
     }
 
     override fun getSessionId(): SessionId? {
-        return if (isClosed) null else SessionId(mainFrame.id)
+        return try {
+            if (isClosed) null else SessionId(mainFrame.id)
+        } catch (e: ChromeDevToolsInvocationException) {
+            null
+        }
     }
 
     override fun getCurrentUrl(): String {
