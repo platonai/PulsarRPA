@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.persist.model.ActiveDomMessage
@@ -60,8 +61,8 @@ class ChromeDevtoolsDriver(
             val viewport = Viewport()
             viewport.x = 0.0
             viewport.y = 0.0
-            viewport.width = browserControl.viewPort.getWidth()
-            viewport.height = browserControl.viewPort.getHeight()
+            viewport.width = BrowserControl.viewPort.getWidth()
+            viewport.height = BrowserControl.viewPort.getHeight()
             viewport.scale = 1.0
             return viewport
         }

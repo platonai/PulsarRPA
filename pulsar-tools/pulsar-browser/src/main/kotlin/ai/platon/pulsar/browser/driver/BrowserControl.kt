@@ -15,7 +15,10 @@ open class BrowserControl(
         var jsDirectory: String = "js",
         immutableConfig: ImmutableConfig = ImmutableConfig()
 ) {
-    var viewPort = Dimension(1920, 1080)
+    companion object {
+        // required
+        var viewPort = Dimension(1920, 1080)
+    }
 
     var headless = immutableConfig.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
     //
