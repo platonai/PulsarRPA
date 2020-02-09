@@ -1,24 +1,23 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.common.BrowserControl
+import ai.platon.pulsar.net.browser.WebDriverControl
 import ai.platon.pulsar.common.options.LoadOptions
-import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 
-object IpChecker {
+class IpChecker: AutoCloseable {
     private val pc = PulsarContext.getOrCreate()
     private val i = pc.createSession()
     private val log = LoggerFactory.getLogger(IpChecker::class.java)
 
     init {
-        BrowserControl.headless = true
+        // WebDriverControl.headless = false
     }
 
     private val onlineCheckTools = listOf(
-            "https://httpbin.org/headers",
-            "https://whatleaks.com/",
-            "https://ipleak.net/"
+//            "https://httpbin.org/headers",
+            "https://whatleaks.com/"
+//            "https://ipleak.net/"
     )
 
     fun check() {
@@ -36,8 +35,14 @@ object IpChecker {
             log.info("Export to: file://{}", path)
         }
     }
+
+    override fun close() {
+        i.close()
+        pc.close()
+        pc.env.shutdown()
+    }
 }
 
 fun main() {
-    IpChecker.check()
+    IpChecker().use { it.check() }
 }

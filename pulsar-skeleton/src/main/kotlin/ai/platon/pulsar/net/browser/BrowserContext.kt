@@ -24,7 +24,7 @@ private class ContextResettableBrowseTask(
         result = browserContext.runInIPS(task, browseFun)
 
         reset = when {
-            task.incognito -> true
+//            task.incognito -> true
             nRedo == 0 -> result.response?.status?.isRetry(RetryScope.BROWSER_CONTEXT)?:false
             else -> false
         }

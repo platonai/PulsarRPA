@@ -41,9 +41,9 @@ internal class BatchFetchContext(
     var startTime = Instant.now()
     val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
-    val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(10)
+    val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(5)
     val checkInterval = Duration.ofSeconds(1)
-    val idleTimeout = Duration.ofMinutes(3)
+    val idleTimeout = threadTimeout.plusSeconds(5)
     val batchSize = Iterables.size(pages)
     val numAllowedFailures = max(10, batchSize / 3)
 
@@ -94,12 +94,12 @@ internal class BatchFetchContext(
  *
  * Note: SeleniumEngine should be in process scope
  */
-class SeleniumFetcher(
+class BrowserEmulateFetcher(
         private val executor: GlobalExecutor,
         private val seleniumEngine: SeleniumEngine,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
-    val log = LoggerFactory.getLogger(SeleniumFetcher::class.java)!!
+    val log = LoggerFactory.getLogger(BrowserEmulateFetcher::class.java)!!
 
     private val driverPool = seleniumEngine.driverPool
     private val closed = AtomicBoolean()

@@ -58,7 +58,7 @@ open class LoadOptions: CommonOptions {
     var browser = BrowserType.CHROME
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
-    var scrollCount = 5
+    var scrollCount = 3
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
     var scrollInterval = Duration.ofMillis(500)

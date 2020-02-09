@@ -2,6 +2,8 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.*
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -60,17 +62,17 @@ class ChromeServiceImpl(
     @Throws(ChromeServiceException::class)
     override fun createTab(url: String): ChromeTab {
         return request(ChromeTab::class.java, "http://%s:%d/%s?%s", host, port, CREATE_TAB, url)
-                ?: throw ChromeServiceException("Failed to create tab")
+                ?: throw ChromeServiceException("Failed to create tab | $url")
     }
 
     @Throws(ChromeServiceException::class)
     override fun activateTab(tab: ChromeTab) {
-        request(Void::class.java, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
+        request(Void::class.java, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
     }
 
     @Throws(ChromeServiceException::class)
     override fun closeTab(tab: ChromeTab) {
-        request(Void::class.java, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
+        request(Void::class.java, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
         clearChromeDevToolsServiceCache(tab)
     }
 
@@ -131,6 +133,7 @@ class ChromeServiceImpl(
 
         val commandInvocationHandler = CommandInvocationHandler()
 
+        // TODO: should it be a local variable or a class member?
         val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
         val invocationHandler = InvocationHandler { proxy, method, args ->
             commandsCache.computeIfAbsent(method) {
@@ -183,7 +186,7 @@ class ChromeServiceImpl(
                 return OBJECT_MAPPER.readerFor(responseType).readValue(inputStream)
             } else {
                 inputStream = connection.errorStream
-                val responseBody = inputStreamToString(inputStream)
+                val responseBody = readString(inputStream)
                 val message = "Responded error $responseCode - ${connection.responseMessage} | $responseBody"
                 throw ChromeServiceException(message)
             }
@@ -203,7 +206,7 @@ class ChromeServiceImpl(
      * @throws IOException If conversion fails.
      */
     @Throws(IOException::class)
-    private fun inputStreamToString(inputStream: InputStream): String {
+    private fun readString(inputStream: InputStream): String {
         var length: Int
         val buffer = ByteArray(1024)
         val result = ByteArrayOutputStream()

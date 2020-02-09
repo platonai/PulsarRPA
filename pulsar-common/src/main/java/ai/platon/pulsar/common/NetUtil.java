@@ -121,6 +121,11 @@ public class NetUtil {
         return buf.toString();
     }
 
+    public static String getChromeUserAgent(String mozilla, String appleWebKit, String chrome, String safari) {
+        return String.format("Mozilla/%s (X11; Linux x86_64) AppleWebKit/%s (KHTML, like Gecko) Chrome/%s Safari/%s",
+                mozilla, appleWebKit, chrome, safari);
+    }
+
     /**
      * Return hostname without throwing exception.
      * @return hostname

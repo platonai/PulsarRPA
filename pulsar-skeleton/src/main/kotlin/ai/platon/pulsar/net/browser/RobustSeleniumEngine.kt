@@ -16,7 +16,7 @@ import kotlin.math.roundToLong
  * Note: SeleniumEngine should be process scope
  */
 class RobustSeleniumEngine(
-        browserControl: BrowserControl,
+        browserControl: WebDriverControl,
         driverPool: WebDriverPool,
         ips: InternalProxyServer,
         fetchTaskTracker: FetchTaskTracker,

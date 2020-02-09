@@ -1,9 +1,6 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.BrowserControl
-import ai.platon.pulsar.common.BrowserControl.Companion.imagesEnabled
-import ai.platon.pulsar.common.BrowserControl.Companion.pageLoadStrategy
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -49,7 +46,7 @@ import kotlin.concurrent.withLock
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class WebDriverPool(
-        private val browserControl: BrowserControl,
+        private val driverControl: WebDriverControl,
         private val proxyPool: ProxyPool,
         private val ips: InternalProxyServer,
         private val conf: ImmutableConfig
@@ -64,10 +61,10 @@ class WebDriverPool(
         private val freeDrivers = mutableMapOf<Int, LinkedList<ManagedWebDriver>>()
         private val workingDrivers = HashMap<Int, ManagedWebDriver>()
         private var driversAreClosing = false
-        private val lock: Lock = ReentrantLock() // lock for containers
-        private val notEmpty: Condition = lock.newCondition()
-        private val notBusy: Condition = lock.newCondition()
-        private val notClosing: Condition = lock.newCondition()
+        private val lock = ReentrantLock() // lock for containers
+        private val notEmpty = lock.newCondition()
+        private val notBusy = lock.newCondition()
+        private val notClosing = lock.newCondition()
 
         val numCrashed = AtomicInteger()
         val numRetired = AtomicInteger()
@@ -87,25 +84,11 @@ class WebDriverPool(
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isIdle get() = workingSize == 0 && idleTime > idleTimeout
 
-    val isAllEmpty: Boolean
-        get() {
-            lock.withLock {
-                return allDrivers.isEmpty() && freeDrivers.isEmpty() && workingDrivers.isEmpty()
-            }
-        }
+    val isAllEmpty: Boolean = lock.withLock { allDrivers.isEmpty() && freeDrivers.isEmpty() && workingDrivers.isEmpty() }
+    val workingSize: Int = lock.withLock { workingDrivers.size }
+    val freeSize: Int = lock.withLock { freeDrivers.values.sumBy { it.size } }
+    val aliveSize: Int = lock.withLock { workingDrivers.size + freeDrivers.values.sumBy { it.size } }
 
-    val workingSize: Int
-        get() {
-            lock.withLock { return workingDrivers.size }
-        }
-    val freeSize: Int
-        get() {
-            lock.withLock { return freeDrivers.values.sumBy { it.size } }
-        }
-    val aliveSize: Int
-        get() {
-            lock.withLock { return workingDrivers.size + freeDrivers.values.sumBy { it.size } }
-        }
     val totalSize get() = allDrivers.size
 
     val proxyEntry get() = ips.proxyEntry
@@ -152,7 +135,7 @@ class WebDriverPool(
             driver = workingDrivers.values.firstOrNull { it.currentUrl == url }
         }
 
-        driver?.executeScriptSilently(";window.stop();")
+        driver?.evaluateSilently(";window.stop();")
         return driver
     }
 
@@ -240,7 +223,8 @@ class WebDriverPool(
             driver.stat.pageViews++
             pageViews.incrementAndGet()
         } catch (e: Exception) {
-            log.warn("Failed to recycle a WebDriver, retire it - {}", StringUtil.simplifyException(e))
+            // log.warn("Failed to recycle a WebDriver, retire it - {}", StringUtil.simplifyException(e))
+            log.warn(StringUtil.stringifyException(e))
             driver.status = DriverStatus.UNKNOWN
             retire(driver, e)
             return
@@ -409,7 +393,7 @@ class WebDriverPool(
             log.trace("The {}th web driver is online, " +
                     "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {} level: {}",
                     totalSize, driver.driver.javaClass.simpleName,
-                    imagesEnabled, pageLoadStrategy, capacity, level)
+                    driverControl.imagesEnabled, driverControl.pageLoadStrategy, capacity, level)
 
             return driver
         } catch (e: Throwable) {
@@ -429,7 +413,7 @@ class WebDriverPool(
             InstantiationException::class
     )
     private fun createWebDriver(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
-        val capabilities = BrowserControl.createGeneralOptions()
+        val capabilities = driverControl.createGeneralOptions()
 
         if (ProxyPool.isProxyEnabled()) {
             setProxy(capabilities)
@@ -439,8 +423,12 @@ class WebDriverPool(
         val browserType = getBrowserType(conf)
         val driver: WebDriver = when {
             browserType == BrowserType.CHROME -> {
+                val options = driverControl.createChromeDevtoolsOptions(capabilities)
+                ChromeDevtoolsDriver(driverControl.randomUserAgent(), driverControl, options)
+            }
+            browserType == BrowserType.SELENIUM_CHROME -> {
                 // System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
-                ChromeDriver(BrowserControl.createChromeOptions(capabilities))
+                ChromeDriver(driverControl.createChromeOptions(capabilities))
             }
             RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
                 defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
@@ -449,18 +437,18 @@ class WebDriverPool(
         }
 
         if (driver is ChromeDriver) {
-            val fakeAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36";
+            val fakeAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36"
             val devTools = driver.devTools
             devTools.createSession()
             devTools.send(Log.enable())
             devTools.addListener(Log.entryAdded()) { e -> log.error(e.text) }
             devTools.send(Network.setUserAgentOverride(fakeAgent, Optional.empty(), Optional.empty()))
 
-//            devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty()));
-//            devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
-        }
+            // devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty()));
+            // devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
 
-        driver.manage().window().maximize()
+            // driver.manage().window().maximize()
+        }
 
         return ManagedWebDriver(instanceCounter.incrementAndGet(), driver, priority)
     }
@@ -519,7 +507,7 @@ class WebDriverPool(
 
     private fun pauseAllWorkingDrivers() {
         workingDrivers.values.forEach {
-            it.executeScriptSilently(";window.stop();")
+            it.evaluateSilently("window.stop()")
             it.pause()
         }
     }

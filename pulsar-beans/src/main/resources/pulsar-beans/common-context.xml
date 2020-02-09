@@ -35,7 +35,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserControl" class="ai.platon.pulsar.common.BrowserControl">
+    <bean id="browserControl" class="ai.platon.pulsar.net.browser.WebDriverControl">
         <constructor-arg ref="conf"/>
     </bean>
 

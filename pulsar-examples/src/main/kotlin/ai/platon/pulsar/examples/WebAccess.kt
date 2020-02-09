@@ -99,13 +99,13 @@ open class WebAccess(
 
         val links = document.select(options.outlinkSelector) { it.attr("abs:href") }
                 .mapTo(mutableSetOf()) { i.normalize(it) }
-                .take(20).map { it.url }
+                .take(options.topLinks).map { it.url }
         log.info("Total " + links.size + " items to load")
 
         i.volatileConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
         i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
 
-        val pages = i.loadAll(links, options)
+        val pages = i.loadAll(links, options.createItemOption())
 
         val query = options.query
         if (query != null) {

@@ -54,9 +54,6 @@ class PulsarEnv {
     companion object {
         private val log = LoggerFactory.getLogger(PulsarEnv::class.java)
 
-        // TODO: read form config file
-        val clientJsVersion = "0.2.3"
-
         val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
         val startTime = Instant.now()

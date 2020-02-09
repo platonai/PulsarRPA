@@ -38,25 +38,10 @@ import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.HashSet
-
-data class DriverConfig(
-        var pageLoadTimeout: Duration,
-        var scriptTimeout: Duration,
-        var scrollDownCount: Int,
-        var scrollInterval: Duration
-) {
-    constructor(config: ImmutableConfig) : this(
-            config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
-            // wait page ready using script, so it can not smaller than pageLoadTimeout
-            config.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
-            config.getInt(FETCH_SCROLL_DOWN_COUNT, 5),
-            config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
-    )
-}
+import kotlin.random.Random
 
 class FetchTask(
         val batchId: Int,
@@ -95,7 +80,7 @@ class BrowseResult(
         var driver: ManagedWebDriver? = null
 )
 
-class JsTask(
+class EmulateTask(
         val url: String,
         val driver: ManagedWebDriver,
         val driverConfig: DriverConfig
@@ -114,7 +99,7 @@ data class VisitResult(
  * Note: SeleniumEngine should be process scope
  */
 open class SeleniumEngine(
-        browserControl: BrowserControl,
+        val browserControl: WebDriverControl,
         val driverPool: WebDriverPool,
         protected val ips: InternalProxyServer,
         protected val fetchTaskTracker: FetchTaskTracker,
@@ -123,11 +108,8 @@ open class SeleniumEngine(
 ) : Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
 
-    private val libJs = browserControl.parseLibJs(false)
-    private val clientJs = browserControl.parseJs(false)
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    private val defaultDriverConfig = DriverConfig(immutableConfig)
     private val browserContext = BrowserContext(driverPool, ips, immutableConfig)
     private val brokenPages = Collections.synchronizedSet(HashSet<String>())
     private var brokenPageTrackTime = Instant.now()
@@ -144,11 +126,10 @@ open class SeleniumEngine(
         return Params.of(
                 "instanceCount", instanceCount,
                 "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
-                "pageLoadTimeout", defaultDriverConfig.pageLoadTimeout,
-                "scriptTimeout", defaultDriverConfig.scriptTimeout,
-                "scrollDownCount", defaultDriverConfig.scrollDownCount,
-                "scrollInterval", defaultDriverConfig.scrollInterval,
-                "clientJsLength", clientJs.length,
+                "pageLoadTimeout", browserControl.pageLoadTimeout,
+                "scriptTimeout", browserControl.scriptTimeout,
+                "scrollDownCount", browserControl.scrollDownCount,
+                "scrollInterval", browserControl.scrollInterval,
                 "driverPoolCapacity", driverPool.capacity
         )
     }
@@ -328,41 +309,37 @@ open class SeleniumEngine(
             )
         }
 
-        val timeouts = driver.driver.manage().timeouts()
-        timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
-        timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
+        driver.setTimeouts(driverConfig)
 
         checkContextState(driver)
-
         // TODO: handle frames
         // driver.switchTo().frame(1);
 
-        driver.get(url)
+        // TODO: use callbacks instead of blocking
+        driver.navigate(url)
 
-        // Block and wait for the document is ready: all css and resources are OK
-        val jsTask = JsTask(url, driver, driverConfig)
-        return executeJs(jsTask)
+        return simulate(EmulateTask(url, driver, driverConfig))
     }
 
     @Throws(ContextResetException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
-    protected open fun executeJs(jsTask: JsTask): VisitResult {
+    protected open fun simulate(emulateTask: EmulateTask): VisitResult {
         val result = VisitResult(ProtocolStatus.STATUS_SUCCESS, null)
 
-        runJsAction(jsTask, result) { jsCheckDOMState(jsTask, result) }
+        runJsAction(emulateTask, result) { jsCheckDOMState(emulateTask, result) }
 
         if (result.state.isContinue) {
-            runJsAction(jsTask, result) { jsScrollDown(jsTask, result) }
+            runJsAction(emulateTask, result) { jsScrollDown(emulateTask, result) }
         }
 
         if (result.state.isContinue) {
-            runJsAction(jsTask, result) { jsComputeFeature(jsTask, result) }
+            runJsAction(emulateTask, result) { jsComputeFeature(emulateTask, result) }
         }
 
         return result
     }
 
     @Throws(ContextResetException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
-    private fun runJsAction(task: JsTask, result: VisitResult, action: () -> Unit) {
+    private fun runJsAction(task: EmulateTask, result: VisitResult, action: () -> Unit) {
         checkState()
 
         var status: ProtocolStatus? = null
@@ -411,75 +388,74 @@ open class SeleniumEngine(
         }
     }
 
-    protected open fun jsCheckDOMState(jsTask: JsTask, result: VisitResult) {
+    protected open fun jsCheckDOMState(emulateTask: EmulateTask, result: VisitResult) {
         checkState()
 
         var status = ProtocolStatus.STATUS_SUCCESS
         // wait for the DOM ready, we do not use scriptTimeout here
-        val pageLoadTimeout = jsTask.driverConfig.pageLoadTimeout
+        val pageLoadTimeout = emulateTask.driverConfig.pageLoadTimeout
 
-        val documentWait = FluentWait<WebDriver>(jsTask.driver.driver)
+        val documentWait = FluentWait<WebDriver>(emulateTask.driver.driver)
                 .withTimeout(pageLoadTimeout)
                 .pollingEvery(Duration.ofSeconds(1))
                 .ignoring(InterruptedException::class.java)
 
         // make sure the document is ready
-        val initialScroll = 2
-        val maxRound = pageLoadTimeout.seconds - 10 // leave 10 seconds to wait for script finish
+        val initialScroll = 5
+        val maxRound = pageLoadTimeout.seconds - 30 // leave 20 seconds to wait for script finish
 
         // TODO: wait for expected ni, na, nnum, nst, etc; required element
-        val js = ";$libJs;return __utils__.waitForReady($maxRound, $initialScroll);"
-
-        checkContextState(jsTask.driver)
+        // val js = ";$libJs;return __utils__.waitForReady($maxRound, $initialScroll);"
+        val expression = "__utils__.waitForReady($maxRound, $initialScroll)"
+        checkContextState(emulateTask.driver)
 
         try {
-            val r = documentWait.until { jsTask.driver.executeScript(js) }
+            val r = documentWait.until { emulateTask.driver.evaluate(expression) }
 
             if (r == "timeout") {
-                log.debug("Hit max round $maxRound to wait for document | {}", jsTask.url)
+                log.debug("Hit max round $maxRound to wait for document | {}", emulateTask.url)
             } else {
-                log.trace("DOM is ready {} | {}", r, jsTask.url)
+                log.trace("DOM is ready {} | {}", r, emulateTask.url)
             }
         } catch (e: org.openqa.selenium.TimeoutException) {
-            log.trace("DOM is timeout ({}) | {}", pageLoadTimeout, jsTask.url)
+            log.trace("DOM is timeout ({}) | {}", pageLoadTimeout, emulateTask.url)
             status = ProtocolStatus.failed(ProtocolStatusCodes.DOM_TIMEOUT)
         }
 
         result.protocolStatus = status
     }
 
-    protected open fun jsScrollDown(jsTask: JsTask, result: VisitResult) {
+    protected open fun jsScrollDown(emulateTask: EmulateTask, result: VisitResult) {
         checkState()
 
-        val scrollDownCount = jsTask.driverConfig.scrollDownCount.toLong()
-        val scrollInterval = jsTask.driverConfig.scrollInterval
+        val random = Random(System.currentTimeMillis())
+        val scrollDownCount = emulateTask.driverConfig.scrollDownCount.toLong() + random.nextInt(3) - 1
+        val scrollInterval = emulateTask.driverConfig.scrollInterval.plus(Duration.ofMillis(random.nextLong(1000)))
         val scrollTimeout = scrollDownCount * scrollInterval.toMillis() + 3 * 1000
-        val scrollWait = FluentWait<WebDriver>(jsTask.driver.driver)
+        val scrollWait = FluentWait<WebDriver>(emulateTask.driver.driver)
                 .withTimeout(Duration.ofMillis(scrollTimeout))
                 .pollingEvery(scrollInterval)
                 .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         try {
-            val js = ";$libJs;return __utils__.scrollDownN($scrollDownCount);"
-
-            checkContextState(jsTask.driver)
-            scrollWait.until { jsTask.driver.executeScript(js) }
-        } catch (e: org.openqa.selenium.TimeoutException) {
-            // ignore
-        }
+            val expression = "__utils__.scrollDownN($scrollDownCount)"
+            checkContextState(emulateTask.driver)
+            scrollWait.until { emulateTask.driver.evaluate(expression) }
+        } catch (ignored: org.openqa.selenium.TimeoutException) {}
     }
 
-    protected open fun jsComputeFeature(jsTask: JsTask, result: VisitResult) {
+    protected open fun jsComputeFeature(emulateTask: EmulateTask, result: VisitResult) {
         checkState()
 
         // TODO: check if the js is injected times, libJs is already injected
-        checkContextState(jsTask.driver)
-        val message = jsTask.driver.executeScript(clientJs)
+        checkContextState(emulateTask.driver)
+        // val message = simulateTask.driver.executeScript(clientJs)
+        val message = emulateTask.driver.evaluate("__utils__.emulate()")
 
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
-                log.debug("{} | {}", result.activeDomMessage?.multiStatus, jsTask.url)
+                log.debug("{} | {}", result.activeDomMessage?.multiStatus, emulateTask.url)
             }
         }
     }
@@ -497,7 +473,8 @@ open class SeleniumEngine(
 
         try {
             // TODO: which one is the better? browser side timer or selenium side timer?
-            val js = ";$libJs;return __utils__.navigateTo($selector);"
+            // val js = ";$libJs;return __utils__.navigateTo($selector);"
+            val js = "__utils__.click($selector)"
             checkContextState(driver)
             val location = scrollWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
             if (location is String) {
@@ -617,7 +594,7 @@ open class SeleniumEngine(
             Files.createSymbolicLink(link, path)
 
             if (log.isTraceEnabled) {
-                takeScreenshot(pageSource.length.toLong(), page, driver.driver as RemoteWebDriver)
+                // takeScreenshot(pageSource.length.toLong(), page, driver.driver as RemoteWebDriver)
             }
         }
     }
@@ -635,15 +612,15 @@ open class SeleniumEngine(
 
     private fun getDriverConfig(config: ImmutableConfig): DriverConfig {
         // Page load timeout
-        val pageLoadTimeout = config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, defaultDriverConfig.pageLoadTimeout)
+        val pageLoadTimeout = config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, browserControl.pageLoadTimeout)
         // Script timeout
-        val scriptTimeout = config.getDuration(FETCH_SCRIPT_TIMEOUT, defaultDriverConfig.scriptTimeout)
+        val scriptTimeout = config.getDuration(FETCH_SCRIPT_TIMEOUT, browserControl.scriptTimeout)
         // Scrolling
-        var scrollDownCount = config.getInt(FETCH_SCROLL_DOWN_COUNT, defaultDriverConfig.scrollDownCount)
+        var scrollDownCount = config.getInt(FETCH_SCROLL_DOWN_COUNT, browserControl.scrollDownCount)
         if (scrollDownCount > 20) {
             scrollDownCount = 20
         }
-        var scrollDownWait = config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, defaultDriverConfig.scrollInterval)
+        var scrollDownWait = config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, browserControl.scrollInterval)
         if (scrollDownWait > pageLoadTimeout) {
             scrollDownWait = pageLoadTimeout
         }
@@ -654,15 +631,14 @@ open class SeleniumEngine(
     }
 
     private fun takeScreenshot(contentLength: Long, page: WebPage, driver: RemoteWebDriver) {
-        if (RemoteWebDriver::class.java.isAssignableFrom(driver.javaClass)) {
-            try {
-                if (contentLength > 100) {
-                    val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                    AppFiles.export(page, bytes, ".png")
-                }
-            } catch (e: Exception) {
-                log.warn("Screenshot failed {} | {}", StringUtil.readableByteCount(contentLength), page.url)
+        try {
+            if (contentLength > 100) {
+                val bytes = driver.getScreenshotAs(OutputType.BYTES)
+                AppFiles.export(page, bytes, ".png")
             }
+        } catch (e: Exception) {
+            log.warn("Screenshot failed {} | {}", StringUtil.readableByteCount(contentLength), page.url)
+            log.warn(StringUtil.stringifyException(e))
         }
     }
 

@@ -9,21 +9,20 @@ let __utils__ = function () {};
 /**
  * @param maxRound The maximum round to check ready
  * @param scroll The count to scroll down
+ * @return {Object|boolean}
  * */
 __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
-    // A document is ready when the major html is downloaded
-    // and all sub resources(images, css, js) are also downloaded
-    if (document.readyState === "loading") {
-        return false
-    }
+    return __utils__.checkPulsarStatus(maxRound, scroll);
+};
 
+__utils__.checkPulsarStatus = function(maxRound = 30, scroll = 2) {
     if (!document.pulsarData) {
         // initialization
         __utils__.createPulsarDataIfAbsent();
         __utils__.updatePulsarStat(true);
     }
 
-    let status = document.pulsarData.multiStatus;
+    let status = document.pulsarData.multiStatus.status;
     status.n += 1;
 
     // start count down latch
@@ -42,20 +41,7 @@ __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     }
 
     // The document is ready
-    return JSON.stringify(document.pulsarData.multiStatus)
-};
-
-/**
- * @param selector The selector to click
- * @param sourceLocation The source location
- * @param maxRound The maximum round to check ready
- * */
-__utils__.navigateTo = function(selector, sourceLocation, maxRound = 30) {
-    if (window.location !== sourceLocation) {
-        window.stop();
-        return window.location
-    }
-    return false
+    return JSON.stringify(document.pulsarData)
 };
 
 __utils__.createPulsarDataIfAbsent = function() {
@@ -159,7 +145,7 @@ __utils__.isIdle = function(init = false) {
         // DOM changed since last check, store the latest stat and return false to wait for the next check
         ++status.idl;
         if (status.idl > 5) {
-            // idle for 10 seconds
+            // idle for 5 seconds
             idle = true;
         }
     }
@@ -685,7 +671,7 @@ __utils__.generateMetadata = function() {
 /**
  * Calculate visualization info and do human actions
  * */
-__utils__.visualizeHumanize = function() {
+__utils__.emulate = function() {
     if (!document.body || !document.body.firstChild) {
         return
     }
@@ -697,9 +683,9 @@ __utils__.visualizeHumanize = function() {
         return
     }
 
-    // __utils__.scrollToBottom();
     __utils__.scrollToTop();
 
+    // calling window.stop will suppress onLoadComplete event
     window.stop();
 
     __utils__.updatePulsarStat();
@@ -720,5 +706,16 @@ __utils__.visualizeHumanize = function() {
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute(DATA_ERROR, '0');
 
-    window.stop();
+    return JSON.stringify(document.pulsarData)
+};
+
+/**
+ * Get return a + b
+ *
+ * @param a {Number}
+ * @param b {Number}
+ * @return {Number}
+ * */
+__utils__.add = function(a, b) {
+    return a + b
 };

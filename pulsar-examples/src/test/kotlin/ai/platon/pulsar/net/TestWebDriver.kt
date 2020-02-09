@@ -1,7 +1,7 @@
 package ai.platon.pulsar.net
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.BrowserControl
+import ai.platon.pulsar.net.browser.WebDriverControl
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.net.browser.ManagedWebDriver
 import ai.platon.pulsar.net.browser.WebDriverPool
@@ -31,6 +31,7 @@ class TestWebDriver {
 
         val env = PulsarEnv.get()
         val conf = PulsarEnv.unmodifiedConfig
+        val driverControl = PulsarEnv.applicationContext.getBean(WebDriverControl::class.java)
         val driverPool = PulsarEnv.applicationContext.getBean(WebDriverPool::class.java)
         var quitMultiThreadTesting = false
 
@@ -47,12 +48,12 @@ class TestWebDriver {
 
     @Test
     fun testCapabilities() {
-        val generalOptions = BrowserControl.createGeneralOptions()
+        val generalOptions = driverControl.createGeneralOptions()
         generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
         generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
         var driver: WebDriver = ChromeDriver(generalOptions)
 
-        val chromeOptions = BrowserControl.createChromeOptions()
+        val chromeOptions = driverControl.createChromeOptions()
         chromeOptions.addArguments("--blink-settings=imagesEnabled=false")
         chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
         chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)

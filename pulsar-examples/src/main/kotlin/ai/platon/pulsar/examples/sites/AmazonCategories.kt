@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.examples.WebAccess
 
@@ -10,12 +10,12 @@ class AmazonCategories: WebAccess() {
     private val siteDirectory = "https://www.amazon.com/gp/site-directory?ref_=nav_em_T1_0_2_2_35__fullstore"
 
     init {
-        BrowserControl.imagesEnabled = false
-        BrowserControl.headless = true
+//        WebDriverControl..imagesEnabled = false
+//        WebDriverControl.headless = false
     }
 
     fun collectFromSiteDirectory() {
-        val page = i.load(siteDirectory)
+        val page = i.load(siteDirectory, LoadOptions.parse("-i 1s"))
         val document = i.parse(page)
         document.absoluteLinks()
         var i = 0

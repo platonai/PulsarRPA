@@ -84,7 +84,8 @@ class GeneralWebAccess: WebAccess() {
         // val url = "https://qingqueyi.tmall.com/category-1406159179.htm?spm=a220o.1000855.w5002-20531914773.3.647438a1i0xkPI&search=y&catName=%D0%C2%C6%B7-%B3%A4%D0%E4%CC%D7%D7%B0"
 //        val url = "https://www.lazada.com.my/shop-small-kitchen-appliances/?spm=a2o4k.home.cate_3.3.75f82e7eneQBGa"
         val url = "https://list.suning.com/0-20006-0-0-0-0-0-0-0-0-11635.html"
-        val page = i.load(url)
+        val options = LoadOptions.parse("-i 1s")
+        val page = i.load(url, options)
         val doc = i.parse(page)
         doc.absoluteLinks()
         doc.stripScripts()
@@ -235,9 +236,9 @@ class GeneralWebAccess: WebAccess() {
     }
 
     fun run() {
-        // load()
+        load()
         // collectLinks()
-        loadOutPages()
+        // loadOutPages()
         // loadOutPagesSinopr()
         // repeat(10) {
         //   parallelLoadOutPages()

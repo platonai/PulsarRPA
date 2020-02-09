@@ -1,14 +1,20 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.persist.model.ActiveDomMessage
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -18,6 +24,21 @@ data class DriverStat(
 
 enum class DriverStatus {
     UNKNOWN, FREE, WORKING, PAUSED, RETIRED, CRASHED, QUIT
+}
+
+data class DriverConfig(
+        var pageLoadTimeout: Duration,
+        var scriptTimeout: Duration,
+        var scrollDownCount: Int,
+        var scrollInterval: Duration
+) {
+    constructor(config: ImmutableConfig) : this(
+            config.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
+            // wait page ready using script, so it can not smaller than pageLoadTimeout
+            config.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
+            config.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 3),
+            config.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
+    )
 }
 
 class ManagedWebDriver(
@@ -53,25 +74,40 @@ class ManagedWebDriver(
 
     val incognito = AtomicBoolean()
 
-    val sessionId
+    val sessionId: String?
         @Synchronized
-        get() = StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+        get() {
+            return if (driver is ChromeDevtoolsDriver) {
+                driver.sessionId?.toString()
+            } else {
+                StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+            }
+        }
 
     val currentUrlOrException: String
         get() = driver.currentUrl
 
     val currentUrl: String
-        get() = try { driver.currentUrl } catch (t: Throwable) { "" }
+        get() = try {
+            driver.currentUrl
+        } catch (t: Throwable) {
+            ""
+        }
 
     val pageSourceOrException: String
         get() = driver.pageSource
 
     val pageSource: String
-        get() = try { driver.pageSource } catch (t: Throwable) { "(exception)" }
+        get() = try {
+            driver.pageSource
+        } catch (t: Throwable) {
+            "(exception)"
+        }
 
     val browserType: BrowserType =
             when (driver) {
-                is ChromeDriver -> BrowserType.CHROME
+                is ChromeDevtoolsDriver -> BrowserType.CHROME
+                is ChromeDriver -> BrowserType.SELENIUM_CHROME
 //            is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
                 else -> {
                     log.warn("Actual browser is set to be NATIVE by selenium engine")
@@ -79,31 +115,45 @@ class ManagedWebDriver(
                 }
             }
 
-    fun get(url: String) {
+    fun navigate(url: String) {
         return driver.get(url)
     }
 
-    fun executeScript(script: String, vararg args: Any?): Any? {
-        val jsExecutor = driver as? JavascriptExecutor
-                ?: throw IllegalClassException("Web driver should be a JavascriptExecutor")
-
-        return jsExecutor.executeScript(script, args)
+    fun evaluate(expression: String): Any? {
+        return when (driver) {
+            is ChromeDriver -> {
+                driver.executeScript(expression)
+            }
+            is ChromeDevtoolsDriver -> {
+                driver.evaluate(expression)
+            }
+            else -> null
+        }
     }
 
-    fun executeScriptSilently(script: String, vararg args: Any?): Any? {
+    fun evaluateSilently(expression: String): Any? {
         try {
-            return executeScript(script, args)
+            return evaluate(expression)
         } catch (ignored: Throwable) {}
 
         return null
     }
 
-    fun maximize() {
-        driver.manage().window().maximize()
+    fun scrollDown() {
+
     }
 
-    fun scollDown() {
-
+    fun setTimeouts(driverConfig: DriverConfig) {
+        if (driver is ChromeDriver) {
+            val timeouts = driver.manage().timeouts()
+            timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
+            timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
+        } else if (driver is ChromeDevtoolsDriver) {
+            driver.pageLoadTimeout = driverConfig.pageLoadTimeout
+            driver.scriptTimeout = driverConfig.scriptTimeout
+            driver.scrollDownCount = driverConfig.scrollDownCount
+            driver.scrollInterval = driverConfig.scrollInterval
+        }
     }
 
     @Synchronized
@@ -116,6 +166,9 @@ class ManagedWebDriver(
         status = DriverStatus.RETIRED
     }
 
+    /**
+     * Quits this driver, close every associated window
+     * */
     @Synchronized
     fun quit() {
         if (isQuit) {
@@ -134,9 +187,13 @@ class ManagedWebDriver(
     fun closeRedundantTabs() {
         if (isQuit) return
 
-        val handles = driver.windowHandles.size
-        if (handles > 1) {
-            driver.close()
+        if (driver is ChromeDevtoolsDriver) {
+            driver.closeRedundantTabs()
+        } else if (driver is ChromeDriver) {
+            val handles = driver.windowHandles.size
+            if (handles > 1) {
+                driver.close()
+            }
         }
     }
 
@@ -145,14 +202,21 @@ class ManagedWebDriver(
         if (isQuit) return
 
         try {
-            val names = driver.manage().cookies.map { it.name }
-            names.forEach { name ->
-                driver.manage().deleteCookieNamed(name)
+            if (driver is ChromeDevtoolsDriver) {
+                val names = driver.coolieNames().joinToString(", ") { it }
+                log.debug("Deleted cookies: $names")
+
+                driver.deleteAllCookies()
+            } else if (driver is RemoteWebDriver) {
+                val names = driver.manage().cookies.map { it.name }
+                names.forEach { name ->
+                    driver.manage().deleteCookieNamed(name)
+                }
+
+                log.debug("Deleted cookies: $names")
+
+                driver.manage().deleteAllCookies()
             }
-
-            log.debug("Deleted cookies: $names")
-
-            driver.manage().deleteAllCookies()
         } catch (e: Throwable) {
             log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }
@@ -163,8 +227,19 @@ class ManagedWebDriver(
         if (isQuit) return
 
         try {
-            driver.get(targetUrl)
-            driver.manage().deleteAllCookies()
+            when (driver) {
+                is RemoteWebDriver -> {
+                    driver.get(targetUrl)
+                    driver.manage().deleteAllCookies()
+                }
+                is ChromeDevtoolsDriver -> {
+                    driver.get(targetUrl)
+                    driver.deleteAllCookies()
+                }
+                else -> {
+
+                }
+            }
         } catch (e: Throwable) {
             log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }

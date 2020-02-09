@@ -16,7 +16,7 @@ class WebSocketServiceImpl : WebSocketService {
     private lateinit var session: Session
 
     override fun isClosed(): Boolean {
-        return closed.get()
+        return !session.isOpen && closed.get()
     }
 
     @Throws(WebSocketServiceException::class)
@@ -27,7 +27,7 @@ class WebSocketServiceImpl : WebSocketService {
             }
 
             override fun onClose(session: Session, closeReason: CloseReason) {
-                log.info("Close ws server {}", uri)
+                log.info("Closing ws server {}", uri)
             }
         }
 
@@ -46,11 +46,16 @@ class WebSocketServiceImpl : WebSocketService {
     @Throws(WebSocketServiceException::class)
     override fun send(message: String) {
         try {
-            log.trace("Sending {} | {}", message, session.requestURI)
+            if (log.isTraceEnabled) {
+                log.trace("Sending {} | {}", message, session.requestURI)
+            }
+
             session.basicRemote.sendText(message)
+        } catch (e: IllegalStateException) {
+            log.error("The connection has been closed | {}", session.requestURI)
+            throw WebSocketServiceException("The connection has been closed", e)
         } catch (e: Exception) {
-            log.error("Failed sending data to {}...", session.requestURI, e)
-            throw WebSocketServiceException("Failed sending data to ws server.", e)
+            log.error("Unexpected exception {}", session.requestURI)
         }
     }
 
@@ -61,7 +66,9 @@ class WebSocketServiceImpl : WebSocketService {
         }
 
         val messageHandle = MessageHandler.Whole<String> { message ->
-            log.trace("Received {} | {}", message, session.requestURI)
+            if (log.isTraceEnabled) {
+                log.trace("Received {} | {}", message, session.requestURI)
+            }
             consumer.accept(message)
         }
 
@@ -71,11 +78,10 @@ class WebSocketServiceImpl : WebSocketService {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                log.debug("Closing WebSocketService")
-
+                log.debug("Closing web socket service session | {}", session.requestURI)
                 session.close()
             } catch (e: IOException) {
-                log.error("Failed closing ws session on {}...", session.getRequestURI(), e)
+                log.error("Failed closing ws session on ${session.requestURI} ...", e)
             }
         }
     }

@@ -20,57 +20,13 @@ package com.github.kklisura.cdt.protocol.commands;
  * #L%
  */
 
-import com.github.kklisura.cdt.protocol.events.page.CompilationCacheProduced;
-import com.github.kklisura.cdt.protocol.events.page.DomContentEventFired;
-import com.github.kklisura.cdt.protocol.events.page.DownloadWillBegin;
-import com.github.kklisura.cdt.protocol.events.page.FileChooserOpened;
-import com.github.kklisura.cdt.protocol.events.page.FrameAttached;
-import com.github.kklisura.cdt.protocol.events.page.FrameClearedScheduledNavigation;
-import com.github.kklisura.cdt.protocol.events.page.FrameDetached;
-import com.github.kklisura.cdt.protocol.events.page.FrameNavigated;
-import com.github.kklisura.cdt.protocol.events.page.FrameRequestedNavigation;
-import com.github.kklisura.cdt.protocol.events.page.FrameResized;
-import com.github.kklisura.cdt.protocol.events.page.FrameScheduledNavigation;
-import com.github.kklisura.cdt.protocol.events.page.FrameStartedLoading;
-import com.github.kklisura.cdt.protocol.events.page.FrameStoppedLoading;
-import com.github.kklisura.cdt.protocol.events.page.InterstitialHidden;
-import com.github.kklisura.cdt.protocol.events.page.InterstitialShown;
-import com.github.kklisura.cdt.protocol.events.page.JavascriptDialogClosed;
-import com.github.kklisura.cdt.protocol.events.page.JavascriptDialogOpening;
-import com.github.kklisura.cdt.protocol.events.page.LifecycleEvent;
-import com.github.kklisura.cdt.protocol.events.page.LoadEventFired;
-import com.github.kklisura.cdt.protocol.events.page.NavigatedWithinDocument;
-import com.github.kklisura.cdt.protocol.events.page.ScreencastFrame;
-import com.github.kklisura.cdt.protocol.events.page.ScreencastVisibilityChanged;
-import com.github.kklisura.cdt.protocol.events.page.WindowOpen;
-import com.github.kklisura.cdt.protocol.support.annotations.EventName;
-import com.github.kklisura.cdt.protocol.support.annotations.Experimental;
-import com.github.kklisura.cdt.protocol.support.annotations.Optional;
-import com.github.kklisura.cdt.protocol.support.annotations.ParamName;
-import com.github.kklisura.cdt.protocol.support.annotations.ReturnTypeParameter;
-import com.github.kklisura.cdt.protocol.support.annotations.Returns;
+import com.github.kklisura.cdt.protocol.events.page.*;
+import com.github.kklisura.cdt.protocol.support.annotations.*;
 import com.github.kklisura.cdt.protocol.support.types.EventHandler;
 import com.github.kklisura.cdt.protocol.support.types.EventListener;
 import com.github.kklisura.cdt.protocol.types.debugger.SearchMatch;
-import com.github.kklisura.cdt.protocol.types.page.AppManifest;
-import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat;
-import com.github.kklisura.cdt.protocol.types.page.CaptureSnapshotFormat;
-import com.github.kklisura.cdt.protocol.types.page.FontFamilies;
-import com.github.kklisura.cdt.protocol.types.page.FontSizes;
-import com.github.kklisura.cdt.protocol.types.page.FrameResourceTree;
-import com.github.kklisura.cdt.protocol.types.page.FrameTree;
-import com.github.kklisura.cdt.protocol.types.page.HandleFileChooserAction;
-import com.github.kklisura.cdt.protocol.types.page.LayoutMetrics;
-import com.github.kklisura.cdt.protocol.types.page.Navigate;
-import com.github.kklisura.cdt.protocol.types.page.NavigationHistory;
-import com.github.kklisura.cdt.protocol.types.page.PrintToPDF;
-import com.github.kklisura.cdt.protocol.types.page.PrintToPDFTransferMode;
-import com.github.kklisura.cdt.protocol.types.page.ResourceContent;
-import com.github.kklisura.cdt.protocol.types.page.SetDownloadBehaviorBehavior;
-import com.github.kklisura.cdt.protocol.types.page.SetWebLifecycleStateState;
-import com.github.kklisura.cdt.protocol.types.page.StartScreencastFormat;
-import com.github.kklisura.cdt.protocol.types.page.TransitionType;
-import com.github.kklisura.cdt.protocol.types.page.Viewport;
+import com.github.kklisura.cdt.protocol.types.page.*;
+
 import java.util.List;
 
 /** Actions and events related to the inspected page belong to the page domain. */

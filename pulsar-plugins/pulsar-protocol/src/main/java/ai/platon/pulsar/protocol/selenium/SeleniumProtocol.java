@@ -20,7 +20,7 @@ import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.net.browser.SeleniumFetcher;
+import ai.platon.pulsar.net.browser.BrowserEmulateFetcher;
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.persist.ProtocolStatus;
@@ -39,7 +39,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
 
     private Logger log = LoggerFactory.getLogger(SeleniumProtocol.class);
 
-    private AtomicReference<SeleniumFetcher> fetchComponent = new AtomicReference<>();
+    private AtomicReference<BrowserEmulateFetcher> fetchComponent = new AtomicReference<>();
 
     private AtomicBoolean closed = new AtomicBoolean();
 
@@ -62,7 +62,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         try {
-            SeleniumFetcher fc = getFetchEngine();
+            BrowserEmulateFetcher fc = getFetchEngine();
             if (fc == null) {
                 return Collections.emptyList();
             }
@@ -83,7 +83,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
                 return response;
             }
 
-            SeleniumFetcher fc = getFetchEngine();
+            BrowserEmulateFetcher fc = getFetchEngine();
             if (fc == null) {
                 return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
             }
@@ -104,14 +104,14 @@ public class SeleniumProtocol extends ForwardingProtocol {
         return !closed.get() && PulsarEnv.Companion.isActive();
     }
 
-    private synchronized SeleniumFetcher getFetchEngine() {
+    private synchronized BrowserEmulateFetcher getFetchEngine() {
         if (!isActive()) {
             return null;
         }
 
         PulsarEnv env = PulsarEnv.Companion.get();
         try {
-            fetchComponent.compareAndSet(null, env.getBean(SeleniumFetcher.class));
+            fetchComponent.compareAndSet(null, env.getBean(BrowserEmulateFetcher.class));
         } catch (BeansException e) {
             log.warn("{}", StringUtil.simplifyException(e));
         }

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.BrowserControl
+import ai.platon.pulsar.net.browser.WebDriverControl
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
@@ -22,8 +22,9 @@ class AmazonAccess: WebAccess() {
     private val driverPool = env.getBean(WebDriverPool::class.java)
 
     init {
-        BrowserControl.imagesEnabled = false
-        BrowserControl.headless = true
+
+//        driverPool.imagesEnabled = false
+//        driverPool.headless = true
     }
 
     fun load() {
