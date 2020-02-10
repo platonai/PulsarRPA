@@ -42,9 +42,9 @@
         <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="seleniumFetcher" class="ai.platon.pulsar.net.browser.BrowserEmulateFetcher" destroy-method="close">
+    <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.net.browser.BrowserEmulatedFetcher" destroy-method="close">
         <constructor-arg ref="globalExecutor"/>
-        <constructor-arg ref="seleniumEngine"/>
+        <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="conf"/>
     </bean>
 

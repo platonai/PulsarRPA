@@ -104,7 +104,8 @@ open class WebDriverControl(
         // chromeOptions.addArguments("disable-infobars")
         // chromeOptions.addArguments("--incognito") // may cause anti-spider
         chromeOptions.addArguments("window-size", formatViewPort())
-        chromeOptions.addArguments("blink-settings", String.format("imagesEnabled=$imagesEnabled"))
+        // TODO: NOT WORKING
+        chromeOptions.addArguments(String.format("blink-settings=imagesEnabled=%b", imagesEnabled))
 
         return chromeOptions
     }

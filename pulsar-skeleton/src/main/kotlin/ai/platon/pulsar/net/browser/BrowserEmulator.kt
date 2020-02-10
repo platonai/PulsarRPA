@@ -98,7 +98,7 @@ data class VisitResult(
  *
  * Note: SeleniumEngine should be process scope
  */
-open class SeleniumEngine(
+open class BrowserEmulator(
         val browserControl: WebDriverControl,
         val driverPool: WebDriverPool,
         protected val ips: InternalProxyServer,
@@ -106,7 +106,11 @@ open class SeleniumEngine(
         protected val metricsSystem: MetricsSystem,
         protected val immutableConfig: ImmutableConfig
 ) : Parameterized, AutoCloseable {
-    private val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
+    companion object {
+        private var instanceCount = AtomicInteger()
+    }
+
+    private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
@@ -649,7 +653,7 @@ open class SeleniumEngine(
     @Throws(ContextResetException::class, IllegalStateException::class)
     private fun checkContextState(driver: ManagedWebDriver) {
         if (isClosed) {
-            throw IllegalStateException("Selenium engine is closed")
+            throw IllegalStateException("Browser emulator is closed")
         }
 
         if (driver.isPaused) {
@@ -660,7 +664,7 @@ open class SeleniumEngine(
     @Throws(IllegalStateException::class)
     private fun checkState() {
         if (isClosed) {
-            throw IllegalStateException("Selenium engine is closed")
+            throw IllegalStateException("Browser emulator is closed")
         }
     }
 
@@ -687,9 +691,5 @@ open class SeleniumEngine(
         if (closed.getAndSet(true)) {
             return
         }
-    }
-
-    companion object {
-        private var instanceCount = AtomicInteger()
     }
 }

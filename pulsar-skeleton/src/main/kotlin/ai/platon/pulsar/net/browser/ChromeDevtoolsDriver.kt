@@ -2,10 +2,6 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.persist.model.ActiveDomMessage
-import com.github.kklisura.cdt.protocol.events.page.DomContentEventFired
-import com.github.kklisura.cdt.protocol.events.page.LoadEventFired
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import org.openqa.selenium.OutputType
@@ -15,7 +11,6 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 /**
  * TODO: more compatible with RemoteWebDriver
@@ -25,10 +20,10 @@ class ChromeDevtoolsDriver(
         private val browserControl: WebDriverControl,
         private val launchOptions: ChromeDevtoolsOptions
 ): RemoteWebDriver() {
-    private val log = LoggerFactory.getLogger(SeleniumEngine::class.java)!!
+    private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
     companion object {
-        private val chromeInitialized = AtomicBoolean()
+        private val chromeProcessLaunched = AtomicBoolean()
         private val numInstances = AtomicInteger()
         private lateinit var launcher: ChromeLauncher
         private lateinit var chrome: ChromeService
@@ -68,7 +63,7 @@ class ChromeDevtoolsDriver(
         }
 
     init {
-        if (chromeInitialized.compareAndSet(false, true)) {
+        if (chromeProcessLaunched.compareAndSet(false, true)) {
             launcher = ChromeLauncher(shutdownHookRegistry = ChromeDevtoolsDriverShutdownHookRegistry())
             chrome = launcher.launch(launchOptions)
         }
@@ -104,7 +99,7 @@ class ChromeDevtoolsDriver(
     fun evaluate(expression: String): Any? {
         val evaluate = runtime.evaluate(expression)
         val result = evaluate.result
-        // TODO: catch exceptions here
+        // TODO: handle errors here
         return result.value
     }
 
@@ -133,6 +128,10 @@ class ChromeDevtoolsDriver(
         return evaluate.result.value.toString()
     }
 
+    fun getCookieNames(): List<String> {
+        return devTools.network.allCookies.map { it.name }
+    }
+
     fun deleteAllCookies() {
         devTools.network.clearBrowserCookies()
         devTools.network.clearBrowserCache()
@@ -140,14 +139,6 @@ class ChromeDevtoolsDriver(
 
     fun deleteCookieNamed(name: String) {
         devTools.network.deleteCookies(name)
-    }
-
-    fun coolieNames(): List<String> {
-        return devTools.network.allCookies.map { it.name }
-    }
-
-    fun closeRedundantTabs() {
-        // Not implemented
     }
 
     override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
@@ -172,28 +163,13 @@ class ChromeDevtoolsDriver(
     }
 
     /**
-     * Quit browser
+     * Close the tab hold by this driver
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             log.info("Closing devtools driver ...")
             tabs.remove(tab.id)
             devTools.use { it.close() }
-        }
-    }
-
-    private fun simulate(notifyAll: Boolean = true) {
-        // The page is completely loaded, document.readyState === 'complete'
-        try {
-            runtime.evaluate("__utils__.emulate()")
-        } catch (e: Exception) {
-            log.warn(StringUtil.stringifyException(e))
-        } finally {
-            if (notifyAll) {
-                pageLock.withLock {
-                    pageCondition.signalAll()
-                }
-            }
         }
     }
 

@@ -51,7 +51,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="seleniumEngine" class="ai.platon.pulsar.net.browser.RobustSeleniumEngine" destroy-method="close">
+    <bean id="browserEmulator" class="ai.platon.pulsar.net.browser.RobustBrowserEmulator" destroy-method="close">
         <constructor-arg ref="browserControl"/>
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="fetchTaskTracker"/>

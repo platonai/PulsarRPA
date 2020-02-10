@@ -216,7 +216,7 @@ class WebDriverPool(
             lastActiveTime = Instant.now()
 
             // a driver is always hold by only one thread, so it's OK to use it without locks
-            driver.closeRedundantTabs()
+            driver.closeIfNotOnly()
             driver.status = DriverStatus.FREE
             driver.stat.pageViews++
             pageViews.incrementAndGet()

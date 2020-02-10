@@ -3,5 +3,5 @@ https ai.platon.pulsar.protocol.http.Http
 file ai.platon.pulsar.protocol.file.File
 
 # Custom protocols
-selenium ai.platon.pulsar.protocol.selenium.SeleniumProtocol custom=true
+selenium ai.platon.pulsar.protocol.selenium.BrowserEmulatorProtocol custom=true
 crowd ai.platon.pulsar.protocol.crowd.ForwardingProtocol custom=true

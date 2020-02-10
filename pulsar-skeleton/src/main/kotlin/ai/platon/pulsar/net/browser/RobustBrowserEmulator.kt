@@ -15,15 +15,15 @@ import kotlin.math.roundToLong
  *
  * Note: SeleniumEngine should be process scope
  */
-class RobustSeleniumEngine(
+class RobustBrowserEmulator(
         browserControl: WebDriverControl,
         driverPool: WebDriverPool,
         ips: InternalProxyServer,
         fetchTaskTracker: FetchTaskTracker,
         metricsSystem: MetricsSystem,
         immutableConfig: ImmutableConfig
-): SeleniumEngine(browserControl, driverPool, ips, fetchTaskTracker, metricsSystem, immutableConfig) {
-    private val log = LoggerFactory.getLogger(RobustSeleniumEngine::class.java)!!
+): BrowserEmulator(browserControl, driverPool, ips, fetchTaskTracker, metricsSystem, immutableConfig) {
+    private val log = LoggerFactory.getLogger(RobustBrowserEmulator::class.java)!!
 
     /**
      * Check if the html is integral without field extraction, a further html integrity checking can be applied after field

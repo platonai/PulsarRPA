@@ -20,7 +20,7 @@ import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.net.browser.BrowserEmulateFetcher;
+import ai.platon.pulsar.net.browser.BrowserEmulatedFetcher;
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.persist.ProtocolStatus;
@@ -35,15 +35,15 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class SeleniumProtocol extends ForwardingProtocol {
+public class BrowserEmulatorProtocol extends ForwardingProtocol {
 
-    private Logger log = LoggerFactory.getLogger(SeleniumProtocol.class);
+    private Logger log = LoggerFactory.getLogger(BrowserEmulatorProtocol.class);
 
-    private AtomicReference<BrowserEmulateFetcher> fetchComponent = new AtomicReference<>();
+    private AtomicReference<BrowserEmulatedFetcher> fetchComponent = new AtomicReference<>();
 
     private AtomicBoolean closed = new AtomicBoolean();
 
-    public SeleniumProtocol() {
+    public BrowserEmulatorProtocol() {
     }
 
     /**
@@ -62,7 +62,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         try {
-            BrowserEmulateFetcher fc = getFetchEngine();
+            BrowserEmulatedFetcher fc = getFetchEngine();
             if (fc == null) {
                 return Collections.emptyList();
             }
@@ -83,7 +83,7 @@ public class SeleniumProtocol extends ForwardingProtocol {
                 return response;
             }
 
-            BrowserEmulateFetcher fc = getFetchEngine();
+            BrowserEmulatedFetcher fc = getFetchEngine();
             if (fc == null) {
                 return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
             }
@@ -104,14 +104,14 @@ public class SeleniumProtocol extends ForwardingProtocol {
         return !closed.get() && PulsarEnv.Companion.isActive();
     }
 
-    private synchronized BrowserEmulateFetcher getFetchEngine() {
+    private synchronized BrowserEmulatedFetcher getFetchEngine() {
         if (!isActive()) {
             return null;
         }
 
         PulsarEnv env = PulsarEnv.Companion.get();
         try {
-            fetchComponent.compareAndSet(null, env.getBean(BrowserEmulateFetcher.class));
+            fetchComponent.compareAndSet(null, env.getBean(BrowserEmulatedFetcher.class));
         } catch (BeansException e) {
             log.warn("{}", StringUtil.simplifyException(e));
         }

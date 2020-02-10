@@ -20,7 +20,7 @@ package ai.platon.pulsar.protocol.common;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
-import ai.platon.pulsar.protocol.selenium.SeleniumProtocol;
+import ai.platon.pulsar.protocol.selenium.BrowserEmulatorProtocol;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,7 +51,7 @@ public class TestProtocolFactory {
                 protocolFactory.getProtocol("https://example.com").getClass().getName());
         assertEquals(ForwardingProtocol.class.getName(),
                 protocolFactory.getProtocol("crowd:http://example.com").getClass().getName());
-        assertEquals(SeleniumProtocol.class.getName(),
+        assertEquals(BrowserEmulatorProtocol.class.getName(),
                 protocolFactory.getProtocol("selenium:http://example.com").getClass().getName());
     }
 }

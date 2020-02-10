@@ -81,18 +81,12 @@ class ManagedWebDriver(
             }
         }
 
-    val currentUrlOrException: String
-        get() = driver.currentUrl
-
     val currentUrl: String
         get() = try {
             driver.currentUrl
         } catch (t: Throwable) {
             ""
         }
-
-    val pageSourceOrException: String
-        get() = driver.pageSource
 
     val pageSource: String
         get() = try {
@@ -181,16 +175,12 @@ class ManagedWebDriver(
     }
 
     @Synchronized
-    fun closeRedundantTabs() {
+    fun closeIfNotOnly() {
         if (isQuit) return
 
-        if (driver is ChromeDevtoolsDriver) {
-            driver.closeRedundantTabs()
-        } else if (driver is ChromeDriver) {
-            val handles = driver.windowHandles.size
-            if (handles > 1) {
-                driver.close()
-            }
+        val handles = driver.windowHandles.size
+        if (handles > 1) {
+            driver.close()
         }
     }
 
@@ -200,7 +190,7 @@ class ManagedWebDriver(
 
         try {
             if (driver is ChromeDevtoolsDriver) {
-                val names = driver.coolieNames().joinToString(", ") { it }
+                val names = driver.getCookieNames().joinToString(", ") { it }
                 log.debug("Deleted cookies: $names")
 
                 driver.deleteAllCookies()

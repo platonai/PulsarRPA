@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 
 fun main() {
-    val proxyPool = PulsarEnv.applicationContext.getBean(ProxyPool::class.java)
+    val proxyPool = PulsarEnv.get().getBean(ProxyPool::class.java)
     var cmd = ""
     var q = false
 

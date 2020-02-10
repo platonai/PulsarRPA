@@ -52,11 +52,8 @@ class AppCloseEventHandler : ApplicationListener<ContextClosedEvent> {
  */
 class PulsarEnv {
     companion object {
-        private val log = LoggerFactory.getLogger(PulsarEnv::class.java)
-
         val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
-        val startTime = Instant.now()
         /**
          * Gora properties
          * */
@@ -87,7 +84,7 @@ class PulsarEnv {
             applicationContext.registerShutdownHook()
             // the primary configuration, keep unchanged with the configuration files
             unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
-            // gora properties
+            // triggler gora properties loading
             goraProperties = GoraStorage.properties
 
             active.set(true)
@@ -115,12 +112,9 @@ class PulsarEnv {
     // serializers, etc
 
     fun shutdown() {
-        active.set(false)
-
-        if (closed.getAndSet(true)) {
-            return
+        if (closed.compareAndSet(false, true)) {
+            active.set(false)
+            applicationContext.close()
         }
-
-        applicationContext.close()
     }
 }

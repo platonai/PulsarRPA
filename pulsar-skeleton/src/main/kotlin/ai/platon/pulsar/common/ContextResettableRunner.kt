@@ -2,12 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.net.browser.BrowseResult
 import ai.platon.pulsar.net.browser.BrowserContext
-import ai.platon.pulsar.net.browser.SeleniumEngine
-import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.RetryScope
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger

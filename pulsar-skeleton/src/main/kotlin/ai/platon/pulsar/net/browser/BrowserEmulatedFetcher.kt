@@ -91,17 +91,15 @@ internal class BatchFetchContext(
 /**
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
- *
- * Note: SeleniumEngine should be in process scope
  */
-class BrowserEmulateFetcher(
+class BrowserEmulatedFetcher(
         private val executor: GlobalExecutor,
-        private val seleniumEngine: SeleniumEngine,
+        private val browserEmulator: BrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
-    val log = LoggerFactory.getLogger(BrowserEmulateFetcher::class.java)!!
+    val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverPool = seleniumEngine.driverPool
+    private val driverPool = browserEmulator.driverPool
     private val closed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -131,7 +129,7 @@ class BrowserEmulateFetcher(
         }
 
         return try {
-            seleniumEngine.fetch(task).response
+            browserEmulator.fetch(task).response
         } catch (e: IllegalStateException) {
             ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
         }
@@ -257,7 +255,7 @@ class BrowserEmulateFetcher(
 
         return try {
             cx.beforeFetch(page)
-            seleniumEngine.fetch(task)
+            browserEmulator.fetch(task)
         } catch (e: IllegalStateException) {
             FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
         } catch (e: Throwable) {
@@ -314,7 +312,7 @@ class BrowserEmulateFetcher(
 
         // if there are still pending tasks, cancel them
         cx.pendingTasks.forEach {(url, future) ->
-            seleniumEngine.cancel(url)
+            browserEmulator.cancel(url)
             future.cancel(true)
         }
         cx.pendingTasks.forEach { (url, future) ->

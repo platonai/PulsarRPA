@@ -78,8 +78,8 @@ class ChromeDevtoolsOptions(
         var disableClientSidePhishingDetection: Boolean = true,
         @ChromeParameter("disable-default-apps")
         var disableDefaultApps: Boolean = true,
-        @ChromeParameter("disable-extensions")
-        var disableExtensions: Boolean = true,
+//        @ChromeParameter("disable-extensions")
+//        var disableExtensions: Boolean = true,
         @ChromeParameter("disable-hang-monitor")
         var disableHangMonitor: Boolean = true,
         @ChromeParameter("disable-popup-blocking")
