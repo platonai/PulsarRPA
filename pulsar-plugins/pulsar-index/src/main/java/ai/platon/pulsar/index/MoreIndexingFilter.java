@@ -42,7 +42,7 @@ public class MoreIndexingFilter implements IndexingFilter {
 
     public MoreIndexingFilter(MimeUtil MIME, ImmutableConfig conf) {
         this.MIME = MIME;
-        reload(conf);
+        setup(conf);
     }
 
     /**
@@ -56,14 +56,14 @@ public class MoreIndexingFilter implements IndexingFilter {
     }
 
     @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        MIME = new MimeUtil(conf);
+    public ImmutableConfig getConf() {
+        return conf;
     }
 
     @Override
-    public ImmutableConfig getConf() {
-        return this.conf;
+    public void setup(ImmutableConfig conf) {
+        this.conf = conf;
+        MIME = new MimeUtil(conf);
     }
 
     @Override

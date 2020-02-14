@@ -60,6 +60,4 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pulsarContext" class="ai.platon.pulsar.PulsarContext" scope="prototype" destroy-method="close"/>
-
 </beans>

@@ -47,7 +47,34 @@ public class GeneralIndexingFilter implements IndexingFilter {
     }
 
     public GeneralIndexingFilter(ImmutableConfig conf) {
-        reload(conf);
+        setup(conf);
+    }
+
+    /**
+     * Set the {@link Configuration} object
+     */
+    @Override
+    public void setup(ImmutableConfig conf) {
+        this.conf = conf;
+
+        maxContentLength = conf.getInt("index.max.content.length", 10 * 10000);
+
+        LOG.info(getParams().formatAsLine());
+    }
+
+    @Override
+    public Params getParams() {
+        return Params.of(
+                "className", this.getClass().getSimpleName(),
+                "maxContentLength", maxContentLength
+        );
+    }
+
+    /**
+     * Get the {@link Configuration} object
+     */
+    public ImmutableConfig getConf() {
+        return this.conf;
     }
 
     /**
@@ -80,32 +107,5 @@ public class GeneralIndexingFilter implements IndexingFilter {
         fields.entrySet().stream()
                 .filter(e -> e.getValue() != null && e.getValue().length() < maxContentLength)
                 .forEach(e -> doc.addIfAbsent(e.getKey(), e.getValue()));
-    }
-
-    /**
-     * Set the {@link Configuration} object
-     */
-    @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-
-        maxContentLength = conf.getInt("index.max.content.length", 10 * 10000);
-
-        LOG.info(getParams().formatAsLine());
-    }
-
-    @Override
-    public Params getParams() {
-        return Params.of(
-                "className", this.getClass().getSimpleName(),
-                "maxContentLength", maxContentLength
-        );
-    }
-
-    /**
-     * Get the {@link Configuration} object
-     */
-    public ImmutableConfig getConf() {
-        return this.conf;
     }
 }

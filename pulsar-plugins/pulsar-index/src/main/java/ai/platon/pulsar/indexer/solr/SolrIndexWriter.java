@@ -78,16 +78,11 @@ public class SolrIndexWriter implements IndexWriter {
 
     public SolrIndexWriter(IndexerMapping indexerMapping, ImmutableConfig conf) {
         this.indexerMapping = indexerMapping;
-        reload(conf);
+        setup(conf);
     }
 
     @Override
-    public ImmutableConfig getConf() {
-        return conf;
-    }
-
-    @Override
-    public void reload(ImmutableConfig conf) {
+    public void setup(ImmutableConfig conf) {
         this.conf = conf;
 
         solrUrls = conf.getStrings(INDEXER_URL, ArrayUtils.EMPTY_STRING_ARRAY);

@@ -5,10 +5,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
 import org.slf4j.LoggerFactory
 
-class IpChecker: AutoCloseable {
-    private val pc = PulsarContext.getOrCreate()
-    private val i = pc.createSession()
-    private val log = LoggerFactory.getLogger(IpChecker::class.java)
+class WhatLeaks: AutoCloseable {
+    private val i = PulsarContext.getOrCreate().createSession()
+    private val log = LoggerFactory.getLogger(WhatLeaks::class.java)
 
     private val onlineCheckTools = listOf(
 //            "https://httpbin.org/headers",
@@ -34,14 +33,12 @@ class IpChecker: AutoCloseable {
     }
 
     override fun close() {
-        i.close()
-        pc.close()
-        pc.env.shutdown()
+        i.context.close()
     }
 }
 
 fun main() {
     System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
 
-    IpChecker().use { it.check() }
+    WhatLeaks().use { it.check() }
 }

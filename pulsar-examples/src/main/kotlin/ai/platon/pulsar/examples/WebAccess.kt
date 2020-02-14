@@ -55,7 +55,7 @@ open class WebAccess(
     val i = pc.createSession()
 
     init {
-        val ips = PulsarEnv.applicationContext.getBean(InternalProxyServer::class.java)
+        val ips = pc.getBean(InternalProxyServer::class.java)
         ips.idleTimeout = Duration.ofMinutes(5)
         ips.showReport = true
     }

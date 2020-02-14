@@ -2,6 +2,9 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
+import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
+import com.github.kklisura.cdt.protocol.types.network.ErrorReason
+import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import org.openqa.selenium.OutputType
@@ -44,6 +47,7 @@ class ChromeDevtoolsDriver(
     private val page get() = devTools.page
     private val mainFrame get() = page.frameTree.frame
     private val network get() = devTools.network
+    private val fetch get() = devTools.fetch
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
     private val pageLock = ReentrantLock()
@@ -90,8 +94,21 @@ class ChromeDevtoolsDriver(
 //            simulate()
 //        }
 
+        // block urls by url pattern
+        // network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
+
+        // Log requests with onRequestWillBeSent event handler
+        network.onRequestWillBeSent { event: RequestWillBeSent ->
+            if (event.type == ResourceType.IMAGE) {
+                // TODO: fetch is not supported?
+                // fetch.failRequest(event.requestId, ErrorReason.BLOCKED_BY_CLIENT)
+                // println(event.request.url)
+            }
+        }
+
         page.enable()
         network.enable()
+//        fetch.enable()
 
         page.navigate(url)
     }

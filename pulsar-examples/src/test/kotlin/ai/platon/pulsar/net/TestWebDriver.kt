@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net
 
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.net.browser.WebDriverControl
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
@@ -29,10 +30,10 @@ class TestWebDriver {
             System.setProperty(PROXY_USE_PROXY, "no")
         }
 
-        val env = PulsarEnv.get()
-        val conf = PulsarEnv.unmodifiedConfig
-        val driverControl = PulsarEnv.applicationContext.getBean(WebDriverControl::class.java)
-        val driverPool = PulsarEnv.applicationContext.getBean(WebDriverPool::class.java)
+        val context = PulsarContext.getOrCreate()
+        val conf = context.unmodifiedConfig
+        val driverControl = context.getBean(WebDriverControl::class.java)
+        val driverPool = context.getBean(WebDriverPool::class.java)
         var quitMultiThreadTesting = false
 
         @BeforeClass

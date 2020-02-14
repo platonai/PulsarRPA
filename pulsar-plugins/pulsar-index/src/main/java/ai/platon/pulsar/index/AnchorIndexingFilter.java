@@ -19,7 +19,6 @@ package ai.platon.pulsar.index;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.index.IndexDocument;
-import ai.platon.pulsar.crawl.index.IndexingException;
 import ai.platon.pulsar.crawl.index.IndexingFilter;
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.hadoop.conf.Configuration;
@@ -50,7 +49,7 @@ public class AnchorIndexingFilter implements IndexingFilter {
      * Set the {@link Configuration} object
      */
     @Override
-    public void reload(ImmutableConfig conf) {
+    public void setup(ImmutableConfig conf) {
         this.conf = conf;
 
         deduplicate = conf.getBoolean("anchorIndexingFilter.deduplicate", true);
@@ -83,7 +82,7 @@ public class AnchorIndexingFilter implements IndexingFilter {
      * @return filtered IndexDocument
      */
     @Override
-    public IndexDocument filter(IndexDocument doc, String url, WebPage page) throws IndexingException {
+    public IndexDocument filter(IndexDocument doc, String url, WebPage page) {
         HashSet<String> set = null;
 
         for (Entry<CharSequence, CharSequence> e : page.getInlinks().entrySet()) {

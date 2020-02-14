@@ -5,7 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.impl.ChromeServiceImpl
 import ai.platon.pulsar.common.AppPaths
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.awt.Dimension
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -33,6 +32,7 @@ class LauncherConfiguration {
         val THREAD_JOIN_WAIT_TIME = Duration.ofSeconds(5)
 
         val CHROME_BINARY_SEARCH_PATHS = arrayOf(
+                "/mnt/data/workspace/chromium/src/out/Default/chrome",
                 "/usr/bin/chromium",
                 "/usr/bin/chromium-browser",
                 "/usr/bin/google-chrome-stable",
@@ -60,7 +60,7 @@ class ChromeDevtoolsOptions(
         var noDefaultBrowserCheck: Boolean = true,
         @ChromeParameter("no-first-run")
         var noFirstRun: Boolean = true,
-        @ChromeParameter(USER_DATA_DIR_ARGUMENT)
+        @ChromeParameter(ARG_USER_DATA_DIR)
         var userDataDir: String = AppPaths.CHROME_TMP_DIR.toString(),
         @ChromeParameter("incognito")
         var incognito: Boolean = false,
@@ -145,8 +145,7 @@ class ChromeDevtoolsOptions(
     }
 
     companion object {
-        val DEFAULT_VIEWPORT = Dimension(1920, 1080)
-        const val USER_DATA_DIR_ARGUMENT = "user-data-dir"
+        const val ARG_USER_DATA_DIR = "user-data-dir"
     }
 }
 

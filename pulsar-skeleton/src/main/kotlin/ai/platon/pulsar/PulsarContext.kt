@@ -16,17 +16,22 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
+import org.springframework.beans.BeansException
 import java.net.URL
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.reflect.KClass
 
 /**
  * Main entry point for Pulsar functionality.
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
-class PulsarContext: AutoCloseable {
+class PulsarContext private constructor(
+        /**
+         * The program environment
+         * */
+        val env: PulsarEnv
+) : AutoCloseable {
 
     companion object {
         private val activeContext = AtomicReference<PulsarContext>()
@@ -34,8 +39,7 @@ class PulsarContext: AutoCloseable {
         fun getOrCreate(): PulsarContext {
             synchronized(PulsarContext::class.java) {
                 if (activeContext.get() == null) {
-                    val pulsarContext = PulsarEnv.applicationContext.getBean(PulsarContext::class.java)
-                    activeContext.set(pulsarContext)
+                    activeContext.set(PulsarContext(PulsarEnv.get()))
                 }
                 return activeContext.get()
             }
@@ -48,17 +52,13 @@ class PulsarContext: AutoCloseable {
 
     val log = LoggerFactory.getLogger(PulsarContext::class.java)
     /**
-     * The program environment
-     * */
-    val env = PulsarEnv.get()
-    /**
-     * A immutable config is loaded from the config file at process startup, and never changes
-     * */
-    val unmodifiedConfig: ImmutableConfig = PulsarEnv.unmodifiedConfig
-    /**
      * The spring application context
      * */
     val applicationContext = PulsarEnv.applicationContext
+    /**
+     * A immutable config is loaded from the config file at process startup, and never changes
+     * */
+    val unmodifiedConfig = applicationContext.getBean(ImmutableConfig::class.java)
     /**
      * The start time
      * */
@@ -66,15 +66,19 @@ class PulsarContext: AutoCloseable {
     /**
      * Whether this pulsar object is already closed
      * */
-    private val stopped = AtomicBoolean()
+    private val closed = AtomicBoolean()
     /**
      * Whether this pulsar object is already closed
      * */
-    val isStopped = stopped.get()
+    val isClosed = closed.get()
     /**
      * Registered closeables, will be closed by Pulsar object
      * */
     private val closableObjects = mutableListOf<AutoCloseable>()
+    /**
+     * All open sessions
+     * */
+    val sessions = mutableMapOf<Int, PulsarSession>()
     /**
      * Url normalizers
      * */
@@ -123,22 +127,19 @@ class PulsarContext: AutoCloseable {
 
     fun createSession(): PulsarSession {
         ensureRunning()
-        return PulsarSession(this, VolatileConfig(unmodifiedConfig))
+        val session = PulsarSession(this, VolatileConfig(unmodifiedConfig))
+        sessions[session.id] = session
+        return session
     }
 
-    fun getBean(name: String): Any? {
-        ensureRunning()
-        return PulsarEnv.applicationContext.getBean(name)
+    fun closeSession(session: PulsarSession) {
+        sessions.remove(session.id)
     }
 
-    fun getBean(clazz: Class<Any>): Any? {
+    @Throws(BeansException::class)
+    fun <T> getBean(requiredType: Class<T>): T {
         ensureRunning()
-        return PulsarEnv.applicationContext.getBean(clazz)
-    }
-
-    fun getBean(clazz: KClass<Any>): Any? {
-        ensureRunning()
-        return PulsarEnv.applicationContext.getBean(clazz.java)
+        return env.getBean(requiredType)
     }
 
     /**
@@ -151,7 +152,7 @@ class PulsarContext: AutoCloseable {
 
     private fun initOptions(options: LoadOptions, isItemOption: Boolean = false): LoadOptions {
         if (options.volatileConfig == null) {
-            options.volatileConfig = VolatileConfig(PulsarEnv.unmodifiedConfig)
+            options.volatileConfig = VolatileConfig(unmodifiedConfig)
         }
 
         options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)
@@ -371,20 +372,16 @@ class PulsarContext: AutoCloseable {
         webDb.flush()
     }
 
-    fun stop() {
-        if (stopped.getAndSet(true)) {
-            return
-        }
-
-        closableObjects.forEach { o -> o.use { it.close() } }
-    }
-
     override fun close() {
-        stop()
+        if (closed.compareAndSet(false, true)) {
+            sessions.values.forEach { it.use { it.close() } }
+            closableObjects.forEach { it.use { it.close() } }
+            env.shutdown()
+        }
     }
 
     private fun ensureRunning() {
-        if (stopped.get()) {
+        if (closed.get()) {
 
 //            throw IllegalStateException(
 //                    """Cannot call methods on a stopped PulsarContext.""")

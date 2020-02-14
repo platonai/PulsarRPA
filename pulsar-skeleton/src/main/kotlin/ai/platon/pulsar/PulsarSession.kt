@@ -353,16 +353,16 @@ open class PulsarSession(
     }
 
     override fun close() {
-        if (closed.getAndSet(true)) {
-            return
+        if (closed.compareAndSet(false, true)) {
+            context.webDb.flush()
+
+            closableObjects.forEach { o -> o.use { it.close() } }
+
+            context.closeSession(this)
+
+            String.format("Pulsar session $this is closed. Used memory: %,dKB, free memory: %,dKB",
+                    Utils.getMemoryUsed(), Utils.getMemoryFree()).also { log.info(it) }
         }
-
-        context.webDb.flush()
-
-        closableObjects.forEach { o -> o.use { it.close() } }
-
-        String.format("Pulsar session $this is closed. Used memory: %,dKB, free memory: %,dKB",
-                Utils.getMemoryUsed(), Utils.getMemoryFree()).also { log.info(it) }
     }
 
     fun getLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {

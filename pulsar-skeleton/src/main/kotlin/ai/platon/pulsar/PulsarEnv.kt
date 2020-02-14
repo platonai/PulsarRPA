@@ -47,30 +47,27 @@ class AppCloseEventHandler : ApplicationListener<ContextClosedEvent> {
 /**
  * Holds all the runtime environment objects for a running Pulsar instance
  * All the threads shares the same PulsarEnv.
- *
- * TODO: make it compatible with spring
  */
 class PulsarEnv {
     companion object {
-        val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
         /**
          * Gora properties
+         * TODO: why we need this?
          * */
         val goraProperties: Properties
         /**
-         * The unmodified config loaded from the config file at process startup, and never changes
+         * If the system is active
          * */
-        val unmodifiedConfig: ImmutableConfig
+        val isActive get() = !closed.get() && applicationContext.isActive
 
         private val env = AtomicReference<PulsarEnv>()
 
         private val active = AtomicBoolean()
         private val closed = AtomicBoolean()
 
-        val isActive get() = !closed.get() && applicationContext.isActive
-
         init {
+            // TODO: use spring config
             // prerequisite system properties
             setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
             setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
@@ -78,12 +75,10 @@ class PulsarEnv {
             setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, AppConstants.H2_SESSION_FACTORY)
 
             // the spring application context
-            contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
+            val contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
             applicationContext = ClassPathXmlApplicationContext(contextConfigLocation)
             // shut down application context before progress exit
             applicationContext.registerShutdownHook()
-            // the primary configuration, keep unchanged with the configuration files
-            unmodifiedConfig = applicationContext.getBean(MutableConfig::class.java)
             // triggler gora properties loading
             goraProperties = GoraStorage.properties
 
@@ -113,8 +108,8 @@ class PulsarEnv {
 
     fun shutdown() {
         if (closed.compareAndSet(false, true)) {
-            active.set(false)
             applicationContext.close()
+            active.set(false)
         }
     }
 }

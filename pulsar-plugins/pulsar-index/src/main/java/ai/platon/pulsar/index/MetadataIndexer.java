@@ -53,11 +53,11 @@ public class MetadataIndexer implements IndexingFilter {
     }
 
     public MetadataIndexer(ImmutableConfig conf) {
-        reload(conf);
+        setup(conf);
     }
 
     @Override
-    public void reload(ImmutableConfig conf) {
+    public void setup(ImmutableConfig conf) {
         this.conf = conf;
 
         conf.getStringCollection(PARSE_CONF_PROPERTY).forEach(metatag -> {
