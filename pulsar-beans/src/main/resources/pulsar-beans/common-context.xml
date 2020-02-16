@@ -21,10 +21,6 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.ProxyPool" destroy-method="close">
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="fetchTaskTracker" class="ai.platon.pulsar.crawl.fetch.FetchTaskTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="metricsSystem"/>
@@ -39,7 +35,11 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="internalProxyServer" class="ai.platon.pulsar.proxy.InternalProxyServer" init-method="start" destroy-method="close">
+    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.ProxyPool" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="proxyConnector" class="ai.platon.pulsar.proxy.ProxyConnector" init-method="start" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -47,7 +47,7 @@
     <bean id="webDriverPool" class="ai.platon.pulsar.net.browser.WebDriverPool" destroy-method="close">
         <constructor-arg ref="browserControl"/>
         <constructor-arg ref="proxyPool"/>
-        <constructor-arg ref="internalProxyServer"/>
+        <constructor-arg ref="proxyConnector"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -55,7 +55,7 @@
         <constructor-arg ref="browserControl"/>
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="fetchTaskTracker"/>
-        <constructor-arg ref="internalProxyServer"/>
+        <constructor-arg ref="proxyConnector"/>
         <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>

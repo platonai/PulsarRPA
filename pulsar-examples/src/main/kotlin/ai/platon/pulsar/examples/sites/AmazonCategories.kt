@@ -47,6 +47,7 @@ class AmazonCategories: WebAccess() {
 }
 
 fun main() {
-    val categories = AmazonCategories()
-    categories.collectFromSiteDirectory()
+    AmazonCategories().use {
+        it.collectFromSiteDirectory()
+    }
 }

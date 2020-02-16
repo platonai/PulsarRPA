@@ -22,7 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Storage class for <code>DomainSuffix</code> objects Note: this class is
@@ -33,9 +35,9 @@ import java.util.HashMap;
 public class DomainSuffixes {
     private static final Logger LOG = LoggerFactory.getLogger(DomainSuffixes.class);
 
-    private static String configFile = "domain-suffixes.xml";
+    public static String DOMAIN_SUFFIXES_FILE = "domain-suffixes.xml";
     private static DomainSuffixes instance;
-    private HashMap<String, DomainSuffix> domains = new HashMap<>();
+    private Map<String, DomainSuffix> domains = Collections.synchronizedMap(new HashMap<>());
 
     private DomainSuffixes() {
     }
@@ -47,20 +49,32 @@ public class DomainSuffixes {
      */
     public static DomainSuffixes getInstance() {
         if (instance == null) {
-            LOG.info("Loading domain suffixes from resource " + configFile);
-            try (InputStream input = DomainSuffixes.class.getClassLoader().getResourceAsStream(configFile)) {
-                if (input == null) {
-                    LOG.error("Failed to load resource " + configFile);
-                } else {
-                    instance = new DomainSuffixesReader().read(new DomainSuffixes(), input);
-                    LOG.info("Total {} known domains", instance.domains.size());
+            synchronized (DomainSuffixes.class) {
+                if (instance == null) {
+                    instance = load(DOMAIN_SUFFIXES_FILE);
                 }
-            } catch (Exception e) {
-                LOG.warn(StringUtil.stringifyException(e));
             }
         }
 
         return instance;
+    }
+
+    private static DomainSuffixes load(String resource) {
+        DomainSuffixes suffixes = null;
+
+        LOG.info("Loading domain suffixes from resource " + resource);
+        try (InputStream input = DomainSuffixes.class.getClassLoader().getResourceAsStream(resource)) {
+            if (input == null) {
+                LOG.error("Failed to load resource " + resource);
+            } else {
+                suffixes = new DomainSuffixesReader().read(new DomainSuffixes(), input);
+                LOG.info("Total {} known domains", suffixes.domains.size());
+            }
+        } catch (Exception e) {
+            LOG.warn(StringUtil.stringifyException(e));
+        }
+
+        return suffixes;
     }
 
     void addDomainSuffix(DomainSuffix tld) {

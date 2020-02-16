@@ -19,10 +19,9 @@ class AmazonAccess: WebAccess() {
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
     private var round = 0
     private var numTotalPages = 0
-    private val driverPool = env.getBean(WebDriverPool::class.java)
+    private val driverPool = i.context.getBean(WebDriverPool::class.java)
 
     init {
-
 //        driverPool.imagesEnabled = false
 //        driverPool.headless = true
     }
@@ -154,7 +153,8 @@ fun main() {
     Files.deleteIfExists(archiveDir)
     Files.move(AppPaths.WEB_CACHE_DIR, archiveDir)
 
-    val access = AmazonAccess()
-    access.laptops()
-    // access.testIpLimit()
+    AmazonAccess().use {
+        it.laptops()
+        // it.testIpLimit()
+    }
 }

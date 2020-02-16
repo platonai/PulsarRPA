@@ -162,6 +162,7 @@ class ManagedWebDriver(
      * */
     @Synchronized
     fun quit() {
+
         if (isQuit) {
             return
         }
@@ -174,13 +175,18 @@ class ManagedWebDriver(
         driver.quit()
     }
 
+    /**
+     * Close redundant web drivers and keep only one to release resources
+     * TODO: buggy
+     * */
     @Synchronized
     fun closeIfNotOnly() {
         if (isQuit) return
 
         val handles = driver.windowHandles.size
         if (handles > 1) {
-            driver.close()
+            // TODO:
+            // driver.close()
         }
     }
 

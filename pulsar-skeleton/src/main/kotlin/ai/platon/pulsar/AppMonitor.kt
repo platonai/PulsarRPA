@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.net.browser.WebDriverPool
-import ai.platon.pulsar.proxy.InternalProxyServer
+import ai.platon.pulsar.proxy.ProxyConnector
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AppMonitor(
         val driverPool: WebDriverPool,
         val proxyPool: ProxyPool,
-        val internalProxyServer: InternalProxyServer,
+        val proxyConnector: ProxyConnector,
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(AppMonitor::class.java)
@@ -90,10 +90,10 @@ class AppMonitor(
     private fun monitorProxySystem(tick: Int) {
         if (tick % 20 == 0) {
             // proxy system can be started and shutdown at runtime
-            if (!internalProxyServer.isWatcherStarted) {
-                if (internalProxyServer.isEnabled) {
+            if (!proxyConnector.isWatcherStarted) {
+                if (proxyConnector.isEnabled) {
                     proxyPool.updateProxies(asap = true)
-                    internalProxyServer.start()
+                    proxyConnector.start()
                 }
             }
 
@@ -122,7 +122,7 @@ class AppMonitor(
                 round
         )
 
-        val ipsReport = internalProxyServer.report
+        val ipsReport = proxyConnector.report
         if (ipsReport.isNotBlank() && ipsReport != lastIPSReport) {
             log.info(ipsReport)
         }

@@ -7,5 +7,5 @@ fun main() {
     val args = """
         -ic -i 1d -ii 1s -tl 5 -ol "a[href~=item]"
     """.trimIndent()
-    WebAccess().loadOutPages(portalUrl, args)
+    WebAccess().use { it.loadOutPages(portalUrl, args) }
 }

@@ -179,7 +179,7 @@ class GeneralWebAccess: WebAccess() {
                 .groupBy { URLUtil.getHost(it, URLUtil.GroupMode.BY_DOMAIN) }.toList()
         Lists.partition(tasks, AppConstants.NCPU).forEach { partition ->
             partition.parallelStream().forEach { (_, urls) ->
-                pc.createSession().use {
+                i.context.createSession().use {
                     it.loadAll(urls.distinct().shuffled().take(10), options)
                 }
             }

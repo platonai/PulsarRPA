@@ -54,8 +54,6 @@ class SQLContext: AutoCloseable {
 
     val unmodifiedConfig: ImmutableConfig
 
-    val env = PulsarEnv.get()
-
     val pulsarContext = PulsarContext.getOrCreate()
 
     private var backgroundSession = pulsarContext.createSession()
@@ -168,7 +166,7 @@ class SQLContext: AutoCloseable {
 
         for (mode in FetchMode.values()) {
             val urls = pulsarContext.fetchTaskTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
-            if (!urls.isEmpty()) {
+            if (urls.isNotEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
         }

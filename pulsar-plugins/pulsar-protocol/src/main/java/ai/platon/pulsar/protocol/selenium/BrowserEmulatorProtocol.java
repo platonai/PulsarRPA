@@ -109,9 +109,8 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
             return null;
         }
 
-        PulsarEnv env = PulsarEnv.Companion.get();
         try {
-            fetchComponent.compareAndSet(null, env.getBean(BrowserEmulatedFetcher.class));
+            fetchComponent.compareAndSet(null, PulsarEnv.Companion.getBean(BrowserEmulatedFetcher.class));
         } catch (BeansException e) {
             log.warn("{}", StringUtil.simplifyException(e));
         }

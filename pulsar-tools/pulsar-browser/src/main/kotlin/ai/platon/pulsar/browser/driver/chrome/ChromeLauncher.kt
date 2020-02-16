@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.pulsar.browser.driver.chrome.LauncherConfiguration.Companion.CHROME_BINARY_SEARCH_PATHS
+import ai.platon.pulsar.browser.driver.chrome.LauncherConfig.Companion.CHROME_BINARY_SEARCH_PATHS
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeServiceImpl
 import ai.platon.pulsar.common.AppPaths
 import org.apache.commons.io.FileUtils
@@ -17,7 +17,7 @@ import java.util.regex.Pattern
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-class LauncherConfiguration {
+class LauncherConfig {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
     var shutdownWaitTime = DEFAULT_SHUTDOWN_WAIT_TIME
     var threadWaitTime = THREAD_JOIN_WAIT_TIME
@@ -78,8 +78,8 @@ class ChromeDevtoolsOptions(
         var disableClientSidePhishingDetection: Boolean = true,
         @ChromeParameter("disable-default-apps")
         var disableDefaultApps: Boolean = true,
-//        @ChromeParameter("disable-extensions")
-//        var disableExtensions: Boolean = true,
+        @ChromeParameter("disable-extensions")
+        var disableExtensions: Boolean = true,
         @ChromeParameter("disable-hang-monitor")
         var disableHangMonitor: Boolean = true,
         @ChromeParameter("disable-popup-blocking")
@@ -166,7 +166,7 @@ class ProcessLauncher {
 class ChromeLauncher(
         private val processLauncher: ProcessLauncher = ProcessLauncher(),
         private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry(),
-        private val configuration: LauncherConfiguration = LauncherConfiguration()
+        private val config: LauncherConfig = LauncherConfig()
 ) : AutoCloseable {
 
     companion object {
@@ -176,11 +176,12 @@ class ChromeLauncher(
 
     private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
     private var chromeProcess: Process? = null
-    private var userDataDirPath: Path = configuration.userDataDirPath
+    private var userDataDirPath = config.userDataDirPath
     private val shutdownHookThread = Thread { this.close() }
 
     fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): ChromeService {
         val port = launchChromeProcess(chromeBinaryPath, options)
+        userDataDirPath = Paths.get(options.userDataDir)
         return ChromeServiceImpl(port)
     }
 
@@ -222,9 +223,9 @@ class ChromeLauncher(
         if (process.isAlive) {
             process.destroy()
             try {
-                if (!process.waitFor(configuration.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
+                if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
                     process.destroyForcibly()
-                    process.waitFor(configuration.shutdownWaitTime.seconds, TimeUnit.SECONDS)
+                    process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
                 }
                 log.info("Chrome process is closed")
             } catch (e: InterruptedException) {
@@ -319,7 +320,7 @@ class ChromeLauncher(
         readLineThread.start()
 
         try {
-            readLineThread.join(configuration.startupWaitTime.toMillis())
+            readLineThread.join(config.startupWaitTime.toMillis())
             if (port == 0) {
                 close(readLineThread)
                 throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start. Chrome output: \n>>>$chromeOutput")
@@ -334,7 +335,7 @@ class ChromeLauncher(
 
     private fun close(thread: Thread) {
         try {
-            thread.join(configuration.threadWaitTime.toMillis())
+            thread.join(config.threadWaitTime.toMillis())
         } catch (ignored: InterruptedException) {}
     }
 

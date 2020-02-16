@@ -23,14 +23,34 @@ class ChromeDevtoolsDriver(
         private val browserControl: WebDriverControl,
         private val launchOptions: ChromeDevtoolsOptions
 ): RemoteWebDriver() {
-    private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
+    private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
     companion object {
-        private val chromeProcessLaunched = AtomicBoolean()
+        private var chromeProcessLaunched = false
         private val numInstances = AtomicInteger()
         private lateinit var launcher: ChromeLauncher
         private lateinit var chrome: ChromeService
         private val tabs = mutableMapOf<String, ChromeTab>()
+
+        private fun launchChromeIfNecessary(launchOptions: ChromeDevtoolsOptions) {
+            synchronized(ChromeLauncher::class.java) {
+                if (!chromeProcessLaunched) {
+                    launcher = ChromeLauncher(shutdownHookRegistry = ChromeDevtoolsDriverShutdownHookRegistry())
+                    chrome = launcher.launch(launchOptions)
+                    chromeProcessLaunched = true
+                }
+            }
+        }
+
+        private fun closeChromeIfNecessary() {
+            synchronized(ChromeLauncher::class.java) {
+                if (chromeProcessLaunched) {
+                    chrome.use { it.close() }
+                    launcher.use { it.close() }
+                    chromeProcessLaunched = false
+                }
+            }
+        }
     }
 
     private val clientLibJs = browserControl.parseLibJs(false)
@@ -67,11 +87,9 @@ class ChromeDevtoolsDriver(
         }
 
     init {
-        if (chromeProcessLaunched.compareAndSet(false, true)) {
-            launcher = ChromeLauncher(shutdownHookRegistry = ChromeDevtoolsDriverShutdownHookRegistry())
-            chrome = launcher.launch(launchOptions)
-        }
+        launchChromeIfNecessary(launchOptions)
 
+        // In chrome every tab is a separate process
         tab = chrome.createTab()
         tabs[tab.id] = tab
 
@@ -158,6 +176,10 @@ class ChromeDevtoolsDriver(
         devTools.network.deleteCookies(name)
     }
 
+//    fun deleteLocalStorage() {
+//        // devTools.cacheStorage.deleteCache()
+//    }
+
     override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
         val result = page.captureScreenshot(CaptureScreenshotFormat.PNG, 100, viewport, true)
         return outputType.convertFromBase64Png(result)
@@ -172,19 +194,16 @@ class ChromeDevtoolsDriver(
      * */
     override fun quit() {
         close()
-
-        if (0 == numInstances.decrementAndGet()) {
-            chrome.use { it.close() }
-            launcher.use { it.close() }
-        }
+        closeChromeIfNecessary()
     }
 
     /**
      * Close the tab hold by this driver
      * */
     override fun close() {
+        val sessionId = getSessionId()
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing devtools driver ...")
+            log.info("Closing devtools driver, session: {} tab: {} ...", sessionId, tab.id)
             tabs.remove(tab.id)
             devTools.use { it.close() }
         }

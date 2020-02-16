@@ -5,12 +5,13 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.net.browser.BatchHandler
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.proxy.InternalProxyServer
+import ai.platon.pulsar.proxy.ProxyConnector
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -47,17 +48,14 @@ class AfterBatchHandler: BatchHandler() {
 open class WebAccess(
         private var beforeBatchHandler: BatchHandler = BeforeBatchHandler(),
         private var afterBatchHandler: BatchHandler = AfterBatchHandler()
-) {
+): AutoCloseable {
     val log = LoggerFactory.getLogger(WebAccess::class.java)
 
-    val env = PulsarEnv.get()
-    val pc = PulsarContext.getOrCreate()
-    val i = pc.createSession()
+    val i = PulsarContext.createSession()
 
     init {
-        val ips = pc.getBean(InternalProxyServer::class.java)
-        ips.idleTimeout = Duration.ofMinutes(5)
-        ips.showReport = true
+        System.setProperty(CapabilityTypes.PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5).toString())
+        i.context.getBean(ProxyConnector::class.java).let { it.showReport = true }
     }
 
     fun load(url: String, args: String) {
@@ -132,13 +130,17 @@ open class WebAccess(
 
     fun scan(baseUri: String) {
         // val contractBaseUri = "http://www.ccgp-hubei.gov.cn:8040/fcontractAction!download.action?path="
-        pc.scan(baseUri).forEachRemaining {
+        i.context.scan(baseUri).forEachRemaining {
             val size = it.content?.array()?.size?:0
             println(size)
         }
     }
 
     fun truncate() {
-        pc.webDb.truncate()
+        i.context.webDb.truncate()
+    }
+
+    override fun close() {
+        PulsarEnv.shutdown()
     }
 }

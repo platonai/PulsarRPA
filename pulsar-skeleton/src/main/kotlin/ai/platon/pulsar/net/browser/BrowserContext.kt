@@ -8,7 +8,7 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.proxy.InternalProxyServer
+import ai.platon.pulsar.proxy.ProxyConnector
 import org.slf4j.LoggerFactory
 
 private class ContextResettableBrowseTask(
@@ -36,7 +36,7 @@ private class ContextResettableBrowseTask(
  * */
 class BrowserContext(
         val driverPool: WebDriverPool,
-        val ips: InternalProxyServer,
+        val proxyConnector: ProxyConnector,
         val immutableConfig: ImmutableConfig
 ) {
     private val log = LoggerFactory.getLogger(BrowserContext::class.java)!!
@@ -50,7 +50,7 @@ class BrowserContext(
     }
 
     fun runInIPS(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
-        return ips.runAnyway { runInDriverPool(task, browseFun) }
+        return proxyConnector.runAnyway { runInDriverPool(task, browseFun) }
     }
 
     fun runInDriverPool(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {

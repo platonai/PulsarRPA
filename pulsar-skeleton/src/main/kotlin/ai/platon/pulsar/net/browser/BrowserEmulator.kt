@@ -24,7 +24,7 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.proxy.InternalProxyServer
+import ai.platon.pulsar.proxy.ProxyConnector
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.JavascriptExecutor
@@ -101,7 +101,7 @@ data class VisitResult(
 open class BrowserEmulator(
         val browserControl: WebDriverControl,
         val driverPool: WebDriverPool,
-        protected val ips: InternalProxyServer,
+        protected val proxyConnector: ProxyConnector,
         protected val fetchTaskTracker: FetchTaskTracker,
         protected val metricsSystem: MetricsSystem,
         protected val immutableConfig: ImmutableConfig
@@ -114,7 +114,7 @@ open class BrowserEmulator(
 
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    private val browserContext = BrowserContext(driverPool, ips, immutableConfig)
+    private val browserContext = BrowserContext(driverPool, proxyConnector, immutableConfig)
     private val brokenPages = Collections.synchronizedSet(HashSet<String>())
     private var brokenPageTrackTime = Instant.now()
     private val closed = AtomicBoolean(false)

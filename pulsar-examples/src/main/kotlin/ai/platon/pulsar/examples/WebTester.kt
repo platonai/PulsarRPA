@@ -31,5 +31,5 @@ object WebTester {
 fun main() {
     WebTester.load()
 
-    PulsarEnv.get().shutdown()
+    PulsarEnv.shutdown()
 }

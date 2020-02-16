@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.proxy.InternalProxyServer
+import ai.platon.pulsar.proxy.ProxyConnector
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
 import org.openqa.selenium.Capabilities
@@ -46,7 +46,7 @@ import kotlin.concurrent.withLock
 class WebDriverPool(
         private val driverControl: WebDriverControl,
         private val proxyPool: ProxyPool,
-        private val ips: InternalProxyServer,
+        private val proxyConnector: ProxyConnector,
         private val conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverPool::class.java)
@@ -89,7 +89,7 @@ class WebDriverPool(
 
     val totalSize get() = allDrivers.size
 
-    val proxyEntry get() = ips.proxyEntry
+    val proxyEntry get() = proxyConnector.proxyEntry
 
     fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
         val driver = poll(priority, volatileConfig)
@@ -216,7 +216,6 @@ class WebDriverPool(
             lastActiveTime = Instant.now()
 
             // a driver is always hold by only one thread, so it's OK to use it without locks
-            driver.closeIfNotOnly()
             driver.status = DriverStatus.FREE
             driver.stat.pageViews++
             pageViews.incrementAndGet()
@@ -435,7 +434,7 @@ class WebDriverPool(
         }
 
         if (driver is ChromeDriver) {
-            val fakeAgent = "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36"
+            val fakeAgent = driverControl.randomUserAgent()
             val devTools = driver.devTools
             devTools.createSession()
             devTools.send(Log.enable())
@@ -471,10 +470,10 @@ class WebDriverPool(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
-        if (ips.ensureAvailable()) {
+        if (proxyConnector.ensureAvailable()) {
             // TODO: internal proxy server can be run at another host
-            proxyEntry = ips.proxyEntry
-            hostPort = "127.0.0.1:${ips.port}"
+            proxyEntry = proxyConnector.proxyEntry
+            hostPort = "127.0.0.1:${proxyConnector.port}"
         }
 
         if (hostPort == null) {
@@ -488,7 +487,6 @@ class WebDriverPool(
         proxy.ftpProxy = hostPort
 
         capabilities.setCapability(CapabilityType.PROXY, proxy)
-        log.trace("Use proxy {}", proxy)
 
         return proxyEntry
     }
@@ -511,7 +509,7 @@ class WebDriverPool(
     }
 
     private fun changeProxy() {
-        proxyEntry?.let { ips.changeProxyIfRunning(it) }
+        proxyEntry?.let { proxyConnector.changeProxyIfRunning(it) }
     }
 
     private fun deleteBrowserCache() {

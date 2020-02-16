@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.proxy.InternalProxyServer
+import ai.platon.pulsar.proxy.ProxyConnector
 import org.slf4j.LoggerFactory
 import kotlin.math.roundToLong
 
@@ -18,11 +18,11 @@ import kotlin.math.roundToLong
 class RobustBrowserEmulator(
         browserControl: WebDriverControl,
         driverPool: WebDriverPool,
-        ips: InternalProxyServer,
+        proxyConnector: ProxyConnector,
         fetchTaskTracker: FetchTaskTracker,
         metricsSystem: MetricsSystem,
         immutableConfig: ImmutableConfig
-): BrowserEmulator(browserControl, driverPool, ips, fetchTaskTracker, metricsSystem, immutableConfig) {
+): BrowserEmulator(browserControl, driverPool, proxyConnector, fetchTaskTracker, metricsSystem, immutableConfig) {
     private val log = LoggerFactory.getLogger(RobustBrowserEmulator::class.java)!!
 
     /**

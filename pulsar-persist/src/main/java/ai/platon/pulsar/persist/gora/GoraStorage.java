@@ -30,11 +30,8 @@ public class GoraStorage {
 
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(
-            Configuration conf,
-            Class<K> keyClass,
-            Class<V> persistentClass
-    ) throws GoraException, ClassNotFoundException {
+    createDataStore(Configuration conf, Class<K> keyClass, Class<V> persistentClass)
+            throws GoraException, ClassNotFoundException {
         String className = conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS);
         Class<? extends DataStore<K, V>> dataStoreClass = (Class<? extends DataStore<K, V>>)Class.forName(className);
         return createDataStore(conf, keyClass, persistentClass, dataStoreClass);
@@ -45,11 +42,8 @@ public class GoraStorage {
      */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(
-            Configuration conf,
-            Class<K> keyClass,
-            Class<V> persistentClass,
-            Class<? extends DataStore<K, V>> dataStoreClass
+    createDataStore(Configuration conf,
+                    Class<K> keyClass, Class<V> persistentClass, Class<? extends DataStore<K, V>> dataStoreClass
     ) throws GoraException {
         String crawlId = conf.get(STORAGE_CRAWL_ID, "");
         String schemaPrefix = "";

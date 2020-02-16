@@ -2,11 +2,7 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.setPropertyIfAbsent
-import ai.platon.pulsar.persist.gora.GoraStorage
-import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextClosedEvent
@@ -14,8 +10,6 @@ import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.ContextStartedEvent
 import org.springframework.context.event.ContextStoppedEvent
 import org.springframework.context.support.ClassPathXmlApplicationContext
-import java.time.Instant
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -51,17 +45,17 @@ class AppCloseEventHandler : ApplicationListener<ContextClosedEvent> {
 class PulsarEnv {
     companion object {
         val applicationContext: ClassPathXmlApplicationContext
-        /**
-         * Gora properties
-         * TODO: why we need this?
-         * */
-        val goraProperties: Properties
+//        /**
+//         * Gora properties
+//         * TODO: why we need this?
+//         * */
+//        val goraProperties: Properties
         /**
          * If the system is active
          * */
         val isActive get() = !closed.get() && applicationContext.isActive
 
-        private val env = AtomicReference<PulsarEnv>()
+        private val shutdownHookThread: Thread = Thread { this.shutdown() }
 
         private val active = AtomicBoolean()
         private val closed = AtomicBoolean()
@@ -77,39 +71,34 @@ class PulsarEnv {
             // the spring application context
             val contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
             applicationContext = ClassPathXmlApplicationContext(contextConfigLocation)
-            // shut down application context before progress exit
-            applicationContext.registerShutdownHook()
-            // triggler gora properties loading
-            goraProperties = GoraStorage.properties
+//            applicationContext.registerShutdownHook()
+
+            // shutdown application context before progress exit
+            Runtime.getRuntime().addShutdownHook(shutdownHookThread)
 
             active.set(true)
         }
 
-        fun get(): PulsarEnv {
-            // TODO: is it necessary to keep an instance?
-            synchronized(PulsarEnv::class.java) {
-                if (env.get() == null) {
-                    env.set(PulsarEnv())
-                }
+        fun initialize() {
+            // Nothing to do
+        }
 
-                return env.get()
+        @Throws(BeansException::class)
+        fun <T> getBean(requiredType: Class<T>): T {
+            return applicationContext.getBean(requiredType)
+        }
+
+        fun shutdown() {
+            if (closed.compareAndSet(false, true)) {
+                // TODO: still can be managed by spring
+                PulsarContext.getOrCreate().use { it.close() }
+                applicationContext.close()
+                active.set(false)
             }
         }
-    }
-
-    @Throws(BeansException::class)
-    fun <T> getBean(requiredType: Class<T>): T {
-        return applicationContext.getBean(requiredType)
     }
 
     // other possible environment scope objects
     // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
     // serializers, etc
-
-    fun shutdown() {
-        if (closed.compareAndSet(false, true)) {
-            applicationContext.close()
-            active.set(false)
-        }
-    }
 }

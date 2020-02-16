@@ -26,20 +26,19 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
-class PulsarContext private constructor(
-        /**
-         * The program environment
-         * */
-        val env: PulsarEnv
-) : AutoCloseable {
+class PulsarContext private constructor(): AutoCloseable {
 
     companion object {
+        init {
+            PulsarEnv.initialize()
+        }
+
         private val activeContext = AtomicReference<PulsarContext>()
 
         fun getOrCreate(): PulsarContext {
             synchronized(PulsarContext::class.java) {
                 if (activeContext.get() == null) {
-                    activeContext.set(PulsarContext(PulsarEnv.get()))
+                    activeContext.set(PulsarContext())
                 }
                 return activeContext.get()
             }
@@ -139,7 +138,7 @@ class PulsarContext private constructor(
     @Throws(BeansException::class)
     fun <T> getBean(requiredType: Class<T>): T {
         ensureRunning()
-        return env.getBean(requiredType)
+        return PulsarEnv.getBean(requiredType)
     }
 
     /**
@@ -376,7 +375,6 @@ class PulsarContext private constructor(
         if (closed.compareAndSet(false, true)) {
             sessions.values.forEach { it.use { it.close() } }
             closableObjects.forEach { it.use { it.close() } }
-            env.shutdown()
         }
     }
 

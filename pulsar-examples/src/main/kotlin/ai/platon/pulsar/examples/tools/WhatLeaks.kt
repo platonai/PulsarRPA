@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.tools
 
 import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
 import org.slf4j.LoggerFactory
@@ -33,7 +34,7 @@ class WhatLeaks: AutoCloseable {
     }
 
     override fun close() {
-        i.context.close()
+        PulsarEnv.shutdown()
     }
 }
 

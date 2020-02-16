@@ -18,7 +18,6 @@ import java.sql.SQLException
 @SpringBootApplication(exclude = [MongoAutoConfiguration::class, EmbeddedMongoAutoConfiguration::class])
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 class H2DbConsole {
-    private val env = PulsarEnv.get()
 
     @Bean(initMethod = "start", destroyMethod = "stop")
     @Throws(SQLException::class)
@@ -38,7 +37,7 @@ fun main(args: Array<String>) {
     val application = SpringApplication(H2DbConsole::class.java)
 
     val event = ApplicationListener<ApplicationEnvironmentPreparedEvent> {
-        PulsarEnv.get()
+        PulsarEnv.initialize()
     }
     application.addListeners(event)
 
