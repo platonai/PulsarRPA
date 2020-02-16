@@ -1,7 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.net.browser.WebDriverControl
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
@@ -110,7 +109,6 @@ class AmazonAccess: WebAccess() {
         val itemOptions = options.createItemOption()
         var j = 0
         Lists.partition(links.toList(), 20).forEach { urls ->
-            driverPool.reset()
             println("----------------The ${++j}th batch in round ${round}-------------------------")
             i.loadAll(urls, itemOptions).let { pages.addAll(it) }
         }
@@ -145,6 +143,8 @@ class AmazonAccess: WebAccess() {
             log.info("Ips banned: $bannedIps")
         }
         // TODO: re-fetch all broken pages
+
+        driverPool.reset()
     }
 }
 

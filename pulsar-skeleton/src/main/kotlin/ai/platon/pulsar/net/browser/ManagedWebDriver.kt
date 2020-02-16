@@ -196,18 +196,25 @@ class ManagedWebDriver(
 
         try {
             if (driver is ChromeDevtoolsDriver) {
-                val names = driver.getCookieNames().joinToString(", ") { it }
-                log.debug("Deleted cookies: $names")
+                val cookies = driver.getCookieNames()
+                if (cookies.isNotEmpty()) {
+                    val names = cookies.joinToString(", ") { it }
+                    log.debug("Deleted cookies: $names")
+                }
 
+                // delete all cookies, this can be ignored
                 driver.deleteAllCookies()
             } else if (driver is RemoteWebDriver) {
                 val names = driver.manage().cookies.map { it.name }
-                names.forEach { name ->
-                    driver.manage().deleteCookieNamed(name)
+                if (names.isNotEmpty()) {
+                    names.forEach { name ->
+                        driver.manage().deleteCookieNamed(name)
+                    }
+
+                    log.debug("Deleted cookies: $names")
                 }
 
-                log.debug("Deleted cookies: $names")
-
+                // delete all cookies, this can be ignored
                 driver.manage().deleteAllCookies()
             }
         } catch (e: Throwable) {

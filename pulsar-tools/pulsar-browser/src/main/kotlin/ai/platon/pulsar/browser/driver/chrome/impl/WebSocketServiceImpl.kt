@@ -16,7 +16,7 @@ class WebSocketServiceImpl : WebSocketService {
     private lateinit var session: Session
 
     override fun isClosed(): Boolean {
-        return !session.isOpen && closed.get()
+        return !session.isOpen || closed.get()
     }
 
     @Throws(WebSocketServiceException::class)
@@ -27,7 +27,7 @@ class WebSocketServiceImpl : WebSocketService {
             }
 
             override fun onClose(session: Session, closeReason: CloseReason) {
-                log.info("Closing ws server {}", uri)
+                // log.info("Closing ws server {}")
             }
         }
 
@@ -52,7 +52,7 @@ class WebSocketServiceImpl : WebSocketService {
 
             session.basicRemote.sendText(message)
         } catch (e: IllegalStateException) {
-            log.error("The connection has been closed | {}", session.requestURI)
+            // log.error("The connection has been closed | {}", session.requestURI)
             throw WebSocketServiceException("The connection has been closed", e)
         } catch (e: Exception) {
             log.error("Unexpected exception {}", session.requestURI)
@@ -87,10 +87,11 @@ class WebSocketServiceImpl : WebSocketService {
     }
 
     companion object {
-        const val WEB_SOCKET_CONTAINER_FACTORY_PROPERTY = "services.config.webSocketContainerFactory"
-        private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY: String = DefaultWebSocketContainerFactory::class.java.getName()
         private val log = LoggerFactory.getLogger(WebSocketServiceImpl::class.java)
-        private val WEB_SOCKET_CONTAINER: WebSocketContainer = webSocketContainer
+
+        private const val WEB_SOCKET_CONTAINER_FACTORY_PROPERTY = "services.config.webSocketContainerFactory"
+        private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY = DefaultWebSocketContainerFactory::class.java.getName()
+        private val WEB_SOCKET_CONTAINER = createWebSocketContainer()
         /**
          * Creates a WebSocketService and connects to a specified uri.
          *
@@ -100,9 +101,7 @@ class WebSocketServiceImpl : WebSocketService {
          */
         @Throws(WebSocketServiceException::class)
         fun create(uri: URI): WebSocketService {
-            val webSocketService = WebSocketServiceImpl()
-            webSocketService.connect(uri)
-            return webSocketService
+            return WebSocketServiceImpl().also { it.connect(uri) }
         }
 
         /**
@@ -112,24 +111,23 @@ class WebSocketServiceImpl : WebSocketService {
          *
          * @return WebSocketContainer.
          */
-        private val webSocketContainer: WebSocketContainer
-            get() {
-                val containerFactoryClassName = System.getProperty(WEB_SOCKET_CONTAINER_FACTORY_PROPERTY, DEFAULT_WEB_SOCKET_CONTAINER_FACTORY)
+        private fun createWebSocketContainer(): WebSocketContainer {
+            val containerFactoryClassName = System.getProperty(WEB_SOCKET_CONTAINER_FACTORY_PROPERTY, DEFAULT_WEB_SOCKET_CONTAINER_FACTORY)
 
-                try {
-                    val containerFactoryClass: Class<WebSocketContainerFactory> = Class.forName(containerFactoryClassName) as Class<WebSocketContainerFactory>
-                    if (WebSocketContainerFactory::class.java.isAssignableFrom(containerFactoryClass)) {
-                        val containerFactory: WebSocketContainerFactory = containerFactoryClass.newInstance()
-                        return containerFactory.webSocketContainer
-                    }
-                    throw RuntimeException("$containerFactoryClassName is not a WebSocketContainerFactory")
-                } catch (e: ClassNotFoundException) {
-                    throw RuntimeException("$containerFactoryClassName class not found.", e)
-                } catch (e: IllegalAccessException) {
-                    throw RuntimeException("Could not create instance of $containerFactoryClassName class")
-                } catch (e: InstantiationException) {
-                    throw RuntimeException("Could not create instance of $containerFactoryClassName class")
+            try {
+                val containerFactoryClass: Class<WebSocketContainerFactory> = Class.forName(containerFactoryClassName) as Class<WebSocketContainerFactory>
+                if (WebSocketContainerFactory::class.java.isAssignableFrom(containerFactoryClass)) {
+                    val containerFactory: WebSocketContainerFactory = containerFactoryClass.newInstance()
+                    return containerFactory.webSocketContainer
                 }
+                throw RuntimeException("$containerFactoryClassName is not a WebSocketContainerFactory")
+            } catch (e: ClassNotFoundException) {
+                throw RuntimeException("$containerFactoryClassName class not found.", e)
+            } catch (e: IllegalAccessException) {
+                throw RuntimeException("Could not create instance of $containerFactoryClassName class")
+            } catch (e: InstantiationException) {
+                throw RuntimeException("Could not create instance of $containerFactoryClassName class")
             }
+        }
     }
 }

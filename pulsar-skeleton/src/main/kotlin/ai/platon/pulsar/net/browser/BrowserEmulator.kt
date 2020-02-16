@@ -27,10 +27,7 @@ import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.proxy.ProxyConnector
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang.StringUtils
-import org.openqa.selenium.JavascriptExecutor
-import org.openqa.selenium.OutputType
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebDriverException
+import org.openqa.selenium.*
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
@@ -184,7 +181,7 @@ open class BrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL))
+            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE))
         } catch (e: org.openqa.selenium.WebDriverException) {
             // status = ProtocolStatus.STATUS_RETRY
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
@@ -353,6 +350,10 @@ open class BrowserEmulator(
             result.state = FlowState.CONTINUE
         } catch (e: InterruptedException) {
             log.warn("Interrupted waiting for document | {}", task.url)
+            status = ProtocolStatus.STATUS_CANCELED
+            result.state = FlowState.BREAK
+        } catch (e: NoSuchSessionException) {
+            log.warn("Session is closed")
             status = ProtocolStatus.STATUS_CANCELED
             result.state = FlowState.BREAK
         } catch (e: WebDriverException) {

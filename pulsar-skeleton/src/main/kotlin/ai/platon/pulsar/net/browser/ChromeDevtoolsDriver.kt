@@ -7,13 +7,17 @@ import com.github.kklisura.cdt.protocol.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
+import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.streams.toList
 
 /**
  * TODO: more compatible with RemoteWebDriver
@@ -23,9 +27,10 @@ class ChromeDevtoolsDriver(
         private val browserControl: WebDriverControl,
         private val launchOptions: ChromeDevtoolsOptions
 ): RemoteWebDriver() {
-    private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
     companion object {
+        private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
+
         private var chromeProcessLaunched = false
         private val numInstances = AtomicInteger()
         private lateinit var launcher: ChromeLauncher
@@ -48,7 +53,20 @@ class ChromeDevtoolsDriver(
                     chrome.use { it.close() }
                     launcher.use { it.close() }
                     chromeProcessLaunched = false
+
+                    checkChromeProcesses()
                 }
+            }
+        }
+
+        private fun checkChromeProcesses() {
+            val process = ProcessLauncher().launch("ps", listOf("-efw"))
+            val runningChromes = BufferedReader(InputStreamReader(process.inputStream)).use {
+                reader -> reader.lines().filter { it.contains("chrome.+headless".toRegex()) }.toList()
+            }
+
+            if (runningChromes.isNotEmpty()) {
+                log.warn("There are still {} running chrome processes after closing", runningChromes.size)
             }
         }
     }
@@ -59,7 +77,6 @@ class ChromeDevtoolsDriver(
     var scrollDownCount = browserControl.scrollDownCount
     var scrollInterval = browserControl.scrollInterval
 
-    // TODO: tab and page does not match
     private var tab: ChromeTab
     private var devTools: ChromeDevToolsService
 
@@ -102,7 +119,8 @@ class ChromeDevtoolsDriver(
     }
 
     override fun get(url: String) {
-        page.addScriptToEvaluateOnNewDocument(clientLibJs)
+        try {
+            page.addScriptToEvaluateOnNewDocument(clientLibJs)
 //        page.onDomContentEventFired { event: DomContentEventFired ->
 //            // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
 //            // runtime.evaluate("__utils__.checkPulsarStatus()")
@@ -112,30 +130,37 @@ class ChromeDevtoolsDriver(
 //            simulate()
 //        }
 
-        // block urls by url pattern
-        // network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
+            // block urls by url pattern
+            // network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
 
-        // Log requests with onRequestWillBeSent event handler
-        network.onRequestWillBeSent { event: RequestWillBeSent ->
-            if (event.type == ResourceType.IMAGE) {
-                // TODO: fetch is not supported?
-                // fetch.failRequest(event.requestId, ErrorReason.BLOCKED_BY_CLIENT)
-                // println(event.request.url)
+            // Log requests with onRequestWillBeSent event handler
+            network.onRequestWillBeSent { event: RequestWillBeSent ->
+                if (event.type == ResourceType.IMAGE) {
+                    // TODO: fetch is not supported?
+                    // fetch.failRequest(event.requestId, ErrorReason.BLOCKED_BY_CLIENT)
+                    // println(event.request.url)
+                }
             }
-        }
 
-        page.enable()
-        network.enable()
+            page.enable()
+            network.enable()
 //        fetch.enable()
 
-        page.navigate(url)
+            page.navigate(url)
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     fun evaluate(expression: String): Any? {
-        val evaluate = runtime.evaluate(expression)
-        val result = evaluate.result
-        // TODO: handle errors here
-        return result.value
+        try {
+            val evaluate = runtime.evaluate(expression)
+            val result = evaluate.result
+            // TODO: handle errors here
+            return result.value
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     override fun executeScript(script: String, vararg args: Any): Any? {
@@ -151,7 +176,11 @@ class ChromeDevtoolsDriver(
     }
 
     override fun getCurrentUrl(): String {
-        return mainFrame.url
+        try {
+            return mainFrame.url
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     override fun getWindowHandles(): Set<String> {
@@ -159,21 +188,37 @@ class ChromeDevtoolsDriver(
     }
 
     override fun getPageSource(): String {
-        val evaluate = runtime.evaluate("document.documentElement.outerHTML")
-        return evaluate.result.value.toString()
+        try {
+            val evaluate = runtime.evaluate("document.documentElement.outerHTML")
+            return evaluate.result.value.toString()
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     fun getCookieNames(): List<String> {
-        return devTools.network.allCookies.map { it.name }
+        try {
+            return devTools.network.allCookies.map { it.name }
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     fun deleteAllCookies() {
-        devTools.network.clearBrowserCookies()
-        devTools.network.clearBrowserCache()
+        try {
+            devTools.network.clearBrowserCookies()
+            devTools.network.clearBrowserCache()
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     fun deleteCookieNamed(name: String) {
-        devTools.network.deleteCookies(name)
+        try {
+            devTools.network.deleteCookies(name)
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
 //    fun deleteLocalStorage() {
@@ -181,8 +226,12 @@ class ChromeDevtoolsDriver(
 //    }
 
     override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
-        val result = page.captureScreenshot(CaptureScreenshotFormat.PNG, 100, viewport, true)
-        return outputType.convertFromBase64Png(result)
+        try {
+            val result = page.captureScreenshot(CaptureScreenshotFormat.PNG, 100, viewport, true)
+            return outputType.convertFromBase64Png(result)
+        } catch (e: ChromeDevToolsInvocationException) {
+            throw NoSuchSessionException(e.message)
+        }
     }
 
     override fun toString(): String {
@@ -201,9 +250,7 @@ class ChromeDevtoolsDriver(
      * Close the tab hold by this driver
      * */
     override fun close() {
-        val sessionId = getSessionId()
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing devtools driver, session: {} tab: {} ...", sessionId, tab.id)
             tabs.remove(tab.id)
             devTools.use { it.close() }
         }

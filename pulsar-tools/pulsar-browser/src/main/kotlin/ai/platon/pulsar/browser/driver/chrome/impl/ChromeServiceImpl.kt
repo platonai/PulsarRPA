@@ -133,7 +133,6 @@ class ChromeServiceImpl(
 
         val commandInvocationHandler = CommandInvocationHandler()
 
-        // TODO: should it be a local variable or a class member?
         val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
         val invocationHandler = InvocationHandler { proxy, method, args ->
             commandsCache.computeIfAbsent(method) {

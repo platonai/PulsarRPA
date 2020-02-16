@@ -4,6 +4,7 @@ import com.github.kklisura.cdt.protocol.ChromeDevTools
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
 import java.net.URI
+import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.function.Consumer
 
@@ -22,12 +23,12 @@ interface EventExecutorService {
 }
 
 class ChromeDevToolsServiceConfiguration {
-    var readTimeout = READ_TIMEOUT
+    var readTimeout = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
     var eventExecutorService = DefaultEventExecutorService()
 
     companion object {
         private const val READ_TIMEOUT_PROPERTY = "chrome.browser.services.config.readTimeout"
-        private val READ_TIMEOUT = System.getProperty(READ_TIMEOUT_PROPERTY, "0").toLong()
+        private val READ_TIMEOUT_MINUTES = System.getProperty(READ_TIMEOUT_PROPERTY, "0").toLong()
     }
 }
 

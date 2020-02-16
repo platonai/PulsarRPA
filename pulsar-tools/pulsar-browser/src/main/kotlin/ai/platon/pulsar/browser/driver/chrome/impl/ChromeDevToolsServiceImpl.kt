@@ -95,14 +95,15 @@ abstract class ChromeDevToolsServiceImpl(
             returnTypeClasses: Array<Class<out Any>>?,
             methodInvocation: MethodInvocation
     ): T? {
-        return try {
+        try {
             val invocationResult = InvocationResult(returnProperty)
+
             invocationResultMap[methodInvocation.id] = invocationResult
             webSocketService.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
-            val hasReceivedResponse = invocationResult.waitForResult(configuration.readTimeout, TimeUnit.SECONDS)
+            val hasReceivedResponse = invocationResult.waitForResult(configuration.readTimeout.seconds, TimeUnit.SECONDS)
             invocationResultMap.remove(methodInvocation.id)
             if (!hasReceivedResponse) {
-                throw ChromeDevToolsInvocationException("Timeout expired while waiting for server response.")
+                throw ChromeDevToolsInvocationException("Timeout to wait for response")
             }
 
             if (invocationResult.isSuccess) {
@@ -111,21 +112,22 @@ abstract class ChromeDevToolsServiceImpl(
                     returnTypeClasses != null -> readJsonObject(returnTypeClasses, clazz, invocationResult.result)
                     else -> readJsonObject(clazz, invocationResult.result)
                 }
-            } else {
-                val error = readJsonObject(ErrorObject::class.java, invocationResult.result)
-                val errorMessageBuilder = StringBuilder(error.message)
-                if (error.data != null) {
-                    errorMessageBuilder.append(": ")
-                    errorMessageBuilder.append(error.data)
-                }
-                throw ChromeDevToolsInvocationException(error.code, errorMessageBuilder.toString())
             }
+
+            // Received a error
+            val error = readJsonObject(ErrorObject::class.java, invocationResult.result)
+            val errorMessageBuilder = StringBuilder(error.message)
+            if (error.data != null) {
+                errorMessageBuilder.append(": ")
+                errorMessageBuilder.append(error.data)
+            }
+            throw ChromeDevToolsInvocationException(error.code, errorMessageBuilder.toString())
         } catch (e: WebSocketServiceException) {
-            throw ChromeDevToolsInvocationException("Failed sending web socket message.", e)
+            throw ChromeDevToolsInvocationException("Failed sending web socket message", e)
         } catch (e: InterruptedException) {
-            throw ChromeDevToolsInvocationException("Interrupted while waiting response.", e)
-        } catch (ex: IOException) {
-            throw ChromeDevToolsInvocationException("Failed reading response message.", ex)
+            throw ChromeDevToolsInvocationException("Interrupted while waiting response", e)
+        } catch (e: IOException) {
+            throw ChromeDevToolsInvocationException("Failed reading response message", e)
         }
     }
 
@@ -170,7 +172,7 @@ abstract class ChromeDevToolsServiceImpl(
                         }
                     }
                 } else {
-                    LOG.warn("Received result response with unknown invocation id {}. {}", id, jsonNode.asText())
+                    LOG.warn("Received response with unknown invocation #{} - {}", id, jsonNode.asText())
                 }
             } else {
                 val methodNode = jsonNode.get(METHOD_PROPERTY)

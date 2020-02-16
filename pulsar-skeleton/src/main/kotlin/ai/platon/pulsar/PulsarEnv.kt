@@ -44,6 +44,7 @@ class AppCloseEventHandler : ApplicationListener<ContextClosedEvent> {
  */
 class PulsarEnv {
     companion object {
+        val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
 //        /**
 //         * Gora properties
@@ -69,7 +70,7 @@ class PulsarEnv {
             setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, AppConstants.H2_SESSION_FACTORY)
 
             // the spring application context
-            val contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
+            contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
             applicationContext = ClassPathXmlApplicationContext(contextConfigLocation)
 //            applicationContext.registerShutdownHook()
 
