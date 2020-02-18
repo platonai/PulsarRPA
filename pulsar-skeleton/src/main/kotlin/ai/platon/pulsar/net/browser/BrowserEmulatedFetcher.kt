@@ -259,7 +259,7 @@ class BrowserEmulatedFetcher(
         } catch (e: IllegalStateException) {
             FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
         } catch (e: Throwable) {
-            log.warn("Unexpected exception", StringUtil.stringifyException(e))
+            log.warn("Unexpected exception", e)
             FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED))
         } finally {
             // TODO: page is not updated
@@ -346,7 +346,7 @@ class BrowserEmulatedFetcher(
         } catch (e: java.util.concurrent.ExecutionException) {
             status = ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL)
             headers.put("EXCEPTION", e.toString())
-            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
+            log.warn("Unexpected exception", e)
         } catch (e: InterruptedException) {
             status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
             headers.put("EXCEPTION", e.toString())
@@ -354,7 +354,7 @@ class BrowserEmulatedFetcher(
         } catch (e: Exception) {
             status = ProtocolStatus.STATUS_EXCEPTION
             headers.put("EXCEPTION", e.toString())
-            log.warn("Unexpected exception, {}", StringUtil.stringifyException(e))
+            log.warn("Unexpected exception", e)
         }
 
         return FetchResult(FetchTask.NIL, ForwardingResponse(url, "", status, headers))

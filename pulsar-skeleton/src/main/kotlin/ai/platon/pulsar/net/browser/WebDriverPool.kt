@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.ProxyConnector
+import org.apache.commons.io.FileUtils
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
 import org.openqa.selenium.Capabilities
@@ -24,7 +25,6 @@ import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
-import java.nio.file.Files
 import java.security.KeyManagementException
 import java.security.KeyStoreException
 import java.security.NoSuchAlgorithmException
@@ -104,7 +104,7 @@ class WebDriverPool(
     }
 
     fun allocate(priority: Int, numInit: Int, conf: ImmutableConfig) {
-        ensureNotClosing()
+        waitUtilNotClosing()
         if (isClosed) {
             return
         }
@@ -118,11 +118,12 @@ class WebDriverPool(
     }
 
     fun reset() {
+        changeProxy()
         closeAll(incognito = true)
     }
 
     fun cancel(url: String): ManagedWebDriver? {
-        ensureNotClosing()
+        waitUtilNotClosing()
 
         var driver: ManagedWebDriver? = null
         lock.withLock {
@@ -133,7 +134,8 @@ class WebDriverPool(
             driver = workingDrivers.values.firstOrNull { it.currentUrl == url }
         }
 
-        driver?.evaluateSilently(";window.stop();")
+        driver?.stopLoading()
+
         return driver
     }
 
@@ -156,7 +158,7 @@ class WebDriverPool(
     }
 
     fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
-        ensureNotClosing()
+        waitUtilNotClosing()
 
         var driver: ManagedWebDriver? = null
         var exception: Exception? = null
@@ -207,7 +209,7 @@ class WebDriverPool(
     }
 
     private fun offer(driver: ManagedWebDriver) {
-        ensureNotClosing()
+        waitUtilNotClosing()
         if (isClosed) {
             return
         }
@@ -256,7 +258,7 @@ class WebDriverPool(
     }
 
     private fun retire(driver: ManagedWebDriver, e: Exception?, external: Boolean = true) {
-        ensureNotClosing()
+        waitUtilNotClosing()
         if (external && isClosed) {
             return
         }
@@ -295,11 +297,11 @@ class WebDriverPool(
 
         try {
             if (e != null) {
-                log.info("Quit {} driver {} - {}", driver.status.name.toLowerCase(), driver, StringUtil.simplifyException(e))
+                log.info("Quiting {} driver {} - {}", driver.status.name.toLowerCase(), driver, StringUtil.simplifyException(e))
             } else {
-                log.info("Quit {} driver {}", driver.status.name.toLowerCase(), driver)
+                log.trace("Quiting {} driver {}", driver.status.name.toLowerCase(), driver)
             }
-            // Quits this driver, close every associated window.
+            // Quits this driver, close every associated window
             driver.quit()
             numQuit.incrementAndGet()
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
@@ -330,7 +332,7 @@ class WebDriverPool(
     }
 
     fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
-        ensureNotClosing()
+        waitUtilNotClosing()
 
         lock.withLock {
             driversAreClosing = true
@@ -341,6 +343,11 @@ class WebDriverPool(
                 }
 
                 closeAllUnlocked(incognito, processExit)
+
+                if (incognito) {
+                    // Force delete all browser data
+                    FileUtils.deleteDirectory(AppPaths.BROWSER_TMP_DIR.toFile())
+                }
             } finally {
                 driversAreClosing = false
                 notClosing.signalAll()
@@ -354,7 +361,7 @@ class WebDriverPool(
         }
     }
 
-    private fun ensureNotClosing() {
+    private fun waitUtilNotClosing() {
         var nanos = pollingTimeout.toNanos()
         lock.withLock {
             while (driversAreClosing && nanos > 0) {
@@ -508,19 +515,8 @@ class WebDriverPool(
         }
     }
 
-    private fun changeProxy() {
+    fun changeProxy() {
         proxyEntry?.let { proxyConnector.changeProxyIfRunning(it) }
-    }
-
-    private fun deleteBrowserCache() {
-        val dataFiles = Files.list(AppPaths.SYS_TMP_DIR).filter { it.fileName.startsWith(".org.chromium.Chromium") }
-        dataFiles.forEach {
-            try {
-                Files.deleteIfExists(it)
-            } catch (t: Throwable) {
-                log.warn("Unexpected exception. {}", t)
-            }
-        }
     }
 
     private fun resumeAllDrivers() {
@@ -530,23 +526,13 @@ class WebDriverPool(
     }
 
     private fun deleteAllCookies() {
+        // TODO: cookies are shared by all drivers, so it's fine to call only once
         allDrivers.values.forEach {
             it.deleteAllCookiesSilently()
         }
     }
 
     private fun closeAllUnlocked(incognito: Boolean = true, processExit: Boolean = false) {
-        if (incognito) {
-            deleteAllCookies()
-
-            if (!processExit) {
-                changeProxy()
-            }
-
-            // browser cache can be useful
-            // deleteBrowserCache()
-        }
-
         if (allDrivers.isEmpty()) {
             if (aliveSize != 0) {
                 log.info("Illegal status - {}", formatStatus(verbose = true))
@@ -569,6 +555,7 @@ class WebDriverPool(
             return
         }
 
+        var count = 0
         val it = allDrivers.iterator()
         while (it.hasNext()) {
             val driver = it.next().value
@@ -576,20 +563,25 @@ class WebDriverPool(
 
             try {
                 if (!driver.isQuit) {
-                    log.info("Quiting {}", driver)
+                    // log.info("Quiting {}", driver)
                     driver.quit()
+                    ++count
                     numQuit.incrementAndGet()
                 }
             } catch (e: org.openqa.selenium.WebDriverException) {
                 when {
-                    e.cause is org.apache.http.conn.HttpHostConnectException -> log.warn("Web driver is already closed: {}", StringUtil.simplifyException(e))
-                    e is org.openqa.selenium.NoSuchSessionException -> log.warn("Web driver is already closed: {}", StringUtil.simplifyException(e))
+                    e.cause is org.apache.http.conn.HttpHostConnectException ->
+                        log.warn("Web driver is already closed: {}", StringUtil.simplifyException(e))
+                    e is org.openqa.selenium.NoSuchSessionException ->
+                        log.warn("Web driver is already closed: {}", StringUtil.simplifyException(e))
                     else -> log.error("Unexpected exception: {}", e)
                 }
             } catch (e: Exception) {
                 log.error("Unexpected exception: {}", e)
             }
         }
+
+        log.info("Total $count/$numQuit drivers are quit")
     }
 
     private fun formatStatus(verbose: Boolean = false): String {

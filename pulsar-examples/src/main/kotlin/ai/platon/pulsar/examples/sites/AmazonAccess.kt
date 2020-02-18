@@ -2,16 +2,17 @@ package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
 import ai.platon.pulsar.net.browser.WebDriverPool
-import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 
 class AmazonAccess: WebAccess() {
     private val url = "https://www.amazon.com/"
@@ -77,14 +78,17 @@ class AmazonAccess: WebAccess() {
             return
         }
 
-        ++round
+        log.info("\n\n\n--------------------------\nRound ${++round} $portalUrl")
 
         val args = "-i 1s -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
-
-        log.info("\n\n\n--------------------------\nRound $round $portalUrl")
-
-        val portalPage = i.load(portalUrl, options)
+        var portalPage = i.load(portalUrl, options)
+//        while (portalPage.htmlIntegrity.isNotOK) {
+//            val proxyEntry = driverPool.proxyEntry
+//            driverPool.changeProxy()
+//            log.info("Change proxy and reload portal url: $proxyEntry -> ${driverPool.proxyEntry}")
+//            portalPage = i.load(portalUrl, options)
+//        }
 
         val portalDocument = i.parse(portalPage)
         val links = portalDocument.select("a[href~=/dp/]") {
@@ -105,13 +109,17 @@ class AmazonAccess: WebAccess() {
             log.info("Page details: \n" + WebPageFormatter(portalPage))
         }
 
-        val pages = mutableListOf<WebPage>()
         val itemOptions = options.createItemOption()
         var j = 0
-        Lists.partition(links.toList(), 20).forEach { urls ->
-            println("----------------The ${++j}th batch in round ${round}-------------------------")
-            i.loadAll(urls, itemOptions).let { pages.addAll(it) }
+        Lists.partition(links.shuffled(), 15).forEach { urls ->
+            log.info("----------------The ${++j}th batch in round ${round}-------------------------")
+            loadAll(urls, itemOptions)
+            driverPool.reset()
         }
+    }
+
+    fun loadAll(urls: List<String>, itemOptions: LoadOptions) {
+        val pages = i.loadAll(urls, itemOptions)
 
         if (pages.isEmpty()) {
             log.info("No page fetched this round")
@@ -125,17 +133,18 @@ class AmazonAccess: WebAccess() {
         val ds = SummaryStatistics()
         pages.forEach { ds.addValue(it.contentBytes.toDouble()) }
 
-        sb.setLength(0)
-        log.info("== Page report ==")
-        sb.append("\nStatus: ")
+        val sb = StringBuilder()
+        sb.appendln("== Page report ==")
+        sb.append("Status: ")
         pages.joinTo(sb) { it.protocolStatus.name }
-        sb.append("\nLength: ")
+        sb.append("\n")
+        sb.append("Length: ")
         lengths.joinTo(sb) { StringUtil.readableByteCount(it) }
         sb.appendln()
         sb.append(ds)
         log.info(sb.toString())
 
-        // half pages are less than 1M
+        // half pages are less than 0.5M
         if (shortLengths.size > 0.5 * lengths.size) {
             val bannedIps = pages.filter { it.contentBytes < 1e6 }
                     .mapNotNullTo(HashSet()) { it.metadata[Name.PROXY] }.joinToString { it }
@@ -143,8 +152,6 @@ class AmazonAccess: WebAccess() {
             log.info("Ips banned: $bannedIps")
         }
         // TODO: re-fetch all broken pages
-
-        driverPool.reset()
     }
 }
 
@@ -154,7 +161,7 @@ fun main() {
     Files.move(AppPaths.WEB_CACHE_DIR, archiveDir)
 
     AmazonAccess().use {
-        it.laptops()
-        // it.testIpLimit()
+        // it.laptops()
+        it.testIpLimit()
     }
 }

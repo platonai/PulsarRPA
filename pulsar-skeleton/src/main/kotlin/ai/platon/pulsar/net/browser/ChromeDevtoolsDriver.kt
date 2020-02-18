@@ -2,8 +2,8 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.common.StringUtil
 import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
@@ -62,7 +62,7 @@ class ChromeDevtoolsDriver(
         private fun checkChromeProcesses() {
             val process = ProcessLauncher().launch("ps", listOf("-efw"))
             val runningChromes = BufferedReader(InputStreamReader(process.inputStream)).use {
-                reader -> reader.lines().filter { it.contains("chrome.+headless".toRegex()) }.toList()
+                reader -> reader.lines().filter { it.contains("chrome.+--headless".toRegex()) }.toList()
             }
 
             if (runningChromes.isNotEmpty()) {
@@ -81,6 +81,7 @@ class ChromeDevtoolsDriver(
     private var devTools: ChromeDevToolsService
 
     private val browser get() = devTools.browser
+    private var navigateTargetUrl = ""
     private val page get() = devTools.page
     private val mainFrame get() = page.frameTree.frame
     private val network get() = devTools.network
@@ -108,6 +109,7 @@ class ChromeDevtoolsDriver(
 
         // In chrome every tab is a separate process
         tab = chrome.createTab()
+        navigateTargetUrl = tab.url?:""
         tabs[tab.id] = tab
 
         devTools = chrome.createDevToolsService(tab)
@@ -131,7 +133,10 @@ class ChromeDevtoolsDriver(
 //        }
 
             // block urls by url pattern
-            // network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
+//            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
+//
+//            }
+            network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
 
             // Log requests with onRequestWillBeSent event handler
             network.onRequestWillBeSent { event: RequestWillBeSent ->
@@ -146,9 +151,18 @@ class ChromeDevtoolsDriver(
             network.enable()
 //        fetch.enable()
 
+            navigateTargetUrl = url
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
             throw NoSuchSessionException(e.message)
+        }
+    }
+
+    fun stopLoading() {
+        try {
+            page.stopLoading()
+        } catch (e: ChromeDevToolsInvocationException) {
+            log.warn("Failed to stop loading {} | {}", StringUtil.simplifyException(e), currentUrl)
         }
     }
 
@@ -175,12 +189,11 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    /**
+     * TODO: the page might be redirected and current url should be mainFrame.url
+     * */
     override fun getCurrentUrl(): String {
-        try {
-            return mainFrame.url
-        } catch (e: ChromeDevToolsInvocationException) {
-            throw NoSuchSessionException(e.message)
-        }
+        return navigateTargetUrl
     }
 
     override fun getWindowHandles(): Set<String> {

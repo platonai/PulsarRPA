@@ -130,6 +130,14 @@ class ManagedWebDriver(
         return null
     }
 
+    fun stopLoading() {
+        if (driver is ChromeDevtoolsDriver) {
+            driver.stopLoading()
+        } else {
+            evaluateSilently(";window.stop();")
+        }
+    }
+
     fun scrollDown() {
 
     }

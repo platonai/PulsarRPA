@@ -202,7 +202,7 @@ open class BrowserEmulator(
             exception = e
             response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL))
         } finally {
-            trackProxy(driver.proxyEntry.get(), task, response)
+            trackProxy(task, response)
         }
 
         return BrowseResult(response, exception, driver)
@@ -301,9 +301,10 @@ open class BrowserEmulator(
         val page = task.page
 
         if (log.isTraceEnabled) {
-            log.trace("Navigate {}/{} in thd{}, drivers: {}/{}/{}(w/f/t) | {} | timeouts: {}/{}/{}",
+            log.trace("Navigate {}/{} in thd{}{}, drivers: {}/{}/{}(w/f/t) | {} | timeouts: {}/{}/{}",
                     taskId, task.batchSize,
                     Thread.currentThread().id,
+                    if (task.retries <= 1) "" else "(${task.retries})",
                     driverPool.workingSize, driverPool.freeSize, driverPool.totalSize,
                     page.configuredUrl,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
@@ -317,6 +318,7 @@ open class BrowserEmulator(
         // driver.switchTo().frame(1);
 
         // TODO: use callbacks instead of blocking
+        task.proxyEntry = driver.proxyEntry.get()
         driver.navigate(url)
 
         return simulate(EmulateTask(url, driver, driverConfig))
@@ -560,7 +562,7 @@ open class BrowserEmulator(
             return status
         }
 
-        if (htmlIntegrity == HtmlIntegrity.EMPTY || htmlIntegrity == HtmlIntegrity.EMPTY_BODY) {
+        if (htmlIntegrity.isEmpty || htmlIntegrity == HtmlIntegrity.EMPTY_BODY) {
             return ProtocolStatus.retry(RetryScope.WEB_DRIVER, htmlIntegrity)
         }
 
@@ -679,8 +681,8 @@ open class BrowserEmulator(
         }
     }
 
-    private fun trackProxy(proxyEntry: ProxyEntry?, task: FetchTask, response: Response?) {
-        task.proxyEntry = proxyEntry
+    private fun trackProxy(task: FetchTask, response: Response?) {
+        val proxyEntry = task.proxyEntry
         if (proxyEntry != null && response != null && response.status.isSuccess) {
             task.page.metadata.set(Name.PROXY, proxyEntry.hostPort)
             proxyEntry.servedDomains.add(task.domain)

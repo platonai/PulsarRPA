@@ -1,13 +1,12 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.net.browser.WebDriverControl
-import ai.platon.pulsar.common.config.ImmutableConfig
-import org.apache.commons.io.FileUtils
+import ai.platon.pulsar.common.isBlankBody
+import java.nio.file.Files
 import java.nio.file.Paths
 
 fun main() {
-    val conf = ImmutableConfig()
-    val bc = WebDriverControl(conf)
-    val js = bc.parseLibJs()
-    FileUtils.write(Paths.get("/tmp/1.js").toFile(), js)
+//    val html = Files.readString(Paths.get("/tmp/ln/4f1cac6cb70d8087f9c2599a67c55853.htm"))
+    val html = "....<body></body>...."
+    val b = isBlankBody(html)
+    println(b)
 }

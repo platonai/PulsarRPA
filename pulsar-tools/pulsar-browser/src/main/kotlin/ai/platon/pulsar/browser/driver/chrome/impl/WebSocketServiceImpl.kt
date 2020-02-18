@@ -31,7 +31,7 @@ class WebSocketServiceImpl : WebSocketService {
             }
         }
 
-        log.debug("Connecting to ws server {}", uri)
+        // log.debug("Connecting to ws server {}", uri)
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)
         } catch (e: DeploymentException) {
@@ -78,7 +78,7 @@ class WebSocketServiceImpl : WebSocketService {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                log.debug("Closing web socket service session | {}", session.requestURI)
+                // log.debug("Closing web socket service session | {}", session.requestURI)
                 session.close()
             } catch (e: IOException) {
                 log.error("Failed closing ws session on ${session.requestURI} ...", e)

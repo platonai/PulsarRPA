@@ -17,18 +17,21 @@ import java.util.*
 object AppPaths {
     @JvmField
     val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
+    // directory for symbolic links, this path should be as short as possible
+    @JvmField
+    val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
+
     @JvmField
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     // TODO: check again whether we need a separate home dir
     // val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @JvmField
     val HOME_DIR = TMP_DIR
+    /**
+     * Application data are kept in the data dir
+     * */
     @JvmField
     val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(AppConstants.PULSAR_DEFAULT_DATA_DIR)
-
-    // directory for symbolic links, this path should be as short as possible
-    @JvmField
-    val LINKS_DIR = get(SYS_TMP_DIR, "ln")
 
     @JvmField
     val CACHE_DIR = get(TMP_DIR, "cache")
@@ -43,7 +46,9 @@ object AppPaths {
     @JvmField
     val TEST_DIR = get(TMP_DIR, "test")
     @JvmField
-    val CHROME_TMP_DIR = get(TMP_DIR, "chrome")
+    val BROWSER_TMP_DIR = get(TMP_DIR, "browser")
+    @JvmField
+    val CHROME_TMP_DIR = get(BROWSER_TMP_DIR, "chrome")
 
     @JvmField
     val ARCHIVE_DIR = get(HOME_DIR, "archive")
@@ -70,7 +75,7 @@ object AppPaths {
 
     init {
         arrayOf(TMP_DIR, CACHE_DIR, WEB_CACHE_DIR, FILE_CACHE_DIR,
-                LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR, CHROME_TMP_DIR,
+                SYS_TMP_LINKS_DIR, REPORT_DIR, SCRIPT_DIR, TEST_DIR, CHROME_TMP_DIR,
                 ARCHIVE_DIR, TMP_ARCHIVE_DIR
         ).forEach {
             if (!Files.exists(it)) {
@@ -111,6 +116,6 @@ object AppPaths {
     }
 
     fun symbolicLinkFromUri(uri: String, prefix: String = "", suffix: String = ".htm"): Path {
-        return LINKS_DIR.resolve("$prefix${hex(uri)}$suffix")
+        return SYS_TMP_LINKS_DIR.resolve("$prefix${hex(uri)}$suffix")
     }
 }

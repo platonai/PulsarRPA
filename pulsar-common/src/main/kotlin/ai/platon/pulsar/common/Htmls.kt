@@ -13,11 +13,14 @@ val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\
         .toPattern(Pattern.CASE_INSENSITIVE)
 
 enum class HtmlIntegrity {
-    OK, EMPTY, EMPTY_BODY, NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
+    OK, EMPTY_1, EMPTY_2, EMPTY_BODY, NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
     ROBOT_CHECK, TOO_SMALL, TOO_SMALL_IN_HISTORY, TOO_SMALL_IN_BATCH;
 
     val isOK: Boolean get() = this == OK
     val isNotOK: Boolean get() = !isOK
+
+    val isEmpty: Boolean get() = this == EMPTY_1 || this == EMPTY_2
+    val isNotEmpty: Boolean get() = !isEmpty
 
     companion object {
         fun fromString(s: String?): HtmlIntegrity {
@@ -35,35 +38,57 @@ enum class HtmlIntegrity {
 /**
  * Replace the charset to the target charset
  * */
-fun replaceHTMLCharset(pageSource: String, charsetPattern: Pattern, targetCharset: String = "UTF-8"): StringBuilder {
-    val pos = pageSource.indexOf("</head>")
+fun replaceHTMLCharset(htmlContent: String, charsetPattern: Pattern, targetCharset: String = "UTF-8"): StringBuilder {
+    val pos = htmlContent.indexOf("</head>")
     if (pos < 0) {
         return StringBuilder()
     }
 
-    var head = pageSource.take(pos)
+    var head = htmlContent.take(pos)
     // Some parsers use html directive to decide the content's encoding, correct it to be UTF-8
     head = charsetPattern.matcher(head).replaceAll(targetCharset)
 
-    // append the rest
+    // append the new head
     val sb = StringBuilder(head)
-    sb.append(pageSource, pos, pageSource.length)
+    // append all the rest
+    sb.append(htmlContent, pos, htmlContent.length)
 
     return sb
 }
 
-fun hasHtmlTags(pageSource: String): Boolean {
-    return pageSource.indexOf("<html") != -1 && pageSource.lastIndexOf("</html>") != -1
+fun hasHtmlTags(htmlContent: String): Boolean {
+    return htmlContent.indexOf("<html") != -1 && htmlContent.lastIndexOf("</html>") != -1
 }
 
-fun hasHeadTags(pageSource: String): Boolean {
-    return pageSource.indexOf("<head") != -1 && pageSource.lastIndexOf("</head>") != -1
+fun hasHeadTags(htmlContent: String): Boolean {
+    return htmlContent.indexOf("<head") != -1 && htmlContent.lastIndexOf("</head>") != -1
 }
 
-fun hasBodyTags(pageSource: String): Boolean {
-    return pageSource.indexOf("<body") != -1 && pageSource.lastIndexOf("</body>") != -1
+fun hasBodyTags(htmlContent: String): Boolean {
+    return htmlContent.indexOf("<body") != -1 && htmlContent.lastIndexOf("</body>") != -1
 }
 
-fun isEmptyBody(pageSource: String): Boolean {
-    return pageSource.indexOf("<body></body>") != -1
+fun isBlankBody(htmlContent: String): Boolean {
+    val tagStart = "<body"
+    val tagEnd = "</body>"
+
+    val h = htmlContent
+    var p = h.indexOf(tagStart) // pos of <body ...>
+    p = h.indexOf(">", p) + 1
+
+    while (h[p].isWhitespace() && p < h.length) {
+        ++p
+    }
+
+    if (p + tagEnd.length > h.length) {
+        return false
+    }
+
+    tagEnd.forEachIndexed { i, c ->
+        if (c != h[p + i]) {
+            return false
+        }
+    }
+
+    return true
 }

@@ -3,7 +3,12 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.*
+import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
+import java.nio.file.SimpleFileVisitor
+import java.util.Comparator
+import kotlin.streams.toList
 
 object WebTester {
     private val log = LoggerFactory.getLogger(WebAccess::class.java)
@@ -29,7 +34,17 @@ object WebTester {
 }
 
 fun main() {
-    WebTester.load()
+//    WebTester.load()
+//
+//    PulsarEnv.shutdown()
 
-    PulsarEnv.shutdown()
+//    Files.walk(AppPaths.BROWSER_TMP_DIR).forEach {
+//        println(it)
+//    }
+
+    println("\n\n")
+
+    Files.walk(AppPaths.BROWSER_TMP_DIR).filter {
+        it.endsWith("Local Storage") || it.endsWith("Session Storage") || it.endsWith("Cookies")
+    }.forEach { println(it) }
 }

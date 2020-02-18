@@ -7,6 +7,8 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.proxy.ProxyConnector
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
+import java.nio.file.Paths
 import kotlin.math.roundToLong
 
 /**
@@ -25,6 +27,8 @@ class RobustBrowserEmulator(
 ): BrowserEmulator(browserControl, driverPool, proxyConnector, fetchTaskTracker, metricsSystem, immutableConfig) {
     private val log = LoggerFactory.getLogger(RobustBrowserEmulator::class.java)!!
 
+    private val SMALL_CONTENT_LIMIT = 1_000_000 / 2 // 500KiB
+
     /**
      * Check if the html is integral without field extraction, a further html integrity checking can be applied after field
      * extraction.
@@ -39,23 +43,32 @@ class RobustBrowserEmulator(
         var message = ""
 
         if (length == 0L) {
-            integrity = HtmlIntegrity.EMPTY
+            integrity = HtmlIntegrity.EMPTY_1
+        } else if (length == 39L) {
+            // TODO: redirected to chrome-error://chromewebdata/, might be caused by proxy error, or proxy lost
+            integrity = HtmlIntegrity.EMPTY_2
         }
 
         // might be caused by web driver exception
-        if (integrity.isOK && isEmptyBody(pageSource)) {
+        if (integrity.isOK && isBlankBody(pageSource)) {
             integrity = HtmlIntegrity.EMPTY_BODY
         }
 
-        if (integrity.isOK && length < 1_000_000 && isAmazonRobotCheck(pageSource, page)) {
+        if (integrity.isOK && length < SMALL_CONTENT_LIMIT && isRobotCheck(pageSource, page)) {
             integrity = HtmlIntegrity.ROBOT_CHECK
         }
 
-        if (integrity.isOK && length < 1_000_000 && isAmazonItemPage(page)) {
+        if (integrity.isOK && isTooSmall(pageSource, page)) {
             integrity = HtmlIntegrity.TOO_SMALL
+            if (log.isTraceEnabled) {
+                val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "small", AppPaths.fromUri(url, "", ".htm"))
+                Files.createDirectories(path)
+                Files.write(path, pageSource.toByteArray())
+                log.info("Write small page to file://$path")
+            }
         }
 
-        if (integrity.isOK && page.fetchCount > 0 && aveLength > 1_000_000 && length < 0.1 * aveLength) {
+        if (integrity.isOK && page.fetchCount > 0 && aveLength > SMALL_CONTENT_LIMIT && length < 0.1 * aveLength) {
             integrity = HtmlIntegrity.TOO_SMALL_IN_HISTORY
         }
 
@@ -99,9 +112,21 @@ class RobustBrowserEmulator(
         return isAmazon(page) && page.url.contains("/dp/")
     }
 
-    private fun isAmazonRobotCheck(pageSource: String, page: WebPage): Boolean {
-        //
-        return isAmazon(page) && pageSource.length < 150_000 && pageSource.contains("Type the characters you see in this image")
+    private fun isTooSmall(pageSource: String, page: WebPage): Boolean {
+        val length = pageSource.length
+        return if (isAmazonItemPage(page)) {
+            length < SMALL_CONTENT_LIMIT / 2
+        } else {
+            length < 100
+        }
+    }
+
+    private fun isRobotCheck(pageSource: String, page: WebPage): Boolean {
+        if (isAmazon(page)) {
+            return pageSource.length < 150_000 && pageSource.contains("Type the characters you see in this image")
+        }
+
+        return false
     }
 
     private fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
@@ -131,10 +156,10 @@ class RobustBrowserEmulator(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Page broken | {} | domain: {}({}) proxy: {} | {} | {}",
-                    message, domain, count, proxyEntry.display, link, task.url)
+            log.warn("Page broken | {} | proxy: {} domain: {}({}) | file://{} | {}",
+                    message, proxyEntry.display, domain, count, link, task.url)
         } else {
-            log.warn("Page broken | {} | {} | {}", message, link, task.url)
+            log.warn("Page broken | {} | file://{} | {}", message, link, task.url)
         }
     }
 }
