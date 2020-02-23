@@ -13,13 +13,21 @@ val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\
         .toPattern(Pattern.CASE_INSENSITIVE)
 
 enum class HtmlIntegrity {
-    OK, EMPTY_1, EMPTY_2, EMPTY_BODY, NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
-    ROBOT_CHECK, TOO_SMALL, TOO_SMALL_IN_HISTORY, TOO_SMALL_IN_BATCH;
+    OK,
+    EMPTY_0B,  // no character at all
+    EMPTY_39B, // <html><head></head><body></body></html> and blanks
+    EMPTY_BODY, // ...<body></body>...
+    NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
+    ROBOT_CHECK,
+    TOO_SMALL,
+    TOO_SMALL_IN_HISTORY,
+    TOO_SMALL_IN_BATCH,
+    OTHER;
 
     val isOK: Boolean get() = this == OK
     val isNotOK: Boolean get() = !isOK
 
-    val isEmpty: Boolean get() = this == EMPTY_1 || this == EMPTY_2
+    val isEmpty: Boolean get() = this == EMPTY_0B || this == EMPTY_39B
     val isNotEmpty: Boolean get() = !isEmpty
 
     companion object {

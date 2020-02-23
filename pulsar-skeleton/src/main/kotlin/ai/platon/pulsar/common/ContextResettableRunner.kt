@@ -2,7 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.net.browser.BrowserContext
+import ai.platon.pulsar.net.browser.BrowserEmulatorContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
@@ -16,7 +16,7 @@ interface ContextResettable {
 }
 
 /**
- * Test the condition with throw program model, this model is used by [BrowserContext]
+ * Test the condition with throw program model, this model is used by [BrowserEmulatorContext]
  * */
 class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextRestorer: () -> Unit = {}) {
     private val log = LoggerFactory.getLogger(ContextResettableRunner::class.java)!!
@@ -78,7 +78,7 @@ class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextR
         nPending.incrementAndGet()
         lock.withLock {
             if (!sponsorThreadId.compareAndSet(tid, 0)) {
-                pr("guard-1", 1, "")
+                debug("guard-1", 1, "")
                 nWaits.incrementAndGet()
                 while (sponsorThreadId.get() != 0L && nanos > 0) {
                     nanos = notMaintain.awaitNanos(nanos)
@@ -88,7 +88,7 @@ class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextR
         }
         nPending.decrementAndGet()
 
-        pr("guard-2", 1, "")
+        debug("guard-2", 1, "")
     }
 
     private fun reset(): Long {
@@ -101,9 +101,9 @@ class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextR
                 sponsorThreadId.set(tid)
 
                 while (nRunning.get() > 0) {
-                    pr("notBusy-1", 1, "")
+                    debug("notBusy-1", 1, "")
                     nanos = notBusy.awaitNanos(nanos)
-                    pr("notBusy-2", 1, "")
+                    debug("notBusy-2", 1, "")
                 }
 
                 log.info(formatMessage("resetting"))
@@ -111,17 +111,17 @@ class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextR
                 sponsoredTid = tid
                 contextRestorer()
 
-                pr("notMaint-1", 1, "")
+                debug("notMaint-1", 1, "")
                 notMaintain.signalAll()
                 nSignals.incrementAndGet()
-                pr("notMaint-2", 1, "")
+                debug("notMaint-2", 1, "")
             }
         }
 
         return sponsoredTid
     }
 
-    private fun pr(ident: String, round: Int, msg: String) {
+    private fun debug(ident: String, round: Int, msg: String) {
         if (debug < 1) {
             return
         }

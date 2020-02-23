@@ -62,7 +62,7 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         try {
-            BrowserEmulatedFetcher fc = getFetchEngine();
+            BrowserEmulatedFetcher fc = getFetcher();
             if (fc == null) {
                 return Collections.emptyList();
             }
@@ -83,7 +83,7 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
                 return response;
             }
 
-            BrowserEmulatedFetcher fc = getFetchEngine();
+            BrowserEmulatedFetcher fc = getFetcher();
             if (fc == null) {
                 return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
             }
@@ -104,7 +104,7 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
         return !closed.get() && PulsarEnv.Companion.isActive();
     }
 
-    private synchronized BrowserEmulatedFetcher getFetchEngine() {
+    private synchronized BrowserEmulatedFetcher getFetcher() {
         if (!isActive()) {
             return null;
         }

@@ -8,20 +8,20 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.proxy.ProxyConnector
+import ai.platon.pulsar.proxy.ProxyManager
 import org.slf4j.LoggerFactory
 
 private class ContextResettableBrowseTask(
         val task: FetchTask,
         val browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult,
-        val browserContext: BrowserContext
+        val emulatorContext: BrowserEmulatorContext
 ) : ContextResettable {
     var result = BrowseResult()
 
     override var reset = false
 
     override fun run(nRedo: Int) {
-        result = browserContext.runInIPS(task, browseFun)
+        result = emulatorContext.runWithProxy(task, browseFun)
 
         reset = when {
 //            task.incognito -> true
@@ -32,43 +32,40 @@ private class ContextResettableBrowseTask(
 }
 
 /**
- * The browse context, the context should be reset if some errors are detected, for example, proxy ips are banned.
+ * The browser emulator context, the context should be reset if some errors are detected, for example, proxy ips are banned.
  * */
-class BrowserContext(
+class BrowserEmulatorContext(
         val driverPool: WebDriverPool,
-        val proxyConnector: ProxyConnector,
+        val proxyManager: ProxyManager,
         val immutableConfig: ImmutableConfig
 ) {
-    private val log = LoggerFactory.getLogger(BrowserContext::class.java)!!
+    private val log = LoggerFactory.getLogger(BrowserEmulatorContext::class.java)!!
     private val contextResettableRunner = ContextResettableRunner(immutableConfig) { driverPool.reset() }
     private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
 
-    fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
+    fun runInResettableContext(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
         val resettable = ContextResettableBrowseTask(task, browseFun, this)
         contextResettableRunner.run(resettable)
         return resettable.result
     }
 
-    fun runInIPS(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
-        return proxyConnector.runAnyway { runInDriverPool(task, browseFun) }
+    fun runWithProxy(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
+        return proxyManager.runAnyway { runInDriverPool(task, browseFun) }
     }
 
     fun runInDriverPool(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> BrowseResult): BrowseResult {
         var result: BrowseResult
         var response: Response = ForwardingResponse(task.url, ProtocolStatus.STATUS_SUCCESS)
-        var i = 0
         do {
             result = driverPool.run(task.priority, task.volatileConfig) {
                 browseFun(task, it)
             }
             result.response?.let { response = it }
 
-            if (i > 1) {
-                log.info("The ${i}th round re-fetch in driver | {}", task.url)
+            if (task.retries > 1) {
+                log.info("The ${task.retries}th round re-fetching | {}", task.url)
             }
-
-            ++i
-        } while(task.retries < fetchMaxRetry && response.status.isRetry(RetryScope.WEB_DRIVER))
+        } while(task.retries <= fetchMaxRetry && response.status.isRetry(RetryScope.WEB_DRIVER))
 
         return result
     }

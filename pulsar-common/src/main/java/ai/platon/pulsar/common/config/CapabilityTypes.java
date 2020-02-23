@@ -168,9 +168,8 @@ public interface CapabilityTypes {
      * Fetch parameters
      */
     String FETCH_MODE = "fetch.fetch.mode";
-    String FETCH_EAGER_FETCH_LIMIT = "fetch.eager.fetch.limit";
+    String FETCH_CONCURRENCY = "fetch.concurrency";
 
-    String FETCH_THREADS_FETCH = "fetch.threads.fetch";
     String FETCH_CRAWL_PATH_STRATEGY = "fetch.crawl.path.strategy";
     String FETCH_JOB_TIMEOUT = "fetch.job.timeout";
     String FETCH_TASK_TIMEOUT = "fetch.task.timeout";
@@ -217,17 +216,14 @@ public interface CapabilityTypes {
     /**
      * Browser control
      */
+    String BROWSER_MAX_DRIVERS = "browser.max.drivers";
+    String BROWSER_WEB_DRIVER_CLASS = "browser.driver.class";
+    String BROWSER_DRIVER_PRIORITY = "browser.driver.priority";
     String BROWSER_TYPE = "browser.type";
     String BROWSER_INCOGNITO = "browser.incognito";
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
-    /**
-     * Selenium
-     */
-    String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
-    String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
-    String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
     /**
      * Proxy
      */

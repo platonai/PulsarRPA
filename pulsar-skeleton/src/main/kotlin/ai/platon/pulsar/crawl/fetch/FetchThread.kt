@@ -14,6 +14,7 @@ import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -45,7 +46,7 @@ class FetchThread(
 
     init {
         this.isDaemon = true
-        this.name = javaClass.simpleName + "-" + id
+        this.name = "w$id"
     }
 
     fun halt() {
@@ -71,7 +72,7 @@ class FetchThread(
                 task = doSchedule()
 
                 if (task == null) {
-                    sleepAndRecord()
+                    sleepAndRecordIdleThread()
                     continue
                 }
 
@@ -111,18 +112,19 @@ class FetchThread(
         val report = StringBuilder()
         report.appendln(String.format("Thread #%d served %d tasks for %d hosts : \n", getId(), taskCount, servedPoolIds.size))
 
-        servedPoolIds.map { Urls.reverseHost("${it.protocol}://${it.host}") }.sorted().map { Urls.unreverseHost(it) }
-                .joinTo(report, "\n") { String.format("%1$40s", it) }
+        servedPoolIds.map {
+            Urls.reverseHost("${it.protocol}://${it.host}")
+        }.sorted().map { Urls.unreverseHost(it) }.joinTo(report, "\n") { String.format("%1$40s", it) }
         report.appendln()
 
         log.info(report.toString())
     }
 
-    private fun sleepAndRecord() {
+    private fun sleepAndRecordIdleThread() {
         fetchMonitor.registerIdleThread(this)
 
         try {
-            sleep(1000)
+            TimeUnit.SECONDS.sleep(1)
         } catch (ignored: InterruptedException) {}
 
         fetchMonitor.unregisterIdleThread(this)
@@ -166,7 +168,7 @@ class FetchThread(
 
         if (fetchTask != null) {
             if (fetchMode != fetchTask.page.fetchMode) {
-                log.error("FetchTask.page.fetchMode {} is not expected {}", fetchMode, fetchTask.page.fetchMode)
+                log.warn("FetchTask.page.fetchMode {} is not expected {}", fetchMode, fetchTask.page.fetchMode)
             }
         }
 
@@ -199,7 +201,6 @@ class FetchThread(
     }
 
     companion object {
-
         private val instanceSequence = AtomicInteger(0)
     }
 }

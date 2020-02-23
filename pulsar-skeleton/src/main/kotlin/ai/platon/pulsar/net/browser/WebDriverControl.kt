@@ -75,10 +75,7 @@ open class WebDriverControl(
 
         // see https://peter.sh/experiments/chromium-command-line-switches/
         chromeOptions.merge(generalOptions)
-        // Use headless mode by default, GUI mode can be used for debugging
         chromeOptions.setHeadless(headless)
-        // some web sites have technology to detect whether the browser is controlled by web driver
-        // chromeOptions.addArguments("disable-infobars")
         chromeOptions.addArguments("--disable-extensions")
         // chromeOptions.addArguments("--incognito") // may cause anti-spider
         chromeOptions.addArguments("--window-size=${formatViewPort()}")
@@ -100,12 +97,8 @@ open class WebDriverControl(
         }
 
         chromeOptions.headless = headless
-        // some web sites have technology to detect whether the browser is controlled by web driver
-        // chromeOptions.addArguments("disable-infobars")
         // chromeOptions.addArguments("--incognito") // may cause anti-spider
         chromeOptions.addArguments("window-size", formatViewPort())
-        // TODO: NOT WORKING
-        chromeOptions.addArguments(String.format("blink-settings=imagesEnabled=%b", imagesEnabled))
 
         return chromeOptions
     }

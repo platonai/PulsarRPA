@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl.fetch
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -75,7 +76,7 @@ class TaskMonitor(
     /**
      * Fetch threads
      */
-    private var initFetchThreadCount: Int = conf.getInt(FETCH_THREADS_FETCH, 10)
+    private var initFetchThreadCount: Int = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
 
     /**
      * Once timeout, the pending items should be put to the ready pool again.

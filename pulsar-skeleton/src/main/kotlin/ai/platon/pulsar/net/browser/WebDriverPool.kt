@@ -10,7 +10,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.proxy.ProxyConnector
+import ai.platon.pulsar.proxy.ProxyManager
 import org.apache.commons.io.FileUtils
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
@@ -46,7 +46,7 @@ import kotlin.concurrent.withLock
 class WebDriverPool(
         private val driverControl: WebDriverControl,
         private val proxyPool: ProxyPool,
-        private val proxyConnector: ProxyConnector,
+        private val proxyManager: ProxyManager,
         private val conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverPool::class.java)
@@ -72,11 +72,12 @@ class WebDriverPool(
     }
 
     private val defaultWebDriverClass = conf.getClass(
-            SELENIUM_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
+            BROWSER_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
     private val isHeadless = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
     private val isClosed = closed.get()
-    val capacity: Int = conf.getInt(SELENIUM_MAX_WEB_DRIVERS, (1.5 * AppConstants.NCPU).toInt())
+    private val concurrency = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+    val capacity = conf.getInt(BROWSER_MAX_DRIVERS, concurrency)
     var lastActiveTime = Instant.now()
     var idleTimeout = Duration.ofMinutes(5)
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -89,7 +90,7 @@ class WebDriverPool(
 
     val totalSize get() = allDrivers.size
 
-    val proxyEntry get() = proxyConnector.proxyEntry
+    val proxyEntry get() = proxyManager.proxyEntry
 
     fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
         val driver = poll(priority, volatileConfig)
@@ -118,8 +119,17 @@ class WebDriverPool(
     }
 
     fun reset() {
-        changeProxy()
-        closeAll(incognito = true)
+        lock.withLock {
+            driversAreClosing = true
+
+            pauseAllWorkingDrivers()
+            changeProxy()
+            closeAll(incognito = true)
+        }
+    }
+
+    fun changeProxy() {
+        proxyEntry?.let { proxyManager.changeProxyIfRunning(it) }
     }
 
     fun cancel(url: String): ManagedWebDriver? {
@@ -178,7 +188,7 @@ class WebDriverPool(
             }
 
             if (driver != null) {
-                driver.status = DriverStatus.WORKING
+                driver.status.set(DriverStatus.WORKING)
                 workingDrivers[driver.id] = driver
             }
         } catch (e: InterruptedException) {
@@ -218,13 +228,13 @@ class WebDriverPool(
             lastActiveTime = Instant.now()
 
             // a driver is always hold by only one thread, so it's OK to use it without locks
-            driver.status = DriverStatus.FREE
+            driver.status.set(DriverStatus.FREE)
             driver.stat.pageViews++
             pageViews.incrementAndGet()
         } catch (e: Exception) {
             // log.warn("Failed to recycle a WebDriver, retire it - {}", StringUtil.simplifyException(e))
             log.warn(StringUtil.stringifyException(e))
-            driver.status = DriverStatus.UNKNOWN
+            driver.status.set(DriverStatus.UNKNOWN)
             retire(driver, e)
             return
         }
@@ -235,7 +245,7 @@ class WebDriverPool(
             }
 
             // it can be retired by close all
-            if (driver.status == DriverStatus.FREE) {
+            if (driver.status.get() == DriverStatus.FREE) {
                 val queue = freeDrivers[driver.priority]
                 if (queue != null) {
                     queue.add(driver)
@@ -273,7 +283,7 @@ class WebDriverPool(
             return
         }
 
-        driver.status = DriverStatus.RETIRED
+        driver.status.set(DriverStatus.RETIRED)
 
         lock.withLock {
             freeDrivers[driver.priority]?.remove(driver)
@@ -285,11 +295,11 @@ class WebDriverPool(
         }
 
         when (e) {
-            is org.openqa.selenium.NoSuchSessionException -> driver.status = DriverStatus.CRASHED
-            is org.apache.http.conn.HttpHostConnectException -> driver.status = DriverStatus.CRASHED
+            is org.openqa.selenium.NoSuchSessionException -> driver.status.set(DriverStatus.CRASHED)
+            is org.apache.http.conn.HttpHostConnectException -> driver.status.set(DriverStatus.CRASHED)
         }
 
-        when (driver.status) {
+        when (driver.status.get()) {
             DriverStatus.RETIRED -> numRetired.incrementAndGet()
             DriverStatus.CRASHED -> numCrashed.incrementAndGet()
             else -> {}
@@ -297,9 +307,9 @@ class WebDriverPool(
 
         try {
             if (e != null) {
-                log.info("Quiting {} driver {} - {}", driver.status.name.toLowerCase(), driver, StringUtil.simplifyException(e))
+                log.info("Quiting {} driver {} - {}", driver.status.get().name.toLowerCase(), driver, StringUtil.simplifyException(e))
             } else {
-                log.trace("Quiting {} driver {}", driver.status.name.toLowerCase(), driver)
+                log.trace("Quiting {} driver {}", driver.status.get().name.toLowerCase(), driver)
             }
             // Quits this driver, close every associated window
             driver.quit()
@@ -362,10 +372,12 @@ class WebDriverPool(
     }
 
     private fun waitUtilNotClosing() {
-        var nanos = pollingTimeout.toNanos()
-        lock.withLock {
-            while (driversAreClosing && nanos > 0) {
-                nanos = notClosing.awaitNanos(nanos)
+        if (!isClosed) {
+            var nanos = pollingTimeout.toNanos()
+            lock.withLock {
+                while (driversAreClosing && nanos > 0) {
+                    nanos = notClosing.awaitNanos(nanos)
+                }
             }
         }
     }
@@ -384,7 +396,7 @@ class WebDriverPool(
 
         if (aliveSize >= capacity) {
             log.warn("Too many web drivers. Cpu cores: {}, capacity: {}, {}",
-                    AppConstants.NCPU, capacity, formatStatus(verbose = false))
+                    AppConstants.FETCH_THREADS, capacity, formatStatus(verbose = false))
             return null
         }
 
@@ -477,10 +489,10 @@ class WebDriverPool(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
-        if (proxyConnector.ensureAvailable()) {
+        if (proxyManager.ensureAvailable()) {
             // TODO: internal proxy server can be run at another host
-            proxyEntry = proxyConnector.proxyEntry
-            hostPort = "127.0.0.1:${proxyConnector.port}"
+            proxyEntry = proxyManager.proxyEntry
+            hostPort = "127.0.0.1:${proxyManager.port}"
         }
 
         if (hostPort == null) {
@@ -508,20 +520,18 @@ class WebDriverPool(
                 ?: conf.getEnum(BROWSER_TYPE, BrowserType.CHROME)
     }
 
+    /**
+     * All browsers are stopped to loading and return as soon as possible
+     * */
     private fun pauseAllWorkingDrivers() {
         workingDrivers.values.forEach {
-            it.evaluateSilently("window.stop()")
             it.pause()
         }
     }
 
-    fun changeProxy() {
-        proxyEntry?.let { proxyConnector.changeProxyIfRunning(it) }
-    }
-
     private fun resumeAllDrivers() {
         workingDrivers.values.forEach {
-            it.status = DriverStatus.WORKING
+            it.status.set(DriverStatus.WORKING)
         }
     }
 

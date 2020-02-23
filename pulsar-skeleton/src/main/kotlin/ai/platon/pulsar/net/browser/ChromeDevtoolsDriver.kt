@@ -81,7 +81,7 @@ class ChromeDevtoolsDriver(
     private var devTools: ChromeDevToolsService
 
     private val browser get() = devTools.browser
-    private var navigateTargetUrl = ""
+    private var navigateUrl = ""
     private val page get() = devTools.page
     private val mainFrame get() = page.frameTree.frame
     private val network get() = devTools.network
@@ -109,7 +109,7 @@ class ChromeDevtoolsDriver(
 
         // In chrome every tab is a separate process
         tab = chrome.createTab()
-        navigateTargetUrl = tab.url?:""
+        navigateUrl = tab.url?:""
         tabs[tab.id] = tab
 
         devTools = chrome.createDevToolsService(tab)
@@ -121,6 +121,8 @@ class ChromeDevtoolsDriver(
     }
 
     override fun get(url: String) {
+        if (isClosed) return
+
         try {
             page.addScriptToEvaluateOnNewDocument(clientLibJs)
 //        page.onDomContentEventFired { event: DomContentEventFired ->
@@ -151,7 +153,7 @@ class ChromeDevtoolsDriver(
             network.enable()
 //        fetch.enable()
 
-            navigateTargetUrl = url
+            navigateUrl = url
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
             throw NoSuchSessionException(e.message)
@@ -159,6 +161,8 @@ class ChromeDevtoolsDriver(
     }
 
     fun stopLoading() {
+        if (isClosed) return
+
         try {
             page.stopLoading()
         } catch (e: ChromeDevToolsInvocationException) {
@@ -167,6 +171,8 @@ class ChromeDevtoolsDriver(
     }
 
     fun evaluate(expression: String): Any? {
+        if (isClosed) return null
+
         try {
             val evaluate = runtime.evaluate(expression)
             val result = evaluate.result
@@ -193,14 +199,20 @@ class ChromeDevtoolsDriver(
      * TODO: the page might be redirected and current url should be mainFrame.url
      * */
     override fun getCurrentUrl(): String {
-        return navigateTargetUrl
+        if (isClosed) return navigateUrl
+
+        return navigateUrl
     }
 
     override fun getWindowHandles(): Set<String> {
+        if (isClosed) return setOf()
+
         return chrome.getTabs().mapTo(HashSet()) { it.id }
     }
 
     override fun getPageSource(): String {
+        if (isClosed) return ""
+
         try {
             val evaluate = runtime.evaluate("document.documentElement.outerHTML")
             return evaluate.result.value.toString()
@@ -210,6 +222,8 @@ class ChromeDevtoolsDriver(
     }
 
     fun getCookieNames(): List<String> {
+        if (isClosed) return listOf()
+
         try {
             return devTools.network.allCookies.map { it.name }
         } catch (e: ChromeDevToolsInvocationException) {
@@ -218,6 +232,8 @@ class ChromeDevtoolsDriver(
     }
 
     fun deleteAllCookies() {
+        if (isClosed) return
+
         try {
             devTools.network.clearBrowserCookies()
             devTools.network.clearBrowserCache()
@@ -227,6 +243,8 @@ class ChromeDevtoolsDriver(
     }
 
     fun deleteCookieNamed(name: String) {
+        if (isClosed) return
+
         try {
             devTools.network.deleteCookies(name)
         } catch (e: ChromeDevToolsInvocationException) {
@@ -270,6 +288,8 @@ class ChromeDevtoolsDriver(
     }
 
     private fun isMainFrame(frameId: String): Boolean {
+        if (isClosed) return false
+
         return mainFrame.id == frameId
     }
 

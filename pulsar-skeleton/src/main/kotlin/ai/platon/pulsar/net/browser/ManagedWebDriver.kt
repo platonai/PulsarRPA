@@ -46,25 +46,28 @@ class ManagedWebDriver(
     private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
 
     val stat = DriverStat()
-    var status = DriverStatus.UNKNOWN
-        @Synchronized get
-        @Synchronized set
+
+    val status = AtomicReference<DriverStatus>()
 
     val isPaused
-        @Synchronized
-        get() = status == DriverStatus.PAUSED
+        get() = status.get() == DriverStatus.PAUSED
 
     val isRetired
-        @Synchronized
-        get() = status == DriverStatus.RETIRED
+        get() = status.get() == DriverStatus.RETIRED
 
     val isWorking
-        @Synchronized
-        get() = status == DriverStatus.WORKING
+        get() = status.get() == DriverStatus.WORKING
 
     val isQuit
-        @Synchronized
-        get() = status == DriverStatus.QUIT
+        get() = status.get() == DriverStatus.QUIT
+
+    fun pause() {
+        status.set(DriverStatus.PAUSED)
+    }
+
+    fun retire() {
+        status.set(DriverStatus.RETIRED)
+    }
 
     // The proxy entry ready to use
     val proxyEntry = AtomicReference<ProxyEntry>()
@@ -72,8 +75,11 @@ class ManagedWebDriver(
     val incognito = AtomicBoolean()
 
     val sessionId: String?
-        @Synchronized
         get() {
+            if (isQuit) {
+                return null
+            }
+
             return if (driver is ChromeDevtoolsDriver) {
                 driver.sessionId?.toString()
             } else {
@@ -82,20 +88,25 @@ class ManagedWebDriver(
         }
 
     val currentUrl: String
-        get() = try {
-            driver.currentUrl
-        } catch (t: Throwable) {
-            ""
+        get() {
+            return try {
+                if (isQuit) "" else driver.currentUrl
+            } catch (t: Throwable) {
+                "(exception)"
+            }
         }
 
     val pageSource: String
-        get() = try {
-            driver.pageSource
-        } catch (t: Throwable) {
-            "(exception)"
+        get() {
+            return try {
+                if (isQuit) "" else driver.pageSource
+            } catch (t: Throwable) {
+                "(exception)"
+            }
         }
 
-    val browserType: BrowserType =
+    val browserType: BrowserType
+        get() =
             when (driver) {
                 is ChromeDevtoolsDriver -> BrowserType.CHROME
                 is ChromeDriver -> BrowserType.SELENIUM_CHROME
@@ -107,10 +118,18 @@ class ManagedWebDriver(
             }
 
     fun navigate(url: String) {
+        if (isQuit) {
+            return
+        }
+
         return driver.get(url)
     }
 
     fun evaluate(expression: String): Any? {
+        if (isQuit) {
+            return null
+        }
+
         return when (driver) {
             is ChromeDriver -> {
                 driver.executeScript(expression)
@@ -123,6 +142,10 @@ class ManagedWebDriver(
     }
 
     fun evaluateSilently(expression: String): Any? {
+        if (isQuit) {
+            return null
+        }
+
         try {
             return evaluate(expression)
         } catch (ignored: Throwable) {}
@@ -131,6 +154,10 @@ class ManagedWebDriver(
     }
 
     fun stopLoading() {
+        if (isQuit) {
+            return
+        }
+
         if (driver is ChromeDevtoolsDriver) {
             driver.stopLoading()
         } else {
@@ -139,10 +166,16 @@ class ManagedWebDriver(
     }
 
     fun scrollDown() {
-
+        if (isQuit) {
+            return
+        }
     }
 
     fun setTimeouts(driverConfig: DriverConfig) {
+        if (isQuit) {
+            return
+        }
+
         if (driver is ChromeDriver) {
             val timeouts = driver.manage().timeouts()
             timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
@@ -155,22 +188,10 @@ class ManagedWebDriver(
         }
     }
 
-    @Synchronized
-    fun pause() {
-        status = DriverStatus.PAUSED
-    }
-
-    @Synchronized
-    fun retire() {
-        status = DriverStatus.RETIRED
-    }
-
     /**
      * Quits this driver, close every associated window
      * */
-    @Synchronized
     fun quit() {
-
         if (isQuit) {
             return
         }
@@ -179,7 +200,7 @@ class ManagedWebDriver(
             deleteAllCookiesSilently()
         }
 
-        status = DriverStatus.QUIT
+        status.set(DriverStatus.QUIT)
         driver.quit()
     }
 
@@ -187,7 +208,6 @@ class ManagedWebDriver(
      * Close redundant web drivers and keep only one to release resources
      * TODO: buggy
      * */
-    @Synchronized
     fun closeIfNotOnly() {
         if (isQuit) return
 
@@ -198,7 +218,6 @@ class ManagedWebDriver(
         }
     }
 
-    @Synchronized
     fun deleteAllCookiesSilently() {
         if (isQuit) return
 
@@ -230,7 +249,6 @@ class ManagedWebDriver(
         }
     }
 
-    @Synchronized
     fun deleteAllCookiesSilently(targetUrl: String) {
         if (isQuit) return
 
@@ -253,17 +271,14 @@ class ManagedWebDriver(
         }
     }
 
-    @Synchronized
     override fun equals(other: Any?): Boolean {
         return other is ManagedWebDriver && other.id == this.id
     }
 
-    @Synchronized
     override fun hashCode(): Int {
         return id
     }
 
-    @Synchronized
     override fun toString(): String {
         return if (sessionId != null) "#$id-$sessionId" else "#$id(closed)"
     }

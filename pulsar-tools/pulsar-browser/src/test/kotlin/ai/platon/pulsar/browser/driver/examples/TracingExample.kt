@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver.chrome.examples
+package ai.platon.pulsar.browser.driver.examples
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.kklisura.cdt.protocol.events.tracing.DataCollected

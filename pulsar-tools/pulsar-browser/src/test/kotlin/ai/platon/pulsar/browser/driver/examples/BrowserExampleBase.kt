@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver.chrome.examples
+package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions

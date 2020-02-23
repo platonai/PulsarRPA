@@ -3,14 +3,9 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
 import ai.platon.pulsar.common.config.*
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.FetchMode
-import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
-import com.beust.jcommander.ParameterException
 import com.beust.jcommander.Parameters
-import org.apache.commons.lang3.StringUtils
-import kotlin.system.exitProcess
 
 @Parameters(commandNames = ["FetchJob"], commandDescription = "The most important switches for fetch jobs.")
 class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(argv) {
@@ -29,7 +24,7 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
     var numReduceTasks = conf.getInt(CapabilityTypes.MAPREDUCE_JOB_REDUCES, 1)
 
     @Parameter(names = [PulsarParams.ARG_THREADS], description = "Number of fetch threads in each reducer, auto detect if non-positive")
-    var numFetchThreads = conf.getInt(CapabilityTypes.FETCH_THREADS_FETCH, 0)
+    var numFetchThreads = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
 
     @Parameter(names = [PulsarParams.ARG_POOL_THREADS], description = "Number of fetcher threads per queue")
     var numPoolThreads = conf.getInt(CapabilityTypes.FETCH_THREADS_PER_POOL, 10)

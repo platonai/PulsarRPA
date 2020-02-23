@@ -191,7 +191,8 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     }
 
     public boolean isTimeout() {
-        return getMinorCode() == REQUEST_TIMEOUT || getMinorCode() == THREAD_TIMEOUT;
+        int code = getMinorCode();
+        return code == REQUEST_TIMEOUT || code == THREAD_TIMEOUT || code == WEB_DRIVER_TIMEOUT || code == DOM_TIMEOUT;
     }
 
     public String getMajorName() {

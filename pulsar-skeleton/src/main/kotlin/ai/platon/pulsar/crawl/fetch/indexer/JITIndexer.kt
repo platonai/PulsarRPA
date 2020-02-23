@@ -99,10 +99,6 @@ class JITIndexer(
         }
 
         val page = fetchTask.page
-        if (page == null) {
-            LOG.warn("Invalid FetchTask to index, ignore it")
-            return
-        }
 
         if (!shouldProduce(page)) {
             return

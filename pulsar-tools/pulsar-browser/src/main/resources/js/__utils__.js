@@ -4,6 +4,34 @@ const fineHeight = 4000;
 const fineNumAnchor = 100;
 const fineNumImage = 20;
 
+class MultiStatus {
+    /**
+     * n: check count
+     * scroll: scroll count
+     * idl: idle count
+     * st: document state
+     * r: complete reason
+     * ec: error code
+     * */
+    status =   { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" };
+    initStat = null;
+    lastStat = { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
+    lastD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0};
+    initD =    { w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0}
+}
+
+class ActiveUrls {
+    URL = document.URL;
+    baseURI = document.baseURI;
+    location = "";
+    documentURI = document.documentURI
+}
+
+class ActiveDomMessage {
+    multiStatus = new MultiStatus();
+    urls = new ActiveUrls()
+}
+
 let __utils__ = function () {};
 
 /**
@@ -13,6 +41,14 @@ let __utils__ = function () {};
  * */
 __utils__.waitForReady = function(maxRound = 30, scroll = 2) {
     return __utils__.checkPulsarStatus(maxRound, scroll);
+};
+
+__utils__.isBrowserError = function () {
+    if (document.documentURI.startsWith("chrome-error")) {
+        return true
+    }
+
+    return false
 };
 
 __utils__.checkPulsarStatus = function(maxRound = 30, scroll = 2) {
@@ -40,6 +76,10 @@ __utils__.checkPulsarStatus = function(maxRound = 30, scroll = 2) {
         return false
     }
 
+    if (__utils__.isBrowserError()) {
+        document.pulsarData.multiStatus.status.ec = document.querySelector(".error-code").textContent
+    }
+
     // The document is ready
     return JSON.stringify(document.pulsarData)
 };
@@ -55,7 +95,7 @@ __utils__.createPulsarDataIfAbsent = function() {
 
         document.pulsarData = {
             multiStatus: {
-                status: { n: 0, scroll: 0, idl: 0, st: "", r: "" },
+                status: { n: 0, scroll: 0, idl: 0, st: "", r: "", ec: "" },
                 initStat: null,
                 lastStat: {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
                 lastD:    {w: 0, h: 0, na: 0, ni: 0, nst: 0, nnm: 0},
@@ -169,39 +209,41 @@ __utils__.updatePulsarStat = function(init = false) {
     let nst = 0; // short text in first screen
     let nnm = 0; // number like text in first screen
 
-    document.body.forEach((node) => {
-        if (node.isIFrame()) {
-            return
-        }
+    if (!__utils__.isBrowserError()) {
+        document.body.forEach((node) => {
+            if (node.isIFrame()) {
+                return
+            }
 
-        if (node.isAnchor()) ++na;
-        if (node.isImage() && !node.isSmallImage()) ++ni;
+            if (node.isAnchor()) ++na;
+            if (node.isImage() && !node.isSmallImage()) ++ni;
 
-        if (node.isText() && node.nScreen() <= 20) {
-            let isShortText = node.isShortText();
-            let isNumberLike = isShortText && node.isNumberLike();
-            if (isShortText) {
-                ++nst;
-                if (isNumberLike) {
-                    ++nnm;
-                }
+            if (node.isText() && node.nScreen() <= 20) {
+                let isShortText = node.isShortText();
+                let isNumberLike = isShortText && node.isNumberLike();
+                if (isShortText) {
+                    ++nst;
+                    if (isNumberLike) {
+                        ++nnm;
+                    }
 
-                let ele = node.bestElement();
-                if (ele != null && !init && !ele.hasAttribute("_ps_tp")) {
-                    // not set at initialization, it's lazy loaded
-                    ele.setAttribute("_ps_lazy", "1")
-                }
+                    let ele = node.bestElement();
+                    if (ele != null && !init && !ele.hasAttribute("_ps_tp")) {
+                        // not set at initialization, it's lazy loaded
+                        ele.setAttribute("_ps_lazy", "1")
+                    }
 
-                if (ele != null) {
-                    let type = isNumberLike ? "nm" : "st";
-                    ele.setAttribute("_ps_tp", type);
+                    if (ele != null) {
+                        let type = isNumberLike ? "nm" : "st";
+                        ele.setAttribute("_ps_tp", type);
+                    }
                 }
             }
-        }
 
-        if (node.isDiv() && node.scrollWidth > width && node.scrollWidth < maxWidth) width = node.scrollWidth;
-        if (node.isDiv() && node.scrollWidth >= fineWidth && node.scrollHeight > height) height = node.scrollHeight;
-    });
+            if (node.isDiv() && node.scrollWidth > width && node.scrollWidth < maxWidth) width = node.scrollWidth;
+            if (node.isDiv() && node.scrollWidth >= fineWidth && node.scrollHeight > height) height = node.scrollHeight;
+        });
+    }
 
     // unexpected but occurs when do performance test to parallel harvest Web sites
     if (!document.pulsarData) {

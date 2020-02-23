@@ -40,6 +40,8 @@ public interface AppConstants {
      */
     int NCPU = Runtime.getRuntime().availableProcessors();
 
+    int FETCH_THREADS = (int)(1.5 * NCPU);
+
     String YES_STRING = "y";
 
     /** Don't show original forbidden content, but show summaries. */

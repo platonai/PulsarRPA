@@ -27,7 +27,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="globalExecutor" class="ai.platon.pulsar.common.GlobalExecutor" destroy-method="close">
+    <bean id="globalExecutor" class="ai.platon.pulsar.common.FetchThreadExecutor" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -39,7 +39,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyConnector" class="ai.platon.pulsar.proxy.ProxyConnector" init-method="start" destroy-method="close">
+    <bean id="proxyConnector" class="ai.platon.pulsar.proxy.ProxyManager" init-method="start" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>

@@ -108,15 +108,19 @@ public interface ProtocolStatusCodes {
     /**
      * Selenium web driver is timeout.
      */
-    int PROXY_ERROR = 1480;
+    int BROWSER_ERR_CONNECTION_TIMED_OUT = 1480;
     /**
      * Selenium web driver is timeout.
      */
-    int IP_BANNED = 1481;
+    int PROXY_ERROR = 1481;
     /**
      * Selenium web driver is timeout.
      */
     int WEB_DRIVER_GONE = 1482;
+    /**
+     * The browser reports an error, ERR_CONNECTION_TIMED_OUT, for example.
+     */
+    int BROWSER_ERROR = 1483;
     /**
      * This protocol was not found. Application may attempt to retry later.
      */

@@ -36,9 +36,15 @@ function printUsage() {
 }
 
 MODULE=
+FETCH_THREADS=5
 while [[ $# -gt 0 ]]
 do
 case $1 in
+    -ft|--fetch-threads)
+        shift
+        export FETCH_THREADS=$1
+        shift
+        ;;
     -m|--module)
         shift
         MODULE=$1

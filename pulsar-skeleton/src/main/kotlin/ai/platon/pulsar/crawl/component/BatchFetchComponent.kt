@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -9,10 +10,9 @@ import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import org.apache.commons.lang3.StringUtils
+import com.google.common.collect.Iterables
 import java.util.*
 import java.util.concurrent.*
-import java.util.stream.Collectors
 
 class BatchFetchComponent(
         val webDb: WebDb,
@@ -83,7 +83,6 @@ class BatchFetchComponent(
      * Or else parallel fetch pages in a ExecutorService
      */
     private fun fetchAllInternal(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        Objects.requireNonNull(options)
         return if (options.preferParallel) {
             parallelFetchAll(urls, options)
         } else {
@@ -114,9 +113,9 @@ class BatchFetchComponent(
 
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         if (LOG.isDebugEnabled) {
-            LOG.debug("Manual parallel fetch urls")
+            LOG.debug("Parallel fetch {} urls manually", Iterables.size(urls))
         }
-        // TODO: use GlobalExecutor
+        // TODO: is it better to use GlobalExecutor?
         val executor = Executors.newWorkStealingPool()
         return urls.map { executor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
     }
@@ -148,14 +147,14 @@ class BatchFetchComponent(
         if (config == null) {
             config = immutableConfig
         }
-        val eagerFetchLimit = config.getUint(CapabilityTypes.FETCH_EAGER_FETCH_LIMIT, 20)
-        if (urls.size <= eagerFetchLimit) {
+        val parallelLevel = config.getUint(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+        if (urls.size <= parallelLevel) {
             return urls
         }
-        val eagerTasks: MutableList<String> = ArrayList(eagerFetchLimit)
-        val lazyTasks: MutableList<String> = ArrayList(0.coerceAtLeast(urls.size - eagerFetchLimit))
+        val eagerTasks: MutableList<String> = ArrayList(parallelLevel)
+        val lazyTasks: MutableList<String> = ArrayList(0.coerceAtLeast(urls.size - parallelLevel))
         for ((i, url) in urls.withIndex()) {
-            if (i < eagerFetchLimit) {
+            if (i < parallelLevel) {
                 eagerTasks.add(url)
             } else {
                 lazyTasks.add(url)

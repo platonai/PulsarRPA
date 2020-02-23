@@ -1,7 +1,7 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.GlobalExecutor
+import ai.platon.pulsar.common.FetchThreadExecutor
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -39,7 +39,7 @@ internal class BatchFetchContext(
         val volatileConfig: VolatileConfig
 ) {
     var startTime = Instant.now()
-    val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
+    val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(5)
     val checkInterval = Duration.ofSeconds(1)
@@ -48,8 +48,8 @@ internal class BatchFetchContext(
     val numAllowedFailures = max(10, batchSize / 3)
 
     // All submitted tasks
-    val pendingTasks = mutableMapOf<String, Future<FetchResult>>()
-    val finishedTasks = mutableMapOf<String, FetchResult>()
+    val pendingTasks = mutableMapOf<FetchTask, Future<FetchResult>>()
+    val finishedTasks = mutableMapOf<FetchTask, FetchResult>()
     val successPages = mutableListOf<WebPage>()
 
     val numFinishedTasks get() = finishedTasks.size
@@ -60,6 +60,8 @@ internal class BatchFetchContext(
 
     val status = BatchStat()
     var idleSeconds = 0
+    // external connection is lost, might be caused by proxy
+    var connectionLost = false
 
     var beforeFetchHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
     var afterFetchHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)
@@ -93,7 +95,7 @@ internal class BatchFetchContext(
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserEmulatedFetcher(
-        private val executor: GlobalExecutor,
+        private val executor: FetchThreadExecutor,
         private val browserEmulator: BrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
@@ -119,14 +121,10 @@ class BrowserEmulatedFetcher(
             return ForwardingResponse(page.url, ProtocolStatus.STATUS_CANCELED)
         }
 
-        val volatileConfig = page.volatileConfig ?: VolatileConfig(immutableConfig)
-        val priority = volatileConfig.getUint(SELENIUM_WEB_DRIVER_PRIORITY, 0)
+        val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
+        val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
         val task = FetchTask(0, nextTaskId, priority, page, volatileConfig)
-        val incognito = volatileConfig.getBoolean(BROWSER_INCOGNITO, false)
-        if (incognito) {
-            task.deleteAllCookies = true
-            task.closeBrowsers = true
-        }
+        task.incognito = volatileConfig.getBoolean(BROWSER_INCOGNITO, false)
 
         return try {
             browserEmulator.fetch(task).response
@@ -183,8 +181,12 @@ class BrowserEmulatedFetcher(
         cx.beforeFetchAll(pages)
 
         // Submit all tasks
-        var batchTaskId = 0
-        pages.associateTo(cx.pendingTasks) { it.url to executor.submit { doFetch(++batchTaskId, it, cx) } }
+        pages.forEachIndexed { batchTaskId, page ->
+            val task = FetchTask(cx.batchId, nextTaskId, cx.priority, page, cx.volatileConfig)
+            task.batchSize = cx.batchSize
+            task.batchTaskId = batchTaskId
+            cx.pendingTasks[task] = executor.submit { doFetch(task, cx) }
+        }
 
         val isLastTaskTimeout: (cx: BatchFetchContext) -> Boolean = {
             it.batchSize > 10 && it.pendingTasks.size == 1 && it.idleSeconds >= 30
@@ -195,16 +197,17 @@ class BrowserEmulatedFetcher(
         while (cx.status.numTaskDone < cx.batchSize
                 && cx.status.numFailedTasks <= cx.numAllowedFailures
                 && cx.idleSeconds < cx.idleTimeout.seconds
+                && !cx.connectionLost
                 && !isLastTaskTimeout(cx)
                 && !closed.get()
                 && !Thread.currentThread().isInterrupted) {
             ++cx.round
 
             // loop and wait for all parallel tasks return
-            val done = mutableListOf<String>()
-            cx.pendingTasks.asSequence().filter { it.value.isDone }.forEach { (url, future) ->
-                val result = handleTaskDone(url, future, cx)
-                done.add(result.task.url)
+            val done = mutableListOf<FetchTask>()
+            cx.pendingTasks.asSequence().filter { it.value.isDone }.forEach { (task, future) ->
+                val result = handleTaskDone(task, future, cx)
+                done.add(result.task)
             }
             done.forEach { cx.pendingTasks.remove(it) }
 
@@ -243,18 +246,9 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun doFetch(batchTaskId: Int, page: WebPage, cx: BatchFetchContext, incognito: Boolean = false): FetchResult {
-        val task = FetchTask(cx.batchId, nextTaskId, cx.priority, page, cx.volatileConfig)
-        task.batchSize = cx.batchSize
-        task.batchTaskId = batchTaskId
-
-        if (incognito) {
-            task.deleteAllCookies = true
-            task.closeBrowsers = true
-        }
-
+    private fun doFetch(task: FetchTask, cx: BatchFetchContext): FetchResult {
         return try {
-            cx.beforeFetch(page)
+            cx.beforeFetch(task.page)
             browserEmulator.fetch(task)
         } catch (e: IllegalStateException) {
             FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
@@ -262,25 +256,29 @@ class BrowserEmulatedFetcher(
             log.warn("Unexpected exception", e)
             FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED))
         } finally {
-            // TODO: page is not updated
-            cx.afterFetch(page)
+            cx.afterFetch(task.page)
         }
     }
 
-    private fun handleTaskDone(url: String, future: Future<FetchResult>, cx: BatchFetchContext): FetchResult {
+    private fun handleTaskDone(task: FetchTask, future: Future<FetchResult>, cx: BatchFetchContext): FetchResult {
+        val url = task.url
         try {
-            val result = getFetchResult(url, future, cx.threadTimeout)
-            cx.finishedTasks[url] = result
+            val result = getFetchResult(task, future, cx.threadTimeout)
+            cx.finishedTasks[task] = result
 
             val response = result.response
 
             val elapsed = Duration.ofSeconds(cx.round)
             when (response.code) {
                 ProtocolStatus.DOCUMENT_INCOMPLETE -> {
-                    // TODO: seems never happen
+                    // TODO: seems never happen at this level
                     log.warn("May be incomplete content, received {} average {}, should retry it later",
                             StringUtil.readableByteCount(response.length()), cx.status.averagePageSize)
                     ++cx.status.numIncompletePages
+                }
+                ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT -> {
+                    log.info("Browser connection timed out | {} | {}", response.status, url)
+                    cx.connectionLost = true
                 }
                 ProtocolStatusCodes.SUCCESS_OK -> {
                     cx.successPages.add(result.task.page)
@@ -311,22 +309,22 @@ class BrowserEmulatedFetcher(
         logBatchAbort(cx)
 
         // if there are still pending tasks, cancel them
-        cx.pendingTasks.forEach {(url, future) ->
-            browserEmulator.cancel(url)
+        cx.pendingTasks.forEach {(task, future) ->
+            browserEmulator.cancel(task)
             future.cancel(true)
         }
-        cx.pendingTasks.forEach { (url, future) ->
+        cx.pendingTasks.forEach { (task, future) ->
             // Attempts to cancel execution of this task
             try {
-                val result = getFetchResult(url, future, cx.threadTimeout)
-                cx.finishedTasks[url] = result
+                val result = getFetchResult(task, future, cx.threadTimeout)
+                cx.finishedTasks[task] = result
             } catch (e: Throwable) {
                 log.error("Unexpected error {}", StringUtil.stringifyException(e))
             }
         }
     }
 
-    private fun getFetchResult(url: String, future: Future<FetchResult>, timeout: Duration): FetchResult {
+    private fun getFetchResult(task: FetchTask, future: Future<FetchResult>, timeout: Duration): FetchResult {
         // used only for failure
         val status: ProtocolStatus
         val headers = MultiMetadata()
@@ -357,7 +355,7 @@ class BrowserEmulatedFetcher(
             log.warn("Unexpected exception", e)
         }
 
-        return FetchResult(FetchTask.NIL, ForwardingResponse(url, "", status, headers))
+        return FetchResult(FetchTask.NIL, ForwardingResponse(task.url, "", status, headers))
     }
 
     private fun logLongTime(cx: BatchFetchContext) {

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
-class NoProxyException : Exception {
+class ProxyException : Exception {
 
     constructor() : super() {}
 

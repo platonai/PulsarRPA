@@ -79,8 +79,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     override fun poll(): ProxyEntry? {
         lastActiveTime = Instant.now()
 
-        if (numFreeProxies == 0) {
-            updateProxies(asap = true)
+        containerLock.withLock {
+            if (numFreeProxies == 0) {
+                updateProxies(asap = true)
+            }
         }
 
         var proxy: ProxyEntry? = null
@@ -179,13 +181,17 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
 
         val maxTry = 5
         var i = 0
-        while (i++ < maxTry && numFreeProxies < minFreeProxies) {
+        while (i++ < maxTry && numFreeProxies < minFreeProxies && !Thread.currentThread().isInterrupted) {
             providers.forEach {
                 syncProxiesFromProvider(it)
             }
 
             val seconds = if (asap || i > 0) 0L else 5L
             reloadProxies(Duration.ofSeconds(seconds))
+
+            try {
+                TimeUnit.SECONDS.sleep(3)
+            } catch (e: InterruptedException) {}
         }
     }
 
@@ -398,7 +404,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
 
         fun hasEnabledProvider(): Boolean {
             try {
-                return ENABLED_PROVIDER_DIR.toFile().listFiles()?.isNotEmpty()?:false
+                return Files.list(ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count() > 0
             } catch (e: IOException) {
                 log.error("Failed to list files in $ENABLED_PROVIDER_DIR", e)
             }

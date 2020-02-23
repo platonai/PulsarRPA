@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_H
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.net.browser.BatchHandler
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.proxy.ProxyConnector
+import ai.platon.pulsar.proxy.ProxyManager
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -55,7 +55,7 @@ open class WebAccess(
 
     init {
         System.setProperty(CapabilityTypes.PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5).toString())
-        i.context.getBean(ProxyConnector::class.java).let { it.showReport = true }
+        i.context.getBean(ProxyManager::class.java).let { it.verbose = true }
     }
 
     fun load(url: String, args: String) {

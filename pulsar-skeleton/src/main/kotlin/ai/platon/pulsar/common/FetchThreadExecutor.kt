@@ -10,40 +10,35 @@ import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.max
 
-class GlobalExecutor(conf: ImmutableConfig) : AutoCloseable {
-    val log = LoggerFactory.getLogger(GlobalExecutor::class.java)
+class FetchThreadExecutor(conf: ImmutableConfig) : AutoCloseable {
+    private val log = LoggerFactory.getLogger(FetchThreadExecutor::class.java)
 
     private var executor: ExecutorService? = null
     private val closed = AtomicBoolean(false)
-    private var autoConcurrencyFactor = conf.getFloat(CapabilityTypes.GLOBAL_EXECUTOR_AUTO_CONCURRENCY_FACTOR, 1f)
     private val threadFactory = ForkJoinWorkerThreadFactory { pool ->
         ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool).also { it.name = String.format("w%02d", it.poolIndex) }
     }
-    private val concurrencyHint = conf.getInt(CapabilityTypes.GLOBAL_EXECUTOR_CONCURRENCY_HINT, -1)
-    val concurrency = if (concurrencyHint > 0) concurrencyHint else max((AppConstants.NCPU * autoConcurrencyFactor).toInt(), 4)
+    val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
 
     init {
         Params.of(
                 "availableProcessors", AppConstants.NCPU,
-                "autoConcurrencyFactor", autoConcurrencyFactor,
-                "concurrencyHint", concurrencyHint,
                 "concurrency", concurrency
         ).withLogger(log).info(true)
     }
 
-    fun getExecutor(): ExecutorService {
-        synchronized(GlobalExecutor::class.java) {
+    fun <T> submit(task: () -> T): Future<T> {
+        return getOrCreate().submit(task)
+    }
+
+    private fun getOrCreate(): ExecutorService {
+        synchronized(FetchThreadExecutor::class.java) {
             if (executor == null) {
                 executor = newWorkStealingPool(concurrency)
             }
             return executor!!
         }
-    }
-
-    fun <T> submit(task: () -> T): Future<T> {
-        return getExecutor().submit(task)
     }
 
     /**

@@ -5,10 +5,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.proxy.ProxyConnector
+import ai.platon.pulsar.proxy.ProxyManager
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.math.roundToLong
 
 /**
@@ -20,11 +19,11 @@ import kotlin.math.roundToLong
 class RobustBrowserEmulator(
         browserControl: WebDriverControl,
         driverPool: WebDriverPool,
-        proxyConnector: ProxyConnector,
+        proxyManager: ProxyManager,
         fetchTaskTracker: FetchTaskTracker,
         metricsSystem: MetricsSystem,
         immutableConfig: ImmutableConfig
-): BrowserEmulator(browserControl, driverPool, proxyConnector, fetchTaskTracker, metricsSystem, immutableConfig) {
+): BrowserEmulator(browserControl, driverPool, proxyManager, fetchTaskTracker, metricsSystem, immutableConfig) {
     private val log = LoggerFactory.getLogger(RobustBrowserEmulator::class.java)!!
 
     private val SMALL_CONTENT_LIMIT = 1_000_000 / 2 // 500KiB
@@ -43,10 +42,11 @@ class RobustBrowserEmulator(
         var message = ""
 
         if (length == 0L) {
-            integrity = HtmlIntegrity.EMPTY_1
+            integrity = HtmlIntegrity.EMPTY_0B
         } else if (length == 39L) {
             // TODO: redirected to chrome-error://chromewebdata/, might be caused by proxy error, or proxy lost
-            integrity = HtmlIntegrity.EMPTY_2
+            // TODO: handled in BrowserErrorHandler
+            integrity = HtmlIntegrity.EMPTY_39B
         }
 
         // might be caused by web driver exception
@@ -62,7 +62,7 @@ class RobustBrowserEmulator(
             integrity = HtmlIntegrity.TOO_SMALL
             if (log.isTraceEnabled) {
                 val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "small", AppPaths.fromUri(url, "", ".htm"))
-                Files.createDirectories(path)
+                Files.createDirectories(path.parent)
                 Files.write(path, pageSource.toByteArray())
                 log.info("Write small page to file://$path")
             }

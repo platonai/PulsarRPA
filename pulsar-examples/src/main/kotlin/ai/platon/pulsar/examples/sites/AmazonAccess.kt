@@ -1,8 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
@@ -11,8 +9,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
-import java.nio.file.Files
-import java.util.concurrent.TimeUnit
 
 class AmazonAccess: WebAccess() {
     private val url = "https://www.amazon.com/"
@@ -111,7 +107,7 @@ class AmazonAccess: WebAccess() {
 
         val itemOptions = options.createItemOption()
         var j = 0
-        Lists.partition(links.shuffled(), 15).forEach { urls ->
+        Lists.partition(links.shuffled(), driverPool.capacity).forEach { urls ->
             log.info("----------------The ${++j}th batch in round ${round}-------------------------")
             loadAll(urls, itemOptions)
             driverPool.reset()
@@ -156,9 +152,7 @@ class AmazonAccess: WebAccess() {
 }
 
 fun main() {
-    val archiveDir = AppPaths.TMP_ARCHIVE_DIR.resolve(DateTimeUtil.now("MMdd.HHmm"))
-    Files.deleteIfExists(archiveDir)
-    Files.move(AppPaths.WEB_CACHE_DIR, archiveDir)
+    // System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
 
     AmazonAccess().use {
         // it.laptops()

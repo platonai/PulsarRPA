@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.files.ext.export
-import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.FetchComponent
@@ -24,7 +24,7 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.proxy.ProxyConnector
+import ai.platon.pulsar.proxy.ProxyManager
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.*
@@ -46,20 +46,34 @@ class FetchTask(
         val priority: Int,
         val page: WebPage,
         val volatileConfig: VolatileConfig
-) {
+): Comparable<FetchTask> {
     var batchSize: Int = 1
     var batchTaskId = 0
     val stat: BatchStat? = null
     var deleteAllCookies: Boolean = false
+    var clearLocalStorage: Boolean = false
     var closeBrowsers: Boolean = false
-    val incognito get() = deleteAllCookies && closeBrowsers
+    var incognito
+        get() = deleteAllCookies && closeBrowsers && clearLocalStorage
+        set(value) {
+            if (value) {
+                deleteAllCookies = true
+                clearLocalStorage = true
+                closeBrowsers = true
+            }
+        }
     var proxyEntry: ProxyEntry? = null
     var retries = 0
+    val canceled = AtomicBoolean()
 
     lateinit var response: Response
 
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
+
+    override fun compareTo(other: FetchTask): Int {
+        return url.compareTo(other.url)
+    }
 
     companion object {
         val NIL = FetchTask(0, 0, 0, WebPage.NIL, VolatileConfig.EMPTY)
@@ -71,23 +85,31 @@ class FetchResult(
         var response: Response
 )
 
+class BrowserStatus(
+        var status: ProtocolStatus,
+        var code: Int = 0
+)
+
 class BrowseResult(
         var response: Response? = null,
         var exception: Exception? = null,
         var driver: ManagedWebDriver? = null
 )
 
-class EmulateTask(
-        val url: String,
-        val driver: ManagedWebDriver,
-        val driverConfig: DriverConfig
-)
-
-data class VisitResult(
+class NavigateResult(
         var protocolStatus: ProtocolStatus,
         var activeDomMessage: ActiveDomMessage? = null,
         var state: FlowState = FlowState.CONTINUE
 )
+
+class EmulateTask(
+        val fetchTask: FetchTask,
+        val driverConfig: DriverConfig,
+        val driver: ManagedWebDriver
+) {
+    val url get() = fetchTask.url
+    val isCanceled get() = fetchTask.canceled.get()
+}
 
 /**
  * Created by vincent on 18-1-1.
@@ -98,7 +120,7 @@ data class VisitResult(
 open class BrowserEmulator(
         val browserControl: WebDriverControl,
         val driverPool: WebDriverPool,
-        protected val proxyConnector: ProxyConnector,
+        protected val proxyManager: ProxyManager,
         protected val fetchTaskTracker: FetchTaskTracker,
         protected val metricsSystem: MetricsSystem,
         protected val immutableConfig: ImmutableConfig
@@ -111,7 +133,7 @@ open class BrowserEmulator(
 
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    private val browserContext = BrowserContext(driverPool, proxyConnector, immutableConfig)
+    private val browserContext = BrowserEmulatorContext(driverPool, proxyManager, immutableConfig)
     private val brokenPages = Collections.synchronizedSet(HashSet<String>())
     private var brokenPageTrackTime = Instant.now()
     private val closed = AtomicBoolean(false)
@@ -135,32 +157,39 @@ open class BrowserEmulator(
         )
     }
 
+    /**
+     * Fetch a page using a real browser
+     *
+     * @param task The task to fetch
+     * @return The result of this fetch
+     * @throws IllegalStateException Throw if the browser is closed or the program is closed
+     * */
     @Throws(IllegalStateException::class)
     fun fetch(task: FetchTask): FetchResult {
         checkState()
 
         fetchTaskTracker.totalTaskCount.getAndIncrement()
         fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
-        val result = browserContext.run(task) { _, driver ->
-            browseWith(task, driver)
+        val result = browserContext.runWithProxy(task) { _, driver ->
+            browseWithDriver(task, driver)
         }
 
         val response = when {
             result.driver == null -> ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL))
             result.response != null -> result.response!!
             result.exception != null -> ForwardingResponse(task.url, ProtocolStatus.failed(result.exception))
-            else -> ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED)
+            else -> ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED) // unknown failure
         }
 
         return FetchResult(task, response)
     }
 
-    fun cancel(url: String) {
-        val driver = driverPool.cancel(url)
-        // TODO: stop js timers, e.g. FluentWait
+    fun cancel(task: FetchTask) {
+        task.canceled.set(true)
+        driverPool.cancel(task.url)
     }
 
-    protected open fun browseWith(task: FetchTask, driver: ManagedWebDriver): BrowseResult {
+    protected open fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): BrowseResult {
         checkState()
 
         var response: Response? = null
@@ -173,11 +202,12 @@ open class BrowserEmulator(
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
-        } catch (e: NoProxyException) {
+        } catch (e: ProxyException) {
+            // TODO: batch should be canceled if NoProxyException is thrown
             log.warn("No proxy, request is canceled | {}", task.url)
             response = ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            log.warn("Web driver is crashed - {}", StringUtil.simplifyException(e))
+            log.warn("Web driver session is closed - {}", StringUtil.simplifyException(e))
 
             driver.retire()
             exception = e
@@ -220,12 +250,14 @@ open class BrowserEmulator(
         val headers = MultiMetadata(Q_REQUEST_TIME, navigateTime.toEpochMilli().toString())
 
         var status: ProtocolStatus
+        var activeDomMessage: ActiveDomMessage? = null
         var pageSource = ""
 
         try {
             val result = navigateAndInteract(task, driver, driverConfig)
             status = result.protocolStatus
-            page.activeDomMultiStatus = result.activeDomMessage?.multiStatus
+            activeDomMessage = result.activeDomMessage
+            page.activeDomMultiStatus = activeDomMessage?.multiStatus
             pageSource = driver.pageSource
         } catch (e: org.openqa.selenium.ScriptTimeoutException) {
             // ignore script timeout, document might lost data, but it's the page extractor's responsibility
@@ -248,15 +280,21 @@ open class BrowserEmulator(
             status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
         }
 
-        // Check quality of the page source, throw an exception if content is broken
-        var integrity = HtmlIntegrity.OK
-        if (pageSource.isNotEmpty()) {
-            integrity = checkHtmlIntegrity(pageSource, page, status, task)
+        val browserStatus = checkBrowserStatus(page, status)
+        status = browserStatus.status
+        if (browserStatus.code != 0) {
+            pageSource = ""
+            val response = ForwardingResponse(page.url, pageSource, status, headers)
+            // Eager update required page status for callbacks
+            eagerUpdateWebPage(page, response, task.volatileConfig)
+            return response
         }
 
+        // Check quality of the page source, throw an exception if content is broken
+        val integrity = checkHtmlIntegrity(pageSource, page, status, task)
+
         // Check browse timeout event, transform status to be success if the page source is good
-        val timeoutStatus = arrayOf(ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.DOM_TIMEOUT)
-        if (status.minorCode in timeoutStatus) {
+        if (status.isTimeout) {
             if (integrity.isOK) {
                 // fetch timeout but content is OK
                 status = ProtocolStatus.STATUS_SUCCESS
@@ -283,17 +321,16 @@ open class BrowserEmulator(
 
         exportIfNecessary(pageSource, status, page, driver)
 
-        // TODO: collect response header
-        // TODO: fetch only the major pages, css, js, etc, ignore the rest resources, ignore external resources
+        // TODO: collect response header of main resource
 
         val response = ForwardingResponse(page.url, pageSource, status, headers)
         // Eager update required page status for callbacks
-        eagerUpdateWebPage(page, response, immutableConfig)
+        eagerUpdateWebPage(page, response, task.volatileConfig)
         return response
     }
 
     @Throws(ContextResetException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
-    private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: DriverConfig): VisitResult {
+    private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: DriverConfig): NavigateResult {
         checkState()
 
         val taskId = task.taskId
@@ -311,9 +348,13 @@ open class BrowserEmulator(
             )
         }
 
-        driver.setTimeouts(driverConfig)
-
         checkContextState(driver)
+        if (task.canceled.get()) {
+            // TODO: is it better to throw an exception?
+            return NavigateResult(ProtocolStatus.STATUS_CANCELED, null)
+        }
+
+        driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
 
@@ -321,29 +362,35 @@ open class BrowserEmulator(
         task.proxyEntry = driver.proxyEntry.get()
         driver.navigate(url)
 
-        return simulate(EmulateTask(url, driver, driverConfig))
+        return emulate(EmulateTask(task, driverConfig, driver))
     }
 
     @Throws(ContextResetException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
-    protected open fun simulate(emulateTask: EmulateTask): VisitResult {
-        val result = VisitResult(ProtocolStatus.STATUS_SUCCESS, null)
+    protected open fun emulate(task: EmulateTask): NavigateResult {
+        val result = NavigateResult(ProtocolStatus.STATUS_SUCCESS, null)
 
-        runJsAction(emulateTask, result) { jsCheckDOMState(emulateTask, result) }
+        runScriptTask(task, result) { jsCheckDOMState(task, result) }
 
         if (result.state.isContinue) {
-            runJsAction(emulateTask, result) { jsScrollDown(emulateTask, result) }
+            runScriptTask(task, result) { jsScrollDown(task, result) }
         }
 
         if (result.state.isContinue) {
-            runJsAction(emulateTask, result) { jsComputeFeature(emulateTask, result) }
+            runScriptTask(task, result) { jsComputeFeature(task, result) }
         }
 
         return result
     }
 
     @Throws(ContextResetException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
-    private fun runJsAction(task: EmulateTask, result: VisitResult, action: () -> Unit) {
+    private fun runScriptTask(task: EmulateTask, result: NavigateResult, action: () -> Unit) {
         checkState()
+        if (task.isCanceled) {
+            // TODO: is it better to throw an exeption?
+            result.protocolStatus = ProtocolStatus.STATUS_CANCELED
+            result.state = FlowState.BREAK
+            return
+        }
 
         var status: ProtocolStatus? = null
 
@@ -355,9 +402,9 @@ open class BrowserEmulator(
             status = ProtocolStatus.STATUS_CANCELED
             result.state = FlowState.BREAK
         } catch (e: NoSuchSessionException) {
-            log.warn("Session is closed")
-            status = ProtocolStatus.STATUS_CANCELED
+            // log.warn("Web driver session is closed, cancel the script task")
             result.state = FlowState.BREAK
+            throw e
         } catch (e: WebDriverException) {
             val message = StringUtil.stringifyException(e)
             when {
@@ -377,8 +424,9 @@ open class BrowserEmulator(
                     result.state = FlowState.BREAK
                 }
                 message.contains("Cannot read property") -> {
+                    // An error reported by chrome like this:
                     // unknown error: Cannot read property 'forEach' of null
-                    log.warn("Javascript exception | {} {}", task.url, StringUtil.simplifyException(e))
+                    log.warn("Javascript exception error | {} {}", task.url, StringUtil.simplifyException(e))
                     // ignore script errors, document might lost data, but it's the page extractor's responsibility
                     status = ProtocolStatus.STATUS_SUCCESS
                     result.state = FlowState.CONTINUE
@@ -395,7 +443,7 @@ open class BrowserEmulator(
         }
     }
 
-    protected open fun jsCheckDOMState(emulateTask: EmulateTask, result: VisitResult) {
+    protected open fun jsCheckDOMState(emulateTask: EmulateTask, result: NavigateResult) {
         checkState()
 
         var status = ProtocolStatus.STATUS_SUCCESS
@@ -409,30 +457,59 @@ open class BrowserEmulator(
 
         // make sure the document is ready
         val initialScroll = 5
-        val maxRound = pageLoadTimeout.seconds - 30 // leave 20 seconds to wait for script finish
+        val maxRound = pageLoadTimeout.seconds - 30 // leave 30 seconds to wait for script finish
 
         // TODO: wait for expected ni, na, nnum, nst, etc; required element
-        // val js = ";$libJs;return __utils__.waitForReady($maxRound, $initialScroll);"
         val expression = "__utils__.waitForReady($maxRound, $initialScroll)"
         checkContextState(emulateTask.driver)
 
         try {
-            val r = documentWait.until { emulateTask.driver.evaluate(expression) }
+            val message = documentWait.until { emulateTask.driver.evaluate(expression) }
 
-            if (r == "timeout") {
+            if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", emulateTask.url)
             } else {
-                log.trace("DOM is ready {} | {}", r, emulateTask.url)
+                if (message is String && message.contains("chrome-error://")) {
+                    // chrome redirected to a special error page chrome-error://
+
+                    val activeDomMessage = ActiveDomMessage.fromJson(message)
+                    status = if (activeDomMessage.multiStatus?.status?.ec == "ERR_CONNECTION_TIMED_OUT") {
+                        // chrome can not connect to the peer, it might be caused by a bad proxy
+                        ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT)
+                    } else {
+                        // unhandled exception
+                        ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERROR)
+                    }
+
+                    result.activeDomMessage = activeDomMessage
+                    result.state = FlowState.BREAK
+                } else {
+                    log.trace("DOM is ready {} | {}", message, emulateTask.url)
+                }
             }
         } catch (e: org.openqa.selenium.TimeoutException) {
             log.trace("DOM is timeout ({}) | {}", pageLoadTimeout, emulateTask.url)
             status = ProtocolStatus.failed(ProtocolStatusCodes.DOM_TIMEOUT)
         }
 
+        // Test context reset automatically
+        // Reset the browser context and proxy only when the proxy is not usable
+        var simulateError = false
+        if (simulateError && emulateTask.fetchTask.batchSize > 0) {
+            val rand = Random.nextInt()
+            simulateError = rand % 3 == 0
+            if (simulateError) {
+                log.warn("Simulate connection time out")
+
+                status = ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT)
+                result.state = FlowState.BREAK
+            }
+        }
+
         result.protocolStatus = status
     }
 
-    protected open fun jsScrollDown(emulateTask: EmulateTask, result: VisitResult) {
+    protected open fun jsScrollDown(emulateTask: EmulateTask, result: NavigateResult) {
         checkState()
 
         val random = Random(System.currentTimeMillis())
@@ -451,12 +528,11 @@ open class BrowserEmulator(
         } catch (ignored: org.openqa.selenium.TimeoutException) {}
     }
 
-    protected open fun jsComputeFeature(emulateTask: EmulateTask, result: VisitResult) {
+    protected open fun jsComputeFeature(emulateTask: EmulateTask, result: NavigateResult) {
         checkState()
 
         // TODO: check if the js is injected times, libJs is already injected
         checkContextState(emulateTask.driver)
-        // val message = simulateTask.driver.executeScript(clientJs)
         val message = emulateTask.driver.evaluate("__utils__.emulate()")
 
         if (message is String) {
@@ -492,6 +568,24 @@ open class BrowserEmulator(
         }
 
         return ""
+    }
+
+    protected open fun checkBrowserStatus(page: WebPage, status: ProtocolStatus): BrowserStatus {
+        val browserStatus = BrowserStatus(status, 0)
+        if (status.minorCode == ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT) {
+            // The browser can not connect to remote peer, it must be caused by the bad proxy ip
+            // It might be fixed by changing the proxy ip
+            // buggy
+            // log.warn("Connection timed out in browser, resetting the browser context")
+            // status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
+            browserStatus.status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+            browserStatus.code = status.minorCode
+        } else if (status.minorCode == ProtocolStatusCodes.BROWSER_ERROR) {
+            browserStatus.status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+            browserStatus.code = status.minorCode
+        }
+
+        return browserStatus
     }
 
     protected open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
@@ -632,7 +726,7 @@ open class BrowserEmulator(
             scrollDownWait = pageLoadTimeout
         }
 
-        // TODO: handle proxy
+        // TODO: handle proxy here
 
         return DriverConfig(pageLoadTimeout, scriptTimeout, scrollDownCount, scrollDownWait)
     }

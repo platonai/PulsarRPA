@@ -263,7 +263,7 @@ class FetchMonitor(
     private fun startFetchThreads(threadCount: Int, context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         var nThreads = threadCount
         if (nThreads <= 0) {
-            nThreads = AppConstants.NCPU
+            nThreads = AppConstants.FETCH_THREADS
         }
 
         for (i in 0 until nThreads) {
@@ -335,7 +335,7 @@ class FetchMonitor(
             }
 
             /*
-             * Read local file for control commands
+             * Read local file commands
              * */
             if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
                 handleFinishJobCommand()

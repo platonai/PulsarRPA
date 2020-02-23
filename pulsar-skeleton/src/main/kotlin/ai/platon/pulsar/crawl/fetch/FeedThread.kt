@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.ReducerContext
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -29,7 +30,7 @@ class FeedThread(
 
     private val id = instanceSequence.incrementAndGet()
     private val checkInterval = Duration.ofSeconds(2)
-    private var fetchThreads = conf.getUint(FETCH_THREADS_FETCH, 10)!!
+    private var fetchThreads = conf.getUint(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)!!
     private val fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofMinutes(30))
     private var jobDeadline = Instant.now().plus(fetchJobTimeout)
     private var initBatchSize = conf.getUint(FETCH_FEEDER_INIT_BATCH_SIZE, fetchThreads)!!

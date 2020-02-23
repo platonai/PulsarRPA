@@ -85,7 +85,6 @@ open class FetchComponent(
      * Fetch a page
      *
      * @param page The page to fetch
-     * If response is null, block and wait for a response
      * @return The fetch result
      */
     protected fun fetchContentInternal(page: WebPage): WebPage {

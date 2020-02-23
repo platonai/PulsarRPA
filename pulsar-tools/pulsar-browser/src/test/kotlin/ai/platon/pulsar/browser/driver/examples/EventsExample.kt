@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver.chrome.examples
+package ai.platon.pulsar.browser.driver.examples
 
 import com.google.gson.Gson
 

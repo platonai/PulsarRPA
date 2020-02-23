@@ -11,7 +11,8 @@ data class ActiveDomStatus(
         val scroll: Int = 0,
         val st: String = "",
         val r: String = "",
-        val idl: String = ""
+        val idl: String = "",
+        val ec: String = ""
 )
 
 data class ActiveDomStat(

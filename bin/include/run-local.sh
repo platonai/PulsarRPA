@@ -43,7 +43,7 @@ PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dpulsar.root.logger=${PULSAR_ROOT_LOGGER:-INF
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dlogging.dir=$PULSAR_LOG_DIR")
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dlogging.file=$PULSAR_LOGFILE")
 
-PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dglobal.executor.concurrency=${GLOBAL_EXECUTOR_CONCURRENCY:-1}")
+PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dfetch.concurrency=${FETCH_THREADS:-5}")
 
 if [[ $DRY_RUN == "1" ]]; then
     PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dpulsar.dry.run=1")
@@ -61,12 +61,13 @@ JAVA="$JAVA_HOME/bin/java"
 # EXEC_CALL=("$JAVA" -Dproc_"$COMMAND" "-XX:OnOutOfMemoryError=\"kill -9 %p\"" "$JAVA_HEAP_MAX" "${PULSAR_OPTS[@]}")
 EXEC_CALL=("$JAVA" -Dproc_"$COMMAND" "${PULSAR_OPTS[@]}")
 
+VERSION=$("${PULSAR_HOME}"/bin/version)
 MESSAGES=(
 "============ Pulsar Runtime ================"
 "\n$(date)"
 "\nCommand: $COMMAND"
 "\nHostname: $(hostname)"
-"\nVersion: " $("${PULSAR_HOME}"/bin/version)
+"\nVersion: $VERSION"
 "\nConfiguration directories: $PULSAR_CONF_DIR <= $PULSAR_PRIME_CONF_DIR, $PULSAR_EXTRA_CONF_DIR"
 "\nWorking directory: $(pwd)"
 "\nPulsar home: " "$PULSAR_HOME"
