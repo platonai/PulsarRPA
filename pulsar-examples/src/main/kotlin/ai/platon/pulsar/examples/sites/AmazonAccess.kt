@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.net.browser.BrowserPrivacyContext
 import ai.platon.pulsar.net.browser.WebDriverPool
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
@@ -15,7 +16,8 @@ class AmazonAccess: WebAccess() {
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
     private var round = 0
     private var numTotalPages = 0
-    private val driverPool = i.context.getBean(WebDriverPool::class.java)
+    private val privacyContext = i.context.getBean(BrowserPrivacyContext::class.java)
+    private val batchSize = privacyContext.driverPool.capacity
 
     init {
 //        driverPool.imagesEnabled = false
@@ -76,7 +78,7 @@ class AmazonAccess: WebAccess() {
 
         log.info("\n\n\n--------------------------\nRound ${++round} $portalUrl")
 
-        val args = "-i 1s -ii 1s -ol \"a[href~=/dp/]\""
+        val args = "-i 1d -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
         var portalPage = i.load(portalUrl, options)
 //        while (portalPage.htmlIntegrity.isNotOK) {
@@ -100,17 +102,22 @@ class AmazonAccess: WebAccess() {
 
         if (links.isEmpty()) {
             log.info("Warning: No links")
-            val link = AppPaths.symbolicLinkFromUri(portalPage.url)
+            val link = AppPaths.uniqueSymbolicLinkForURI(portalPage.url)
             log.info("file://$link")
             log.info("Page details: \n" + WebPageFormatter(portalPage))
+
+            if (portalPage.crawlStatus.isUnFetched) {
+                // privacyContext.reset()
+            }
+
+            return
         }
 
         val itemOptions = options.createItemOption()
         var j = 0
-        Lists.partition(links.shuffled(), driverPool.capacity).forEach { urls ->
+        Lists.partition(links.shuffled(), batchSize).forEach { urls ->
             log.info("----------------The ${++j}th batch in round ${round}-------------------------")
             loadAll(urls, itemOptions)
-            driverPool.reset()
         }
     }
 
@@ -144,10 +151,12 @@ class AmazonAccess: WebAccess() {
         if (shortLengths.size > 0.5 * lengths.size) {
             val bannedIps = pages.filter { it.contentBytes < 1e6 }
                     .mapNotNullTo(HashSet()) { it.metadata[Name.PROXY] }.joinToString { it }
-            log.info("Ip banned after $numTotalPages pages")
-            log.info("Ips banned: $bannedIps")
+            log.info("Ip banned after $numTotalPages pages, privacy context reset is required. Ips banned: $bannedIps")
+
+            // Reset the context only when the extraction result is not as good as expected
+            numTotalPages = 0
+            // privacyContext.reset()
         }
-        // TODO: re-fetch all broken pages
     }
 }
 

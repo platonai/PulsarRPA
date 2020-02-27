@@ -36,7 +36,8 @@ function printUsage() {
 }
 
 MODULE=
-FETCH_THREADS=5
+# the default number of fetch thread is the number of cpu cores
+FETCH_THREADS=$(nproc)
 while [[ $# -gt 0 ]]
 do
 case $1 in

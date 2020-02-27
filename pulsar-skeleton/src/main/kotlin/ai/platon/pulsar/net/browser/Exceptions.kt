@@ -2,21 +2,16 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.persist.ProtocolStatus
 
-class ContextResetException: Exception {
-    var sponsorThreadId = 0L
-
+class CancellationException: Exception {
     constructor() : super() {}
 
-    constructor(sponsorThreadId: Long, message: String) : super(message) {
-        this.sponsorThreadId = sponsorThreadId
+    constructor(message: String) : super(message) {
     }
 
-    constructor(sponsorThreadId: Long, message: String, cause: Throwable) : super(message, cause) {
-        this.sponsorThreadId = sponsorThreadId
+    constructor(message: String, cause: Throwable) : super(message, cause) {
     }
 
-    constructor(sponsorThreadId: Long, cause: Throwable) : super(cause) {
-        this.sponsorThreadId = sponsorThreadId
+    constructor(cause: Throwable) : super(cause) {
     }
 }
 

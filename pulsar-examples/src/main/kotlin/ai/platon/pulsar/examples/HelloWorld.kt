@@ -1,12 +1,16 @@
 package ai.platon.pulsar.examples
 
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.RequiredDirectory
 import ai.platon.pulsar.common.isBlankBody
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.reflect.full.declaredMembers
+import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.memberProperties
 
 fun main() {
-//    val html = Files.readString(Paths.get("/tmp/ln/4f1cac6cb70d8087f9c2599a67c55853.htm"))
-    val html = "....<body></body>...."
-    val b = isBlankBody(html)
-    println(b)
+    AppPaths::class.java.declaredFields.filter { it.annotations.any { it is RequiredDirectory } }.mapNotNull { it.get(AppPaths) as? Path }
+            .forEach { println(it) }
 }

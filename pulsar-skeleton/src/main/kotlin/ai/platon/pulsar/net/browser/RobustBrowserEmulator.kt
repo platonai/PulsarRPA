@@ -17,20 +17,20 @@ import kotlin.math.roundToLong
  * Note: SeleniumEngine should be process scope
  */
 class RobustBrowserEmulator(
-        browserControl: WebDriverControl,
-        driverPool: WebDriverPool,
-        proxyManager: ProxyManager,
+        privacyContext: BrowserPrivacyContext,
         fetchTaskTracker: FetchTaskTracker,
         metricsSystem: MetricsSystem,
         immutableConfig: ImmutableConfig
-): BrowserEmulator(browserControl, driverPool, proxyManager, fetchTaskTracker, metricsSystem, immutableConfig) {
+): BrowserEmulator(privacyContext, fetchTaskTracker, metricsSystem, immutableConfig) {
+    companion object {
+        private const val SMALL_CONTENT_LIMIT = 1_000_000 / 2 // 500KiB
+    }
+
     private val log = LoggerFactory.getLogger(RobustBrowserEmulator::class.java)!!
 
-    private val SMALL_CONTENT_LIMIT = 1_000_000 / 2 // 500KiB
-
     /**
-     * Check if the html is integral without field extraction, a further html integrity checking can be applied after field
-     * extraction.
+     * Check if the html is integral without field extraction, a further html integrity checking can be
+     * applied after field extraction.
      * */
     override fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
         val url = page.url
@@ -44,8 +44,6 @@ class RobustBrowserEmulator(
         if (length == 0L) {
             integrity = HtmlIntegrity.EMPTY_0B
         } else if (length == 39L) {
-            // TODO: redirected to chrome-error://chromewebdata/, might be caused by proxy error, or proxy lost
-            // TODO: handled in BrowserErrorHandler
             integrity = HtmlIntegrity.EMPTY_39B
         }
 
@@ -131,9 +129,9 @@ class RobustBrowserEmulator(
 
     private fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
         val p1 = pageSource.indexOf("<body")
-        if (p1 <= 0) return HtmlIntegrity.NO_BODY_START
+        if (p1 <= 0) return HtmlIntegrity.OTHER
         val p2 = pageSource.indexOf(">", p1)
-        if (p2 < p1) return HtmlIntegrity.NO_BODY_END
+        if (p2 < p1) return HtmlIntegrity.OTHER
         // no any link, it's broken
         val p3 = pageSource.indexOf("<a", p2)
         if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
@@ -143,7 +141,7 @@ class RobustBrowserEmulator(
         // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
         val r = bodyTag.contains("data-error=\"0\"")
         if (!r) {
-            return HtmlIntegrity.NO_JS_OK
+            return HtmlIntegrity.NO_JS_OK_FLAG
         }
 
         return HtmlIntegrity.OK
@@ -152,7 +150,7 @@ class RobustBrowserEmulator(
     private fun logIncompleteContentPage(task: FetchTask, message: String) {
         val proxyEntry = task.proxyEntry
         val domain = task.domain
-        val link = AppPaths.symbolicLinkFromUri(task.url)
+        val link = AppPaths.uniqueSymbolicLinkForURI(task.url)
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)

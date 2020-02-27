@@ -157,7 +157,7 @@ open class FetchComponent(
                 page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
             }
             ProtocolStatus.RETRY, ProtocolStatus.BLOCKED -> updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
-            ProtocolStatus.REQUEST_TIMEOUT, ProtocolStatus.THREAD_TIMEOUT, ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.DOM_TIMEOUT -> {
+            ProtocolStatus.REQUEST_TIMEOUT, ProtocolStatus.THREAD_TIMEOUT, ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.SCRIPT_TIMEOUT -> {
                 fetchTaskTracker.trackTimeout(url)
                 updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
             }

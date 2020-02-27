@@ -713,7 +713,7 @@ __utils__.generateMetadata = function() {
 /**
  * Calculate visualization info and do human actions
  * */
-__utils__.emulate = function() {
+__utils__.compute = function() {
     if (!document.body || !document.body.firstChild) {
         return
     }
@@ -736,6 +736,7 @@ __utils__.emulate = function() {
     // do something like a human being
     // humanize(document.body);
 
+    // remove temporary flags
     document.body.forEachElement(ele => {
         ele.removeAttribute("_ps_tp")
     });
@@ -752,7 +753,7 @@ __utils__.emulate = function() {
 };
 
 /**
- * Get return a + b
+ * Return a + b
  *
  * @param a {Number}
  * @param b {Number}

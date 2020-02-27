@@ -73,7 +73,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(CANCELED, "canceled");
         minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
         minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
-        minorCodes.put(DOM_TIMEOUT, "dom_timeout");
+        minorCodes.put(SCRIPT_TIMEOUT, "script_timeout");
     }
 
     private GProtocolStatus protocolStatus;
@@ -192,7 +192,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public boolean isTimeout() {
         int code = getMinorCode();
-        return code == REQUEST_TIMEOUT || code == THREAD_TIMEOUT || code == WEB_DRIVER_TIMEOUT || code == DOM_TIMEOUT;
+        return code == REQUEST_TIMEOUT || code == THREAD_TIMEOUT || code == WEB_DRIVER_TIMEOUT || code == SCRIPT_TIMEOUT;
     }
 
     public String getMajorName() {
@@ -211,6 +211,9 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMinorName(getMinorCode());
     }
 
+    /**
+     * The detailed status code of the protocol, it must be compatible with standard http response code
+     * */
     public int getMinorCode() {
         return protocolStatus.getMinorCode();
     }

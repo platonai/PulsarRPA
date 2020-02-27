@@ -2,7 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.net.browser.BrowserEmulatorContext
+import ai.platon.pulsar.net.browser.BrowserPrivacyContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
@@ -16,7 +16,7 @@ interface ContextResettable {
 }
 
 /**
- * Test the condition with throw program model, this model is used by [BrowserEmulatorContext]
+ * Test the condition with throw program model, this model is used by [BrowserPrivacyContext]
  * */
 class ContextResettableRunner(val immutableConfig: ImmutableConfig, val contextRestorer: () -> Unit = {}) {
     private val log = LoggerFactory.getLogger(ContextResettableRunner::class.java)!!

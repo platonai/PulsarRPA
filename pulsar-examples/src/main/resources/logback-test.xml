@@ -28,13 +28,11 @@
     <logger name="ai.platon.pulsar" level="DEBUG" />
     <logger name="ai.platon.pulsar.ql" level="DEBUG" />
     <logger name="ai.platon.pulsar.net" level="DEBUG" />
-    <logger name="ai.platon.pulsar.net.browser" level="DEBUG" />
+    <logger name="ai.platon.pulsar.net.browser" level="TRACE" />
     <logger name="ai.platon.pulsar.proxy" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.component" level="DEBUG" />
     <logger name="ai.platon.pulsar.crawl.protocol" level="DEBUG" />
-
-    <logger name="ai.platon.pulsar.browser" level="WARN" />
 
     <logger name="ai.platon.pulsar.parse.html" level="DEBUG" />
 

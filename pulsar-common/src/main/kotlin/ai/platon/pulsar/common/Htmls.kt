@@ -17,7 +17,8 @@ enum class HtmlIntegrity {
     EMPTY_0B,  // no character at all
     EMPTY_39B, // <html><head></head><body></body></html> and blanks
     EMPTY_BODY, // ...<body></body>...
-    NO_BODY_START, NO_BODY_END, NO_ANCHOR, NO_JS_OK,
+    NO_ANCHOR,
+    NO_JS_OK_FLAG,
     ROBOT_CHECK,
     TOO_SMALL,
     TOO_SMALL_IN_HISTORY,
@@ -27,8 +28,10 @@ enum class HtmlIntegrity {
     val isOK: Boolean get() = this == OK
     val isNotOK: Boolean get() = !isOK
 
-    val isEmpty: Boolean get() = this == EMPTY_0B || this == EMPTY_39B
+    val isEmpty: Boolean get() = this == EMPTY_0B || this == EMPTY_39B || this == EMPTY_BODY
     val isNotEmpty: Boolean get() = !isEmpty
+
+    val isBanned: Boolean get() = this == ROBOT_CHECK
 
     companion object {
         fun fromString(s: String?): HtmlIntegrity {

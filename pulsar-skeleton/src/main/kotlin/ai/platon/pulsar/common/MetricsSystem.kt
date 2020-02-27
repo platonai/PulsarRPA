@@ -403,7 +403,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
             val fieldFmt = if (numFields == 0) "%s" else "%-3s"
             val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt c:%-4d | %s"
-            val link = AppPaths.symbolicLinkFromUri(page.url)
+            val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
             val url = if (redirected) page.location else page.url
             val readableUrl = if (redirected) "[R] $url" else url
             val readableLinks = if (verbose) "file://$link | $readableUrl" else readableUrl

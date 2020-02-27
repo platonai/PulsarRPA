@@ -32,15 +32,7 @@ class CommandInvocationHandler: InvocationHandler {
         val returnType = method.returnType
         val returnTypeClasses = method.getAnnotation(ReturnTypeParameter::class.java)
                 ?.value?.map { it.java }?.toTypedArray()
-//        val returnTypeParameter = method.getAnnotation(ReturnTypeParameter::class.java)
-//        if (returnTypeParameter != null) {
-//            returnTypeClasses = returnTypeParameter.value
-//        }
         val returnProperty = method.getAnnotation(Returns::class.java)?.value
-//        val returnsAnnotation = method.getAnnotation(Returns::class.java)
-//        if (returnsAnnotation != null) {
-//            returnProperty = returnsAnnotation.value
-//        }
         val methodInvocation = createMethodInvocation(method, args)
         return chromeDevToolsService.invoke(returnProperty, returnType, returnTypeClasses, methodInvocation)
     }
@@ -80,6 +72,9 @@ class CommandInvocationHandler: InvocationHandler {
         val name = method.name
         val parameters = method.parameters
         return (name.startsWith(EVENT_LISTENER_PREFIX)
-                && EventListener::class.java == method.returnType && parameters != null && parameters.size == 1 && EventHandler::class.java.isAssignableFrom(parameters[0].type))
+                && EventListener::class.java == method.returnType
+                && parameters != null
+                && parameters.size == 1
+                && EventHandler::class.java.isAssignableFrom(parameters[0].type))
     }
 }

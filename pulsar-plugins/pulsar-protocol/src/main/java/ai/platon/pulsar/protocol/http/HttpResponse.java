@@ -19,8 +19,8 @@ package ai.platon.pulsar.protocol.http;
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.proxy.NoProxyException;
 import ai.platon.pulsar.common.proxy.ProxyEntry;
+import ai.platon.pulsar.common.proxy.ProxyException;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
@@ -55,7 +55,7 @@ public class HttpResponse implements Response {
     private byte[] content;
     private int code;
 
-    public HttpResponse(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, NoProxyException {
+    public HttpResponse(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, ProxyException {
         this.http = http;
         this.url = url;
 
@@ -106,7 +106,7 @@ public class HttpResponse implements Response {
             if (http.useProxyPool()) {
                 proxy = http.proxyPool().poll();
                 if (proxy == null) {
-                    throw new NoProxyException("proxy pool exhausted");
+                    throw new ProxyException("proxy pool exhausted");
                 }
 
                 sockHost = proxy.getHost();
@@ -262,7 +262,7 @@ public class HttpResponse implements Response {
     }
 
     @Override
-    public int getCode() {
+    public int getHttpCode() {
         return code;
     }
 

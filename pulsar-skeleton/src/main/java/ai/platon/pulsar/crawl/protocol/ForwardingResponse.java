@@ -65,8 +65,11 @@ public class ForwardingResponse implements Response {
         return status;
     }
 
+    /**
+     * The protocol's response code, it must be compatible with standard http response code
+     * */
     @Override
-    public int getCode() {
+    public int getHttpCode() {
         return status.getMinorCode();
     }
 

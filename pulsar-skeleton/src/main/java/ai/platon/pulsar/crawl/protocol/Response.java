@@ -34,8 +34,8 @@ public interface Response {
     /** The protocol's response status, with transform. */
     ProtocolStatus getStatus();
 
-    /** The protocol's response code, without transform. */
-    int getCode();
+    /** The protocol's response code, it must be compatible with standard http response code */
+    int getHttpCode();
 
     /** The value of a named header. */
     String getHeader(String name);

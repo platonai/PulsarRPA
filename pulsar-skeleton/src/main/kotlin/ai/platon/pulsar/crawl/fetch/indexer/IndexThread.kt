@@ -25,7 +25,7 @@ class IndexThread(
         this.id = instanceSequence.incrementAndGet()
 
         this.isDaemon = true
-        this.name = "IndexThread-$id"
+        this.name = "Indexer-$id"
     }
 
     fun halt() {

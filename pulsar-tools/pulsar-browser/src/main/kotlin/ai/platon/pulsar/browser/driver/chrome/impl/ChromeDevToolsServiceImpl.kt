@@ -11,15 +11,14 @@ import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
 import org.slf4j.LoggerFactory
 import java.io.IOException
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.Lock
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
+import kotlin.concurrent.withLock
 
 private class InvocationResult(val returnProperty: String? = null) {
     var result: JsonNode? = null
@@ -68,18 +67,16 @@ abstract class ChromeDevToolsServiceImpl(
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    var chromeTab: ChromeTab? = null
     var chromeService: ChromeService? = null
 
     private val eventExecutorService = configuration.eventExecutorService
     private val invocationResultMap: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
     private val eventNameToHandlersMap: MutableMap<String, MutableSet<EventListenerImpl>> = mutableMapOf()
-    private val numRunningEvents = AtomicInteger()
-    private val pollingTimeout = Duration.ofMillis(100)
-    private val eventLock = ReentrantLock()
-    private val noRunningEvent = eventLock.newCondition()
+    private val lock = ReentrantLock() // lock for containers
+    private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
-    private val isClosed get() = closeLatch.count == 0L
+    private val closed = AtomicBoolean()
+    private val isClosed get() = closed.get()
 
     init {
         webSocketService.addMessageHandler(this)
@@ -95,27 +92,38 @@ abstract class ChromeDevToolsServiceImpl(
             returnTypeClasses: Array<Class<out Any>>?,
             methodInvocation: MethodInvocation
     ): T? {
-        try {
-            val invocationResult = InvocationResult(returnProperty)
+        if (isClosed) {
+            return null
+        }
 
-            invocationResultMap[methodInvocation.id] = invocationResult
+        try {
+            val result = InvocationResult(returnProperty)
+
+            invocationResultMap[methodInvocation.id] = result
             webSocketService.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
-            val hasReceivedResponse = invocationResult.waitForResult(configuration.readTimeout.seconds, TimeUnit.SECONDS)
+            val responded = result.waitForResult(configuration.readTimeout.seconds, TimeUnit.SECONDS)
             invocationResultMap.remove(methodInvocation.id)
-            if (!hasReceivedResponse) {
+
+            lock.withLock {
+                if (invocationResultMap.isEmpty()) {
+                    notBusy.signalAll()
+                }
+            }
+
+            if (!responded) {
                 throw ChromeDevToolsInvocationException("Timeout to wait for response")
             }
 
-            if (invocationResult.isSuccess) {
+            if (result.isSuccess) {
                 return when {
                     Void.TYPE == clazz -> null
-                    returnTypeClasses != null -> readJsonObject(returnTypeClasses, clazz, invocationResult.result)
-                    else -> readJsonObject(clazz, invocationResult.result)
+                    returnTypeClasses != null -> readJsonObject(returnTypeClasses, clazz, result.result)
+                    else -> readJsonObject(clazz, result.result)
                 }
             }
 
             // Received a error
-            val error = readJsonObject(ErrorObject::class.java, invocationResult.result)
+            val error = readJsonObject(ErrorObject::class.java, result.result)
             val errorMessageBuilder = StringBuilder(error.message)
             if (error.data != null) {
                 errorMessageBuilder.append(": ")
@@ -153,22 +161,22 @@ abstract class ChromeDevToolsServiceImpl(
             val idNode = jsonNode.get(ID_PROPERTY)
             if (idNode != null) {
                 val id = idNode.asLong()
-                val invocationResult = invocationResultMap[id]
-                if (invocationResult != null) {
+                val result = invocationResultMap[id]
+                if (result != null) {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)
                     if (errorNode != null) {
-                        invocationResult.signalResultReady(false, errorNode)
+                        result.signalResultReady(false, errorNode)
                     } else {
-                        if (invocationResult.returnProperty != null) {
+                        if (result.returnProperty != null) {
                             if (resultNode != null) {
-                                resultNode = resultNode.get(invocationResult.returnProperty)
+                                resultNode = resultNode.get(result.returnProperty)
                             }
                         }
                         if (resultNode != null) {
-                            invocationResult.signalResultReady(true, resultNode)
+                            result.signalResultReady(true, resultNode)
                         } else {
-                            invocationResult.signalResultReady(true, null)
+                            result.signalResultReady(true, null)
                         }
                     }
                 } else {
@@ -195,10 +203,17 @@ abstract class ChromeDevToolsServiceImpl(
     }
 
     override fun close() {
-        if (!isClosed) {
-            webSocketService.close()
-            chromeService?.close()
-            eventExecutorService.shutdown()
+        if (closed.compareAndSet(false, true)) {
+            lock.withLock {
+                if (invocationResultMap.isNotEmpty()) {
+                    notBusy.await(5, TimeUnit.SECONDS)
+                }
+            }
+
+            chromeService?.use { it.close() }
+            eventExecutorService.use { it.close() }
+            webSocketService.use { it.close() }
+
             closeLatch.countDown()
         }
     }

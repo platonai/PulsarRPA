@@ -22,6 +22,7 @@ enum class ProxyType {
 data class ProxyEntry(
         var host: String,
         var port: Int = 0,
+        var id: Int = instanceSequence.incrementAndGet(),
         var proxyType: ProxyType = ProxyType.HTTP, // reserved
         var user: String? = null,
         var pwd: String? = null,
@@ -29,7 +30,7 @@ data class ProxyEntry(
         var targetHost: String? = null
 ) : Comparable<ProxyEntry> {
     val hostPort get() = "$host:$port"
-    val display get() = "$host:$port" + ttlDuration?.let { "(${DateTimeUtil.readableDuration(it)})" }
+    val display get() = formatDisplay()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val testCount = AtomicInteger()
     val testTime = AtomicLong()
@@ -110,6 +111,9 @@ data class ProxyEntry(
         return other is ProxyEntry && other.proxyType == proxyType && other.host == host && other.port == port
     }
 
+    /**
+     * The string representation can be parsed using [parse]
+     * */
     override fun toString(): String {
         val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
         return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed"
@@ -119,9 +123,15 @@ data class ProxyEntry(
         return hostPort.compareTo(other.hostPort)
     }
 
+    private fun formatDisplay() {
+        val ttlStr = ttlDuration?.let { DateTimeUtil.readableDuration(ttlDuration) }?:"0s"
+        "$host:$port($failedPageCount/$successPageCount/$ttlStr)"
+    }
+
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPool::class.java)
 
+        private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
         private const val IP_PORT_REGEX = "^((25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1?\\d?\\d)(:[0-9]{2,5})"
         private val IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX)

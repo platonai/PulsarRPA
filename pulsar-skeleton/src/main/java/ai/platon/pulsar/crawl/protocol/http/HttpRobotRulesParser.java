@@ -94,7 +94,7 @@ public class HttpRobotRulesParser extends RobotRulesParser {
                 Response response = ((AbstractHttpProtocol) http).getResponse(new URL(url, "/robots.txt").toString(),
                         WebPage.newWebPage(url.toString()), true);
                 // try one level of redirection ?
-                if (response.getCode() == 301 || response.getCode() == 302) {
+                if (response.getHttpCode() == 301 || response.getHttpCode() == 302) {
                     String redirection = response.getHeader("Location");
                     if (redirection == null) {
                         // some versions of MS IIS are known to mangle this header
@@ -112,13 +112,13 @@ public class HttpRobotRulesParser extends RobotRulesParser {
                     }
                 }
 
-                if (response.getCode() == 200) // found rules: parse them
+                if (response.getHttpCode() == 200) // found rules: parse them
                     robotRules = parseRules(url.toString(), response.getContent(),
                             response.getHeader("Content-Type"), agentNames);
 
-                else if ((response.getCode() == 403) && (!allowForbidden))
+                else if ((response.getHttpCode() == 403) && (!allowForbidden))
                     robotRules = FORBID_ALL_RULES; // use forbid all
-                else if (response.getCode() >= 500) {
+                else if (response.getHttpCode() >= 500) {
                     cacheRule = false;
                     robotRules = EMPTY_RULES;
                 } else

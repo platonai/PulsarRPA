@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.data.PoolId
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -17,62 +18,60 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.HashMap
 
 /**
  * This class picks items from queues and fetches the pages.
  */
 class FetchThread(
-        private val fetchComponent: FetchComponent,
         private val fetchMonitor: FetchMonitor,
+        private val fetchComponent: FetchComponent,
         private val taskScheduler: TaskScheduler,
         immutableConfig: ImmutableConfig,
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>
 ): Thread(), Comparable<FetchThread> {
+    companion object {
+        private val instanceSequence = AtomicInteger(0)
+        val pendingTasks = Collections.synchronizedMap(HashMap<Int, WebPage>())
+    }
 
     private val log = LoggerFactory.getLogger(FetchThread::class.java)
 
     private val id = instanceSequence.incrementAndGet()
-
     /**
      * Fix the thread to a specified queue as possible as we can
      */
     private var currPoolId: PoolId? = null
-    private val halted = AtomicBoolean(false)
     private val servedPoolIds = TreeSet<PoolId>()
     private var taskCount = 0
-
-    val isHalted: Boolean
-        get() = halted.get()
+    private val closed = AtomicBoolean(false)
+    private val tasksMonitor = taskScheduler.tasksMonitor
 
     init {
         this.isDaemon = true
-        this.name = "w$id"
+        this.name = "w$id" // w is short for worker
     }
 
-    fun halt() {
-        halted.set(true)
-    }
-
-    fun exitAndJoin() {
-        halted.set(true)
-        try {
+    fun exit() {
+        if (closed.compareAndSet(false, true)) {
+            interrupt()
             join()
-        } catch (e: InterruptedException) {
-            log.error(e.toString())
         }
     }
 
     override fun run() {
         fetchMonitor.registerFetchThread(this)
 
+
         var task: FetchTask? = null
 
         try {
-            while (!fetchMonitor.isMissionComplete && !isHalted) {
-                task = doSchedule()
+            while (!fetchMonitor.isMissionComplete && !closed.get() && !interrupted()) {
+                task = schedule()
 
+                // TODO: block in schedule
                 if (task == null) {
-                    sleepAndRecordIdleThread()
+                    sleep()
                     continue
                 }
 
@@ -80,8 +79,18 @@ class FetchThread(
                     log.trace("Ready to fetch task from pool {}", task.poolId)
                 }
 
-                val page = fetchOne(task)
-                if (page.isNotNil) {
+                val page = fetchComponent.fetchContent(task.page)
+                taskScheduler.finish(task.poolId, task.itemId)
+
+                if (page.protocolStatus.isRetry(RetryScope.PRIVACY_CONTEXT)) {
+                    // 1. cancel all running tasks
+                    // 2. push back to fetch queue
+                    // 3. lock down fetch queue
+                    // 4. reset fetch context
+                    //
+                    // tasksMonitor.produce(context.jobId, page)
+                    pendingTasks[context.jobId] = page
+                } else if (page.isNotNil) {
                     if (log.isInfoEnabled) {
                         log.info(MetricsSystem.getFetchCompleteReport(page))
                     }
@@ -120,7 +129,11 @@ class FetchThread(
         log.info(report.toString())
     }
 
-    private fun sleepAndRecordIdleThread() {
+    private fun waitUntilAllFree() {
+
+    }
+
+    private fun sleep() {
         fetchMonitor.registerIdleThread(this)
 
         try {
@@ -130,12 +143,12 @@ class FetchThread(
         fetchMonitor.unregisterIdleThread(this)
     }
 
-    private fun doSchedule(): FetchTask? {
+    private fun schedule(): FetchTask? {
         var fetchTask: FetchTask? = null
 
         val fetchMode = fetchMonitor.options.fetchMode
-        if (fetchMode == FetchMode.CROWDSOURCING) {
-            val response = taskScheduler.pollFetchResult()
+        if (fetchMode == FetchMode.CROWD_SOURCING) {
+            val response = taskScheduler.pollForwardResponse()
 
             if (response != null) {
                 val url = Urls.getURLOrNull(response.queueId)
@@ -175,14 +188,6 @@ class FetchThread(
         return fetchTask
     }
 
-    private fun fetchOne(task: FetchTask): WebPage {
-        fetchComponent.fetchContent(task.page)
-
-        taskScheduler.finish(task.poolId, task.itemId)
-
-        return task.page
-    }
-
     private fun write(key: String, page: WebPage) {
         try {
             // the page is fetched and status are updated, write to the file system
@@ -198,9 +203,5 @@ class FetchThread(
 
     override fun compareTo(other: FetchThread): Int {
         return id - other.id
-    }
-
-    companion object {
-        private val instanceSequence = AtomicInteger(0)
     }
 }

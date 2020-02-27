@@ -7,7 +7,28 @@ import org.jetbrains.annotations.NotNull;
  * TODO: FetchMode seems can be merged into BrowserType
  */
 public enum FetchMode {
-    UNKNOWN, AUTO, NATIVE, PROXY, CROWDSOURCING, SELENIUM, NATIVE_RENDERER;
+    UNKNOWN,
+    /**
+     * Simple native fetcher, no script renderer/cookie supported
+     * */
+    NATIVE,
+    /**
+     * Native renderer, for example, jbrowserdriver
+     * */
+    NATIVE_RENDERER,
+    /**
+     * Crowd source
+     * */
+    CROWD_SOURCING,
+    /**
+     * Selenium or selenium compatible protocol
+     * */
+    SELENIUM,
+    /**
+     * Choose the fetcher automatically
+     * Not implemented
+     * */
+    AUTO;
 
     @NotNull
     public static FetchMode fromString(String s) {

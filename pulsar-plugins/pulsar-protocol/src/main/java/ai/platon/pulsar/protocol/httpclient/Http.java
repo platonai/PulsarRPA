@@ -42,7 +42,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_THREADS_FETCH;
+import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY;
 
 /**
  * This class is a protocol plugin that configures an HTTP client for Basic,
@@ -247,7 +247,7 @@ public class Http extends AbstractHttpProtocol {
     public void setConf(ImmutableConfig jobConf) {
         super.setConf(jobConf);
         Http.conf = jobConf;
-        this.maxThreadsTotal = jobConf.getInt(FETCH_THREADS_FETCH, 10);
+        this.maxThreadsTotal = jobConf.getInt(FETCH_CONCURRENCY, 10);
         this.proxyUsername = jobConf.get("http.proxy.username", "");
         this.proxyPassword = jobConf.get("http.proxy.password", "");
         this.proxyRealm = jobConf.get("http.proxy.realm", "");

@@ -34,17 +34,17 @@ class FeedThread(
     private val fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofMinutes(30))
     private var jobDeadline = Instant.now().plus(fetchJobTimeout)
     private var initBatchSize = conf.getUint(FETCH_FEEDER_INIT_BATCH_SIZE, fetchThreads)!!
-    private val completed = AtomicBoolean(false)
+    private val closed = AtomicBoolean(false)
 
     private lateinit var currentIter: Iterator<IFetchEntry>
-    private var totalFeeded = 0
+    private var totalFeed = 0
 
-    val isCompleted: Boolean
-        get() = completed.get()
+    val isClosed: Boolean
+        get() = closed.get()
 
     init {
         this.isDaemon = true
-        this.name = javaClass.simpleName + "-" + id
+        this.name = "feeder-$id"
         LOG.info(params.format())
     }
 
@@ -55,10 +55,6 @@ class FeedThread(
                 "initBatchSize", initBatchSize,
                 "id", id
         )
-    }
-
-    fun halt() {
-        completed.set(true)
     }
 
     override fun run() {
@@ -73,17 +69,17 @@ class FeedThread(
                 currentIter = context.values.iterator()
             }
 
-            while (!isCompleted && Instant.now().isBefore(jobDeadline) && hasMore) {
+            while (!isClosed && Instant.now().isBefore(jobDeadline) && hasMore) {
                 ++round
 
-                var feededInRound = 0
-                while (feededInRound < batchSize && currentIter.hasNext() && hasMore) {
+                var feedInRound = 0
+                while (feedInRound < batchSize && currentIter.hasNext() && hasMore) {
                     val entry = currentIter.next()
                     val page = entry.page
                     tasksMonitor.produce(context.jobId, page)
 
-                    ++totalFeeded
-                    ++feededInRound
+                    ++totalFeed
+                    ++feedInRound
 
                     if (!currentIter.hasNext()) {
                         hasMore = context.nextKey()
@@ -94,7 +90,7 @@ class FeedThread(
                 }
 
                 if (round % 5 == 0 && LOG.isInfoEnabled) {
-                    logAndReport(round, batchSize, feededInRound)
+                    report(round, batchSize, feedInRound)
                 }
 
                 try {
@@ -108,17 +104,17 @@ class FeedThread(
 
             tasksMonitor.setFeederCompleted()
         } catch (e: Throwable) {
-            LOG.error("Feeder error reading input, record $totalFeeded", e)
+            LOG.error("Feeder error reading input, record $totalFeed", e)
         } finally {
             fetchMonitor.unregisterFeedThread(this)
         }
 
         LOG.info("Feeder finished. Feed " + round + " rounds, Last feed batch size : "
-                + batchSize + ", feed total " + totalFeeded + " records. ")
+                + batchSize + ", feed total " + totalFeed + " records. ")
     }
 
     fun exitAndJoin() {
-        completed.set(true)
+        closed.set(true)
         try {
             join()
         } catch (e: InterruptedException) {
@@ -126,12 +122,12 @@ class FeedThread(
         }
     }
 
-    private fun logAndReport(round: Int, batchSize: Float, feededInRound: Int) {
+    private fun report(round: Int, batchSize: Float, feededInRound: Int) {
         Params.of(
                 "Feed round", round,
                 "batchSize", batchSize,
                 "feededInRound", feededInRound,
-                "totalFeeded", totalFeeded,
+                "totalFeeded", totalFeed,
                 "readyTasks", tasksMonitor.readyTaskCount(),
                 "pendingTasks", tasksMonitor.pendingTaskCount(),
                 "finishedTasks", tasksMonitor.finishedTaskCount(),

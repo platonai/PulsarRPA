@@ -104,7 +104,6 @@ class HtmlParser(
 
         val parseContext = ParseContext(page, parseResult, metaTags, documentFragment, FeaturedDocument(document))
 
-        // TODO: for NativeBrowser mode, we can
         if (page.fetchMode == FetchMode.NATIVE_RENDERER) {
             // the native renderer may have done the parsing work
         }

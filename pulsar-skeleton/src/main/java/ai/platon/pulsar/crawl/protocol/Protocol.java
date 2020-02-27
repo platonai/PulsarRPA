@@ -48,6 +48,21 @@ public interface Protocol extends Configurable, AutoCloseable {
     }
 
     /**
+     * Reset the protocol environment, so the peer host view the client as a new one
+     * */
+    default void reset() {}
+
+    /**
+     * Cancel the page
+     * */
+    default void cancel(WebPage page) {}
+
+    /**
+     * Cancel all fetching tasks
+     * */
+    default void cancelAll() {}
+
+    /**
      * Returns the {@link Content} for a fetch list entry.
      */
     ProtocolOutput getProtocolOutput(WebPage page);
@@ -61,6 +76,5 @@ public interface Protocol extends Configurable, AutoCloseable {
     BaseRobotRules getRobotRules(WebPage page);
 
     @Override
-    default void close() {
-    }
+    default void close() {}
 }

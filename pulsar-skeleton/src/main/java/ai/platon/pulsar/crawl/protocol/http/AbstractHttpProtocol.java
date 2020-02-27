@@ -246,6 +246,11 @@ public abstract class AbstractHttpProtocol implements Protocol {
     }
 
     @Override
+    public void reset() {
+        // reset proxy, user agent, etc
+    }
+
+    @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         if (closed.get()) {
             return Collections.emptyList();
@@ -302,16 +307,17 @@ public abstract class AbstractHttpProtocol implements Protocol {
             location = page.getUrl();
         }
 
-        return transformProtocolOutput(page.getUrl(), location, response);
+        return getOutputWithHttpStatusTransformed(page.getUrl(), location, response);
     }
 
     /**
      * TODO: do not translate status code, they are just OK to handle in FetchComponent
      * */
-    private ProtocolOutput transformProtocolOutput(String url, String location, Response response) throws MalformedURLException {
+    private ProtocolOutput getOutputWithHttpStatusTransformed(
+            String url, String location, Response response) throws MalformedURLException {
         URL u = new URL(url);
 
-        int httpCode = response.getCode();
+        int httpCode = response.getHttpCode();
         byte[] bytes = response.getContent();
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         String contentType = response.getHeader(HttpHeaders.CONTENT_TYPE);
@@ -351,8 +357,8 @@ public abstract class AbstractHttpProtocol implements Protocol {
                 default:
                     code = ProtocolStatus.MOVED;
             }
-            // handle redirection in the higher layer.
 
+            // handle redirection in the higher layer.
             // page.getMetadata().set(ARG_REDIRECT_TO_URL, url.toString());
             status = ProtocolStatus.failed(code, ARG_HTTP_CODE, httpCode, ARG_REDIRECT_TO_URL, u);
         } else if (httpCode == SC_BAD_REQUEST) {
@@ -370,28 +376,18 @@ public abstract class AbstractHttpProtocol implements Protocol {
         } else if (httpCode == SC_GONE) {
             // permanently GONE
             status = ProtocolStatus.failed(GONE, ARG_HTTP_CODE, httpCode);
-        } else if (httpCode == THREAD_TIMEOUT) {
-            status = ProtocolStatus.failed(THREAD_TIMEOUT, ARG_HTTP_CODE, httpCode);
-        } else if (httpCode == WEB_DRIVER_TIMEOUT) {
-            status = ProtocolStatus.failed(WEB_DRIVER_TIMEOUT, ARG_HTTP_CODE, httpCode);
-        } else if (httpCode == DOM_TIMEOUT) {
-            status = ProtocolStatus.failed(DOM_TIMEOUT, ARG_HTTP_CODE, httpCode);
-        } else if (httpCode == RETRY) {
-            status = ProtocolStatus.failed(RETRY, ARG_HTTP_CODE, httpCode);
-        } else if (httpCode == CANCELED) {
-            status = ProtocolStatus.failed(CANCELED, ARG_HTTP_CODE, httpCode);
         } else {
-            status = ProtocolStatus.failed(EXCEPTION, ARG_HTTP_CODE, httpCode);
+            status = response.getStatus();
         }
 
         return new ProtocolOutput(content, headers, status);
     }
 
     private int getMaxRetry(WebPage page) {
-        // Never retry if fetch mode is croudsourcing or selenium
+        // Never retry if fetch mode is crowd sourcing
         int maxRry = this.fetchMaxRetry;
         FetchMode pageFetchMode = page.getFetchMode();
-        if (pageFetchMode == FetchMode.CROWDSOURCING || pageFetchMode == FetchMode.SELENIUM) {
+        if (pageFetchMode == FetchMode.CROWD_SOURCING) {
             maxRry = 1;
         }
 
@@ -424,7 +420,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
     private void setResponseTime(Instant startTime, WebPage page, Response response) {
         Duration elapsedTime;
         FetchMode pageFetchMode = page.getFetchMode();
-        if (pageFetchMode == FetchMode.CROWDSOURCING || pageFetchMode == FetchMode.SELENIUM) {
+        if (pageFetchMode == FetchMode.CROWD_SOURCING || pageFetchMode == FetchMode.SELENIUM) {
             long requestTime = NumberUtils.toLong(response.getHeader(Q_REQUEST_TIME), -1);
             long responseTime = NumberUtils.toLong(response.getHeader(Q_RESPONSE_TIME), -1);
 

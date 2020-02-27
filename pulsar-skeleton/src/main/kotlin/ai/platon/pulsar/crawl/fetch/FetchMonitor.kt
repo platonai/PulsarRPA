@@ -11,7 +11,6 @@ import ai.platon.pulsar.crawl.fetch.indexer.IndexThread
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
-import org.apache.commons.lang3.SystemUtils
 import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -22,12 +21,15 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.HashSet
 
 /**
  * Created by vincent on 16-9-24.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
+ *
+ * The fetch monitor
  */
 class FetchMonitor(
         private val fetchComponent: FetchComponent,
@@ -36,9 +38,12 @@ class FetchMonitor(
         private val jitIndexer: JITIndexer,
         private val immutableConfig: ImmutableConfig
 ) : Parameterized, Configurable, JobInitialized, AutoCloseable {
+    companion object {
+        private val instanceSequence = AtomicInteger(0)
+    }
+
     private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
     private val id = instanceSequence.incrementAndGet()
-    private val taskScheduler = taskSchedulers.first // TODO: multiple task schedulers are not supported
 
     private val startTime = Instant.now()
 
@@ -75,7 +80,12 @@ class FetchMonitor(
     private var totalLowThoCount: Int = 0
 
     /**
-     * Index server
+     * Task scheduler
+     * */
+    private val taskScheduler = taskSchedulers.first // TODO: multiple task schedulers are not supported
+
+    /**
+     * Index server, solr or elastic search
      */
     private var indexServerHost = immutableConfig.get(INDEXER_HOSTNAME, DEFAULT_INDEX_SERVER_HOSTNAME)
     private var indexServerPort = immutableConfig.getInt(INDEXER_PORT, DEFAULT_INDEX_SERVER_PORT)
@@ -92,22 +102,27 @@ class FetchMonitor(
      */
     private val feedThreads = ConcurrentSkipListSet<FeedThread>()
 
-    var isHalt = false
-        private set
-
-    val isFeederAlive: Boolean
+    private val isFeederAlive: Boolean
         get() = !feedThreads.isEmpty()
 
     val isMissionComplete: Boolean
         get() = !isFeederAlive && taskMonitor.readyTaskCount() == 0 && taskMonitor.pendingTaskCount() == 0
 
+    /**
+     * Initialize in setup using job conf
+     * */
     lateinit var options: FetchOptions
-
+    /**
+     * Initialize in setup using job conf
+     * */
     lateinit var jobName: String
     /**
-     * Scripts
+     * The path of finish scripts, run the finish script to kill this job
+     * Initialize in setup using job conf
      */
     private lateinit var finishScript: Path
+
+    private val closed = AtomicBoolean()
 
     override fun setup(jobConf: ImmutableConfig) {
         jitIndexer.setup(jobConf)
@@ -122,23 +137,6 @@ class FetchMonitor(
         generateFinishCommand()
 
         log.info(params.format())
-    }
-
-    fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        startFeedThread(context)
-
-        if (FetchMode.CROWDSOURCING == options.fetchMode) {
-            startCrowdsourcingThreads(context)
-        } else {
-            // Threads for SELENIUM or proxy mode
-            startLocalFetcherThreads(context)
-        }
-
-        if (jitIndexer.isEnabled) {
-            startIndexThreads()
-        }
-
-        startCheckAndReportLoop(context)
     }
 
     override fun getParams(): Params {
@@ -172,15 +170,21 @@ class FetchMonitor(
         return immutableConfig
     }
 
-    private fun generateFinishCommand() {
-        val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
+    fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
+        startFeedThread(context)
 
-        try {
-            Files.write(finishScript, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-            Files.setPosixFilePermissions(finishScript, PosixFilePermissions.fromString("rwxrw-r--"))
-        } catch (e: IOException) {
-            log.error(e.toString())
+        if (FetchMode.CROWD_SOURCING == options.fetchMode) {
+            startCrowdSourcingThreads(context)
+        } else {
+            // Threads for SELENIUM or proxy mode
+            startLocalFetcherThreads(context)
         }
+
+        if (jitIndexer.isEnabled) {
+            startIndexThreads()
+        }
+
+        startWatcherLoop(context)
     }
 
     fun registerFeedThread(feedThread: FeedThread) {
@@ -214,22 +218,31 @@ class FetchMonitor(
     }
 
     override fun close() {
-        try {
-            log.info("[Destruction] Closing FetchMonitor #$id")
+        if (closed.compareAndSet(false, true)) {
+            try {
+                log.info("[Destruction] Closing FetchMonitor #$id")
 
-            feedThreads.forEach { it.exitAndJoin() }
-            activeFetchThreads.forEach { it.exitAndJoin() }
-            retiredFetchThreads.forEach { it.report() }
+                // cancel all tasks
+                feedThreads.forEach { it.exitAndJoin() }
+                activeFetchThreads.forEach { it.exit() }
+                retiredFetchThreads.forEach { it.report() }
 
-            Files.deleteIfExists(finishScript)
-        } catch (e: Throwable) {
-            log.error(StringUtil.stringifyException(e))
+                Files.deleteIfExists(finishScript)
+            } catch (e: Throwable) {
+                log.error("Caught an unexpected exception when closing FetchMonitor - {}", StringUtil.stringifyException(e))
+            }
         }
     }
 
-    fun halt() {
-        feedThreads.forEach { it.halt() }
-        isHalt = true
+    private fun generateFinishCommand() {
+        val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
+
+        try {
+            Files.write(finishScript, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            Files.setPosixFilePermissions(finishScript, PosixFilePermissions.fromString("rwxrw-r--"))
+        } catch (e: IOException) {
+            log.error(e.toString())
+        }
     }
 
     /**
@@ -239,8 +252,7 @@ class FetchMonitor(
      */
     @Throws(IOException::class, InterruptedException::class)
     private fun startFeedThread(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        val feedThread = FeedThread(this, taskScheduler, taskScheduler.tasksMonitor, context, immutableConfig);
-        feedThread.start();
+        FeedThread(this, taskScheduler, taskScheduler.tasksMonitor, context, immutableConfig).start()
     }
 
     /**
@@ -248,7 +260,7 @@ class FetchMonitor(
      * Non-Blocking
      * TODO: not implemented
      */
-    private fun startCrowdsourcingThreads(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
+    private fun startCrowdSourcingThreads(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         startFetchThreads(options.numFetchThreads, context)
     }
 
@@ -261,15 +273,9 @@ class FetchMonitor(
     }
 
     private fun startFetchThreads(threadCount: Int, context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        var nThreads = threadCount
-        if (nThreads <= 0) {
-            nThreads = AppConstants.FETCH_THREADS
-        }
-
-        for (i in 0 until nThreads) {
-            log.info("Starting {}/{} fetch threads", i + 1, threadCount)
-            val fetchThread = FetchThread(fetchComponent, this, taskScheduler, immutableConfig, context)
-            fetchThread.start()
+        val nThreads = if (threadCount > 0) threadCount else AppConstants.FETCH_THREADS
+        repeat(nThreads) {
+            FetchThread(this, fetchComponent, taskScheduler, immutableConfig, context).start()
         }
     }
 
@@ -278,20 +284,19 @@ class FetchMonitor(
      * Non-Blocking
      */
     private fun startIndexThreads() {
-        for (i in 0 until jitIndexer.indexThreadCount) {
-            val indexThread = IndexThread(jitIndexer, immutableConfig)
-            indexThread.start()
+        repeat(jitIndexer.indexThreadCount) {
+            IndexThread(jitIndexer, immutableConfig).start()
         }
     }
 
     @Throws(IOException::class)
-    private fun startCheckAndReportLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
+    private fun startWatcherLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         if (checkInterval.seconds < 5) {
             log.warn("Check frequency is too high, it might cause a serious performance problem")
         }
 
         do {
-            val status = taskScheduler.waitAndReport(checkInterval)
+            val status = taskScheduler.lap(checkInterval)
 
             val statusString = taskScheduler.format(status)
 
@@ -308,7 +313,11 @@ class FetchMonitor(
             /*
              * Check if any fetch tasks are hung
              * */
-            retuneFetchQueues(now, idleTime)
+            tuneFetchQueues(now, idleTime)
+
+            // TODO: handle browse context reset
+            handleContextReset()
+            // TODO: merge report from AppMonitor and ProxyManager
 
             /*
              * Dump the remainder fetch items if feeder thread is no available and fetch item is few
@@ -329,7 +338,7 @@ class FetchMonitor(
             /*
              * Halt command is received
              * */
-            if (isHalt) {
+            if (closed.get()) {
                 log.info("Received halt command, exit the job ...")
                 break
             }
@@ -340,7 +349,7 @@ class FetchMonitor(
             if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
                 handleFinishJobCommand()
                 log.info("Found finish-job command, exit the job ...")
-                halt()
+                close()
                 break
             }
 
@@ -371,7 +380,7 @@ class FetchMonitor(
                 log.warn("Lost index server, exit the job")
                 break
             }
-        } while (activeFetchThreads.isNotEmpty())
+        } while (!closed.get() && activeFetchThreads.isNotEmpty())
     }
 
     /**
@@ -410,6 +419,33 @@ class FetchMonitor(
         log.info(report)
     }
 
+    private fun handleContextReset() {
+        val pendingTasks = FetchThread.pendingTasks
+        synchronized(FetchThread::class.java) {
+
+            while (activeFetchThreads.isNotEmpty()) {
+                // do not
+                // taskScheduler.freeze()
+            }
+
+            if (pendingTasks.isNotEmpty()) {
+                // collect all protocols need to reset
+                val protocols = pendingTasks.mapNotNullTo(HashSet()) {
+                    fetchComponent.protocolFactory.getProtocol(it.value)
+                }
+                protocols.forEach { it.reset() }
+
+                // wait until the context is ok
+
+                // re-fetch all pending tasks again
+                pendingTasks.forEach {
+                    taskScheduler.tasksMonitor.produce(it.key, it.value)
+                }
+                pendingTasks.clear()
+            }
+        }
+    }
+
     private fun handleFewFetchItems() {
         taskMonitor.dump(FETCH_TASK_REMAINDER_NUMBER, false)
     }
@@ -421,9 +457,9 @@ class FetchMonitor(
     /**
      * Check pools to see if something is hung
      */
-    private fun retuneFetchQueues(now: Instant, idleTime: Duration) {
+    private fun tuneFetchQueues(now: Instant, idleTime: Duration) {
         if (taskMonitor.readyTaskCount() + taskMonitor.pendingTaskCount() < 20) {
-            poolPendingTimeout = Duration.ofMinutes(2)
+            poolPendingTimeout = Duration.ofMinutes(3)
         }
 
         // Do not check in every report loop
@@ -472,9 +508,5 @@ class FetchMonitor(
 
             totalLowThoCount = 0
         }
-    }
-
-    companion object {
-        private val instanceSequence = AtomicInteger(0)
     }
 }

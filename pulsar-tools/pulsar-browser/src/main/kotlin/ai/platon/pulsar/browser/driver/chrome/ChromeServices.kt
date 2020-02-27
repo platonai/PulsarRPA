@@ -8,18 +8,16 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.function.Consumer
 
-interface WebSocketService {
+interface WebSocketService: AutoCloseable {
     @Throws(WebSocketServiceException::class)
     fun connect(uri: URI)
     fun send(message: String)
     fun addMessageHandler(consumer: Consumer<String>)
-    fun close()
     fun isClosed(): Boolean
 }
 
-interface EventExecutorService {
+interface EventExecutorService: AutoCloseable {
     fun execute(runnable: Runnable)
-    fun shutdown()
 }
 
 class ChromeDevToolsServiceConfiguration {
@@ -73,7 +71,7 @@ class DefaultEventExecutorService : EventExecutorService {
         executorService.execute(runnable)
     }
 
-    override fun shutdown() {
+    override fun close() {
         executorService.shutdown()
     }
 }

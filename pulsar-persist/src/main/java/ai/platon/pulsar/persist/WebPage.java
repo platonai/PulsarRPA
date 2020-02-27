@@ -633,10 +633,18 @@ public class WebPage {
         page.setReprUrl(value);
     }
 
+    /**
+     * Get the number of crawl scope retries
+     * @see ai.platon.pulsar.persist.RetryScope
+     * */
     public int getFetchRetries() {
         return page.getFetchRetries();
     }
 
+    /**
+     * Set the number of crawl scope retries
+     * @see ai.platon.pulsar.persist.RetryScope
+     * */
     public void setFetchRetries(int value) {
         page.setFetchRetries(value);
     }

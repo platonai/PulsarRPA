@@ -12,15 +12,23 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import java.util.logging.Level
 
 data class DriverStat(
         var pageViews: Int = 0
 )
 
 enum class DriverStatus {
-    UNKNOWN, FREE, WORKING, PAUSED, RETIRED, CRASHED, QUIT
+    UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
+
+    val isFree get() = this == FREE
+    val isWorking get() = this == WORKING
+    val isCanceled get() = this == CANCELED
+    val isRetired get() = this == RETIRED
+    val isCrashed get() = this == CRASHED
+    val isQuit get() = this == QUIT
 }
 
 data class DriverConfig(
@@ -29,139 +37,154 @@ data class DriverConfig(
         var scrollDownCount: Int,
         var scrollInterval: Duration
 ) {
-    constructor(config: ImmutableConfig) : this(
-            config.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
+    constructor(conf: ImmutableConfig) : this(
+            conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
             // wait page ready using script, so it can not smaller than pageLoadTimeout
-            config.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
-            config.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 3),
-            config.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
+            conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
+            conf.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 3),
+            conf.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
     )
 }
 
 class ManagedWebDriver(
-        val id: Int,
         val driver: WebDriver,
         val priority: Int = 1000
-) {
+): Comparable<ManagedWebDriver> {
+    companion object {
+        val instanceSequence = AtomicInteger()
+    }
+
     private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
 
+    /**
+     * The driver id
+     * */
+    val id = instanceSequence.incrementAndGet()
+
+    val name = driver.javaClass.simpleName
+
+    /**
+     * Driver statistics
+     * */
     val stat = DriverStat()
 
-    val status = AtomicReference<DriverStatus>()
+    /**
+     * Driver status
+     * */
+    val status = AtomicReference<DriverStatus>(DriverStatus.UNKNOWN)
 
-    val isPaused
-        get() = status.get() == DriverStatus.PAUSED
+    val isFree get() = status.get().isFree
+    val isWorking get() = status.get().isWorking
+    val isNotWorking get() = !isWorking
+    val isCanceled get() = status.get().isCanceled
+    val isRetired get() = status.get().isRetired
+    val isCrashed get() = status.get().isCrashed
+    val isQuit get() = status.get().isQuit
 
-    val isRetired
-        get() = status.get() == DriverStatus.RETIRED
+    // The proxy entry ready to use
+    val proxyEntry = AtomicReference<ProxyEntry>()
 
-    val isWorking
-        get() = status.get() == DriverStatus.WORKING
+    var incognito = false
 
-    val isQuit
-        get() = status.get() == DriverStatus.QUIT
+    /**
+     * The loading page url
+     * The browser might redirect, so it might not be the same to [currentUrl]
+     * */
+    var url: String = ""
 
-    fun pause() {
-        status.set(DriverStatus.PAUSED)
+    /**
+     * The actual url return by the browser
+     * */
+    val currentUrl: String get() = try {
+        if (isQuit) "" else driver.currentUrl
+    } catch (t: Throwable) { "" }
+
+    /**
+     * The real time page source return by the browser
+     * */
+    val pageSource: String get() = try {
+        if (isQuit) "" else driver.pageSource
+    } catch (t: Throwable) { "(exception)" }
+
+    /**
+     * The id of the session to the browser
+     * */
+    val sessionId: String? get() = when {
+        isQuit -> null
+        driver is ChromeDevtoolsDriver -> driver.sessionId?.toString()
+        else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+    }
+
+    /**
+     * The browser type
+     * */
+    val browserType: BrowserType get() =
+        when (driver) {
+            is ChromeDevtoolsDriver -> BrowserType.CHROME
+            is ChromeDriver -> BrowserType.SELENIUM_CHROME
+            else -> BrowserType.CHROME
+        }
+
+    init {
+        setLogLevel()
+    }
+
+    fun startWork() {
+        status.set(DriverStatus.WORKING)
+    }
+
+    fun cancel() {
+        status.set(DriverStatus.CANCELED)
+        stopLoading()
     }
 
     fun retire() {
         status.set(DriverStatus.RETIRED)
     }
 
-    // The proxy entry ready to use
-    val proxyEntry = AtomicReference<ProxyEntry>()
-
-    val incognito = AtomicBoolean()
-
-    val sessionId: String?
-        get() {
-            if (isQuit) {
-                return null
-            }
-
-            return if (driver is ChromeDevtoolsDriver) {
-                driver.sessionId?.toString()
-            } else {
-                StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
-            }
+    /**
+     * Navigate to the url
+     * The browser might redirect, so it might not be the same to [currentUrl]
+     * */
+    fun navigateTo(url: String) {
+        if (isWorking) {
+            this.url = url
+            driver.get(url)
         }
-
-    val currentUrl: String
-        get() {
-            return try {
-                if (isQuit) "" else driver.currentUrl
-            } catch (t: Throwable) {
-                "(exception)"
-            }
-        }
-
-    val pageSource: String
-        get() {
-            return try {
-                if (isQuit) "" else driver.pageSource
-            } catch (t: Throwable) {
-                "(exception)"
-            }
-        }
-
-    val browserType: BrowserType
-        get() =
-            when (driver) {
-                is ChromeDevtoolsDriver -> BrowserType.CHROME
-                is ChromeDriver -> BrowserType.SELENIUM_CHROME
-//            is HtmlUnitDriver -> page.lastBrowser = BrowserType.HTMLUNIT
-                else -> {
-                    log.warn("Actual browser is set to be NATIVE by selenium engine")
-                    BrowserType.NATIVE
-                }
-            }
-
-    fun navigate(url: String) {
-        if (isQuit) {
-            return
-        }
-
-        return driver.get(url)
     }
 
     fun evaluate(expression: String): Any? {
-        if (isQuit) {
-            return null
-        }
-
-        return when (driver) {
-            is ChromeDriver -> {
-                driver.executeScript(expression)
-            }
-            is ChromeDevtoolsDriver -> {
-                driver.evaluate(expression)
-            }
+        return when {
+            isNotWorking -> null
+            driver is ChromeDevtoolsDriver -> driver.evaluate(expression)
+            driver is ChromeDriver -> driver.executeScript(expression)
             else -> null
         }
     }
 
     fun evaluateSilently(expression: String): Any? {
-        if (isQuit) {
-            return null
+        if (isWorking) {
+            try {
+                return evaluate(expression)
+            } catch (ignored: Throwable) {}
         }
-
-        try {
-            return evaluate(expression)
-        } catch (ignored: Throwable) {}
 
         return null
     }
 
     fun stopLoading() {
-        if (isQuit) {
+        if (isNotWorking) {
             return
         }
 
-        if (driver is ChromeDevtoolsDriver) {
-            driver.stopLoading()
-        } else {
-            evaluateSilently(";window.stop();")
+        try {
+            if (driver is ChromeDevtoolsDriver) {
+                driver.stopLoading()
+            } else {
+                evaluateSilently(";window.stop();")
+            }
+        } catch (e: Throwable) {
+            log.info("Failed to stop loading - {}", StringUtil.simplifyException(e))
         }
     }
 
@@ -172,7 +195,7 @@ class ManagedWebDriver(
     }
 
     fun setTimeouts(driverConfig: DriverConfig) {
-        if (isQuit) {
+        if (isNotWorking) {
             return
         }
 
@@ -192,23 +215,25 @@ class ManagedWebDriver(
      * Quits this driver, close every associated window
      * */
     fun quit() {
-        if (isQuit) {
-            return
-        }
+        if (!isQuit) {
+            synchronized(status) {
+                if (!isQuit) {
+                    status.set(DriverStatus.QUIT)
 
-        if (incognito.get()) {
-            deleteAllCookiesSilently()
+                    if (incognito) {
+                        removeFootprint()
+                    }
+                    driver.quit()
+                }
+            }
         }
-
-        status.set(DriverStatus.QUIT)
-        driver.quit()
     }
 
     /**
      * Close redundant web drivers and keep only one to release resources
      * TODO: buggy
      * */
-    fun closeIfNotOnly() {
+    fun closeOtherTabs() {
         if (isQuit) return
 
         val handles = driver.windowHandles.size
@@ -218,6 +243,16 @@ class ManagedWebDriver(
         }
     }
 
+    fun removeFootprint() {
+        deleteAllCookiesSilently()
+        // delete local session data
+        // detete local storage data
+    }
+
+    /**
+     * Delete all cookies
+     * TODO: delete data directory directly
+     * */
     fun deleteAllCookiesSilently() {
         if (isQuit) return
 
@@ -271,12 +306,30 @@ class ManagedWebDriver(
         }
     }
 
+    private fun setLogLevel() {
+        // Set log level
+        if (driver is RemoteWebDriver) {
+            val logger = LoggerFactory.getLogger(WebDriver::class.java)
+            val level = when {
+                logger.isDebugEnabled -> Level.FINER
+                logger.isTraceEnabled -> Level.ALL
+                else -> Level.FINE
+            }
+
+            driver.setLogLevel(level)
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         return other is ManagedWebDriver && other.id == this.id
     }
 
     override fun hashCode(): Int {
         return id
+    }
+
+    override fun compareTo(other: ManagedWebDriver): Int {
+        return id - other.id
     }
 
     override fun toString(): String {

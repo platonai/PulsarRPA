@@ -116,7 +116,6 @@ data class FetchStat(
 data class BatchStat(
         var numTaskDone: Int = 0,
         var numSuccessTasks: Int = 0,
-        var numIncompletePages: Int = 0,
         var numFailedTasks: Int = 0,
         var totalBytes: Long = 0L
 ) {

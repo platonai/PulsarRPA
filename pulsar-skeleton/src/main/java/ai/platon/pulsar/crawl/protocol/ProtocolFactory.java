@@ -50,7 +50,7 @@ public class ProtocolFactory implements AutoCloseable {
 
     private ImmutableConfig immutableConfig;
     private Map<String, Protocol> protocols = Collections.synchronizedMap(new HashMap<>());
-    private AtomicBoolean isClosed = new AtomicBoolean();
+    private AtomicBoolean closed = new AtomicBoolean();
 
     public ProtocolFactory(ImmutableConfig immutableConfig) {
         this.immutableConfig = immutableConfig;
@@ -90,7 +90,7 @@ public class ProtocolFactory implements AutoCloseable {
         Protocol protocol;
         if (mode == FetchMode.SELENIUM) {
             protocol = getProtocol("selenium:" + page.getUrl());
-        } else if (mode == FetchMode.CROWDSOURCING) {
+        } else if (mode == FetchMode.CROWD_SOURCING) {
             protocol = getProtocol("crowd:" + page.getUrl());
         } else {
             protocol = getProtocol(page.getUrl());
@@ -138,22 +138,16 @@ public class ProtocolFactory implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        if (isClosed.getAndSet(true)) {
-            return;
-        }
-
-        Iterator<Protocol> it = protocols.values().iterator();
-        while (it.hasNext()) {
-            Protocol protocol = it.next();
-
-            try {
-                protocol.close();
-            } catch (Throwable e) {
-                LOG.error(e.toString());
-            }
-
-            it.remove();
+    public void close() {
+        if (closed.compareAndSet(false, true)) {
+            protocols.values().forEach(protocol -> {
+                try {
+                    protocol.close();
+                } catch (Throwable e) {
+                    LOG.error(e.toString());
+                }
+            });
+            protocols.clear();
         }
     }
 }

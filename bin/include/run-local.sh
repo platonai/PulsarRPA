@@ -43,7 +43,8 @@ PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dpulsar.root.logger=${PULSAR_ROOT_LOGGER:-INF
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dlogging.dir=$PULSAR_LOG_DIR")
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dlogging.file=$PULSAR_LOGFILE")
 
-PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dfetch.concurrency=${FETCH_THREADS:-5}")
+# the default number of fetch thread is the number of cpu cores
+PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dfetch.concurrency=${FETCH_THREADS:-$(nproc)}")
 
 if [[ $DRY_RUN == "1" ]]; then
     PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dpulsar.dry.run=1")

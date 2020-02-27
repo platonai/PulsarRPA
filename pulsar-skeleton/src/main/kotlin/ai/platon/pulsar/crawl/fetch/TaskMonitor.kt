@@ -89,7 +89,7 @@ class TaskMonitor(
         // TODO: just parse from command line
         this.options = FetchOptions(jobConf)
 
-        numPoolThreads = if (options.fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE
+        numPoolThreads = if (options.fetchMode == FetchMode.CROWD_SOURCING) Integer.MAX_VALUE
         else options.numPoolThreads
 
         log.info(params.format())

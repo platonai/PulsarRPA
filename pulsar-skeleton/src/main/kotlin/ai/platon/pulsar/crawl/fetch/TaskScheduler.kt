@@ -23,6 +23,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.roundToInt
@@ -42,7 +43,7 @@ class TaskScheduler(
     )
 
     private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
-    val id: Int = objectSequence.getAndIncrement()
+    val id: Int = instanceSequence.getAndIncrement()
     private val metricsCounters = MetricsCounters()
 
     private val fetchResultQueue = ConcurrentLinkedQueue<FetchJobForwardingResponse>()
@@ -212,23 +213,12 @@ class TaskScheduler(
     }
 
     /**
-     * Multiple threaded
+     * Poll a response if it's forwarded, for example, in crowd source mode,
+     * all fetching is done by remote agents and forwarded to TaskScheduler
+     * @return FetchJobForwardingResponse
      */
-    fun pollFetchResult(): FetchJobForwardingResponse? {
+    fun pollForwardResponse(): FetchJobForwardingResponse? {
         return fetchResultQueue.remove()
-    }
-
-    override fun close() {
-        log.info("[Destruction] Closing TaskScheduler #$id")
-
-        val border = StringUtils.repeat('.', 40)
-        log.info(border)
-        log.info("[Final Report - " + DateTimeUtil.now() + "]")
-
-        report()
-
-        log.info("[End Report]")
-        log.info(border)
     }
 
     /**
@@ -237,14 +227,13 @@ class TaskScheduler(
      * @param reportInterval Report interval
      * @return Status
      */
-    fun waitAndReport(reportInterval: Duration): Status {
+    fun lap(reportInterval: Duration): Status {
         val pagesLastSec = totalPages.get().toFloat()
         val bytesLastSec = totalBytes.get()
 
         try {
-            Thread.sleep(reportInterval.toMillis())
-        } catch (ignored: InterruptedException) {
-        }
+            TimeUnit.MILLISECONDS.sleep(reportInterval.toMillis())
+        } catch (ignored: InterruptedException) {}
 
         val reportIntervalSec = reportInterval.seconds.toDouble()
         val pagesThoRate = (totalPages.get() - pagesLastSec) / reportIntervalSec
@@ -268,6 +257,19 @@ class TaskScheduler(
 
     fun format(status: Status): String {
         return format(status.pagesThoRate, status.bytesThoRate, status.readyFetchItems, status.pendingFetchItems)
+    }
+
+    override fun close() {
+        log.info("Closing TaskScheduler #$id")
+
+        val border = StringUtils.repeat('.', 40)
+        log.info(border)
+        log.info("[Final Report - " + DateTimeUtil.now() + "]")
+
+        report()
+
+        log.info("[End Report]")
+        log.info(border)
     }
 
     private fun format(pagesThroughput: Double, bytesThroughput: Double, readyFetchItems: Int, pendingFetchItems: Int): String {
@@ -366,7 +368,7 @@ class TaskScheduler(
     }
 
     /**
-     * Do not redirect too much
+     * Do not redirect too many times
      * TODO : Check why we need to save reprUrl for each thread
      */
     private fun handleRedirectUrl(page: WebPage, url: String, newUrl: String, temp: Boolean): String {
@@ -416,7 +418,7 @@ class TaskScheduler(
             val hosts = pageParser.unparsableTypes.sortedBy { it.toString() }.joinToString("\n") { it }
             report += hosts
             report += "\n"
-            log.info("# Un-parsable types : \n$report")
+            log.info("Un-parsable types : \n$report")
         }
     }
 
@@ -432,6 +434,6 @@ class TaskScheduler(
 
         init { MetricsCounters.register(Counter::class.java) }
 
-        private val objectSequence = AtomicInteger(0)
+        private val instanceSequence = AtomicInteger(0)
     }
 }

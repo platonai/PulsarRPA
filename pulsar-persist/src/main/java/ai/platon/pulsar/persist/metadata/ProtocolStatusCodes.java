@@ -100,9 +100,10 @@ public interface ProtocolStatusCodes {
     /**
      * Selenium web driver is timeout.
      */
-    int DOM_TIMEOUT = 1472;
+    int SCRIPT_TIMEOUT = 1472;
     /**
-     * Selenium web driver is timeout.
+     * Selenium web driver is timeout
+     * @deprecated
      */
     int DOCUMENT_INCOMPLETE = 1473;
     /**

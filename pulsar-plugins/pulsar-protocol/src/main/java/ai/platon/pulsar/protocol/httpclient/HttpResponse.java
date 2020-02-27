@@ -187,7 +187,7 @@ public class HttpResponse implements Response {
     }
 
     @Override
-    public int getCode() {
+    public int getHttpCode() {
         return code;
     }
 

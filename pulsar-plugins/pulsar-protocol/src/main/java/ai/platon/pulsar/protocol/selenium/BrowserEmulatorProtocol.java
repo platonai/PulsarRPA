@@ -39,7 +39,7 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
 
     private Logger log = LoggerFactory.getLogger(BrowserEmulatorProtocol.class);
 
-    private AtomicReference<BrowserEmulatedFetcher> fetchComponent = new AtomicReference<>();
+    private AtomicReference<BrowserEmulatedFetcher> browserEmulator = new AtomicReference<>();
 
     private AtomicBoolean closed = new AtomicBoolean();
 
@@ -55,6 +55,7 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
         super.setConf(jobConf);
     }
 
+    @Override
     public boolean supportParallel() {
         return true;
     }
@@ -62,12 +63,12 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
     @Override
     public Collection<Response> getResponses(Collection<WebPage> pages, VolatileConfig volatileConfig) {
         try {
-            BrowserEmulatedFetcher fc = getFetcher();
-            if (fc == null) {
+            BrowserEmulatedFetcher fetcher = getFetcher();
+            if (fetcher == null) {
                 return Collections.emptyList();
             }
 
-            return fc.parallelFetchAllPages(pages, volatileConfig);
+            return fetcher.parallelFetchAllPages(pages, volatileConfig);
         } catch (Exception e) {
             log.warn("Unexpected exception", e);
         }
@@ -96,6 +97,30 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
     }
 
     @Override
+    public void reset() {
+        BrowserEmulatedFetcher fetcher = getFetcher();
+        if (fetcher != null) {
+            // fetcher.privacyContext.reset();
+        }
+    }
+
+    @Override
+    public void cancel(WebPage page) {
+        BrowserEmulatedFetcher fetcher = getFetcher();
+        if (fetcher != null) {
+            // fetcher.privacyContext.cancel(page);
+        }
+    }
+
+    @Override
+    public void cancelAll() {
+        BrowserEmulatedFetcher fetcher = getFetcher();
+        if (fetcher != null) {
+            // fetcher.privacyContext.cancelAll();
+        }
+    }
+
+    @Override
     public void close() {
         closed.set(true);
     }
@@ -110,11 +135,11 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
         }
 
         try {
-            fetchComponent.compareAndSet(null, PulsarEnv.Companion.getBean(BrowserEmulatedFetcher.class));
+            browserEmulator.compareAndSet(null, PulsarEnv.Companion.getBean(BrowserEmulatedFetcher.class));
         } catch (BeansException e) {
             log.warn("{}", StringUtil.simplifyException(e));
         }
 
-        return fetchComponent.get();
+        return browserEmulator.get();
     }
 }

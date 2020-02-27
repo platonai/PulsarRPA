@@ -17,7 +17,7 @@
 package ai.platon.pulsar.protocol.http;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.proxy.NoProxyException;
+import ai.platon.pulsar.common.proxy.ProxyException;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
@@ -36,7 +36,7 @@ public class Http extends AbstractHttpProtocol {
 
     @Override
     protected Response getResponse(String url, WebPage page, boolean redirect)
-            throws ProtocolException, IOException, NoProxyException {
+            throws ProtocolException, IOException, ProxyException {
         return new HttpResponse(this, new URL(url), page);
     }
 }

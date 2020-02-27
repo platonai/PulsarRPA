@@ -73,29 +73,24 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
      */
     @Synchronized
     fun randomFetchItems(count: Int): List<FetchTask.Key> {
-        val keys = Lists.newArrayList<FetchTask.Key>()
-
-        val id = fetchSchedulerIds.poll()
-                ?: // log.debug("No running fetcher job");
-                return Lists.newArrayList()
+        val keys = mutableListOf<FetchTask.Key>()
+        val id = fetchSchedulerIds.poll()?: return listOf()
 
         try {
             val taskScheduler = fetchSchedulers[id]
             if (taskScheduler == null) {
                 LOG.error("Failed to find out the fetch scheduler with id #$id")
-
                 remove(id)
-                return Lists.newArrayList()
+                return listOf()
             }
 
-            for (item in taskScheduler.schedule(count)) {
-                keys.add(item.key)
-            }
+            taskScheduler.schedule(count).mapTo(keys) { it.key }
         } catch (e: Throwable) {
-            LOG.error(e.toString())
+            LOG.error("Unexpected exception", e)
         }
 
-        fetchSchedulerIds.add(id) // put back to the queue
+        // put back to the queue
+        fetchSchedulerIds.add(id)
 
         return keys
     }
