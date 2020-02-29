@@ -51,21 +51,21 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="privacyContext" class="ai.platon.pulsar.net.browser.BrowserPrivacyContext">
+    <bean id="privacyContextFactory" class="ai.platon.pulsar.net.browser.PrivacyContextFactory">
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="proxyManager"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="browserEmulator" class="ai.platon.pulsar.net.browser.RobustBrowserEmulator" destroy-method="close">
-        <constructor-arg ref="privacyContext"/>
+        <constructor-arg ref="privacyContextFactory"/>
         <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.net.browser.BrowserEmulatedFetcher" destroy-method="close">
-        <constructor-arg ref="privacyContext"/>
+        <constructor-arg ref="privacyContextFactory"/>
         <constructor-arg ref="globalExecutor"/>
         <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="conf"/>

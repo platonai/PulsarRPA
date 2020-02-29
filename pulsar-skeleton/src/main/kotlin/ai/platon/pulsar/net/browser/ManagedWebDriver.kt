@@ -40,7 +40,7 @@ data class DriverConfig(
     constructor(conf: ImmutableConfig) : this(
             conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
             // wait page ready using script, so it can not smaller than pageLoadTimeout
-            conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60)),
+            conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(90)),
             conf.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 3),
             conf.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
     )
@@ -219,10 +219,6 @@ class ManagedWebDriver(
             synchronized(status) {
                 if (!isQuit) {
                     status.set(DriverStatus.QUIT)
-
-                    if (incognito) {
-                        removeFootprint()
-                    }
                     driver.quit()
                 }
             }

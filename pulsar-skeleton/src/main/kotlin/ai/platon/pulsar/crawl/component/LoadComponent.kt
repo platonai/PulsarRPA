@@ -18,7 +18,6 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
@@ -425,7 +424,7 @@ class LoadComponent(
                 flush()
             }
             if (log.isTraceEnabled) {
-                log.trace("Persisted {} | {}", StringUtil.readableByteCount(page.contentBytes.toLong()), page.url)
+                log.trace("Persisted {} | {}", StringUtil.readableBytes(page.contentBytes.toLong()), page.url)
             }
         }
     }

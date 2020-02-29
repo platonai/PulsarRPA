@@ -21,15 +21,18 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_RETRY_SCOPE = "rsp";
     public static final String ARG_RETRY_REASON = "rrs";
 
-    public static final short NOTFETCHED = 0;
+    /**
+     * Content was not retrieved yet.
+     */
+    private static final short NOTFETCHED = 0;
     /**
      * Content was retrieved without errors.
      */
-    public static final short SUCCESS = 1;
+    private static final short SUCCESS = 1;
     /**
      * Content was not retrieved. Any further errors may be indicated in args.
      */
-    public static final short FAILED = 2;
+    private static final short FAILED = 2;
 
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
@@ -39,12 +42,12 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
-    // if a task is canceled, we do not save the WebPage, if a task is retry, all the metadata is saved
+    // if a task is canceled, we do not save anything, if a task is retry, all the metadata is saved
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
     public static final ProtocolStatus STATUS_EXCEPTION = ProtocolStatus.failed(EXCEPTION);
 
-    public static final HashMap<Short, String> majorCodes = new HashMap<>();
-    public static final HashMap<Integer, String> minorCodes = new HashMap<>();
+    private static final HashMap<Short, String> majorCodes = new HashMap<>();
+    private static final HashMap<Integer, String> minorCodes = new HashMap<>();
 
     static {
         majorCodes.put(NOTFETCHED, "nofetched");

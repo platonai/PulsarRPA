@@ -3,50 +3,84 @@ package ai.platon.pulsar.net.browser
 import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.proxy.ProxyManager
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The browser emulator context, the context should be reset if some errors are detected, for example, proxy ips are banned.
+ * The privacy context, the context should be reset if privacy is leaked
  * */
 open class BrowserPrivacyContext(
         val driverPool: WebDriverPool,
         val proxyManager: ProxyManager,
-        val immutableConfig: ImmutableConfig
-): Freezable() {
+        val immutableConfig: ImmutableConfig,
+        val id: Int = instanceSequence.incrementAndGet()
+): Freezable(), AutoCloseable {
+    companion object {
+        val instanceSequence = AtomicInteger()
+    }
+
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
     private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+    private val closed = AtomicBoolean()
+    private val closeLatch = CountDownLatch(1)
 
-    private val privacyLeakWarnings = AtomicInteger()
-    val isPrivacyLeaked = privacyLeakWarnings.get() > 3
+    val privacyLeakWarnings = AtomicInteger()
+    val nServedTasks = AtomicInteger()
+    val servedProxies = ConcurrentLinkedQueue<ProxyEntry>()
+
+    val isPrivacyLeaked get() = privacyLeakWarnings.get() > 3
+    val currentProxyEntry get() = proxyManager.currentProxyEntry
 
     fun informSuccess() {
+        informSuccess("")
+    }
+
+    fun informSuccess(message: String) {
         if (privacyLeakWarnings.get() > 0) {
             privacyLeakWarnings.decrementAndGet()
         }
+        log.info("success - ${message}privacyLeakWarnings: $privacyLeakWarnings freezers: $numFreezers tasks: $numTasks")
     }
 
     fun informWarning() {
-        privacyLeakWarnings.incrementAndGet()
+        informWarning("")
     }
 
-    open fun reset() {
-        freeze {
-            log.info("Resetting privacy context ...")
+    fun informWarning(message: String) {
+        privacyLeakWarnings.incrementAndGet()
+        log.info("warning - ${message}privacyLeakWarnings: $privacyLeakWarnings freezers: $numFreezers tasks: $numTasks")
+    }
 
-            changeProxy()
-            driverPool.reset()
-            privacyLeakWarnings.set(0)
+    fun waitUntilClosed() {
+        try {
+            closeLatch.await()
+        } catch (ignored: InterruptedException) {}
+    }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            freeze {
+                log.info("Privacy context #{} is closed after {} tasks ...", id, nServedTasks)
+
+                changeProxy()
+                driverPool.reset()
+
+                closeLatch.countDown()
+            }
         }
     }
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen {
-            runWithProxy(task, browseFun)
+            runWithProxy(task, browseFun).also { nServedTasks.incrementAndGet() }
         }
     }
 
@@ -57,7 +91,7 @@ open class BrowserPrivacyContext(
         do {
             if (isPrivacyLeaked) {
                 task.reset()
-                reset()
+                close()
             }
 
             result = run(task) { _, driver ->
@@ -76,22 +110,29 @@ open class BrowserPrivacyContext(
     }
 
     private fun changeProxy() {
-        driverPool.proxyEntry?.let { proxyManager.changeProxyIfRunning(it) }
+        currentProxyEntry?.let { proxyManager.changeProxyIfRunning(it) }
     }
 
     private fun runWithProxy(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        task.proxyEntry = currentProxyEntry
+
         val result = proxyManager.runAnyway { runInDriverPool(task, browseFun) }
-        val proxyEntry = proxyManager.proxyEntry
+
+        val proxyEntry = currentProxyEntry
         if (proxyEntry != null) {
             if (result.response.status.isSuccess) {
-                proxyEntry.successPageCount.incrementAndGet()
+                proxyEntry.nSuccessPages.incrementAndGet()
                 proxyEntry.servedDomains.add(task.domain)
-                proxyEntry.targetHost = task.page.url
+                proxyEntry.lastServedUrl = task.page.url
+
+                servedProxies.add(proxyEntry)
+
                 task.page.metadata.set(Name.PROXY, proxyEntry.hostPort)
             } else {
-                proxyEntry.failedPageCount.incrementAndGet()
+                proxyEntry.nFailedPages.incrementAndGet()
             }
         }
+
         return result
     }
 
@@ -104,10 +145,10 @@ open class BrowserPrivacyContext(
             }
             response = result.response
 
-            if (task.retries > 1) {
-                log.info("The ${task.retries}th round re-fetching | {}", task.url)
+            if (task.nRetries > 1) {
+                log.info("The ${task.nRetries}th round re-fetching | {}", task.url)
             }
-        } while(task.retries <= fetchMaxRetry && response.status.isRetry(RetryScope.WEB_DRIVER))
+        } while(task.nRetries <= fetchMaxRetry && response.status.isRetry(RetryScope.WEB_DRIVER))
 
         return result
     }

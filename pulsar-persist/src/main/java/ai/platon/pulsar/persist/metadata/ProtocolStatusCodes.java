@@ -17,7 +17,6 @@
 package ai.platon.pulsar.persist.metadata;
 
 /**
- * See ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol#getProtocolOutput for more information
  * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
  * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
  * */

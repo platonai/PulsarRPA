@@ -51,7 +51,7 @@ class WebSocketServiceImpl : WebSocketService {
             }
 
             session.basicRemote.sendText(message)
-        } catch (e: IllegalStateException) {
+        } catch (e: java.lang.IllegalStateException) {
             throw WebSocketServiceException("The connection has been closed", e)
         } catch (e: Exception) {
             log.error("Unexpected exception | ${session.requestURI}", e)

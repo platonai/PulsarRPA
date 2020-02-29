@@ -72,30 +72,30 @@ class TestWebDriver {
             }
         }
 
-        assertEquals(10, driverPool.workingSize)
-        assertEquals(0, driverPool.freeSize)
-        assertEquals(10, driverPool.aliveSize)
-        assertEquals(10, driverPool.totalSize)
+        assertEquals(10, driverPool.nWorking)
+        assertEquals(0, driverPool.nFree)
+        assertEquals(10, driverPool.nActive)
+        assertEquals(10, driverPool.nAlive)
 
         workingDrivers.forEachIndexed { i, driver ->
             if (i % 2 == 0) driver.retire()
             driverPool.put(driver)
         }
 
-        assertEquals(0, driverPool.workingSize)
-        assertEquals(5, driverPool.freeSize)
+        assertEquals(0, driverPool.nWorking)
+        assertEquals(5, driverPool.nFree)
         assertEquals(5, WebDriverPool.numRetired.get())
 
         driverPool.closeAll()
 
-        assertEquals(0, driverPool.workingSize)
-        assertEquals(0, driverPool.freeSize)
+        assertEquals(0, driverPool.nWorking)
+        assertEquals(0, driverPool.nFree)
         assertEquals(10, WebDriverPool.numQuit.get())
 
         driverPool.closeAll()
 
-        assertEquals(0, driverPool.workingSize)
-        assertEquals(0, driverPool.freeSize)
+        assertEquals(0, driverPool.nWorking)
+        assertEquals(0, driverPool.nFree)
         assertEquals(10, WebDriverPool.numQuit.get())
     }
 

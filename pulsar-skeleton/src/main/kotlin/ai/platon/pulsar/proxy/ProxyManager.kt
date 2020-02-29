@@ -77,11 +77,12 @@ class ProxyManager(
         private set
     var report: String = ""
     var verbose = false
+    var autoRefresh = true
     val isWatcherStarted get() = watcherStarted.get()
 
     var lastProxyEntry: ProxyEntry? = null
         private set
-    var proxyEntry: ProxyEntry? = null
+    var currentProxyEntry: ProxyEntry? = null
         private set
 
     init {
@@ -99,10 +100,14 @@ class ProxyManager(
 
         if (watcherStarted.compareAndSet(false, true)) {
             watcherThread.isDaemon = true
+            watcherThread.name = "pm"
             watcherThread.start()
         }
     }
 
+    /**
+     * Run the task despite the proxy manager is disabled, it it's disabled, call the innovation directly
+     * */
     fun <R> runAnyway(task: () -> R): R {
         return if (isDisabled) {
             task()
@@ -111,19 +116,22 @@ class ProxyManager(
         }
     }
 
+    /**
+     * Run the task in the proxy manager
+     * */
     fun <R> run(task: () -> R): R {
         if (isClosed || isDisabled) {
             throw ProxyException("Proxy manager is " + if (isClosed) "closed" else "disabled")
         }
 
         idleTime = Duration.ZERO
-        numRunningTasks.incrementAndGet()
 
         if (!ensureAvailable()) {
             throw ProxyException("Failed to wait for proxy manager to be available")
         }
 
         return try {
+            numRunningTasks.incrementAndGet()
             task()
         } catch (e: Exception) {
             throw e
@@ -174,24 +182,23 @@ class ProxyManager(
             return
         }
 
-        if (excludedProxy == this.proxyEntry) {
+        if (excludedProxy == this.currentProxyEntry) {
             tryConnectToNext()
         }
     }
 
     private fun startWatcher() {
         var tick = 0
-        while (!isClosed && tick++ < Int.MAX_VALUE) {
+        while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
             try {
+                checkAndReport(tick)
+
                 try {
                     TimeUnit.SECONDS.sleep(1)
                 } catch (e: InterruptedException) {
                     log.info("Proxy watcher loop is interrupted after {} rounds", tick)
                     Thread.currentThread().interrupt()
-                    break
                 }
-
-                checkAndReport(tick)
             } catch (e: Throwable) {
                 log.error("Unexpected proxy manager error: ", e)
             }
@@ -216,13 +223,13 @@ class ProxyManager(
             return
         }
 
-        val lastProxy = proxyEntry
-        val proxyAlive = checkAndUpdateProxyStatus()
+        val lastProxy = currentProxyEntry
+        val availability = checkAvailability()
 
         // always false, feature disabled
         val isIdle = isIdle()
         if (isIdle) {
-            if (proxyAlive && lastProxy != null) {
+            if (availability.first && lastProxy != null) {
                 proxyPool.retire(lastProxy)
                 // all free proxies are very likely be expired
                 log.info("Proxy manager is idle, clear proxy pool")
@@ -232,7 +239,7 @@ class ProxyManager(
             log.info("Proxy manager is idle, disconnect proxy")
             disconnect(true)
         } else {
-            if (!proxyAlive || !isConnected) {
+            if (!availability.first || !isConnected) {
                 tryConnectToNext()
             }
         }
@@ -240,29 +247,34 @@ class ProxyManager(
         idleCount = if (isIdle) idleCount++ else 0
         val duration = min(20 + idleCount / 5, 120)
         if (tick % duration == 0) {
-            report(isIdle, proxyAlive, lastProxy)
+            report(isIdle, availability.first, lastProxy)
             if (verbose) {
                 log.info(report)
             }
         }
     }
 
-    private fun checkAndUpdateProxyStatus(): Boolean {
-        val lastProxy = proxyEntry
-        val proxyAlive = when {
-            lastProxy == null -> false
-            lastProxy.willExpireAfter(Duration.ofMinutes(1)) -> false
-            !lastProxy.test() -> false
-            else -> true
+    private fun checkAvailability(): Pair<Boolean, String> {
+        if (!autoRefresh) {
+            return true to ""
         }
 
-        if (!proxyAlive && lastProxy != null) {
-            log.info("Proxy <{}> is force retired", lastProxy.display)
+        val lastProxy = currentProxyEntry
+        val availability = when {
+            lastProxy == null -> false to "no proxy"
+            lastProxy.isTestIp -> true to "is test ip"
+            lastProxy.willExpireAfter(Duration.ofMinutes(1)) -> false to "will expire"
+            !lastProxy.test() -> false to "unreachable"
+            else -> true to ""
+        }
+
+        if (!availability.first && lastProxy != null) {
+            log.info("Proxy <{}> is retired ({})", lastProxy.display, availability.second)
             proxyPool.retire(lastProxy)
-            proxyEntry = null
+            currentProxyEntry = null
         }
 
-        return proxyAlive
+        return availability
     }
 
     private fun isIdle(): Boolean {
@@ -319,29 +331,36 @@ class ProxyManager(
             thread.start()
 
             var i = 0
-            while (!isClosed && !NetUtil.testNetwork("127.0.0.1", nextPort)) {
+            while (!isClosed && !NetUtil.testNetwork("127.0.0.1", nextPort) && !Thread.currentThread().isInterrupted) {
                 if (i++ > 3) {
                     log.warn("Waited {}s for proxy manager to start ...", i)
                 }
                 if (i > 20) {
                     disconnect(notifyAll = true)
-                    throw TimeoutException("Timeout to wait for proxy manager")
+                    throw TimeoutException("Timeout to wait for proxy to connect")
                 }
-                TimeUnit.SECONDS.sleep(1)
+
+                try {
+                    TimeUnit.SECONDS.sleep(1)
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                }
             }
 
             log.info("Proxy manager is started at {} with {}",
                     nextPort,
                     if (proxy != null) "external proxy <${proxy.display}>" else "no proxy")
 
-            forwardServer = server
-            forwardServerThread = thread
-            port = nextPort
-            lastProxyEntry = proxyEntry
-            proxyEntry = proxy
-            ++numTotalConnects
+            connectionLock.withLock {
+                forwardServer = server
+                forwardServerThread = thread
+                port = nextPort
+                lastProxyEntry = currentProxyEntry
+                currentProxyEntry = proxy
+                ++numTotalConnects
 
-            connected.set(true)
+                connected.set(true)
+            }
         } finally {
             connectionLock.withLock {
                 connectionCond.signalAll()
@@ -359,16 +378,17 @@ class ProxyManager(
             }
         }
 
-        val server = forwardServer
-        if (server != null) {
-            log.info("Disconnecting proxy manager with {} ...", server.proxyConfig?.hostPort)
+        connectionLock.withLock {
+            val server = forwardServer
+            if (server != null) {
+                log.info("Disconnecting proxy with {} ...", server.proxyConfig?.hostPort)
+            }
+            forwardServer?.use { it.close() }
+            forwardServerThread?.interrupt()
+            forwardServerThread?.join(threadJoinTimeout.toMillis())
+            forwardServer = null
+            forwardServerThread = null
         }
-
-        forwardServer?.use { it.close() }
-        forwardServerThread?.interrupt()
-        forwardServerThread?.join(threadJoinTimeout.toMillis())
-        forwardServer = null
-        forwardServerThread = null
     }
 
     @Synchronized
@@ -390,11 +410,11 @@ class ProxyManager(
         }
     }
 
-    private fun report(isIdle: Boolean, proxyAlive: Boolean, lastProxy: ProxyEntry? = null) {
+    private fun report(isIdle: Boolean, available: Boolean, lastProxy: ProxyEntry? = null) {
         report = String.format("%s%s running tasks, %s | %s",
                 if (isIdle) "[Idle] " else "",
                 numRunningTasks,
-                formatProxy(proxyAlive, lastProxy),
+                formatProxy(available, lastProxy),
                 proxyPool)
     }
 

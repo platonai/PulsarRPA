@@ -1,10 +1,7 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
-import ai.platon.pulsar.common.BeanFactory
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
@@ -12,7 +9,6 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
-import org.h2.util.Utils
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -355,17 +351,17 @@ open class PulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             context.webDb.flush()
-
             closableObjects.forEach { o -> o.use { it.close() } }
-
             context.closeSession(this)
 
-            String.format("Pulsar session $this is closed. Used memory: %,dKB, free memory: %,dKB",
-                    Utils.getMemoryUsed(), Utils.getMemoryFree()).also { log.info(it) }
+            log.info("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
+                    id,
+                    StringUtil.readableBytes(Systems.getMemoryUsed()),
+                    StringUtil.readableBytes(Systems.getMemoryFree()))
         }
     }
 
-    fun getLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
+    private fun getLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
         var link = ele.attr("abs:href")
         if (normalize) link = normalize(link).takeIf { it.isValid }?.url
         if (link != null && ignoreQuery) link = Urls.getUrlWithoutParameters(link)

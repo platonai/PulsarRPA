@@ -116,7 +116,7 @@ class AppMonitor(
         val idleTime = DateTimeUtil.readableDuration(p.idleTime)
         log.info("WDM - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {} rounds: {}",
                 if (isIdle) "[Idle($idleTime)] " else "",
-                p.freeSize, p.workingSize, p.aliveSize,
+                p.nFree, p.nWorking, p.nActive,
                 WebDriverPool.numCrashed, WebDriverPool.numRetired, WebDriverPool.numQuit,
                 WebDriverPool.pageViews,
                 round

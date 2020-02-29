@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.proxy.ProxyManager
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import kotlin.math.roundToLong
@@ -17,11 +16,11 @@ import kotlin.math.roundToLong
  * Note: SeleniumEngine should be process scope
  */
 class RobustBrowserEmulator(
-        privacyContext: BrowserPrivacyContext,
+        privacyContextFactory: PrivacyContextFactory,
         fetchTaskTracker: FetchTaskTracker,
         metricsSystem: MetricsSystem,
         immutableConfig: ImmutableConfig
-): BrowserEmulator(privacyContext, fetchTaskTracker, metricsSystem, immutableConfig) {
+): BrowserEmulator(privacyContextFactory, fetchTaskTracker, metricsSystem, immutableConfig) {
     companion object {
         private const val SMALL_CONTENT_LIMIT = 1_000_000 / 2 // 500KiB
     }
@@ -36,10 +35,7 @@ class RobustBrowserEmulator(
         val url = page.url
         val length = pageSource.length.toLong()
         val aveLength = page.aveContentBytes.toLong()
-        val readableLength = StringUtil.readableByteCount(length)
-        val readableAveLength = StringUtil.readableByteCount(aveLength)
         var integrity = HtmlIntegrity.OK
-        var message = ""
 
         if (length == 0L) {
             integrity = HtmlIntegrity.EMPTY_0B
@@ -74,26 +70,22 @@ class RobustBrowserEmulator(
         if (integrity.isOK && status.isSuccess && stat != null) {
             val batchAveLength = stat.averagePageSize.roundToLong()
             if (stat.numSuccessTasks > 3 && batchAveLength > 10_000 && length < batchAveLength / 10) {
-                val readableBatchAveLength = StringUtil.readableByteCount(batchAveLength)
-                val fetchCount = page.fetchCount
-                message = "retrieved: $readableLength, batch: $readableBatchAveLength" +
-                        " history: $readableAveLength/$fetchCount ($integrity)"
-
                 integrity = HtmlIntegrity.TOO_SMALL_IN_BATCH
+
+                if (log.isInfoEnabled) {
+                    val readableLength = StringUtil.readableBytes(length)
+                    val readableAveLength = StringUtil.readableBytes(aveLength)
+                    val readableBatchAveLength = StringUtil.readableBytes(batchAveLength)
+                    val fetchCount = page.fetchCount
+                    val message = "retrieved: $readableLength, batch: $readableBatchAveLength" +
+                            " history: $readableAveLength/$fetchCount ($integrity)"
+                    log.info(message)
+                }
             }
         }
 
         if (integrity.isOK) {
             integrity = checkHtmlIntegrity(pageSource)
-        }
-
-        if (integrity.isNotOK) {
-            if (message.isEmpty()) {
-                val fetchCount = page.fetchCount
-                message = "retrieved: $readableLength, history: $readableAveLength/$fetchCount ($integrity)"
-            }
-
-            logIncompleteContentPage(task, message)
         }
 
         return integrity
@@ -147,17 +139,4 @@ class RobustBrowserEmulator(
         return HtmlIntegrity.OK
     }
 
-    private fun logIncompleteContentPage(task: FetchTask, message: String) {
-        val proxyEntry = task.proxyEntry
-        val domain = task.domain
-        val link = AppPaths.uniqueSymbolicLinkForURI(task.url)
-
-        if (proxyEntry != null) {
-            val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Page broken | {} | proxy: {} domain: {}({}) | file://{} | {}",
-                    message, proxyEntry.display, domain, count, link, task.url)
-        } else {
-            log.warn("Page broken | {} | file://{} | {}", message, link, task.url)
-        }
-    }
 }

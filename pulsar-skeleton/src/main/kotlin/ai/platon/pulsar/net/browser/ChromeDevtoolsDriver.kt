@@ -14,6 +14,7 @@ import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
@@ -23,9 +24,9 @@ import kotlin.streams.toList
  * TODO: more compatible with RemoteWebDriver
  * */
 class ChromeDevtoolsDriver(
-        private val userAgent: String = "",
-        private val browserControl: WebDriverControl,
-        private val launchOptions: ChromeDevtoolsOptions
+        userAgent: String = "",
+        browserControl: WebDriverControl,
+        launchOptions: ChromeDevtoolsOptions
 ): RemoteWebDriver() {
 
     companion object {
@@ -35,7 +36,7 @@ class ChromeDevtoolsDriver(
         private val numInstances = AtomicInteger()
         private lateinit var launcher: ChromeLauncher
         private lateinit var chrome: ChromeService
-        private val tabs = mutableMapOf<String, ChromeTab>()
+        private val devToolsServices = ConcurrentLinkedQueue<ChromeDevToolsService>()
 
         private fun launchChromeIfNecessary(launchOptions: ChromeDevtoolsOptions) {
             synchronized(ChromeLauncher::class.java) {
@@ -49,7 +50,10 @@ class ChromeDevtoolsDriver(
 
         private fun closeChromeIfNecessary() {
             synchronized(ChromeLauncher::class.java) {
-                if (chromeProcessLaunched) {
+                if (chromeProcessLaunched && numInstances.get() == 0) {
+                    devToolsServices.forEach { it.waitUntilClosed() }
+                    devToolsServices.clear()
+
                     chrome.use { it.close() }
                     launcher.use { it.close() }
                     chromeProcessLaunched = false
@@ -88,8 +92,6 @@ class ChromeDevtoolsDriver(
     private val fetch get() = devTools.fetch
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
-    private val pageLock = ReentrantLock()
-    private val pageCondition = pageLock.newCondition()
     private val closed = AtomicBoolean()
     val isClosed get() = closed.get()
 
@@ -110,9 +112,10 @@ class ChromeDevtoolsDriver(
         // In chrome every tab is a separate process
         tab = chrome.createTab()
         navigateUrl = tab.url?:""
-        tabs[tab.id] = tab
 
         devTools = chrome.createDevToolsService(tab)
+        devToolsServices.add(devTools)
+
         if (userAgent.isNotEmpty()) {
             emulation.setUserAgentOverride(userAgent)
         }
@@ -282,8 +285,8 @@ class ChromeDevtoolsDriver(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            tabs.remove(tab.id)
             devTools.use { it.close() }
+            numInstances.decrementAndGet()
         }
     }
 

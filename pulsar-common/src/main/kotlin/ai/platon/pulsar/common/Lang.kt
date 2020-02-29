@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -11,37 +12,39 @@ enum class FlowState {
 }
 
 /**
- * We want to implement a critical-area-1/critical-area-2 functionality where only one thread is allowed
- * in critical-area-1 while multiple threads are allowed in critical-area-2,
- * critical-area-1 are critical-area-2 are exclusive
+ * Implement a freezer/task functionality
+ * 1. freezer and task can not run at the same time
+ * 2. freezers can run at the same time
+ * 3. task can run at the same time
  * */
 abstract class Freezable {
     private val lock = ReentrantLock() // lock for containers
     private val notFrozen = lock.newCondition()
     private val notBusy = lock.newCondition()
-    private var numFreezers = 0
-    private var numTasks = 0
-    private var nanos = Duration.ofMillis(500).toNanos()
-    // for debug purpose only
+    private var pollingNanos = Duration.ofMillis(500).toNanos()
+    val numFreezers = AtomicInteger()
+    val numTasks = AtomicInteger()
+    // for debug purpose
     var enabled = true
+    val disabled get() = !enabled
 
     fun <T> freeze(action: () -> T): T {
-        if (!enabled) {
+        if (disabled) {
             return action()
         }
 
         lock.withLock {
-            while (numTasks > 0 && nanos > 0) {
-                nanos = notBusy.awaitNanos(nanos)
+            while (numTasks.get() > 0 && pollingNanos > 0) {
+                pollingNanos = notBusy.awaitNanos(pollingNanos)
             }
-            ++numFreezers
+            numFreezers.incrementAndGet()
         }
 
         try {
             return action()
         } finally {
             lock.withLock {
-                if (--numFreezers == 0) {
+                if (numFreezers.decrementAndGet() == 0) {
                     notFrozen.signalAll()
                 }
             }
@@ -49,23 +52,23 @@ abstract class Freezable {
     }
 
     fun <T> whenUnfrozen(action: () -> T): T {
-        if (!enabled) {
+        if (disabled) {
             return action()
         }
 
         // wait until not frozen
         lock.withLock {
-            while (numFreezers > 0 && nanos > 0) {
-                nanos = notFrozen.awaitNanos(nanos)
+            while (numFreezers.get() > 0 && pollingNanos > 0) {
+                pollingNanos = notFrozen.awaitNanos(pollingNanos)
             }
-            ++numTasks
+            numTasks.incrementAndGet()
         }
 
         try {
             return action()
         } finally {
             lock.withLock {
-                if (--numTasks == 0) {
+                if (numTasks.decrementAndGet() == 0) {
                     // only one
                     notBusy.signal()
                 }

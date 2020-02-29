@@ -20,13 +20,14 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * Manager all external proxies
+ * Manage all external proxies
  * Check all unavailable proxies, recover them if possible.
  * This might take a long time, so it should be run in a separate thread
 */
@@ -41,6 +42,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     private val containerLock = ReentrantLock()
     private val closed = AtomicBoolean()
 
+    /**
+     * The probability to choose the test ip if it's absent
+     * */
+    var testIpRate = 0.3
     val isClosed get() = closed.get()
     var lastActiveTime = Instant.now()
     var idleTimeout = Duration.ofMinutes(5)
@@ -140,9 +145,54 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         return recovered
     }
 
+    @Synchronized
+    fun updateProxies(asap: Boolean = false) {
+        log.trace("Update proxies ...")
+
+        reloadProviders(Duration.ofSeconds(10))
+
+        val minFreeProxies = 3
+
+        val maxTry = 5
+        var i = 0
+        while (i++ < maxTry && numFreeProxies < minFreeProxies && !Thread.currentThread().isInterrupted) {
+            providers.forEach {
+                syncProxiesFromProvider(it)
+            }
+
+            val seconds = if (asap || i > 0) 0L else 5L
+            reloadProxies(Duration.ofSeconds(seconds))
+
+            try {
+                TimeUnit.SECONDS.sleep(3)
+            } catch (e: InterruptedException) {}
+        }
+    }
+
+    /**
+     * Get a test ip by a probability if exist in [ENABLED_TEST_PROXY_FILE]
+     * */
+    fun getTestProxyIfAbsent(): ProxyEntry? {
+        if (testIpRate > 0 && ThreadLocalRandom.current().nextDouble() <= testIpRate) {
+            // if testIpRate == 0.3, we hit the ( 30% ) case
+
+            if (Files.exists(TEST_PROXY_FILE)) {
+                return Files.readAllLines(TEST_PROXY_FILE).firstOrNull()
+                        ?.let { ProxyEntry.parse(it) }
+                        ?.also { it.isTestIp = true }
+            }
+        }
+
+        return null
+    }
+
     // Block until timeout or an available proxy entry returns
     private fun pollOne(): ProxyEntry? {
-        val proxyEntry: ProxyEntry?
+        var proxyEntry = getTestProxyIfAbsent()
+        if (proxyEntry != null) {
+            return proxyEntry
+        }
+
         try {
             proxyEntry = freeProxies.poll(pollingInterval.seconds, TimeUnit.SECONDS)
         } catch (ignored: InterruptedException) {
@@ -171,38 +221,14 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         return proxy
     }
 
-    @Synchronized
-    fun updateProxies(asap: Boolean = false) {
-        log.trace("Update proxies ...")
-
-        reloadProviders(Duration.ofSeconds(10))
-
-        val minFreeProxies = 3
-
-        val maxTry = 5
-        var i = 0
-        while (i++ < maxTry && numFreeProxies < minFreeProxies && !Thread.currentThread().isInterrupted) {
-            providers.forEach {
-                syncProxiesFromProvider(it)
-            }
-
-            val seconds = if (asap || i > 0) 0L else 5L
-            reloadProxies(Duration.ofSeconds(seconds))
-
-            try {
-                TimeUnit.SECONDS.sleep(3)
-            } catch (e: InterruptedException) {}
-        }
-    }
-
     private fun syncProxiesFromProvider(providerUrl: String): Int {
-        val SPACE = StringUtils.SPACE
-        val url = providerUrl.substringBefore(SPACE)
-        val metadata = providerUrl.substringAfter(SPACE)
+        val space = StringUtils.SPACE
+        val url = providerUrl.substringBefore(space)
+        val metadata = providerUrl.substringAfter(space)
         var vendor = "none"
         var format = "txt"
 
-        metadata.split(SPACE).zipWithNext().forEach {
+        metadata.split(space).zipWithNext().forEach {
             when (it.first) {
                 "-vendor" -> vendor = it.second
                 "-fmt" -> format = it.second
@@ -362,14 +388,8 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     }
 
     override fun close() {
-        if (closed.getAndSet(true)) {
-            return
-        }
-
-        try {
+        if (closed.compareAndSet(false, true)) {
             dump()
-        } catch (e: Throwable) {
-            log.warn(StringUtil.stringifyException(e))
         }
     }
 
@@ -383,6 +403,8 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         val AVAILABLE_PROXY_DIR = AppPaths.get(BASE_DIR, "proxies-available")
         val ARCHIVE_DIR = AppPaths.get(BASE_DIR, "proxies-archived")
         val LATEST_AVAILABLE_PROXY = AppPaths.get( "latest-available-proxy")
+
+        val TEST_PROXY_FILE = AppPaths.get(BASE_DIR, "test-ip")
         val INIT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.HOME_DIR)
                 .map { Paths.get(it, "proxy.providers.txt") }
 

@@ -628,15 +628,15 @@ public final class StringUtil {
         return sb.reverse().toString();
     }
 
-    public static String readableByteCount(long bytes) {
-        return readableByteCount(bytes, -1, false);
+    public static String readableBytes(long bytes) {
+        return readableBytes(bytes, -1, false);
     }
 
-    public static String readableByteCount(long bytes, boolean si) {
-        return readableByteCount(bytes, -1, si);
+    public static String readableBytes(long bytes, boolean si) {
+        return readableBytes(bytes, -1, si);
     }
 
-    public static String readableByteCount(long bytes, int scale, boolean si) {
+    public static String readableBytes(long bytes, int scale, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(unit));

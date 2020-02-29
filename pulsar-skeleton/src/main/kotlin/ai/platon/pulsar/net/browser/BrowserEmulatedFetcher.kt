@@ -6,6 +6,8 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -40,7 +42,6 @@ internal class BatchFetchContext(
 ) {
     var startTime = Instant.now()
     val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
-    val incognito = volatileConfig.getBoolean(BROWSER_INCOGNITO, false)
     // The function must return in a reasonable time
     val threadTimeout = volatileConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(5)
     val idleTimeout = threadTimeout.plusSeconds(5)
@@ -58,11 +59,17 @@ internal class BatchFetchContext(
 
     // Submit all tasks
     var round = 0L
-
-    val stat = BatchStat()
     var idleSeconds = 0
 //    // external connection is lost, might be caused by proxy
     var connectionLost = false
+    /**
+     * Batch statistics
+     * */
+    val stat = BatchStat()
+    var lastSuccessTask: FetchTask? = null
+    var lastFailedTask: FetchTask? = null
+    var lastSuccessProxy: ProxyEntry? = null
+    var lastFailedProxy: ProxyEntry? = null
 
     var beforeFetchHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
     var afterFetchHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)
@@ -70,13 +77,38 @@ internal class BatchFetchContext(
     var beforeFetchAllHandler = volatileConfig.getBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BatchHandler::class.java)
     var afterFetchAllHandler = volatileConfig.getBean(FETCH_AFTER_FETCH_BATCH_HANDLER, BatchHandler::class.java)
 
-    fun reset() {
-        stat.numTaskDone = 0
-        stat.numFailedTasks = 0
+    val root: BatchFetchContext get() {
+        var r = this
+        while (r.parent != null) {
+            r = r.parent!!
+        }
+        return r
+    }
+    var parent: BatchFetchContext? = null
+    var child: BatchFetchContext? = null
 
-        round = 0L
-        idleSeconds = 0
-        startTime = Instant.now()
+    fun lastTaskTimeout(): Boolean {
+        return batchSize > 10 && workingTasks.size == 1 && idleSeconds >= 30
+    }
+
+    fun createChild(): BatchFetchContext {
+        val retryPages = privacyLeakedTasks.map { it.page }
+        val cx = BatchFetchContext(batchId, retryPages, volatileConfig)
+        cx.parent = this
+        child = cx
+        return cx
+    }
+
+    fun collectResponses(): List<Response> {
+        val responses = mutableListOf<Response>()
+
+        var cx: BatchFetchContext? = root
+        do {
+            cx?.finishedTasks?.mapTo(responses) { it.value.response }
+            cx = cx?.child
+        } while (cx != null)
+
+        return responses
     }
 
     fun beforeFetch(page: WebPage) {
@@ -105,14 +137,14 @@ internal class BatchFetchContext(
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserEmulatedFetcher(
-        val privacyContext: BrowserPrivacyContext,
+        val privacyContextFactory: PrivacyContextFactory,
         private val executor: FetchThreadExecutor,
         private val browserEmulator: BrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverPool = privacyContext.driverPool
+    private val driverPool = privacyContextFactory.driverPool
     private val closed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -134,11 +166,10 @@ class BrowserEmulatedFetcher(
 
         val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
         val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
-        val incognito = volatileConfig.getBoolean(BROWSER_INCOGNITO, false)
-        val task = FetchTask(0, priority, page, volatileConfig, incognito = incognito)
+        val task = FetchTask(0, priority, page, volatileConfig)
 
         return try {
-            privacyContext.runInContext(task) { _, driver ->
+            privacyContextFactory.activeContext.runInContext(task) { _, driver ->
                 browserEmulator.fetch(task, driver)
             }.response
         } catch (e: IllegalStateException) {
@@ -177,74 +208,54 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        val cx = BatchFetchContext(batchId, pages, volatileConfig)
+        var cx = BatchFetchContext(batchId, pages, volatileConfig)
 
         // allocate drivers before batch fetch context timing
         allocateDriversIfNecessary(cx, cx.volatileConfig)
 
         log.info("Start batch task {} with {} pages in parallel", cx.batchId, cx.batchSize)
 
-        cx.beforeFetchAll(pages)
+        cx.beforeFetchAll(cx.pages)
 
         var retry = 1
         do {
-            if (privacyContext.isPrivacyLeaked) {
-                privacyContext.reset()
-                cx.reset()
+            if (privacyContextFactory.activeContext.isPrivacyLeaked) {
+                privacyContextFactory.reset()
+                cx = cx.createChild()
             }
 
             parallelFetch(cx)
-        } while (retry++ <= 2 && privacyContext.isPrivacyLeaked)
+        } while (retry++ <= 2 && privacyContextFactory.activeContext.isPrivacyLeaked)
 
         cx.afterFetchAll(cx.pages)
 
         logBatchFinished(cx)
 
-        return cx.finishedTasks.values.map { it.response }
+        return cx.collectResponses()
     }
 
     /**
      * TODO: merge with [ai.platon.pulsar.crawl.fetch.FetchThread]
      * */
     private fun parallelFetch(cx: BatchFetchContext) {
-        if (cx.privacyLeakedTasks.isNotEmpty()) {
-            cx.batchSize = cx.privacyLeakedTasks.size
-            cx.privacyLeakedTasks.forEachIndexed { batchTaskId, task ->
-                task.reset()
-                cx.workingTasks[task] = executor.submit { doFetch(task, cx) }
-            }
-            cx.privacyLeakedTasks.clear()
-        } else {
-            // Submit all tasks
-            cx.pages.forEachIndexed { batchTaskId, page ->
-                val task = FetchTask(
-                        batchId = cx.batchId,
-                        batchTaskId = batchTaskId,
-                        priority = cx.priority,
-                        page = page,
-                        volatileConfig = cx.volatileConfig,
-                        batchSize = cx.batchSize,
-                        incognito = cx.incognito
-                )
-                cx.workingTasks[task] = executor.submit { doFetch(task, cx) }
-            }
-        }
-
-        val isLastTaskTimeout: (cx: BatchFetchContext) -> Boolean = {
-            it.batchSize > 10 && it.workingTasks.size == 1 && it.idleSeconds >= 30
+        // Submit all tasks
+        cx.pages.forEachIndexed { i, page ->
+            val task = FetchTask(
+                    batchId = cx.batchId,
+                    batchTaskId = 1 + i,
+                    priority = cx.priority,
+                    page = page,
+                    volatileConfig = cx.volatileConfig,
+                    batchSize = cx.batchSize
+            )
+            cx.workingTasks[task] = executor.submit { doFetch(task, cx) }
         }
 
         // Since the urls in the batch are usually in the same domain,
         // if there are too many failure, the rest tasks are very likely run to failure too
         val done = ArrayList<FetchResult>(cx.numWorkingTasks)
-        while (cx.stat.numTaskDone < cx.batchSize
-                && cx.stat.numFailedTasks <= cx.numAllowedFailures
-                && cx.idleSeconds < cx.idleTimeout.seconds
-                && !cx.connectionLost
-                && !privacyContext.isPrivacyLeaked
-                && !isLastTaskTimeout(cx)
-                && !closed.get()
-                && !Thread.currentThread().isInterrupted) {
+        var state: String
+        do {
             ++cx.round
 
             // loop and wait for all parallel tasks return
@@ -263,16 +274,32 @@ class BrowserEmulatedFetcher(
                 Thread.currentThread().interrupt()
                 log.warn("Browser emulator is interrupted, {} pending tasks will be canceled", cx.workingTasks.size)
             }
-        }
+
+            state = checkState(cx)
+        } while (state == "continue")
 
         if (cx.workingTasks.isNotEmpty()) {
-            handleBatchAbort(cx)
+            handleBatchAbort(cx, state)
+        }
+    }
+
+    private fun checkState(cx: BatchFetchContext): String {
+        return when {
+            cx.stat.numTaskDone >= cx.batchSize -> "all done"
+            cx.stat.numFailedTasks > cx.numAllowedFailures -> "too many failure"
+            cx.idleSeconds > cx.idleTimeout.seconds -> "idle timeout"
+            cx.connectionLost -> "connection lost"
+            cx.lastTaskTimeout() -> "last task timeout"
+            privacyContextFactory.activeContext.isPrivacyLeaked -> "privacy leak"
+            Thread.currentThread().isInterrupted -> "interrupted"
+            closed.get() -> "program closed"
+            else -> "continue"
         }
     }
 
     private fun allocateDriversIfNecessary(cx: BatchFetchContext, volatileConfig: VolatileConfig) {
         // allocate drivers before batch fetch context timing, the allocation might take long time
-        val requiredDrivers = cx.batchSize - driverPool.freeSize
+        val requiredDrivers = cx.batchSize - driverPool.nFree
         if (requiredDrivers > 0) {
             log.info("Allocating $requiredDrivers drivers")
             driverPool.allocate(0, requiredDrivers, volatileConfig)
@@ -283,9 +310,12 @@ class BrowserEmulatedFetcher(
     private fun doFetch(task: FetchTask, cx: BatchFetchContext): FetchResult {
         return try {
             cx.beforeFetch(task.page)
-            privacyContext.run(task) { _, driver ->
+            privacyContextFactory.activeContext.run(task) { _, driver ->
                 browserEmulator.fetch(task, driver)
             }
+        } catch (e: ProxyException) {
+            log.warn(StringUtil.simplifyException(e))
+            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
         } catch (e: WebDriverPoolExhaust) {
             log.warn("Too many web drivers", e)
             FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)))
@@ -310,27 +340,33 @@ class BrowserEmulatedFetcher(
             val response = result.response
             when (response.httpCode) {
                 ProtocolStatusCodes.SUCCESS_OK -> {
-                    privacyContext.informSuccess()
+                    privacyContextFactory.activeContext.informSuccess("handleTaskDone | ")
 
+                    cx.lastSuccessTask = result.task
+                    cx.lastSuccessProxy = result.task.proxyEntry
                     cx.successPages.add(result.task.page)
                     cx.stat.totalBytes += response.length()
-                    ++cx.stat.numSuccessTasks
+                    cx.stat.numSuccessTasks++
 
                     cx.afterFetchN(cx.successPages)
+
                     logTaskSuccess(cx, url, response, elapsed)
                 }
                 ProtocolStatusCodes.RETRY -> {
+                    cx.lastFailedTask = result.task
+                    cx.lastFailedProxy = result.task.proxyEntry
+
                     if (response.status.isRetry(RetryScope.PRIVACY_CONTEXT)) {
                         cx.privacyLeakedTasks.add(task)
-                        privacyContext.informWarning()
+                        privacyContextFactory.activeContext.informWarning("handleTaskDone | ")
                     }
                 }
-                ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT -> {
-                    log.info("Browser connection timed out | {} | {}", response.status, url)
-                    cx.connectionLost = true
-                }
                 else -> {
+                    cx.lastFailedTask = result.task
+                    cx.lastFailedProxy = result.task.proxyEntry
+
                     ++cx.stat.numFailedTasks
+
                     logTaskFailed(cx, url, response, elapsed)
                 }
             }
@@ -341,8 +377,8 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun handleBatchAbort(cx: BatchFetchContext) {
-        logBatchAbort(cx)
+    private fun handleBatchAbort(cx: BatchFetchContext, state: String) {
+        logBatchAbort(cx, state)
 
         // if there are still pending tasks, cancel them
         cx.workingTasks.forEach { (task, future) ->
@@ -350,13 +386,7 @@ class BrowserEmulatedFetcher(
             future.cancel(true)
         }
         cx.workingTasks.forEach { (task, future) ->
-            // Attempts to cancel execution of this task
-            try {
-                val result = getFetchResult(task, future, cx.threadTimeout)
-                cx.finishedTasks[task] = result
-            } catch (e: Throwable) {
-                log.error("Unexpected error {}", StringUtil.stringifyException(e))
-            }
+            cx.finishedTasks[task] = getFetchResult(task, future, cx.threadTimeout)
         }
     }
 
@@ -366,28 +396,23 @@ class BrowserEmulatedFetcher(
         val headers = MultiMetadata()
 
         try {
-            // Waits if necessary for at most the given time for the computation
+            // Wait if necessary for at most the given time for the computation
             // to complete, and then retrieves its result, if available.
             return future.get(timeout.seconds, TimeUnit.SECONDS)
         } catch (e: java.util.concurrent.CancellationException) {
             // if the computation was cancelled
             status = ProtocolStatus.STATUS_CANCELED
-            headers.put("EXCEPTION", e.toString())
         } catch (e: java.util.concurrent.TimeoutException) {
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
-            headers.put("EXCEPTION", e.toString())
             log.warn("Fetch resource timeout, {}", e)
         } catch (e: java.util.concurrent.ExecutionException) {
             status = ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL)
-            headers.put("EXCEPTION", e.toString())
             log.warn("Unexpected exception", e)
         } catch (e: InterruptedException) {
             status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
-            headers.put("EXCEPTION", e.toString())
-            log.warn("Interrupted when fetch resource {}", e)
+            log.warn("Interrupted when retrieve task result", e)
         } catch (e: Exception) {
             status = ProtocolStatus.STATUS_EXCEPTION
-            headers.put("EXCEPTION", e.toString())
             log.warn("Unexpected exception", e)
         }
 
@@ -405,7 +430,7 @@ class BrowserEmulatedFetcher(
         if (log.isInfoEnabled) {
             log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
                     cx.batchId, String.format("%2d", cx.round),
-                    StringUtil.readableByteCount(response.length()), DateTimeUtil.readableDuration(elapsed),
+                    StringUtil.readableBytes(response.length()), DateTimeUtil.readableDuration(elapsed),
                     response.status,
                     cx.stat.numFailedTasks,
                     url
@@ -415,35 +440,38 @@ class BrowserEmulatedFetcher(
 
     private fun logTaskSuccess(cx: BatchFetchContext, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
-            val code = response.httpCode
-            val codeMessage = if (code != 200) " with code $code" else ""
+            val httpCode = response.httpCode
+            val codeMessage = if (httpCode != 200) " with code $httpCode" else ""
             log.info("Batch {} round {} fetched{}{} in {}{} | {}",
                     cx.batchId, String.format("%2d", cx.round),
                     if (cx.stat.totalBytes < 2000) " only " else " ",
-                    StringUtil.readableByteCount(response.length()),
+                    StringUtil.readableBytes(response.length()),
                     DateTimeUtil.readableDuration(elapsed),
                     codeMessage, url)
         }
     }
 
-    private fun logBatchAbort(cx: BatchFetchContext) {
-        log.warn("Batch {} is abort, finished: {}, pending: {}, failed: {}, total: {}, idle: {}s",
-                cx.batchId,
+    private fun logBatchAbort(cx: BatchFetchContext, state: String) {
+        val proxyDisplay = cx.lastSuccessTask?.proxyEntry?.display
+        log.warn("Batch {} is abort ({}), finished: {}, pending: {}, failed: {}, total: {}, idle: {}s | {}",
+                cx.batchId, state,
                 cx.numFinishedTasks, cx.numWorkingTasks, cx.stat.numFailedTasks, cx.batchSize,
-                cx.idleSeconds)
+                cx.idleSeconds, proxyDisplay?:"(all failed)")
     }
 
     private fun logBatchFinished(cx: BatchFetchContext) {
         if (log.isInfoEnabled) {
             val elapsed = Duration.between(cx.startTime, Instant.now())
-            val aveTime = elapsed.dividedBy(cx.batchSize.toLong())
-            val speed = StringUtil.readableByteCount((1.0 * cx.stat.totalBytes / elapsed.seconds).roundToLong())
-            log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}",
+            val aveTime = elapsed.dividedBy(1 + cx.batchSize.toLong())
+            val speed = StringUtil.readableBytes((1.0 * cx.stat.totalBytes / (1 + elapsed.seconds)).roundToLong())
+            val proxyDisplay = cx.lastSuccessTask?.proxyEntry?.display
+            log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {} | {}",
                     cx.batchId, cx.batchSize,
                     DateTimeUtil.readableDuration(elapsed),
                     DateTimeUtil.readableDuration(aveTime),
-                    StringUtil.readableByteCount(cx.stat.averagePageSize.roundToLong()),
-                    speed
+                    StringUtil.readableBytes(cx.stat.averagePageSize.roundToLong()),
+                    speed,
+                    proxyDisplay?:"(no proxy)"
             )
         }
     }

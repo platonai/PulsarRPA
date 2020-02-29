@@ -1,8 +1,8 @@
 package ai.platon.pulsar
 
+import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.setPropertyIfAbsent
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextClosedEvent
@@ -11,7 +11,6 @@ import org.springframework.context.event.ContextStartedEvent
 import org.springframework.context.event.ContextStoppedEvent
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 // TODO: add event handlers instead of PulsarEnv like global context, spring context should be the only global context
 class AppRefreshedEventHandler : ApplicationListener<ContextRefreshedEvent> {
@@ -64,10 +63,10 @@ class PulsarEnv {
         init {
             // TODO: use spring config
             // prerequisite system properties
-            setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
-            setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
-            setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
-            setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, AppConstants.H2_SESSION_FACTORY)
+            Systems.setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
+            Systems.setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
+            Systems.setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
+            Systems.setPropertyIfAbsent(PARAM_H2_SESSION_FACTORY, AppConstants.H2_SESSION_FACTORY)
 
             // the spring application context
             contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)

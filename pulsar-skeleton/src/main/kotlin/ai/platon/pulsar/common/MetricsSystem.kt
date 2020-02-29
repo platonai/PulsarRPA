@@ -409,7 +409,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             val readableLinks = if (verbose) "file://$link | $readableUrl" else readableUrl
             return String.format(fmt,
                     mark,
-                    StringUtil.readableByteCount(bytes.toLong(), 7, false),
+                    StringUtil.readableBytes(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",
                     jsSate,

@@ -28,9 +28,9 @@ enum class HtmlIntegrity {
     val isOK: Boolean get() = this == OK
     val isNotOK: Boolean get() = !isOK
 
-    val isEmpty: Boolean get() = this == EMPTY_0B || this == EMPTY_39B || this == EMPTY_BODY
+    val isEmpty: Boolean get() = this == EMPTY_0B || this == EMPTY_39B
     val isNotEmpty: Boolean get() = !isEmpty
-
+    val isEmptyBody: Boolean get() = this == EMPTY_BODY
     val isBanned: Boolean get() = this == ROBOT_CHECK
 
     companion object {

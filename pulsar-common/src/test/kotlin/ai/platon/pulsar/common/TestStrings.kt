@@ -26,6 +26,6 @@ class TestStrings {
 
     @Test
     fun testReadableBytes() {
-        println(StringUtil.readableByteCount(1e6.toLong(), true))
+        println(StringUtil.readableBytes(1e6.toLong(), true))
     }
 }

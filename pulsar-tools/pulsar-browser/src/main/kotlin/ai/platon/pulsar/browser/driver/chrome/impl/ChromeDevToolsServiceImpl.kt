@@ -67,8 +67,6 @@ abstract class ChromeDevToolsServiceImpl(
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    var chromeService: ChromeService? = null
-
     private val eventExecutorService = configuration.eventExecutorService
     private val invocationResultMap: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
     private val eventNameToHandlersMap: MutableMap<String, MutableSet<EventListenerImpl>> = mutableMapOf()
@@ -210,7 +208,6 @@ abstract class ChromeDevToolsServiceImpl(
                 }
             }
 
-            chromeService?.use { it.close() }
             eventExecutorService.use { it.close() }
             webSocketService.use { it.close() }
 

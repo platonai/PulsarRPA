@@ -1,13 +1,18 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.vendor.ProxyVendorFactory
 import org.junit.Test
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestProxy {
+    private val proxyPool = ProxyPool(ImmutableConfig())
+
     @Test
     fun testParseProxyEntry() {
         val proxies = arrayOf(
@@ -34,6 +39,22 @@ class TestProxy {
         assertEquals(toReadableLocalDateTime(proxyEntries[0].declaredTTL!!), "2019-08-24T21:55:02")
         assertEquals(toReadableLocalDateTime(proxyEntries[1].declaredTTL!!), "2019-08-24T22:07:31")
         assertEquals(toReadableLocalDateTime(proxyEntries[2].declaredTTL!!), "2019-08-24T21:58:21")
+    }
+
+    @Test
+    fun testGetTestProxyIfAbsent() {
+        repeat(10) {
+            val proxyEntry = proxyPool.getTestProxyIfAbsent()
+            if (proxyEntry != null) {
+                println(proxyEntry)
+            }
+        }
+
+        val count = IntRange(0, 10).sumBy {
+            IntRange(0, 100).mapNotNull { proxyPool.getTestProxyIfAbsent() }.count()
+        } / 10
+        assertTrue { count - proxyPool.testIpRate * 100 < 20 }
+        println(count)
     }
 
     private fun toReadableLocalDateTime(instant: Instant): String {

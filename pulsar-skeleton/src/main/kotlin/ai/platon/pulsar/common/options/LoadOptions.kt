@@ -65,7 +65,7 @@ open class LoadOptions: CommonOptions {
     var scrollInterval = Duration.ofMillis(500)
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
-    var scriptTimeout = Duration.ofSeconds(60)
+    var scriptTimeout = Duration.ofSeconds(90)
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to finish from the first http request start")
     var pageLoadTimeout = Duration.ofMinutes(3)

@@ -28,10 +28,10 @@ class BeforeBatchHandler: BatchHandler() {
 class AfterBatchHandler: BatchHandler() {
     override fun invoke(pages: Iterable<WebPage>) {
         val size = Iterables.size(pages)
-        val length = pages.joinToString { StringUtil.readableByteCount(it.aveContentBytes.toLong()) }
+        val length = pages.joinToString { StringUtil.readableBytes(it.aveContentBytes.toLong()) }
         val lengthAfterCompress = pages.asSequence()
                 .map { it.content?.array()?:"".toByteArray() }
-                .joinToString { StringUtil.readableByteCount(compress(it).second.toLong()) }
+                .joinToString { StringUtil.readableBytes(compress(it).second.toLong()) }
         println("After fetching - Fetched $size pages\nLength: \n$length\nCompressed: \n$lengthAfterCompress")
     }
 

@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
 import ai.platon.pulsar.net.browser.BrowserPrivacyContext
-import ai.platon.pulsar.net.browser.WebDriverPool
+import ai.platon.pulsar.net.browser.PrivacyContextFactory
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
@@ -16,8 +16,8 @@ class AmazonAccess: WebAccess() {
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
     private var round = 0
     private var numTotalPages = 0
-    private val privacyContext = i.context.getBean(BrowserPrivacyContext::class.java)
-    private val batchSize = privacyContext.driverPool.capacity
+    private val privacyContextFactory = i.context.getBean(PrivacyContextFactory::class.java)
+    private val batchSize = privacyContextFactory.activeContext.driverPool.capacity
 
     init {
 //        driverPool.imagesEnabled = false
@@ -80,13 +80,7 @@ class AmazonAccess: WebAccess() {
 
         val args = "-i 1d -ii 1s -ol \"a[href~=/dp/]\""
         val options = LoadOptions.parse(args)
-        var portalPage = i.load(portalUrl, options)
-//        while (portalPage.htmlIntegrity.isNotOK) {
-//            val proxyEntry = driverPool.proxyEntry
-//            driverPool.changeProxy()
-//            log.info("Change proxy and reload portal url: $proxyEntry -> ${driverPool.proxyEntry}")
-//            portalPage = i.load(portalUrl, options)
-//        }
+        val portalPage = i.load(portalUrl, options)
 
         val portalDocument = i.parse(portalPage)
         val links = portalDocument.select("a[href~=/dp/]") {
@@ -116,8 +110,10 @@ class AmazonAccess: WebAccess() {
         val itemOptions = options.createItemOption()
         var j = 0
         Lists.partition(links.shuffled(), batchSize).forEach { urls ->
-            log.info("----------------The ${++j}th batch in round ${round}-------------------------")
-            loadAll(urls, itemOptions)
+            if (i.isActive) {
+                log.info("----------------The ${++j}th batch in round ${round}-------------------------")
+                loadAll(urls, itemOptions)
+            }
         }
     }
 
@@ -142,7 +138,7 @@ class AmazonAccess: WebAccess() {
         pages.joinTo(sb) { it.protocolStatus.name }
         sb.append("\n")
         sb.append("Length: ")
-        lengths.joinTo(sb) { StringUtil.readableByteCount(it) }
+        lengths.joinTo(sb) { StringUtil.readableBytes(it) }
         sb.appendln()
         sb.append(ds)
         log.info(sb.toString())
@@ -151,10 +147,9 @@ class AmazonAccess: WebAccess() {
         if (shortLengths.size > 0.5 * lengths.size) {
             val bannedIps = pages.filter { it.contentBytes < 1e6 }
                     .mapNotNullTo(HashSet()) { it.metadata[Name.PROXY] }.joinToString { it }
-            log.info("Ip banned after $numTotalPages pages, privacy context reset is required. Ips banned: $bannedIps")
+            log.info("Ip banned after $numTotalPages pages. Ips banned: $bannedIps")
 
             // Reset the context only when the extraction result is not as good as expected
-            numTotalPages = 0
             // privacyContext.reset()
         }
     }
