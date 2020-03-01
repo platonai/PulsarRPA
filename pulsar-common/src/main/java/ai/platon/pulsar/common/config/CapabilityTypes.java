@@ -230,7 +230,7 @@ public interface CapabilityTypes {
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
-    String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
+    String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.internal.server";
     String PROXY_INTERNAL_SERVER_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
     String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
     String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";

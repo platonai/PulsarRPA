@@ -269,6 +269,10 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         writeLineTo(report, "parse-flaw.txt")
     }
 
+    fun reportRetiredProxies(report: String) {
+        writeLineTo(report, "retired-proxies.txt")
+    }
+
     private fun getFlawParsedPageReport(page: WebPage, verbose: Boolean): String {
         val pageCounters = page.pageCounters
         val parseStatus = page.parseStatus

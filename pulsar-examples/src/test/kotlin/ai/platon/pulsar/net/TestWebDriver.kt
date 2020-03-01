@@ -75,7 +75,7 @@ class TestWebDriver {
         assertEquals(10, driverPool.nWorking)
         assertEquals(0, driverPool.nFree)
         assertEquals(10, driverPool.nActive)
-        assertEquals(10, driverPool.nAlive)
+        assertEquals(10, driverPool.nOnline)
 
         workingDrivers.forEachIndexed { i, driver ->
             if (i % 2 == 0) driver.retire()

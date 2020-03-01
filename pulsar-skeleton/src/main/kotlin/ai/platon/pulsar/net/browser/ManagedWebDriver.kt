@@ -81,9 +81,6 @@ class ManagedWebDriver(
     val isCrashed get() = status.get().isCrashed
     val isQuit get() = status.get().isQuit
 
-    // The proxy entry ready to use
-    val proxyEntry = AtomicReference<ProxyEntry>()
-
     var incognito = false
 
     /**
@@ -102,9 +99,7 @@ class ManagedWebDriver(
     /**
      * The real time page source return by the browser
      * */
-    val pageSource: String get() = try {
-        if (isQuit) "" else driver.pageSource
-    } catch (t: Throwable) { "(exception)" }
+    val pageSource: String get() = driver.pageSource
 
     /**
      * The id of the session to the browser

@@ -43,7 +43,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     private val closed = AtomicBoolean()
 
     /**
-     * The probability to choose the test ip if it's absent
+     * The probability to choose a test ip if absent
      * */
     var testIpRate = 0.3
     val isClosed get() = closed.get()

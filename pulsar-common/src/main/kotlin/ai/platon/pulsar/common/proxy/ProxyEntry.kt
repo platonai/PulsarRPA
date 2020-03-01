@@ -22,9 +22,10 @@ data class ProxyEntry(
         var host: String,
         var port: Int = 0,
         var id: Int = instanceSequence.incrementAndGet(),
-        var lastServedUrl: String? = null,
+        var lastTarget: String? = null,
         val declaredTTL: Instant? = null,
-        var testSites: List<URL> = TEST_WEB_SITES.toList(),
+        var testUrls: List<URL> = TEST_URLS.toList(),
+        var defaultTestUrl: URL = DEFAULT_TEST_URL,
         var isTestIp: Boolean = false,
         var proxyType: ProxyType = ProxyType.HTTP, // reserved
         var user: String? = null, // reserved
@@ -36,7 +37,7 @@ data class ProxyEntry(
     val nTests = AtomicInteger()
     val nFailedTests = AtomicInteger()
     // accumulated test time
-    val accumResponseTime = AtomicLong()
+    val accumResponseMillis = AtomicLong()
     // failed connection count
     var availableTime: Instant = Instant.now()
     // number of failed pages
@@ -44,7 +45,7 @@ data class ProxyEntry(
     // number of success pages
     val nSuccessPages = AtomicInteger()
     val servedDomains = ConcurrentHashMultiset.create<String>()
-    val speed get() = (1000 * accumResponseTime.get() / 1000 / (0.1 + nTests.get())).roundToInt() / 1000.0
+    val speed get() = (1000 * accumResponseMillis.get() / 1000 / (0.1 + nTests.get())).roundToInt() / 1000.0
     val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
@@ -63,15 +64,15 @@ data class ProxyEntry(
     }
 
     fun test(): Boolean {
-        val target = if (lastServedUrl != null) {
-            URL(lastServedUrl)
-        } else testSites.random()
+        val target = if (lastTarget != null) {
+            URL(lastTarget)
+        } else testUrls.random()
 
         var available = test(target)
-        if (!available && target != DEFAULT_TEST_WEB_SITE) {
-            available = test(DEFAULT_TEST_WEB_SITE)
+        if (!available && target != defaultTestUrl) {
+            available = test(defaultTestUrl)
             if (available) {
-                log.warn("Test web site is unreachable | <{}> - {}", this, target)
+                log.warn("Target unreachable via {} | tests:{} | {}", display, nTests, target)
             }
         }
 
@@ -91,7 +92,7 @@ data class ProxyEntry(
             val end = System.currentTimeMillis()
 
             nTests.incrementAndGet()
-            accumResponseTime.addAndGet(end - start)
+            accumResponseMillis.addAndGet(end - start)
         }
 
         if (!available) {
@@ -114,11 +115,13 @@ data class ProxyEntry(
     }
 
     /**
-     * The string representation can be parsed using [parse]
+     * The string representation, can be parsed using [parse]
      * */
     override fun toString(): String {
         val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
-        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed"
+        val nPages = nSuccessPages.get() + nFailedPages.get()
+        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed" +
+                ", tt:$nTests, ftt:$nFailedTests, pg:$nPages, fpg:$nFailedPages"
     }
 
     override fun compareTo(other: ProxyEntry): Int {
@@ -127,11 +130,11 @@ data class ProxyEntry(
 
     private fun formatDisplay(): String {
         val ttlStr = ttlDuration?.let { DateTimeUtil.readableDuration(ttlDuration) }?:"0s"
-        return "$host:$port($nFailedPages/$nSuccessPages/$ttlStr)"
+        return "$host:$port($nFailedPages/$nSuccessPages/$ttlStr) spd:$speed"
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyPool::class.java)
+        private val log = LoggerFactory.getLogger(ProxyEntry::class.java)
 
         private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
@@ -141,11 +144,11 @@ data class ProxyEntry(
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
         private const val DEFAULT_PROXY_SERVER_PORT = 80
         private const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
-        val DEFAULT_TEST_WEB_SITE = URL("https://www.baidu.com")
-        val TEST_WEB_SITES = mutableSetOf<URL>()
+        val DEFAULT_TEST_URL = URL("https://www.baidu.com")
+        val TEST_URLS = mutableSetOf<URL>()
 
         init {
-            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_WEB_SITES) { Urls.getURLOrNull(it) }
+            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { Urls.getURLOrNull(it) }
         }
 
         fun parse(str: String): ProxyEntry? {

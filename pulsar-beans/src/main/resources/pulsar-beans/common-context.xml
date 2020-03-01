@@ -41,6 +41,7 @@
 
     <bean id="proxyManager" class="ai.platon.pulsar.proxy.ProxyManager" init-method="start" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
+        <constructor-arg ref="metricsSystem"/>
         <constructor-arg ref="conf"/>
     </bean>
 

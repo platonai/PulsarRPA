@@ -1,14 +1,11 @@
 package ai.platon.pulsar.proxy
 
-import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.RuntimeUtils
-import ai.platon.pulsar.common.SimpleLogger
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPool
 import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptInitializer
@@ -41,8 +38,17 @@ import kotlin.math.min
 
 class ProxyManager(
         private val proxyPool: ProxyPool,
+        private val metricsSystem: MetricsSystem,
         private val conf: ImmutableConfig
 ): AutoCloseable {
+
+    enum class Availability {
+        OK, TEST_IP, NO_PROXY, WILL_EXPIRE, GONE;
+
+        val isAvailable get() = this == OK || this == TEST_IP
+        val isNotAvailable get() = !isAvailable
+    }
+
     private val log = LoggerFactory.getLogger(ProxyManager::class.java)
 
     private val numBossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 1)
@@ -54,11 +60,13 @@ class ProxyManager(
 
     private val watcherThread = Thread(this::startWatcher)
     private val watcherStarted = AtomicBoolean()
+
     private val closed = AtomicBoolean()
-    private val connected = AtomicBoolean()
+    private val online = AtomicBoolean()
     private val connectionLock: Lock = ReentrantLock()
-    private val connectionCond: Condition = connectionLock.newCondition()
-    private val conditionPollingInterval = Duration.ofMillis(100)
+    private val connected: Condition = connectionLock.newCondition()
+    private val disconnected: Condition = connectionLock.newCondition()
+    private val pollingInterval = Duration.ofMillis(100)
     private val conditionTimeout = Duration.ofSeconds(30)
 
     private var idleTimeout = conf.getDuration(PROXY_INTERNAL_SERVER_IDLE_TIMEOUT, Duration.ofMinutes(5))
@@ -68,10 +76,10 @@ class ProxyManager(
     private val numRunningTasks = AtomicInteger()
     private var lastActiveTime = Instant.now()
     private var idleTime = Duration.ZERO
-    private val isConnected get() = connected.get()
+    private val isOnline get() = online.get()
     private val isClosed get() = closed.get()
 
-    val isEnabled get() = ProxyPool.isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_INTERNAL_SERVER, true)
+    val isEnabled get() = ProxyPool.isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_FORWARD_SERVER, true)
     val isDisabled get() = !isEnabled
     var port = -1
         private set
@@ -126,8 +134,8 @@ class ProxyManager(
 
         idleTime = Duration.ZERO
 
-        if (!ensureAvailable()) {
-            throw ProxyException("Failed to wait for proxy manager to be available")
+        if (!ensureOnline()) {
+            throw ProxyException("Failed to wait for proxy manager, proxy is unavailable")
         }
 
         return try {
@@ -141,44 +149,40 @@ class ProxyManager(
         }
     }
 
-    fun ensureAvailable(): Boolean {
+    fun ensureOnline(): Boolean {
         if (isDisabled || isClosed) {
             return false
         }
 
         connectionLock.withLock {
-            if (isConnected) {
+            if (isOnline) {
                 return true
             }
 
-            log.info("Waiting for proxy manager to connect ...")
+            log.info("No online proxy, waiting ...")
 
             try {
                 var signaled = false
                 var round = 0
-                val maxRound = conditionTimeout.toMillis() / conditionPollingInterval.toMillis()
-                while (!isClosed && !isConnected && !signaled && round++ < maxRound) {
-                    signaled = connectionCond.await(conditionPollingInterval.toMillis(), TimeUnit.MILLISECONDS)
-                }
-
-                if (!signaled && !isClosed) {
-                    log.warn("Timeout to wait for proxy manager to be ready after $round round")
+                val maxRound = conditionTimeout.toMillis() / pollingInterval.toMillis()
+                while (!isClosed && !isOnline && !signaled && round++ < maxRound) {
+                    signaled = connected.await(pollingInterval.toMillis(), TimeUnit.MILLISECONDS)
                 }
             } catch (e: InterruptedException) {
-                log.warn("Interrupted to waiting for proxy manager")
+                log.warn("Interrupted to wait for a proxy")
                 Thread.currentThread().interrupt()
             }
         }
 
-        return !isClosed && isConnected
+        return !isClosed && isOnline
     }
 
-    fun changeProxyIfRunning(excludedProxy: ProxyEntry) {
+    fun changeProxyIfOnline(excludedProxy: ProxyEntry) {
         if (isDisabled || isClosed) {
             return
         }
 
-        if (!ensureAvailable()) {
+        if (!ensureOnline()) {
             return
         }
 
@@ -191,7 +195,7 @@ class ProxyManager(
         var tick = 0
         while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
             try {
-                checkAndReport(tick)
+                watch(tick)
 
                 try {
                     TimeUnit.SECONDS.sleep(1)
@@ -200,7 +204,7 @@ class ProxyManager(
                     Thread.currentThread().interrupt()
                 }
             } catch (e: Throwable) {
-                log.error("Unexpected proxy manager error: ", e)
+                log.error("Unexpected proxy manager error", e)
             }
         }
 
@@ -211,15 +215,15 @@ class ProxyManager(
         }
     }
 
-    private fun checkAndReport(tick: Int) {
+    private fun watch(tick: Int) {
         // Wait for 5 seconds
-        if (tick % 5 != 0) {
+        if (tick % 10 != 0) {
             return
         }
 
         if (RuntimeUtils.hasLocalFileCommand(CMD_INTERNAL_PROXY_SERVER_DISCONNECT, Duration.ofSeconds(15))) {
             log.info("Find fcmd $CMD_INTERNAL_PROXY_SERVER_DISCONNECT, disconnect proxy")
-            disconnect(true)
+            disconnect()
             return
         }
 
@@ -229,17 +233,17 @@ class ProxyManager(
         // always false, feature disabled
         val isIdle = isIdle()
         if (isIdle) {
-            if (availability.first && lastProxy != null) {
+            if (availability.isAvailable && lastProxy != null) {
                 proxyPool.retire(lastProxy)
                 // all free proxies are very likely be expired
                 log.info("Proxy manager is idle, clear proxy pool")
                 proxyPool.clear()
             }
 
-            log.info("Proxy manager is idle, disconnect proxy")
-            disconnect(true)
+            log.info("Proxy manager is idle, disconnect online proxy")
+            disconnect()
         } else {
-            if (!availability.first || !isConnected) {
+            if (availability.isNotAvailable || !isOnline) {
                 tryConnectToNext()
             }
         }
@@ -247,29 +251,39 @@ class ProxyManager(
         idleCount = if (isIdle) idleCount++ else 0
         val duration = min(20 + idleCount / 5, 120)
         if (tick % duration == 0) {
-            report(isIdle, availability.first, lastProxy)
+            generateReport(isIdle, availability, lastProxy)
             if (verbose) {
                 log.info(report)
             }
         }
     }
 
-    private fun checkAvailability(): Pair<Boolean, String> {
+    private fun startTester() {
+        while (!isClosed && !Thread.currentThread().isInterrupted) {
+            val proxy = currentProxyEntry
+            if (proxy != null) {
+                proxy.test()
+            }
+        }
+    }
+
+    private fun checkAvailability(): Availability {
         if (!autoRefresh) {
-            return true to ""
+            return Availability.OK
         }
 
         val lastProxy = currentProxyEntry
         val availability = when {
-            lastProxy == null -> false to "no proxy"
-            lastProxy.isTestIp -> true to "is test ip"
-            lastProxy.willExpireAfter(Duration.ofMinutes(1)) -> false to "will expire"
-            !lastProxy.test() -> false to "unreachable"
-            else -> true to ""
+            lastProxy == null -> Availability.NO_PROXY
+            lastProxy.isTestIp -> Availability.TEST_IP
+            lastProxy.willExpireAfter(Duration.ofMinutes(1)) -> Availability.WILL_EXPIRE
+            lastProxy.isGone -> Availability.GONE
+            !lastProxy.test() -> Availability.GONE
+            else -> Availability.OK
         }
 
-        if (!availability.first && lastProxy != null) {
-            log.info("Proxy <{}> is retired ({})", lastProxy.display, availability.second)
+        if (lastProxy != null && availability.isNotAvailable) {
+            log.info("Proxy is retired ({}) | <{}>", availability, lastProxy)
             proxyPool.retire(lastProxy)
             currentProxyEntry = null
         }
@@ -298,7 +312,7 @@ class ProxyManager(
             return
         }
 
-        disconnect(notifyAll = false)
+        disconnect()
 
         val proxy = proxyPool.poll()
         if (proxy != null) {
@@ -312,46 +326,32 @@ class ProxyManager(
             return
         }
 
-        if (isConnected) {
-            log.warn("Proxy manager is already running")
-            return
+        // wait until disconnected
+        connectionLock.withLock {
+            while (!isClosed && isOnline) {
+                disconnected.await(pollingInterval.toMillis(), TimeUnit.MILLISECONDS)
+            }
         }
 
         val nextPort = SocketUtils.findAvailableTcpPort(INTERNAL_PROXY_SERVER_PORT_BASE)
         if (log.isTraceEnabled) {
-            log.trace("Ready to start proxy manager at {} with {}",
-                    nextPort,
-                    if (proxy != null) " <${proxy.display}>" else "no proxy")
+            val proxyDescription = if (proxy != null) " <${proxy.display}>" else "no proxy"
+            log.trace("Ready to start forward proxy server at {} with {}", nextPort, proxyDescription)
         }
 
         try {
-            val server = initForwardProxyServer(proxy)
-            val thread = Thread { server.start(nextPort) }
-            thread.isDaemon = true
-            thread.start()
-
-            var i = 0
-            while (!isClosed && !NetUtil.testNetwork("127.0.0.1", nextPort) && !Thread.currentThread().isInterrupted) {
-                if (i++ > 3) {
-                    log.warn("Waited {}s for proxy manager to start ...", i)
-                }
-                if (i > 20) {
-                    disconnect(notifyAll = true)
-                    throw TimeoutException("Timeout to wait for proxy to connect")
-                }
-
-                try {
-                    TimeUnit.SECONDS.sleep(1)
-                } catch (e: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                }
-            }
-
-            log.info("Proxy manager is started at {} with {}",
-                    nextPort,
-                    if (proxy != null) "external proxy <${proxy.display}>" else "no proxy")
-
             connectionLock.withLock {
+                if (isClosed) {
+                    return
+                }
+
+                val server = initForwardProxyServer(proxy)
+                val thread = Thread { server.start(nextPort) }
+                thread.isDaemon = true
+                thread.start()
+
+                waitUntilOnline(nextPort)
+
                 forwardServer = server
                 forwardServerThread = thread
                 port = nextPort
@@ -359,27 +359,26 @@ class ProxyManager(
                 currentProxyEntry = proxy
                 ++numTotalConnects
 
-                connected.set(true)
+                online.set(true)
+                connected.signalAll()
             }
-        } finally {
-            connectionLock.withLock {
-                connectionCond.signalAll()
+
+            if (log.isInfoEnabled) {
+                val proxyDescription = if (proxy != null) "external proxy <${proxy.display}>" else "no proxy"
+                log.info("Forward proxy server is started at {} with {}", nextPort, proxyDescription)
             }
+        } catch (e: Exception) {
+            log.error("Failed to start forward proxy server", e)
         }
     }
 
     @Synchronized
-    private fun disconnect(notifyAll: Boolean = true) {
-        connected.set(false)
-        // notify all to exit waiting
-        if (notifyAll) {
-            connectionLock.withLock {
-                connectionCond.signalAll()
-            }
-        }
-
+    private fun disconnect() {
         connectionLock.withLock {
+            online.set(false)
+
             val server = forwardServer
+            val port = server?.proxyConfig?.port
             if (server != null) {
                 log.info("Disconnecting proxy with {} ...", server.proxyConfig?.hostPort)
             }
@@ -388,6 +387,11 @@ class ProxyManager(
             forwardServerThread?.join(threadJoinTimeout.toMillis())
             forwardServer = null
             forwardServerThread = null
+
+            port?.let { waitUntilOffline(it) }
+            lastProxyEntry?.let { metricsSystem.reportRetiredProxies(it.toString()) }
+
+            disconnected.signalAll()
         }
     }
 
@@ -398,19 +402,53 @@ class ProxyManager(
         }
 
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing proxy manager ...")
+            log.info("Closing proxy manager ... | {}", report)
 
             try {
-                disconnect(notifyAll = true)
+                disconnect()
                 watcherThread.interrupt()
                 watcherThread.join(threadJoinTimeout.toMillis())
             } catch (e: Throwable) {
-                log.error("Failed to close proxy manager - {}", e)
+                log.error("Unexpected exception, failed to close proxy manager", e)
             }
         }
     }
 
-    private fun report(isIdle: Boolean, available: Boolean, lastProxy: ProxyEntry? = null) {
+    private fun waitUntilOnline(port: Int) {
+        var i = 0
+        while (!isClosed && !NetUtil.testNetwork("127.0.0.1", port) && !Thread.currentThread().isInterrupted) {
+            if (i++ > 5) {
+                log.warn("Waited {}s for proxy to be online ...", i)
+            }
+            if (i > 20) {
+                disconnect()
+                throw TimeoutException("Timeout to wait for proxy to connect")
+            }
+
+            try {
+                TimeUnit.SECONDS.sleep(1)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+    }
+
+    private fun waitUntilOffline(port: Int) {
+        var i = 0
+        while (!isClosed && NetUtil.testNetwork("127.0.0.1", port) && !Thread.currentThread().isInterrupted) {
+            if (i++ > 5) {
+                log.warn("Waited {}s for proxy to be offline ...", i)
+            }
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(100)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+    }
+
+    private fun generateReport(isIdle: Boolean, available: Availability, lastProxy: ProxyEntry? = null) {
         report = String.format("%s%s running tasks, %s | %s",
                 if (isIdle) "[Idle] " else "",
                 numRunningTasks,
@@ -418,9 +456,9 @@ class ProxyManager(
                 proxyPool)
     }
 
-    private fun formatProxy(proxyAlive: Boolean, lastProxy: ProxyEntry?): String {
+    private fun formatProxy(available: Availability, lastProxy: ProxyEntry?): String {
         if (lastProxy != null) {
-            return "proxy: ${lastProxy.display}" + if (proxyAlive) "" else "(retired)"
+            return "proxy: ${lastProxy.display}" + if (available.isAvailable) "" else "(retired)"
         }
 
         return "proxy: <none>"
@@ -494,11 +532,4 @@ class ProxyManager(
     companion object {
         val PROXY_LOG = SimpleLogger(HttpProxyServer.PATH, SimpleLogger.INFO)
     }
-}
-
-fun main() {
-    val conf = ImmutableConfig()
-    val proxyPool = ProxyPool(conf)
-    val manager = ProxyManager(proxyPool, conf)
-    manager.start()
 }

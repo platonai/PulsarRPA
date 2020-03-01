@@ -69,12 +69,12 @@ class ProxyMonitor(
 
     private fun testTestWebSites() {
         val removal = mutableSetOf<URL>()
-        ProxyEntry.TEST_WEB_SITES.forEach {
+        ProxyEntry.TEST_URLS.forEach {
             if (!NetUtil.testHttpNetwork(it)) {
                 removal.add(it)
             }
         }
-        ProxyEntry.TEST_WEB_SITES.removeAll(removal)
+        ProxyEntry.TEST_URLS.removeAll(removal)
         log.warn("Unreachable test sites: {}", removal.joinToString(", ") { it.toString() })
     }
 

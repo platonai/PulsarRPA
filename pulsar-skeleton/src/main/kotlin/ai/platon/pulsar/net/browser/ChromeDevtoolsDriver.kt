@@ -218,7 +218,7 @@ class ChromeDevtoolsDriver(
 
         try {
             val evaluate = runtime.evaluate("document.documentElement.outerHTML")
-            return evaluate.result.value.toString()
+            return evaluate?.result?.value?.toString()?:""
         } catch (e: ChromeDevToolsInvocationException) {
             throw NoSuchSessionException(e.message)
         }

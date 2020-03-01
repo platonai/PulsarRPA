@@ -6,13 +6,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.files.ext.export
-import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyException
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.component.FetchComponent
-import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -35,62 +31,6 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
-
-class FetchTask(
-        val batchId: Int,
-        val priority: Int,
-        val page: WebPage,
-        val volatileConfig: VolatileConfig,
-        val id: Int = instanceSequence.incrementAndGet(),
-        val batchSize: Int = 1,
-        val batchTaskId: Int = 0,
-        var stat: BatchStat? = null,
-        var proxyEntry: ProxyEntry? = null, // the proxy used
-        var nRetries: Int = 0, // The number retries inside a privacy context
-        val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
-): Comparable<FetchTask> {
-    lateinit var response: Response
-
-    val url get() = page.url
-    val domain get() = URLUtil.getDomainName(url)
-
-    fun reset() {
-        stat = null
-        proxyEntry = null
-        nRetries = 0
-        canceled.set(false)
-    }
-
-    fun clone(): FetchTask {
-        return FetchTask(
-                batchId = batchId,
-                batchTaskId = batchTaskId,
-                batchSize = batchSize,
-                priority = priority,
-                page = page,
-                volatileConfig = volatileConfig
-        )
-    }
-
-    override fun compareTo(other: FetchTask): Int {
-        return url.compareTo(other.url)
-    }
-
-    companion object {
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id =0)
-        private val instanceSequence = AtomicInteger(0)
-    }
-}
-
-class FetchResult(
-        val task: FetchTask,
-        var response: Response,
-        var exception: Exception? = null
-) {
-    operator fun component1() = task
-    operator fun component2() = response
-    operator fun component3() = exception
-}
 
 class BrowserStatus(
         var status: ProtocolStatus,
@@ -165,6 +105,7 @@ open class BrowserEmulator(
             return FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
         }
 
+        task.thread = Thread.currentThread()
         fetchTaskTracker.totalTaskCount.getAndIncrement()
         fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
 
@@ -172,7 +113,7 @@ open class BrowserEmulator(
     }
 
     open fun cancel(task: FetchTask) {
-        task.canceled.set(true)
+        task.cancel()
         driverPool.cancel(task.url)
     }
 
@@ -201,7 +142,7 @@ open class BrowserEmulator(
             response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.PRIVACY_CONTEXT))
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             if (!isClosed) {
-                log.warn("Unexpected exception: web driver session is closed", e)
+                log.warn("Web driver session is closed. {}", StringUtil.simplifyException(e))
             }
             driver.retire()
             exception = e
@@ -332,11 +273,11 @@ open class BrowserEmulator(
         val page = task.page
 
         if (log.isTraceEnabled) {
-            log.trace("Navigate {}/{}/{} in [t{}]{}, drivers: {}/{}/{}(w/f/t) | {} | timeouts: {}/{}/{}",
+            log.trace("Navigate {}/{}/{} in [t{}]{}, drivers: {}/{}/{}(w/f/o) | {} | timeouts: {}/{}/{}",
                     task.batchTaskId, task.batchSize, task.id,
                     Thread.currentThread().id,
                     if (task.nRetries <= 1) "" else "(${task.nRetries})",
-                    driverPool.nWorking, driverPool.nFree, driverPool.nAlive,
+                    driverPool.nWorking, driverPool.nFree, driverPool.nOnline,
                     page.configuredUrl,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
             )
@@ -605,7 +546,7 @@ open class BrowserEmulator(
                     status.minorName,
                     elapsed,
                     StringUtil.readableBytes(pageSource.length.toLong()),
-                    driverPool.nWorking, driverPool.nFree, driverPool.nAlive,
+                    driverPool.nWorking, driverPool.nFree, driverPool.nOnline,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
         }
@@ -741,7 +682,7 @@ open class BrowserEmulator(
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw CancellationException("Task with dirver #${driver.id} is canceled | ${driver.url}")
+            throw CancellationException("Task with driver #${driver.id} is canceled | ${driver.url}")
         }
     }
 

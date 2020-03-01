@@ -1,6 +1,7 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.AppConstants
@@ -8,27 +9,11 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.ProxyManager
 import org.apache.commons.io.FileUtils
-import org.apache.http.conn.ssl.SSLContextBuilder
-import org.apache.http.conn.ssl.TrustStrategy
-import org.openqa.selenium.Capabilities
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
-import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.devtools.log.Log
-import org.openqa.selenium.devtools.network.Network
-import org.openqa.selenium.remote.CapabilityType
-import org.openqa.selenium.remote.DesiredCapabilities
-import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
-import java.lang.reflect.InvocationTargetException
-import java.security.KeyManagementException
-import java.security.KeyStoreException
-import java.security.NoSuchAlgorithmException
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -39,107 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-
-private class WebDriverFactory(
-        val driverControl: WebDriverControl,
-        val proxyPool: ProxyPool,
-        val proxyManager: ProxyManager,
-        val conf: ImmutableConfig
-) {
-    private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
-    private val defaultWebDriverClass = conf.getClass(
-            BROWSER_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
-
-    /**
-     * Create a RemoteWebDriver
-     * Use reflection so we can make the dependency level to be "provided" rather than "source"
-     */
-    @Throws(NoSuchMethodException::class,
-            IllegalAccessException::class,
-            InvocationTargetException::class,
-            InstantiationException::class
-    )
-    fun create(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
-        val capabilities = driverControl.createGeneralOptions()
-
-        if (ProxyPool.isProxyEnabled()) {
-            setProxy(capabilities)
-        }
-
-        // Choose the WebDriver
-        val browserType = getBrowserType(conf)
-        val driver: WebDriver = when {
-            browserType == BrowserType.CHROME -> {
-                val options = driverControl.createChromeDevtoolsOptions(capabilities)
-                ChromeDevtoolsDriver(driverControl.randomUserAgent(), driverControl, options)
-            }
-            browserType == BrowserType.SELENIUM_CHROME -> {
-                // System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
-                ChromeDriver(driverControl.createChromeOptions(capabilities))
-            }
-            RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
-                defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
-            }
-            else -> defaultWebDriverClass.getConstructor().newInstance()
-        }
-
-        if (driver is ChromeDriver) {
-            val fakeAgent = driverControl.randomUserAgent()
-            val devTools = driver.devTools
-            devTools.createSession()
-            devTools.send(Log.enable())
-            devTools.addListener(Log.entryAdded()) { e -> log.error(e.text) }
-            devTools.send(Network.setUserAgentOverride(fakeAgent, Optional.empty(), Optional.empty()))
-
-            // devTools.send(Network.enable(Optional.of(1000000), Optional.empty(), Optional.empty()));
-            // devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
-        }
-
-        return ManagedWebDriver(driver, priority)
-    }
-
-    @Throws(KeyStoreException::class, NoSuchAlgorithmException::class, KeyManagementException::class)
-    private fun ssl() {
-        val trustStrategy = TrustStrategy { x509Certificates, s -> true }
-        val sslContext = SSLContextBuilder().loadTrustMaterial(null, trustStrategy).build()
-        // SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, new NoopHostnameVerifier());
-    }
-
-    private fun setProxy(capabilities: DesiredCapabilities): ProxyEntry? {
-        var proxyEntry: ProxyEntry? = null
-        var hostPort: String? = null
-        val proxy = org.openqa.selenium.Proxy()
-        if (proxyManager.ensureAvailable()) {
-            // TODO: internal proxy server can be run at another host
-            proxyEntry = proxyManager.currentProxyEntry
-            hostPort = "127.0.0.1:${proxyManager.port}"
-        }
-
-        if (hostPort == null) {
-            // internal proxy server is not available, set proxy to the browser directly
-            proxyEntry = proxyPool.poll()
-            hostPort = proxyEntry?.hostPort
-        }
-
-        proxy.httpProxy = hostPort
-        proxy.sslProxy = hostPort
-        proxy.ftpProxy = hostPort
-
-        capabilities.setCapability(CapabilityType.PROXY, proxy)
-
-        return proxyEntry
-    }
-
-    /**
-     * TODO: choose a best browser automatically: which one is faster yet still have good result
-     * Speed: native > htmlunit > chrome
-     * Quality: chrome > htmlunit > native
-     */
-    private fun getBrowserType(mutableConfig: ImmutableConfig?): BrowserType {
-        return mutableConfig?.getEnum(BROWSER_TYPE, BrowserType.CHROME)
-                ?: conf.getEnum(BROWSER_TYPE, BrowserType.CHROME)
-    }
-}
+import kotlin.math.roundToLong
 
 /**
  * Created by vincent on 18-1-1.
@@ -154,37 +39,40 @@ class WebDriverPool(
     private val log = LoggerFactory.getLogger(WebDriverPool::class.java)
 
     companion object {
-        private val pollingTimeout = Duration.ofMillis(100)
         private val onlineDrivers = Collections.synchronizedSet(HashSet<ManagedWebDriver>())
-        // Every value collection is a first in, first out queue
         private val freeDrivers: MutableMap<Int, ConcurrentLinkedQueue<ManagedWebDriver>> = ConcurrentHashMap()
         private val workingDrivers: MutableMap<Int, ManagedWebDriver> = ConcurrentHashMap()
+
         private val lock = ReentrantLock() // lock for containers
         private val notEmpty = lock.newCondition()
         private val notBusy = lock.newCondition()
+        private val pollingTimeout = Duration.ofMillis(100)
 
+        val startTime = Instant.now()
         val numCrashed = AtomicInteger()
         val numRetired = AtomicInteger()
         val numQuit = AtomicInteger()
-
+        val numReset = AtomicInteger()
         val pageViews = AtomicInteger()
+        val elapsedTime get() = Duration.between(startTime, Instant.now())
+        val speed get() = 1.0 * pageViews.get() / elapsedTime.seconds
     }
 
     private val isHeadless = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
-    private val isClosed = closed.get()
     private val concurrency = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     private var lastActiveTime = Instant.now()
     private var idleTimeout = Duration.ofMinutes(5)
 
     val capacity = conf.getInt(BROWSER_MAX_DRIVERS, concurrency)
+    val isClosed get() = closed.get()
     val isIdle get() = nWorking == 0 && idleTime > idleTimeout
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isAllEmpty get() = lock.withLock { onlineDrivers.isEmpty() && freeDrivers.isEmpty() && workingDrivers.isEmpty() }
     val nWorking get() = workingDrivers.size
     val nFree get() = freeDrivers.values.sumBy { it.size }
     val nActive get() = nWorking + nFree
-    val nAlive get() = onlineDrivers.size
+    val nOnline get() = onlineDrivers.size
 
     /**
      * Allocate [n] drivers with priority [priority]
@@ -200,9 +88,7 @@ class WebDriverPool(
      * */
     fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
         return whenUnfrozen {
-            val driver = poll(priority, volatileConfig)
-                    ?: throw WebDriverPoolExhaust(formatStatus(verbose = true))
-
+            val driver = poll(priority, volatileConfig)?: throw WebDriverPoolExhaust(formatStatus(verbose = true))
             try {
                 action(driver)
             } finally {
@@ -215,8 +101,10 @@ class WebDriverPool(
      * Cancel the fetch task specified by [url] remotely
      * */
     fun cancel(url: String): ManagedWebDriver? {
+        log.debug("About to cancel task - 1 | {} {} | {}", numFreezers, numTasks, url)
         return freeze {
-            cancelInternal(url)
+            log.debug("About to cancel task - 2 | {} {} | {}", numFreezers, numTasks, url)
+            cancelInternal(url).also { log.debug("Task is cancel - 3 | {} {} | {}", numFreezers, numTasks, url) }
         }
     }
 
@@ -234,6 +122,7 @@ class WebDriverPool(
      * */
     fun reset() {
         freeze {
+            numReset.incrementAndGet()
             cancelAllInternal()
             closeAllInternal(incognito = true)
         }
@@ -283,6 +172,10 @@ class WebDriverPool(
         if (closed.compareAndSet(false, true)) {
             closeAllInternal(incognito = true, processExit = true)
         }
+    }
+
+    override fun toString(): String {
+        return formatStatus(true)
     }
 
     private fun pollInternal(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
@@ -379,43 +272,34 @@ class WebDriverPool(
         if (log.isTraceEnabled) {
             log.trace("The {}th web driver is online, " +
                     "browser: {} imagesEnabled: {} pageLoadStrategy: {} capacity: {}",
-                    nAlive, driver.name,
+                    nOnline, driver.name,
                     driverControl.imagesEnabled, driverControl.pageLoadStrategy, capacity)
         }
     }
 
     private fun offer(driver: ManagedWebDriver) {
-        try {
-            lastActiveTime = Instant.now()
+        lastActiveTime = Instant.now()
 
-            // a driver is always hold by only one thread, so it's OK to use it without locks
-            driver.status.set(DriverStatus.FREE)
-            driver.stat.pageViews++
-            pageViews.incrementAndGet()
-        } catch (e: Exception) {
-            // log.warn("Failed to recycle a WebDriver, retire it - {}", StringUtil.simplifyException(e))
-            log.warn(StringUtil.stringifyException(e))
-            driver.status.set(DriverStatus.UNKNOWN)
-            retire(driver, e)
-            return
-        }
+        // a driver is always hold by a single thread, so it's OK to use it without locks
+        driver.stat.pageViews++
+        pageViews.incrementAndGet()
 
         lock.withLock {
-            // it can be retired by close all
-            if (driver.isFree) {
-                val queue = freeDrivers[driver.priority]
-                if (queue != null) {
-                    queue.add(driver)
-                    // TODO: every queue should have a separate signal
-                    notEmpty.signal()
-                } else {
-                    log.warn("Unexpected driver priority {}, no queue exist - {}", driver.priority, driver)
-                }
-            }
-
             workingDrivers.remove(driver.id)
             if (workingDrivers.isEmpty()) {
                 notBusy.signalAll()
+            }
+
+            driver.status.set(DriverStatus.FREE)
+
+            // it can be retired by close all
+            val queue = freeDrivers[driver.priority]
+            if(queue == null) {
+                log.error("Unexpected driver, no free queue for priority {} | {}", driver.priority, driver)
+            } else {
+                queue.add(driver)
+                // TODO: every queue should have a separate signal
+                notEmpty.signal()
             }
         }
     }
@@ -429,19 +313,11 @@ class WebDriverPool(
             return
         }
 
-        if (driver.isQuit) {
-            if (freeDrivers[driver.priority]?.contains(driver) == true) {
-                log.warn("Driver is quit, should not be in free driver list | {}", driver)
-            }
-            if (workingDrivers.containsKey(driver.id)) {
-                log.warn("Driver is quit, should not be in working driver list | {}", driver)
-            }
-            return
-        }
-
-        driver.retire()
+        checkState(driver)
 
         lock.withLock {
+            driver.retire()
+
             freeDrivers[driver.priority]?.remove(driver)
             workingDrivers.remove(driver.id)
 
@@ -465,7 +341,7 @@ class WebDriverPool(
             if (e != null) {
                 log.info("Quiting {} driver {} - {}", driver.status.get().name.toLowerCase(), driver, StringUtil.simplifyException(e))
             } else {
-                log.trace("Quiting {} driver {}", driver.status.get().name.toLowerCase(), driver)
+                log.debug("Quiting {} driver {}", driver.status.get().name.toLowerCase(), driver)
             }
             // Quits this driver, close every associated window
             driver.quit()
@@ -483,8 +359,11 @@ class WebDriverPool(
     private fun closeAllInternal(incognito: Boolean = true, processExit: Boolean = false) {
         lock.withLock {
             var i = 0
-            while (nWorking > 0 && i++ < 120) {
+            while (!isClosed && nWorking > 0 && i++ < 120) {
                 notBusy.await(1, TimeUnit.SECONDS)
+                if (i >= 30 && i % 30 == 0) {
+                    log.warn("Waited {}s for driver pool to be idle", i)
+                }
             }
         }
 
@@ -506,57 +385,49 @@ class WebDriverPool(
             return
         }
 
-        log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
-
-        freeDrivers.flatMap { it.value }.forEach { retire(it, null, external = false) }
-        freeDrivers.forEach { it.value.clear() }
-        freeDrivers.clear()
-
-        workingDrivers.map { it.value }.forEach { retire(it, null, external = false) }
-        workingDrivers.clear()
-
         if (!isHeadless) {
             // should close the browsers by hand
             return
         }
 
-        var count = 0
-        val drivers = onlineDrivers.toList()
+        log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
+
+        freeDrivers.flatMap { it.value }.stream().parallel().forEach { retire(it, null, external = false) }
+        freeDrivers.forEach { it.value.clear() }
+        freeDrivers.clear()
+
+        workingDrivers.map { it.value }.stream().parallel().forEach { retire(it, null, external = false) }
+        workingDrivers.clear()
+
+        onlineDrivers.stream().parallel().forEach { it.quit() }
         onlineDrivers.clear()
 
-        drivers.forEach { driver ->
-            try {
-                if (!driver.isQuit) {
-                    driver.quit()
-                    ++count
-                    numQuit.incrementAndGet()
-                }
-            } catch (e: org.openqa.selenium.WebDriverException) {
-                when {
-                    e.cause is org.apache.http.conn.HttpHostConnectException ->
-                        log.warn("Web driver is already closed: {}", StringUtil.simplifyException(e))
-                    e is org.openqa.selenium.NoSuchSessionException ->
-                        log.warn("Web driver is already closed: {}", StringUtil.simplifyException(e))
-                    else -> log.error("Unexpected exception: {}", e)
-                }
-            } catch (e: Throwable) {
-                log.error("Unexpected exception", e)
+        log.info("Total $numQuit drivers are quit | {}", formatStatus(true))
+    }
+
+    private fun checkState(driver: ManagedWebDriver) {
+        if (driver.isQuit) {
+            if (freeDrivers[driver.priority]?.contains(driver) == true) {
+                log.warn("Driver is quit, should not be in free driver list | {}", driver)
+            }
+            if (workingDrivers.containsKey(driver.id)) {
+                log.warn("Driver is quit, should not be in working driver list | {}", driver)
             }
         }
-
-        log.info("Total $count/$numQuit drivers are quit")
     }
 
     private fun formatStatus(verbose: Boolean = false): String {
         return if (verbose) {
-            String.format("total: %d free: %d working: %d alive: %d" +
-                    " crashed: %d retired: %d quit: %d pageViews: %d",
-                    nAlive, nFree, nWorking, nActive,
-                    numCrashed.get(), numRetired.get(), numQuit.get(), pageViews.get()
+            String.format("total: %d free: %d working: %d online: %d" +
+                    " crashed: %d retired: %d quit: %d reset: %d" +
+                    " pageViews: %d speed: elapsed: %s speed: %.2f page/s",
+                    nOnline, nFree, nWorking, nActive,
+                    numCrashed.get(), numRetired.get(), numQuit.get(), numReset.get(),
+                    pageViews.get(), DateTimeUtil.readableDuration(elapsedTime), speed
             )
         } else {
-            String.format("%d/%d/%d/%d/%d (free/working/total/crashed/retired)",
-                    nFree, nWorking, nActive, numCrashed.get(), numRetired.get())
+            String.format("%d/%d/%d/%d/%d/%d (free/working/active/online/crashed/retired)",
+                    nFree, nWorking, nActive, nOnline, numCrashed.get(), numRetired.get())
         }
     }
 }

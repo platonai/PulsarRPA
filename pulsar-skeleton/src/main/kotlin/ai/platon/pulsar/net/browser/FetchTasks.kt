@@ -1,0 +1,220 @@
+package ai.platon.pulsar.net.browser
+
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.fetch.BatchStat
+import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.persist.WebPage
+import com.google.common.collect.Iterables
+import java.time.Instant
+import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.max
+
+abstract class TaskHandler: (WebPage) -> Unit {
+    abstract override operator fun invoke(page: WebPage)
+}
+
+abstract class BatchHandler: (Iterable<WebPage>) -> Unit {
+    abstract override operator fun invoke(pages: Iterable<WebPage>)
+}
+
+class FetchTask(
+        val batchId: Int,
+        val priority: Int,
+        val page: WebPage,
+        val volatileConfig: VolatileConfig,
+        val id: Int = instanceSequence.incrementAndGet(),
+        val batchSize: Int = 1,
+        val batchTaskId: Int = 0,
+        var stat: BatchStat? = null,
+        var proxyEntry: ProxyEntry? = null, // the proxy used
+        var nRetries: Int = 0, // The number retries inside a privacy context
+        val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
+): Comparable<FetchTask> {
+    lateinit var response: Response
+
+    val url get() = page.url
+    val domain get() = URLUtil.getDomainName(url)
+    var thread: Thread? = null
+
+    fun reset() {
+        stat = null
+        proxyEntry = null
+        nRetries = 0
+        canceled.set(false)
+    }
+
+    fun cancel() {
+        canceled.set(false)
+        thread?.interrupt()
+    }
+
+    fun clone(): FetchTask {
+        return FetchTask(
+                batchId = batchId,
+                batchTaskId = batchTaskId,
+                batchSize = batchSize,
+                priority = priority,
+                page = page,
+                volatileConfig = volatileConfig
+        )
+    }
+
+    override fun compareTo(other: FetchTask): Int {
+        return url.compareTo(other.url)
+    }
+
+    companion object {
+        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id =0)
+        private val instanceSequence = AtomicInteger(0)
+    }
+}
+
+class FetchResult(
+        val task: FetchTask,
+        var response: Response,
+        var exception: Exception? = null
+) {
+    operator fun component1() = task
+    operator fun component2() = response
+    operator fun component3() = exception
+}
+
+internal class FetchTaskBatch(
+        val batchId: Int,
+        val pages: Iterable<WebPage>,
+        val conf: VolatileConfig,
+        var parent: FetchTaskBatch? = null,
+        var child: FetchTaskBatch? = null
+) {
+    enum class State {
+        OK,
+        ALL_DONE,
+        TOO_MANY_FAILURE,
+        IDLE_TIMEOUT,
+        CONNECTION_LOST,
+        LAST_TASK_TIMEOUT,
+        PRIVACY_LEAK,
+        INTERRUPTED,
+        CLOSED
+    }
+
+    var startTime = Instant.now()
+    val priority = conf.getUint(CapabilityTypes.BROWSER_DRIVER_PRIORITY, 0)
+    // The function must return in a reasonable time
+    val threadTimeout = conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(5)
+    val idleTimeout = threadTimeout.plusSeconds(5)
+    var batchSize = Iterables.size(pages)
+    val numAllowedFailures = max(10, batchSize / 3)
+
+    // All submitted tasks
+    val workingTasks = mutableMapOf<FetchTask, Future<FetchResult>>()
+    val finishedTasks = mutableMapOf<FetchTask, FetchResult>()
+    val privacyLeakedTasks = mutableListOf<FetchTask>()
+    val abortedTasks = mutableListOf<FetchTask>()
+    val successPages = mutableListOf<WebPage>()
+
+    val beforeFetchHandler = conf.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
+    val afterFetchHandler = conf.getBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)
+    val afterFetchNHandler = conf.getBean(CapabilityTypes.FETCH_AFTER_FETCH_N_HANDLER, BatchHandler::class.java)
+    val beforeFetchAllHandler = conf.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER, BatchHandler::class.java)
+    val afterFetchAllHandler = conf.getBean(CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER, BatchHandler::class.java)
+
+    val numFinishedTasks get() = finishedTasks.size
+    val numWorkingTasks get() = workingTasks.size
+
+    // Submit all tasks
+    var round = 0L
+    var idleSeconds = 0
+    //    // external connection is lost, might be caused by proxy
+    var connectionLost = false
+    /**
+     * Batch statistics
+     * */
+    val stat = BatchStat()
+    var lastSuccessTask: FetchTask? = null
+    var lastFailedTask: FetchTask? = null
+    var lastSuccessProxy: ProxyEntry? = null
+    var lastFailedProxy: ProxyEntry? = null
+
+    val root: FetchTaskBatch get() {
+        var r = this
+        while (r.parent != null) {
+            r = r.parent!!
+        }
+        return r
+    }
+
+    fun checkState(): State {
+        return when {
+            stat.numTaskDone >= batchSize -> State.ALL_DONE
+            stat.numFailedTasks > numAllowedFailures -> State.TOO_MANY_FAILURE
+            idleSeconds > idleTimeout.seconds -> State.IDLE_TIMEOUT
+            connectionLost -> State.CONNECTION_LOST
+            lastTaskTimeout() -> State.LAST_TASK_TIMEOUT
+            else -> State.OK
+        }
+    }
+
+    /**
+     * Create a child context to re-fetch aborted pages and privacy leaked pages
+     * */
+    fun createChild(): FetchTaskBatch {
+        val capacity = privacyLeakedTasks.size + abortedTasks.size
+        val retryPages = ArrayList<WebPage>(capacity)
+        privacyLeakedTasks.mapTo(retryPages) { it.page }
+        abortedTasks.mapTo(retryPages) { it.page }
+
+        return FetchTaskBatch(batchId, retryPages, conf, parent = this).also { child = it }
+    }
+
+    fun collectResponses(): List<Response> {
+        val responses = mutableListOf<Response>()
+
+        var cx: FetchTaskBatch? = root
+        do {
+            cx?.finishedTasks?.mapTo(responses) { it.value.response }
+            cx = cx?.child
+        } while (cx != null)
+
+        return responses
+    }
+
+    fun beforeFetch(page: WebPage) {
+        try {
+            beforeFetchHandler?.invoke(page)
+        } catch (e: Throwable) {}
+    }
+
+    fun afterFetch(page: WebPage) {
+        try {
+            afterFetchHandler?.invoke(page)
+        } catch (e: Throwable) {}
+    }
+
+    fun afterFetchN(pages: Iterable<WebPage>) {
+        try {
+            afterFetchNHandler?.invoke(pages)
+        } catch (e: Throwable) {}
+    }
+
+    fun beforeFetchAll(pages: Iterable<WebPage>) {
+        try {
+            beforeFetchAllHandler?.invoke(pages)
+        } catch (e: Throwable) {}
+    }
+
+    fun afterFetchAll(pages: Iterable<WebPage>) {
+        try {
+            afterFetchAllHandler?.invoke(pages)
+        } catch (e: Throwable) {}
+    }
+
+    private fun lastTaskTimeout(): Boolean {
+        return batchSize > 10 && workingTasks.size == 1 && idleSeconds >= 45
+    }
+}

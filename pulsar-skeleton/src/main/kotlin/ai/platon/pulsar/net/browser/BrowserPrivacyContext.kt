@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
@@ -15,14 +16,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The privacy context, the context should be reset if privacy is leaked
+ * The privacy context, the context should be dropped if privacy is leaked
  * */
 open class BrowserPrivacyContext(
         val driverPool: WebDriverPool,
         val proxyManager: ProxyManager,
         val immutableConfig: ImmutableConfig,
         val id: Int = instanceSequence.incrementAndGet()
-): Freezable(), AutoCloseable {
+): Freezable(), PrivacyContext {
     companion object {
         val instanceSequence = AtomicInteger()
     }
@@ -33,10 +34,9 @@ open class BrowserPrivacyContext(
     private val closeLatch = CountDownLatch(1)
 
     val privacyLeakWarnings = AtomicInteger()
+    override val isPrivacyLeaked get() = privacyLeakWarnings.get() > 3
     val nServedTasks = AtomicInteger()
     val servedProxies = ConcurrentLinkedQueue<ProxyEntry>()
-
-    val isPrivacyLeaked get() = privacyLeakWarnings.get() > 3
     val currentProxyEntry get() = proxyManager.currentProxyEntry
 
     fun informSuccess() {
@@ -78,6 +78,12 @@ open class BrowserPrivacyContext(
         }
     }
 
+    open fun <T> run(task: FetchTask, action: () -> T): T {
+        return whenUnfrozen {
+            action()
+        }
+    }
+
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen {
             runWithProxy(task, browseFun).also { nServedTasks.incrementAndGet() }
@@ -110,11 +116,12 @@ open class BrowserPrivacyContext(
     }
 
     private fun changeProxy() {
-        currentProxyEntry?.let { proxyManager.changeProxyIfRunning(it) }
+        currentProxyEntry?.let { proxyManager.changeProxyIfOnline(it) }
     }
 
     private fun runWithProxy(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         task.proxyEntry = currentProxyEntry
+        task.proxyEntry?.lastTarget = task.page.url
 
         val result = proxyManager.runAnyway { runInDriverPool(task, browseFun) }
 
@@ -123,7 +130,6 @@ open class BrowserPrivacyContext(
             if (result.response.status.isSuccess) {
                 proxyEntry.nSuccessPages.incrementAndGet()
                 proxyEntry.servedDomains.add(task.domain)
-                proxyEntry.lastServedUrl = task.page.url
 
                 servedProxies.add(proxyEntry)
 
@@ -148,7 +154,7 @@ open class BrowserPrivacyContext(
             if (task.nRetries > 1) {
                 log.info("The ${task.nRetries}th round re-fetching | {}", task.url)
             }
-        } while(task.nRetries <= fetchMaxRetry && response.status.isRetry(RetryScope.WEB_DRIVER))
+        } while(task.nRetries < fetchMaxRetry && task.canceled.get() && response.status.isRetry(RetryScope.WEB_DRIVER))
 
         return result
     }
