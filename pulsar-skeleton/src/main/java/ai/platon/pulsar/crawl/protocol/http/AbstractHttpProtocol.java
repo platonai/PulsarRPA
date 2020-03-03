@@ -286,6 +286,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
             }
 
             try {
+                // TODO: FETCH_PROTOCOL does not work if the response is forwarded
                 response = getResponse(page.getUrl(), page, false);
                 retry = response == null || response.getStatus().isRetry(RetryScope.FETCH_PROTOCOL);
             } catch (Throwable e) {

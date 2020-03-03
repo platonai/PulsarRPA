@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.stream.Collectors
 
@@ -46,7 +47,7 @@ class LoadComponent(
         val metricsSystem: MetricsSystem
 ): AutoCloseable {
     companion object {
-        private val globalFetchingUrls = Collections.synchronizedSet(HashSet<String>())
+        private val globalFetchingUrls = ConcurrentSkipListSet<String>()
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.FetchThreadExecutor
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -16,10 +17,11 @@ import java.util.concurrent.*
 
 class BatchFetchComponent(
         val webDb: WebDb,
-        statusTracker: FetchTaskTracker,
+        fetchTaskTracker: FetchTaskTracker,
         protocolFactory: ProtocolFactory,
+        fetchThreadExecutor: FetchThreadExecutor,
         immutableConfig: ImmutableConfig
-) : FetchComponent(statusTracker, protocolFactory, immutableConfig) {
+) : FetchComponent(fetchTaskTracker, protocolFactory, fetchThreadExecutor, immutableConfig) {
     /**
      * Fetch all the urls, config property 'fetch.concurrency' controls the concurrency level.
      * If concurrency level is not great than 1, fetch all urls in the caller thread
@@ -105,27 +107,26 @@ class BatchFetchComponent(
     }
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
-        // TODO: avoid searching a page from the map, carry it inside response
-        val pages = urls.associateWith { createFetchEntry(it, options) }
-        return protocol.getResponses(pages.values, options.volatileConfig)
-                .mapNotNull { response -> pages[response.url]?.let { forwardResponse(protocol, response, it) } }
+        return urls.map { createFetchEntry(it, options) }
+                .let { protocol.getResponses(it, options.volatileConfig) }
+                .map { getProtocolOutput(protocol, it, it.page) }
     }
 
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         if (LOG.isDebugEnabled) {
             LOG.debug("Parallel fetch {} urls manually", Iterables.size(urls))
         }
-        // TODO: is it better to use GlobalExecutor?
-        val executor = Executors.newWorkStealingPool()
-        return urls.map { executor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
+        return urls.map { fetchThreadExecutor.submit { fetch(it, options) } }.map { getResponse(it) }
     }
 
     /**
      * Forward previous fetched response to protocol for further process: retry, status processing, etc
      */
-    private fun forwardResponse(protocol: Protocol, response: Response, page: WebPage): WebPage {
+    private fun getProtocolOutput(protocol: Protocol, response: Response, page: WebPage): WebPage {
+        // forward response
         protocol.setResponse(response)
         // run protocol.getProtocolOutput so the page have a chance to perform FETCH_PROTOCOL retry if necessary
+        // TODO: FETCH_PROTOCOL does not work since the response is forwarded
         return processProtocolOutput(page, protocol.getProtocolOutput(page))
     }
 

@@ -8,11 +8,10 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.proxy.ProxyException
-import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
-import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.net.browser.BrowserError.Companion.CONNECTION_TIMED_OUT
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
@@ -24,18 +23,15 @@ import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.*
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
+import org.openqa.selenium.support.ui.Sleeper
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
-
-class BrowserStatus(
-        var status: ProtocolStatus,
-        var code: Int = 0
-)
 
 class NavigateResult(
         var protocolStatus: ProtocolStatus,
@@ -49,7 +45,35 @@ class EmulateTask(
         val driver: ManagedWebDriver
 ) {
     val url get() = fetchTask.url
-    val isCanceled get() = fetchTask.canceled.get()
+    val isCanceled get() = fetchTask.isCanceled
+}
+
+class BrowserStatus(
+        var status: ProtocolStatus,
+        var code: Int = 0
+)
+
+class BrowserError(
+        val status: ProtocolStatus,
+        val activeDomMessage: ActiveDomMessage
+) {
+    companion object {
+        const val CONNECTION_TIMED_OUT = "ERR_CONNECTION_TIMED_OUT"
+        const val NO_SUPPORTED_PROXIES = "ERR_NO_SUPPORTED_PROXIES"
+    }
+}
+
+class CancellableSleeper(val task: FetchTask): Sleeper {
+    @Throws(CancellationException::class)
+    override fun sleep(duration: Duration) {
+        try {
+            Thread.sleep(duration.toMillis())
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
+
+        if (task.isCanceled) throw CancellationException()
+    }
 }
 
 /**
@@ -72,8 +96,9 @@ open class BrowserEmulator(
     private val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val closed = AtomicBoolean(false)
     private val isClosed get() = closed.get()
-    private val driverPool = privacyContextFactory.driverPool
-    private val browserControl = driverPool.driverControl
+    private val driverManager = privacyContextFactory.driverManager
+    private val driverControl = driverManager.driverControl
+    private val driverPool = driverManager.driverPool
 
     init {
         instanceSequence.incrementAndGet()
@@ -84,10 +109,10 @@ open class BrowserEmulator(
         return Params.of(
                 "instanceSequence", instanceSequence,
                 "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
-                "pageLoadTimeout", browserControl.pageLoadTimeout,
-                "scriptTimeout", browserControl.scriptTimeout,
-                "scrollDownCount", browserControl.scrollDownCount,
-                "scrollInterval", browserControl.scrollInterval,
+                "pageLoadTimeout", driverControl.pageLoadTimeout,
+                "scriptTimeout", driverControl.scriptTimeout,
+                "scrollDownCount", driverControl.scrollDownCount,
+                "scrollInterval", driverControl.scrollInterval,
                 "driverPoolCapacity", driverPool.capacity
         )
     }
@@ -102,10 +127,9 @@ open class BrowserEmulator(
     @Throws(IllegalStateException::class)
     open fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         if (isClosed) {
-            return FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
+            return FetchResult(task, ForwardingResponse.canceled(task.page))
         }
 
-        task.thread = Thread.currentThread()
         fetchTaskTracker.totalTaskCount.getAndIncrement()
         fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
 
@@ -114,7 +138,7 @@ open class BrowserEmulator(
 
     open fun cancel(task: FetchTask) {
         task.cancel()
-        driverPool.cancel(task.url)
+        driverManager.cancel(task.url)
     }
 
     protected open fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): FetchResult {
@@ -124,29 +148,26 @@ open class BrowserEmulator(
         var exception: Exception? = null
 
         if (++task.nRetries > fetchMaxRetry) {
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE))
+            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL_SCHEDULE)
             return FetchResult(task, response, exception)
         }
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: ai.platon.pulsar.net.browser.CancellationException) {
-            driver.retire()
             exception = e
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.PRIVACY_CONTEXT))
+            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY_CONTEXT)
         } catch (e: ProxyException) {
             log.warn("No proxy, will retry task in privacy context | {}", task.url)
-
-            driver.retire()
             exception = e
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.PRIVACY_CONTEXT))
+            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY_CONTEXT)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             if (!isClosed) {
                 log.warn("Web driver session is closed. {}", StringUtil.simplifyException(e))
             }
             driver.retire()
             exception = e
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE))
+            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL_SCHEDULE)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 log.warn("Web driver is disconnected - {}", StringUtil.simplifyException(e))
@@ -156,7 +177,7 @@ open class BrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL))
+            response = ForwardingResponse.retry(task.page, RetryScope.FETCH_PROTOCOL)
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
             if (!isClosed) {
                 log.warn("Web driver is disconnected - {}", StringUtil.simplifyException(e))
@@ -164,26 +185,29 @@ open class BrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL))
+            response = ForwardingResponse.retry(task.page, RetryScope.FETCH_PROTOCOL)
         } finally {
         }
 
         if (response == null) {
-            response = ForwardingResponse(task.url, ProtocolStatus.failed(exception))
+            response = ForwardingResponse(task.url, exception, task.page)
         }
 
         return FetchResult(task, response, exception)
     }
 
+    @Throws(CancellationException::class)
     private fun browseWithMinorExceptionsHandled(task: FetchTask, driver: ManagedWebDriver): Response {
-        checkState()
+        checkState(task)
+        checkState(driver)
 
         val navigateTime = Instant.now()
 
         val batchId = task.batchId
+        val url = task.url
         val page = task.page
 
-        val driverConfig = getDriverConfig(task.volatileConfig)
+        val driverConfig = createDriverConfig(task.volatileConfig)
         val headers = MultiMetadata(Q_REQUEST_TIME, navigateTime.toEpochMilli().toString())
 
         var status: ProtocolStatus
@@ -192,6 +216,8 @@ open class BrowserEmulator(
 
         try {
             val result = navigateAndInteract(task, driver, driverConfig)
+            checkState(task)
+            checkState(driver)
             status = result.protocolStatus
             activeDomMessage = result.activeDomMessage
             page.activeDomMultiStatus = activeDomMessage?.multiStatus
@@ -213,14 +239,11 @@ open class BrowserEmulator(
             status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
         }
 
-        val browserStatus = checkBrowserStatus(page, status)
+        val browserStatus = checkErrorPage(page, status)
         status = browserStatus.status
         if (browserStatus.code != ProtocolStatusCodes.SUCCESS_OK) {
             pageSource = ""
-            val response = ForwardingResponse(page.url, pageSource, status, headers)
-            // Eager update required page status for callbacks
-            eagerUpdateWebPage(page, response, task.volatileConfig)
-            return response
+            return ForwardingResponse(url, pageSource, status, headers, page)
         }
 
         // Check quality of the page source, throw an exception if content is broken
@@ -259,42 +282,19 @@ open class BrowserEmulator(
 
         // TODO: collect response headers of main resource
 
-        val response = ForwardingResponse(page.url, pageSource, status, headers)
-        // Eager update required page status for callbacks
-        eagerUpdateWebPage(page, response, task.volatileConfig)
-        return response
+        return ForwardingResponse(page.url, pageSource, status, headers, page)
     }
 
     @Throws(CancellationException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
     private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: DriverConfig): NavigateResult {
-        checkState()
+        checkState(driver)
+        checkState(task)
 
-        val url = task.url
-        val page = task.page
-
-        if (log.isTraceEnabled) {
-            log.trace("Navigate {}/{}/{} in [t{}]{}, drivers: {}/{}/{}(w/f/o) | {} | timeouts: {}/{}/{}",
-                    task.batchTaskId, task.batchSize, task.id,
-                    Thread.currentThread().id,
-                    if (task.nRetries <= 1) "" else "(${task.nRetries})",
-                    driverPool.nWorking, driverPool.nFree, driverPool.nOnline,
-                    page.configuredUrl,
-                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
-            )
-        }
-
-        checkContextState(driver)
-        if (task.canceled.get()) {
-            // TODO: is it better to throw an exception?
-            return NavigateResult(ProtocolStatus.STATUS_CANCELED, null)
-        }
-
+        logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
-
-        // TODO: use callbacks instead of blocking
-        driver.navigateTo(url)
+        driver.navigateTo(task.url)
 
         return emulate(EmulateTask(task, driverConfig, driver))
     }
@@ -318,9 +318,8 @@ open class BrowserEmulator(
 
     @Throws(CancellationException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
     private fun runScriptTask(task: EmulateTask, result: NavigateResult, action: () -> Unit) {
-        checkState()
         if (task.isCanceled) {
-            // TODO: is it better to throw an exeption?
+            // TODO: is it better to throw an exception?
             result.protocolStatus = ProtocolStatus.STATUS_CANCELED
             result.state = FlowState.BREAK
             return
@@ -329,31 +328,35 @@ open class BrowserEmulator(
         var status: ProtocolStatus? = null
 
         try {
-            require(task.driver.isWorking)
+            checkState(task.driver)
+            checkState(task.fetchTask)
+
             action()
             result.state = FlowState.CONTINUE
         } catch (e: InterruptedException) {
             log.warn("Interrupted waiting for document, cancel it | {}", task.url)
-            status = ProtocolStatus.STATUS_CANCELED
+            status = ProtocolStatus.retry(RetryScope.WEB_DRIVER)
             result.state = FlowState.BREAK
         } catch (e: NoSuchSessionException) {
+            status = ProtocolStatus.retry(RetryScope.WEB_DRIVER)
             result.state = FlowState.BREAK
             throw e
         } catch (e: WebDriverException) {
             val message = StringUtil.stringifyException(e)
             when {
                 e.cause is org.apache.http.conn.HttpHostConnectException -> {
-                    // Web driver closed
+                    // Web driver is closed
                     // status = ProtocolStatus.failed(ProtocolStatus.WEB_DRIVER_GONE, e)
                     throw e
                 }
                 e.cause is InterruptedException -> {
+                    status = ProtocolStatus.retry(RetryScope.WEB_DRIVER)
                     // Web driver closed
                     if (message.contains("sleep interrupted")) {
-                        log.warn("Interrupted waiting for DOM, sleep interrupted | {}", task.url)
-                        status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+                        // throw if we use default sleeper, if we use CancellableSleeper, this must not happen
+                        log.warn("Interrupted waiting for document (by cause), cancel it | {}", task.url)
                     } else {
-                        log.warn("Interrupted waiting for DOM | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
+                        log.warn("Interrupted waiting for document | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
                     }
                     result.state = FlowState.BREAK
                 }
@@ -382,13 +385,18 @@ open class BrowserEmulator(
         }
     }
 
+    @Throws(CancellationException::class)
     protected open fun jsCheckDOMState(emulateTask: EmulateTask, result: NavigateResult) {
         checkState()
 
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = emulateTask.driverConfig.scriptTimeout
 
-        val documentWait = FluentWait<WebDriver>(emulateTask.driver.driver)
+        val fetchTask = emulateTask.fetchTask
+        val driver = emulateTask.driver.driver
+        val clock = Clock.systemDefaultZone()
+        val sleeper = CancellableSleeper(fetchTask)
+        val documentWait = FluentWait<WebDriver>(driver, clock, sleeper)
                 .withTimeout(scriptTimeout)
                 .pollingEvery(Duration.ofSeconds(1))
                 .ignoring(NoSuchElementException::class.java)
@@ -399,33 +407,31 @@ open class BrowserEmulator(
 
         // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
         val expression = "__utils__.waitForReady($maxRound, $initialScroll)"
-        checkContextState(emulateTask.driver)
+        checkState(emulateTask.driver)
+        checkState(fetchTask)
 
+        var message: Any? = null
         try {
-            val message = documentWait.until { emulateTask.driver.evaluate(expression) }
-
-            if (message == "timeout") {
-                log.debug("Hit max round $maxRound to wait for document | {}", emulateTask.url)
-            } else if (message is String && message.contains("chrome-error://")) {
-                // chrome redirected to a special error page chrome-error://
-
-                val activeDomMessage = ActiveDomMessage.fromJson(message)
-                status = if (activeDomMessage.multiStatus?.status?.ec == "ERR_CONNECTION_TIMED_OUT") {
-                    // chrome can not connect to the peer, it probably be caused by a bad proxy
-                    // convert to retry in PRIVACY_CONTEXT later
-                    ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT)
-                } else {
-                    // unhandled exception
-                    ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERROR)
-                }
-
-                result.activeDomMessage = activeDomMessage
-                result.state = FlowState.BREAK
-            } else {
-                log.trace("DOM is ready {} | {}", message, emulateTask.url)
-            }
+            message = documentWait.until { emulateTask.driver.evaluate(expression) }
         } catch (e: org.openqa.selenium.TimeoutException) {
             status = ProtocolStatus.failed(ProtocolStatusCodes.SCRIPT_TIMEOUT)
+            result.state = FlowState.BREAK
+        } finally {
+            checkState(fetchTask)
+            if (message == null) {
+                if (!fetchTask.isCanceled) {
+                    log.warn("Unexpected script result (null) | {}", emulateTask.url)
+                }
+            } else if (message == "timeout") {
+                log.debug("Hit max round $maxRound to wait for document | {}", emulateTask.url)
+            } else if (message is String && message.contains("chrome-error://")) {
+                val errorResult = handleChromeError(message)
+                status = errorResult.status
+                result.activeDomMessage = errorResult.activeDomMessage
+                result.state = FlowState.BREAK
+            } else {
+                log.trace("DOM is ready {} | {}", message.toString().substringBefore("urls"), emulateTask.url)
+            }
         }
 
         // Test context reset automatically
@@ -435,7 +441,7 @@ open class BrowserEmulator(
             val rand = Random.nextInt()
             simulateError = rand % 3 == 0
             if (simulateError) {
-                log.warn("Simulate connection time out")
+                log.warn("Simulate chrome error page connection time out")
 
                 status = ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT)
                 result.state = FlowState.BREAK
@@ -452,25 +458,30 @@ open class BrowserEmulator(
         val scrollDownCount = emulateTask.driverConfig.scrollDownCount.toLong() + random.nextInt(3) - 1
         val scrollInterval = emulateTask.driverConfig.scrollInterval.plus(Duration.ofMillis(random.nextLong(1000)))
         val scrollTimeout = scrollDownCount * scrollInterval.toMillis() + 3 * 1000
-        val scrollWait = FluentWait<WebDriver>(emulateTask.driver.driver)
+
+        val driver = emulateTask.driver.driver
+        val clock = Clock.systemDefaultZone()
+        val sleeper = CancellableSleeper(emulateTask.fetchTask)
+        val scrollWait = FluentWait<WebDriver>(driver, clock, sleeper)
                 .withTimeout(Duration.ofMillis(scrollTimeout))
                 .pollingEvery(scrollInterval)
                 .ignoring(org.openqa.selenium.TimeoutException::class.java)
 
         try {
             val expression = "__utils__.scrollDownN($scrollDownCount)"
-            checkContextState(emulateTask.driver)
+            checkState(emulateTask.driver)
+            checkState(emulateTask.fetchTask)
             scrollWait.until { emulateTask.driver.evaluate(expression) }
-        } catch (ignored: org.openqa.selenium.TimeoutException) {}
+        } catch (ignored: org.openqa.selenium.TimeoutException) {
+
+        }
     }
 
     protected open fun jsComputeFeature(emulateTask: EmulateTask, result: NavigateResult) {
-        checkState()
+        checkState(emulateTask.driver)
+        checkState(emulateTask.fetchTask)
 
-        // TODO: check if the js is injected times, libJs is already injected
-        checkContextState(emulateTask.driver)
         val message = emulateTask.driver.evaluate("__utils__.compute()")
-
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
@@ -482,20 +493,13 @@ open class BrowserEmulator(
     /**
      * Perform click on the selected element and wait for the new page location
      * */
-    protected open fun jsClick(jsExecutor: JavascriptExecutor, selector: String, driver: ManagedWebDriver, driverConfig: DriverConfig): String {
+    protected open fun jsClick(jsExecutor: JavascriptExecutor,
+            selector: String, driver: ManagedWebDriver, driverConfig: DriverConfig): String {
         checkState()
 
-        val scrollWait = FluentWait<WebDriver>(driver.driver)
-                .withTimeout(driverConfig.pageLoadTimeout)
-                .pollingEvery(Duration.ofSeconds(1))
-                .ignoring(org.openqa.selenium.TimeoutException::class.java)
-
         try {
-            // TODO: which one is the better? browser side timer or selenium side timer?
-            // val js = ";$libJs;return __utils__.navigateTo($selector);"
-            val js = "__utils__.click($selector)"
-            checkContextState(driver)
-            val location = scrollWait.until { (it as? JavascriptExecutor)?.executeScript(js) }
+            checkState(driver)
+            val location = driver.evaluate("__utils__.click($selector)")
             if (location is String) {
                 return location
             }
@@ -506,7 +510,24 @@ open class BrowserEmulator(
         return ""
     }
 
-    protected open fun checkBrowserStatus(page: WebPage, status: ProtocolStatus): BrowserStatus {
+    /**
+     * Chrome redirected to the error page chrome-error://
+     * This page should be text analyzed to determine the actual error
+     * */
+    private fun handleChromeError(message: String): BrowserError {
+        val activeDomMessage = ActiveDomMessage.fromJson(message)
+        val status = if (activeDomMessage.multiStatus?.status?.ec == CONNECTION_TIMED_OUT) {
+            // chrome can not connect to the peer, it probably be caused by a bad proxy
+            // convert to retry in PRIVACY_CONTEXT later
+            ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT)
+        } else {
+            // unhandled exception
+            ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERROR)
+        }
+        return BrowserError(status, activeDomMessage)
+    }
+
+    protected open fun checkErrorPage(page: WebPage, status: ProtocolStatus): BrowserStatus {
         val browserStatus = BrowserStatus(status, ProtocolStatusCodes.SUCCESS_OK)
         if (status.minorCode == ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT) {
             // The browser can not connect to remote peer, it must be caused by the bad proxy ip
@@ -546,7 +567,7 @@ open class BrowserEmulator(
                     status.minorName,
                     elapsed,
                     StringUtil.readableBytes(pageSource.length.toLong()),
-                    driverPool.nWorking, driverPool.nFree, driverPool.nOnline,
+                    driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
         }
@@ -569,18 +590,10 @@ open class BrowserEmulator(
     }
 
     protected open fun handleNavigateSuccess(batchId: Int, page: WebPage) {
+        // TODO: deprecated counters
         val t = fetchTaskTracker
         t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
         t.totalSuccessCount.incrementAndGet()
-
-        // TODO: A metrics system is required
-        if (t.totalTaskCount.get() % 20 == 0) {
-            log.debug("Selenium task success: {}/{}, total task success: {}/{}",
-                    t.batchSuccessCounters[batchId], t.batchTaskCounters[batchId],
-                    t.totalSuccessCount,
-                    t.totalTaskCount
-            )
-        }
     }
 
     protected open fun handlePageSource(pageSource: String): StringBuilder {
@@ -625,29 +638,17 @@ open class BrowserEmulator(
         }
     }
 
-    /**
-     * Eager update web page, the status is partial but required by callbacks,
-     * [FetchComponent] is responsible to do the fully updating.
-     * */
-    private fun eagerUpdateWebPage(page: WebPage, response: Response, conf: ImmutableConfig) {
-        page.protocolStatus = response.status
-        val bytes = response.content
-        val contentType = response.getHeader(HttpHeaders.CONTENT_TYPE)
-        val content = Content(page.url, page.location, bytes, contentType, response.headers, conf)
-        FetchComponent.updateContent(page, content)
-    }
-
-    private fun getDriverConfig(config: ImmutableConfig): DriverConfig {
+    private fun createDriverConfig(config: ImmutableConfig): DriverConfig {
         // Page load timeout
-        val pageLoadTimeout = config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, browserControl.pageLoadTimeout)
+        val pageLoadTimeout = config.getDuration(FETCH_PAGE_LOAD_TIMEOUT, driverControl.pageLoadTimeout)
         // Script timeout
-        val scriptTimeout = config.getDuration(FETCH_SCRIPT_TIMEOUT, browserControl.scriptTimeout)
+        val scriptTimeout = config.getDuration(FETCH_SCRIPT_TIMEOUT, driverControl.scriptTimeout)
         // Scrolling
-        var scrollDownCount = config.getInt(FETCH_SCROLL_DOWN_COUNT, browserControl.scrollDownCount)
+        var scrollDownCount = config.getInt(FETCH_SCROLL_DOWN_COUNT, driverControl.scrollDownCount)
         if (scrollDownCount > 20) {
             scrollDownCount = 20
         }
-        var scrollDownWait = config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, browserControl.scrollInterval)
+        var scrollDownWait = config.getDuration(FETCH_SCROLL_DOWN_INTERVAL, driverControl.scrollInterval)
         if (scrollDownWait > pageLoadTimeout) {
             scrollDownWait = pageLoadTimeout
         }
@@ -669,15 +670,20 @@ open class BrowserEmulator(
         }
     }
 
-    /**
-     * Check if privacy context reset occurs
-     * every direct or indirect IO operation is a checkpoint for the context reset event
-     * */
-    @Throws(CancellationException::class, IllegalStateException::class)
-    private fun checkContextState(driver: ManagedWebDriver) {
+    @Throws(IllegalStateException::class)
+    private fun checkState() {
         if (isClosed) {
             throw IllegalStateException("Browser emulator is closed")
         }
+    }
+
+    /**
+     * Check task state
+     * every direct or indirect IO operation is a checkpoint for the context reset event
+     * */
+    @Throws(CancellationException::class, IllegalStateException::class)
+    private fun checkState(driver: ManagedWebDriver) {
+        checkState()
 
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
@@ -686,20 +692,31 @@ open class BrowserEmulator(
         }
     }
 
-    @Throws(IllegalStateException::class)
-    private fun checkState() {
-        if (isClosed) {
-            throw IllegalStateException("Browser emulator is closed")
+    /**
+     * Check task state
+     * every direct or indirect IO operation is a checkpoint for the context reset event
+     * */
+    @Throws(CancellationException::class, IllegalStateException::class)
+    private fun checkState(task: FetchTask) {
+        checkState()
+
+        if (task.isCanceled) {
+            // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
+            // and all the running tasks should be redo
+            throw CancellationException("Task #${task.id} is canceled | ${task.url}")
         }
     }
 
-    private fun logBrowseDone(retryRound: Int, task: FetchTask, result: FetchResult) {
-        if (log.isInfoEnabled) {
-            val r = result.response
-            if (retryRound > 1 && r != null && r.status.isSuccess && r.length() > 100_1000) {
-                log.info("Retried {} times and obtain a good page with {} | {}",
-                        retryRound, StringUtil.readableBytes(r.length()), task.url)
-            }
+    private fun logBeforeNavigate(task: FetchTask, driverConfig: DriverConfig) {
+        if (log.isTraceEnabled) {
+            log.trace("Navigate {}/{}/{} in [t{}]{}, drivers: {}/{}/{}(w/f/o) | {} | timeouts: {}/{}/{}",
+                    task.batchTaskId, task.batchSize, task.id,
+                    Thread.currentThread().id,
+                    if (task.nRetries <= 1) "" else "(${task.nRetries})",
+                    driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
+                    task.page.configuredUrl,
+                    driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
+            )
         }
     }
 

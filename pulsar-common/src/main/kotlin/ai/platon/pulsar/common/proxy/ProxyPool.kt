@@ -19,6 +19,7 @@ import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
@@ -32,14 +33,14 @@ import kotlin.concurrent.withLock
  * This might take a long time, so it should be run in a separate thread
 */
 class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseable {
-    private val pollingInterval: Duration = conf.getDuration(PROXY_POOL_POLLING_INTERVAL, Duration.ofSeconds(10))
     private val capacity: Int = conf.getInt(PROXY_POOL_CAPACITY, 1000)
+    private val pollingInterval: Duration = conf.getDuration(PROXY_POOL_POLLING_INTERVAL, Duration.ofSeconds(10))
     private val lastModifiedTimes = mutableMapOf<Path, Instant>()
     private val proxyEntries = mutableSetOf<ProxyEntry>()
     private val freeProxies = LinkedBlockingDeque<ProxyEntry>(capacity)
-    private val workingProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
-    private val unavailableProxies = Collections.synchronizedSet(HashSet<ProxyEntry>())
-    private val containerLock = ReentrantLock()
+    private val workingProxies = ConcurrentSkipListSet<ProxyEntry>()
+    private val unavailableProxies = ConcurrentSkipListSet<ProxyEntry>()
+    private val lock = ReentrantLock()
     private val closed = AtomicBoolean()
 
     /**
@@ -66,14 +67,14 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     override val size get() = freeProxies.size
 
     override fun clear() {
-        containerLock.withLock {
+        lock.withLock {
             freeProxies.clear()
             workingProxies.clear()
         }
     }
 
     override fun offer(proxyEntry: ProxyEntry): Boolean {
-        containerLock.withLock {
+        lock.withLock {
             proxyEntry.refresh()
             proxyEntries.add(proxyEntry)
             workingProxies.remove(proxyEntry)
@@ -84,7 +85,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     override fun poll(): ProxyEntry? {
         lastActiveTime = Instant.now()
 
-        containerLock.withLock {
+        lock.withLock {
             if (numFreeProxies == 0) {
                 updateProxies(asap = true)
             }
@@ -93,7 +94,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         var proxy: ProxyEntry? = null
         val maxRetry = 5
         var n = 0
-        while (!isClosed && proxy == null && n++ < maxRetry && !Thread.currentThread().isInterrupted) {
+        while (!isClosed && proxy == null && n++ < maxRetry && !Thread.interrupted()) {
             proxy = pollOne()
         }
 
@@ -112,7 +113,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
      * The proxy may be recovered later
      */
     fun retire(proxyEntry: ProxyEntry) {
-        containerLock.withLock {
+        lock.withLock {
             workingProxies.remove(proxyEntry)
             unavailableProxies.add(proxyEntry)
         }
@@ -126,7 +127,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         var n = limit
         var recovered = 0
 
-        containerLock.withLock {
+        lock.withLock {
             val it = unavailableProxies.iterator()
             while (!isClosed && n-- > 0 && it.hasNext()) {
                 val proxy = it.next()
@@ -155,7 +156,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
 
         val maxTry = 5
         var i = 0
-        while (i++ < maxTry && numFreeProxies < minFreeProxies && !Thread.currentThread().isInterrupted) {
+        while (i++ < maxTry && numFreeProxies < minFreeProxies && !Thread.interrupted()) {
             providers.forEach {
                 syncProxiesFromProvider(it)
             }
@@ -165,7 +166,9 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
 
             try {
                 TimeUnit.SECONDS.sleep(3)
-            } catch (e: InterruptedException) {}
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
         }
     }
 
@@ -408,6 +411,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         val INIT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.HOME_DIR)
                 .map { Paths.get(it, "proxy.providers.txt") }
 
+        private val ENABLED_PROVIDER_DIR_WATCH_INTERVAL = Duration.ofSeconds(45)
+        private var enabledProviderDirLastWatchTime = Instant.EPOCH
+        private var numEnabledProviderFiles = 0L
+
         init {
             arrayOf(ENABLED_PROVIDER_DIR, AVAILABLE_PROVIDER_DIR, ENABLED_PROXY_DIR, AVAILABLE_PROXY_DIR, ARCHIVE_DIR)
                     .forEach { Files.createDirectories(it) }
@@ -426,7 +433,16 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
 
         fun hasEnabledProvider(): Boolean {
             try {
-                return Files.list(ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count() > 0
+                val now = Instant.now()
+                synchronized(ProxyPool::class.java) {
+                    val elapsedTime = Duration.between(enabledProviderDirLastWatchTime, now)
+                    if (elapsedTime > ENABLED_PROVIDER_DIR_WATCH_INTERVAL) {
+                        numEnabledProviderFiles = Files.list(ENABLED_PROVIDER_DIR)
+                                .filter { Files.isRegularFile(it) }.count()
+                    }
+                    enabledProviderDirLastWatchTime = now
+                }
+                return numEnabledProviderFiles > 0
             } catch (e: IOException) {
                 log.error("Failed to list files in $ENABLED_PROVIDER_DIR", e)
             }

@@ -37,6 +37,7 @@ import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -55,7 +56,7 @@ class PageParser(
 
     private val log = LoggerFactory.getLogger(PageParser::class.java)
 
-    val unparsableTypes = Collections.synchronizedSet(HashSet<CharSequence>())
+    val unparsableTypes = ConcurrentSkipListSet<CharSequence>()
     private val maxParsedLinks = conf.getUint(CapabilityTypes.PARSE_MAX_LINKS_PER_PAGE, 200)
     /**
      * Parser timeout set to 30 sec by default. Set -1 (or any negative int) to deactivate

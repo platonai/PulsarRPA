@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
 import ai.platon.pulsar.net.browser.BrowserPrivacyContext
 import ai.platon.pulsar.net.browser.PrivacyContextFactory
+import ai.platon.pulsar.net.browser.WebDriverManager
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
@@ -16,8 +17,9 @@ class AmazonAccess: WebAccess() {
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
     private var round = 0
     private var numTotalPages = 0
+    private val driverManager = i.context.getBean(WebDriverManager::class.java)
     private val privacyContextFactory = i.context.getBean(PrivacyContextFactory::class.java)
-    private val batchSize = privacyContextFactory.activeContext.driverPool.capacity
+    private val batchSize = driverManager.driverPool.capacity
 
     init {
 //        driverPool.imagesEnabled = false

@@ -81,8 +81,6 @@ class ManagedWebDriver(
     val isCrashed get() = status.get().isCrashed
     val isQuit get() = status.get().isQuit
 
-    var incognito = false
-
     /**
      * The loading page url
      * The browser might redirect, so it might not be the same to [currentUrl]

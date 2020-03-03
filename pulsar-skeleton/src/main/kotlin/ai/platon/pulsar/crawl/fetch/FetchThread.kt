@@ -15,6 +15,7 @@ import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -32,7 +33,7 @@ class FetchThread(
 ): Thread(), Comparable<FetchThread> {
     companion object {
         private val instanceSequence = AtomicInteger(0)
-        val pendingTasks = Collections.synchronizedMap(HashMap<Int, WebPage>())
+        val pendingTasks = ConcurrentHashMap<Int, WebPage>()
     }
 
     private val log = LoggerFactory.getLogger(FetchThread::class.java)

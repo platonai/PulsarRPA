@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.net.browser.WebDriverPool
+import ai.platon.pulsar.net.browser.WebDriverManager
 import ai.platon.pulsar.proxy.ProxyManager
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -15,17 +15,18 @@ import java.util.concurrent.atomic.AtomicBoolean
  * TODO: merge all monitor threads
  * */
 class AppMonitor(
-        val driverPool: WebDriverPool,
-        val proxyPool: ProxyPool,
+        val driverManager: WebDriverManager,
         val proxyManager: ProxyManager,
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(AppMonitor::class.java)
     private var lastIPSReport = ""
 
+    private val driverPool = driverManager.driverPool
+    private val proxyPool = proxyManager.proxyPool
     private var monitorThread = Thread(this::update)
     private val loopStarted = AtomicBoolean()
-    private val isIdle get() = driverPool.isIdle
+    private val isIdle get() = driverManager.isIdle
     private val closed = AtomicBoolean()
     private val isClosed get() = closed.get()
 
@@ -113,12 +114,12 @@ class AppMonitor(
 
     private fun report(round: Int) {
         val p = driverPool
-        val idleTime = DateTimeUtil.readableDuration(p.idleTime)
+        val idleTime = DateTimeUtil.readableDuration(driverManager.idleTime)
         log.info("WDM - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {} rounds: {}",
                 if (isIdle) "[Idle($idleTime)] " else "",
-                p.nFree, p.nWorking, p.nActive,
-                WebDriverPool.numCrashed, WebDriverPool.numRetired, WebDriverPool.numQuit,
-                WebDriverPool.pageViews,
+                p.numFree, p.numWorking, p.numActive,
+                driverPool.numCrashed, driverPool.numRetired, driverPool.numQuit,
+                driverManager.pageViews,
                 round
         )
 

@@ -67,6 +67,7 @@ public class RuntimeUtils {
      * General command options are supported:
      * -keep: the command should be always keep in the file and execute every time the command file is checked,
      *          otherwise the command is executed only
+     * TODO: create a LocalFileCommand class to manage such commands
      */
     public static boolean hasLocalFileCommand(String command, Duration checkInterval) {
         if (!Files.exists(COMMAND_FILE)) {

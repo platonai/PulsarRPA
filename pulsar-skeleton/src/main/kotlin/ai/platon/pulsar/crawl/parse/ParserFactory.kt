@@ -24,13 +24,14 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.parse.ParserNotFound
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Creates [Parser].
  */
 class ParserFactory {
     // Thread safe for both outer map and inner list
-    private val mineType2Parsers = Collections.synchronizedMap(HashMap<String, List<Parser>>())
+    private val mineType2Parsers = ConcurrentHashMap<String, List<Parser>>()
 
     constructor(conf: ImmutableConfig) : this(listOf(), conf)
 

@@ -10,6 +10,8 @@ import java.net.Proxy
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.roundToInt
@@ -33,23 +35,24 @@ data class ProxyEntry(
 ): Comparable<ProxyEntry> {
     val hostPort get() = "$host:$port"
     val display get() = formatDisplay()
+    val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
-    val nTests = AtomicInteger()
-    val nFailedTests = AtomicInteger()
+    val numTests = AtomicInteger()
+    val numFailedTests = AtomicInteger()
     // accumulated test time
     val accumResponseMillis = AtomicLong()
     // failed connection count
     var availableTime: Instant = Instant.now()
     // number of failed pages
-    val nFailedPages = AtomicInteger()
+    val numFailedPages = AtomicInteger()
     // number of success pages
-    val nSuccessPages = AtomicInteger()
+    val numSuccessPages = AtomicInteger()
     val servedDomains = ConcurrentHashMultiset.create<String>()
-    val speed get() = (1000 * accumResponseMillis.get() / 1000 / (0.1 + nTests.get())).roundToInt() / 1000.0
+    val speed get() = (1000 * accumResponseMillis.get() / 1000 / (0.1 + numTests.get())).roundToInt() / 1000.0
     val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
-    val isGone get() = nFailedTests.get() >= 3
+    val isGone get() = numFailedTests.get() >= 3
 
     fun willExpireAt(instant: Instant): Boolean {
         return ttl < instant
@@ -69,10 +72,12 @@ data class ProxyEntry(
         } else testUrls.random()
 
         var available = test(target)
-        if (!available && target != defaultTestUrl) {
+        if (!available && !isGone && target != defaultTestUrl) {
             available = test(defaultTestUrl)
             if (available) {
-                log.warn("Target unreachable via {} | tests:{} | {}", display, nTests, target)
+                log.warn("Target unreachable via {} | tests:{} | {}", display, numTests, target)
+            } else if (!isGone) {
+                log.warn("Proxy connection lost {} | tests:{} | {}", display, numTests, target)
             }
         }
 
@@ -91,15 +96,17 @@ data class ProxyEntry(
             available = networkTester(target, proxy)
             val end = System.currentTimeMillis()
 
-            nTests.incrementAndGet()
+            numTests.incrementAndGet()
             accumResponseMillis.addAndGet(end - start)
         }
 
         if (!available) {
-            nFailedTests.incrementAndGet()
+            numFailedTests.incrementAndGet()
+            if (isGone) {
+                log.warn("Proxy is gone after {} tests | {}", numTests, this)
+            }
         } else {
-            // test if the proxy is expired
-            nFailedTests.set(0)
+            numFailedTests.set(0)
             refresh()
         }
 
@@ -119,9 +126,9 @@ data class ProxyEntry(
      * */
     override fun toString(): String {
         val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
-        val nPages = nSuccessPages.get() + nFailedPages.get()
+        val nPages = numSuccessPages.get() + numFailedPages.get()
         return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed" +
-                ", tt:$nTests, ftt:$nFailedTests, pg:$nPages, fpg:$nFailedPages"
+                ", tt:$numTests, ftt:$numFailedTests, pg:$nPages, fpg:$numFailedPages"
     }
 
     override fun compareTo(other: ProxyEntry): Int {
@@ -129,8 +136,13 @@ data class ProxyEntry(
     }
 
     private fun formatDisplay(): String {
-        val ttlStr = ttlDuration?.let { DateTimeUtil.readableDuration(ttlDuration) }?:"0s"
-        return "$host:$port($nFailedPages/$nSuccessPages/$ttlStr) spd:$speed"
+        val ttlStr = ttlDuration?.let { DateTimeUtil.readableDuration(it.truncatedTo(ChronoUnit.SECONDS)) }?:"0s"
+        return "$host:$port($numFailedPages/$numSuccessPages/$ttlStr)"
+    }
+
+    private fun formatMetadata(): String {
+        val nPages = numSuccessPages.get() + numFailedPages.get()
+        return "spd:$speed, tt:$numTests, ftt:$numFailedTests, pg:$nPages, fpg:$numFailedPages"
     }
 
     companion object {

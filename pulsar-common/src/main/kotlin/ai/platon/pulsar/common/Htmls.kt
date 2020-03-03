@@ -15,8 +15,8 @@ val SYSTEM_AVAILABLE_CHARSET_PATTERN = SYSTEM_AVAILABLE_CHARSETS.replace("UTF-8\
 enum class HtmlIntegrity {
     OK,
     EMPTY_0B,  // no character at all
-    EMPTY_39B, // <html><head></head><body></body></html> and blanks
-    EMPTY_BODY, // ...<body></body>...
+    EMPTY_39B, // <html><head></head><body></body></html> and blanks, must be caused by bad proxies
+    EMPTY_BODY, // ...<body>\s*</body>...
     NO_ANCHOR,
     NO_JS_OK_FLAG,
     ROBOT_CHECK,

@@ -72,31 +72,31 @@ class TestWebDriver {
             }
         }
 
-        assertEquals(10, driverPool.nWorking)
-        assertEquals(0, driverPool.nFree)
-        assertEquals(10, driverPool.nActive)
-        assertEquals(10, driverPool.nOnline)
+        assertEquals(10, driverPool.numWorking)
+        assertEquals(0, driverPool.numFree)
+        assertEquals(10, driverPool.numActive)
+        assertEquals(10, driverPool.numOnline)
 
         workingDrivers.forEachIndexed { i, driver ->
             if (i % 2 == 0) driver.retire()
             driverPool.put(driver)
         }
 
-        assertEquals(0, driverPool.nWorking)
-        assertEquals(5, driverPool.nFree)
-        assertEquals(5, WebDriverPool.numRetired.get())
+        assertEquals(0, driverPool.numWorking)
+        assertEquals(5, driverPool.numFree)
+        assertEquals(5, driverPool.numRetired.get())
 
         driverPool.closeAll()
 
-        assertEquals(0, driverPool.nWorking)
-        assertEquals(0, driverPool.nFree)
-        assertEquals(10, WebDriverPool.numQuit.get())
+        assertEquals(0, driverPool.numWorking)
+        assertEquals(0, driverPool.numFree)
+        assertEquals(10, driverPool.numQuit.get())
 
         driverPool.closeAll()
 
-        assertEquals(0, driverPool.nWorking)
-        assertEquals(0, driverPool.nFree)
-        assertEquals(10, WebDriverPool.numQuit.get())
+        assertEquals(0, driverPool.numWorking)
+        assertEquals(0, driverPool.numFree)
+        assertEquals(10, driverPool.numQuit.get())
     }
 
     @Test

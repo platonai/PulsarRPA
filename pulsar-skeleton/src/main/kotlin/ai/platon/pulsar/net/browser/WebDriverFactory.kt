@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.proxy.ProxyManager
-import org.apache.http.conn.ssl.SSLContextBuilder
 import org.openqa.selenium.Capabilities
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
@@ -17,14 +16,10 @@ import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
-import java.security.KeyManagementException
-import java.security.KeyStoreException
-import java.security.NoSuchAlgorithmException
 import java.util.*
 
 class WebDriverFactory(
         val driverControl: WebDriverControl,
-        val proxyPool: ProxyPool,
         val proxyManager: ProxyManager,
         val conf: ImmutableConfig
 ) {
@@ -92,7 +87,7 @@ class WebDriverFactory(
 
         if (hostPort == null) {
             // internal proxy server is not available, set proxy to the browser directly
-            proxyEntry = proxyPool.poll()
+            proxyEntry = proxyManager.proxyPool.poll()
             hostPort = proxyEntry?.hostPort
         }
 

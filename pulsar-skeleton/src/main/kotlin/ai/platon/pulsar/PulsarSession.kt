@@ -15,6 +15,7 @@ import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -42,7 +43,7 @@ open class PulsarSession(
      * TODO: session scoped?
      * */
     val beanFactory = BeanFactory(volatileConfig)
-    private val variables: MutableMap<String, Any> = Collections.synchronizedMap(HashMap())
+    private val variables: MutableMap<String, Any> = ConcurrentHashMap()
     private var enableCache = true
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()

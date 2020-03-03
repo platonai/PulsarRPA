@@ -4,13 +4,14 @@ import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.config.AppConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.ProtocolStatus
+import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 
 class FetchJobForwardingResponse(
         headers: MultiMetadata,
         content: ByteArray
-): ForwardingResponse(headers.get(HttpHeaders.Q_URL), content, getProtocolStatus(headers), headers), HttpHeaders {
+): ForwardingResponse(headers.get(HttpHeaders.Q_URL), content, getProtocolStatus(headers), headers, WebPage.NIL), HttpHeaders {
 
     val jobId: Int
         get() = headers.getInt(HttpHeaders.Q_JOB_ID, 0)

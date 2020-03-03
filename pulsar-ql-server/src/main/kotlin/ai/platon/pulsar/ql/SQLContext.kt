@@ -1,8 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_EAGER_FETCH_LIMIT
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -13,6 +12,7 @@ import org.h2.api.ErrorCode
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -62,7 +62,7 @@ class SQLContext: AutoCloseable {
      * The sessions container
      * A session will be closed if it's expired or the pool is full
      */
-    private val sessions: MutableMap<DbSession, QuerySession> = Collections.synchronizedMap(mutableMapOf())
+    private val sessions = ConcurrentHashMap<DbSession, QuerySession>()
 
     private val backgroundTaskBatchSize: Int
 
@@ -88,7 +88,7 @@ class SQLContext: AutoCloseable {
         handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, false)
 
         backgroundSession.disableCache()
-        backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_EAGER_FETCH_LIMIT, 20)
+        backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_CONCURRENCY, 20)
 
         backgroundThread = Thread { runBackgroundTasks() }
         backgroundThread.isDaemon = true

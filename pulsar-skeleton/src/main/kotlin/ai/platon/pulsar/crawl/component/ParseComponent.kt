@@ -28,6 +28,7 @@ import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -40,7 +41,7 @@ class ParseComponent(
         val pageParser: PageParser,
         val conf: ImmutableConfig
 ) {
-    private val report = Collections.synchronizedMap(HashMap<String, Any>())
+    private val report = ConcurrentHashMap<String, Any>()
 
     @JvmOverloads
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = false): ParseResult {

@@ -23,6 +23,7 @@ import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.persist.model.DomStatistics
 import ai.platon.pulsar.persist.model.LabeledHyperLink
 import java.util.*
+import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.collections.HashSet
 
 class ParseResult : ParseStatus {
@@ -39,7 +40,7 @@ class ParseResult : ParseStatus {
     constructor(majorCode: Short, minorCode: Int, message: String?) : super(majorCode, minorCode, message)
 
     companion object {
-        val labeledHypeLinks = Collections.synchronizedSet(HashSet<LabeledHyperLink>())
+        val labeledHypeLinks = ConcurrentSkipListSet<LabeledHyperLink>()
 
         fun failed(minorCode: Int, message: String?): ParseResult {
             return ParseResult(ParseStatusCodes.FAILED, minorCode, message)

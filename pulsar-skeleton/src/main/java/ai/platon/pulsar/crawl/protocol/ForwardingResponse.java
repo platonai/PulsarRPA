@@ -17,6 +17,8 @@
 package ai.platon.pulsar.crawl.protocol;
 
 import ai.platon.pulsar.persist.ProtocolStatus;
+import ai.platon.pulsar.persist.RetryScope;
+import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 
 import javax.annotation.Nullable;
@@ -28,36 +30,85 @@ import java.util.Objects;
 public class ForwardingResponse implements Response {
 
     private String url;
-    private byte[] content;
     private ProtocolStatus status;
     private MultiMetadata headers;
+    private byte[] content;
+    /**
+     * The unmodified page, the page must be updated using status, headers and content later
+     * */
+    private WebPage page;
 
-    public ForwardingResponse(String url, ProtocolStatus status) {
-        this(url, "", status, new MultiMetadata());
+    public static ForwardingResponse canceled(WebPage page) {
+        return new ForwardingResponse(page.getUrl(), ProtocolStatus.STATUS_CANCELED, page);
     }
 
-    public ForwardingResponse(String url, ProtocolStatus status, MultiMetadata headers) {
-        this(url, "", status, headers);
+    public static ForwardingResponse retry(WebPage page, RetryScope retryScope) {
+        return new ForwardingResponse(page.getUrl(), retryScope, page);
     }
 
-    public ForwardingResponse(String url, String content, ProtocolStatus status, MultiMetadata headers) {
-        this(url, content.getBytes(), status, headers);
+    public static ForwardingResponse failed(WebPage page, Throwable e) {
+        return new ForwardingResponse(page.getUrl(), e, page);
     }
 
-    public ForwardingResponse(String url, byte[] content, ProtocolStatus status, MultiMetadata headers) {
+    /**
+     * The page should keep status unchanged
+     * */
+    public ForwardingResponse(String url, ProtocolStatus status, WebPage page) {
+        this(url, "", status, new MultiMetadata(), page);
+    }
+
+    /**
+     * The page should keep status unchanged
+     * */
+    public ForwardingResponse(String url, RetryScope retryScope, WebPage page) {
+        this(url, "", ProtocolStatus.retry(retryScope), new MultiMetadata(), page);
+    }
+
+    /**
+     * The page should keep status unchanged
+     * */
+    public ForwardingResponse(String url, Throwable e, WebPage page) {
+        this(url, "", ProtocolStatus.failed(e), new MultiMetadata(), page);
+    }
+
+    /**
+     * The page should keep status unchanged
+     * */
+    public ForwardingResponse(String url, ProtocolStatus status, MultiMetadata headers, WebPage page) {
+        this(url, "", status, headers, page);
+    }
+
+    /**
+     * The page should keep status unchanged
+     * */
+    public ForwardingResponse(String url, String content, ProtocolStatus status, MultiMetadata headers, WebPage page) {
+        this(url, content.getBytes(), status, headers, page);
+    }
+
+    /**
+     * The page should keep status unchanged
+     * */
+    public ForwardingResponse(String url, byte[] content, ProtocolStatus status, MultiMetadata headers, WebPage page) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(content);
         Objects.requireNonNull(headers);
+        Objects.requireNonNull(page);
 
         this.url = url;
         this.content = content;
         this.status = status;
         this.headers = headers;
+        this.page = page;
     }
 
     @Override
     public String getUrl() {
         return url;
+    }
+
+    @Override
+    public WebPage getPage() {
+        return page;
     }
 
     @Override

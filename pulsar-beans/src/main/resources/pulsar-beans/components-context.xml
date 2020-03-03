@@ -34,12 +34,14 @@
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchTaskTracker"/>
+        <constructor-arg ref="fetchThreadExecutor"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchTaskTracker"/>
+        <constructor-arg ref="fetchThreadExecutor"/>
         <constructor-arg ref="conf"/>
     </bean>
 

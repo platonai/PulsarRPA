@@ -27,7 +27,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="globalExecutor" class="ai.platon.pulsar.common.FetchThreadExecutor" destroy-method="close">
+    <bean id="fetchThreadExecutor" class="ai.platon.pulsar.common.FetchThreadExecutor" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -45,15 +45,14 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDriverPool" class="ai.platon.pulsar.net.browser.WebDriverPool" destroy-method="close">
+    <bean id="webDriverManager" class="ai.platon.pulsar.net.browser.WebDriverManager" destroy-method="close">
         <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="proxyManager"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="privacyContextFactory" class="ai.platon.pulsar.net.browser.PrivacyContextFactory">
-        <constructor-arg ref="webDriverPool"/>
+        <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="proxyManager"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -67,7 +66,7 @@
 
     <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.net.browser.BrowserEmulatedFetcher" destroy-method="close">
         <constructor-arg ref="privacyContextFactory"/>
-        <constructor-arg ref="globalExecutor"/>
+        <constructor-arg ref="fetchThreadExecutor"/>
         <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="conf"/>
     </bean>

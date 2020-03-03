@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -49,7 +50,7 @@ public class ProtocolFactory implements AutoCloseable {
     public static final Logger LOG = LoggerFactory.getLogger(ProtocolFactory.class);
 
     private ImmutableConfig immutableConfig;
-    private Map<String, Protocol> protocols = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, Protocol> protocols = new ConcurrentHashMap<>();
     private AtomicBoolean closed = new AtomicBoolean();
 
     public ProtocolFactory(ImmutableConfig immutableConfig) {

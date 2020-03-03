@@ -125,7 +125,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun setEagerFetchLimit(@H2Context h2session: Session, parallel: Boolean, ttl: Int): String? {
-        return getAndSetConf(h2session, FETCH_EAGER_FETCH_LIMIT, parallel.toString(), ttl)
+        return getAndSetConf(h2session, FETCH_CONCURRENCY, parallel.toString(), ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
@@ -133,7 +133,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetEagerFetchLimit(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_EAGER_FETCH_LIMIT)
+        return session.volatileConfig.getAndUnset(FETCH_CONCURRENCY)
     }
 
     /**

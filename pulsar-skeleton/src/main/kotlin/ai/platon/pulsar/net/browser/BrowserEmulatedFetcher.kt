@@ -35,7 +35,7 @@ class BrowserEmulatedFetcher(
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverPool = privacyContextFactory.driverPool
+    private val driverManager = privacyContextFactory.driverManager
     private val closed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -51,7 +51,7 @@ class BrowserEmulatedFetcher(
      * */
     fun fetchContent(page: WebPage): Response {
         if (closed.get()) {
-            return ForwardingResponse(page.url, ProtocolStatus.STATUS_CANCELED)
+            return ForwardingResponse.canceled(page)
         }
 
         val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
@@ -63,7 +63,7 @@ class BrowserEmulatedFetcher(
                 browserEmulator.fetch(task, driver)
             }.response
         } catch (e: IllegalStateException) {
-            ForwardingResponse(page.url, ProtocolStatus.STATUS_CANCELED)
+            ForwardingResponse.canceled(page)
         }
     }
 
@@ -98,25 +98,26 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        var cx = FetchTaskBatch(batchId, pages, volatileConfig)
+        var cx = FetchTaskBatch(batchId, pages, volatileConfig, privacyContextFactory)
 
         // allocate drivers before batch fetch context timing
         allocateDriversIfNecessary(cx, cx.conf)
 
         log.info("Start batch task {} with {} pages in parallel with expected proxy <{}>",
-                cx.batchId, cx.batchSize, driverPool.proxyManager.currentProxyEntry)
+                cx.batchId, cx.batchSize, driverManager.proxyManager.currentProxyEntry)
 
         cx.beforeFetchAll(cx.pages)
 
         var retry = 1
+        val maxRetry = 2
         do {
             if (privacyContextFactory.activeContext.isPrivacyLeaked) {
                 privacyContextFactory.reset()
-                cx = cx.createChild()
+                cx = cx.createNextNode()
             }
 
             parallelFetch(cx)
-        } while (retry++ <= 2 && privacyContextFactory.activeContext.isPrivacyLeaked)
+        } while (retry++ <= maxRetry && privacyContextFactory.activeContext.isPrivacyLeaked)
 
         cx.afterFetchAll(cx.pages)
 
@@ -185,10 +186,10 @@ class BrowserEmulatedFetcher(
 
     private fun allocateDriversIfNecessary(cx: FetchTaskBatch, volatileConfig: VolatileConfig) {
         // allocate drivers before batch fetch context timing, the allocation might take long time
-        val requiredDrivers = cx.batchSize - driverPool.nFree
+        val requiredDrivers = cx.batchSize - driverManager.driverPool.numFree
         if (requiredDrivers > 0) {
             log.info("Allocating $requiredDrivers drivers")
-            driverPool.allocate(0, requiredDrivers, volatileConfig)
+            driverManager.allocate(0, requiredDrivers, volatileConfig)
             cx.startTime = Instant.now()
         }
     }
@@ -201,16 +202,17 @@ class BrowserEmulatedFetcher(
             }
         } catch (e: ProxyException) {
             log.warn(StringUtil.simplifyException(e))
-            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
+            FetchResult(task, ForwardingResponse.canceled(task.page))
         } catch (e: WebDriverPoolExhaust) {
             log.warn("Too many web drivers", e)
-            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)))
+            FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL_SCHEDULE))
         } catch (e: IllegalStateException) {
-            log.warn("Program is already closed", e)
-            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_CANCELED))
+            log.warn("Application is closed ({})", StringUtil.simplifyException(e))
+            FetchResult(task, ForwardingResponse.canceled(task.page))
         } catch (e: Throwable) {
-            log.warn("Unexpected exception", e)
-            FetchResult(task, ForwardingResponse(task.url, ProtocolStatus.STATUS_FAILED))
+            log.warn("Unexpected throwable", e)
+            e.printStackTrace()
+            FetchResult(task, ForwardingResponse.failed(task.page, e))
         } finally {
             cx.afterFetch(task.page)
         }
@@ -220,39 +222,19 @@ class BrowserEmulatedFetcher(
         val url = task.url
         try {
             val result = waitFor(task, future, cx.threadTimeout)
-            cx.finishedTasks[task] = result
 
             val elapsed = Duration.ofSeconds(cx.round)
             val response = result.response
             when (response.httpCode) {
                 ProtocolStatusCodes.SUCCESS_OK -> {
-                    privacyContextFactory.activeContext.informSuccess("handleTaskDone | ")
-
-                    cx.lastSuccessTask = result.task
-                    cx.lastSuccessProxy = result.task.proxyEntry
-                    cx.successPages.add(result.task.page)
-                    cx.stat.totalBytes += response.length()
-                    cx.stat.numSuccessTasks++
-
-                    cx.afterFetchN(cx.successPages)
-
+                    cx.onSuccess(task, result)
                     logTaskSuccess(cx, url, response, elapsed)
                 }
                 ProtocolStatusCodes.RETRY -> {
-                    cx.lastFailedTask = result.task
-                    cx.lastFailedProxy = result.task.proxyEntry
-
-                    if (response.status.isRetry(RetryScope.PRIVACY_CONTEXT)) {
-                        cx.privacyLeakedTasks.add(task)
-                        privacyContextFactory.activeContext.informWarning("handleTaskDone | ")
-                    }
+                    cx.onRetry(task, result)
                 }
                 else -> {
-                    cx.lastFailedTask = result.task
-                    cx.lastFailedProxy = result.task.proxyEntry
-
-                    ++cx.stat.numFailedTasks
-
+                    cx.onFailure(task, result)
                     logTaskFailed(cx, url, response, elapsed)
                 }
             }
@@ -268,10 +250,10 @@ class BrowserEmulatedFetcher(
 
         // if there are still pending tasks, cancel them
         cx.workingTasks.forEach { browserEmulator.cancel(it.key) }
-        cx.workingTasks.forEach { it.value.cancel(true) }
+//        cx.workingTasks.forEach { it.value.cancel(true) }
         cx.workingTasks.forEach { (task, future) ->
-            cx.finishedTasks[task] = waitFor(task, future, cx.threadTimeout)
-            cx.abortedTasks.add(task)
+            val result = waitFor(task, future, cx.threadTimeout)
+            cx.onAbort(task, result)
         }
     }
 
@@ -302,7 +284,7 @@ class BrowserEmulatedFetcher(
             status = ProtocolStatus.STATUS_EXCEPTION
         }
 
-        return FetchResult(FetchTask.NIL, ForwardingResponse(task.url, "", status, headers))
+        return FetchResult(FetchTask.NIL, ForwardingResponse(task.url, "", status, headers, task.page))
     }
 
     private fun logLongTimeCost(cx: FetchTaskBatch) {
@@ -362,7 +344,7 @@ class BrowserEmulatedFetcher(
         }
 
         if (log.isTraceEnabled) {
-            log.trace("Driver pool status: $driverPool")
+            log.trace("Drivers - $driverManager")
         }
     }
 

@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Storage class for <code>DomainSuffix</code> objects Note: this class is
@@ -37,7 +38,7 @@ public class DomainSuffixes {
 
     public static String DOMAIN_SUFFIXES_FILE = "domain-suffixes.xml";
     private static DomainSuffixes instance;
-    private Map<String, DomainSuffix> domains = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, DomainSuffix> domains = new ConcurrentHashMap<>();
 
     private DomainSuffixes() {
     }

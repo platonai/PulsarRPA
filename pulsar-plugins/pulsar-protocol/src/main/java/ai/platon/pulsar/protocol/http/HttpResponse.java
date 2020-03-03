@@ -49,6 +49,7 @@ public class HttpResponse implements Response {
 
     private final AbstractHttpProtocol http;
     private final URL url;
+    private final WebPage page;
     private final MultiMetadata headers = new SpellCheckedMultiMetadata();
     private ImmutableConfig conf;
     private ProxyEntry proxy = null;
@@ -58,7 +59,46 @@ public class HttpResponse implements Response {
     public HttpResponse(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, ProxyException {
         this.http = http;
         this.url = url;
+        this.page = page;
 
+        open(http, url, page);
+    }
+
+    @Override
+    public String getUrl() {
+        return url.toString();
+    }
+
+    @Override
+    public WebPage getPage() {
+        return page;
+    }
+
+    @Override
+    public ProtocolStatus getStatus() {
+        System.out.println("Should check the implementation, it always return STATUS_NOTFETCHED");
+        return ProtocolStatus.STATUS_NOTFETCHED;
+    }
+
+    @Override
+    public int getHttpCode() {
+        return code;
+    }
+
+    public String getHeader(String name) {
+        return headers.get(name);
+    }
+
+    public MultiMetadata getHeaders() {
+        return headers;
+    }
+
+    @Nullable
+    public byte[] getContent() {
+        return content;
+    }
+
+    private void open(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, ProxyException {
         Scheme scheme;
 
         if ("http".equals(url.getProtocol())) {
@@ -249,34 +289,6 @@ public class HttpResponse implements Response {
                 }
             }
         }
-    }
-
-    public String getUrl() {
-        return url.toString();
-    }
-
-    @Override
-    public ProtocolStatus getStatus() {
-        System.out.println("Should check the implementation, it always return STATUS_NOTFETCHED");
-        return ProtocolStatus.STATUS_NOTFETCHED;
-    }
-
-    @Override
-    public int getHttpCode() {
-        return code;
-    }
-
-    public String getHeader(String name) {
-        return headers.get(name);
-    }
-
-    public MultiMetadata getHeaders() {
-        return headers;
-    }
-
-    @Nullable
-    public byte[] getContent() {
-        return content;
     }
 
     private void readPlainContent(InputStream in) throws HttpException, IOException {

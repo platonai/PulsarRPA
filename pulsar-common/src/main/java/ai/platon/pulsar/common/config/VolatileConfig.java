@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by vincent on 18-1-17.
@@ -16,8 +17,8 @@ public class VolatileConfig extends MutableConfig {
     public static final VolatileConfig EMPTY = new VolatileConfig();
 
     private ImmutableConfig fallbackConfig;
-    private Map<String, Integer> ttls = Collections.synchronizedMap(new HashMap<>());
-    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, Integer> ttls = new ConcurrentHashMap<>();
+    private Map<String, Object> variables = new ConcurrentHashMap<>();
 
     public VolatileConfig() {
         super(false);

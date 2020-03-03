@@ -4,12 +4,13 @@ import ai.platon.pulsar.rest.api.ServerInstance
 import ai.platon.pulsar.rest.api.common.PortManager
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 @RestController
 @RequestMapping("/port")
 class PortResource {
 
-    private val portManagers = Collections.synchronizedMap(hashMapOf<String, PortManager>())
+    private val portManagers = ConcurrentHashMap<String, PortManager>()
 
     init {
         var portManager = PortManager(ServerInstance.Type.FetchService.name)

@@ -13,7 +13,8 @@ public class NetUtil {
 
     private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
-    public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
+    public static Duration CONNECTION_TIMEOUT = Duration.ofSeconds(3);
+    public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(3);
 
     // Pattern for matching ip[:port]
     public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
@@ -60,7 +61,7 @@ public class NetUtil {
     }
 
     public static boolean testTcpNetwork(String ip, int port) {
-        return testTcpNetwork(ip, port, PROXY_CONNECTION_TIMEOUT);
+        return testTcpNetwork(ip, port, CONNECTION_TIMEOUT);
     }
 
     public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
@@ -165,7 +166,7 @@ public class NetUtil {
         return masterHostname.equals("localhost") || masterHostname.equals(getHostname());
     }
 
-    public static URL getUrl(Configuration conf, String path) throws MalformedURLException {
+    public static URL getMasterURL(Configuration conf, String path) throws MalformedURLException {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
 

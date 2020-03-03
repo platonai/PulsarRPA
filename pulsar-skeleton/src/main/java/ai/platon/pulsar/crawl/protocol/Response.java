@@ -17,6 +17,7 @@
 package ai.platon.pulsar.crawl.protocol;
 
 import ai.platon.pulsar.persist.ProtocolStatus;
+import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,8 @@ public interface Response {
     Logger LOG = LoggerFactory.getLogger(Response.class);
 
     String getUrl();
+
+    WebPage getPage();
 
     /** The protocol's response status, with transform. */
     ProtocolStatus getStatus();

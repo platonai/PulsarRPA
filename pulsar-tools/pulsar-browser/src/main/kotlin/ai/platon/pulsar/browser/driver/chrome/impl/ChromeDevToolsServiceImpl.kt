@@ -68,8 +68,9 @@ abstract class ChromeDevToolsServiceImpl(
     }
 
     private val eventExecutorService = configuration.eventExecutorService
-    private val invocationResultMap: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
-    private val eventNameToHandlersMap: MutableMap<String, MutableSet<EventListenerImpl>> = mutableMapOf()
+    private val invocationResults: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
+    // private val eventHandlers: MutableMap<String, ConcurrentSkipListSet<EventListenerImpl>> = ConcurrentHashMap()
+    private val eventHandlers: MutableMap<String, MutableSet<EventListenerImpl>> = mutableMapOf()
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
@@ -97,13 +98,13 @@ abstract class ChromeDevToolsServiceImpl(
         try {
             val result = InvocationResult(returnProperty)
 
-            invocationResultMap[methodInvocation.id] = result
+            invocationResults[methodInvocation.id] = result
             webSocketService.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
             val responded = result.waitForResult(configuration.readTimeout.seconds, TimeUnit.SECONDS)
-            invocationResultMap.remove(methodInvocation.id)
+            invocationResults.remove(methodInvocation.id)
 
             lock.withLock {
-                if (invocationResultMap.isEmpty()) {
+                if (invocationResults.isEmpty()) {
                     notBusy.signalAll()
                 }
             }
@@ -122,12 +123,12 @@ abstract class ChromeDevToolsServiceImpl(
 
             // Received a error
             val error = readJsonObject(ErrorObject::class.java, result.result)
-            val errorMessageBuilder = StringBuilder(error.message)
+            val errorBuilder = StringBuilder(error.message)
             if (error.data != null) {
-                errorMessageBuilder.append(": ")
-                errorMessageBuilder.append(error.data)
+                errorBuilder.append(": ")
+                errorBuilder.append(error.data)
             }
-            throw ChromeDevToolsInvocationException(error.code, errorMessageBuilder.toString())
+            throw ChromeDevToolsInvocationException(error.code, errorBuilder.toString())
         } catch (e: WebSocketServiceException) {
             throw ChromeDevToolsInvocationException("Failed sending web socket message", e)
         } catch (e: InterruptedException) {
@@ -137,20 +138,21 @@ abstract class ChromeDevToolsServiceImpl(
         }
     }
 
-    override fun addEventListener(domainName: String, eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener {
+    override fun addEventListener(domainName: String,
+            eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener {
         val name = "$domainName.$eventName"
         val listener = EventListenerImpl(name, eventHandler, eventType, this)
-        eventNameToHandlersMap.computeIfAbsent(name) { createEventHandlerSet() }.add(listener)
+        eventHandlers.computeIfAbsent(name) { createEventHandlerSet() }.add(listener)
         return listener
-    }
-
-    override fun removeEventListener(eventListener: EventListener) {
-        val listener = eventListener as EventListenerImpl
-        eventNameToHandlersMap[listener.key]?.removeIf { listener.handler == it.handler }
     }
 
     private fun createEventHandlerSet(): MutableSet<EventListenerImpl> {
         return Collections.synchronizedSet<EventListenerImpl>(HashSet())
+    }
+
+    override fun removeEventListener(eventListener: EventListener) {
+        val listener = eventListener as EventListenerImpl
+        eventHandlers[listener.key]?.removeIf { listener.handler == it.handler }
     }
 
     override fun accept(message: String) {
@@ -159,7 +161,7 @@ abstract class ChromeDevToolsServiceImpl(
             val idNode = jsonNode.get(ID_PROPERTY)
             if (idNode != null) {
                 val id = idNode.asLong()
-                val result = invocationResultMap[id]
+                val result = invocationResults[id]
                 if (result != null) {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)
@@ -203,7 +205,7 @@ abstract class ChromeDevToolsServiceImpl(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             lock.withLock {
-                if (invocationResultMap.isNotEmpty()) {
+                if (invocationResults.isNotEmpty()) {
                     notBusy.await(5, TimeUnit.SECONDS)
                 }
             }
@@ -218,7 +220,7 @@ abstract class ChromeDevToolsServiceImpl(
     private fun handleEvent(name: String, params: JsonNode) {
         if (isClosed) return
 
-        val listeners = eventNameToHandlersMap[name] ?:return
+        val listeners = eventHandlers[name] ?:return
 
         var unmodifiedListeners: Set<EventListenerImpl>
         // make a copy

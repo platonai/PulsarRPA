@@ -44,6 +44,7 @@ import java.net.URL;
 public class HttpResponse implements Response {
 
     private URL url;
+    private WebPage page;
     private byte[] content;
     private int code;
     private MultiMetadata headers = new SpellCheckedMultiMetadata();
@@ -60,9 +61,51 @@ public class HttpResponse implements Response {
      * @throws IOException When an error occurs
      */
     HttpResponse(Http http, URL url, WebPage page, boolean followRedirects) throws IOException {
+        this.url = url;
+        this.page = page;
 
         // Prepare GET method for HTTP request
-        this.url = url;
+        doGet(http, url, page, followRedirects);
+    }
+
+    @Override
+    public String getUrl() {
+        return url.toString();
+    }
+
+    @Override
+    public WebPage getPage() {
+        return page;
+    }
+
+    @Override
+    public ProtocolStatus getStatus() {
+        return ProtocolStatus.STATUS_NOTFETCHED;
+    }
+
+    @Override
+    public int getHttpCode() {
+        return code;
+    }
+
+    @Override
+    public String getHeader(String name) {
+        return headers.get(name);
+    }
+
+    @Override
+    public MultiMetadata getHeaders() {
+        return headers;
+    }
+
+    @Override
+    public byte[] getContent() {
+        return content;
+    }
+
+    private void doGet(Http http, URL url, WebPage page, boolean followRedirects) throws IOException {
+        // Prepare GET method for HTTP request
+
         GetMethod get = new GetMethod(url.toString());
         get.setFollowRedirects(followRedirects);
         get.setDoAuthentication(true);
@@ -174,35 +217,5 @@ public class HttpResponse implements Response {
         } finally {
             get.releaseConnection();
         }
-    }
-
-    @Override
-    public String getUrl() {
-        return url.toString();
-    }
-
-    @Override
-    public ProtocolStatus getStatus() {
-        return ProtocolStatus.STATUS_NOTFETCHED;
-    }
-
-    @Override
-    public int getHttpCode() {
-        return code;
-    }
-
-    @Override
-    public String getHeader(String name) {
-        return headers.get(name);
-    }
-
-    @Override
-    public MultiMetadata getHeaders() {
-        return headers;
-    }
-
-    @Override
-    public byte[] getContent() {
-        return content;
     }
 }

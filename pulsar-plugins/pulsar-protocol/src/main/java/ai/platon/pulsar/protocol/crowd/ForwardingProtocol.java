@@ -26,19 +26,32 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ForwardingProtocol extends AbstractHttpProtocol {
     private Logger log = LoggerFactory.getLogger(ForwardingProtocol.class);
 
-    private Map<String, Response> cache = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, Response> cache = new ConcurrentHashMap<>();
 
     public ForwardingProtocol() {
     }
 
     @Override
     public void setResponse(@Nonnull Response response) {
+        cache.put(response.getUrl(), response);
+        logAfterPutResponse();
+    }
+
+    @Override
+    protected Response getResponse(String url, WebPage page, boolean followRedirects) {
+        Response response = cache.remove(url);
+        logAfterRemoveResponse(url, response);
+        return response;
+    }
+
+    private void logAfterPutResponse() {
         if (log.isTraceEnabled()) {
-            log.trace("Putting page to forward cache, total {} | {}", cache.size(), response.getUrl());
+            log.trace("Putting page to forward cache, total {}", cache.size());
         }
 
         if (cache.size() > 100) {
@@ -48,19 +61,13 @@ public class ForwardingProtocol extends AbstractHttpProtocol {
                 cache.clear();
             }
         }
-
-        cache.put(response.getUrl(), response);
     }
 
-    @Override
-    protected Response getResponse(String url, WebPage page, boolean followRedirects) {
-        Response response = cache.remove(url);
+    private void logAfterRemoveResponse(String url, Response response) {
         if (response == null) {
-            if (log.isTraceEnabled()) {
-                log.trace("Failed to find page in forward cache, total {} | {}", cache.size(), url);
+            if (log.isDebugEnabled()) {
+                log.debug("Failed to find page in forward cache, total {} | {}", cache.size(), url);
             }
         }
-
-        return response;
     }
 }

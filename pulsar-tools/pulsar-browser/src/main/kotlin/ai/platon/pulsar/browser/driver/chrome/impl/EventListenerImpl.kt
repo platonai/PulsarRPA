@@ -9,12 +9,16 @@ class EventListenerImpl(
         val handler: EventHandler<Any>,
         val paramType: Class<*>,
         private val service: ChromeDevToolsService
-) : EventListener {
+) : EventListener, Comparable<EventListenerImpl> {
     override fun off() {
         unsubscribe()
     }
 
     override fun unsubscribe() {
         service.removeEventListener(this)
+    }
+
+    override fun compareTo(other: EventListenerImpl): Int {
+        return this.key.compareTo(other.key)
     }
 }

@@ -13,7 +13,7 @@ class PrivacyContextFactory(
          * The web driver pool
          * TODO: web driver pool should be created by a privacy context, not a singleton
          * */
-        val driverPool: WebDriverPool,
+        val driverManager: WebDriverManager,
         val proxyManager: ProxyManager,
         val immutableConfig: ImmutableConfig
 ) {
@@ -37,7 +37,7 @@ class PrivacyContextFactory(
 
     private fun getOrCreate(): BrowserPrivacyContext {
         if (globalActiveContext.get() == null) {
-            globalActiveContext.set(BrowserPrivacyContext(driverPool, proxyManager, immutableConfig))
+            globalActiveContext.set(BrowserPrivacyContext(driverManager, proxyManager, immutableConfig))
         }
         return globalActiveContext.get()
     }

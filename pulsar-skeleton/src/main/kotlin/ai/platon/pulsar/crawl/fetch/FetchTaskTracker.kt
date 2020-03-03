@@ -19,6 +19,8 @@ import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.HashSet
@@ -38,35 +40,34 @@ class FetchTaskTracker(
     /**
      * Tracking statistics for each host
      */
-    val hostStatistics = Collections.synchronizedMap(HashMap<String, FetchStat>())
+    val hostStatistics = ConcurrentHashMap<String, FetchStat>()
     /**
      * Tracking unreachable hosts
      */
-    val unreachableHosts = Collections.synchronizedSet(HashSet<String>())
+    val unreachableHosts = ConcurrentSkipListSet<String>()
     /**
      * Tracking hosts who is failed to fetch tasks.
      * A host is considered to be a unreachable host if there are too many failure
      */
     val failedHostTracker = TreeMultiset.create<String>()
-    val timeoutUrls = Collections.synchronizedSet(HashSet<CharSequence>())
-    val failedUrls = Collections.synchronizedSet(HashSet<CharSequence>())
-    val deadUrls = Collections.synchronizedSet(HashSet<CharSequence>())
+    val timeoutUrls = ConcurrentSkipListSet<String>()
+    val failedUrls = ConcurrentSkipListSet<String>()
+    val deadUrls = ConcurrentSkipListSet<String>()
 
     val totalTaskCount = AtomicInteger(0)
     val totalSuccessCount = AtomicInteger(0)
 
-    val batchTaskCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
-    val batchSuccessCounters = Collections.synchronizedMap(mutableMapOf<Int, AtomicInteger>())
+    val batchTaskCounters = ConcurrentHashMap<Int, AtomicInteger>()
+    val batchSuccessCounters = ConcurrentHashMap<Int, AtomicInteger>()
 
     private val isClosed = AtomicBoolean()
     private val isReported = AtomicBoolean()
 
     init {
-        timeoutUrls.addAll(urlTrackerIndexer.takeAll(TIMEOUT_URLS_PAGE))
-        failedUrls.addAll(urlTrackerIndexer.getAll(FAILED_URLS_PAGE))
-        deadUrls.addAll(urlTrackerIndexer.getAll(DEAD_URLS_PAGE))
-
-        unreachableHosts.addAll(LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS))
+        urlTrackerIndexer.takeAll(TIMEOUT_URLS_PAGE).mapTo(timeoutUrls) { it.toString() }
+        urlTrackerIndexer.getAll(FAILED_URLS_PAGE).mapTo(failedUrls) { it.toString() }
+        urlTrackerIndexer.getAll(DEAD_URLS_PAGE).mapTo(deadUrls) { it.toString() }
+        LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
 
         params.withLogger(LOG).info(true)
     }

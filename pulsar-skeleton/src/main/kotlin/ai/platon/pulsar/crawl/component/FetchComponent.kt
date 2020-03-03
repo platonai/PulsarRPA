@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.FetchThreadExecutor
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.AppConstants
@@ -45,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class FetchComponent(
         val fetchTaskTracker: FetchTaskTracker,
         val protocolFactory: ProtocolFactory,
+        val fetchThreadExecutor: FetchThreadExecutor,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
 

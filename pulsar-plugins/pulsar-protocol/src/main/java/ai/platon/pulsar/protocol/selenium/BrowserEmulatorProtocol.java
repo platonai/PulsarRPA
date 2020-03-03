@@ -20,10 +20,9 @@ import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.StringUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.net.browser.BrowserEmulatedFetcher;
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
 import ai.platon.pulsar.crawl.protocol.Response;
-import ai.platon.pulsar.persist.ProtocolStatus;
+import ai.platon.pulsar.net.browser.BrowserEmulatedFetcher;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol;
 import org.slf4j.Logger;
@@ -86,13 +85,13 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
 
             BrowserEmulatedFetcher fc = getFetcher();
             if (fc == null) {
-                return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
+                return ForwardingResponse.canceled(page);
             }
             return fc.fetchContent(page);
         } catch (Exception e) {
             log.warn("Unexpected exception", e);
             // Unexpected exception, cancel the request, hope to retry in CRAWL_SOLUTION scope
-            return new ForwardingResponse(url, ProtocolStatus.STATUS_CANCELED);
+            return ForwardingResponse.canceled(page);
         }
     }
 
