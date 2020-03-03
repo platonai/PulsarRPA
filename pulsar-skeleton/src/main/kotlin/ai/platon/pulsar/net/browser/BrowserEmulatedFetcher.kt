@@ -205,7 +205,7 @@ class BrowserEmulatedFetcher(
             FetchResult(task, ForwardingResponse.canceled(task.page))
         } catch (e: WebDriverPoolExhaust) {
             log.warn("Too many web drivers", e)
-            FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL_SCHEDULE))
+            FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
         } catch (e: IllegalStateException) {
             log.warn("Application is closed ({})", StringUtil.simplifyException(e))
             FetchResult(task, ForwardingResponse.canceled(task.page))
@@ -275,10 +275,10 @@ class BrowserEmulatedFetcher(
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
         } catch (e: java.util.concurrent.ExecutionException) {
             log.warn("Execution error caught when retrieve task result", e)
-            status = ProtocolStatus.retry(RetryScope.FETCH_PROTOCOL)
+            status = ProtocolStatus.retry(RetryScope.PROTOCOL)
         } catch (e: InterruptedException) {
             log.warn("Interrupted when retrieve task result", e)
-            status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+            status = ProtocolStatus.retry(RetryScope.CRAWL)
         } catch (e: Exception) {
             log.warn("Unexpected exception", e)
             status = ProtocolStatus.STATUS_EXCEPTION

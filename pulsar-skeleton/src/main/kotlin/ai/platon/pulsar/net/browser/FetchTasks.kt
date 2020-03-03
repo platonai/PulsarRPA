@@ -8,7 +8,6 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
@@ -236,7 +235,7 @@ internal class FetchTaskBatch(
         lastFailedTask = result.task
         lastFailedProxy = result.task.proxyEntry
 
-        if (result.response.status.isRetry(RetryScope.PRIVACY_CONTEXT)) {
+        if (result.response.status.isRetry(RetryScope.PRIVACY)) {
             privacyLeakedTasks.add(task)
             privacyContextFactory.activeContext.informWarning()
         }
@@ -294,7 +293,7 @@ internal class FetchTaskBatch(
     private fun getResponse(page: WebPage, tail: FetchTaskBatch): Response {
         val url = page.url
         val result = universalSuccessTasks[url]?:tail.finishedTasks[url]
-        return result?.response?:ForwardingResponse.retry(page, RetryScope.CRAWL_SCHEDULE)
+        return result?.response?:ForwardingResponse.retry(page, RetryScope.CRAWL)
     }
 
     private fun lastTaskTimeout(): Boolean {

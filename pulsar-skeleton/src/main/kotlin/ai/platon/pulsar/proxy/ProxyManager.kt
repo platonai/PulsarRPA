@@ -52,6 +52,7 @@ class ProxyManager(
 
     val isEnabled get() = ProxyPool.isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_FORWARD_SERVER, true)
     val isDisabled get() = !isEnabled
+    val enableTester = true
     val port get() = connector.port
     var report: String = ""
         private set
@@ -75,7 +76,7 @@ class ProxyManager(
             watcherThread.start()
         }
 
-        if (testerStarted.compareAndSet(false, true)) {
+        if (enableTester && testerStarted.compareAndSet(false, true)) {
             testerThread.isDaemon = true
             testerThread.name = "pTester"
             testerThread.start()
@@ -145,11 +146,15 @@ class ProxyManager(
             log.info("Closing proxy manager ... | {}", report)
 
             try {
-                testerThread.interrupt()
-                testerThread.join(threadJoinTimeout.toMillis())
+                if (testerStarted.get()) {
+                    testerThread.interrupt()
+                    testerThread.join(threadJoinTimeout.toMillis())
+                }
 
-                watcherThread.interrupt()
-                watcherThread.join(threadJoinTimeout.toMillis())
+                if (watcherStarted.get()) {
+                    watcherThread.interrupt()
+                    watcherThread.join(threadJoinTimeout.toMillis())
+                }
 
                 connector.use { it.close() }
             } catch (e: Throwable) {

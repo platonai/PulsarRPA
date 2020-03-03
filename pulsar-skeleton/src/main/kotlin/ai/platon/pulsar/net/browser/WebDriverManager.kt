@@ -94,45 +94,11 @@ class WebDriverManager(
         freeze {
             numReset.incrementAndGet()
             cancelAll()
-            driverPool.closeAll(incognito = true)
+            closeAll(incognito = true)
         }
     }
 
-    fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
-        freeze {
-            log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
-            driverPool.closeAll(incognito, processExit)
-            log.info("Total ${driverPool.numQuit} drivers are quit | {}", formatStatus(true))
-        }
-    }
-
-    fun report() {
-        log.info(formatStatus(verbose = true))
-
-        val sb = StringBuilder()
-
-//        driverPool.onlineDrivers.forEach { driver ->
-//            driver.driver.manage().cookies.joinTo(sb, "Cookies in driver #${driver.id}: ") { it.toString() }
-//        }
-
-        if (sb.isNotBlank()) {
-            log.info("Cookies: \n{}", sb)
-        } else {
-            log.info("All drivers have no cookie")
-        }
-    }
-
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-            driverPool.closeAll(true, true)
-        }
-    }
-
-    override fun toString(): String {
-        return formatStatus(true)
-    }
-
-    private fun formatStatus(verbose: Boolean = false): String {
+    fun formatStatus(verbose: Boolean = false): String {
         return if (verbose) {
             String.format("total: %d free: %d working: %d online: %d" +
                     " crashed: %d retired: %d quit: %d reset: %d" +
@@ -147,4 +113,23 @@ class WebDriverManager(
                     driverPool.numCrashed.get(), driverPool.numRetired.get())
         }
     }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            closeAll(true, true)
+        }
+    }
+
+    override fun toString(): String {
+        return formatStatus(true)
+    }
+
+    private fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
+        freeze {
+            log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
+            driverPool.closeAll(incognito, processExit)
+            log.info("Total ${driverPool.numQuit} drivers are quit | {}", formatStatus(true))
+        }
+    }
+
 }

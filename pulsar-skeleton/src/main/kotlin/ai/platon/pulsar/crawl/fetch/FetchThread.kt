@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.HashMap
 
 /**
  * This class picks items from queues and fetches the pages.
@@ -83,7 +82,7 @@ class FetchThread(
                 val page = fetchComponent.fetchContent(task.page)
                 taskScheduler.finish(task.poolId, task.itemId)
 
-                if (page.protocolStatus.isRetry(RetryScope.PRIVACY_CONTEXT)) {
+                if (page.protocolStatus.isRetry(RetryScope.PRIVACY)) {
                     // 1. cancel all running tasks
                     // 2. push back to fetch queue
                     // 3. lock down fetch queue

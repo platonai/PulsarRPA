@@ -148,7 +148,7 @@ open class BrowserEmulator(
         var exception: Exception? = null
 
         if (++task.nRetries > fetchMaxRetry) {
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL_SCHEDULE)
+            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
             return FetchResult(task, response, exception)
         }
 
@@ -156,18 +156,18 @@ open class BrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: ai.platon.pulsar.net.browser.CancellationException) {
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY_CONTEXT)
+            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
         } catch (e: ProxyException) {
             log.warn("No proxy, will retry task in privacy context | {}", task.url)
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY_CONTEXT)
+            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             if (!isClosed) {
                 log.warn("Web driver session is closed. {}", StringUtil.simplifyException(e))
             }
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL_SCHEDULE)
+            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 log.warn("Web driver is disconnected - {}", StringUtil.simplifyException(e))
@@ -177,7 +177,7 @@ open class BrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.FETCH_PROTOCOL)
+            response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
             if (!isClosed) {
                 log.warn("Web driver is disconnected - {}", StringUtil.simplifyException(e))
@@ -185,7 +185,7 @@ open class BrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.FETCH_PROTOCOL)
+            response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)
         } finally {
         }
 
@@ -236,7 +236,7 @@ open class BrowserEmulator(
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+            status = ProtocolStatus.retry(RetryScope.CRAWL)
         }
 
         val browserStatus = checkErrorPage(page, status)
@@ -533,11 +533,10 @@ open class BrowserEmulator(
             // The browser can not connect to remote peer, it must be caused by the bad proxy ip
             // It might be fixed by resetting the privacy context
             // log.warn("Connection timed out in browser, resetting the browser context")
-            // status = ProtocolStatus.retry(RetryScope.BROWSER_CONTEXT)
-            browserStatus.status = ProtocolStatus.retry(RetryScope.PRIVACY_CONTEXT, status)
+            browserStatus.status = ProtocolStatus.retry(RetryScope.PRIVACY, status)
             browserStatus.code = status.minorCode
         } else if (status.minorCode == ProtocolStatusCodes.BROWSER_ERROR) {
-            browserStatus.status = ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE, status)
+            browserStatus.status = ProtocolStatus.retry(RetryScope.CRAWL, status)
             browserStatus.code = status.minorCode
         }
 
@@ -605,20 +604,21 @@ open class BrowserEmulator(
         return when {
             htmlIntegrity.isBanned -> {
                 // should cancel all running tasks and reset the privacy context and then re-fetch them
-                ProtocolStatus.retry(RetryScope.PRIVACY_CONTEXT, htmlIntegrity)
+                ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
             }
             task.nRetries > fetchMaxRetry -> {
                 // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
-                ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+                ProtocolStatus.retry(RetryScope.CRAWL)
             }
             htmlIntegrity.isEmpty -> {
-                if (task.nRetries == 1) {
-                    ProtocolStatus.retry(RetryScope.WEB_DRIVER, htmlIntegrity)
-                } else {
-                    ProtocolStatus.retry(RetryScope.PRIVACY_CONTEXT, htmlIntegrity)
-                }
+//                if (task.nRetries == 1) {
+//                    ProtocolStatus.retry(RetryScope.PROXY, htmlIntegrity)
+//                } else {
+//                    ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
+//                }
+                ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
             }
-            else -> ProtocolStatus.retry(RetryScope.CRAWL_SCHEDULE)
+            else -> ProtocolStatus.retry(RetryScope.CRAWL)
         }
     }
 

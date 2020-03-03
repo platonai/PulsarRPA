@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.PrivacyContext
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.proxy.ProxyManager
@@ -58,12 +59,6 @@ open class BrowserPrivacyContext(
         // log.info("warning - ${message}privacyLeakWarnings: $privacyLeakWarnings freezers: $numFreezers tasks: $numTasks")
     }
 
-    open fun <T> run(task: FetchTask, action: () -> T): T {
-        return whenUnfrozen {
-            action()
-        }
-    }
-
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen {
             runWithProxy(task, browseFun).also { nServedTasks.incrementAndGet() }
@@ -73,7 +68,8 @@ open class BrowserPrivacyContext(
     open fun runInContext(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         var result: FetchResult
 
-        var retry = 1
+        var i = 1
+        val maxRetry = 2
         do {
             if (isPrivacyLeaked) {
                 task.reset()
@@ -87,10 +83,10 @@ open class BrowserPrivacyContext(
             val response = result.response
             if (response.status.isSuccess) {
                 informSuccess()
-            } else if (response.status.isRetry(RetryScope.PRIVACY_CONTEXT)) {
+            } else if (response.status.isRetry(RetryScope.PRIVACY)) {
                 informWarning()
             }
-        } while (retry++ <= 2 && isPrivacyLeaked)
+        } while (i++ <= maxRetry && isPrivacyLeaked)
 
         return result
     }
