@@ -1,6 +1,7 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.proxy.ProxyManager
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
@@ -8,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * TODO: multiple context support
  * */
-class PrivacyContextFactory(
+class PrivacyContextManager(
         /**
          * The web driver pool
          * TODO: web driver pool should be created by a privacy context, not a singleton
@@ -22,9 +23,36 @@ class PrivacyContextFactory(
         val zombieContexts = ConcurrentLinkedQueue<BrowserPrivacyContext>()
     }
 
+    val maxRetry = 2
+
     val activeContext
         @Synchronized
         get() = getOrCreate()
+
+    fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        var result: FetchResult
+
+        var i = 1
+        do {
+            if (activeContext.isPrivacyLeaked) {
+                task.reset()
+                reset()
+            }
+
+            result = activeContext.run(task) { _, driver ->
+                browseFun(task, driver)
+            }
+
+            val response = result.response
+            if (response.status.isSuccess) {
+                activeContext.informSuccess()
+            } else if (response.status.isRetry(RetryScope.PRIVACY)) {
+                activeContext.informWarning()
+            }
+        } while (i++ <= maxRetry && activeContext.isPrivacyLeaked)
+
+        return result
+    }
 
     @Synchronized
     fun reset() {

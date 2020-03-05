@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyPool
 import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle
 import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptInitializer
@@ -25,20 +24,16 @@ import io.netty.util.ResourceLeakDetector
 import org.slf4j.LoggerFactory
 import org.springframework.util.SocketUtils
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.math.max
-import kotlin.math.min
 
 class ProxyConnector(
-        private val proxyPool: ProxyPool,
         private val metricsSystem: MetricsSystem,
         private val conf: ImmutableConfig
 ): AutoCloseable {
@@ -57,24 +52,15 @@ class ProxyConnector(
     private val proxyTimeout = Duration.ofMinutes(3)
 
     private val closed = AtomicBoolean()
-    private val online = AtomicBoolean()
-    private val connectionLock: Lock = ReentrantLock()
-    private val connected: Condition = connectionLock.newCondition()
-    private val disconnected: Condition = connectionLock.newCondition()
+    private val lock: Lock = ReentrantLock()
+    private val connected: Condition = lock.newCondition()
+    private val disconnected: Condition = lock.newCondition()
 
-    private var numTotalConnects = 0
-    val isOnline get() = online.get()
-    val isClosed get() = closed.get()
-
+    var numTotalConnects = 0
     var port = -1
-        private set
-    var report: String = ""
-    var verbose = false
-
-    var lastProxyEntry: ProxyEntry? = null
-        private set
-    var currentProxyEntry: ProxyEntry? = null
-        private set
+    val proxyEntry = AtomicReference<ProxyEntry>()
+    val isOnline get() = proxyEntry.get() != null
+    val isClosed get() = closed.get()
 
     init {
         httpProxyServerConfig.bossGroupThreads = numBossGroupThreads
@@ -91,7 +77,7 @@ class ProxyConnector(
             log.info("No proxy online, waiting ...")
         }
 
-        connectionLock.withLock {
+        lock.withLock {
             var i = 0
             val maxRound = proxyTimeout.toMillis() / pollingInterval.toMillis()
             while (!isClosed && !isOnline && ++i < maxRound && !Thread.currentThread().isInterrupted) {
@@ -102,46 +88,20 @@ class ProxyConnector(
         return !isClosed && isOnline
     }
 
+    /**
+     * Connect to a new proxy, disconnect last proxy if exists.
+     * */
     @Synchronized
-    fun tryConnectToNext() {
-        if (isClosed) {
-            return
-        }
-
-        disconnect()
-
-        val proxy = proxyPool.poll()
-        if (proxy != null) {
-            connectTo(proxy)
-        }
-    }
-
-    @Synchronized
-    fun connectTo(proxy: ProxyEntry?) {
-        // wait until disconnected
-        connectionLock.withLock {
-            var i = 0
-            while (!isClosed && isOnline && i++ < 30 && !Thread.currentThread().isInterrupted) {
-                // disconnected.await(pollingInterval.toMillis(), TimeUnit.MILLISECONDS)
-                disconnected.await(1, TimeUnit.SECONDS)
-                if (i > 5 && i % 10 == 0) {
-                    log.debug("Waits {} for proxy to disconnect | {}", i, currentProxyEntry)
-                }
-            }
-        }
-
+    fun connect(proxy: ProxyEntry): Boolean {
         val nextPort = SocketUtils.findAvailableTcpPort(INTERNAL_PROXY_SERVER_PORT_BASE)
+        disconnectIfNecessary()
+
         if (log.isTraceEnabled) {
-            val proxyDescription = if (proxy != null) " <${proxy.display}>" else "no proxy"
-            log.trace("Starting forward server on {} with {}", nextPort, proxyDescription)
+            log.trace("Starting forward server on {} with {}", nextPort, proxy.display)
         }
 
         try {
-            connectionLock.withLock {
-                if (isClosed) {
-                    return
-                }
-
+            lock.withLock {
                 val server = initForwardProxyServer(proxy)
                 val thread = Thread { server.start(nextPort) }
                 thread.isDaemon = true
@@ -151,63 +111,71 @@ class ProxyConnector(
 
                 forwardServer = server
                 forwardServerThread = thread
-                port = nextPort
-                lastProxyEntry = currentProxyEntry
-                currentProxyEntry = proxy
-                ++numTotalConnects
 
-                online.set(true)
+                ++numTotalConnects
+                port = nextPort
+                proxyEntry.set(proxy)
                 connected.signalAll()
             }
 
             if (log.isInfoEnabled) {
-                val proxyDescription = if (proxy != null) "external proxy <${proxy.display}>" else "no proxy"
-                log.info("Forward server is started on port {} with {}", nextPort, proxyDescription)
+                log.info("Forward server is started on port {} with {}", nextPort, proxy.display)
             }
         } catch (e: TimeoutException) {
             log.error("Timeout to wait for forward server on port {}", nextPort)
         } catch (e: Exception) {
             log.error("Failed to start forward server", e)
         }
+
+        return isOnline
     }
 
     @Synchronized
-    fun disconnect() {
-        connectionLock.withLock {
-            online.set(false)
+    fun disconnect(): ProxyEntry? {
+        lock.withLock {
+            val proxy = proxyEntry.getAndSet(null)
+            val proxyConfig = forwardServer?.proxyConfig
 
-            currentProxyEntry?.let {
-                metricsSystem.reportRetiredProxies(it.toString())
-                proxyPool.retire(it)
+            if (proxy != null && proxyConfig != null) {
+                log.info("Disconnecting proxy {} {} ...", proxy.display, proxy.metadata)
+
+                forwardServer?.use { it.close() }
+                forwardServerThread?.interrupt()
+                forwardServerThread?.join(threadJoinTimeout.toMillis())
+                forwardServer = null
+                forwardServerThread = null
+
+                waitUntilOffline(proxyConfig.port)
+                disconnected.signalAll()
             }
-            lastProxyEntry = currentProxyEntry
-            currentProxyEntry = null
 
-            val server = forwardServer
-            val port = server?.proxyConfig?.port
-            if (server != null) {
-                log.info("Disconnecting proxy with {} ...", server.proxyConfig?.hostPort)
-            }
-            forwardServer?.use { it.close() }
-            forwardServerThread?.interrupt()
-            forwardServerThread?.join(threadJoinTimeout.toMillis())
-            forwardServer = null
-            forwardServerThread = null
-
-            port?.let { waitUntilOffline(it) }
-            disconnected.signalAll()
+            return proxy
         }
     }
 
     @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing proxy connector ... | {}", report)
+            disconnect()
+        }
+    }
 
-            try {
-                disconnect()
-            } catch (e: Throwable) {
-                log.error("Unexpected exception is caught when closing proxy manager", e)
+    @Synchronized
+    private fun disconnectIfNecessary() {
+        lock.withLock {
+            if (isOnline) {
+                val proxy = proxyEntry.get()
+                val thread = Thread { disconnect() }
+                thread.isDaemon = true
+                thread.start()
+
+                log.debug("Waiting for proxy to disconnect | {}", proxy)
+                val signaled = disconnected.await(20, TimeUnit.SECONDS)
+                if (!signaled) {
+                    log.warn("Timeout to wait for proxy to disconnect | {}", proxy)
+                }
+
+                thread.join(threadJoinTimeout.toMillis())
             }
         }
     }
@@ -215,9 +183,10 @@ class ProxyConnector(
     @Throws(TimeoutException::class)
     private fun waitUntilOnline(port: Int) {
         var i = 0
+        val proxy = proxyEntry.get()
         while (!isClosed && !NetUtil.testNetwork("127.0.0.1", port) && !Thread.currentThread().isInterrupted) {
             if (i++ > 5) {
-                log.warn("Waited {}s for proxy to be online ...", i)
+                log.warn("Waited {}s for proxy to be online | {}", i, proxy.display)
             }
             if (i > 20) {
                 disconnect()
@@ -234,9 +203,10 @@ class ProxyConnector(
 
     private fun waitUntilOffline(port: Int) {
         var i = 0
+        val proxy = proxyEntry.get()
         while (!isClosed && NetUtil.testNetwork("127.0.0.1", port) && !Thread.currentThread().isInterrupted) {
             if (i++ > 5) {
-                log.warn("Waited {}s for proxy to be offline ...", i)
+                log.warn("Waited {}s for proxy to be offline | {}", i, proxy.display)
             }
 
             try {

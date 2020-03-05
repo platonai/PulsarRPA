@@ -72,8 +72,8 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
      * Random get @param count fetch items from an iterative selected job
      */
     @Synchronized
-    fun randomFetchItems(count: Int): List<FetchTask.Key> {
-        val keys = mutableListOf<FetchTask.Key>()
+    fun randomFetchItems(count: Int): List<JobFetchTask.Key> {
+        val keys = mutableListOf<JobFetchTask.Key>()
         val id = fetchSchedulerIds.poll()?: return listOf()
 
         try {

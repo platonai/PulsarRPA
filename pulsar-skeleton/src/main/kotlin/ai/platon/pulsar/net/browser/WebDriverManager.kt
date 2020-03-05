@@ -19,12 +19,12 @@ import java.util.concurrent.atomic.AtomicInteger
 class WebDriverManager(
         val driverControl: WebDriverControl,
         val proxyManager: ProxyManager,
-        val conf: ImmutableConfig
+        val immutableConfig: ImmutableConfig
 ): Parameterized, Freezable(), AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
-    val driverFactory = WebDriverFactory(driverControl, proxyManager, conf)
-    val driverPool = WebDriverPool(driverFactory, conf)
+    val driverFactory = WebDriverFactory(driverControl, proxyManager, immutableConfig)
+    val driverPool = WebDriverPool(driverFactory, immutableConfig)
 
     private val closed = AtomicBoolean()
     private var lastActiveTime = Instant.now()
@@ -42,9 +42,16 @@ class WebDriverManager(
     /**
      * Allocate [n] drivers with priority [priority]
      * */
-    fun allocate(priority: Int, n: Int, conf: ImmutableConfig) {
-        whenUnfrozen {
-            repeat(n) { driverPool.poll(priority, conf)?.let { driverPool.put(it) } }
+    fun allocate(priority: Int, n: Int, volatileConfig: VolatileConfig) {
+        freeze {
+            repeat(n) {
+                var driver: ManagedWebDriver? = null
+                try {
+                    driver = driverPool.poll(priority, volatileConfig)
+                } finally {
+                    driver?.let { driverPool.put(it) }
+                }
+            }
         }
     }
 
@@ -53,18 +60,20 @@ class WebDriverManager(
      * */
     fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
         return whenUnfrozen {
-            val driver = driverPool.poll(priority, volatileConfig)
-                    ?: throw WebDriverPoolExhaust(formatStatus(verbose = true))
+            var driver: ManagedWebDriver? = null
             try {
+                driver = driverPool.poll(priority, volatileConfig)
                 driver.startWork()
                 action(driver)
             } finally {
-                lastActiveTime = Instant.now()
+                if (driver != null) {
+                    lastActiveTime = Instant.now()
 
-                driverPool.put(driver)
+                    driverPool.put(driver)
 
-                driver.stat.pageViews++
-                pageViews.incrementAndGet()
+                    driver.stat.pageViews++
+                    pageViews.incrementAndGet()
+                }
             }
         }
     }
@@ -100,7 +109,7 @@ class WebDriverManager(
 
     fun formatStatus(verbose: Boolean = false): String {
         return if (verbose) {
-            String.format("total: %d free: %d working: %d online: %d" +
+            String.format("online: %d free: %d working: %d active: %d" +
                     " crashed: %d retired: %d quit: %d reset: %d" +
                     " pageViews: %d elapsed: %s speed: %.2f page/s",
                     driverPool.numOnline, driverPool.numFree, driverPool.numWorking, driverPool.numActive,
@@ -127,9 +136,8 @@ class WebDriverManager(
     private fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
         freeze {
             log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
-            driverPool.closeAll(incognito, processExit)
-            log.info("Total ${driverPool.numQuit} drivers are quit | {}", formatStatus(true))
+            driverPool.closeAll(incognito)
+            log.info("Total ${driverPool.numQuit} drivers were quit | {}", formatStatus(true))
         }
     }
-
 }

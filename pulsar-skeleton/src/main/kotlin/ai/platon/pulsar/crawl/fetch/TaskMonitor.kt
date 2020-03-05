@@ -115,7 +115,7 @@ class TaskMonitor(
     fun produce(jobID: Int, page: WebPage) {
         page.fetchMode = options.fetchMode
 
-        val task = FetchTask.create(jobID, page.fetchPriority, page.url, page, groupMode)
+        val task = JobFetchTask.create(jobID, page.fetchPriority, page.url, page, groupMode)
 
         if (task != null) {
             produce(task)
@@ -125,12 +125,12 @@ class TaskMonitor(
     }
 
     @Synchronized
-    fun produce(task: FetchTask) {
+    fun produce(task: JobFetchTask) {
         doProduce(task)
     }
 
     @Synchronized
-    fun consume(poolId: PoolId? = null): FetchTask? {
+    fun consume(poolId: PoolId? = null): JobFetchTask? {
         if (poolId == null) {
             return consumeFromAnyPool()
         }
@@ -143,12 +143,12 @@ class TaskMonitor(
     }
 
     @Synchronized
-    fun finish(item: FetchTask) {
+    fun finish(item: JobFetchTask) {
         doFinish(PoolId(item.priority, item.protocol, item.host), item.itemId, false)
     }
 
     @Synchronized
-    fun finishAsap(item: FetchTask) {
+    fun finishAsap(item: JobFetchTask) {
         doFinish(PoolId(item.priority, item.protocol, item.host), item.itemId, true)
     }
 
@@ -189,7 +189,7 @@ class TaskMonitor(
      * Find out the FetchQueue with top priority,
      * wait for all pending tasks with higher priority are finished
      */
-    private fun consumeFromAnyPool(): FetchTask? {
+    private fun consumeFromAnyPool(): JobFetchTask? {
         var pool = taskPools.peek() ?: return null
 
         val nextPriority = pool.priority
@@ -208,7 +208,7 @@ class TaskMonitor(
         return consumeUnchecked(pool)
     }
 
-    private fun consumeUnchecked(pool: TaskPool): FetchTask? {
+    private fun consumeUnchecked(pool: TaskPool): JobFetchTask? {
         val item = pool.consume()
 
         if (item != null) {
@@ -220,7 +220,7 @@ class TaskMonitor(
         return item
     }
 
-    private fun doProduce(task: FetchTask) {
+    private fun doProduce(task: JobFetchTask) {
         if (taskTracker.isGone(task.host)) {
             return
         }
@@ -328,14 +328,14 @@ class TaskMonitor(
     }
 
     @Synchronized
-    fun findPendingTask(priority: Int, url: URL, itemID: Int): FetchTask? {
+    fun findPendingTask(priority: Int, url: URL, itemID: Int): JobFetchTask? {
         val pool = taskPools.findExtend(PoolId(priority, url))
         return pool?.getPendingTask(itemID)
     }
 
     /** Get a pending task, the task can be in working pools or in detached pools  */
     @Synchronized
-    fun findPendingTask(poolId: PoolId, itemID: Int): FetchTask? {
+    fun findPendingTask(poolId: PoolId, itemID: Int): JobFetchTask? {
         val pool = taskPools.findExtend(poolId)
         return pool?.getPendingTask(itemID)
     }

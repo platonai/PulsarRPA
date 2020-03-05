@@ -16,11 +16,11 @@ import kotlin.math.roundToLong
  * Note: SeleniumEngine should be process scope
  */
 class RobustBrowserEmulator(
-        privacyContextFactory: PrivacyContextFactory,
+        privacyContextManager: PrivacyContextManager,
         fetchTaskTracker: FetchTaskTracker,
         metricsSystem: MetricsSystem,
         immutableConfig: ImmutableConfig
-): BrowserEmulator(privacyContextFactory, fetchTaskTracker, metricsSystem, immutableConfig) {
+): BrowserEmulator(privacyContextManager, fetchTaskTracker, metricsSystem, immutableConfig) {
     companion object {
         private const val SMALL_CONTENT_LIMIT = 1_000_000 / 2 // 500KiB
     }
@@ -54,12 +54,6 @@ class RobustBrowserEmulator(
 
         if (integrity.isOK && isTooSmall(pageSource, page)) {
             integrity = HtmlIntegrity.TOO_SMALL
-            if (log.isTraceEnabled) {
-                val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "small", AppPaths.fromUri(url, "", ".htm"))
-                Files.createDirectories(path.parent)
-                Files.write(path, pageSource.toByteArray())
-                log.info("Write small page to file://$path")
-            }
         }
 
         if (integrity.isOK && page.fetchCount > 0 && aveLength > SMALL_CONTENT_LIMIT && length < 0.1 * aveLength) {
@@ -138,5 +132,4 @@ class RobustBrowserEmulator(
 
         return HtmlIntegrity.OK
     }
-
 }

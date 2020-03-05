@@ -13,7 +13,6 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.min
 
 class ProxyManager(
         val proxyPool: ProxyPool,
@@ -31,7 +30,7 @@ class ProxyManager(
 
     private val log = LoggerFactory.getLogger(ProxyManager::class.java)
 
-    private val connector = ProxyConnector(proxyPool, metricsSystem, conf)
+    private val connector = ProxyConnector(metricsSystem, conf)
     private val watcherThread = Thread(this::startWatcher)
     private val watcherStarted = AtomicBoolean()
     private val testerThread = Thread(this::startTester)
@@ -60,8 +59,7 @@ class ProxyManager(
     var autoRefresh = true
 
     val isWatcherStarted get() = watcherStarted.get()
-    val lastProxyEntry get() = connector.lastProxyEntry
-    val currentProxyEntry get() = connector.currentProxyEntry
+    val currentProxyEntry: ProxyEntry? get() = connector.proxyEntry.get()
 
     @Synchronized
     fun start() {
@@ -137,8 +135,20 @@ class ProxyManager(
         }
 
         if (excludedProxy == this.currentProxyEntry) {
-            connector.tryConnectToNext()
+            excludedProxy.retire()
         }
+    }
+
+    private fun connectNext() {
+        if (!isEnabled || isClosed) {
+            return
+        }
+
+        connector.disconnect()?.let {
+            proxyPool.retire(it)
+            metricsSystem.reportRetiredProxies(it.toString())
+        }
+        proxyPool.poll()?.let { connector.connect(it) }
     }
 
     override fun close() {
@@ -163,50 +173,6 @@ class ProxyManager(
         }
     }
 
-    private fun startWatcher() {
-        var tick = 0
-        while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
-            try {
-                watch(tick)
-            } catch (e: Throwable) {
-                log.error("Unexpected error", e)
-            }
-
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
-        }
-
-        log.info("Quit proxy watcher loop after {} rounds", tick)
-    }
-
-    private fun startTester() {
-        var tick = 0
-        var seconds = 1L
-        while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
-            val proxy = currentProxyEntry
-
-            when {
-                proxy == null -> seconds += 10
-                connector.isOnline -> seconds = if (proxy.test()) 10 + seconds else 1
-                else -> seconds += 10
-            }
-
-            if (seconds < 1) seconds = 1
-            if (seconds > 60) seconds = 60
-
-            try {
-                TimeUnit.SECONDS.sleep(seconds)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
-        }
-
-        log.info("Quit proxy tester loop after {} rounds", tick)
-    }
-
     private fun watch(tick: Int) {
         // watch every 5 seconds
         if (tick % 5 != 0) {
@@ -225,7 +191,7 @@ class ProxyManager(
                 proxyPool.clear()
             }
             avail.isNotOK -> {
-                connector.tryConnectToNext()
+                connectNext()
             }
             else -> {}
         }
@@ -292,13 +258,57 @@ class ProxyManager(
         return isIdle
     }
 
+    private fun startWatcher() {
+        var tick = 0
+        while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
+            try {
+                watch(tick)
+            } catch (e: Throwable) {
+                log.error("Unexpected error", e)
+            }
+
+            try {
+                TimeUnit.SECONDS.sleep(1)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+
+        log.info("Quit proxy watcher loop after {} rounds", tick)
+    }
+
+    private fun startTester() {
+        var tick = 0
+        var seconds = 1L
+        while (!isClosed && tick++ < Int.MAX_VALUE && !Thread.currentThread().isInterrupted) {
+            val proxy = currentProxyEntry
+
+            when {
+                proxy == null -> seconds += 10
+                connector.isOnline -> seconds = if (proxy.test()) 10 + seconds else 1
+                else -> seconds += 10
+            }
+
+            if (seconds < 1) seconds = 1
+            if (seconds > 60) seconds = 60
+
+            try {
+                TimeUnit.SECONDS.sleep(seconds)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+        }
+
+        log.info("Quit proxy tester loop after {} rounds", tick)
+    }
+
     private fun formatReport(isIdle: Boolean, avail: Availability, lastProxy: ProxyEntry? = null): String {
         if (isIdle) {
             return "Proxy is idle for $idleTime | $proxyPool"
         }
 
         if (lastProxy == null) {
-            return "Proxy <none> is serving $numRunningTasks tasks | $proxyPool | $lastProxy"
+            return "Proxy <none> is serving $numRunningTasks tasks | $proxyPool"
         }
 
         return "Proxy <${lastProxy.display}> is serving $numRunningTasks tasks ($avail)" +

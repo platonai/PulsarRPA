@@ -28,14 +28,14 @@ import kotlin.math.roundToLong
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserEmulatedFetcher(
-        val privacyContextFactory: PrivacyContextFactory,
+        val privacyContextManager: PrivacyContextManager,
         private val executor: FetchThreadExecutor,
         private val browserEmulator: BrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverManager = privacyContextFactory.driverManager
+    private val driverManager = privacyContextManager.driverManager
     private val closed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -59,7 +59,7 @@ class BrowserEmulatedFetcher(
         val task = FetchTask(0, priority, page, volatileConfig)
 
         return try {
-            privacyContextFactory.activeContext.runInContext(task) { _, driver ->
+            privacyContextManager.run(task) { _, driver ->
                 browserEmulator.fetch(task, driver)
             }.response
         } catch (e: IllegalStateException) {
@@ -98,32 +98,34 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        var cx = FetchTaskBatch(batchId, pages, volatileConfig, privacyContextFactory)
+        FetchTaskBatch(batchId, pages, volatileConfig, privacyContextManager).use {
+            var cx = it
 
-        // allocate drivers before batch fetch context timing
-        allocateDriversIfNecessary(cx, cx.conf)
+            // allocate drivers before batch fetch context timing
+            allocateDriversIfNecessary(cx, cx.conf)
 
-        log.info("Start batch task {} with {} pages in parallel with expected proxy <{}>",
-                cx.batchId, cx.batchSize, driverManager.proxyManager.currentProxyEntry)
+            log.info("Start task batch {} with {} pages in parallel with expected proxy <{}>",
+                    cx.batchId, cx.batchSize, driverManager.proxyManager.currentProxyEntry?.display)
 
-        cx.beforeFetchAll(cx.pages)
+            cx.startTime = Instant.now()
+            cx.beforeFetchAll(cx.pages)
 
-        var retry = 1
-        val maxRetry = 2
-        do {
-            if (privacyContextFactory.activeContext.isPrivacyLeaked) {
-                privacyContextFactory.reset()
-                cx = cx.createNextNode()
-            }
+            var i = 1
+            do {
+                if (privacyContextManager.activeContext.isPrivacyLeaked) {
+                    privacyContextManager.reset()
+                    cx = cx.createNextNode()
+                }
 
-            parallelFetch(cx)
-        } while (retry++ <= maxRetry && privacyContextFactory.activeContext.isPrivacyLeaked)
+                parallelFetch(cx)
+            } while (i++ <= privacyContextManager.maxRetry && privacyContextManager.activeContext.isPrivacyLeaked)
 
-        cx.afterFetchAll(cx.pages)
+            cx.afterFetchAll(cx.pages)
 
-        logBatchFinished(cx)
+            logBatchFinished(cx)
 
-        return cx.collectResponses()
+            return cx.collectResponses()
+        }
     }
 
     /**
@@ -143,7 +145,7 @@ class BrowserEmulatedFetcher(
             cx.workingTasks[task] = executor.submit { doFetch(task, cx) }
         }
 
-        // Since the urls in the batch are usually in the same domain,
+        // Since the urls in the batch are usually in the same domain
         // if there are too many failure, the rest tasks are very likely run to failure too
         val done = ArrayList<FetchResult>(cx.numWorkingTasks)
         var state: FetchTaskBatch.State
@@ -179,7 +181,7 @@ class BrowserEmulatedFetcher(
         return when {
             closed.get() -> FetchTaskBatch.State.CLOSED
             Thread.currentThread().isInterrupted -> FetchTaskBatch.State.INTERRUPTED
-            privacyContextFactory.activeContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
+            privacyContextManager.activeContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
             else -> cx.checkState()
         }
     }
@@ -190,14 +192,13 @@ class BrowserEmulatedFetcher(
         if (requiredDrivers > 0) {
             log.info("Allocating $requiredDrivers drivers")
             driverManager.allocate(0, requiredDrivers, volatileConfig)
-            cx.startTime = Instant.now()
         }
     }
 
     private fun doFetch(task: FetchTask, cx: FetchTaskBatch): FetchResult {
         return try {
             cx.beforeFetch(task.page)
-            privacyContextFactory.activeContext.run(task) { _, driver ->
+            privacyContextManager.activeContext.run(task) { _, driver ->
                 browserEmulator.fetch(task, driver)
             }
         } catch (e: ProxyException) {
@@ -207,11 +208,10 @@ class BrowserEmulatedFetcher(
             log.warn("Too many web drivers", e)
             FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
         } catch (e: IllegalStateException) {
-            log.warn("Application is closed ({})", StringUtil.simplifyException(e))
+            log.warn("Program is closed ({})", StringUtil.simplifyException(e))
             FetchResult(task, ForwardingResponse.canceled(task.page))
         } catch (e: Throwable) {
             log.warn("Unexpected throwable", e)
-            e.printStackTrace()
             FetchResult(task, ForwardingResponse.failed(task.page, e))
         } finally {
             cx.afterFetch(task.page)
@@ -248,13 +248,51 @@ class BrowserEmulatedFetcher(
     private fun handleBatchAbort(cx: FetchTaskBatch, state: FetchTaskBatch.State) {
         logBatchAbort(cx, state)
 
-        // if there are still pending tasks, cancel them
+        // If there are still pending tasks, cancel them
         cx.workingTasks.forEach { browserEmulator.cancel(it.key) }
-//        cx.workingTasks.forEach { it.value.cancel(true) }
-        cx.workingTasks.forEach { (task, future) ->
-            val result = waitFor(task, future, cx.threadTimeout)
-            cx.onAbort(task, result)
+
+        // Wait until all worker thread complete normally or timeout
+        var tick = 0
+        val timeout = Duration.ofMinutes(2).seconds
+        val done = ArrayList<FetchResult>(cx.numWorkingTasks)
+        while (cx.workingTasks.isNotEmpty() && tick++ < timeout) {
+            done.clear()
+            cx.workingTasks.asSequence().filter { it.value.isDone }.mapTo(done) { handleTaskAbort(it.key, it.value, cx) }
+            done.forEach { cx.workingTasks.remove(it.task) }
+
+            try {
+                TimeUnit.SECONDS.sleep(1)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
         }
+
+        // Finally, if there are still working tasks, force abort the worker threads
+        done.clear()
+        if (cx.workingTasks.isNotEmpty()) {
+            log.warn("There are still {} working tasks, cancel worker threads", cx.numWorkingTasks)
+            cx.workingTasks.forEach { it.value.cancel(true) }
+            cx.workingTasks.forEach { (task, future) ->
+                val result = handleTaskAbort(task, future, cx)
+                done.add(result)
+            }
+            done.forEach { cx.workingTasks.remove(it.task) }
+            // driverManager.driverPool.fixDriverLeak()
+        }
+
+        if (cx.workingTasks.isNotEmpty()) {
+            log.warn("There are still {} working tasks, something wrong happen", cx.numWorkingTasks)
+        }
+
+        cx.workingTasks.clear()
+
+        done.clear()
+    }
+
+    private fun handleTaskAbort(task: FetchTask, future: Future<FetchResult>, cx: FetchTaskBatch): FetchResult {
+        val result = waitFor(task, future, cx.threadTimeout)
+        cx.onAbort(task, result)
+        return result
     }
 
     private fun waitFor(task: FetchTask, future: Future<FetchResult>, timeout: Duration): FetchResult {
@@ -267,8 +305,7 @@ class BrowserEmulatedFetcher(
             // to complete, and then retrieves its result, if available.
             return future.get(timeout.seconds, TimeUnit.SECONDS)
         } catch (e: java.util.concurrent.CancellationException) {
-            log.debug("Fetch thread is canceled | {}", task.url)
-            // if the computation was cancelled
+            log.debug("Fetch thread for task #{}/{} is canceled | {}", task.batchTaskId, task.batchId, task.url)
             status = ProtocolStatus.STATUS_CANCELED
         } catch (e: java.util.concurrent.TimeoutException) {
             log.warn("Timeout when retrieve task result", e)
@@ -284,7 +321,7 @@ class BrowserEmulatedFetcher(
             status = ProtocolStatus.STATUS_EXCEPTION
         }
 
-        return FetchResult(FetchTask.NIL, ForwardingResponse(task.url, "", status, headers, task.page))
+        return FetchResult(task, ForwardingResponse(task.url, "", status, headers, task.page))
     }
 
     private fun logLongTimeCost(cx: FetchTaskBatch) {

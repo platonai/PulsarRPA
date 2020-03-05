@@ -72,7 +72,9 @@ class CancellableSleeper(val task: FetchTask): Sleeper {
             Thread.currentThread().interrupt()
         }
 
-        if (task.isCanceled) throw CancellationException()
+        if (task.isCanceled) {
+            throw CancellationException("Task #${task.batchTaskId}}/${task.batchId} is canceled from sleeper")
+        }
     }
 }
 
@@ -81,7 +83,7 @@ class CancellableSleeper(val task: FetchTask): Sleeper {
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulator(
-        val privacyContextFactory: PrivacyContextFactory,
+        val privacyContextManager: PrivacyContextManager,
         protected val fetchTaskTracker: FetchTaskTracker,
         protected val metricsSystem: MetricsSystem,
         protected val immutableConfig: ImmutableConfig
@@ -96,7 +98,7 @@ open class BrowserEmulator(
     private val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     private val closed = AtomicBoolean(false)
     private val isClosed get() = closed.get()
-    private val driverManager = privacyContextFactory.driverManager
+    private val driverManager = privacyContextManager.driverManager
     private val driverControl = driverManager.driverControl
     private val driverPool = driverManager.driverPool
 
@@ -248,9 +250,6 @@ open class BrowserEmulator(
 
         // Check quality of the page source, throw an exception if content is broken
         val integrity = checkHtmlIntegrity(pageSource, page, status, task)
-        if (integrity.isNotOK) {
-            logBrokenPage(task, pageSource, integrity)
-        }
 
         // Check browse timeout event, transform status to be success if the page source is good
         if (status.isTimeout) {
@@ -268,6 +267,7 @@ open class BrowserEmulator(
         } else {
             // The page seems to be broken, retry it, if there are too many broken pages in a certain period, reset the browse context
             status = handleBrokenPageSource(task, integrity)
+            logBrokenPage(task, pageSource, integrity)
         }
 
         // Update headers, metadata, do the logging stuff
@@ -550,22 +550,15 @@ open class BrowserEmulator(
 
     protected open fun handleBrowseTimeout(startTime: Instant,
             pageSource: String, status: ProtocolStatus, page: WebPage, driverConfig: DriverConfig) {
-        val length = pageSource.length
-        val elapsed = Duration.between(startTime, Instant.now())
-
-        if (log.isDebugEnabled) {
-            if (status.isSuccess) {
-                log.info("DOM is good though {} after {} with {} | {}",
-                        status.minorName, elapsed, StringUtil.readableBytes(length.toLong()), page.url)
-            }
-        }
-
         if (log.isInfoEnabled) {
+            val elapsed = Duration.between(startTime, Instant.now())
+            val length = pageSource.length
+
             val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
             log.info("Timeout ({}) after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
                     status.minorName,
                     elapsed,
-                    StringUtil.readableBytes(pageSource.length.toLong()),
+                    StringUtil.readableBytes(length.toLong()),
                     driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
@@ -703,7 +696,7 @@ open class BrowserEmulator(
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw CancellationException("Task #${task.id} is canceled | ${task.url}")
+            throw CancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
         }
     }
 

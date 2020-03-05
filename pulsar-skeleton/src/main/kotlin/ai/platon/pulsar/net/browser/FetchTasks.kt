@@ -11,6 +11,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
+import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
@@ -60,7 +61,7 @@ class FetchTask(
     }
 
     fun cancel() {
-        canceled.set(false)
+        canceled.set(true)
     }
 
     fun clone(): FetchTask {
@@ -100,9 +101,9 @@ internal class FetchTaskBatch(
         val batchId: Int,
         val pages: Iterable<WebPage>,
         val conf: VolatileConfig,
-        val privacyContextFactory: PrivacyContextFactory,
+        val privacyContextManager: PrivacyContextManager,
         var prevNode: FetchTaskBatch? = null
-) {
+): AutoCloseable {
     enum class State {
         OK,
         ALL_DONE,
@@ -114,6 +115,8 @@ internal class FetchTaskBatch(
         INTERRUPTED,
         CLOSED
     }
+
+    private val log = LoggerFactory.getLogger(FetchTaskBatch::class.java)!!
 
     var startTime = Instant.now()
     val priority = conf.getUint(CapabilityTypes.BROWSER_DRIVER_PRIORITY, 0)
@@ -204,13 +207,15 @@ internal class FetchTaskBatch(
      * Create a child context to re-fetch aborted pages and privacy leaked pages
      * */
     fun createNextNode(): FetchTaskBatch {
+        log.info("Creating sub-batch of #{}, leaked: {} aborted: {} success: {} finished: {} expect: {}",
+                batchId, privacyLeakedTasks.size, abortedTasks.size, universalSuccessPages.size, numFinishedTasks, batchSize)
+
         val capacity = privacyLeakedTasks.size + abortedTasks.size
         val retryPages = ArrayList<WebPage>(capacity)
         privacyLeakedTasks.mapTo(retryPages) { it.page }
-        // sequential search in small vector is fast
         abortedTasks.asSequence().filter { it in privacyLeakedTasks }.mapTo(retryPages) { it.page }
 
-        return FetchTaskBatch(batchId, retryPages, conf, privacyContextFactory, prevNode = this).also { nextNode = it }
+        return FetchTaskBatch(batchId, retryPages, conf, privacyContextManager, prevNode = this).also { nextNode = it }
     }
 
     fun onSuccess(task: FetchTask, result: FetchResult) {
@@ -224,7 +229,7 @@ internal class FetchTaskBatch(
         stat.numSuccessTasks++
         stat.totalBytes += result.response.length()
 
-        privacyContextFactory.activeContext.informSuccess()
+        privacyContextManager.activeContext.informSuccess()
 
         afterFetchN(headNode.universalSuccessPages)
     }
@@ -237,7 +242,7 @@ internal class FetchTaskBatch(
 
         if (result.response.status.isRetry(RetryScope.PRIVACY)) {
             privacyLeakedTasks.add(task)
-            privacyContextFactory.activeContext.informWarning()
+            privacyContextManager.activeContext.informWarning()
         }
     }
 
@@ -288,6 +293,32 @@ internal class FetchTaskBatch(
         try {
             afterFetchAllHandler?.invoke(pages)
         } catch (e: Throwable) {}
+    }
+
+    fun clear() {
+        if (prevNode == null) {
+            var n: FetchTaskBatch? = this
+            while (n != null) {
+                clearNode(n)
+                n = n.nextNode
+            }
+        }
+    }
+
+    override fun close() {
+        clear()
+    }
+
+    private fun clearNode(node: FetchTaskBatch) {
+        node.workingTasks.clear()
+        node.abortedTasks.clear()
+        node.privacyLeakedTasks.clear()
+        node.finishedTasks.clear()
+
+        if (node.prevNode == null) {
+            node.universalSuccessPages.clear()
+            node.universalSuccessTasks.clear()
+        }
     }
 
     private fun getResponse(page: WebPage, tail: FetchTaskBatch): Response {

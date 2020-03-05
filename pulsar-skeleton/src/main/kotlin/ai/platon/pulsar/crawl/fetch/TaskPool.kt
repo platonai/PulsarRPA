@@ -34,9 +34,9 @@ class TaskPool(val id: PoolId,
     private val log = LoggerFactory.getLogger(TaskPool::class.java)
 
     /** Hold all tasks ready to fetch  */
-    private val readyTasks = LinkedList<FetchTask>()
+    private val readyTasks = LinkedList<JobFetchTask>()
     /** Hold all tasks are fetching  */
-    private val pendingTasks = TreeMap<Int, FetchTask>()
+    private val pendingTasks = TreeMap<Int, JobFetchTask>()
     /** If a task costs more then this duration, it's a slow task  */
     private val slowTaskThreshold = Duration.ofMillis(500)
     /** Record timing cost of slow tasks  */
@@ -111,7 +111,7 @@ class TaskPool(val id: PoolId,
     }
 
     /** Produce a task to this queue. Retired queues do not accept any tasks  */
-    fun produce(task: FetchTask) {
+    fun produce(task: JobFetchTask) {
         if (status != Status.ACTIVITY) {
             return
         }
@@ -124,7 +124,7 @@ class TaskPool(val id: PoolId,
     }
 
     /** Ask a task from this queue. Retired queues do not assign any tasks  */
-    fun consume(): FetchTask? {
+    fun consume(): JobFetchTask? {
         if (status != Status.ACTIVITY) {
             return null
         }
@@ -155,7 +155,7 @@ class TaskPool(val id: PoolId,
     /**
      * Note : We have set response time for each page, @see {HttpBase#getProtocolOutput}
      */
-    fun finish(fetchTask: FetchTask, asap: Boolean): Boolean {
+    fun finish(fetchTask: JobFetchTask, asap: Boolean): Boolean {
         pendingTasks.remove(fetchTask.itemId)
 
         val finishTime = Instant.now()
@@ -179,14 +179,14 @@ class TaskPool(val id: PoolId,
         return true
     }
 
-    fun getPendingTask(itemID: Int): FetchTask? {
+    fun getPendingTask(itemID: Int): JobFetchTask? {
         return pendingTasks[itemID]
     }
 
     /**
      * Hang up the task and wait for completion. Move the fetch task to pending queue.
      */
-    private fun hangUp(fetchTask: FetchTask, now: Instant) {
+    private fun hangUp(fetchTask: JobFetchTask, now: Instant) {
         fetchTask.pendingStart = now
         pendingTasks[fetchTask.itemId] = fetchTask
     }
@@ -234,8 +234,8 @@ class TaskPool(val id: PoolId,
     fun retune(force: Boolean) {
         val now = Instant.now()
 
-        val readyList = Lists.newArrayList<FetchTask>()
-        val pendingList = HashMap<Int, FetchTask>()
+        val readyList = Lists.newArrayList<JobFetchTask>()
+        val pendingList = HashMap<Int, JobFetchTask>()
 
         pendingTasks.values.forEach { fetchTask ->
             if (force || fetchTask.pendingStart.plus(pendingTimeout).isBefore(now)) {
@@ -292,7 +292,7 @@ class TaskPool(val id: PoolId,
             val limit = 20
             var report = "Drop the following tasks : "
 
-            var fetchTask: FetchTask? = readyTasks.poll()
+            var fetchTask: JobFetchTask? = readyTasks.poll()
             while (fetchTask != null && ++i <= limit) {
                 report += "  " + i + ". " + fetchTask.urlString + "\t"
                 fetchTask = readyTasks.poll()

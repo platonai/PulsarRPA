@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
 import ai.platon.pulsar.crawl.common.JobInitialized
-import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.JobFetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.index.IndexWriters
 import ai.platon.pulsar.crawl.index.IndexingFilters
@@ -52,7 +52,7 @@ class JITIndexer(
 
     private val indexThreads = mutableListOf<IndexThread>()
     private val activeIndexThreads = ConcurrentSkipListSet<IndexThread>()
-    private lateinit var indexTasks: Queue<FetchTask>
+    private lateinit var indexTasks: Queue<JobFetchTask>
     private lateinit var indexDocumentBuilder: IndexDocument.Builder
 
     val indexedPageCount: Int get() = indexedPages.get()
@@ -61,7 +61,7 @@ class JITIndexer(
     override fun setup(jobConf: ImmutableConfig) {
         isEnabled = jobConf.getBoolean(INDEXER_JIT, false)
         if (isEnabled) {
-            indexTasks = Queues.newLinkedBlockingQueue<FetchTask>(batchSize)
+            indexTasks = Queues.newLinkedBlockingQueue<JobFetchTask>(batchSize)
 
             this.indexDocumentBuilder = IndexDocument.Builder(conf).with(indexingFilters).with(scoringFilters)
             this.indexWriters.open()
@@ -93,7 +93,7 @@ class JITIndexer(
      * Add fetch item to index indexTasks
      * Thread safe
      */
-    fun produce(fetchTask: FetchTask) {
+    fun produce(fetchTask: JobFetchTask) {
         if (!isEnabled) {
             return
         }
@@ -110,7 +110,7 @@ class JITIndexer(
     /**
      * Thread safe
      */
-    fun consume(): FetchTask? {
+    fun consume(): JobFetchTask? {
         return indexTasks.poll()
     }
 
@@ -139,7 +139,7 @@ class JITIndexer(
     /**
      * Thread safe
      */
-    fun index(fetchTask: FetchTask?) {
+    fun index(fetchTask: JobFetchTask?) {
         if (!isEnabled) {
             return
         }

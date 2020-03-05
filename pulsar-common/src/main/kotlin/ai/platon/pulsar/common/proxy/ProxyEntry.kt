@@ -12,6 +12,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.time.temporal.TemporalUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.roundToInt
@@ -33,7 +34,8 @@ data class ProxyEntry(
         var user: String? = null, // reserved
         var pwd: String? = null // reserved
 ): Comparable<ProxyEntry> {
-    val hostPort get() = "$host:$port"
+    val hostPort = "$host:$port"
+    val segment = host.substringBeforeLast(".")
     val display get() = formatDisplay()
     val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
@@ -52,7 +54,10 @@ data class ProxyEntry(
     val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
-    val isGone get() = numFailedTests.get() >= 3
+    val isRetired = AtomicBoolean()
+    val isBanned = isRetired.get() && !isExpired
+    val isFailed get() = numFailedTests.get() >= 3
+    val isGone get() = isFailed || isRetired.get()
 
     fun willExpireAt(instant: Instant): Boolean {
         return ttl < instant
@@ -60,6 +65,10 @@ data class ProxyEntry(
 
     fun willExpireAfter(duration: Duration): Boolean {
         return ttl < Instant.now() + duration
+    }
+
+    fun retire() {
+        isRetired.set(true)
     }
 
     fun refresh() {
@@ -126,9 +135,7 @@ data class ProxyEntry(
      * */
     override fun toString(): String {
         val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
-        val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed" +
-                ", tt:$numTests, ftt:$numFailedTests, pg:$nPages, fpg:$numFailedPages"
+        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, $metadata"
     }
 
     override fun compareTo(other: ProxyEntry): Int {
@@ -136,13 +143,14 @@ data class ProxyEntry(
     }
 
     private fun formatDisplay(): String {
+        val ban = if (isBanned) "[banned] " else ""
         val ttlStr = ttlDuration?.let { DateTimeUtil.readableDuration(it.truncatedTo(ChronoUnit.SECONDS)) }?:"0s"
-        return "$host:$port($numFailedPages/$numSuccessPages/$ttlStr)"
+        return "$ban$host:$port($numFailedPages/$numSuccessPages/$ttlStr)"
     }
 
     private fun formatMetadata(): String {
         val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "spd:$speed, tt:$numTests, ftt:$numFailedTests, pg:$nPages, fpg:$numFailedPages"
+        return "pg:$nPages, spd:$speed, tt:$numTests, ftt:$numFailedTests, fpg:$numFailedPages"
     }
 
     companion object {

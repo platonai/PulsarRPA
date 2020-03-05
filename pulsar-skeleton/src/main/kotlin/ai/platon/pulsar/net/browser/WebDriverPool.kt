@@ -10,7 +10,6 @@ import org.apache.commons.io.FileUtils
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListSet
@@ -31,7 +30,7 @@ class WebDriverPool(
     private val log = LoggerFactory.getLogger(WebDriverPool::class.java)
 
     val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
-    val freeDrivers = ConcurrentHashMap<Int, ConcurrentLinkedQueue<ManagedWebDriver>>()
+    val freeDrivers = ConcurrentLinkedQueue<ManagedWebDriver>()
     val workingDrivers = ConcurrentHashMap<Int, ManagedWebDriver>()
 
     private val lock = ReentrantLock() // lock for containers
@@ -51,29 +50,51 @@ class WebDriverPool(
     val numRetired = AtomicInteger()
     val numQuit = AtomicInteger()
     val numWorking get() = workingDrivers.size
-    val numFree get() = freeDrivers.values.sumBy { it.size }
+    val numFree get() = freeDrivers.size
     val numActive get() = numWorking + numFree
     val numOnline get() = onlineDrivers.size
 
-    fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
-        return pollInternal(priority, conf)
-    }
+    fun poll(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
+        lock.withLock {
+            val driver = pollOrCreate(priority, conf)
 
-    fun put(driver: ManagedWebDriver) {
-        if (driver.isRetired) {
-            retire(driver, null)
-        } else {
-            offer(driver)
+            workingDrivers[driver.id] = driver
+            notEmpty.signal()
+
+            return driver
         }
     }
 
-    fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
-        closeAllInternal(incognito, processExit)
+    fun put(driver: ManagedWebDriver) {
+        lock.withLock {
+            workingDrivers.remove(driver.id)
+            if (workingDrivers.isEmpty()) {
+                notBusy.signalAll()
+            }
+
+            if (driver.isRetired) {
+                retire(driver, null)
+            } else {
+                offer(driver)
+            }
+        }
+    }
+
+    fun closeAll(incognito: Boolean = true) {
+        waitUntilIdle()
+
+        closeAllDrivers()
+
+        if (incognito) {
+            // Force delete all browser data
+            // TODO: delete data that might leak privacy only, cookies, sessions, local storage, etc
+            FileUtils.deleteDirectory(AppPaths.BROWSER_TMP_DIR.toFile())
+        }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closeAllInternal(incognito = true, processExit = true)
+            closeAll(incognito = true)
         }
     }
 
@@ -84,22 +105,11 @@ class WebDriverPool(
 
     private fun offer(driver: ManagedWebDriver) {
         lock.withLock {
-            workingDrivers.remove(driver.id)
-            if (workingDrivers.isEmpty()) {
-                notBusy.signalAll()
-            }
-
             driver.status.set(DriverStatus.FREE)
-
             // it can be retired by close all
-            val queue = freeDrivers[driver.priority]
-            if(queue == null) {
-                log.error("Unexpected driver, no free queue for priority {} | {}", driver.priority, driver)
-            } else {
-                queue.add(driver)
-                // TODO: every queue should have a separate signal
-                notEmpty.signal()
-            }
+            freeDrivers.add(driver)
+            // TODO: every queue should have a separate signal
+            notEmpty.signal()
         }
     }
 
@@ -116,10 +126,8 @@ class WebDriverPool(
 
         lock.withLock {
             driver.retire()
-
-            freeDrivers[driver.priority]?.remove(driver)
+            freeDrivers.remove(driver)
             workingDrivers.remove(driver.id)
-
             if (workingDrivers.isEmpty()) {
                 notBusy.signalAll()
             }
@@ -156,88 +164,24 @@ class WebDriverPool(
         }
     }
 
-    private fun pollInternal(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
-        var driver: ManagedWebDriver? = null
-        var exception: Exception? = null
-
-        try {
-            driver = pollOrCreate(priority, conf)
-
-            if (driver != null) {
-                workingDrivers[driver.id] = driver
-            }
-        } catch (e: InterruptedException) {
-            log.info("Interrupted, no web driver should return")
-            exception = e
-        } catch (e: Exception) {
-            log.warn("Unexpected error - {}", StringUtil.simplifyException(e))
-            exception = e
-        }
-
-        if (exception != null && driver != null) {
-            retire(driver, exception)
-            driver = null
-        }
-
-        return if (isClosed) null else driver
-    }
-
     /**
      * TODO: conf is not really used if the queue is not empty
      * */
-    private fun pollOrCreate(group: Int, conf: ImmutableConfig): ManagedWebDriver? {
-        val queue = freeDrivers.computeIfAbsent(group) { ConcurrentLinkedQueue() }
-
+    private fun pollOrCreate(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
+        // wait until not empty
         var nanos = pollingTimeout.toNanos()
-        lock.withLock {
-            while (!isClosed && queue.isEmpty() && nanos > 0) {
-                nanos = notEmpty.awaitNanos(nanos)
-            }
-
-            if (queue.isEmpty()) {
-                allocateTo(group, queue, conf)
-            }
+        while (!isClosed && freeDrivers.isEmpty() && nanos > 0) {
+            nanos = notEmpty.awaitNanos(nanos)
         }
 
-        return if (queue.isEmpty()) null else queue.remove()
-    }
-
-    private fun allocateTo(group: Int, queue: Queue<ManagedWebDriver>, conf: ImmutableConfig): ManagedWebDriver? {
-        val driver = allocate(group, conf)
-        if (driver != null) {
-            queue.add(driver)
+        if (freeDrivers.isEmpty()) {
+            val driver = driverFactory.create(priority, conf)
+            freeDrivers.add(driver)
             onlineDrivers.add(driver)
             logDriverOnline(driver)
         }
 
-        return driver
-    }
-
-    private fun allocate(priority: Int, conf: ImmutableConfig): ManagedWebDriver? {
-        if (numActive >= capacity) {
-            log.warn("Too many web drivers. Cpu cores: {}, capacity: {}, {}", AppConstants.NCPU, capacity, this)
-            return null
-        }
-
-        try {
-            return driverFactory.create(priority, conf)
-        } catch (e: Throwable) {
-            log.error("Unexpected exception, failed to create a web driver", e)
-        }
-
-        return null
-    }
-
-    private fun closeAllInternal(incognito: Boolean = true, processExit: Boolean = false) {
-        waitUntilIdle()
-
-        closeAllDrivers()
-
-        if (incognito) {
-            // Force delete all browser data
-            // TODO: delete data that might leak privacy only, cookies, sessions, local storage, etc
-            FileUtils.deleteDirectory(AppPaths.BROWSER_TMP_DIR.toFile())
-        }
+        return freeDrivers.remove()
     }
 
     private fun closeAllDrivers() {
@@ -250,11 +194,10 @@ class WebDriverPool(
             return
         }
 
-        freeDrivers.flatMap { it.value }.stream().parallel().forEach { retire(it, null, external = false) }
-        freeDrivers.forEach { it.value.clear() }
+        freeDrivers.parallelStream().forEach { retire(it, null, external = false) }
         freeDrivers.clear()
 
-        workingDrivers.map { it.value }.stream().parallel().forEach { retire(it, null, external = false) }
+        workingDrivers.map { it.value }.parallelStream().forEach { retire(it, null, external = false) }
         workingDrivers.clear()
 
         onlineDrivers.stream().parallel().forEach { it.quit() }
@@ -264,10 +207,10 @@ class WebDriverPool(
     private fun waitUntilIdle() {
         lock.withLock {
             var i = 0
-            while (!isClosed && numWorking > 0 && i++ < 120) {
+            while (!isClosed && numWorking > 0 && i++ < 120 && !Thread.currentThread().isInterrupted) {
                 notBusy.await(1, TimeUnit.SECONDS)
                 if (i >= 30 && i % 30 == 0) {
-                    log.warn("Waited {}s for driver pool to be idle", i)
+                    log.warn("Waited {}s for driver pool to be idle | {}", i, this)
                 }
             }
         }
@@ -275,7 +218,7 @@ class WebDriverPool(
 
     private fun checkState(driver: ManagedWebDriver) {
         if (driver.isQuit) {
-            if (freeDrivers[driver.priority]?.contains(driver) == true) {
+            if (freeDrivers.contains(driver)) {
                 log.warn("Driver is quit, should not be in free driver list | {}", driver)
             }
             if (workingDrivers.containsKey(driver.id)) {

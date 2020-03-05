@@ -63,7 +63,7 @@ class FetchThread(
         fetchMonitor.registerFetchThread(this)
 
 
-        var task: FetchTask? = null
+        var task: JobFetchTask? = null
 
         try {
             while (!fetchMonitor.isMissionComplete && !closed.get() && !interrupted()) {
@@ -143,8 +143,8 @@ class FetchThread(
         fetchMonitor.unregisterIdleThread(this)
     }
 
-    private fun schedule(): FetchTask? {
-        var fetchTask: FetchTask? = null
+    private fun schedule(): JobFetchTask? {
+        var fetchTask: JobFetchTask? = null
 
         val fetchMode = fetchMonitor.options.fetchMode
         if (fetchMode == FetchMode.CROWD_SOURCING) {

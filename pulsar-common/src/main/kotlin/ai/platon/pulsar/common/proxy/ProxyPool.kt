@@ -39,7 +39,9 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     private val proxyEntries = mutableSetOf<ProxyEntry>()
     private val freeProxies = LinkedBlockingDeque<ProxyEntry>(capacity)
     private val workingProxies = ConcurrentSkipListSet<ProxyEntry>()
-    private val unavailableProxies = ConcurrentSkipListSet<ProxyEntry>()
+    private val retiredProxies = ConcurrentSkipListSet<ProxyEntry>()
+    private val bannedHosts = ConcurrentSkipListSet<String>()
+    private val bannedSegments = ConcurrentSkipListSet<String>()
     private val lock = ReentrantLock()
     private val closed = AtomicBoolean()
 
@@ -47,6 +49,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
      * The probability to choose a test ip if absent
      * */
     var testIpRate = 0.3
+    var banIpSegment = true
     val isClosed get() = closed.get()
     var lastActiveTime = Instant.now()
     var idleTimeout = Duration.ofMinutes(5)
@@ -54,7 +57,11 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     val providers = mutableSetOf<String>()
     val numFreeProxies get() = freeProxies.size
     val numWorkingProxies get() = workingProxies.size
-    val numUnavailableProxies get() = unavailableProxies.size
+    val numRetiredProxies get() = retiredProxies.size
+
+    init {
+        loadBannedIps()
+    }
 
     override operator fun contains(element: ProxyEntry): Boolean {
         return freeProxies.contains(element)
@@ -91,10 +98,14 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             }
         }
 
-        var proxy: ProxyEntry? = null
+        var proxy: ProxyEntry? = getTestProxyIfAbsent()
+        if (proxy != null) {
+            return proxy
+        }
+
         val maxRetry = 5
         var n = 0
-        while (!isClosed && proxy == null && n++ < maxRetry && !Thread.interrupted()) {
+        while (!isClosed && proxy == null && n++ < maxRetry && !Thread.currentThread().isInterrupted) {
             proxy = pollOne()
         }
 
@@ -114,8 +125,15 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
      */
     fun retire(proxyEntry: ProxyEntry) {
         lock.withLock {
+            proxyEntry.retire()
+
             workingProxies.remove(proxyEntry)
-            unavailableProxies.add(proxyEntry)
+            retiredProxies.add(proxyEntry)
+
+            if (proxyEntry.isBanned) {
+                bannedHosts.add(proxyEntry.host)
+                bannedSegments.add(proxyEntry.segment)
+            }
         }
     }
 
@@ -128,7 +146,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         var recovered = 0
 
         lock.withLock {
-            val it = unavailableProxies.iterator()
+            val it = retiredProxies.iterator()
             while (!isClosed && n-- > 0 && it.hasNext()) {
                 val proxy = it.next()
 
@@ -144,6 +162,10 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         }
 
         return recovered
+    }
+
+    fun isBanned(proxyEntry: ProxyEntry): Boolean {
+        return proxyEntry.isBanned || proxyEntry.segment in bannedSegments || proxyEntry.host in bannedHosts
     }
 
     @Synchronized
@@ -173,7 +195,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
     }
 
     /**
-     * Get a test ip by a probability if exist in [ENABLED_TEST_PROXY_FILE]
+     * Get a test ip by a probability if exist in [TEST_PROXY_FILE]
      * */
     fun getTestProxyIfAbsent(): ProxyEntry? {
         if (testIpRate > 0 && ThreadLocalRandom.current().nextDouble() <= testIpRate) {
@@ -191,11 +213,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
 
     // Block until timeout or an available proxy entry returns
     private fun pollOne(): ProxyEntry? {
-        var proxyEntry = getTestProxyIfAbsent()
-        if (proxyEntry != null) {
-            return proxyEntry
-        }
-
+        val proxyEntry: ProxyEntry?
         try {
             proxyEntry = freeProxies.poll(pollingInterval.seconds, TimeUnit.SECONDS)
         } catch (ignored: InterruptedException) {
@@ -208,6 +226,12 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             return null
         }
 
+        if (isBanned(proxy)) {
+            log.info("Proxy is banned | {}", proxy.display)
+            retiredProxies.add(proxy)
+            return null
+        }
+
         if (proxy.isExpired) {
             if (proxy.test()) {
                 proxy.refresh()
@@ -215,7 +239,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         }
 
         if (proxy.isExpired) {
-            unavailableProxies.add(proxy)
+            retiredProxies.add(proxy)
             proxy = null
         } else {
             workingProxies.add(proxy)
@@ -271,28 +295,33 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         archiveDestinations[proxyEntries] = "proxies.all.txt"
         archiveDestinations[workingProxies] = "proxies.working.txt"
         archiveDestinations[freeProxies] = "proxies.free.txt"
-        archiveDestinations[unavailableProxies] = "proxies.unavailable.txt"
+        archiveDestinations[retiredProxies] = "proxies.unavailable.txt"
 
         archiveDestinations.forEach { (proxies, destination) ->
             val path = AppPaths.get(currentArchiveDir, destination)
             dump(path, proxies)
         }
 
-        log.info("{} | Dumped to file://{}", this, currentArchiveDir)
+        try {
+            Files.write(PROXY_BANNED_SEGMENTS_FILE, bannedSegments.joinToString("\n") { it }.toByteArray())
+            Files.write(PROXY_BANNED_HOSTS_FILE, bannedHosts.joinToString("\n") { it }.toByteArray())
+        } catch (e: IOException) {
+            log.warn(e.toString())
+        }
+
+        log.info("Proxy pool is dumped to file://{} | {}", currentArchiveDir, this)
     }
 
     override fun toString(): String {
         val sb = StringBuilder()
-        String.format("Total %d, free: %d, working: %d, gone: %d",
+        String.format("total %d, free: %d, working: %d, gone: %d, banH: %d banS: %d",
                 proxyEntries.size,
                 freeProxies.size,
                 workingProxies.size,
-                unavailableProxies.size
+                retiredProxies.size,
+                bannedHosts.size,
+                bannedSegments.size
         ).also { sb.append(it) }
-
-        if (workingProxies.isNotEmpty()) {
-            sb.append(" | ").append('<').append(workingProxies.first()).append('>')
-        }
 
         return sb.toString()
     }
@@ -367,10 +396,13 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             val proxies = parser.parse(content, format)
 
             val minTTL = Duration.ofMinutes(3)
-            proxies.filterNot { it.willExpireAfter(minTTL) }.forEach {
-                offer(it)
-                ++count
-            }
+            proxies.asSequence().filterNot { it.willExpireAfter(minTTL) }
+                    .filterNot { banIpSegment && it.host in bannedSegments }
+                    .filterNot { it.host in bannedHosts }
+                    .forEach {
+                        offer(it)
+                        ++count
+                    }
 
             log.info("Loaded {} proxies from {}", proxies.size, path)
         } catch (e: IOException) {
@@ -380,10 +412,31 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         return count
     }
 
+    private fun loadBannedIps() {
+        try {
+            if (Files.exists(PROXY_BANNED_HOSTS_FILE)) {
+                Files.readAllLines(PROXY_BANNED_HOSTS_FILE).mapTo(bannedHosts) { it }
+            }
+            if (Files.exists(PROXY_BANNED_SEGMENTS_FILE)) {
+                Files.readAllLines(PROXY_BANNED_SEGMENTS_FILE).mapTo(bannedSegments) { it }
+            }
+
+            if (bannedHosts.isNotEmpty()) {
+                log.info("There are {} banned hosts: ", bannedHosts.take(50).joinToString(", ") { it })
+            }
+            if (bannedSegments.isNotEmpty()) {
+                log.info("There are {} banned segments: ", bannedSegments.take(50).joinToString(", ") { it })
+            }
+        } catch (e: IOException) {
+            log.warn(e.toString())
+        }
+    }
+
     private fun dump(path: Path, proxyEntries: Collection<ProxyEntry>) {
         val content = proxyEntries.joinToString("\n") { it.toString() }
         try {
             Files.deleteIfExists(path)
+            Files.createDirectories(path.parent)
             Files.write(path, content.toByteArray(), StandardOpenOption.CREATE_NEW)
         } catch (e: IOException) {
             log.warn(e.toString())
@@ -410,6 +463,8 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         val TEST_PROXY_FILE = AppPaths.get(BASE_DIR, "test-ip")
         val INIT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.HOME_DIR)
                 .map { Paths.get(it, "proxy.providers.txt") }
+        val PROXY_BANNED_HOSTS_FILE = AppPaths.get(BASE_DIR, "proxies-banned-hosts.txt")
+        val PROXY_BANNED_SEGMENTS_FILE = AppPaths.get(BASE_DIR, "proxies-banned-segments.txt")
 
         private val ENABLED_PROVIDER_DIR_WATCH_INTERVAL = Duration.ofSeconds(45)
         private var enabledProviderDirLastWatchTime = Instant.EPOCH
@@ -418,7 +473,7 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
         init {
             arrayOf(ENABLED_PROVIDER_DIR, AVAILABLE_PROVIDER_DIR, ENABLED_PROXY_DIR, AVAILABLE_PROXY_DIR, ARCHIVE_DIR)
                     .forEach { Files.createDirectories(it) }
-            arrayOf(LATEST_AVAILABLE_PROXY).forEach {
+            arrayOf(LATEST_AVAILABLE_PROXY, PROXY_BANNED_HOSTS_FILE, PROXY_BANNED_SEGMENTS_FILE).forEach {
                 if (!Files.exists(it)) Files.createFile(it)
             }
 

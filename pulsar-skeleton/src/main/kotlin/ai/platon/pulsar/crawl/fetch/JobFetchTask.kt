@@ -16,14 +16,14 @@ interface IFetchEntry {
 /**
  * This class described the item to be fetched.
  */
-class FetchTask private constructor(
+class JobFetchTask private constructor(
         jobID: Int,
         val priority: Int,
         val protocol: String,
         val host: String,
         val page: WebPage,
         val url: URL
-) : Comparable<FetchTask> {
+) : Comparable<JobFetchTask> {
     val key = Key(jobID, priority, protocol, host, url.toString())
     val itemId get() = key.itemId
     val urlString get() = key.url
@@ -34,7 +34,7 @@ class FetchTask private constructor(
         return "<itemId=" + key.itemId + ", priority=" + key.priority + ", url=" + key.url + ">"
     }
 
-    override fun compareTo(other: FetchTask): Int {
+    override fun compareTo(other: JobFetchTask): Int {
         return key.compareTo(other.key)
     }
 
@@ -71,7 +71,7 @@ class FetchTask private constructor(
          * argument, either as a protocol + hostname pair, protocol + IP
          * address pair or protocol+domain pair.
          */
-        fun create(jobId: Int, priority: Int, url: String, page: WebPage, groupMode: URLUtil.GroupMode): FetchTask? {
+        fun create(jobId: Int, priority: Int, url: String, page: WebPage, groupMode: URLUtil.GroupMode): JobFetchTask? {
             val u = Urls.getURLOrNull(url) ?: return null
 
             val proto = u.protocol
@@ -80,7 +80,7 @@ class FetchTask private constructor(
             return if (proto == null || host == null || host.isEmpty()) {
                 // TODO: report the exception
                 null
-            } else FetchTask(jobId, priority, proto.toLowerCase(), host.toLowerCase(), page, u)
+            } else JobFetchTask(jobId, priority, proto.toLowerCase(), host.toLowerCase(), page, u)
         }
     }
 }

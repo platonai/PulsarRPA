@@ -4,8 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.examples.WebAccess
-import ai.platon.pulsar.net.browser.BrowserPrivacyContext
-import ai.platon.pulsar.net.browser.PrivacyContextFactory
+import ai.platon.pulsar.net.browser.PrivacyContextManager
 import ai.platon.pulsar.net.browser.WebDriverManager
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.WebPageFormatter
@@ -18,7 +17,7 @@ class AmazonAccess: WebAccess() {
     private var round = 0
     private var numTotalPages = 0
     private val driverManager = i.context.getBean(WebDriverManager::class.java)
-    private val privacyContextFactory = i.context.getBean(PrivacyContextFactory::class.java)
+    private val privacyContextManager = i.context.getBean(PrivacyContextManager::class.java)
     private val batchSize = driverManager.driverPool.capacity
 
     init {
@@ -152,7 +151,7 @@ class AmazonAccess: WebAccess() {
             log.info("Ip banned after $numTotalPages pages. Ips banned: $bannedIps")
 
             // Reset the context only when the extraction result is not as good as expected
-            // privacyContext.reset()
+            // privacyContextManager.reset()
         }
     }
 }

@@ -122,7 +122,7 @@ class TaskScheduler(
     /**
      * Schedule a queue with the given priority and given poolId
      */
-    fun schedule(poolId: PoolId? = null): FetchTask? {
+    fun schedule(poolId: PoolId? = null): JobFetchTask? {
         val fetchTasks = schedule(poolId, 1)
         return fetchTasks.firstOrNull()
     }
@@ -130,7 +130,7 @@ class TaskScheduler(
     /**
      * Schedule the queues with top priority
      */
-    fun schedule(number: Int): List<FetchTask> {
+    fun schedule(number: Int): List<JobFetchTask> {
         return schedule(null, number)
     }
 
@@ -138,7 +138,7 @@ class TaskScheduler(
      * Null queue id means the queue with top priority
      * Consume a fetch item and try to download the target web page
      */
-    fun schedule(poolId: PoolId?, number: Int): List<FetchTask> {
+    fun schedule(poolId: PoolId?, number: Int): List<JobFetchTask> {
         var num = number
         if (num <= 0) {
             log.warn("Required no fetch item")
@@ -150,7 +150,7 @@ class TaskScheduler(
             return listOf()
         }
 
-        val fetchTasks = ArrayList<FetchTask>(num)
+        val fetchTasks = ArrayList<JobFetchTask>(num)
         while (num-- > 0) {
             val fetchTask = tasksMonitor.consume(poolId)
             if (fetchTask != null) {
@@ -170,7 +170,7 @@ class TaskScheduler(
     /**
      * Finish the fetch item anyway, even if it's failed to download the target page
      */
-    fun finishUnchecked(fetchTask: FetchTask) {
+    fun finishUnchecked(fetchTask: JobFetchTask) {
         tasksMonitor.finish(fetchTask)
         lastTaskFinishTime = Instant.now()
         metricsCounters.increase(Counter.rFinishedTasks)
@@ -301,7 +301,7 @@ class TaskScheduler(
         return status.toString()
     }
 
-    private fun handleResult(fetchTask: FetchTask, crawlStatus: CrawlStatus) {
+    private fun handleResult(fetchTask: JobFetchTask, crawlStatus: CrawlStatus) {
         val page = fetchTask.page
 
         metricsSystem.debugFetchHistory(page)

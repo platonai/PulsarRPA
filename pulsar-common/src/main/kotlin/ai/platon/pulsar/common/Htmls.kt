@@ -32,6 +32,7 @@ enum class HtmlIntegrity {
     val isNotEmpty: Boolean get() = !isEmpty
     val isEmptyBody: Boolean get() = this == EMPTY_BODY
     val isBanned: Boolean get() = this == ROBOT_CHECK
+    val isSmall: Boolean get() = this == TOO_SMALL || this == TOO_SMALL_IN_HISTORY || this == TOO_SMALL_IN_BATCH
 
     companion object {
         fun fromString(s: String?): HtmlIntegrity {

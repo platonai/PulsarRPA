@@ -5,15 +5,16 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.PrivacyContext
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.proxy.ProxyManager
+import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.reflect.KClass
 
 /**
  * The privacy context, the context should be dropped if privacy is leaked
@@ -26,7 +27,7 @@ open class BrowserPrivacyContext(
 ): Freezable(), PrivacyContext {
     companion object {
         val instanceSequence = AtomicInteger()
-        val numProxyChanges = AtomicInteger()
+        val numProxies = AtomicInteger()
     }
 
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
@@ -36,71 +37,29 @@ open class BrowserPrivacyContext(
 
     val privacyLeakWarnings = AtomicInteger()
     override val isPrivacyLeaked get() = privacyLeakWarnings.get() > 3
-    val nServedTasks = AtomicInteger()
+    val numServedTasks = AtomicInteger()
     val servedProxies = ConcurrentLinkedQueue<ProxyEntry>()
 
     fun informSuccess() {
-        informSuccess("")
-    }
-
-    fun informSuccess(message: String) {
         if (privacyLeakWarnings.get() > 0) {
             privacyLeakWarnings.decrementAndGet()
         }
-        // log.info("success - ${message}privacyLeakWarnings: $privacyLeakWarnings freezers: $numFreezers tasks: $numTasks")
     }
 
     fun informWarning() {
-        informWarning("")
-    }
-
-    fun informWarning(message: String) {
         privacyLeakWarnings.incrementAndGet()
-        // log.info("warning - ${message}privacyLeakWarnings: $privacyLeakWarnings freezers: $numFreezers tasks: $numTasks")
     }
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen {
-            runWithProxy(task, browseFun).also { nServedTasks.incrementAndGet() }
+            runWithProxy(task, browseFun).also { numServedTasks.incrementAndGet() }
         }
-    }
-
-    open fun runInContext(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        var result: FetchResult
-
-        var i = 1
-        val maxRetry = 2
-        do {
-            if (isPrivacyLeaked) {
-                task.reset()
-                close()
-            }
-
-            result = run(task) { _, driver ->
-                browseFun(task, driver)
-            }
-
-            val response = result.response
-            if (response.status.isSuccess) {
-                informSuccess()
-            } else if (response.status.isRetry(RetryScope.PRIVACY)) {
-                informWarning()
-            }
-        } while (i++ <= maxRetry && isPrivacyLeaked)
-
-        return result
-    }
-
-    fun waitUntilClosed() {
-        try {
-            closeLatch.await()
-        } catch (ignored: InterruptedException) {}
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             freeze {
-                log.info("Privacy context #{} is closed after {} tasks ...", id, nServedTasks)
+                log.info("Privacy context #{} is closed after {} tasks ...", id, numServedTasks)
 
                 changeProxy()
                 driverManager.reset()
@@ -125,7 +84,7 @@ open class BrowserPrivacyContext(
         } finally {
             if (proxyEntry != proxyManager.currentProxyEntry) {
                 proxyEntry = proxyManager.currentProxyEntry
-                numProxyChanges.incrementAndGet()
+                numProxies.incrementAndGet()
             }
 
             if (proxyEntry != null) {
