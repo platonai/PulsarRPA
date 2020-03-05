@@ -4,17 +4,15 @@ import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
-import ai.platon.pulsar.proxy.ProxyManager
-import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.reflect.KClass
 
 /**
  * The privacy context, the context should be dropped if privacy is leaked
@@ -59,7 +57,8 @@ open class BrowserPrivacyContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             freeze {
-                log.info("Privacy context #{} is closed after {} tasks ...", id, numServedTasks)
+                log.info("Privacy context #{} is closed after {} tasks | {}",
+                        id, numServedTasks, proxyManager.currentProxyEntry)
 
                 changeProxy()
                 driverManager.reset()
@@ -70,7 +69,9 @@ open class BrowserPrivacyContext(
     }
 
     private fun changeProxy() {
-        proxyManager.currentProxyEntry?.let { proxyManager.changeProxyIfOnline(it) }
+        proxyManager.currentProxyEntry?.let {
+            proxyManager.changeProxyIfOnline(it, ban = true)
+        }
     }
 
     private fun runWithProxy(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {

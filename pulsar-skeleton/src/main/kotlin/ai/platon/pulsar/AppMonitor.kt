@@ -1,18 +1,15 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.RuntimeUtils
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.net.browser.WebDriverManager
-import ai.platon.pulsar.proxy.ProxyManager
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * TODO: merge all monitor threads
+ * TODO: metrics system is a better choice
  * */
 class AppMonitor(
         val driverManager: WebDriverManager,
@@ -23,7 +20,6 @@ class AppMonitor(
     private var lastIPSReport = ""
 
     private val driverPool = driverManager.driverPool
-    private val proxyPool = proxyManager.proxyPool
     private var monitorThread = Thread(this::update)
     private val loopStarted = AtomicBoolean()
     private val isIdle get() = driverManager.isIdle
@@ -80,34 +76,6 @@ class AppMonitor(
             if (isIdle && !driverPool.isAllEmpty) {
                 log.info("The web driver pool is idle, closing all drivers ...")
                 driverPool.closeAll(incognito = true)
-            }
-        }
-
-        if (ProxyPool.isProxyEnabled()) {
-            monitorProxySystem(tick)
-        }
-    }
-
-    private fun monitorProxySystem(tick: Int) {
-        if (tick % 20 == 0) {
-            // proxy system can be started and shutdown at runtime
-            if (!proxyManager.isWatcherStarted) {
-                if (proxyManager.isEnabled) {
-                    proxyPool.updateProxies(asap = true)
-                    proxyManager.start()
-                }
-            }
-
-            // check local file command
-            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_PROXY_POOL_DUMP)) {
-                proxyPool.dump()
-            }
-        }
-
-        if (!proxyPool.isIdle) {
-            when {
-                proxyPool.numFreeProxies == 0 -> proxyPool.updateProxies(asap = true)
-                proxyPool.numFreeProxies < 3 -> proxyPool.updateProxies()
             }
         }
     }

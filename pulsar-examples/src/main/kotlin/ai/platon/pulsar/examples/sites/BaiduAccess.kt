@@ -8,7 +8,7 @@ fun main() {
 
     val portalUrl = "https://www.baidu.com/"
     val args = """
-        -ic -i 1d -ii 1s -tl 5 -ol "a[href~=item]"
+        -ic -i 1s -ii 1s -tl 5 -ol "a[href~=item]"
     """.trimIndent()
     WebAccess().use { it.load(portalUrl, args) }
 }

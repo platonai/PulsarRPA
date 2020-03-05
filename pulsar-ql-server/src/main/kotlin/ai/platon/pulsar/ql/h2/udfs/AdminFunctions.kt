@@ -1,9 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -16,7 +14,6 @@ import org.slf4j.LoggerFactory
 object AdminFunctions {
     val log = LoggerFactory.getLogger(AdminFunctions::class.java)
     private val sqlContext = SQLContext.getOrCreate()
-    private val proxyPool = PulsarEnv.applicationContext.getBean(ProxyPool::class.java)
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context h2session: Session, message: String): String {
@@ -57,12 +54,6 @@ object AdminFunctions {
         val page = H2SessionFactory.getSession(h2session.serialId).load(url)
         val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(page.url, ".htm"))
         return AppFiles.saveTo(page, path).toString()
-    }
-
-    @UDFunction
-    @JvmStatic
-    fun testProxy(ipPort: String): String {
-        return proxyPool.toString()
     }
 
     private fun checkPrivilege(h2session: Session) {

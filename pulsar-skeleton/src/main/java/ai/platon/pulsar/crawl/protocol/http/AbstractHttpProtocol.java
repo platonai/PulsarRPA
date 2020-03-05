@@ -16,18 +16,16 @@
  */
 package ai.platon.pulsar.crawl.protocol.http;
 
-import ai.platon.pulsar.PulsarEnv;
 import ai.platon.pulsar.common.*;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.common.proxy.ProxyPool;
 import ai.platon.pulsar.crawl.protocol.Content;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
 import ai.platon.pulsar.crawl.protocol.Response;
-import ai.platon.pulsar.persist.RetryScope;
 import ai.platon.pulsar.persist.ProtocolStatus;
+import ai.platon.pulsar.persist.RetryScope;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
@@ -79,16 +77,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
      * Indicates if a proxy is used
      */
     protected boolean useProxy = false;
-
-    /**
-     * Indicates if a proxy pool is used
-     */
-    protected boolean useProxyPool = false;
-
-    /**
-     * The proxy pool
-     */
-    protected ProxyPool proxyPool;
 
     /**
      * The network timeout in millisecond
@@ -162,11 +150,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
         // TODO: be consistent with WebDriverQueues
         this.proxyHost = jobConf.get("http.proxy.host");
         this.proxyPort = jobConf.getInt("http.proxy.port", 8080);
-        this.useProxyPool = jobConf.getBoolean("http.proxy.pool", false);
-        if (this.useProxyPool) {
-            this.proxyPool = PulsarEnv.Companion.getApplicationContext().getBean(ProxyPool.class);
-        }
-        this.useProxy = (proxyHost != null && proxyHost.length() > 0) || this.useProxyPool;
+        this.useProxy = (proxyHost != null && proxyHost.length() > 0);
 
         this.timeout = jobConf.getDuration(HTTP_TIMEOUT, Duration.ofSeconds(10));
         this.fetchMaxRetry = jobConf.getInt(HTTP_FETCH_MAX_RETRY, 3);
@@ -448,14 +432,6 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
     public boolean useProxy() {
         return useProxy;
-    }
-
-    public boolean useProxyPool() {
-        return useProxyPool;
-    }
-
-    public ProxyPool proxyPool() {
-        return proxyPool;
     }
 
     public Duration getTimeout() {

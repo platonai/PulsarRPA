@@ -1,8 +1,8 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.persist.RetryScope
-import ai.platon.pulsar.proxy.ProxyManager
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
 
@@ -10,10 +10,6 @@ import java.util.concurrent.atomic.AtomicReference
  * TODO: multiple context support
  * */
 class PrivacyContextManager(
-        /**
-         * The web driver pool
-         * TODO: web driver pool should be created by a privacy context, not a singleton
-         * */
         val driverManager: WebDriverManager,
         val proxyManager: ProxyManager,
         val immutableConfig: ImmutableConfig
@@ -25,8 +21,8 @@ class PrivacyContextManager(
 
     val maxRetry = 2
 
+    @get:Synchronized
     val activeContext
-        @Synchronized
         get() = getOrCreate()
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {

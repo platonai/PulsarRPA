@@ -185,7 +185,7 @@ public interface AppConstants {
     /**
      * Proxy
      * */
-    int INTERNAL_PROXY_SERVER_PORT_BASE = 8184;
+    int PROXY_SERVER_PORT_BASE = 8584;
 
     /**
      * SQL engine

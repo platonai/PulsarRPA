@@ -48,18 +48,6 @@
         </profile>
 
         <profile>
-            <id>proxy</id>
-            <activation>
-                <property>
-                    <name>active-proxy</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-proxy</module>
-            </modules>
-        </profile>
-
-        <profile>
             <id>plugins</id>
             <activation>
                 <property>
@@ -188,11 +176,6 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-persist</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-proxy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

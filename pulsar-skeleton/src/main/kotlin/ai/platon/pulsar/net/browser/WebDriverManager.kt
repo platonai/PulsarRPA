@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ProxyManager
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant

@@ -3,9 +3,8 @@ package ai.platon.pulsar.net.browser
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
+import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.persist.metadata.BrowserType
-import ai.platon.pulsar.proxy.ProxyManager
 import org.openqa.selenium.Capabilities
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
@@ -39,9 +38,10 @@ class WebDriverFactory(
     fun create(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         val capabilities = driverControl.createGeneralOptions()
 
-        if (ProxyPool.isProxyEnabled()) {
-            setProxy(capabilities)
-        }
+//        if (ProxyPool.isProxyEnabled()) {
+//            setProxy(capabilities)
+//        }
+        setProxy(capabilities)
 
         // Choose the WebDriver
         val browserType = getBrowserType(conf)
@@ -85,11 +85,11 @@ class WebDriverFactory(
             hostPort = "127.0.0.1:${proxyManager.port}"
         }
 
-        if (hostPort == null) {
-            // internal proxy server is not available, set proxy to the browser directly
-            proxyEntry = proxyManager.proxyPool.poll()
-            hostPort = proxyEntry?.hostPort
-        }
+//        if (hostPort == null) {
+//            // internal proxy server is not available, set proxy to the browser directly
+//            proxyEntry = proxyManager.proxyPool.poll()
+//            hostPort = proxyEntry?.hostPort
+//        }
 
         proxy.httpProxy = hostPort
         proxy.sslProxy = hostPort

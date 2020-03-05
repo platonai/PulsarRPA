@@ -1,12 +1,8 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.NetUtil.testNetwork
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -34,14 +30,7 @@ object CommonFunctions {
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
     private val sqlContext = SQLContext.getOrCreate()
-    private val proxyPool = PulsarEnv.applicationContext.getBean(ProxyPool::class.java)
     private val unmodifiedConfig = sqlContext.unmodifiedConfig
-
-    @UDFunction(description = "Get the proxy pool status")
-    @JvmStatic
-    fun getProxyPoolStatus(): String {
-        return proxyPool.toString()
-    }
 
     /**
      * Set volatileConfig to the given value
@@ -383,57 +372,6 @@ object CommonFunctions {
         }
 
         return rs
-    }
-
-    @UDFunction(description = "Add a proxy into the proxy pool")
-    @JvmStatic
-    fun addProxy(ipPort: String): Boolean {
-        val proxyEntry = ProxyEntry.parse(ipPort)
-        if (proxyEntry != null && proxyEntry.test()) {
-            return proxyPool.offer(proxyEntry)
-        }
-
-        return false
-    }
-
-    @UDFunction(description = "Add a proxy into the proxy pool")
-    @JvmStatic
-    fun addProxy(ip: String, port: Int): Boolean {
-        if (testNetwork(ip, port)) {
-            return proxyPool.offer(ProxyEntry(ip, port))
-        }
-
-        return false
-    }
-
-    @UDFunction(description = "Add a list of proxies into the proxy pool, i.e. call add_proxies(array(ip1, ip2, ip3))")
-    @JvmStatic
-    fun addProxies(ipPorts: ValueArray): Int {
-        var count = 0
-
-        for (value in ipPorts.list) {
-            if (addProxy(value.string)) {
-                ++count
-            }
-        }
-
-        return count
-    }
-
-    @UDFunction(description = "Add a proxy into the proxy pool without checking it's availability")
-    @JvmStatic
-    fun addProxiesUnchecked(ipPorts: ValueArray): Int {
-        var count = 0
-
-        for (value in ipPorts.list) {
-            val proxyEntry = ProxyEntry.parse(value.string)
-            if (proxyEntry != null) {
-                proxyPool.offer(proxyEntry)
-                ++count
-            }
-        }
-
-        return count
     }
 
     @UDFunction(description = "Test if the given string is a number")

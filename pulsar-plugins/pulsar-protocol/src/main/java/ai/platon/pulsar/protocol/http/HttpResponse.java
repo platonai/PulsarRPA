@@ -143,19 +143,19 @@ public class HttpResponse implements Response {
             // connect
             String sockHost = http.useProxy() ? http.getProxyHost() : host;
             int sockPort = http.useProxy() ? http.getProxyPort() : port;
-            if (http.useProxyPool()) {
-                proxy = http.proxyPool().poll();
-                if (proxy == null) {
-                    throw new ProxyException("proxy pool exhausted");
-                }
-
-                sockHost = proxy.getHost();
-                sockPort = proxy.getPort();
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(proxy.toString());
-                }
-            }
+//            if (http.useProxyPool()) {
+//                proxy = http.proxyPool().poll();
+//                if (proxy == null) {
+//                    throw new ProxyException("proxy pool exhausted");
+//                }
+//
+//                sockHost = proxy.getHost();
+//                sockPort = proxy.getPort();
+//
+//                if (LOG.isDebugEnabled()) {
+//                    LOG.debug(proxy.toString());
+//                }
+//            }
 
             InetSocketAddress sockAddr = new InetSocketAddress(sockHost, sockPort);
             // API notes : Connects this socket to the server with a specified timeout
@@ -278,16 +278,16 @@ public class HttpResponse implements Response {
                 socket.close();
             }
 
-            if (http.useProxyPool() && proxy != null) {
-                // put back the proxy resource, this is essential important!
-                if (fetchSuccess) {
-                    log.debug("put back proxy {}", proxy);
-                    http.proxyPool().offer(proxy);
-                } else {
-                    log.debug("retire proxy {}", proxy);
-                    http.proxyPool().retire(proxy);
-                }
-            }
+//            if (http.useProxyPool() && proxy != null) {
+//                // put back the proxy resource, this is essential important!
+//                if (fetchSuccess) {
+//                    log.debug("put back proxy {}", proxy);
+//                    http.proxyPool().offer(proxy);
+//                } else {
+//                    log.debug("retire proxy {}", proxy);
+//                    http.proxyPool().retire(proxy);
+//                }
+//            }
         }
     }
 

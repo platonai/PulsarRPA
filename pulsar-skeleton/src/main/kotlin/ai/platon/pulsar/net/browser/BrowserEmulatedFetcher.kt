@@ -62,7 +62,9 @@ class BrowserEmulatedFetcher(
             privacyContextManager.run(task) { _, driver ->
                 browserEmulator.fetch(task, driver)
             }.response
-        } catch (e: IllegalStateException) {
+        } catch (e: ProxyException) {
+            ForwardingResponse.retry(page, RetryScope.CRAWL)
+        } catch (e: IllegalContextStateException) {
             ForwardingResponse.canceled(page)
         }
     }
@@ -205,7 +207,7 @@ class BrowserEmulatedFetcher(
                 browserEmulator.fetch(task, driver)
             } catch (e: ProxyException) {
                 log.warn(StringUtil.simplifyException(e))
-                FetchResult(task, ForwardingResponse.canceled(task.page))
+                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
             } catch (e: WebDriverPoolExhaust) {
                 log.warn("Too many web drivers", e)
                 FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
