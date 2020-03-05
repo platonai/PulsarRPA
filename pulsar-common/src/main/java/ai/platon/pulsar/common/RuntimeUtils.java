@@ -20,7 +20,7 @@ public class RuntimeUtils {
 
     private static final Object COMMAND_FILE_LOCKER = new Object();
     private static final Path COMMAND_FILE = AppPaths.PATH_LOCAL_COMMAND;
-    private static final Duration DEFAULT_COMMAND_FILE_CHECK_INTERVAL = Duration.ofSeconds(5);
+    private static final Duration COMMAND_FILE_CHECK_INTERVAL = Duration.ofSeconds(15);
     private static Map<String, Long> COMMAND_LAST_CHECK_TIME = new HashMap<>();
 
     static {
@@ -55,10 +55,22 @@ public class RuntimeUtils {
      * Supported local file commands can be found in AppConstants CMD_*
      * General command options are supported:
      * -keep: the command should be always keep in the file and execute every time the command file is checked,
-     *          otherwise the command is executed only
+     * otherwise the command is executed only
      */
     public static boolean hasLocalFileCommand(String command) {
-        return hasLocalFileCommand(command, DEFAULT_COMMAND_FILE_CHECK_INTERVAL);
+        return hasLocalFileCommand(command, COMMAND_FILE_CHECK_INTERVAL);
+    }
+
+    /**
+     * Check local command file to see if there are pending commands
+     * Supported local file commands can be found in AppConstants CMD_*
+     * General command options are supported:
+     * -keep: the command should be always keep in the file and execute every time the command file is checked,
+     *          otherwise the command is executed only
+     * TODO: create a LocalFileCommand class to manage such commands
+     */
+    public static boolean hasLocalFileCommand(String command, int seconds) {
+        return hasLocalFileCommand(command, Duration.ofSeconds(seconds));
     }
 
     /**

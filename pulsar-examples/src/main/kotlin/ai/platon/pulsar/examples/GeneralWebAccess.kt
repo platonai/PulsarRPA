@@ -1,6 +1,5 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -228,8 +227,8 @@ class GeneralWebAccess: WebAccess() {
 
     fun localFileCommand() {
         while (true) {
-            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)) {
-                println("Execute local file command: " + AppConstants.CMD_INTERNAL_PROXY_SERVER_RECONNECT)
+            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_PROXY_RECONNECT)) {
+                println("Execute local file command: " + AppConstants.CMD_PROXY_RECONNECT)
             }
             Thread.sleep(5000)
         }

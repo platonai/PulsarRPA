@@ -12,6 +12,7 @@ import java.util.function.Consumer
 import javax.websocket.*
 
 class WebSocketServiceImpl : WebSocketService {
+    private val log = LoggerFactory.getLogger(WebSocketServiceImpl::class.java)
     private val closed = AtomicBoolean()
     private lateinit var session: Session
 
@@ -88,8 +89,6 @@ class WebSocketServiceImpl : WebSocketService {
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(WebSocketServiceImpl::class.java)
-
         private const val WEB_SOCKET_CONTAINER_FACTORY_PROPERTY = "services.config.webSocketContainerFactory"
         private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY = DefaultWebSocketContainerFactory::class.java.getName()
         private val WEB_SOCKET_CONTAINER = createWebSocketContainer()

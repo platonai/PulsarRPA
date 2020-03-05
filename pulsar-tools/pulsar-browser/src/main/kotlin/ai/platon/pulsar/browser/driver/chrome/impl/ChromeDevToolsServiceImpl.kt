@@ -16,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import kotlin.concurrent.withLock
@@ -51,7 +50,7 @@ private class ErrorObject {
 
 abstract class ChromeDevToolsServiceImpl(
         val wsService: WebSocketService,
-        val configuration: ChromeDevToolsServiceConfiguration
+        val config: DevToolsServiceConfig
 ): ChromeDevToolsService, Consumer<String>, AutoCloseable {
 
     companion object {
@@ -68,14 +67,14 @@ abstract class ChromeDevToolsServiceImpl(
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    private val eventExecutor = configuration.eventExecutorService
+    private val eventExecutor = config.eventExecutorService
     private val invocationResults: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
     private val eventHandlers: MutableMap<String, MutableSet<EventListenerImpl>> = mutableMapOf()
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
-    private val isClosed get() = closed.get()
+    override val isOpen get() = !closed.get() && !wsService.isClosed()
 
     init {
         wsService.addMessageHandler(this)
@@ -91,7 +90,7 @@ abstract class ChromeDevToolsServiceImpl(
             returnTypeClasses: Array<Class<out Any>>?,
             methodInvocation: MethodInvocation
     ): T? {
-        if (isClosed) {
+        if (!isOpen) {
             return null
         }
 
@@ -100,7 +99,7 @@ abstract class ChromeDevToolsServiceImpl(
 
             invocationResults[methodInvocation.id] = result
             wsService.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
-            val responded = result.waitForResult(configuration.readTimeout.seconds, TimeUnit.SECONDS)
+            val responded = result.waitForResult(config.readTimeout.seconds, TimeUnit.SECONDS)
             invocationResults.remove(methodInvocation.id)
 
             lock.withLock {
@@ -219,7 +218,7 @@ abstract class ChromeDevToolsServiceImpl(
     }
 
     private fun handleEvent(name: String, params: JsonNode) {
-        if (isClosed) return
+        if (!isOpen) return
 
         val listeners = eventHandlers[name] ?:return
 

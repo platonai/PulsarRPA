@@ -133,9 +133,9 @@ public interface AppConstants {
     String CMD_ENABLE_PROXY = "use_proxy"; // keep consistent with linux system variable
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
-    String CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE = "IPS-force-idle";
-    String CMD_INTERNAL_PROXY_SERVER_RECONNECT = "IPS-reconnect";
-    String CMD_INTERNAL_PROXY_SERVER_DISCONNECT = "IPS-disconnect";
+    String CMD_PROXY_FORCE_IDLE = "IPS-force-idle";
+    String CMD_PROXY_RECONNECT = "IPS-reconnect";
+    String CMD_PROXY_DISCONNECT = "IPS-disconnect";
 
     String CMD_WEB_DRIVER_CLOSE_ALL = "close-all-web-drivers";
     String CMD_WEB_DRIVER_DELETE_ALL_COOKIES = "delete-all-cookies";

@@ -20,22 +20,19 @@ class ChromeServiceImpl(
         var wss: WebSocketServiceFactory
 ): ChromeService {
     companion object {
-        val ABOUT_BLANK_PAGE = "about:blank"
+        const val ABOUT_BLANK_PAGE = "about:blank"
+        const val LOCALHOST = "localhost"
 
-        val EMPTY_STRING = ""
-
-        val LOCALHOST = "localhost"
+        const val LIST_TABS = "json/list"
+        const val CREATE_TAB = "json/new"
+        const val ACTIVATE_TAB = "json/activate"
+        const val CLOSE_TAB = "json/close"
+        const val VERSION = "json/version"
     }
 
-    val LOG = LoggerFactory.getLogger(ChromeServiceImpl::class.java)
+    private val LOG = LoggerFactory.getLogger(ChromeServiceImpl::class.java)
 
     private val OBJECT_MAPPER = ObjectMapper()
-
-    private val LIST_TABS = "json/list"
-    private val CREATE_TAB = "json/new"
-    private val ACTIVATE_TAB = "json/activate"
-    private val CLOSE_TAB = "json/close"
-    private val VERSION = "json/version"
 
     private val devToolsServices: MutableMap<String, ChromeDevToolsService> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
@@ -82,9 +79,9 @@ class ChromeServiceImpl(
 
     @Throws(ChromeServiceException::class)
     @Synchronized
-    override fun createDevToolsService(tab: ChromeTab, configuration: ChromeDevToolsServiceConfiguration): ChromeDevToolsService {
+    override fun createDevToolsService(tab: ChromeTab, config: DevToolsServiceConfig): ChromeDevToolsService {
         return try {
-            createDevToolsServiceInternal(tab, configuration)
+            devToolsServices.computeIfAbsent(tab.id) { createDevToolsServiceInternal(tab, config) }
         } catch (e: WebSocketServiceException) {
             throw ChromeServiceException("Failed connecting to tab web socket.", e)
         }
@@ -92,7 +89,7 @@ class ChromeServiceImpl(
 
     @Synchronized
     override fun createDevToolsService(tab: ChromeTab): ChromeDevToolsService {
-        return createDevToolsService(tab, ChromeDevToolsServiceConfiguration())
+        return createDevToolsService(tab, DevToolsServiceConfig())
     }
 
     private fun clearDevToolsServices(tab: ChromeTab) {
@@ -105,23 +102,15 @@ class ChromeServiceImpl(
         }
     }
 
-    private fun isChromeDevToolsServiceCached(tab: ChromeTab): Boolean {
-        return devToolsServices.containsKey(tab.id)
-    }
-
-    private fun getCachedChromeDevToolsService(tab: ChromeTab): ChromeDevToolsService? {
-        return devToolsServices[tab.id]
-    }
-
-    private fun cacheChromeDevToolsService(tab: ChromeTab, chromeDevToolsService: ChromeDevToolsService) {
-        devToolsServices[tab.id] = chromeDevToolsService
-    }
-
     @Throws(WebSocketServiceException::class)
-    private fun createDevToolsServiceInternal(
-            tab: ChromeTab, configuration: ChromeDevToolsServiceConfiguration): ChromeDevToolsService {
-        if (isChromeDevToolsServiceCached(tab)) {
-            return getCachedChromeDevToolsService(tab)!!
+    private fun createDevToolsServiceInternal(tab: ChromeTab, config: DevToolsServiceConfig): ChromeDevToolsService {
+        // Create invocation handler
+        val commandInvocationHandler = CommandInvocationHandler()
+        val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
+        val invocationHandler = InvocationHandler { _, method, _ ->
+            commandsCache.computeIfAbsent(method) {
+                ProxyClasses.createProxy(method.returnType, commandInvocationHandler)
+            }
         }
 
         // Connect to a tab via web socket
@@ -129,30 +118,13 @@ class ChromeServiceImpl(
                 ?:throw WebSocketServiceException("Invalid web socket debugger url")
         val wsService = wss.createWebSocketService(webSocketDebuggerUrl)
 
-        val commandInvocationHandler = CommandInvocationHandler()
-
-        val commandsCache: MutableMap<Method, Any> = ConcurrentHashMap()
-        val invocationHandler = InvocationHandler { proxy, method, args ->
-            commandsCache.computeIfAbsent(method) {
-                ProxyClasses.createProxy(method.returnType, commandInvocationHandler)
-            }
-        }
-
         // Create dev tools service.
-        val chromeDevToolsService = ProxyClasses.createProxyFromAbstract(
+        return ProxyClasses.createProxyFromAbstract(
                 ChromeDevToolsServiceImpl::class.java,
-                arrayOf(WebSocketService::class.java, ChromeDevToolsServiceConfiguration::class.java),
-                arrayOf(wsService, configuration),
+                arrayOf(WebSocketService::class.java, DevToolsServiceConfig::class.java),
+                arrayOf(wsService, config),
                 invocationHandler
-        )
-
-        // Register dev tools service with invocation handler.
-        commandInvocationHandler.chromeDevToolsService = chromeDevToolsService
-
-        // Cache it up.
-        cacheChromeDevToolsService(tab, chromeDevToolsService)
-
-        return chromeDevToolsService
+        ).also { commandInvocationHandler.chromeDevToolsService = it }
     }
 
     /**

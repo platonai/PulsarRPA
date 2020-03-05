@@ -98,7 +98,9 @@ class ManagedWebDriver(
     /**
      * The real time page source return by the browser
      * */
-    val pageSource: String get() = driver.pageSource
+    val pageSource: String
+        @Throws(NoSuchSessionException::class)
+        get() = driver.pageSource
 
     /**
      * The id of the session to the browser
@@ -146,6 +148,7 @@ class ManagedWebDriver(
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
+    @Throws(NoSuchSessionException::class)
     fun navigateTo(url: String) {
         if (isWorking) {
             this.url = url
@@ -153,6 +156,7 @@ class ManagedWebDriver(
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     fun evaluate(expression: String): Any? {
         return when {
             isNotWorking -> null
@@ -183,8 +187,7 @@ class ManagedWebDriver(
             } else {
                 evaluateSilently(";window.stop();")
             }
-        } catch (e: NoSuchSessionException) {
-        }
+        } catch (e: NoSuchSessionException) {}
     }
 
     fun scrollDown() {

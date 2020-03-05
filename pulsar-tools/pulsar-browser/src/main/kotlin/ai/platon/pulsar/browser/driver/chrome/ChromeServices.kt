@@ -20,7 +20,7 @@ interface EventExecutorService: AutoCloseable {
     fun execute(runnable: Runnable)
 }
 
-class ChromeDevToolsServiceConfiguration {
+class DevToolsServiceConfig {
     var readTimeout = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
     var eventExecutorService = DefaultEventExecutorService()
 
@@ -43,12 +43,14 @@ interface ChromeService: AutoCloseable {
 
     fun getVersion(): ChromeVersion
 
-    fun createDevToolsService(tab: ChromeTab, configuration: ChromeDevToolsServiceConfiguration): ChromeDevToolsService
+    fun createDevToolsService(tab: ChromeTab, config: DevToolsServiceConfig): ChromeDevToolsService
 
     fun createDevToolsService(tab: ChromeTab): ChromeDevToolsService
 }
 
 interface ChromeDevToolsService: ChromeDevTools, AutoCloseable {
+
+    val isOpen: Boolean
 
     operator fun <T> invoke(
             returnProperty: String?,

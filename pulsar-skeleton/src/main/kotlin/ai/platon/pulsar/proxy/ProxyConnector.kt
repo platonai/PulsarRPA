@@ -217,7 +217,6 @@ class ProxyConnector(
         }
     }
 
-    @Synchronized
     private fun initForwardProxyServer(externalProxy: ProxyEntry?): HttpProxyServer {
         val server = HttpProxyServer()
         server.serverConfig(httpProxyServerConfig)

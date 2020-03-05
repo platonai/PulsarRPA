@@ -230,8 +230,8 @@ class ProxyManager(
     }
 
     private fun willDisconnectOnCommand(): Boolean {
-        if (RuntimeUtils.hasLocalFileCommand(CMD_INTERNAL_PROXY_SERVER_DISCONNECT, Duration.ofSeconds(30))) {
-            log.info("Find fcmd $CMD_INTERNAL_PROXY_SERVER_DISCONNECT, disconnect the online proxy")
+        if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_DISCONNECT, 30)) {
+            log.info("Find fcmd $CMD_PROXY_DISCONNECT, disconnect the online proxy")
             return true
         }
 
@@ -247,7 +247,7 @@ class ProxyManager(
             idleTime = Duration.between(lastActiveTime, Instant.now())
             if (idleTime > idleTimeout) {
                 isIdle = true
-            } else if (RuntimeUtils.hasLocalFileCommand(CMD_INTERNAL_PROXY_SERVER_FORCE_IDLE, Duration.ofSeconds(15))) {
+            } else if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_FORCE_IDLE, 15)) {
                 isIdle = true
             }
         }

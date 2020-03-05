@@ -184,9 +184,9 @@ class WebDriverPool(
         workingDrivers.clear()
 
         onlineDrivers.parallelStream().forEach {
+            log.info("Quit driver $it")
             it.quit()
             numQuit.incrementAndGet()
-            log.warn("Driver is quit {}", it)
         }
         onlineDrivers.clear()
     }

@@ -2,7 +2,6 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.common.StringUtil
 import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
@@ -17,7 +16,6 @@ import java.io.InputStreamReader
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.streams.toList
 
 /**
@@ -36,7 +34,7 @@ class ChromeDevtoolsDriver(
         private val numInstances = AtomicInteger()
         private lateinit var launcher: ChromeLauncher
         private lateinit var chrome: ChromeService
-        private val devToolsServices = ConcurrentLinkedQueue<ChromeDevToolsService>()
+        private val devToolsList = ConcurrentLinkedQueue<ChromeDevToolsService>()
 
         private fun launchChromeIfNecessary(launchOptions: ChromeDevtoolsOptions) {
             synchronized(ChromeLauncher::class.java) {
@@ -54,8 +52,8 @@ class ChromeDevtoolsDriver(
                     if (chromeProcessLaunched && numInstances.get() == 0) {
                         chromeProcessLaunched = false
 
-                        devToolsServices.parallelStream().forEach { it.waitUntilClosed() }
-                        devToolsServices.clear()
+                        devToolsList.parallelStream().forEach { it.waitUntilClosed() }
+                        devToolsList.clear()
 
                         chrome.use { it.close() }
                         launcher.use { it.close() }
@@ -99,8 +97,7 @@ class ChromeDevtoolsDriver(
 
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
-    val isGone get() = isClosed || numSessionLost.get() > 1
-    val isClosed get() = closed.get()
+    private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
 
     val viewport: Viewport
         get() {
@@ -121,7 +118,7 @@ class ChromeDevtoolsDriver(
         navigateUrl = tab.url?:""
 
         devTools = chrome.createDevToolsService(tab)
-        devToolsServices.add(devTools)
+        devToolsList.add(devTools)
 
         if (userAgent.isNotEmpty()) {
             emulation.setUserAgentOverride(userAgent)
