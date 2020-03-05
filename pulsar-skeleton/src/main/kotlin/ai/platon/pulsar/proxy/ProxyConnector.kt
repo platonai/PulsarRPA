@@ -1,20 +1,12 @@
 package ai.platon.pulsar.proxy
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.AppConstants.*
-import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.AppConstants.INTERNAL_PROXY_SERVER_PORT_BASE
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_SERVER_BOSS_THREADS
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_SERVER_WORKER_THREADS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
-import com.github.monkeywie.proxyee.exception.HttpProxyExceptionHandle
-import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptInitializer
-import com.github.monkeywie.proxyee.intercept.HttpProxyInterceptPipeline
-import com.github.monkeywie.proxyee.intercept.common.FullRequestIntercept
-import com.github.monkeywie.proxyee.intercept.common.FullResponseIntercept
-import com.github.monkeywie.proxyee.proxy.ProxyConfig
-import com.github.monkeywie.proxyee.proxy.ProxyType
-import com.github.monkeywie.proxyee.server.HttpProxyServer
-import com.github.monkeywie.proxyee.server.HttpProxyServerConfig
+import ai.platon.pulsar.proxy.server.*
 import io.netty.channel.Channel
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.FullHttpResponse
@@ -33,18 +25,92 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+private class ForwardServer(val proxyServerConfig: HttpProxyServerConfig): AutoCloseable {
+
+    private val log = LoggerFactory.getLogger(ProxyConnector::class.java)
+    private val proxyLog = HttpProxyServer.log
+    private var server: HttpProxyServer? = null
+
+    private val proxyInterceptInitializer = object: HttpProxyInterceptInitializer() {
+
+        override fun init(pipeline: HttpProxyInterceptPipeline) {
+            pipeline.addLast(object : FullRequestIntercept() {
+                override fun match(httpRequest: HttpRequest, pipeline: HttpProxyInterceptPipeline): Boolean {
+                    return log.isTraceEnabled
+                }
+
+                override fun handelRequest(httpRequest: FullHttpRequest, pipeline: HttpProxyInterceptPipeline) {
+                    val message = String.format("Ready to download %s", httpRequest.headers())
+                    proxyLog.write(SimpleLogger.DEBUG, "[proxy]", message)
+                }
+            })
+
+            pipeline.addLast(object : FullResponseIntercept() {
+                override fun match(httpRequest: HttpRequest, httpResponse: HttpResponse, pipeline: HttpProxyInterceptPipeline): Boolean {
+                    return log.isTraceEnabled
+                }
+
+                override fun handelResponse(httpRequest: HttpRequest, httpResponse: FullHttpResponse, pipeline: HttpProxyInterceptPipeline) {
+                    val message = String.format("Got resource %s, %s", httpResponse.status(), httpResponse.headers())
+                    proxyLog.write(SimpleLogger.DEBUG, "[proxy]", message)
+                }
+            })
+        }
+    }
+
+    val httpProxyExceptionHandle = object: HttpProxyExceptionHandle() {
+        private val proxyLog = HttpProxyServer.log
+
+        override fun beforeCatch(clientChannel: Channel, cause: Throwable) {
+            // log.warn("Internal proxy error - {}", StringUtil.stringifyException(cause))
+        }
+
+        override fun afterCatch(clientChannel: Channel, proxyChannel: Channel, cause: Throwable) {
+            var message = cause.message
+            when (cause) {
+                is io.netty.handler.proxy.ProxyConnectException -> {
+                    // TODO: handle io.netty.handler.proxy.ProxyConnectException: http, none, /117.69.129.113:4248 => img59.ddimg.cn:80, disconnected
+                    message = StringUtil.simplifyException(cause)
+                }
+            }
+
+            if (message == null) {
+                log.warn(StringUtil.stringifyException(cause))
+                return
+            }
+
+            // log.warn(StringUtil.simplifyException(cause))
+            proxyLog.write(SimpleLogger.WARN, javaClass, message)
+        }
+    }
+
+    fun start(port: Int) {
+        // ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.ADVANCED)
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.SIMPLE)
+        server = HttpProxyServer(proxyServerConfig, proxyInterceptInitializer, httpProxyExceptionHandle)
+        server?.start(port)
+    }
+
+    override fun close() {
+        server?.use { it.close() }
+    }
+}
+
 class ProxyConnector(
         private val metricsSystem: MetricsSystem,
         private val conf: ImmutableConfig
 ): AutoCloseable {
 
-    private val log = LoggerFactory.getLogger(ProxyConnector::class.java)
-    private val proxyLog = SimpleLogger(HttpProxyServer.PATH, SimpleLogger.INFO)
+    companion object {
+        const val TEST_SCRIPT = "wget https://www.baidu.com/ -e use_proxy=yes -e http_proxy=127.0.0.1:{port}"
+    }
 
-    private val numBossGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_BOSS_THREADS, 1)
-    private val numWorkerGroupThreads = conf.getInt(PROXY_INTERNAL_SERVER_WORKER_THREADS, 2)
-    private val httpProxyServerConfig = HttpProxyServerConfig()
-    private var forwardServer: HttpProxyServer? = null
+    private val log = LoggerFactory.getLogger(ProxyConnector::class.java)
+
+    private val numBossGroupThreads = conf.getInt(PROXY_SERVER_BOSS_THREADS, 1)
+    private val numWorkerGroupThreads = conf.getInt(PROXY_SERVER_WORKER_THREADS, 2)
+    private val numProxyGroupThreads = conf.getInt(PROXY_SERVER_WORKER_THREADS, 2)
+    private var forwardServer: ForwardServer? = null
     private var forwardServerThread: Thread? = null
     private val threadJoinTimeout = Duration.ofSeconds(30)
 
@@ -61,12 +127,6 @@ class ProxyConnector(
     val proxyEntry = AtomicReference<ProxyEntry>()
     val isOnline get() = proxyEntry.get() != null
     val isClosed get() = closed.get()
-
-    init {
-        httpProxyServerConfig.bossGroupThreads = numBossGroupThreads
-        httpProxyServerConfig.workerGroupThreads = numWorkerGroupThreads
-        httpProxyServerConfig.isHandleSsl = false
-    }
 
     fun ensureOnline(): Boolean {
         if (isClosed) {
@@ -102,7 +162,14 @@ class ProxyConnector(
 
         try {
             lock.withLock {
-                val server = initForwardProxyServer(proxy)
+                val serverConfig = HttpProxyServerConfig(
+                        numBossGroupThreads,
+                        numWorkerGroupThreads,
+                        proxy,
+                        numProxyGroupThreads
+                )
+
+                val server = ForwardServer(serverConfig)
                 val thread = Thread { server.start(nextPort) }
                 thread.isDaemon = true
                 thread.start()
@@ -120,6 +187,8 @@ class ProxyConnector(
 
             if (log.isInfoEnabled) {
                 log.info("Forward server is started on port {} with {}", nextPort, proxy.display)
+                val script = TEST_SCRIPT.replace("{port}", nextPort.toString())
+                log.info("Test script: \n$script")
             }
         } catch (e: TimeoutException) {
             log.error("Timeout to wait for forward server on port {}", nextPort)
@@ -134,9 +203,9 @@ class ProxyConnector(
     fun disconnect(): ProxyEntry? {
         lock.withLock {
             val proxy = proxyEntry.getAndSet(null)
-            val proxyConfig = forwardServer?.proxyConfig
+            val proxyServerConfig = forwardServer?.proxyServerConfig
 
-            if (proxy != null && proxyConfig != null) {
+            if (proxy != null && proxyServerConfig != null) {
                 log.info("Disconnecting proxy {} {} ...", proxy.display, proxy.metadata)
 
                 forwardServer?.use { it.close() }
@@ -145,7 +214,7 @@ class ProxyConnector(
                 forwardServer = null
                 forwardServerThread = null
 
-                waitUntilOffline(proxyConfig.port)
+                // waitUntilOffline(proxyConfig.port)
                 disconnected.signalAll()
             }
 
@@ -215,70 +284,5 @@ class ProxyConnector(
                 Thread.currentThread().interrupt()
             }
         }
-    }
-
-    private fun initForwardProxyServer(externalProxy: ProxyEntry?): HttpProxyServer {
-        val server = HttpProxyServer()
-        server.serverConfig(httpProxyServerConfig)
-
-        if (externalProxy != null) {
-            val proxyConfig = ProxyConfig(ProxyType.HTTP, externalProxy.host, externalProxy.port)
-            server.proxyConfig(proxyConfig)
-        }
-
-        server.proxyInterceptInitializer(object : HttpProxyInterceptInitializer() {
-            override fun init(pipeline: HttpProxyInterceptPipeline) {
-                pipeline.addLast(object : FullRequestIntercept() {
-                    override fun match(httpRequest: HttpRequest, pipeline: HttpProxyInterceptPipeline): Boolean {
-                        return log.isTraceEnabled
-                    }
-
-                    override fun handelRequest(httpRequest: FullHttpRequest, pipeline: HttpProxyInterceptPipeline) {
-                        val message = String.format("Ready to download %s", httpRequest.headers())
-                        proxyLog.write(SimpleLogger.DEBUG, "[proxy]", message)
-                    }
-                })
-
-                pipeline.addLast(object : FullResponseIntercept() {
-                    override fun match(httpRequest: HttpRequest, httpResponse: HttpResponse, pipeline: HttpProxyInterceptPipeline): Boolean {
-                        return log.isTraceEnabled
-                    }
-
-                    override fun handelResponse(httpRequest: HttpRequest, httpResponse: FullHttpResponse, pipeline: HttpProxyInterceptPipeline) {
-                        val message = String.format("Got resource %s, %s", httpResponse.status(), httpResponse.headers())
-                        proxyLog.write(SimpleLogger.DEBUG, "[proxy]", message)
-                    }
-                })
-            }
-        })
-
-        server.httpProxyExceptionHandle(object: HttpProxyExceptionHandle() {
-            override fun beforeCatch(clientChannel: Channel, cause: Throwable) {
-                // log.warn("Internal proxy error - {}", StringUtil.stringifyException(cause))
-            }
-
-            override fun afterCatch(clientChannel: Channel, proxyChannel: Channel, cause: Throwable) {
-                var message = cause.message
-                when (cause) {
-                    is io.netty.handler.proxy.ProxyConnectException -> {
-                        // TODO: handle io.netty.handler.proxy.ProxyConnectException: http, none, /117.69.129.113:4248 => img59.ddimg.cn:80, disconnected
-                        message = StringUtil.simplifyException(cause)
-                    }
-                }
-
-                if (message == null) {
-                    log.warn(StringUtil.stringifyException(cause))
-                    return
-                }
-
-                // log.warn(StringUtil.simplifyException(cause))
-                proxyLog.write(SimpleLogger.WARN, javaClass, message)
-            }
-        })
-
-        // ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.ADVANCED)
-        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.SIMPLE)
-
-        return server
     }
 }

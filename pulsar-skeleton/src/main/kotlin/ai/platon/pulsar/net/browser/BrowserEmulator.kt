@@ -60,6 +60,8 @@ class BrowserError(
     companion object {
         const val CONNECTION_TIMED_OUT = "ERR_CONNECTION_TIMED_OUT"
         const val NO_SUPPORTED_PROXIES = "ERR_NO_SUPPORTED_PROXIES"
+        const val CONNECTION_CLOSED = "ERR_CONNECTION_CLOSED"
+        const val EMPTY_RESPONSE = "ERR_EMPTY_RESPONSE"
     }
 }
 
@@ -165,7 +167,7 @@ open class BrowserEmulator(
             response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             if (!isClosed) {
-                log.warn("Web driver session is closed | $driver", e)
+                log.warn("Web driver session of #{} is closed | {}", driver.id, e.message)
             }
             driver.retire()
             exception = e

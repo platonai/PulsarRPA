@@ -66,7 +66,7 @@ abstract class FullRequestIntercept(
     /**
      * 拦截并处理响应
      */
-    fun handelRequest(httpRequest: FullHttpRequest, pipeline: HttpProxyInterceptPipeline) {}
+    open fun handelRequest(httpRequest: FullHttpRequest, pipeline: HttpProxyInterceptPipeline) {}
 }
 
 abstract class FullResponseIntercept(

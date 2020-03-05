@@ -181,18 +181,12 @@ class ManagedWebDriver(
             return
         }
 
-        try {
-            if (driver is ChromeDevtoolsDriver) {
+        if (driver is ChromeDevtoolsDriver) {
+            try {
                 driver.stopLoading()
-            } else {
-                evaluateSilently(";window.stop();")
-            }
-        } catch (e: NoSuchSessionException) {}
-    }
-
-    fun scrollDown() {
-        if (isQuit) {
-            return
+            } catch (e: NoSuchSessionException) {}
+        } else {
+            evaluateSilently(";window.stop();")
         }
     }
 
@@ -227,34 +221,6 @@ class ManagedWebDriver(
         }
     }
 
-    /**
-     * Close redundant web drivers and keep only one to release resources
-     * TODO: buggy
-     * */
-    fun closeOtherTabs() {
-        if (isQuit) return
-
-        val handles = driver.windowHandles.size
-        if (handles > 1) {
-            // TODO:
-            // driver.close()
-        }
-    }
-
-    private fun setLogLevel() {
-        // Set log level
-        if (driver is RemoteWebDriver) {
-            val logger = LoggerFactory.getLogger(WebDriver::class.java)
-            val level = when {
-                logger.isDebugEnabled -> Level.FINER
-                logger.isTraceEnabled -> Level.ALL
-                else -> Level.FINE
-            }
-
-            driver.setLogLevel(level)
-        }
-    }
-
     override fun equals(other: Any?): Boolean {
         return other is ManagedWebDriver && other.id == this.id
     }
@@ -269,5 +235,19 @@ class ManagedWebDriver(
 
     override fun toString(): String {
         return if (sessionId != null) "#$id-$sessionId" else "#$id(closed)"
+    }
+
+    private fun setLogLevel() {
+        // Set log level
+        if (driver is RemoteWebDriver) {
+            val logger = LoggerFactory.getLogger(WebDriver::class.java)
+            val level = when {
+                logger.isDebugEnabled -> Level.FINER
+                logger.isTraceEnabled -> Level.ALL
+                else -> Level.FINE
+            }
+
+            driver.setLogLevel(level)
+        }
     }
 }

@@ -8,7 +8,6 @@ import java.nio.charset.Charset
 
 private const val DEFAULT_PORT = 9999
 
-
 object InterceptHttpProxyServer {
 
     fun create() {
@@ -51,7 +50,6 @@ object InterceptHttpProxyServer {
     }
 }
 
-
 object InterceptFullHttpProxyServer {
 
     fun create(): HttpProxyServer {
@@ -91,7 +89,13 @@ object InterceptFullHttpProxyServer {
     }
 }
 
+/**
+ * Use the following bash to test the proxy server
+ * wget https://www.baidu.com/ -e use_proxy=yes -e http_proxy=127.0.0.1:9999
+ * */
 fun main() {
-    val serverConfig = HttpProxyServerConfig(1, 1, 1)
-    HttpProxyServer(serverConfig).start(DEFAULT_PORT)
+//    val serverConfig = HttpProxyServerConfig(1, 1)
+//    HttpProxyServer(serverConfig).start(DEFAULT_PORT)
+
+    InterceptFullHttpProxyServer.create().start(DEFAULT_PORT)
 }

@@ -50,9 +50,13 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-dom</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ai.platon.pulsar</groupId>-->
+<!--            <artifactId>pulsar-proxyee</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-proxyee</artifactId>
+            <artifactId>pulsar-proxy</artifactId>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>

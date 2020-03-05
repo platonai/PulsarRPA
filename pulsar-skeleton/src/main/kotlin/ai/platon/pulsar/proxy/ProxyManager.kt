@@ -183,9 +183,10 @@ class ProxyManager(
                 connector.disconnect()
             }
             avail == Availability.IDLE -> {
-                log.info("Proxy manager is idle, disconnect online proxy")
-                connector.disconnect()
-                proxyPool.clear()
+                if (proxy != null) {
+                    log.info("Proxy manager is idle, disconnect online proxy")
+                    connector.disconnect()
+                }
             }
             avail.isNotOK -> {
                 connectNext()
@@ -218,9 +219,9 @@ class ProxyManager(
     private fun checkAvailability(): Availability {
         val proxy = currentProxyEntry
         return when {
+            isIdle() -> Availability.IDLE
             proxy == null -> Availability.NO_PROXY
             willDisconnectOnCommand() -> Availability.WILL_DISCONNECT
-            isIdle() -> Availability.IDLE
             !autoRefresh -> Availability.OK
             proxy.isTestIp -> Availability.TEST_IP
             proxy.isGone -> Availability.GONE

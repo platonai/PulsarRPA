@@ -187,9 +187,9 @@ class ChromeDevtoolsDriver(
 
         try {
             val evaluate = runtime.evaluate(expression)
-            val result = evaluate.result
+            val result = evaluate?.result
             // TODO: handle errors here
-            return result.value
+            return result?.value
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)

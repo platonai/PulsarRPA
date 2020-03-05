@@ -2,8 +2,10 @@ package ai.platon.pulsar.proxy.server
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyType
+import ai.platon.pulsar.proxy.common.CertPool
 import ai.platon.pulsar.proxy.common.ProtoUtil
 import io.netty.bootstrap.Bootstrap
+import io.netty.buffer.ByteBuf
 import io.netty.channel.*
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.http.*
@@ -11,11 +13,18 @@ import io.netty.handler.proxy.HttpProxyHandler
 import io.netty.handler.proxy.ProxyHandler
 import io.netty.handler.proxy.Socks4ProxyHandler
 import io.netty.handler.proxy.Socks5ProxyHandler
+import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
 import io.netty.resolver.NoopAddressResolverGroup
 import io.netty.util.ReferenceCountUtil
 import java.net.InetSocketAddress
 import java.net.URL
 import java.util.*
+
+internal const val HTTP_CODEC = "httpCodec"
+internal const val SSL_HANDLE = "sslHandle"
+internal const val SERVER_HANDLE = "serverHandle"
+internal val PROXY_CLIENT_HANDLE = "proxyClientHandle"
 
 open class HttpProxyExceptionHandle {
 
@@ -41,8 +50,8 @@ open class HttpProxyInitializer(
         if (proxyHandler != null) {
             ch.pipeline().addLast(proxyHandler)
         }
-        ch.pipeline().addLast("httpCodec", HttpClientCodec())
-        ch.pipeline().addLast("proxyClientHandle", HttpProxyClientHandle(clientChannel))
+        ch.pipeline().addLast(HTTP_CODEC, HttpClientCodec())
+        ch.pipeline().addLast(PROXY_CLIENT_HANDLE, HttpProxyClientHandle(clientChannel))
     }
 }
 
@@ -79,15 +88,15 @@ open class HttpProxyClientHandle(private val clientChannel: Channel) : ChannelIn
 open class HttpProxyServerHandle(
         val serverConfig: HttpProxyServerConfig,
         private val interceptInitializer: HttpProxyInterceptInitializer,
-        private val proxyEntry: ProxyEntry?,
         val exceptionHandle: HttpProxyExceptionHandle
 ) : ChannelInboundHandlerAdapter() {
 
     private var channelFuture: ChannelFuture? = null
     private lateinit var host: String
     private var port: Int = 0
+    private var isSsl = false
     private var status = 0
-    private var requestList = mutableListOf<Any>()
+    private var requestList = LinkedList<Any>()
     private var isConnected: Boolean = false
 
     lateinit var interceptPipeline: HttpProxyInterceptPipeline
@@ -111,7 +120,7 @@ open class HttpProxyServerHandle(
                     status = 2
                     val response = DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpProxyServer.SUCCESS)
                     ctx.writeAndFlush(response)
-                    ctx.channel().pipeline().remove("httpCodec")
+                    ctx.channel().pipeline().remove(HTTP_CODEC)
                     //fix issue #42
                     ReferenceCountUtil.release(msg)
                     return
@@ -119,7 +128,7 @@ open class HttpProxyServerHandle(
             }
 
             interceptPipeline = buildPipeline()
-            interceptPipeline.requestProto = ProtoUtil.RequestProto(host, port)
+            interceptPipeline.requestProto = ProtoUtil.RequestProto(host, port, isSsl)
             //fix issue #27
             if (msg.uri().indexOf("/") != 0) {
                 val url = URL(msg.uri())
@@ -134,6 +143,22 @@ open class HttpProxyServerHandle(
                 status = 1
             }
         } else { // ssl和websocket的握手处理
+            if (serverConfig.handleSsl) {
+                val byteBuf = msg as ByteBuf
+                if (byteBuf.getByte(0).toInt() == 22) { //ssl握手
+                    isSsl = true
+                    val port = (ctx.channel().localAddress() as InetSocketAddress).port
+                    val sslCtx: SslContext = SslContextBuilder
+                            .forServer(serverConfig.serverPriKey, CertPool.getCert(port, host, serverConfig))
+                            .build()
+                    ctx.pipeline().addFirst(HTTP_CODEC, HttpServerCodec())
+                    ctx.pipeline().addFirst(SSL_HANDLE, sslCtx.newHandler(ctx.alloc()))
+                    //重新过一遍pipeline，拿到解密后的的http报文
+                    ctx.pipeline().fireChannelRead(msg)
+                    return
+                }
+            }
+
             handleProxyData(ctx.channel(), msg, false)
         }
     }
@@ -156,14 +181,15 @@ open class HttpProxyServerHandle(
                 return
             }
 
-            // TODO: choose a external proxy from proxy pool here
+            // TODO: choose a external proxy from a proxy pool here
+            val proxyEntry = serverConfig.proxyEntry
             val proxyHandler = if (proxyEntry == null) null else ProxyHandleFactory.build(proxyEntry)
             /*
              添加SSL client hello的Server Name Indication extension(SNI扩展)
              有些服务器对于client hello不带SNI扩展时会直接返回Received fatal alert: handshake_failure(握手错误)
              例如：https://cdn.mdn.mozilla.net/static/img/favicon32.7f3da72dcea1.png
             */
-            val requestProto = ProtoUtil.RequestProto(host, port)
+            val requestProto = ProtoUtil.RequestProto(host, port, isSsl)
             val channelInitializer = if (isHttp)
                 HttpProxyInitializer(channel, requestProto, proxyHandler)
             else
@@ -180,26 +206,22 @@ open class HttpProxyServerHandle(
             }
 
             requestList = LinkedList()
-
             channelFuture = bootstrap.connect(host, port)
-
-            // System.out.println("Connected to " + host + ":" + port);
-
-            channelFuture?.addListener({ future: ChannelFuture ->
+            channelFuture?.addListener(ChannelFutureListener { future: ChannelFuture ->
                 if (future.isSuccess) {
                     future.channel().writeAndFlush(msg)
                     synchronized(requestList) {
-                        requestList.forEach { obj -> future.channel().writeAndFlush(obj) }
+                        requestList.forEach { future.channel().writeAndFlush(it) }
                         requestList.clear()
                         isConnected = true
                     }
                 } else {
-                    requestList.forEach { obj -> ReferenceCountUtil.release(obj) }
+                    requestList.forEach { ReferenceCountUtil.release(it) }
                     requestList.clear()
                     future.channel().close()
                     channel.close()
                 }
-            } as ChannelFutureListener)
+            })
         } else {
             synchronized(requestList) {
                 if (isConnected) {
@@ -213,23 +235,21 @@ open class HttpProxyServerHandle(
 
     private fun buildPipeline(): HttpProxyInterceptPipeline {
         val proxyIntercept = object: HttpProxyIntercept() {
-            override fun beforeRequest(clientChannel: Channel, httpRequest: HttpRequest,
-                                       pipeline: HttpProxyInterceptPipeline) {
+            override fun beforeRequest(clientChannel: Channel, httpRequest: HttpRequest, pipeline: HttpProxyInterceptPipeline) {
                 handleProxyData(clientChannel, httpRequest, true)
             }
 
-            override fun beforeRequest(clientChannel: Channel, httpContent: HttpContent,
-                                       pipeline: HttpProxyInterceptPipeline) {
+            override fun beforeRequest(clientChannel: Channel, httpContent: HttpContent, pipeline: HttpProxyInterceptPipeline) {
                 handleProxyData(clientChannel, httpContent, true)
             }
 
-            override fun afterResponse(clientChannel: Channel, proxyChannel: Channel,
-                                       httpResponse: HttpResponse, pipeline: HttpProxyInterceptPipeline) {
+            override fun afterResponse(
+                    clientChannel: Channel, proxyChannel: Channel, httpResponse: HttpResponse, pipeline: HttpProxyInterceptPipeline) {
                 clientChannel.writeAndFlush(httpResponse)
                 if (HttpHeaderValues.WEBSOCKET.toString() == httpResponse.headers().get(HttpHeaderNames.UPGRADE)) {
                     // websocket转发原始报文
-                    proxyChannel.pipeline().remove("httpCodec")
-                    clientChannel.pipeline().remove("httpCodec")
+                    proxyChannel.pipeline().remove(HTTP_CODEC)
+                    clientChannel.pipeline().remove(HTTP_CODEC)
                 }
             }
 
@@ -272,7 +292,7 @@ open class TunnelProxyInitializer(
                 ctx0.channel().close()
                 clientChannel.close()
                 val exceptionHandle = (clientChannel.pipeline()
-                        .get("serverHandle") as HttpProxyServerHandle).exceptionHandle
+                        .get(SERVER_HANDLE) as HttpProxyServerHandle).exceptionHandle
                 exceptionHandle.afterCatch(clientChannel, ctx0.channel(), cause)
             }
         })
@@ -280,23 +300,21 @@ open class TunnelProxyInitializer(
 }
 
 object ProxyHandleFactory {
-    fun build(config: ProxyEntry): ProxyHandler {
-        val proxyHandler: ProxyHandler
-        val isAuth = config.user != null && config.pwd != null
-        val inetSocketAddress = InetSocketAddress(config.host, config.port)
-        when (config.proxyType) {
+    fun build(proxy: ProxyEntry): ProxyHandler {
+        val isAuth = proxy.user != null && proxy.pwd != null
+        val inetSocketAddress = InetSocketAddress(proxy.host, proxy.port)
+        return when (proxy.proxyType) {
             ProxyType.HTTP -> if (isAuth) {
-                proxyHandler = HttpProxyHandler(inetSocketAddress, config.user, config.pwd)
+                HttpProxyHandler(inetSocketAddress, proxy.user, proxy.pwd)
             } else {
-                proxyHandler = HttpProxyHandler(inetSocketAddress)
+                HttpProxyHandler(inetSocketAddress)
             }
-            ProxyType.SOCKS4 -> proxyHandler = Socks4ProxyHandler(inetSocketAddress)
+            ProxyType.SOCKS4 -> Socks4ProxyHandler(inetSocketAddress)
             ProxyType.SOCKS5 -> if (isAuth) {
-                proxyHandler = Socks5ProxyHandler(inetSocketAddress, config.user, config.pwd)
+                Socks5ProxyHandler(inetSocketAddress, proxy.user, proxy.pwd)
             } else {
-                proxyHandler = Socks5ProxyHandler(inetSocketAddress)
+                Socks5ProxyHandler(inetSocketAddress)
             }
         }
-        return proxyHandler
     }
 }

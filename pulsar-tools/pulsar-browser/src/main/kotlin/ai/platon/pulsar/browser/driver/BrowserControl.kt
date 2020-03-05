@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.google.gson.GsonBuilder
-import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.time.Duration
 import kotlin.random.Random
@@ -13,28 +12,28 @@ import kotlin.random.Random
 open class BrowserControl(
         parameters: Map<String, Any> = mapOf(),
         var jsDirectory: String = "js",
-        immutableConfig: ImmutableConfig = ImmutableConfig()
+        conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
         // required
         var viewPort = Dimension(1920, 1080)
     }
 
-    var headless = immutableConfig.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
+    var headless = conf.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
     //
-    var imagesEnabled = immutableConfig.getBoolean(CapabilityTypes.BROWSER_IMAGES_ENABLED, false)
+    var imagesEnabled = conf.getBoolean(CapabilityTypes.BROWSER_IMAGES_ENABLED, false)
 
     // We will wait for document ready manually using javascript
     var pageLoadStrategy = "none"
 
     // The javascript to execute by Web browsers
-    var propertyNames = immutableConfig.getTrimmedStrings(
+    var propertyNames = conf.getTrimmedStrings(
             CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
-    var pageLoadTimeout = immutableConfig.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
-    var scriptTimeout = immutableConfig.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
-    var scrollDownCount = immutableConfig.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 5)
-    var scrollInterval = immutableConfig.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
+    var pageLoadTimeout = conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
+    var scriptTimeout = conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
+    var scrollDownCount = conf.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 5)
+    var scrollInterval = conf.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
 
     var clientJsVersion = "0.2.3"
 

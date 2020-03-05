@@ -135,7 +135,8 @@ public class HttpProxyServer implements AutoCloseable {
             protected void initChannel(Channel ch) throws Exception {
               ch.pipeline().addLast("httpCodec", new HttpServerCodec());
               ch.pipeline().addLast("serverHandle",
-                  new HttpProxyServerHandle(serverConfig, proxyInterceptInitializer, proxyConfig,
+                  new HttpProxyServerHandle(serverConfig,
+                          proxyInterceptInitializer, proxyConfig,
                       httpProxyExceptionHandle));
             }
           });

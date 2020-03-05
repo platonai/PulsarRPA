@@ -232,8 +232,8 @@ public interface CapabilityTypes {
     String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
     String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.internal.server";
     String PROXY_INTERNAL_SERVER_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
-    String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
-    String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";
+    String PROXY_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
+    String PROXY_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";
     String PROXY_PROXY_POOL_RECOVER_PERIOD = "proxy.proxy.pool.recover.period";
 
     /**
