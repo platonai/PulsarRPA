@@ -2,8 +2,6 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.*
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -19,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ChromeServiceImpl(
         var host: String = LOCALHOST,
         var port: Int = 0,
-        var webSocketServiceFactory: WebSocketServiceFactory
+        var wss: WebSocketServiceFactory
 ): ChromeService {
     companion object {
         val ABOUT_BLANK_PAGE = "about:blank"
@@ -39,7 +37,7 @@ class ChromeServiceImpl(
     private val CLOSE_TAB = "json/close"
     private val VERSION = "json/version"
 
-    private val chromeDevToolServiceCache: MutableMap<String, ChromeDevToolsService> = ConcurrentHashMap()
+    private val devToolsServices: MutableMap<String, ChromeDevToolsService> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
 
     constructor(host: String, port: Int): this(host, port, object: WebSocketServiceFactory {
@@ -73,7 +71,7 @@ class ChromeServiceImpl(
     @Throws(ChromeServiceException::class)
     override fun closeTab(tab: ChromeTab) {
         request(Void::class.java, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
-        clearChromeDevToolsServiceCache(tab)
+        clearDevToolsServices(tab)
     }
 
     @Throws(ChromeServiceException::class)
@@ -97,8 +95,8 @@ class ChromeServiceImpl(
         return createDevToolsService(tab, ChromeDevToolsServiceConfiguration())
     }
 
-    fun clearChromeDevToolsServiceCache(tab: ChromeTab) {
-        chromeDevToolServiceCache.remove(tab.id)?.close()
+    private fun clearDevToolsServices(tab: ChromeTab) {
+        devToolsServices.remove(tab.id)?.close()
     }
 
     override fun close() {
@@ -108,15 +106,15 @@ class ChromeServiceImpl(
     }
 
     private fun isChromeDevToolsServiceCached(tab: ChromeTab): Boolean {
-        return chromeDevToolServiceCache.containsKey(tab.id)
+        return devToolsServices.containsKey(tab.id)
     }
 
     private fun getCachedChromeDevToolsService(tab: ChromeTab): ChromeDevToolsService? {
-        return chromeDevToolServiceCache[tab.id]
+        return devToolsServices[tab.id]
     }
 
     private fun cacheChromeDevToolsService(tab: ChromeTab, chromeDevToolsService: ChromeDevToolsService) {
-        chromeDevToolServiceCache[tab.id] = chromeDevToolsService
+        devToolsServices[tab.id] = chromeDevToolsService
     }
 
     @Throws(WebSocketServiceException::class)
@@ -129,7 +127,7 @@ class ChromeServiceImpl(
         // Connect to a tab via web socket
         val webSocketDebuggerUrl: String = tab.webSocketDebuggerUrl
                 ?:throw WebSocketServiceException("Invalid web socket debugger url")
-        val webSocketService = webSocketServiceFactory.createWebSocketService(webSocketDebuggerUrl)
+        val wsService = wss.createWebSocketService(webSocketDebuggerUrl)
 
         val commandInvocationHandler = CommandInvocationHandler()
 
@@ -144,7 +142,7 @@ class ChromeServiceImpl(
         val chromeDevToolsService = ProxyClasses.createProxyFromAbstract(
                 ChromeDevToolsServiceImpl::class.java,
                 arrayOf(WebSocketService::class.java, ChromeDevToolsServiceConfiguration::class.java),
-                arrayOf(webSocketService, configuration),
+                arrayOf(wsService, configuration),
                 invocationHandler
         )
 

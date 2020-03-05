@@ -136,7 +136,11 @@ class WebDriverManager(
     private fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
         freeze {
             log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
-            driverPool.closeAll(incognito)
+            if (processExit) {
+                driverPool.use { it.close() }
+            } else {
+                driverPool.closeAll(incognito)
+            }
             log.info("Total ${driverPool.numQuit} drivers were quit | {}", formatStatus(true))
         }
     }

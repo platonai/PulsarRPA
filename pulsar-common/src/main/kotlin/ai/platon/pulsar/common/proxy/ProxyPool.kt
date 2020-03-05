@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_CAPACITY
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_POOL_POLLING_INTERVAL
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.vendor.ProxyVendorException
 import ai.platon.pulsar.common.proxy.vendor.ProxyVendorFactory
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
@@ -278,6 +279,8 @@ class ProxyPool(conf: ImmutableConfig): AbstractQueue<ProxyEntry>(), AutoCloseab
             updatedCount = loadProxies(target, vendor, format)
 
             log.info("Added {} proxies from provider {}", updatedCount, providerUrl.host)
+        } catch (e: ProxyVendorException) {
+            log.error(e.message)
         } catch (e: IOException) {
             log.error(e.toString())
         }

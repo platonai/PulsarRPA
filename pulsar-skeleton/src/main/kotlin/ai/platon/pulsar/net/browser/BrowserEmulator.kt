@@ -124,9 +124,9 @@ open class BrowserEmulator(
      *
      * @param task The task to fetch
      * @return The result of this fetch
-     * @throws IllegalStateException Throw if the browser is closed or the program is closed
+     * @throws IllegalContextStateException Throw if the browser is closed or the program is closed
      * */
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalContextStateException::class)
     open fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         if (isClosed) {
             return FetchResult(task, ForwardingResponse.canceled(task.page))
@@ -165,7 +165,7 @@ open class BrowserEmulator(
             response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             if (!isClosed) {
-                log.warn("Web driver session is closed. {}", StringUtil.simplifyException(e))
+                log.warn("Web driver session is closed | $driver", e)
             }
             driver.retire()
             exception = e
@@ -285,7 +285,7 @@ open class BrowserEmulator(
         return ForwardingResponse(page.url, pageSource, status, headers, page)
     }
 
-    @Throws(CancellationException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
     private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: DriverConfig): NavigateResult {
         checkState(driver)
         checkState(task)
@@ -299,7 +299,7 @@ open class BrowserEmulator(
         return emulate(EmulateTask(task, driverConfig, driver))
     }
 
-    @Throws(CancellationException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
     protected open fun emulate(task: EmulateTask): NavigateResult {
         val result = NavigateResult(ProtocolStatus.STATUS_SUCCESS, null)
 
@@ -316,7 +316,7 @@ open class BrowserEmulator(
         return result
     }
 
-    @Throws(CancellationException::class, IllegalStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
     private fun runScriptTask(task: EmulateTask, result: NavigateResult, action: () -> Unit) {
         if (task.isCanceled) {
             // TODO: is it better to throw an exception?
@@ -663,10 +663,10 @@ open class BrowserEmulator(
         }
     }
 
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalContextStateException::class)
     private fun checkState() {
         if (isClosed) {
-            throw IllegalStateException("Browser emulator is closed")
+            throw IllegalContextStateException("Context is closed")
         }
     }
 
@@ -674,7 +674,7 @@ open class BrowserEmulator(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(CancellationException::class, IllegalStateException::class)
+    @Throws(CancellationException::class, IllegalContextStateException::class)
     private fun checkState(driver: ManagedWebDriver) {
         checkState()
 
@@ -689,7 +689,7 @@ open class BrowserEmulator(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(CancellationException::class, IllegalStateException::class)
+    @Throws(CancellationException::class, IllegalContextStateException::class)
     private fun checkState(task: FetchTask) {
         checkState()
 

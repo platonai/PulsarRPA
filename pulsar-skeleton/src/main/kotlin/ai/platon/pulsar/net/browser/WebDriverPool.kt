@@ -73,17 +73,19 @@ class WebDriverPool(
             }
 
             if (driver.isRetired) {
-                retire(driver, null)
+                retire(driver)
             } else {
                 offer(driver)
             }
         }
     }
 
-    fun closeAll(incognito: Boolean = true) {
-        waitUntilIdle()
+    fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
+        if (!processExit) {
+            waitUntilIdle()
+        }
 
-        closeAllDrivers()
+        closeAllDrivers(processExit)
 
         if (incognito) {
             // Force delete all browser data
@@ -94,7 +96,7 @@ class WebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closeAll(incognito = true)
+            closeAll(incognito = true, processExit = true)
         }
     }
 
@@ -113,16 +115,10 @@ class WebDriverPool(
         }
     }
 
-    private fun retire(driver: ManagedWebDriver, e: Exception?) {
-        return retire(driver, e, true)
-    }
-
-    private fun retire(driver: ManagedWebDriver, e: Exception?, external: Boolean = true) {
+    private fun retire(driver: ManagedWebDriver, external: Boolean = true) {
         if (external && isClosed) {
             return
         }
-
-        checkState(driver)
 
         lock.withLock {
             driver.retire()
@@ -133,10 +129,7 @@ class WebDriverPool(
             }
         }
 
-        when (e) {
-            is org.openqa.selenium.NoSuchSessionException -> driver.status.set(DriverStatus.CRASHED)
-            is org.apache.http.conn.HttpHostConnectException -> driver.status.set(DriverStatus.CRASHED)
-        }
+        checkState(driver)
 
         when {
             driver.isRetired -> numRetired.incrementAndGet()
@@ -145,12 +138,6 @@ class WebDriverPool(
         }
 
         try {
-            val status = driver.status.get().name.toLowerCase()
-            if (e != null) {
-                log.info("Quiting {} driver {} - {}", status, driver, StringUtil.simplifyException(e))
-            } else {
-                log.debug("Quiting {} driver {}", status, driver)
-            }
             // Quits this driver, close every associated window
             driver.quit()
             numQuit.incrementAndGet()
@@ -160,7 +147,6 @@ class WebDriverPool(
             log.warn("Quit WebDriver {} - {}", driver, StringUtil.simplifyException(e))
         } catch (e: Throwable) {
             log.error("Unknown error - {}", StringUtil.stringifyException(e))
-        } finally {
         }
     }
 
@@ -184,7 +170,7 @@ class WebDriverPool(
         return freeDrivers.remove()
     }
 
-    private fun closeAllDrivers() {
+    private fun closeAllDrivers(processExit: Boolean = false) {
         if (onlineDrivers.isEmpty()) {
             return
         }
@@ -194,13 +180,14 @@ class WebDriverPool(
             return
         }
 
-        freeDrivers.parallelStream().forEach { retire(it, null, external = false) }
         freeDrivers.clear()
-
-        workingDrivers.map { it.value }.parallelStream().forEach { retire(it, null, external = false) }
         workingDrivers.clear()
 
-        onlineDrivers.stream().parallel().forEach { it.quit() }
+        onlineDrivers.parallelStream().forEach {
+            it.quit()
+            numQuit.incrementAndGet()
+            log.warn("Driver is quit {}", it)
+        }
         onlineDrivers.clear()
     }
 

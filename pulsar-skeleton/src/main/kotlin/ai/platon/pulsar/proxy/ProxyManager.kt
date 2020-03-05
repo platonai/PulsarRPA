@@ -144,10 +144,7 @@ class ProxyManager(
             return
         }
 
-        connector.disconnect()?.let {
-            proxyPool.retire(it)
-            metricsSystem.reportRetiredProxies(it.toString())
-        }
+        connector.disconnect()?.let { proxyPool.retire(it) }
         proxyPool.poll()?.let { connector.connect(it) }
     }
 

@@ -30,7 +30,7 @@ class IncompleteContentException: Exception {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-class IllegalBrowseContextStateException: Exception {
+class IllegalContextStateException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {

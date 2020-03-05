@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import kotlin.concurrent.withLock
@@ -49,7 +50,7 @@ private class ErrorObject {
 }
 
 abstract class ChromeDevToolsServiceImpl(
-        val webSocketService: WebSocketService,
+        val wsService: WebSocketService,
         val configuration: ChromeDevToolsServiceConfiguration
 ): ChromeDevToolsService, Consumer<String>, AutoCloseable {
 
@@ -67,9 +68,8 @@ abstract class ChromeDevToolsServiceImpl(
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
-    private val eventExecutorService = configuration.eventExecutorService
+    private val eventExecutor = configuration.eventExecutorService
     private val invocationResults: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
-    // private val eventHandlers: MutableMap<String, ConcurrentSkipListSet<EventListenerImpl>> = ConcurrentHashMap()
     private val eventHandlers: MutableMap<String, MutableSet<EventListenerImpl>> = mutableMapOf()
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
@@ -78,7 +78,7 @@ abstract class ChromeDevToolsServiceImpl(
     private val isClosed get() = closed.get()
 
     init {
-        webSocketService.addMessageHandler(this)
+        wsService.addMessageHandler(this)
     }
 
     open operator fun <T> invoke(returnProperty: String, clazz: Class<T>, methodInvocation: MethodInvocation): T? {
@@ -99,7 +99,7 @@ abstract class ChromeDevToolsServiceImpl(
             val result = InvocationResult(returnProperty)
 
             invocationResults[methodInvocation.id] = result
-            webSocketService.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
+            wsService.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
             val responded = result.waitForResult(configuration.readTimeout.seconds, TimeUnit.SECONDS)
             invocationResults.remove(methodInvocation.id)
 
@@ -123,14 +123,15 @@ abstract class ChromeDevToolsServiceImpl(
 
             // Received a error
             val error = readJsonObject(ErrorObject::class.java, result.result)
-            val errorBuilder = StringBuilder(error.message)
+            val sb = StringBuilder(error.message)
             if (error.data != null) {
-                errorBuilder.append(": ")
-                errorBuilder.append(error.data)
+                sb.append(": ")
+                sb.append(error.data)
             }
-            throw ChromeDevToolsInvocationException(error.code, errorBuilder.toString())
+
+            throw ChromeDevToolsInvocationException(error.code, sb.toString())
         } catch (e: WebSocketServiceException) {
-            throw ChromeDevToolsInvocationException("Failed sending web socket message", e)
+            throw ChromeDevToolsInvocationException("Web socket connection lost", e)
         } catch (e: InterruptedException) {
             throw ChromeDevToolsInvocationException("Interrupted while waiting response", e)
         } catch (e: IOException) {
@@ -210,8 +211,8 @@ abstract class ChromeDevToolsServiceImpl(
                 }
             }
 
-            eventExecutorService.use { it.close() }
-            webSocketService.use { it.close() }
+            eventExecutor.use { it.close() }
+            wsService.use { it.close() }
 
             closeLatch.countDown()
         }
@@ -227,7 +228,7 @@ abstract class ChromeDevToolsServiceImpl(
         synchronized(listeners) { unmodifiedListeners = HashSet<EventListenerImpl>(listeners) }
         if (unmodifiedListeners.isEmpty()) return
 
-        eventExecutorService.execute(Runnable {
+        eventExecutor.execute(Runnable {
             var event: Any? = null
             for (listener in unmodifiedListeners) {
                 try {

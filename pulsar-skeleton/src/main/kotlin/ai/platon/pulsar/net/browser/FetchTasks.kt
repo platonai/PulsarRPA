@@ -16,6 +16,7 @@ import java.time.Instant
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
 
 abstract class TaskHandler: (WebPage) -> Unit {
@@ -52,6 +53,7 @@ class FetchTask(
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = canceled.get()
+    var workerThread = AtomicReference<Thread>()
 
     fun reset() {
         stat = null
@@ -77,6 +79,10 @@ class FetchTask(
 
     override fun compareTo(other: FetchTask): Int {
         return url.compareTo(other.url)
+    }
+
+    override fun toString(): String {
+        return "$batchTaskId/$batchId"
     }
 
     companion object {

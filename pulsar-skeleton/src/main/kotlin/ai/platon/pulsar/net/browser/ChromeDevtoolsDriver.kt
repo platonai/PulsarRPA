@@ -49,16 +49,19 @@ class ChromeDevtoolsDriver(
         }
 
         private fun closeChromeIfNecessary() {
-            synchronized(ChromeLauncher::class.java) {
-                if (chromeProcessLaunched && numInstances.get() == 0) {
-                    devToolsServices.forEach { it.waitUntilClosed() }
-                    devToolsServices.clear()
+            if (chromeProcessLaunched) {
+                synchronized(ChromeLauncher::class.java) {
+                    if (chromeProcessLaunched && numInstances.get() == 0) {
+                        chromeProcessLaunched = false
 
-                    chrome.use { it.close() }
-                    launcher.use { it.close() }
-                    chromeProcessLaunched = false
+                        devToolsServices.parallelStream().forEach { it.waitUntilClosed() }
+                        devToolsServices.clear()
 
-                    checkChromeProcesses()
+                        chrome.use { it.close() }
+                        launcher.use { it.close() }
+
+                        checkChromeProcesses()
+                    }
                 }
             }
         }
@@ -84,6 +87,7 @@ class ChromeDevtoolsDriver(
     private var tab: ChromeTab
     private var devTools: ChromeDevToolsService
 
+    private var lastSessionId: SessionId? = null
     private val browser get() = devTools.browser
     private var navigateUrl = ""
     private val page get() = devTools.page
@@ -92,7 +96,10 @@ class ChromeDevtoolsDriver(
     private val fetch get() = devTools.fetch
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
+
+    private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
+    val isGone get() = isClosed || numSessionLost.get() > 1
     val isClosed get() = closed.get()
 
     val viewport: Viewport
@@ -123,8 +130,9 @@ class ChromeDevtoolsDriver(
         numInstances.incrementAndGet()
     }
 
+    @Throws(NoSuchSessionException::class)
     override fun get(url: String) {
-        if (isClosed) return
+        if (isGone) return
 
         try {
             page.addScriptToEvaluateOnNewDocument(clientLibJs)
@@ -154,27 +162,31 @@ class ChromeDevtoolsDriver(
 
             page.enable()
             network.enable()
-//        fetch.enable()
+    //        fetch.enable()
 
             navigateUrl = url
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     fun stopLoading() {
-        if (isClosed) return
+        if (isGone) return
 
         try {
             page.stopLoading()
         } catch (e: ChromeDevToolsInvocationException) {
-            log.warn("Failed to stop loading {} | {}", StringUtil.simplifyException(e), currentUrl)
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     fun evaluate(expression: String): Any? {
-        if (isClosed) return null
+        if (isGone) return null
 
         try {
             val evaluate = runtime.evaluate(expression)
@@ -182,75 +194,88 @@ class ChromeDevtoolsDriver(
             // TODO: handle errors here
             return result.value
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     override fun executeScript(script: String, vararg args: Any): Any? {
         TODO("Use evaluate instead")
     }
 
+    @Throws(NoSuchSessionException::class)
     override fun getSessionId(): SessionId? {
-        return try {
-            if (isClosed) null else SessionId(mainFrame.id)
+        try {
+            lastSessionId = if (isGone) null else SessionId(mainFrame.id)
+            return lastSessionId
         } catch (e: ChromeDevToolsInvocationException) {
-            null
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
         }
     }
 
-    /**
-     * TODO: the page might be redirected and current url should be mainFrame.url
-     * */
+    @Throws(NoSuchSessionException::class)
     override fun getCurrentUrl(): String {
-        if (isClosed) return navigateUrl
-
-        return navigateUrl
+        try {
+            navigateUrl = if (isGone) navigateUrl else mainFrame.url
+            return navigateUrl
+        } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
+        }
     }
 
+    @Throws(NoSuchSessionException::class)
     override fun getWindowHandles(): Set<String> {
-        if (isClosed) return setOf()
-
+        if (isGone) return setOf()
         return chrome.getTabs().mapTo(HashSet()) { it.id }
     }
 
+    @Throws(NoSuchSessionException::class)
     override fun getPageSource(): String {
-        if (isClosed) return ""
-
         try {
             val evaluate = runtime.evaluate("document.documentElement.outerHTML")
             return evaluate?.result?.value?.toString()?:""
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     fun getCookieNames(): List<String> {
-        if (isClosed) return listOf()
+        if (isGone) return listOf()
 
         try {
             return devTools.network.allCookies.map { it.name }
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     fun deleteAllCookies() {
-        if (isClosed) return
+        if (isGone) return
 
         try {
             devTools.network.clearBrowserCookies()
             devTools.network.clearBrowserCache()
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     fun deleteCookieNamed(name: String) {
-        if (isClosed) return
+        if (isGone) return
 
         try {
             devTools.network.deleteCookies(name)
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
@@ -259,17 +284,19 @@ class ChromeDevtoolsDriver(
 //        // devTools.cacheStorage.deleteCache()
 //    }
 
+    @Throws(NoSuchSessionException::class)
     override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
         try {
             val result = page.captureScreenshot(CaptureScreenshotFormat.PNG, 100, viewport, true)
             return outputType.convertFromBase64Png(result)
         } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
             throw NoSuchSessionException(e.message)
         }
     }
 
     override fun toString(): String {
-        return "Chrome Devtools Driver ($sessionId)"
+        return "Chrome Devtools Driver ($lastSessionId)"
     }
 
     /**
@@ -290,8 +317,9 @@ class ChromeDevtoolsDriver(
         }
     }
 
+    @Throws(NoSuchSessionException::class)
     private fun isMainFrame(frameId: String): Boolean {
-        if (isClosed) return false
+        if (isGone) return false
 
         return mainFrame.id == frameId
     }

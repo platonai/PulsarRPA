@@ -1,11 +1,10 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.BrowserType
 import org.apache.commons.lang3.StringUtils
+import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -92,7 +91,9 @@ class ManagedWebDriver(
      * */
     val currentUrl: String get() = try {
         if (isQuit) "" else driver.currentUrl
-    } catch (t: Throwable) { "" }
+    } catch (e: NoSuchSessionException) {
+        ""
+    }
 
     /**
      * The real time page source return by the browser
@@ -102,10 +103,16 @@ class ManagedWebDriver(
     /**
      * The id of the session to the browser
      * */
-    val sessionId: String? get() = when {
-        isQuit -> null
-        driver is ChromeDevtoolsDriver -> driver.sessionId?.toString()
-        else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+    val sessionId: String? get() {
+        return try {
+            when {
+                isQuit -> null
+                driver is ChromeDevtoolsDriver -> driver.sessionId?.toString()
+                else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
+            }
+        } catch (e: NoSuchSessionException) {
+            null
+        }
     }
 
     /**
@@ -127,8 +134,8 @@ class ManagedWebDriver(
     }
 
     fun cancel() {
-        status.set(DriverStatus.CANCELED)
         stopLoading()
+        status.set(DriverStatus.CANCELED)
     }
 
     fun retire() {
@@ -176,8 +183,7 @@ class ManagedWebDriver(
             } else {
                 evaluateSilently(";window.stop();")
             }
-        } catch (e: Throwable) {
-            log.info("Failed to stop loading - {}", StringUtil.simplifyException(e))
+        } catch (e: NoSuchSessionException) {
         }
     }
 
@@ -229,69 +235,6 @@ class ManagedWebDriver(
         if (handles > 1) {
             // TODO:
             // driver.close()
-        }
-    }
-
-    fun removeFootprint() {
-        deleteAllCookiesSilently()
-        // delete local session data
-        // detete local storage data
-    }
-
-    /**
-     * Delete all cookies
-     * TODO: delete data directory directly
-     * */
-    fun deleteAllCookiesSilently() {
-        if (isQuit) return
-
-        try {
-            if (driver is ChromeDevtoolsDriver) {
-                val cookies = driver.getCookieNames()
-                if (cookies.isNotEmpty()) {
-                    val names = cookies.joinToString(", ") { it }
-                    log.debug("Deleted cookies: $names")
-                }
-
-                // delete all cookies, this can be ignored
-                driver.deleteAllCookies()
-            } else if (driver is RemoteWebDriver) {
-                val names = driver.manage().cookies.map { it.name }
-                if (names.isNotEmpty()) {
-                    names.forEach { name ->
-                        driver.manage().deleteCookieNamed(name)
-                    }
-
-                    log.debug("Deleted cookies: $names")
-                }
-
-                // delete all cookies, this can be ignored
-                driver.manage().deleteAllCookies()
-            }
-        } catch (e: Throwable) {
-            log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
-        }
-    }
-
-    fun deleteAllCookiesSilently(targetUrl: String) {
-        if (isQuit) return
-
-        try {
-            when (driver) {
-                is RemoteWebDriver -> {
-                    driver.get(targetUrl)
-                    driver.manage().deleteAllCookies()
-                }
-                is ChromeDevtoolsDriver -> {
-                    driver.get(targetUrl)
-                    driver.deleteAllCookies()
-                }
-                else -> {
-
-                }
-            }
-        } catch (e: Throwable) {
-            log.info("Failed to delete cookies - {}", StringUtil.simplifyException(e))
         }
     }
 
