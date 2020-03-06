@@ -1,7 +1,7 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ProxyManagerFactory
 import ai.platon.pulsar.persist.RetryScope
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicReference
  * TODO: multiple context support
  * */
 class PrivacyContextManager(
+        val proxyManagerFactory: ProxyManagerFactory,
         val driverManager: WebDriverManager,
-        val proxyManager: ProxyManager,
         val immutableConfig: ImmutableConfig
 ) {
     companion object {
@@ -19,6 +19,7 @@ class PrivacyContextManager(
         val zombieContexts = ConcurrentLinkedQueue<BrowserPrivacyContext>()
     }
 
+    val proxyManager = proxyManagerFactory.get()
     val maxRetry = 2
 
     @get:Synchronized

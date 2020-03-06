@@ -22,6 +22,9 @@ interface EventExecutorService: AutoCloseable {
 
 class DevToolsServiceConfig {
     var readTimeout = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
+    /**
+     * TODO: use an universal thread pool
+     * */
     var eventExecutorService = DefaultEventExecutorService()
 
     companion object {

@@ -183,12 +183,15 @@ class WebDriverPool(
         freeDrivers.clear()
         workingDrivers.clear()
 
-        onlineDrivers.parallelStream().forEach {
+        // create a non-synchronized list for quitting all drivers in parallel
+        val nonSyncDriverList = onlineDrivers.toList()
+        onlineDrivers.clear()
+
+        nonSyncDriverList.parallelStream().forEach {
             log.info("Quit driver $it")
             it.quit()
             numQuit.incrementAndGet()
         }
-        onlineDrivers.clear()
     }
 
     private fun waitUntilIdle() {

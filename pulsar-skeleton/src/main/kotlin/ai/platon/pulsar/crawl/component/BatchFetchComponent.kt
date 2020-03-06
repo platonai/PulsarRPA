@@ -94,7 +94,7 @@ class BatchFetchComponent(
 
     /**
      * Parallel fetch all urls
-     * If the protocol supports native parallel, use the protocol's native batch fetch method,
+     * If the protocol supports native parallel, use the protocol's native parallel fetch method,
      * Or else parallel fetch pages in a ExecutorService
      */
     private fun parallelFetchAllInternal(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
@@ -123,7 +123,7 @@ class BatchFetchComponent(
      * Forward previous fetched response to protocol for further process: retry, status processing, etc
      */
     private fun getProtocolOutput(protocol: Protocol, response: Response, page: WebPage): WebPage {
-        // forward response
+        // forward a response
         protocol.setResponse(response)
         // run protocol.getProtocolOutput so the page have a chance to perform FETCH_PROTOCOL retry if necessary
         // TODO: FETCH_PROTOCOL does not work since the response is forwarded

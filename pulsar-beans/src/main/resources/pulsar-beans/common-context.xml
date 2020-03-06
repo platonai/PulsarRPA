@@ -35,19 +35,19 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyManager" class="ai.platon.pulsar.common.proxy.ProxyManager" init-method="start" destroy-method="close">
+    <bean id="proxyManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyManagerFactory" init-method="start" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="webDriverManager" class="ai.platon.pulsar.net.browser.WebDriverManager" destroy-method="close">
         <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="proxyManager"/>
+        <constructor-arg ref="proxyManagerFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="privacyContextManager" class="ai.platon.pulsar.net.browser.PrivacyContextManager">
         <constructor-arg ref="webDriverManager"/>
-        <constructor-arg ref="proxyManager"/>
+        <constructor-arg ref="proxyManagerFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
 

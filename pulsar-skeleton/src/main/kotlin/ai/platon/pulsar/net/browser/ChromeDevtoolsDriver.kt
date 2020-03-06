@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.streams.toList
 
 /**
- * TODO: more compatible with RemoteWebDriver
+ * TODO: more compatible methods with RemoteWebDriver, or disable them explicitly
  * */
 class ChromeDevtoolsDriver(
         userAgent: String = "",

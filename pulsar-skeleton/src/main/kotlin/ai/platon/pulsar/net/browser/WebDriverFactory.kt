@@ -38,10 +38,9 @@ class WebDriverFactory(
     fun create(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         val capabilities = driverControl.createGeneralOptions()
 
-//        if (ProxyPool.isProxyEnabled()) {
-//            setProxy(capabilities)
-//        }
-        setProxy(capabilities)
+        if (proxyManager.isEnabled) {
+            setProxy(capabilities)
+        }
 
         // Choose the WebDriver
         val browserType = getBrowserType(conf)
@@ -83,6 +82,10 @@ class WebDriverFactory(
             // TODO: internal proxy server can be run at another host
             proxyEntry = proxyManager.currentProxyEntry
             hostPort = "127.0.0.1:${proxyManager.port}"
+        }
+
+        if (hostPort == null) {
+            return null
         }
 
 //        if (hostPort == null) {

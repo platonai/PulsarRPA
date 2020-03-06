@@ -86,7 +86,7 @@ class FetchTask(
     }
 
     companion object {
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id =0)
+        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id = 0)
         private val instanceSequence = AtomicInteger(0)
     }
 }
@@ -111,7 +111,7 @@ internal class FetchTaskBatch(
         var prevNode: FetchTaskBatch? = null
 ): AutoCloseable {
     enum class State {
-        OK,
+        RUNNING,
         ALL_DONE,
         TOO_MANY_FAILURE,
         IDLE_TIMEOUT,
@@ -169,7 +169,7 @@ internal class FetchTaskBatch(
     // Submit all tasks
     var round = 0L
     var idleSeconds = 0
-    //    // external connection is lost, might be caused by proxy
+    // external connection is lost, might be caused by proxy
     var connectionLost = false
     /**
      * Batch statistics
@@ -198,6 +198,9 @@ internal class FetchTaskBatch(
         return r
     }
 
+    val isHead get() = prevNode == null
+    val isTail get() = nextNode == null
+
     fun checkState(): State {
         return when {
             stat.numTaskDone >= batchSize -> State.ALL_DONE
@@ -205,7 +208,7 @@ internal class FetchTaskBatch(
             idleSeconds > idleTimeout.seconds -> State.IDLE_TIMEOUT
             connectionLost -> State.CONNECTION_LOST
             lastTaskTimeout() -> State.LAST_TASK_TIMEOUT
-            else -> State.OK
+            else -> State.RUNNING
         }
     }
 
@@ -302,7 +305,7 @@ internal class FetchTaskBatch(
     }
 
     fun clear() {
-        if (prevNode == null) {
+        if (isHead) {
             var n: FetchTaskBatch? = this
             while (n != null) {
                 clearNode(n)
@@ -321,7 +324,7 @@ internal class FetchTaskBatch(
         node.privacyLeakedTasks.clear()
         node.finishedTasks.clear()
 
-        if (node.prevNode == null) {
+        if (node.isHead) {
             node.universalSuccessPages.clear()
             node.universalSuccessTasks.clear()
         }

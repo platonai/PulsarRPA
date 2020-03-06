@@ -58,7 +58,7 @@ open class BrowserPrivacyContext(
         if (closed.compareAndSet(false, true)) {
             freeze {
                 log.info("Privacy context #{} is closed after {} tasks | {}",
-                        id, numServedTasks, proxyManager.currentProxyEntry)
+                        id, numServedTasks, proxyManager.currentProxyEntry?:"<no proxy>")
 
                 changeProxy()
                 driverManager.reset()
@@ -88,10 +88,10 @@ open class BrowserPrivacyContext(
                 numProxies.incrementAndGet()
             }
 
-            if (proxyEntry != null) {
-                task.proxyEntry = proxyEntry
-                task.page.metadata.set(Name.PROXY, proxyEntry.hostPort)
+            task.proxyEntry = proxyEntry
+            task.page.metadata.set(Name.PROXY, proxyEntry?.hostPort)
 
+            if (proxyEntry != null) {
                 if (success) {
                     proxyEntry.numSuccessPages.incrementAndGet()
                     proxyEntry.lastTarget = task.url
