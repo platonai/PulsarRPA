@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.examples.Crawler
 
 fun main() {
     System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
@@ -10,5 +10,5 @@ fun main() {
     val args = """
         -ic -i 1s -ii 1s -tl 5 -ol "a[href~=item]"
     """.trimIndent()
-    WebAccess().use { it.load(portalUrl, args) }
+    Crawler().use { it.load(portalUrl, args) }
 }

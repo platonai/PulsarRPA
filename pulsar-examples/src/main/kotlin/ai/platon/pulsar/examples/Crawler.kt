@@ -44,11 +44,11 @@ class AfterBatchHandler: BatchHandler() {
     }
 }
 
-open class WebAccess(
+open class Crawler(
         private var beforeBatchHandler: BatchHandler = BeforeBatchHandler(),
         private var afterBatchHandler: BatchHandler = AfterBatchHandler()
 ): AutoCloseable {
-    val log = LoggerFactory.getLogger(WebAccess::class.java)
+    val log = LoggerFactory.getLogger(Crawler::class.java)
 
     val i = PulsarContext.createSession()
 

@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-class TestContextLoadOptions {
+class TestLoadOptions {
 
     init {
         System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")

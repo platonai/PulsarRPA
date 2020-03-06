@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.examples.Crawler
 
 /**
  * Test for Thai language
@@ -10,5 +10,5 @@ fun main() {
     val args = """
         -ic -i 1s -ii 1s -ol ".product-recommend-items__item-wrapper > a" -query .product-briefing
     """.trimIndent()
-    WebAccess().loadOutPages(portalUrl, args)
+    Crawler().loadOutPages(portalUrl, args)
 }

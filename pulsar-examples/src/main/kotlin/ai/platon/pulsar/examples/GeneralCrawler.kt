@@ -12,7 +12,7 @@ import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
 import java.net.URL
 
-class GeneralWebAccess: WebAccess() {
+class GeneralCrawler: Crawler() {
     private val seeds = mapOf(
             0 to "http://category.dangdang.com/cid4002590.html",
             1 to "https://list.mogujie.com/book/magic/51894",
@@ -250,5 +250,5 @@ class GeneralWebAccess: WebAccess() {
 }
 
 fun main() {
-    GeneralWebAccess().run()
+    GeneralCrawler().run()
 }

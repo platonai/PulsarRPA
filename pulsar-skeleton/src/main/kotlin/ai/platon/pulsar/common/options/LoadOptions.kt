@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -285,8 +284,10 @@ open class LoadOptions: CommonOptions {
         val default = LoadOptions()
         val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val optionNames = LoadOptions::class.java.declaredFields.flatMap { it.annotations.toList() }.filter { it is Parameter }
-                .map { it as Parameter }.flatMap { it.names.toList() }
+        val optionNames = LoadOptions::class.java.declaredFields
+                .flatMap { it.annotations.toList() }
+                .filterIsInstance<Parameter>()
+                .flatMap { it.names.toList() }
 
         val helpList: List<List<String>> get() =
                 LoadOptions::class.java.declaredFields

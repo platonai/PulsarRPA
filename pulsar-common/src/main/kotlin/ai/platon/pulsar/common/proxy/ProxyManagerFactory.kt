@@ -1,14 +1,14 @@
 package ai.platon.pulsar.common.proxy
 
+import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_MANAGER_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.reflect.KClass
 
 class ProxyManagerFactory(val conf: ImmutableConfig): AutoCloseable {
     companion object {
-        var proxyManagerClass: KClass<out ProxyManager> = ProxyManager::class
         private fun createProxyManager(conf: ImmutableConfig): ProxyManager {
-            return proxyManagerClass.constructors.first { it.parameters.size == 1 }.call(conf)
+            val clazz = conf.getClass(PROXY_MANAGER_CLASS, ProxyManager::class.java)
+            return clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyManager
         }
     }
 

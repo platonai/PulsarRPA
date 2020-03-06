@@ -3,9 +3,9 @@ package ai.platon.pulsar.examples.sites
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.Documents
-import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.examples.Crawler
 
-class AmazonCategories: WebAccess() {
+class AmazonCategories: Crawler() {
     private val url = "https://www.amazon.com/"
     private val siteDirectory = "https://www.amazon.com/gp/site-directory?ref_=nav_em_T1_0_2_2_35__fullstore"
 

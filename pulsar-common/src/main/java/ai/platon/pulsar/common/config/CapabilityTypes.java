@@ -228,6 +228,7 @@ public interface CapabilityTypes {
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
+    String PROXY_MANAGER_CLASS = "proxy.proxy.manager.class";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
     String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.internal.server";
@@ -388,5 +389,5 @@ public interface CapabilityTypes {
     String SPARK_MASTER = "spark.master";
 
     // H2
-    String PARAM_H2_SESSION_FACTORY = "h2.sessionFactory";
+    String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
 }

@@ -11,7 +11,7 @@ import java.util.Comparator
 import kotlin.streams.toList
 
 object WebTester {
-    private val log = LoggerFactory.getLogger(WebAccess::class.java)
+    private val log = LoggerFactory.getLogger(WebTester::class.java)
     private val i = PulsarContext.getOrCreate().createSession()
 
     fun load() {

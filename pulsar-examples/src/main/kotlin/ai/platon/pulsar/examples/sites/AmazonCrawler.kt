@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples.sites
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.examples.WebAccess
+import ai.platon.pulsar.examples.Crawler
 import ai.platon.pulsar.net.browser.PrivacyContextManager
 import ai.platon.pulsar.net.browser.WebDriverManager
 import ai.platon.pulsar.persist.metadata.Name
@@ -11,7 +11,7 @@ import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics
 
-class AmazonAccess: WebAccess() {
+class AmazonAccess: Crawler() {
     private val url = "https://www.amazon.com/"
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
     private var round = 0
