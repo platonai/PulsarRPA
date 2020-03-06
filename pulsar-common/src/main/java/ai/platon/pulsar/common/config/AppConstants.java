@@ -186,7 +186,7 @@ public interface AppConstants {
      * Proxy
      * */
     int PROXY_SERVER_PORT_BASE = 8584;
-    String PROXY_MANAGER = "ai.platon.pulsar.proxy.ForwardProxyManager";
+    String PROXY_MANAGER = "ai.platon.scent.proxy.ForwardProxyManager";
 
     /**
      * SQL engine

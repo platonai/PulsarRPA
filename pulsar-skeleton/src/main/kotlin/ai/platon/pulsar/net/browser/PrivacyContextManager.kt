@@ -63,6 +63,7 @@ class PrivacyContextManager(
     private fun getOrCreate(): BrowserPrivacyContext {
         if (globalActiveContext.get() == null) {
             globalActiveContext.set(BrowserPrivacyContext(driverManager, proxyManager, immutableConfig))
+            // globalActiveContext.compareAndSet(null, BrowserPrivacyContext(driverManager, proxyManager, immutableConfig))
         }
         return globalActiveContext.get()
     }

@@ -3,12 +3,9 @@ package ai.platon.pulsar.common.proxy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.PROXY_SERVER_PORT_BASE
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_ENABLE_FORWARD_SERVER
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyException
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -23,21 +20,19 @@ open class ProxyManager(
         private val conf: ImmutableConfig
 ): AutoCloseable {
 
-    private val numRunningTasks = AtomicInteger()
-
-    private var lastActiveTime = Instant.now()
-    private var idleTime = Duration.ZERO
-    private val closed = AtomicBoolean()
-    private val isClosed get() = closed.get()
+    val numRunningTasks = AtomicInteger()
+    var lastActiveTime = Instant.now()
+    var idleTime = Duration.ZERO
+    val closed = AtomicBoolean()
 
     var report: String = ""
-    var port = -1
     var verbose = false
-    var autoRefresh = true
 
+    open val port = -1
     open val currentProxyEntry: ProxyEntry? = null
     open val isEnabled
         get() = isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_FORWARD_SERVER, true)
+    val isClosed get() = closed.get()
     val isDisabled get() = !isEnabled
 
     open fun start() {
@@ -68,8 +63,8 @@ open class ProxyManager(
 
         idleTime = Duration.ZERO
 
-        if (!ensureOnline()) {
-            throw ProxyException("Failed to wait for a online proxy")
+        if (!waitUntilOnline()) {
+            throw ProxyException("Failed to wait for an online proxy")
         }
 
         return try {
@@ -83,27 +78,14 @@ open class ProxyManager(
         }
     }
 
-    open fun ensureOnline(): Boolean {
-        if (isDisabled || isClosed) {
-            return false
-        }
-
-        return true
+    open fun waitUntilOnline(): Boolean {
+        return false
     }
 
     open fun changeProxyIfOnline(excludedProxy: ProxyEntry, ban: Boolean) {
-        if (isDisabled || isClosed) {
-            return
-        }
-
-        if (!ensureOnline()) {
-            return
-        }
     }
 
     override fun close() {
-        if (isEnabled && closed.compareAndSet(false, true)) {
-        }
     }
 
     companion object {

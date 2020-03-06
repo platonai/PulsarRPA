@@ -17,7 +17,6 @@ class AmazonAccess: Crawler() {
     private var round = 0
     private var numTotalPages = 0
     private val driverManager = i.context.getBean(WebDriverManager::class.java)
-    private val privacyContextManager = i.context.getBean(PrivacyContextManager::class.java)
     private val batchSize = driverManager.driverPool.capacity
 
     init {

@@ -397,25 +397,25 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             }
 
             val redirected = page.url != page.location
-            val mark = page.pageCategory.symbol()
+            val category = page.pageCategory.symbol()
             val numFields = page.pageModel.first()?.fields?.size?:0
             val proxyFmt = if (proxy == null) "%s" else "%26s"
-            val jsFmt = if (jsSate.isBlank()) "%s" else "%24s"
+            val jsFmt = if (jsSate.isBlank()) "%s" else "%30s"
             val fieldFmt = if (numFields == 0) "%s" else "%-3s"
-            val fmt = "Fetched %s %s in %8s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt c:%-4d | %s"
+            val fmt = "Fetched %s [%4d] %13s in %10s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
             val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
             val url = if (redirected) page.location else page.url
             val readableUrl = if (redirected) "[R] $url" else url
             val readableLinks = if (verbose) "file://$link | $readableUrl" else readableUrl
             return String.format(fmt,
-                    mark,
+                    category,
+                    page.protocolStatus.minorCode,
                     StringUtil.readableBytes(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",
                     jsSate,
                     page.fetchCount,
                     if (numFields == 0) "0" else numFields.toString(),
-                    page.protocolStatus.minorCode,
                     readableLinks
             )
         }

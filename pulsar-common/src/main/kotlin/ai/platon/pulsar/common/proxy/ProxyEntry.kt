@@ -24,8 +24,8 @@ data class ProxyEntry(
         var host: String,
         var port: Int = 0,
         var id: Int = instanceSequence.incrementAndGet(),
-        var lastTarget: String? = null,
         val declaredTTL: Instant? = null,
+        var lastTarget: String? = null,
         var testUrls: List<URL> = TEST_URLS.toList(),
         var defaultTestUrl: URL = DEFAULT_TEST_URL,
         var isTestIp: Boolean = false,
@@ -39,7 +39,7 @@ data class ProxyEntry(
     val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
     val numTests = AtomicInteger()
-    val numFailedTests = AtomicInteger()
+    val numConnectionLosts = AtomicInteger()
     // accumulated test time
     val accumResponseMillis = AtomicLong()
     // failed connection count
@@ -55,8 +55,8 @@ data class ProxyEntry(
     val isExpired get() = willExpireAt(Instant.now())
     val isRetired = AtomicBoolean()
     val isBanned = isRetired.get() && !isExpired
-    val isFailed get() = numFailedTests.get() >= 3
-    val isGone get() = isFailed || isRetired.get()
+    val isFailed get() = numConnectionLosts.get() >= 3 // large value means ignoring failures
+    val isGone get() = isRetired.get() || isFailed
 
     enum class BanState {
         OK, SEGMENT, HOST, OTHER;
@@ -116,12 +116,12 @@ data class ProxyEntry(
         }
 
         if (!available) {
-            numFailedTests.incrementAndGet()
+            numConnectionLosts.incrementAndGet()
             if (isGone) {
                 log.warn("Proxy is gone after {} tests | {}", numTests, this)
             }
         } else {
-            numFailedTests.set(0)
+            numConnectionLosts.set(0)
             refresh()
         }
 
@@ -163,7 +163,7 @@ data class ProxyEntry(
 
     private fun formatMetadata(): String {
         val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "pg:$nPages, spd:$speed, tt:$numTests, ftt:$numFailedTests, fpg:$numFailedPages"
+        return "pg:$nPages, spd:$speed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
     }
 
     companion object {

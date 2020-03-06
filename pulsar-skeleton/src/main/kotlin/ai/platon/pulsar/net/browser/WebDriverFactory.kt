@@ -78,10 +78,15 @@ class WebDriverFactory(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
-        if (proxyManager.ensureOnline()) {
-            // TODO: internal proxy server can be run at another host
-            proxyEntry = proxyManager.currentProxyEntry
-            hostPort = "127.0.0.1:${proxyManager.port}"
+        if (proxyManager.waitUntilOnline()) {
+            val port = proxyManager.port
+            if (port > 0) {
+                // TODO: proxy connector can be run at another host
+                proxyEntry = proxyManager.currentProxyEntry
+                hostPort = "127.0.0.1:${proxyManager.port}"
+            } else {
+                log.info("Invalid port for proxy connector, proxy is disabled")
+            }
         }
 
         if (hostPort == null) {

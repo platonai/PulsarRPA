@@ -73,7 +73,7 @@ object AppPaths {
     val AVAILABLE_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-available")
     @RequiredDirectory @JvmField
     val PROXY_ARCHIVE_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-archived")
-    @RequiredDirectory @JvmField
+    @RequiredFile @JvmField
     val LATEST_AVAILABLE_PROXY = AppPaths.get( "latest-available-proxy")
     @RequiredFile @JvmField
     val TEST_PROXY_FILE = AppPaths.get(PROXY_BASE_DIR, "test-ip")
@@ -111,23 +111,14 @@ object AppPaths {
         AppPaths::class.java.declaredFields
                 .filter { it.annotations.any { it is RequiredDirectory } }
                 .mapNotNull { it.get(AppPaths) as? Path }
-                .forEach {
-                    if (!Files.exists(it)) {
-                        Files.createDirectories(it)
-                    }
-                }
+                .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
 
         AppPaths::class.java.declaredFields
                 .filter { it.annotations.any { it is RequiredFile } }
                 .mapNotNull { it.get(AppPaths) as? Path }
                 .forEach {
-                    if (!Files.exists(it.parent)) {
-                        Files.createDirectories(it.parent)
-                    }
-
-                    if (!Files.exists(it)) {
-                        Files.createFile(it)
-                    }
+                    it.parent.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) }
+                    it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
                 }
     }
 

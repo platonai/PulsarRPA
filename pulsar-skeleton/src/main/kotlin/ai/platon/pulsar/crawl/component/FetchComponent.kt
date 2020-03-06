@@ -230,7 +230,8 @@ open class FetchComponent(
 
     private fun updatePage(page: WebPage, content: Content?, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
         updateStatus(page, crawlStatus, protocolStatus)
-        if (content != null) {
+        if (content != null && protocolStatus.isSuccess) {
+            // No need to update content if the fetch is failed, just keep the last content in such cases
             updateContent(page, content)
         }
         updateFetchTime(page)

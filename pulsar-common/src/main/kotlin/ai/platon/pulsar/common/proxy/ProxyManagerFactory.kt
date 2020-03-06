@@ -5,25 +5,27 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import java.util.concurrent.atomic.AtomicReference
 
 class ProxyManagerFactory(val conf: ImmutableConfig): AutoCloseable {
-    companion object {
-        private fun createProxyManager(conf: ImmutableConfig): ProxyManager {
-            val clazz = conf.getClass(PROXY_MANAGER_CLASS, ProxyManager::class.java)
-            return clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyManager
-        }
-    }
 
     private val proxyManager = AtomicReference<ProxyManager>()
 
     fun get(): ProxyManager {
-        proxyManager.compareAndSet(null, createProxyManager(conf))
+        createProxyManagerIfAbsent(conf)
         return proxyManager.get()
-    }
-
-    fun start() {
-        proxyManager.get()?.start()
     }
 
     override fun close() {
         proxyManager.get()?.use { it.close() }
+    }
+
+    private fun createProxyManagerIfAbsent(conf: ImmutableConfig) {
+        if (proxyManager.get() == null) {
+            synchronized(ProxyManagerFactory::class) {
+                if (proxyManager.get() == null) {
+                    val clazz = conf.getClass(PROXY_MANAGER_CLASS, ProxyManager::class.java)
+                    proxyManager.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyManager)
+                    proxyManager.get().start()
+                }
+            }
+        }
     }
 }

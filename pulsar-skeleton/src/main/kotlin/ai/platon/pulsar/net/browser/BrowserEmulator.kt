@@ -606,11 +606,6 @@ open class BrowserEmulator(
                 ProtocolStatus.retry(RetryScope.CRAWL)
             }
             htmlIntegrity.isEmpty -> {
-//                if (task.nRetries == 1) {
-//                    ProtocolStatus.retry(RetryScope.PROXY, htmlIntegrity)
-//                } else {
-//                    ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
-//                }
                 ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
             }
             else -> ProtocolStatus.retry(RetryScope.CRAWL)

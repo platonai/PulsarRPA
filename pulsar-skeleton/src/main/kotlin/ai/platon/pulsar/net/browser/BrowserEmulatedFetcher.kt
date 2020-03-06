@@ -151,11 +151,6 @@ class BrowserEmulatedFetcher(
         do {
             ++batch.round
 
-            // loop and wait for all parallel tasks return
-//            done.clear()
-//            batch.workingTasks.asSequence().filter { it.value.isDone }.mapTo(done) { handleTaskDone(it.key, it.value, batch) }
-//            done.forEach { batch.workingTasks.remove(it.task) }
-
             var numDone = 0
             val it = batch.workingTasks.iterator()
             while (it.hasNext()) {
@@ -394,17 +389,21 @@ class BrowserEmulatedFetcher(
 
     private fun logAfterBatchFinish(batch: FetchTaskBatch) {
         if (log.isInfoEnabled) {
-            val bc = batch.headNode
-            val elapsed = Duration.between(bc.startTime, Instant.now())
-            val aveTime = elapsed.dividedBy(1 + bc.batchSize.toLong())
-            val speed = StringUtil.readableBytes((1.0 * bc.stat.totalBytes / (1 + elapsed.seconds)).roundToLong())
-            val proxyDisplay = (bc.lastSuccessProxy?:bc.lastFailedProxy)?.display
+            val mainBatch = batch.headNode
+            // val proxyDisplay = (bc.lastSuccessProxy?:bc.lastFailedProxy)?.display
+            val successProxy = mainBatch.lastSuccessProxy
+            val failedProxy = mainBatch.lastFailedProxy
+            val proxyDisplay = when {
+                successProxy != null -> successProxy.display
+                failedProxy != null -> "${failedProxy.display}(failed)"
+                else -> null
+            }
             log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}/s | {}",
-                    bc.batchId, bc.batchSize,
-                    DateTimeUtil.readableDuration(elapsed),
-                    DateTimeUtil.readableDuration(aveTime),
-                    StringUtil.readableBytes(bc.stat.averagePageSize.roundToLong()),
-                    speed,
+                    mainBatch.batchId, mainBatch.batchSize,
+                    DateTimeUtil.readableDuration(mainBatch.elapsed),
+                    DateTimeUtil.readableDuration(mainBatch.averageTime),
+                    StringUtil.readableBytes(mainBatch.stat.averagePageSize.roundToLong()),
+                    mainBatch.speed,
                     proxyDisplay?:"(no proxy)"
             )
         }

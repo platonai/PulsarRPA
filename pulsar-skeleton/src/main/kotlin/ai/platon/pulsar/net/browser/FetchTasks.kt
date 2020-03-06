@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -12,12 +13,14 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
+import kotlin.math.roundToLong
 
 abstract class TaskHandler: (WebPage) -> Unit {
     abstract override operator fun invoke(page: WebPage)
@@ -132,6 +135,10 @@ internal class FetchTaskBatch(
     var batchSize = Iterables.size(pages)
     val numAllowedFailures = max(10, batchSize / 3)
 
+    val elapsed get() = Duration.between(startTime, Instant.now())
+    val averageTime get() = elapsed.dividedBy(1 + batchSize.toLong())
+    val speed get() = StringUtil.readableBytes((1.0 * stat.totalBytes / (1 + elapsed.seconds)).roundToLong())
+
     /**
      * The universal success tasks
      * */
@@ -243,11 +250,16 @@ internal class FetchTaskBatch(
         afterFetchN(headNode.universalSuccessPages)
     }
 
-    fun onRetry(task: FetchTask, result: FetchResult) {
+    fun onFailure(task: FetchTask, result: FetchResult) {
         finishedTasks[task.url] = result
 
-        lastFailedTask = result.task
-        lastFailedProxy = result.task.proxyEntry
+        lastFailedTask = task
+        lastFailedProxy = task.proxyEntry
+        ++stat.numFailedTasks
+    }
+
+    fun onRetry(task: FetchTask, result: FetchResult) {
+        onFailure(task, result)
 
         if (result.response.status.isRetry(RetryScope.PRIVACY)) {
             privacyLeakedTasks.add(task)
@@ -255,17 +267,8 @@ internal class FetchTaskBatch(
         }
     }
 
-    fun onFailure(task: FetchTask, result: FetchResult) {
-        finishedTasks[task.url] = result
-
-        lastFailedTask = task
-        lastFailedProxy = task.proxyEntry
-
-        ++stat.numFailedTasks
-    }
-
     fun onAbort(task: FetchTask, result: FetchResult) {
-        finishedTasks[task.url] = result
+        onFailure(task, result)
         abortedTasks.add(task)
     }
 
