@@ -114,6 +114,10 @@ public final class Content {
         this.content = content;
     }
 
+    public long length() {
+        return content == null ? 0 : content.length;
+    }
+
     /**
      * The media type of the retrieved content.
      *

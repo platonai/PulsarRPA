@@ -25,12 +25,14 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.support.ui.Sleeper
 import org.slf4j.LoggerFactory
+import oshi.SystemInfo
 import java.nio.file.Files
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.random.Random
 
 class NavigateResult(
@@ -104,8 +106,18 @@ open class BrowserEmulator(
     private val driverControl = driverManager.driverControl
     private val driverPool = driverManager.driverPool
 
+    private val systemInfo = SystemInfo()
+    private var initSystemNetworkBytesRecv = 0L
+    private var systemNetworkBytesRecv = 0L
+    private val bytesRecv = AtomicLong()
+
     init {
         instanceSequence.incrementAndGet()
+
+        for (networkIF in systemInfo.hardware.networkIFs) {
+            initSystemNetworkBytesRecv += networkIF.bytesRecv
+        }
+
         params.withLogger(log).info()
     }
 
@@ -137,7 +149,10 @@ open class BrowserEmulator(
         fetchTaskTracker.totalTaskCount.getAndIncrement()
         fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
 
-        return browseWithDriver(task, driver)
+        val result = browseWithDriver(task, driver)
+        logNetworkTraffic(result.response)
+
+        return result
     }
 
     open fun cancel(task: FetchTask) {
@@ -708,6 +723,24 @@ open class BrowserEmulator(
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
             )
         }
+    }
+
+    private fun logNetworkTraffic(response: Response) {
+        val length = response.length()
+        if (length < 1000 && !response.status.isSuccess) {
+            return
+        }
+
+        bytesRecv.addAndGet(length)
+        var bytes: Long = 0
+        for (networkIF in systemInfo.hardware.networkIFs) {
+            bytes += networkIF.bytesRecv
+        }
+        systemNetworkBytesRecv = bytes
+        log.info("Content recv: {}, sys recv: {}, total sys recv: {}",
+                StringUtil.readableBytes(bytesRecv.get()),
+                StringUtil.readableBytes(systemNetworkBytesRecv - initSystemNetworkBytesRecv),
+                StringUtil.readableBytes(systemNetworkBytesRecv))
     }
 
     private fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {

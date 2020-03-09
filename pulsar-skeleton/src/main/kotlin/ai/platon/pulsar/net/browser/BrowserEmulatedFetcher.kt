@@ -326,7 +326,7 @@ class BrowserEmulatedFetcher(
             log.warn("Timeout when retrieve task result", e)
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
         } catch (e: java.util.concurrent.ExecutionException) {
-            log.warn("Execution error caught when retrieve task result", e)
+            log.warn("Failed to get the fetch result", e)
             status = ProtocolStatus.retry(RetryScope.PROTOCOL)
         } catch (e: InterruptedException) {
             log.warn("Interrupted when retrieve task result", e)
@@ -405,6 +405,11 @@ class BrowserEmulatedFetcher(
                     StringUtil.readableBytes(mainBatch.stat.averagePageSize.roundToLong()),
                     mainBatch.speed,
                     proxyDisplay?:"(no proxy)"
+            )
+            val proxyManager = privacyContextManager.activeContext.proxyManager
+            log.info("Total page size: {} total network read: {}",
+                    StringUtil.readableBytes(BrowserPrivacyContext.cumulativePageBytes),
+                    StringUtil.readableBytes(proxyManager.cumulativeReadBytes)
             )
         }
 

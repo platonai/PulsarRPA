@@ -45,8 +45,13 @@ public class ProtocolOutput {
         this.status = status;
     }
 
+    @Nullable
     public Content getContent() {
         return content;
+    }
+
+    public long length() {
+        return content != null ? content.length() : 0;
     }
 
     public ProtocolStatus getStatus() {

@@ -96,6 +96,12 @@
             <artifactId>jcommander</artifactId>
         </dependency>
 
+        <!-- System monitor -->
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>

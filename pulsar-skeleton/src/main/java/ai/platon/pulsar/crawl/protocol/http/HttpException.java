@@ -16,8 +16,6 @@
  */
 package ai.platon.pulsar.crawl.protocol.http;
 
-// AppConstants imports
-
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 
 public class HttpException extends ProtocolException {

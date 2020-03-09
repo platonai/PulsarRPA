@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.crawl.protocol.http.AbstractNativeHttpProtocol;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
@@ -155,7 +156,7 @@ public class HttpResponse implements Response {
             // for error.
             InputStream in = get.getResponseBodyAsStream();
             try {
-                byte[] buffer = new byte[AbstractHttpProtocol.BUFFER_SIZE];
+                byte[] buffer = new byte[AbstractNativeHttpProtocol.BUFFER_SIZE];
                 int bufferFilled = 0;
                 int totalRead = 0;
                 ByteArrayOutputStream out = new ByteArrayOutputStream();

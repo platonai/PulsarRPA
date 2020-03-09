@@ -21,12 +21,13 @@ import ai.platon.pulsar.common.proxy.ProxyException;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.crawl.protocol.http.AbstractNativeHttpProtocol;
 import ai.platon.pulsar.persist.WebPage;
 
 import java.io.IOException;
 import java.net.URL;
 
-public class Http extends AbstractHttpProtocol {
+public class Http extends AbstractNativeHttpProtocol {
 
     public Http() {}
 

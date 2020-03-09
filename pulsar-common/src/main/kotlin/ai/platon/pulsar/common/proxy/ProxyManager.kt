@@ -30,10 +30,10 @@ open class ProxyManager(
 
     open val port = -1
     open val currentProxyEntry: ProxyEntry? = null
-    open val isEnabled
-        get() = isProxyEnabled() && conf.getBoolean(PROXY_ENABLE_FORWARD_SERVER, true)
-    val isClosed get() = closed.get()
+    open val cumulativeReadBytes = 0L
+    open val isEnabled = false
     val isDisabled get() = !isEnabled
+    val isClosed get() = closed.get()
 
     open fun start() {
         if (isDisabled) {

@@ -129,17 +129,14 @@ class SimpleLogger(val path: Path, var levelFile: Int = DEFAULT_LOG_LEVEL): Auto
         const val WARN = 2
         const val INFO = 3
         const val DEBUG = 4
-
         /**
          * The default level for system out log messages.
          */
         val DEFAULT_LOG_LEVEL_SYSTEM_OUT = OFF
-
         /**
          * The default level for file log messages.
          */
         val DEFAULT_LOG_LEVEL = ERROR
-
         /**
          * The default maximum trace file size. It is currently 64 MB. Additionally,
          * there could be a .old file of the same size.

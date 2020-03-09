@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
 import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.crawl.protocol.http.AbstractNativeHttpProtocol;
 import ai.platon.pulsar.persist.WebPage;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
@@ -52,7 +53,7 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY;
  *
  * @author Susam Pal
  */
-public class Http extends AbstractHttpProtocol {
+public class Http extends AbstractNativeHttpProtocol {
 
     public static final Logger LOG = LoggerFactory.getLogger(Http.class);
 

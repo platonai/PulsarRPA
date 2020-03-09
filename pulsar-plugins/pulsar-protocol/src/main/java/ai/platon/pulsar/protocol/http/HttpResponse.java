@@ -24,12 +24,13 @@ import ai.platon.pulsar.common.proxy.ProxyException;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolException;
 import ai.platon.pulsar.crawl.protocol.Response;
-import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
+import ai.platon.pulsar.crawl.protocol.http.AbstractNativeHttpProtocol;
 import ai.platon.pulsar.crawl.protocol.http.HttpException;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.MultiMetadata;
 import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ import java.util.Set;
 public class HttpResponse implements Response {
     private Logger log = LoggerFactory.getLogger(HttpResponse.class);
 
-    private final AbstractHttpProtocol http;
+    private final AbstractNativeHttpProtocol http;
     private final URL url;
     private final WebPage page;
     private final MultiMetadata headers = new SpellCheckedMultiMetadata();
@@ -56,7 +57,8 @@ public class HttpResponse implements Response {
     private byte[] content;
     private int code;
 
-    public HttpResponse(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, ProxyException {
+    public HttpResponse(AbstractNativeHttpProtocol http, URL url, WebPage page)
+            throws ProtocolException, IOException, ProxyException {
         this.http = http;
         this.url = url;
         this.page = page;
@@ -76,8 +78,7 @@ public class HttpResponse implements Response {
 
     @Override
     public ProtocolStatus getStatus() {
-        System.out.println("Should check the implementation, it always return STATUS_NOTFETCHED");
-        return ProtocolStatus.STATUS_NOTFETCHED;
+        throw new NotImplementedException("Http response is not implemented");
     }
 
     @Override
@@ -98,7 +99,7 @@ public class HttpResponse implements Response {
         return content;
     }
 
-    private void open(AbstractHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, ProxyException {
+    private void open(AbstractNativeHttpProtocol http, URL url, WebPage page) throws ProtocolException, IOException, ProxyException {
         Scheme scheme;
 
         if ("http".equals(url.getProtocol())) {

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.Freezable
+import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
@@ -26,6 +27,11 @@ open class BrowserPrivacyContext(
     companion object {
         val instanceSequence = AtomicInteger()
         val numProxies = AtomicInteger()
+        /**
+         * TODO: use a metrics system
+         * */
+        @Volatile
+        var cumulativePageBytes = 0L
     }
 
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
@@ -82,6 +88,10 @@ open class BrowserPrivacyContext(
         try {
             result = proxyManager.runAnyway { runInDriverPool(task, browseFun) }
             success = result.response.status.isSuccess
+
+            if (success) {
+                cumulativePageBytes += result.response.length()
+            }
         } finally {
             if (proxyEntry != proxyManager.currentProxyEntry) {
                 proxyEntry = proxyManager.currentProxyEntry
