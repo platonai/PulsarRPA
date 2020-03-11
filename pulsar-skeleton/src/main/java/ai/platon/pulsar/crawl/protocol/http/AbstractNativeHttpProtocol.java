@@ -301,14 +301,4 @@ public abstract class AbstractNativeHttpProtocol extends AbstractHttpProtocol {
             return null;
         }
     }
-
-    @Override
-    public void close() {
-        closed.set(true);
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
-    }
 }

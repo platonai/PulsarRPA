@@ -5,6 +5,7 @@ import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.text.SimpleDateFormat
 import kotlin.math.max
 
@@ -97,7 +98,7 @@ class SimpleLogger(val path: Path, var levelFile: Int = DEFAULT_LOG_LEVEL): Auto
         if (printWriter == null) {
             try {
                 Files.createDirectories(path.parent)
-                fileWriter = Files.newBufferedWriter(path)
+                fileWriter = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
                 printWriter = PrintWriter(fileWriter!!, true)
             } catch (e: Exception) {
                 logWritingError(e)

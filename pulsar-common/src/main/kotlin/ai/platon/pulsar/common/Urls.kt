@@ -427,6 +427,7 @@ object Urls {
      *
      * @param utf8 Utf8 object
      * @return string-ifed Utf8 object or null if Utf8 instance is null
+     * @deprecated purpose not clear
      */
     @JvmStatic
     fun toString(utf8: CharSequence?): String? {

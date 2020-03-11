@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.RuntimeUtils
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_ENABLE_FORWARD_SERVER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
@@ -28,9 +27,9 @@ open class ProxyManager(
     var report: String = ""
     var verbose = false
 
-    open val port = -1
+    open val localPort = -1
     open val currentProxyEntry: ProxyEntry? = null
-    open val cumulativeReadBytes = 0L
+    // Disabled currently
     open val isEnabled = false
     val isDisabled get() = !isEnabled
     val isClosed get() = closed.get()

@@ -407,10 +407,6 @@ class BrowserEmulatedFetcher(
                     proxyDisplay?:"(no proxy)"
             )
             val proxyManager = privacyContextManager.activeContext.proxyManager
-            log.info("Total page size: {} total network read: {}",
-                    StringUtil.readableBytes(BrowserPrivacyContext.cumulativePageBytes),
-                    StringUtil.readableBytes(proxyManager.cumulativeReadBytes)
-            )
         }
 
         if (log.isTraceEnabled) {

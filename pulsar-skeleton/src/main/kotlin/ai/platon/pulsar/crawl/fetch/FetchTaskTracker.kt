@@ -17,12 +17,13 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.TreeMultiset
 import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
+import oshi.SystemInfo
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.collections.HashSet
 
 class FetchTaskTracker(
@@ -60,6 +61,12 @@ class FetchTaskTracker(
     val batchTaskCounters = ConcurrentHashMap<Int, AtomicInteger>()
     val batchSuccessCounters = ConcurrentHashMap<Int, AtomicInteger>()
 
+    private val systemInfo = SystemInfo()
+    var initSystemNetworkBytesRecv = 0L
+    @Volatile
+    var systemNetworkBytesRecv = 0L
+    val htmlContentBytes = AtomicLong()
+
     private val isClosed = AtomicBoolean()
     private val isReported = AtomicBoolean()
 
@@ -68,6 +75,8 @@ class FetchTaskTracker(
         urlTrackerIndexer.getAll(FAILED_URLS_PAGE).mapTo(failedUrls) { it.toString() }
         urlTrackerIndexer.getAll(DEAD_URLS_PAGE).mapTo(deadUrls) { it.toString() }
         LocalFSUtils.readAllLinesSilent(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
+
+        initSystemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
 
         params.withLogger(LOG).info(true)
     }
@@ -157,22 +166,33 @@ class FetchTaskTracker(
 
         // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
         val pageCategory = page.pageCategory
-        if (pageCategory.isIndex) {
-            ++fetchStatus.indexUrls
-        } else if (pageCategory.isDetail) {
-            ++fetchStatus.detailUrls
-        } else if (pageCategory.isMedia) {
-            ++fetchStatus.mediaUrls
-        } else if (pageCategory.isSearch) {
-            ++fetchStatus.searchUrls
-        } else if (pageCategory.isBBS) {
-            ++fetchStatus.bbsUrls
-        } else if (pageCategory.isTieBa) {
-            ++fetchStatus.tiebaUrls
-        } else if (pageCategory.isBlog) {
-            ++fetchStatus.blogUrls
-        } else if (pageCategory.isUnknown) {
-            ++fetchStatus.unknownUrls
+        when {
+            pageCategory.isIndex -> {
+                ++fetchStatus.indexUrls
+            }
+            pageCategory.isDetail -> {
+                ++fetchStatus.detailUrls
+            }
+            pageCategory.isMedia -> {
+                ++fetchStatus.mediaUrls
+            }
+            pageCategory.isSearch -> {
+                ++fetchStatus.searchUrls
+            }
+            pageCategory.isBBS -> {
+                ++fetchStatus.bbsUrls
+            }
+            pageCategory.isTieBa -> {
+                ++fetchStatus.tiebaUrls
+            }
+            pageCategory.isBlog -> {
+                ++fetchStatus.blogUrls
+            }
+            pageCategory.isUnknown -> {
+                ++fetchStatus.unknownUrls
+            }
+
+            // The host is reachable
         }
 
         val depth = page.distance
@@ -193,6 +213,11 @@ class FetchTaskTracker(
         unreachableHosts.remove(host)
 
         failedHostTracker.remove(host)
+    }
+
+    fun updateNetworkTraffic(htmlContentLength: Long) {
+        htmlContentBytes.addAndGet(htmlContentLength)
+        systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     }
 
     fun countHostTasks(host: String): Int {

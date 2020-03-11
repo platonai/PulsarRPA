@@ -219,11 +219,6 @@
                 <artifactId>pulsar-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-proxyee</artifactId>
-                <version>${project.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
