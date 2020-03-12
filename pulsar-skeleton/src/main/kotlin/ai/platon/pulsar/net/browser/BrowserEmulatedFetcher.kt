@@ -319,6 +319,9 @@ class BrowserEmulatedFetcher(
             // Wait if necessary for at most the given time for the computation
             // to complete, and then retrieves its result, if available.
             return future.get(timeout.seconds, TimeUnit.SECONDS)
+        } catch (e: ProxyException) {
+            log.warn("No proxy available", e)
+            status = ProtocolStatus.retry(RetryScope.CRAWL)
         } catch (e: java.util.concurrent.CancellationException) {
             // log.debug("Fetch thread for task #{}/{} is canceled | {}", task.batchTaskId, task.batchId, task.url)
             status = ProtocolStatus.STATUS_CANCELED
