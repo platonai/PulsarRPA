@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.ReducerContext
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.component.FetchComponent
@@ -101,7 +101,7 @@ class FetchThread(
                 ++taskCount
             } // while
         } catch (e: Throwable) {
-            log.error("Unexpected throwable : " + StringUtil.stringifyException(e))
+            log.error("Unexpected throwable : " + Strings.stringifyException(e))
         } finally {
             if (task != null) {
                 taskScheduler.finishUnchecked(task)
@@ -193,11 +193,11 @@ class FetchThread(
             // the page is fetched and status are updated, write to the file system
             context.write(key, page.unbox())
         } catch (e: IOException) {
-            log.error("Failed to write to hdfs - {}", StringUtil.stringifyException(e))
+            log.error("Failed to write to hdfs - {}", Strings.stringifyException(e))
         } catch (e: InterruptedException) {
-            log.error("Interrupted - {}", StringUtil.stringifyException(e))
+            log.error("Interrupted - {}", Strings.stringifyException(e))
         } catch (e: Throwable) {
-            log.error(StringUtil.stringifyException(e))
+            log.error(Strings.stringifyException(e))
         }
     }
 

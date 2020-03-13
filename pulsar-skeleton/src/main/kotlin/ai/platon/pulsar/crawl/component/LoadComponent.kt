@@ -4,7 +4,7 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.MetricsSystem.Companion.getBatchCompleteReport
 import ai.platon.pulsar.common.MetricsSystem.Companion.getFetchCompleteReport
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
@@ -425,7 +425,7 @@ class LoadComponent(
                 flush()
             }
             if (log.isTraceEnabled) {
-                log.trace("Persisted {} | {}", StringUtil.readableBytes(page.contentBytes.toLong()), page.url)
+                log.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes.toLong()), page.url)
             }
         }
     }

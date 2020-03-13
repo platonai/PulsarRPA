@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
@@ -58,7 +58,7 @@ open class PulsarOptions : Parameterized {
         try {
             doParse()
         } catch (e: Throwable) {
-            log.warn(StringUtil.stringifyException(e))
+            log.warn(Strings.stringifyException(e))
             return false
         }
 

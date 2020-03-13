@@ -6,7 +6,6 @@ import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import kotlin.math.roundToLong
 
 /**
@@ -67,9 +66,9 @@ class RobustBrowserEmulator(
                 integrity = HtmlIntegrity.TOO_SMALL_IN_BATCH
 
                 if (log.isInfoEnabled) {
-                    val readableLength = StringUtil.readableBytes(length)
-                    val readableAveLength = StringUtil.readableBytes(aveLength)
-                    val readableBatchAveLength = StringUtil.readableBytes(batchAveLength)
+                    val readableLength = Strings.readableBytes(length)
+                    val readableAveLength = Strings.readableBytes(aveLength)
+                    val readableBatchAveLength = Strings.readableBytes(batchAveLength)
                     val fetchCount = page.fetchCount
                     val message = "retrieved: $readableLength, batch: $readableBatchAveLength" +
                             " history: $readableAveLength/$fetchCount ($integrity)"

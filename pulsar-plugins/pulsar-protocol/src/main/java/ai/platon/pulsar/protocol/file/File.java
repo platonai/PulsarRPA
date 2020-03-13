@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.protocol.file;
 
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.protocol.Protocol;
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
@@ -132,7 +132,7 @@ public class File implements Protocol {
                 }
             }
         } catch (Exception e) {
-            LOG.warn(StringUtil.stringifyException(e));
+            LOG.warn(Strings.stringifyException(e));
             return new ProtocolOutput(null, headers, ProtocolStatus.failed(e));
         }
     }

@@ -229,7 +229,7 @@ class FetchMonitor(
 
                 Files.deleteIfExists(finishScript)
             } catch (e: Throwable) {
-                log.error("Caught an unexpected exception when closing FetchMonitor - {}", StringUtil.stringifyException(e))
+                log.error("Caught an unexpected exception when closing FetchMonitor - {}", Strings.stringifyException(e))
             }
         }
     }
@@ -346,7 +346,7 @@ class FetchMonitor(
             /*
              * Read local file commands
              * */
-            if (RuntimeUtils.hasLocalFileCommand("finish-job $jobName")) {
+            if (FileCommand.exists("finish-job $jobName")) {
                 handleFinishJobCommand()
                 log.info("Found finish-job command, exit the job ...")
                 close()

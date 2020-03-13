@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
@@ -16,13 +16,13 @@ object StringFunctions {
     @UDFunction(description = "Get the first integer in the given string")
     @JvmStatic
     fun getFirstInteger(str: String?, defaultValue: Int): Int {
-        return StringUtil.getFirstInteger(str, defaultValue)
+        return Strings.getFirstInteger(str, defaultValue)
     }
 
     @UDFunction(description = "Get the first float number in the given string")
     @JvmStatic
     fun getFirstFloatNumber(str: String?, defaultValue: Float): Float {
-        return StringUtil.getFirstFloatNumber(str, defaultValue)
+        return Strings.getFirstFloatNumber(str, defaultValue)
     }
 
     @UDFunction(description = "Chinese tokenizer")

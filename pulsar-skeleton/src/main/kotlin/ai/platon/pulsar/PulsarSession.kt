@@ -357,8 +357,8 @@ open class PulsarSession(
 
             log.info("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
                     id,
-                    StringUtil.readableBytes(Systems.getMemoryUsed()),
-                    StringUtil.readableBytes(Systems.getMemoryFree()))
+                    Strings.readableBytes(Systems.getMemoryUsed()),
+                    Strings.readableBytes(Systems.getMemoryFree()))
         }
     }
 

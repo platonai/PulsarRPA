@@ -1,6 +1,6 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.AppRuntime
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.STORAGE_DATA_STORE_CLASS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -55,11 +55,11 @@ class AutoDetectedStorageService private constructor(conf: ImmutableConfig): Aut
             return when {
                 conf.isDryRun -> MEM_STORE_CLASS
                 conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                RuntimeUtils.checkIfProcessRunning(".+HMaster.+") ->
+                AppRuntime.checkIfProcessRunning(".+HMaster.+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
-                RuntimeUtils.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
+                AppRuntime.checkIfProcessRunning(".+/usr/bin/mongod .+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
-                RuntimeUtils.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
+                AppRuntime.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
                 else -> MEM_STORE_CLASS
             }

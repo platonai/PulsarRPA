@@ -17,13 +17,11 @@
 
 package ai.platon.pulsar.net.domain;
 
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,7 +70,7 @@ public class DomainSuffixes {
                 LOG.info("Total {} known domains", suffixes.domains.size());
             }
         } catch (Exception e) {
-            LOG.warn(StringUtil.stringifyException(e));
+            LOG.warn(Strings.stringifyException(e));
         }
 
         return suffixes;

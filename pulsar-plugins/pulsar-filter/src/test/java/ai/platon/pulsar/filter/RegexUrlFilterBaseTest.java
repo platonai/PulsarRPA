@@ -18,7 +18,7 @@ package ai.platon.pulsar.filter;
 
 // JDK imports
 
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.crawl.filter.UrlFilter;
 
 import java.io.BufferedReader;
@@ -89,7 +89,7 @@ public abstract class RegexUrlFilterBaseTest extends UrlFilterTestBase {
         try {
             test(getURLFilter(rules), readURLFile(urls));
         } catch (Exception e) {
-            fail(StringUtil.stringifyException(e));
+            fail(Strings.stringifyException(e));
         }
     }
 

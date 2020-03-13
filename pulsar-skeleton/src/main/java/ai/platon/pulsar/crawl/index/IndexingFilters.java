@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.index;
 
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public class IndexingFilters {
                     break;
                 }
             } catch (IndexingException e) {
-                LOG.error(StringUtil.stringifyException(e));
+                LOG.error(Strings.stringifyException(e));
                 return null;
             }
         }

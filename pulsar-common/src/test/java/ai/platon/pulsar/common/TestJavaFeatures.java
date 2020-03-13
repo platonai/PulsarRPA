@@ -37,7 +37,7 @@ public class TestJavaFeatures {
     @Test
     public void test() {
         System.out.println(Integer.valueOf(" ".charAt(0)));
-        System.out.println(Integer.valueOf(StringUtil.NBSP.charAt(0)));
+        System.out.println(Integer.valueOf(Strings.NBSP.charAt(0)));
     }
 
     @Test

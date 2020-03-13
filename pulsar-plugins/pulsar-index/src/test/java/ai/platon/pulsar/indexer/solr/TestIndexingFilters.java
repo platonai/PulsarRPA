@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.indexer.solr;
 
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.index.IndexDocument;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNull;
 @ContextConfiguration(locations = {"classpath:/test-context/index-beans.xml"})
 public class TestIndexingFilters {
 
-    private String indexingFiltersClassNames = StringUtil.humanize(IndexingFilters.class, "classes", ".");
+    private String indexingFiltersClassNames = Strings.humanize(IndexingFilters.class, "classes", ".");
 
     @Autowired
     private ImmutableConfig conf;

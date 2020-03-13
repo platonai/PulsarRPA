@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.crawl.filter
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls.reverseUrl
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
@@ -72,7 +72,7 @@ class CrawlFilter(val conf: ImmutableConfig) {
                 reversedEndKey = reverseUrl(endKey!!)
             }
         } catch (e: RuntimeException) {
-            LOG.error(StringUtil.stringifyException(e))
+            LOG.error(Strings.stringifyException(e))
         }
     }
 

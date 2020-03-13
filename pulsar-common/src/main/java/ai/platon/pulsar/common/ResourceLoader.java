@@ -150,7 +150,7 @@ public class ResourceLoader {
                         .collect(Collectors.toList());
             }
         } catch (IOException e) {
-            LOG.error(StringUtil.stringifyException(e));
+            LOG.error(Strings.stringifyException(e));
         }
 
         return new ArrayList<>(0);
@@ -168,7 +168,7 @@ public class ResourceLoader {
                         .collect(Collectors.toList());
             }
         } catch (IOException e) {
-            LOG.error(StringUtil.stringifyException(e));
+            LOG.error(Strings.stringifyException(e));
         }
 
         return new ArrayList<>(0);
@@ -184,7 +184,7 @@ public class ResourceLoader {
                 new BufferedReader(reader).lines().forEach(sb::append);
             }
         } catch (IOException e) {
-            LOG.error(StringUtil.stringifyException(e));
+            LOG.error(Strings.stringifyException(e));
         }
 
         return sb.toString();

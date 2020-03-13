@@ -17,7 +17,7 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -80,7 +80,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
                 return url
             }
         } catch (e: Exception) {
-            LOG.error("Could not apply filter on url: " + url + "\n" + StringUtil.stringifyException(e))
+            LOG.error("Could not apply filter on url: " + url + "\n" + Strings.stringifyException(e))
         }
         return null
     }

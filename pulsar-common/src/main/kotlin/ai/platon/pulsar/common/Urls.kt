@@ -431,6 +431,6 @@ object Urls {
      */
     @JvmStatic
     fun toString(utf8: CharSequence?): String? {
-        return if (utf8 == null) null else StringUtil.cleanField(utf8.toString())
+        return if (utf8 == null) null else Strings.cleanField(utf8.toString())
     }
 }

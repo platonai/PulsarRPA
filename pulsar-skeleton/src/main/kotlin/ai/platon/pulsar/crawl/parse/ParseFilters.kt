@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
@@ -46,7 +46,7 @@ class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfi
         try {
             parseFilter.filter(parseContext)
         } catch (e: Throwable) {
-            log.warn(StringUtil.stringifyException(e))
+            log.warn(Strings.stringifyException(e))
         }
 
         return parseContext.parseResult.shouldContinue

@@ -20,7 +20,7 @@ package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.MetricsSystem
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
@@ -36,7 +36,6 @@ import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -127,7 +126,7 @@ class PageParser(
 
             return parseResult
         } catch (e: Throwable) {
-            LOG.error(StringUtil.stringifyException(e))
+            LOG.error(Strings.stringifyException(e))
         }
 
         return ParseResult()

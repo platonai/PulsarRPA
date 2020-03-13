@@ -189,7 +189,7 @@ data class ProxyEntry(
          * */
         fun parse(str: String): ProxyEntry? {
             val ipPort = str.substringBefore(META_DELIMITER)
-            if (!StringUtil.isIpPortLike(ipPort)) {
+            if (!Strings.isIpPortLike(ipPort)) {
                 log.warn("Malformed ip port - {}", str)
                 return null
             }

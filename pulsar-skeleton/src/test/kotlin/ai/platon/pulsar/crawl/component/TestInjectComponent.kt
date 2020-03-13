@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
     if (seeds.startsWith("@")) {
         seeds = String(Files.readAllBytes(Paths.get(seeds.substring(1))))
     }
-    val configuredUrls = StringUtil.getUnslashedLines(seeds)
+    val configuredUrls = Strings.getUnslashedLines(seeds)
             .filter { it.isNotEmpty() && !it.startsWith("#") }
             .sorted().distinct()
     context.getBean(WebDb::class.java).use { webDb ->

@@ -1,8 +1,7 @@
 package ai.platon.pulsar.crawl.filter
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import com.google.gson.annotations.Expose
-import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
 
 class TextFilter {
@@ -22,16 +21,16 @@ class TextFilter {
 
     fun test(text: String?): Boolean {
         buildCache()
-        if (_contains.isNotEmpty() && !StringUtil.contains(text, *_contains)) {
+        if (_contains.isNotEmpty() && !Strings.contains(text, *_contains)) {
             return false
         }
-        if (_containsAny.isNotEmpty() && StringUtil.containsNone(text, *_containsAny)) {
+        if (_containsAny.isNotEmpty() && Strings.containsNone(text, *_containsAny)) {
             return false
         }
-        if (_notContains.isNotEmpty() && StringUtil.contains(text, *_notContains)) {
+        if (_notContains.isNotEmpty() && Strings.contains(text, *_notContains)) {
             return false
         }
-        return !(_containsNone.isNotEmpty() && StringUtil.containsAny(text, *_containsNone))
+        return !(_containsNone.isNotEmpty() && Strings.containsAny(text, *_containsNone))
     }
 
     private fun buildCache() {

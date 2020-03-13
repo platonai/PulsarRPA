@@ -2,7 +2,7 @@ package ai.platon.pulsar.crawl.fetch.indexer
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
@@ -163,7 +163,7 @@ class JITIndexer(
                 indexedPages.incrementAndGet()
             } // if
         } catch (e: Throwable) {
-            LOG.error("Failed to index a page " + StringUtil.stringifyException(e))
+            LOG.error("Failed to index a page " + Strings.stringifyException(e))
         }
 
     }

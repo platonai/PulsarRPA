@@ -62,6 +62,7 @@ class BrowserError(
         const val NO_SUPPORTED_PROXIES = "ERR_NO_SUPPORTED_PROXIES"
         const val CONNECTION_CLOSED = "ERR_CONNECTION_CLOSED"
         const val EMPTY_RESPONSE = "ERR_EMPTY_RESPONSE"
+        const val CONNECTION_RESET = "ERR_CONNECTION_RESET"
     }
 }
 
@@ -86,12 +87,12 @@ class CancellableSleeper(val task: FetchTask): Sleeper {
  */
 open class BrowserEmulator(
         val privacyContextManager: PrivacyContextManager,
-        protected val fetchTaskTracker: FetchTaskTracker,
-        protected val metricsSystem: MetricsSystem,
-        protected val immutableConfig: ImmutableConfig
+        val fetchTaskTracker: FetchTaskTracker,
+        val metricsSystem: MetricsSystem,
+        val immutableConfig: ImmutableConfig
 ) : Parameterized, AutoCloseable {
     companion object {
-        private var instanceSequence = AtomicInteger()
+        private var sequencer = AtomicInteger()
     }
 
     private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
@@ -105,13 +106,13 @@ open class BrowserEmulator(
     private val driverPool = driverManager.driverPool
 
     init {
-        instanceSequence.incrementAndGet()
+        sequencer.incrementAndGet()
         params.withLogger(log).info()
     }
 
     override fun getParams(): Params {
         return Params.of(
-                "instanceSequence", instanceSequence,
+                "instanceSequence", sequencer,
                 "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
                 "pageLoadTimeout", driverControl.pageLoadTimeout,
                 "scriptTimeout", driverControl.scriptTimeout,
@@ -134,11 +135,16 @@ open class BrowserEmulator(
             return FetchResult(task, ForwardingResponse.canceled(task.page))
         }
 
-        fetchTaskTracker.totalTaskCount.getAndIncrement()
+        fetchTaskTracker.totalTasks.getAndIncrement()
         fetchTaskTracker.batchTaskCounters.computeIfAbsent(task.batchId) { AtomicInteger() }.incrementAndGet()
 
         val result = browseWithDriver(task, driver)
-        logNetworkTraffic(result.response)
+
+        fetchTaskTracker.contentBytes.addAndGet(result.response.length())
+        val i = fetchTaskTracker.totalFinishedTasks.incrementAndGet()
+        if (i % 5 == 0) {
+            fetchTaskTracker.updateNetworkTraffic()
+        }
 
         return result
     }
@@ -177,7 +183,7 @@ open class BrowserEmulator(
             response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
-                log.warn("Web driver is disconnected - {}", StringUtil.simplifyException(e))
+                log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
             } else {
                 log.warn("Unexpected WebDriver exception", e)
             }
@@ -187,7 +193,7 @@ open class BrowserEmulator(
             response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
             if (!isClosed) {
-                log.warn("Web driver is disconnected - {}", StringUtil.simplifyException(e))
+                log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
             }
 
             driver.retire()
@@ -234,11 +240,11 @@ open class BrowserEmulator(
             status = ProtocolStatus.failed(ProtocolStatusCodes.SCRIPT_TIMEOUT)
         } catch (e: org.openqa.selenium.UnhandledAlertException) {
             // TODO: review the status, what's the proper way to handle this exception?
-            log.warn(StringUtil.simplifyException(e))
+            log.warn(Strings.simplifyException(e))
             status = ProtocolStatus.STATUS_SUCCESS
         } catch (e: org.openqa.selenium.TimeoutException) {
             // TODO: which kind of timeout? resource loading timeout? script execution timeout? or web driver connection timeout?
-            log.warn("Unexpected web driver timeout - {}", StringUtil.simplifyException(e))
+            log.warn("Unexpected web driver timeout - {}", Strings.simplifyException(e))
             status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
@@ -347,7 +353,7 @@ open class BrowserEmulator(
             result.state = FlowState.BREAK
             throw e
         } catch (e: WebDriverException) {
-            val message = StringUtil.stringifyException(e)
+            val message = Strings.stringifyException(e)
             when {
                 e.cause is org.apache.http.conn.HttpHostConnectException -> {
                     // Web driver is closed
@@ -361,20 +367,20 @@ open class BrowserEmulator(
                         // throw if we use default sleeper, if we use CancellableSleeper, this must not happen
                         log.warn("Interrupted waiting for document (by cause), cancel it | {}", task.url)
                     } else {
-                        log.warn("Interrupted waiting for document | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
+                        log.warn("Interrupted waiting for document | {} \n>>>\n{}\n<<<", task.url, Strings.stringifyException(e))
                     }
                     result.state = FlowState.BREAK
                 }
                 message.contains("Cannot read property") -> {
                     // An error reported by chrome like this:
                     // unknown error: Cannot read property 'forEach' of null
-                    log.warn("Javascript exception error | {} {}", task.url, StringUtil.simplifyException(e))
+                    log.warn("Javascript exception error | {} {}", task.url, Strings.simplifyException(e))
                     // ignore script errors, document might lost data, but it's the page extractor's responsibility
                     status = ProtocolStatus.STATUS_SUCCESS
                     result.state = FlowState.CONTINUE
                 }
                 else -> {
-                    log.warn("Unexpected WebDriver exception | {} \n>>>\n{}\n<<<", task.url, StringUtil.stringifyException(e))
+                    log.warn("Unexpected WebDriver exception | {} \n>>>\n{}\n<<<", task.url, Strings.stringifyException(e))
                     throw e
                 }
             }
@@ -563,7 +569,7 @@ open class BrowserEmulator(
             log.info("Timeout ({}) after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
                     status.minorName,
                     elapsed,
-                    StringUtil.readableBytes(length.toLong()),
+                    Strings.readableBytes(length.toLong()),
                     driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
@@ -590,7 +596,7 @@ open class BrowserEmulator(
         // TODO: deprecated counters
         val t = fetchTaskTracker
         t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
-        t.totalSuccessCount.incrementAndGet()
+        t.totalSuccessTasks.incrementAndGet()
     }
 
     protected open fun handlePageSource(pageSource: String): StringBuilder {
@@ -658,8 +664,8 @@ open class BrowserEmulator(
                 AppFiles.export(page, bytes, ".png")
             }
         } catch (e: Exception) {
-            log.warn("Screenshot failed {} | {}", StringUtil.readableBytes(contentLength), page.url)
-            log.warn(StringUtil.stringifyException(e))
+            log.warn("Screenshot failed {} | {}", Strings.readableBytes(contentLength), page.url)
+            log.warn(Strings.stringifyException(e))
         }
     }
 
@@ -713,26 +719,11 @@ open class BrowserEmulator(
         }
     }
 
-    private fun logNetworkTraffic(response: Response) {
-        val length = response.length()
-        if (length < 1000 && !response.status.isSuccess) {
-            return
-        }
-
-        val tracker = fetchTaskTracker
-        tracker.updateNetworkTraffic(length)
-
-        log.info("Content recv: {}, sys recv: {}, total sys recv: {}",
-                StringUtil.readableBytes(tracker.htmlContentBytes.get()),
-                StringUtil.readableBytes(tracker.systemNetworkBytesRecv - tracker.initSystemNetworkBytesRecv),
-                StringUtil.readableBytes(tracker.systemNetworkBytesRecv))
-    }
-
     private fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForURI(task.url)
-        val readableLength = StringUtil.readableBytes(pageSource.length.toLong())
+        val readableLength = Strings.readableBytes(pageSource.length.toLong())
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)

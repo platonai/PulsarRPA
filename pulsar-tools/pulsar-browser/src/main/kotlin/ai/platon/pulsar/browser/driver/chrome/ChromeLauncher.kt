@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome
 import ai.platon.pulsar.browser.driver.chrome.LauncherConfig.Companion.CHROME_BINARY_SEARCH_PATHS
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeServiceImpl
 import ai.platon.pulsar.common.AppPaths
+import com.github.kklisura.cdt.protocol.types.security.CertificateErrorAction
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -93,7 +94,9 @@ class ChromeDevtoolsOptions(
         @ChromeParameter("metrics-recording-only")
         var metricsRecordingOnly: Boolean = true,
         @ChromeParameter("safebrowsing-disable-auto-update")
-        var safebrowsingDisableAutoUpdate: Boolean = true
+        var safebrowsingDisableAutoUpdate: Boolean = true,
+        @ChromeParameter("ignore-certificate-errors")
+        var ignoreCertificateErrors: Boolean = true
 ) {
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 

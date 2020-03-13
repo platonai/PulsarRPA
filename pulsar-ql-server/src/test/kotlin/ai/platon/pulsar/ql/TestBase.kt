@@ -3,7 +3,7 @@ package ai.platon.pulsar.ql
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.h2.H2Db
@@ -56,7 +56,7 @@ abstract class TestBase {
                 remoteConnection = remoteDB.getConnection(remoteDbName)
                 remoteStat = remoteConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
             } catch (e: Throwable) {
-                println(StringUtil.stringifyException(e))
+                println(Strings.stringifyException(e))
             }
         }
 

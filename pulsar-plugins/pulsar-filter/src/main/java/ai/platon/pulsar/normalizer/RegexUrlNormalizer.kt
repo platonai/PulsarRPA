@@ -19,7 +19,7 @@
 package ai.platon.pulsar.normalizer
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.UrlNormalizer
@@ -199,7 +199,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : UrlNormalizer {
         try {
             getRulesReader(conf).use { reader -> rules = readConfiguration(reader) }
         } catch (e: IOException) {
-            LOG.error(StringUtil.stringifyException(e))
+            LOG.error(Strings.stringifyException(e))
         }
         defaultRules = rules
     }

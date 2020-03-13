@@ -11,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class StringUtilTest {
+public class StringsTest {
 
     @Test public void join() {
         assertEquals("", StringUtil.join(Arrays.asList(""), " "));

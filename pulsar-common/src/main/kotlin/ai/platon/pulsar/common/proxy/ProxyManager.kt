@@ -1,13 +1,12 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Duration
@@ -29,7 +28,6 @@ open class ProxyManager(
 
     open val localPort = -1
     open val currentProxyEntry: ProxyEntry? = null
-    // Disabled currently
     open val isEnabled = false
     val isDisabled get() = !isEnabled
     val isClosed get() = closed.get()
@@ -94,41 +92,34 @@ open class ProxyManager(
                 .map { Paths.get(it, "proxy.providers.txt") }
 
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
-        private var enabledProviderDirLastWatchTime = Instant.EPOCH
+        private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
 
         init {
-            INIT_PROXY_PROVIDER_FILES.forEach {
-                if (Files.exists(it)) {
-                    FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
-                }
+            INIT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+                FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
             }
         }
 
         fun hasEnabledProvider(): Boolean {
-            try {
-                val now = Instant.now()
-                synchronized(ProxyManager::class.java) {
-                    val elapsedTime = Duration.between(enabledProviderDirLastWatchTime, now)
-                    if (elapsedTime > PROXY_FILE_WATCH_INTERVAL) {
-                        numEnabledProviderFiles = Files.list(AppPaths.ENABLED_PROVIDER_DIR)
-                                .filter { Files.isRegularFile(it) }.count()
-                    }
-                    enabledProviderDirLastWatchTime = now
+            val now = Instant.now()
+            synchronized(ProxyManager::class.java) {
+                if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
+                    providerDirLastWatchTime = now
+                    numEnabledProviderFiles = try {
+                        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
+                    } catch (e: Throwable) { 0 }
                 }
-                return numEnabledProviderFiles > 0
-            } catch (e: IOException) {
-                log.error("Failed to list files in ${AppPaths.ENABLED_PROVIDER_DIR}", e)
             }
 
-            return false
+            return numEnabledProviderFiles > 0
         }
 
         /**
          * Proxy system can be enabled/disabled at runtime
          * */
         fun isProxyEnabled(): Boolean {
-            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_ENABLE_PROXY)) {
+            if (FileCommand.exists(AppConstants.CMD_ENABLE_PROXY)) {
                 return true
             }
 

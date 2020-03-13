@@ -28,7 +28,7 @@ object AppPaths {
     @JvmField
     val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
     // directory for symbolic links, this path should be as short as possible
-    @RequiredDirectory
+    @RequiredDirectory @JvmField
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
 
     @RequiredDirectory @JvmField
@@ -68,7 +68,7 @@ object AppPaths {
     val AVAILABLE_PROVIDER_DIR = AppPaths.get(PROXY_BASE_DIR, "providers-available")
     @RequiredDirectory @JvmField
     val ENABLED_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-enabled")
-    
+
     @RequiredDirectory @JvmField
     val AVAILABLE_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-available")
     @RequiredDirectory @JvmField

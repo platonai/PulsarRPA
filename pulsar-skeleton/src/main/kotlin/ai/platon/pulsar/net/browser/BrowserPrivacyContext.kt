@@ -1,7 +1,6 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.Freezable
-import ai.platon.pulsar.common.StringUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry

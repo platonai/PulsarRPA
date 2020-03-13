@@ -67,7 +67,7 @@ public class TestString {
     @Test
     public void testToHexString() {
         ByteBuffer buffer = ByteBuffer.wrap("".getBytes());
-        assertEquals("", StringUtil.toHexString(buffer));
+        assertEquals("", Strings.toHexString(buffer));
     }
 
     @Test
@@ -140,7 +140,7 @@ public class TestString {
     public void testReplaceCharsetInHtml() {
         List<String> lines = ResourceLoader.readAllLines("data/html-charsets.txt");
         for (String line : lines) {
-            line = StringUtil.replaceCharsetInHtml(line, "UTF-8");
+            line = Strings.replaceCharsetInHtml(line, "UTF-8");
             assertTrue(line, line.contains("UTF-8"));
         }
     }
@@ -174,7 +174,7 @@ public class TestString {
         // text = text.replaceAll("¥|,|'", "");
         // System.out.println(text);
 
-        Matcher matcher = StringUtil.PRICE_PATTERN.matcher(text);
+        Matcher matcher = Strings.PRICE_PATTERN.matcher(text);
 
         int count = 0;
         while (matcher.find()) {
@@ -198,7 +198,7 @@ public class TestString {
         String text = "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ";
 
         assertEquals(text.trim(), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ");
-        assertEquals(StringUtil.trimNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘");
+        assertEquals(Strings.trimNonCJKChar(text), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘");
     }
 
     @Test
@@ -209,7 +209,7 @@ public class TestString {
         };
 
         for (String text : texts) {
-            System.out.println(StringUtil.stripNonCJKChar(text, StringUtil.DEFAULT_KEEP_CHARS));
+            System.out.println(Strings.stripNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS));
         }
 
 //    assertEquals(text.trim(), "天王表 正品热卖 机械表 全自动 男士商务气派钢带手表GS5733T/D尊贵大气 个性表盘  ");
@@ -223,7 +223,7 @@ public class TestString {
         };
 
         for (String text : texts) {
-            assertTrue(StringUtil.isChinese(text));
+            assertTrue(Strings.isChinese(text));
         }
 
         String[] noChineseTexts = {
@@ -246,9 +246,9 @@ public class TestString {
         };
 
         for (String text : mainlyChineseTexts) {
-            System.out.println(StringUtil.countChinese(text) + "/" + text.length()
-                    + "=" + StringUtil.countChinese(text) * 1.0 / text.length() + "\t" + text);
-            assertTrue(text, StringUtil.isMainlyChinese(text, 0.6));
+            System.out.println(Strings.countChinese(text) + "/" + text.length()
+                    + "=" + Strings.countChinese(text) * 1.0 / text.length() + "\t" + text);
+            assertTrue(text, Strings.isMainlyChinese(text, 0.6));
         }
     }
 
@@ -278,20 +278,20 @@ public class TestString {
         assertEquals("http://t.tt/", parts[0]);
 
         s = "ld,-o,-s,-w:hello,-a:b,-c";
-        String[] options = StringUtils.replaceChars(s, ":,", StringUtil.padding[2]).split(" ");
+        String[] options = StringUtils.replaceChars(s, ":,", Strings.padding[2]).split(" ");
         System.out.println(StringUtils.join(options, " "));
     }
 
     @Test
     public void testCsslize() {
         String s = "-TestStringUtil";
-        assertEquals("-test-string-util", StringUtil.csslize(s));
+        assertEquals("-test-string-util", Strings.csslize(s));
 
         s = "TestStringUtil-a";
-        assertEquals("test-string-util-a", StringUtil.csslize(s));
+        assertEquals("test-string-util-a", Strings.csslize(s));
 
         s = "TestStringUtil-";
-        assertEquals("test-string-util-", StringUtil.csslize(s));
+        assertEquals("test-string-util-", Strings.csslize(s));
     }
 
     @Test
@@ -304,15 +304,15 @@ public class TestString {
         cases.put("image      detail", "image-detail");
 
         for (Map.Entry<String, String> entry : cases.entrySet()) {
-            assertEquals(entry.getValue(), StringUtil.csslize(entry.getKey()));
+            assertEquals(entry.getValue(), Strings.csslize(entry.getKey()));
         }
     }
 
     @Test
     public void testHumanize() {
         String s = "TestStringUtil";
-        assertEquals("test string util", StringUtil.humanize(s));
-        assertEquals("test.string.util", StringUtil.humanize(s, "."));
+        assertEquals("test string util", Strings.humanize(s));
+        assertEquals("test.string.util", Strings.humanize(s, "."));
     }
 
     @Test
@@ -322,11 +322,11 @@ public class TestString {
         kvs.put("b", "2");
         kvs.put("c", "3");
 
-        assertEquals(kvs, StringUtil.parseKvs("a=1 b=2 c=3"));
-        assertEquals(kvs, StringUtil.parseKvs("a:1\nb:2\tc:3", ":"));
-        assertTrue(StringUtil.parseKvs("abcd1234*&#$").isEmpty());
+        assertEquals(kvs, Strings.parseKvs("a=1 b=2 c=3"));
+        assertEquals(kvs, Strings.parseKvs("a:1\nb:2\tc:3", ":"));
+        assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty());
 
-        System.out.println(StringUtil.parseKvs("a=1 b=2 c=3 c=4  d e f"));
+        System.out.println(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"));
         System.out.println(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="));
         System.out.println(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="));
 
@@ -353,7 +353,7 @@ public class TestString {
         kvs.put("-isX", "true");
 
         // assertEquals(kvs, StringUtil.parseOptions("-a 1 -b 2 -c 3 -isX"));
-        assertTrue(StringUtil.parseKvs("abcd1234*&#$").isEmpty());
+        assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty());
     }
 
     @Test
@@ -368,7 +368,7 @@ public class TestString {
                 "http://news.163.com/\t--fetch-interval=1h --entity=#content" +
                 "\n";
 
-        List<String> lines = StringUtil.getUnslashedLines(s);
+        List<String> lines = Strings.getUnslashedLines(s);
 
         assertEquals(4, lines.size());
 
@@ -376,7 +376,7 @@ public class TestString {
                 "http://sz.sxrb.com/sxxww/dspd/szpd/fcjjjc/\n" +
                 "http://sz.sxrb.com/sxxww/dspd/szpd/hydt/";
 
-        lines = StringUtil.getUnslashedLines(s);
+        lines = Strings.getUnslashedLines(s);
         assertEquals(3, lines.size());
     }
 
@@ -389,7 +389,7 @@ public class TestString {
         }
 
         File seedFile = File.createTempFile("seed", ".txt");
-        List<String> unslashedLines = StringUtil.getUnslashedLines(seeds);
+        List<String> unslashedLines = Strings.getUnslashedLines(seeds);
 
 //        for (int i = 0; i < unslashedLines.size(); i++) {
 //            System.out.println(i + "\t" + unslashedLines.get(i));
@@ -407,12 +407,12 @@ public class TestString {
     @Test
     public void testGetFirstInteger() {
         String s = "-hello world 999 i love you 520 forever";
-        assertEquals(999, StringUtil.getFirstInteger(s, -1));
+        assertEquals(999, Strings.getFirstInteger(s, -1));
     }
 
     @Test
     public void testGetFirstFloatNumber() {
         String s = "-hello world 999.00.0 i love you 520.0 forever";
-        assertEquals(999.00f, StringUtil.getFirstFloatNumber(s, Float.MIN_VALUE), 0.1);
+        assertEquals(999.00f, Strings.getFirstFloatNumber(s, Float.MIN_VALUE), 0.1);
     }
 }

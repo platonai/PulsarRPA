@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
@@ -27,10 +27,10 @@ class BeforeBatchHandler: BatchHandler() {
 class AfterBatchHandler: BatchHandler() {
     override fun invoke(pages: Iterable<WebPage>) {
         val size = Iterables.size(pages)
-        val length = pages.joinToString { StringUtil.readableBytes(it.aveContentBytes.toLong()) }
+        val length = pages.joinToString { Strings.readableBytes(it.aveContentBytes.toLong()) }
         val lengthAfterCompress = pages.asSequence()
                 .map { it.content?.array()?:"".toByteArray() }
-                .joinToString { StringUtil.readableBytes(compress(it).second.toLong()) }
+                .joinToString { Strings.readableBytes(compress(it).second.toLong()) }
         println("After fetching - Fetched $size pages\nLength: \n$length\nCompressed: \n$lengthAfterCompress")
     }
 

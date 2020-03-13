@@ -11,6 +11,8 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
+import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.net.browser.BrowserEmulator
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -18,6 +20,7 @@ import com.google.common.collect.TreeMultiset
 import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
@@ -31,6 +34,8 @@ class FetchTaskTracker(
         private val metrics: MetricsSystem,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
+
+    private val log = LoggerFactory.getLogger(FetchTaskTracker::class.java)!!
     private val groupMode = conf.getEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     private val seedIndexer = WeakPageIndexer(SEED_HOME_URL, webDb)
     private val urlTrackerIndexer = WeakPageIndexer(URL_TRACKER_HOME_URL, webDb)
@@ -38,6 +43,7 @@ class FetchTaskTracker(
      * The limitation of url length
      */
     private var maxUrlLength: Int = conf.getInt(PARSE_MAX_URL_LENGTH, 1024)
+    val startTime = Instant.now()
     /**
      * Tracking statistics for each host
      */
@@ -55,8 +61,9 @@ class FetchTaskTracker(
     val failedUrls = ConcurrentSkipListSet<String>()
     val deadUrls = ConcurrentSkipListSet<String>()
 
-    val totalTaskCount = AtomicInteger(0)
-    val totalSuccessCount = AtomicInteger(0)
+    val totalTasks = AtomicInteger(0)
+    val totalSuccessTasks = AtomicInteger(0)
+    val totalFinishedTasks = AtomicInteger(0)
 
     val batchTaskCounters = ConcurrentHashMap<Int, AtomicInteger>()
     val batchSuccessCounters = ConcurrentHashMap<Int, AtomicInteger>()
@@ -65,7 +72,13 @@ class FetchTaskTracker(
     var initSystemNetworkBytesRecv = 0L
     @Volatile
     var systemNetworkBytesRecv = 0L
-    val htmlContentBytes = AtomicLong()
+    val networkBytesRecv
+        get() = systemNetworkBytesRecv - initSystemNetworkBytesRecv
+    val networkBytesRecvPerSecond
+        get() = networkBytesRecv / (Duration.between(startTime, Instant.now())).seconds
+    val contentBytes = AtomicLong()
+    val contentBytesPerSecond
+        get() = contentBytes.get() / (Duration.between(startTime, Instant.now())).seconds
 
     private val isClosed = AtomicBoolean()
     private val isReported = AtomicBoolean()
@@ -141,7 +154,6 @@ class FetchTaskTracker(
         if (failedHostTracker.count(host) > failureHostEventCount) {
             LOG.info("Host unreachable : $host")
             unreachableHosts.add(host)
-            // retune(true);
             return true
         }
 
@@ -215,9 +227,17 @@ class FetchTaskTracker(
         failedHostTracker.remove(host)
     }
 
-    fun updateNetworkTraffic(htmlContentLength: Long) {
-        htmlContentBytes.addAndGet(htmlContentLength)
+    fun updateNetworkTraffic() {
         systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+
+        if (log.isInfoEnabled) {
+            log.info("Traffic - content: {} {}/s, net recv: {} {}/s, total net recv: {}",
+                    Strings.readableBytes(contentBytes.get()),
+                    Strings.readableBytes(contentBytesPerSecond),
+                    Strings.readableBytes(networkBytesRecv),
+                    Strings.readableBytes(networkBytesRecvPerSecond),
+                    Strings.readableBytes(systemNetworkBytesRecv))
+        }
     }
 
     fun countHostTasks(host: String): Int {

@@ -17,7 +17,7 @@
 package ai.platon.pulsar.protocol.selenium;
 
 import ai.platon.pulsar.PulsarEnv;
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse;
@@ -136,7 +136,7 @@ public class BrowserEmulatorProtocol extends ForwardingProtocol {
         try {
             browserEmulator.compareAndSet(null, PulsarEnv.Companion.getBean(BrowserEmulatedFetcher.class));
         } catch (BeansException e) {
-            log.warn("{}", StringUtil.simplifyException(e));
+            log.warn("{}", Strings.simplifyException(e));
         }
 
         return browserEmulator.get();

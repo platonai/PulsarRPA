@@ -2,7 +2,7 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.DateTimeUtil
 import ai.platon.pulsar.common.FetchThreadExecutor
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -209,7 +209,7 @@ class BrowserEmulatedFetcher(
                 batch.beforeFetch(task.page)
                 browserEmulator.fetch(task, driver)
             } catch (e: ProxyException) {
-                log.warn(StringUtil.simplifyException(e))
+                log.warn(Strings.simplifyException(e))
                 FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
             } catch (e: WebDriverPoolExhaust) {
                 log.warn("Too many web drivers", e)
@@ -353,7 +353,7 @@ class BrowserEmulatedFetcher(
         if (log.isInfoEnabled) {
             log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
                     batch.batchId, String.format("%2d", batch.round),
-                    StringUtil.readableBytes(response.length()), DateTimeUtil.readableDuration(elapsed),
+                    Strings.readableBytes(response.length()), DateTimeUtil.readableDuration(elapsed),
                     response.status,
                     batch.stat.numFailedTasks,
                     url
@@ -368,7 +368,7 @@ class BrowserEmulatedFetcher(
             log.info("Batch {} round {} fetched{}{} in {}{} | {}",
                     batch.batchId, String.format("%2d", batch.round),
                     if (batch.stat.totalBytes < 2000) " only " else " ",
-                    StringUtil.readableBytes(response.length()),
+                    Strings.readableBytes(response.length()),
                     DateTimeUtil.readableDuration(elapsed),
                     codeMessage, url)
         }
@@ -405,11 +405,11 @@ class BrowserEmulatedFetcher(
                     mainBatch.batchId, mainBatch.batchSize,
                     DateTimeUtil.readableDuration(mainBatch.elapsed),
                     DateTimeUtil.readableDuration(mainBatch.averageTime),
-                    StringUtil.readableBytes(mainBatch.stat.averagePageSize.roundToLong()),
+                    Strings.readableBytes(mainBatch.stat.averagePageSize.roundToLong()),
                     mainBatch.speed,
                     proxyDisplay?:"(no proxy)"
             )
-            val proxyManager = privacyContextManager.activeContext.proxyManager
+            browserEmulator.fetchTaskTracker.updateNetworkTraffic()
         }
 
         if (log.isTraceEnabled) {

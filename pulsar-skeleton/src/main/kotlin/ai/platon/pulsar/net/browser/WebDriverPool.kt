@@ -1,7 +1,7 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -142,11 +142,11 @@ class WebDriverPool(
             driver.quit()
             numQuit.incrementAndGet()
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            log.info("WebDriver is already quit {} - {}", driver, StringUtil.simplifyException(e))
+            log.info("WebDriver is already quit {} - {}", driver, Strings.simplifyException(e))
         } catch (e: WebDriverException) {
-            log.warn("Quit WebDriver {} - {}", driver, StringUtil.simplifyException(e))
+            log.warn("Quit WebDriver {} - {}", driver, Strings.simplifyException(e))
         } catch (e: Throwable) {
-            log.error("Unknown error - {}", StringUtil.stringifyException(e))
+            log.error("Unknown error - {}", Strings.stringifyException(e))
         }
     }
 

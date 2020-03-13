@@ -159,8 +159,8 @@ object AppFiles {
     }
 
     fun logUnreachableHosts(unreachableHosts: Collection<String>) {
-        val report = unreachableHosts.map { StringUtil.reverse(it) }.sorted()
-                .map { StringUtil.reverse(it) }.joinToString { "\n" }
+        val report = unreachableHosts.map { Strings.reverse(it) }.sorted()
+                .map { Strings.reverse(it) }.joinToString { "\n" }
 
         try {
             Files.write(AppPaths.PATH_UNREACHABLE_HOSTS, report.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)

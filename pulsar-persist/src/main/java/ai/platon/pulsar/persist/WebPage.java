@@ -18,7 +18,7 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.common.DateTimeUtil;
 import ai.platon.pulsar.common.HtmlIntegrity;
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
@@ -906,7 +906,7 @@ public class WebPage {
         if (sig == null) {
             sig = ByteBuffer.wrap("".getBytes());
         }
-        return StringUtil.toHexString(sig);
+        return Strings.toHexString(sig);
     }
 
     // TODO: use a separate avro field to hold BROWSER_JS_DATA
@@ -962,7 +962,7 @@ public class WebPage {
         if (sig == null) {
             sig = ByteBuffer.wrap("".getBytes());
         }
-        return StringUtil.toHexString(sig);
+        return Strings.toHexString(sig);
     }
 
     @NotNull

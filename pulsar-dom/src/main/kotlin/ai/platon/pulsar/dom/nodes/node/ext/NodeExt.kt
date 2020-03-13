@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_HIDDEN
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
@@ -105,7 +105,7 @@ fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
 }
 
 fun Element.parseStyle(): Array<String> {
-    return StringUtil.stripNonChar(attr("style"), ":;")
+    return Strings.stripNonChar(attr("style"), ":;")
             .split(";".toRegex())
             .dropLastWhile { it.isEmpty() }
             .toTypedArray()
@@ -237,14 +237,14 @@ val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
 // TODO: detect all SQL types
 val Node.isInt get() = isShortText && StringUtils.isNumeric(cleanText)
 
-val Node.isFloat get() = isShortText && StringUtil.isFloat(cleanText)
+val Node.isFloat get() = isShortText && Strings.isFloat(cleanText)
 
 /**
  * If the text is numeric and have non-numeric surroundings
  * */
-val Node.isNumericLike get() = isMediumText && StringUtil.isNumericLike(cleanText)
+val Node.isNumericLike get() = isMediumText && Strings.isNumericLike(cleanText)
 
-val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
+val Node.isMoneyLike get() = isShortText && Strings.isMoneyLike(cleanText)
 
 val Node.intValue by field { SParser(it.cleanText).getInt(Int.MIN_VALUE) }
 
@@ -592,7 +592,7 @@ fun Node.clearMlLabels() {
 }
 
 fun Node.addCaptionWord(word: String) {
-    addTupleItem(A_CAPTION, ai.platon.pulsar.common.StringUtil.stripNonCJKChar(word))
+    addTupleItem(A_CAPTION, Strings.stripNonCJKChar(word))
 }
 
 fun Node.removeCaptionWord(word: String): Boolean {

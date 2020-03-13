@@ -1,6 +1,6 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -137,7 +137,7 @@ internal class FetchTaskBatch(
 
     val elapsed get() = Duration.between(startTime, Instant.now())
     val averageTime get() = elapsed.dividedBy(1 + batchSize.toLong())
-    val speed get() = StringUtil.readableBytes((1.0 * stat.totalBytes / (1 + elapsed.seconds)).roundToLong())
+    val speed get() = Strings.readableBytes((1.0 * stat.totalBytes / (1 + elapsed.seconds)).roundToLong())
 
     /**
      * The universal success tasks

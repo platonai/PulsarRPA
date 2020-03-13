@@ -44,7 +44,7 @@ fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffi
     val browser = page.lastBrowser.name.toLowerCase()
 
     val u = Urls.getURLOrNull(page.url)?: return AppPaths.TMP_DIR
-    val domain = if (StringUtil.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
+    val domain = if (Strings.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
     val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
     val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), "original", browser, domain, filename)
     AppFiles.saveTo(content, path, true)

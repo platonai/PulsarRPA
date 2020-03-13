@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.RuntimeUtils
+import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
@@ -227,7 +227,7 @@ class GeneralCrawler: Crawler() {
 
     fun localFileCommand() {
         while (true) {
-            if (RuntimeUtils.hasLocalFileCommand(AppConstants.CMD_PROXY_RECONNECT)) {
+            if (FileCommand.exists(AppConstants.CMD_PROXY_RECONNECT)) {
                 println("Execute local file command: " + AppConstants.CMD_PROXY_RECONNECT)
             }
             Thread.sleep(5000)

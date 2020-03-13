@@ -18,7 +18,7 @@
 package ai.platon.pulsar.crawl.protocol;
 
 import ai.platon.pulsar.common.ResourceLoader;
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.persist.WebPage;
 import ai.platon.pulsar.persist.metadata.FetchMode;
@@ -30,9 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -132,7 +129,7 @@ public class ProtocolFactory implements AutoCloseable {
             String className = config[1];
             return (Protocol) Class.forName(className).newInstance();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            LOG.error(StringUtil.stringifyException(e));
+            LOG.error(Strings.stringifyException(e));
         }
 
         return null;

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.first
@@ -64,7 +64,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstInteger(dom: ValueDom, cssQuery: String, defaultValue: Int = 0): Int {
         val s = firstText(dom, cssQuery)
-        return StringUtil.getFirstInteger(s, defaultValue)
+        return Strings.getFirstInteger(s, defaultValue)
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
@@ -73,7 +73,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun nthInteger(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Int = 0): Int {
         val s = nthText(dom, cssQuery, n)
-        return StringUtil.getFirstInteger(s, defaultValue)
+        return Strings.getFirstInteger(s, defaultValue)
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -81,7 +81,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstNumber(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): Float {
         val s = firstText(dom, cssQuery)
-        return StringUtil.getFirstFloatNumber(s, defaultValue)
+        return Strings.getFirstFloatNumber(s, defaultValue)
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
@@ -90,7 +90,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun nthNumber(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): Float {
         val s = nthText(dom, cssQuery, n)
-        return StringUtil.getFirstFloatNumber(s, defaultValue)
+        return Strings.getFirstFloatNumber(s, defaultValue)
     }
 
     @UDFunction(description = "Select all the element from a DOM by the given css query " +

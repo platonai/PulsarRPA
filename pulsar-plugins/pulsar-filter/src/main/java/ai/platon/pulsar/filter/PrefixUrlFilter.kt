@@ -21,7 +21,7 @@ package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.PrefixStringMatcher
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.TrieStringMatcher
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -49,7 +49,7 @@ class PrefixUrlFilter(conf: ImmutableConfig) : UrlFilter {
         try {
             getRulesReader(conf).use { reader -> trie = readConfiguration(reader) }
         } catch (e: IOException) {
-            LOG.error(StringUtil.stringifyException(e))
+            LOG.error(Strings.stringifyException(e))
             throw RuntimeException(e.message, e)
         }
     }

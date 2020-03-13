@@ -410,7 +410,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             return String.format(fmt,
                     category,
                     page.protocolStatus.minorCode,
-                    StringUtil.readableBytes(bytes.toLong(), 7, false),
+                    Strings.readableBytes(bytes.toLong(), 7, false),
                     DateTimeUtil.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",
                     jsSate,
