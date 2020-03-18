@@ -45,11 +45,6 @@ class PulsarEnv {
     companion object {
         val contextConfigLocation: String
         val applicationContext: ClassPathXmlApplicationContext
-//        /**
-//         * Gora properties
-//         * TODO: why we need this?
-//         * */
-//        val goraProperties: Properties
         /**
          * If the system is active
          * */

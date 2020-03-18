@@ -76,9 +76,16 @@ class FetchTaskTracker(
         get() = systemNetworkBytesRecv - initSystemNetworkBytesRecv
     val networkBytesRecvPerSecond
         get() = networkBytesRecv / (Duration.between(startTime, Instant.now())).seconds
+    val networkBytesRecvPerPage
+        get() = networkBytesRecv / (1 + totalSuccessTasks.get())
+    /**
+     * The total bytes of page content of all success web pages
+     * */
     val contentBytes = AtomicLong()
     val contentBytesPerSecond
         get() = contentBytes.get() / (Duration.between(startTime, Instant.now())).seconds
+    val contentBytesPerPage
+        get() = contentBytes.get() / (1 + totalSuccessTasks.get())
 
     private val isClosed = AtomicBoolean()
     private val isReported = AtomicBoolean()
@@ -229,15 +236,17 @@ class FetchTaskTracker(
 
     fun updateNetworkTraffic() {
         systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+    }
 
-        if (log.isInfoEnabled) {
-            log.info("Traffic - content: {} {}/s, net recv: {} {}/s, total net recv: {}",
-                    Strings.readableBytes(contentBytes.get()),
-                    Strings.readableBytes(contentBytesPerSecond),
-                    Strings.readableBytes(networkBytesRecv),
-                    Strings.readableBytes(networkBytesRecvPerSecond),
-                    Strings.readableBytes(systemNetworkBytesRecv))
-        }
+    fun formatTraffic(): String {
+        return String.format("Traffic - content: %s, %s/s, %s/p, net recv: %s, %s/s, %s/p, total net recv: %s",
+                Strings.readableBytes(contentBytes.get()),
+                Strings.readableBytes(contentBytesPerSecond),
+                Strings.readableBytes(contentBytesPerPage),
+                Strings.readableBytes(networkBytesRecv),
+                Strings.readableBytes(networkBytesRecvPerSecond),
+                Strings.readableBytes(networkBytesRecvPerPage),
+                Strings.readableBytes(systemNetworkBytesRecv))
     }
 
     fun countHostTasks(host: String): Int {

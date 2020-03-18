@@ -140,10 +140,8 @@ open class BrowserEmulator(
 
         val result = browseWithDriver(task, driver)
 
-        fetchTaskTracker.contentBytes.addAndGet(result.response.length())
-        val i = fetchTaskTracker.totalFinishedTasks.incrementAndGet()
-        if (i % 5 == 0) {
-            fetchTaskTracker.updateNetworkTraffic()
+        if (result.status.isSuccess) {
+            handleBrowseSuccess(task.batchId, result)
         }
 
         return result
@@ -285,9 +283,6 @@ open class BrowserEmulator(
         page.lastBrowser = driver.browserType
         page.htmlIntegrity = integrity
         handleBrowseFinish(page, headers)
-        if (status.isSuccess) {
-            handleNavigateSuccess(batchId, page)
-        }
 
         exportIfNecessary(pageSource, status, page, driver)
 
@@ -296,7 +291,10 @@ open class BrowserEmulator(
         return ForwardingResponse(page.url, pageSource, status, headers, page)
     }
 
-    @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(CancellationException::class,
+            IllegalContextStateException::class,
+            IllegalClassException::class,
+            WebDriverException::class)
     private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: DriverConfig): NavigateResult {
         checkState(driver)
         checkState(task)
@@ -592,13 +590,6 @@ open class BrowserEmulator(
         }
     }
 
-    protected open fun handleNavigateSuccess(batchId: Int, page: WebPage) {
-        // TODO: deprecated counters
-        val t = fetchTaskTracker
-        t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
-        t.totalSuccessTasks.incrementAndGet()
-    }
-
     protected open fun handlePageSource(pageSource: String): StringBuilder {
         // The browser has already convert source code to UTF-8
         return replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
@@ -732,6 +723,22 @@ open class BrowserEmulator(
                     proxyEntry.display, domain, count, link, task.url)
         } else {
             log.warn("Page is broken with {}({}) | file://{} | {}", readableLength, integrity.name, link, task.url)
+        }
+    }
+
+    protected open fun handleBrowseSuccess(batchId: Int, result: FetchResult) {
+        // TODO: deprecated counters
+        val t = fetchTaskTracker
+        t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
+        t.totalSuccessTasks.incrementAndGet()
+
+        fetchTaskTracker.contentBytes.addAndGet(result.response.length())
+        val i = fetchTaskTracker.totalFinishedTasks.incrementAndGet()
+        if (i % 5 == 0) {
+            fetchTaskTracker.updateNetworkTraffic()
+            if (log.isInfoEnabled) {
+                log.info(fetchTaskTracker.formatTraffic())
+            }
         }
     }
 

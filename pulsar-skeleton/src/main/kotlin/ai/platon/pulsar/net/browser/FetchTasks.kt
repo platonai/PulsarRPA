@@ -56,7 +56,6 @@ class FetchTask(
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = canceled.get()
-    var workerThread = AtomicReference<Thread>()
 
     fun reset() {
         stat = null

@@ -36,6 +36,7 @@ class BrowserEmulatedFetcher(
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
     private val driverManager = privacyContextManager.driverManager
+    private val fetchTaskTracker = browserEmulator.fetchTaskTracker
     private val closed = AtomicBoolean()
 
     fun fetch(url: String): Response {
@@ -204,13 +205,8 @@ class BrowserEmulatedFetcher(
     private fun doFetch(task: FetchTask, batch: FetchTaskBatch): FetchResult {
         return privacyContextManager.activeContext.run(task) { _, driver ->
             try {
-                task.workerThread.set(Thread.currentThread())
-
                 batch.beforeFetch(task.page)
                 browserEmulator.fetch(task, driver)
-            } catch (e: ProxyException) {
-                log.warn(Strings.simplifyException(e))
-                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
             } catch (e: WebDriverPoolExhaust) {
                 log.warn("Too many web drivers", e)
                 FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
@@ -222,7 +218,6 @@ class BrowserEmulatedFetcher(
                 FetchResult(task, ForwardingResponse.failed(task.page, e))
             } finally {
                 batch.afterFetch(task.page)
-                task.workerThread.set(null)
             }
         }
     }
@@ -283,8 +278,6 @@ class BrowserEmulatedFetcher(
             }
 
             checkAndHandleTasksAbort(batch)
-
-            // driverManager.driverPool.fixDriverLeak()
         }
 
         if (batch.workingTasks.isNotEmpty()) {
@@ -319,9 +312,6 @@ class BrowserEmulatedFetcher(
             // Wait if necessary for at most the given time for the computation
             // to complete, and then retrieves its result, if available.
             return future.get(timeout.seconds, TimeUnit.SECONDS)
-        } catch (e: ProxyException) {
-            log.warn("No proxy available", e)
-            status = ProtocolStatus.retry(RetryScope.CRAWL)
         } catch (e: java.util.concurrent.CancellationException) {
             // log.debug("Fetch thread for task #{}/{} is canceled | {}", task.batchTaskId, task.batchId, task.url)
             status = ProtocolStatus.STATUS_CANCELED
@@ -330,7 +320,7 @@ class BrowserEmulatedFetcher(
             status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
         } catch (e: java.util.concurrent.ExecutionException) {
             log.warn("Failed to get the fetch result", e)
-            status = ProtocolStatus.retry(RetryScope.PROTOCOL)
+            status = ProtocolStatus.retry(RetryScope.CRAWL)
         } catch (e: InterruptedException) {
             log.warn("Interrupted when retrieve task result", e)
             status = ProtocolStatus.retry(RetryScope.CRAWL)
@@ -409,7 +399,10 @@ class BrowserEmulatedFetcher(
                     mainBatch.speed,
                     proxyDisplay?:"(no proxy)"
             )
-            browserEmulator.fetchTaskTracker.updateNetworkTraffic()
+            fetchTaskTracker.updateNetworkTraffic()
+            if (log.isInfoEnabled) {
+                log.info(fetchTaskTracker.formatTraffic())
+            }
         }
 
         if (log.isTraceEnabled) {
@@ -419,6 +412,7 @@ class BrowserEmulatedFetcher(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+
         }
     }
 

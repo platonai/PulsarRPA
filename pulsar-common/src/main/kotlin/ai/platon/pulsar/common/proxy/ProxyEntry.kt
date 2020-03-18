@@ -62,7 +62,7 @@ data class ProxyEntry(
         OK, SEGMENT, HOST, OTHER;
 
         val isOK get() = this == OK
-        val isNotOK get() = !isOK
+        val isBanned get() = !isOK
     }
 
     fun willExpireAt(instant: Instant): Boolean {

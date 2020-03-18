@@ -1,11 +1,14 @@
 package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.common.Freezable
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.crawl.PrivacyContext
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
@@ -26,11 +29,6 @@ open class BrowserPrivacyContext(
     companion object {
         val instanceSequence = AtomicInteger()
         val numProxies = AtomicInteger()
-        /**
-         * TODO: use a metrics system
-         * */
-        @Volatile
-        var cumulativePageBytes = 0L
     }
 
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
@@ -82,15 +80,14 @@ open class BrowserPrivacyContext(
     private fun runWithProxy(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         var proxyEntry = proxyManager.currentProxyEntry
 
-        val result: FetchResult
+        var result: FetchResult
         var success = false
         try {
             result = proxyManager.runAnyway { runInDriverPool(task, browseFun) }
             success = result.response.status.isSuccess
-
-            if (success) {
-                cumulativePageBytes += result.response.length()
-            }
+        } catch (e: ProxyException) {
+            log.warn(Strings.simplifyException(e))
+            result = FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
         } finally {
             if (proxyEntry != proxyManager.currentProxyEntry) {
                 proxyEntry = proxyManager.currentProxyEntry
