@@ -114,10 +114,9 @@ data class FetchStat(
 }
 
 data class BatchStat(
-        var numTaskDone: Int = 0,
-        var numSuccessTasks: Int = 0,
-        var numFailedTasks: Int = 0,
-        var totalBytes: Long = 0L
+        var numTasksSuccess: Int = 0,
+        var numTasksFailed: Int = 0,
+        var totalSuccessBytes: Long = 0L
 ) {
-    val averagePageSize get() = 1.0 * totalBytes / (0.1 + numSuccessTasks)
+    val averagePageSize get() = 1.0 * totalSuccessBytes / (0.1 + numTasksSuccess)
 }

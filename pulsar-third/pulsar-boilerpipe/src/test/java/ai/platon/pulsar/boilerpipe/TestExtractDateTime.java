@@ -4,7 +4,7 @@ import ai.platon.pulsar.boilerpipe.document.TextDocument;
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor;
 import ai.platon.pulsar.boilerpipe.sax.HTMLDownloader;
 import ai.platon.pulsar.boilerpipe.sax.HTMLParser;
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -63,8 +63,8 @@ public class TestExtractDateTime {
         if (doc.getTextContent().length() > 0) {
             if (doc.getModifiedTime().isAfter(Instant.EPOCH)) {
                 System.out.println("v\t"
-                        + DateTimeUtil.isoInstantFormat(doc.getPublishTime())
-                        + ", " + DateTimeUtil.isoInstantFormat(doc.getModifiedTime())
+                        + DateTimes.isoInstantFormat(doc.getPublishTime())
+                        + ", " + DateTimes.isoInstantFormat(doc.getModifiedTime())
                         + ", " + doc.getPageCategory()
                         + "\t<-\t" + url);
             } else {

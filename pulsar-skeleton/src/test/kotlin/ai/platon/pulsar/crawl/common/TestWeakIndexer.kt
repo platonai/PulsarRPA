@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
@@ -37,7 +37,7 @@ class TestWeakIndexer {
     @Before
     fun setup() {
         conf["storage.data.store.class"] = AppConstants.TOY_STORE_CLASS
-        exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimeUtil.format(Instant.now(), "MMdd")
+        exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
     }
 
     @After

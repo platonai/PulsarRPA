@@ -1,6 +1,6 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.proxy.ProxyManagerFactory
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -115,7 +116,7 @@ class WebDriverManager(
                     " pageViews: %d elapsed: %s speed: %.2f page/s",
                     driverPool.numOnline, driverPool.numFree, driverPool.numWorking, driverPool.numActive,
                     driverPool.numCrashed.get(), driverPool.numRetired.get(), driverPool.numQuit.get(), numReset.get(),
-                    pageViews.get(), DateTimeUtil.readableDuration(elapsedTime), speed
+                    pageViews.get(), DateTimes.readableDuration(elapsedTime), speed
             )
         } else {
             String.format("%d/%d/%d/%d/%d/%d (free/working/active/online/crashed/retired)",
@@ -136,7 +137,8 @@ class WebDriverManager(
 
     private fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
         freeze {
-            log.info("Closing all web drivers ... {}", formatStatus(verbose = true))
+            log.info("Closing all web drivers ... ")
+            log.info(formatStatus(verbose = true))
             if (processExit) {
                 driverPool.use { it.close() }
             } else {

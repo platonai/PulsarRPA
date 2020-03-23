@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.Urls;
@@ -708,7 +708,7 @@ public class WebPage {
 
     public void putFetchTimeHistory(Instant fetchTime) {
         String fetchTimeHistory = getMetadata().get(Name.FETCH_TIME_HISTORY);
-        fetchTimeHistory = DateTimeUtil.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
+        fetchTimeHistory = DateTimes.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
         getMetadata().set(Name.FETCH_TIME_HISTORY, fetchTimeHistory);
     }
 
@@ -718,7 +718,7 @@ public class WebPage {
         String fetchTimeHistory = getFetchTimeHistory("");
         if (!fetchTimeHistory.isEmpty()) {
             String[] times = fetchTimeHistory.split(",");
-            Instant time = DateTimeUtil.parseInstant(times[0], Instant.EPOCH);
+            Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
             if (time.isAfter(Instant.EPOCH)) {
                 firstCrawlTime = time;
             }
@@ -907,6 +907,17 @@ public class WebPage {
             sig = ByteBuffer.wrap("".getBytes());
         }
         return Strings.toHexString(sig);
+    }
+
+    @Nullable
+    public String getProxy() {
+        return getMetadata().get(Name.PROXY);
+    }
+
+    public void setProxy(@Nullable String proxy) {
+        if (proxy != null) {
+            getMetadata().set(Name.PROXY, proxy);
+        }
     }
 
     // TODO: use a separate avro field to hold BROWSER_JS_DATA
@@ -1378,7 +1389,7 @@ public class WebPage {
 
     public void putIndexTimeHistory(Instant indexTime) {
         String indexTimeHistory = getMetadata().get(Name.INDEX_TIME_HISTORY);
-        indexTimeHistory = DateTimeUtil.constructTimeHistory(indexTimeHistory, indexTime, 10);
+        indexTimeHistory = DateTimes.constructTimeHistory(indexTimeHistory, indexTime, 10);
         getMetadata().set(Name.INDEX_TIME_HISTORY, indexTimeHistory);
     }
 
@@ -1388,7 +1399,7 @@ public class WebPage {
         String indexTimeHistory = getIndexTimeHistory("");
         if (!indexTimeHistory.isEmpty()) {
             String[] times = indexTimeHistory.split(",");
-            Instant time = DateTimeUtil.parseInstant(times[0], Instant.EPOCH);
+            Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
             if (time.isAfter(Instant.EPOCH)) {
                 firstIndexTime = time;
             }

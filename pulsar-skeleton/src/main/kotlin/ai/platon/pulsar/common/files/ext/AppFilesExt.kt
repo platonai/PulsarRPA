@@ -12,7 +12,7 @@ import org.jsoup.nodes.Document
 import java.nio.file.Files
 import java.nio.file.Path
 
-private val monthDay = DateTimeUtil.now("MMdd")
+private val monthDay = DateTimes.now("MMdd")
 
 fun AppFiles.export(status: ProtocolStatus, content: String, page: WebPage): Path {
     return AppFiles.export(StringBuilder(), status, content, page)

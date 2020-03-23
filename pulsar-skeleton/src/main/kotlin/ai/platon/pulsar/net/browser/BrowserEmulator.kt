@@ -727,18 +727,17 @@ open class BrowserEmulator(
     }
 
     protected open fun handleBrowseSuccess(batchId: Int, result: FetchResult) {
-        // TODO: deprecated counters
         val t = fetchTaskTracker
         t.batchSuccessCounters.computeIfAbsent(batchId) { AtomicInteger() }.incrementAndGet()
         t.totalSuccessTasks.incrementAndGet()
 
-        fetchTaskTracker.contentBytes.addAndGet(result.response.length())
-        val i = fetchTaskTracker.totalFinishedTasks.incrementAndGet()
+        t.contentBytes.addAndGet(result.response.length())
+        val i = t.totalFinishedTasks.incrementAndGet()
         if (i % 5 == 0) {
-            fetchTaskTracker.updateNetworkTraffic()
-            if (log.isInfoEnabled) {
-                log.info(fetchTaskTracker.formatTraffic())
-            }
+            t.updateNetworkTraffic()
+//            if (log.isInfoEnabled) {
+//                log.info(t.formatTraffic())
+//            }
         }
     }
 

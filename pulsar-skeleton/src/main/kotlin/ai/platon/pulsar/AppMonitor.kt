@@ -1,6 +1,6 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyManager
 import ai.platon.pulsar.net.browser.WebDriverManager
@@ -82,7 +82,7 @@ class AppMonitor(
 
     private fun report(round: Int) {
         val p = driverPool
-        val idleTime = DateTimeUtil.readableDuration(driverManager.idleTime)
+        val idleTime = DateTimes.readableDuration(driverManager.idleTime)
         log.info("WDM - {}free: {}, working: {}, total: {}, crashed: {}, retired: {}, quit: {}, pageViews: {} rounds: {}",
                 if (isIdle) "[Idle($idleTime)] " else "",
                 p.numFree, p.numWorking, p.numActive,

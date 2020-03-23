@@ -7,7 +7,7 @@ import ai.platon.pulsar.boilerpipe.filters.simple.LabeledFieldExtractorFilter;
 import ai.platon.pulsar.boilerpipe.filters.simple.RegexFieldExtractorFilter;
 import ai.platon.pulsar.boilerpipe.filters.statistics.NumWordsRulesClassifier;
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException;
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import com.google.common.collect.ListMultimap;
 
 import java.time.ZoneId;
@@ -90,8 +90,8 @@ public final class ChineseNewsExtractor implements TextExtractor {
 
         doc.setField(DOC_FIELD_TEXT_CONTENT_LENGTH, String.valueOf(doc.getTextContent().length()));
         doc.setField(DOC_FIELD_HTML_CONTENT_LENGTH, String.valueOf(doc.getHtmlContent().length()));
-        doc.setField(DOC_FIELD_PUBLISH_TIME, DateTimeUtil.isoInstantFormat(doc.getPublishTime()));
-        doc.setField(DOC_FIELD_MODIFIED_TIME, DateTimeUtil.isoInstantFormat(doc.getModifiedTime()));
+        doc.setField(DOC_FIELD_PUBLISH_TIME, DateTimes.isoInstantFormat(doc.getPublishTime()));
+        doc.setField(DOC_FIELD_MODIFIED_TIME, DateTimes.isoInstantFormat(doc.getModifiedTime()));
         doc.setField(DOC_FIELD_PAGE_CATEGORY, doc.getPageCategoryAsString());
         doc.setField(DOC_FIELD_PAGE_TITLE, doc.getPageTitle());
         doc.setField(DOC_FIELD_CONTENT_TITLE, doc.getContentTitle());

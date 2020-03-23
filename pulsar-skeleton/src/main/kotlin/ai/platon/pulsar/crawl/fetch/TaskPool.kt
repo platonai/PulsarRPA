@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
@@ -99,8 +99,8 @@ class TaskPool(val id: PoolId,
                 "pendingTasks", pendingTasks.size,
                 "crawlDelay", crawlDelay,
                 "minCrawlDelay", minCrawlDelay,
-                "now", DateTimeUtil.now(),
-                "nextFetchTime", DateTimeUtil.format(nextFetchTime),
+                "now", DateTimes.now(),
+                "nextFetchTime", DateTimes.format(nextFetchTime),
                 "aveTimeCost(s)", df.format(averageTimeCost),
                 "aveThoRate(s)", df.format(averageThoRate),
                 "readyTasks", readyCount,

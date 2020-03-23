@@ -155,12 +155,12 @@ class FetchMonitor(
                 "fetchTaskTimeout", fetchTaskTimeout,
                 "poolPendingTimeout", poolPendingTimeout,
                 "poolRetuneInterval", poolRetuneInterval,
-                "poolRetuneTime", DateTimeUtil.format(poolRetuneTime),
+                "poolRetuneTime", DateTimes.format(poolRetuneTime),
                 "checkInterval", checkInterval,
 
                 "minPageThoRate", minPageThoRate,
                 "maxLowThoCount", maxLowThoCount,
-                "thoCheckTime", DateTimeUtil.format(thoCheckTime),
+                "thoCheckTime", DateTimes.format(thoCheckTime),
 
                 "finishScript", finishScript
         )
@@ -346,7 +346,7 @@ class FetchMonitor(
             /*
              * Read local file commands
              * */
-            if (FileCommand.exists("finish-job $jobName")) {
+            if (FileCommand.check("finish-job $jobName")) {
                 handleFinishJobCommand()
                 log.info("Found finish-job command, exit the job ...")
                 close()

@@ -239,7 +239,8 @@ class FetchTaskTracker(
     }
 
     fun formatTraffic(): String {
-        return String.format("Traffic - content: %s, %s/s, %s/p, net recv: %s, %s/s, %s/p, total net recv: %s",
+        return String.format("Tasks success: %d, content: %s, %s/s, %s/p, net recv: %s, %s/s, %s/p, total net recv: %s",
+                totalSuccessTasks.get(),
                 Strings.readableBytes(contentBytes.get()),
                 Strings.readableBytes(contentBytesPerSecond),
                 Strings.readableBytes(contentBytesPerPage),

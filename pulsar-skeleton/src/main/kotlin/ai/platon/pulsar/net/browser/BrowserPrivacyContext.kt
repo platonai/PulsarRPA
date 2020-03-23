@@ -1,5 +1,6 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -12,6 +13,7 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
@@ -95,7 +97,7 @@ open class BrowserPrivacyContext(
             }
 
             task.proxyEntry = proxyEntry
-            task.page.metadata.set(Name.PROXY, proxyEntry?.hostPort)
+            task.page.proxy = proxyEntry?.outIp
 
             if (proxyEntry != null) {
                 if (success) {

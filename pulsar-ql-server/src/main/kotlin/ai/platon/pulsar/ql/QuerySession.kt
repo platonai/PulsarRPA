@@ -22,13 +22,13 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 
-    val registeredAllUserUdfClasses = mutableListOf<Class<out Any>>()
+    val registeredAllUdfClasses = mutableListOf<Class<out Any>>()
     val registeredAdminUdfClasses
-        get() = registeredAllUserUdfClasses.filter {
+        get() = registeredAllUdfClasses.filter {
             it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
         }
     val registeredUdfClasses
-        get() = registeredAllUserUdfClasses.filterNot {
+        get() = registeredAllUdfClasses.filterNot {
             it in registeredAdminUdfClasses
         }
 
@@ -57,8 +57,8 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
                 .map { it.load() }
                 .filter { it.annotations.any { it is UDFGroup } }
 
-        registeredAllUserUdfClasses.addAll(udfClasses)
-        registeredAllUserUdfClasses.forEach { registerUdfs(session, it.kotlin) }
+        registeredAllUdfClasses.addAll(udfClasses)
+        registeredAllUdfClasses.forEach { registerUdfs(session, it.kotlin) }
 
         if (totalUdfs.get() > 0) {
             log.debug("Added total {} new UDFs for session {}", totalUdfs, session)
@@ -71,8 +71,8 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
                 .map { it.load() }
                 .filter { it.annotations.any { it is UDFGroup } }
 
-        registeredAllUserUdfClasses.addAll(udfClasses)
-        registeredAllUserUdfClasses.forEach { registerUdfs(session, it.kotlin) }
+        registeredAllUdfClasses.addAll(udfClasses)
+        registeredAllUdfClasses.forEach { registerUdfs(session, it.kotlin) }
     }
 
     /**

@@ -119,7 +119,7 @@ open class ProxyManager(
          * Proxy system can be enabled/disabled at runtime
          * */
         fun isProxyEnabled(): Boolean {
-            if (FileCommand.exists(AppConstants.CMD_ENABLE_PROXY)) {
+            if (FileCommand.check(AppConstants.CMD_ENABLE_PROXY)) {
                 return true
             }
 

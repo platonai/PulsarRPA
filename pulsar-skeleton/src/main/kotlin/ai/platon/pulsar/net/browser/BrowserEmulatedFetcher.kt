@@ -1,6 +1,6 @@
 package ai.platon.pulsar.net.browser
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.FetchThreadExecutor
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
@@ -17,6 +17,7 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -101,7 +102,7 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        FetchTaskBatch(batchId, pages, volatileConfig, privacyContextManager).use { batch ->
+        FetchTaskBatch(batchId, pages, volatileConfig, privacyContextManager.activeContext).use { batch ->
             // allocate drivers before batch fetch context timing
             allocateDriversIfNecessary(batch, batch.conf)
 
@@ -115,7 +116,7 @@ class BrowserEmulatedFetcher(
                 var b = batch
                 if (privacyContextManager.activeContext.isPrivacyLeaked) {
                     privacyContextManager.reset()
-                    b = b.createNextNode()
+                    b = b.createNextNode(privacyContextManager.activeContext)
                 }
 
                 parallelFetch(b)
@@ -245,7 +246,7 @@ class BrowserEmulatedFetcher(
 
             return result
         } finally {
-            ++batch.stat.numTaskDone
+            ++batch.numTasksDone
         }
     }
 
@@ -332,46 +333,6 @@ class BrowserEmulatedFetcher(
         return FetchResult(task, ForwardingResponse(task.url, "", status, headers, task.page))
     }
 
-    private fun logLongTimeCost(batch: FetchTaskBatch) {
-        log.warn("Batch {} takes long time - round {} - {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}",
-                batch.batchId, batch.round,
-                batch.workingTasks.size, batch.finishedTasks.size, batch.stat.numFailedTasks,
-                batch.idleSeconds, batch.idleTimeout)
-    }
-
-    private fun logAfterTaskFailed(batch: FetchTaskBatch, url: String, response: Response, elapsed: Duration) {
-        if (log.isInfoEnabled) {
-            log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
-                    batch.batchId, String.format("%2d", batch.round),
-                    Strings.readableBytes(response.length()), DateTimeUtil.readableDuration(elapsed),
-                    response.status,
-                    batch.stat.numFailedTasks,
-                    url
-            )
-        }
-    }
-
-    private fun logAfterTaskSuccess(batch: FetchTaskBatch, url: String, response: Response, elapsed: Duration) {
-        if (log.isInfoEnabled) {
-            val httpCode = response.httpCode
-            val codeMessage = if (httpCode != 200) " with code $httpCode" else ""
-            log.info("Batch {} round {} fetched{}{} in {}{} | {}",
-                    batch.batchId, String.format("%2d", batch.round),
-                    if (batch.stat.totalBytes < 2000) " only " else " ",
-                    Strings.readableBytes(response.length()),
-                    DateTimeUtil.readableDuration(elapsed),
-                    codeMessage, url)
-        }
-    }
-
-    private fun logAfterBatchAbort(batch: FetchTaskBatch, state: FetchTaskBatch.State) {
-        val proxyDisplay = (batch.lastSuccessProxy ?: batch.lastFailedProxy)?.display
-        log.warn("Batch {} is aborted ({}), finished: {}, pending: {}, failed: {}, total: {}, idle: {}s | {}",
-                batch.batchId, state,
-                batch.numFinishedTasks, batch.numWorkingTasks, batch.stat.numFailedTasks, batch.batchSize,
-                batch.idleSeconds, proxyDisplay ?: "(all failed)")
-    }
-
     private fun logBeforeBatchStart(batch: FetchTaskBatch) {
         if (log.isInfoEnabled) {
             val proxy = driverManager.proxyManager.currentProxyEntry
@@ -380,26 +341,68 @@ class BrowserEmulatedFetcher(
         }
     }
 
+    private fun logLongTimeCost(batch: FetchTaskBatch) {
+        log.warn("Batch {} round {} takes long time, {} pending, {} finished, {} failed, idle: {}s, idle timeout: {}",
+                batch.batchId, batch.round,
+                batch.workingTasks.size, batch.finishedTasks.size, batch.numTasksFailed,
+                batch.idleSeconds, batch.idleTimeout)
+    }
+
+    private fun logAfterTaskFailed(batch: FetchTaskBatch, url: String, response: Response, elapsed: Duration) {
+        if (log.isInfoEnabled) {
+            log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
+                    batch.batchId, String.format("%2d", batch.round),
+                    Strings.readableBytes(response.length()),
+                    DateTimes.readableDuration(elapsed),
+                    response.status,
+                    batch.numTasksFailed,
+                    url
+            )
+        }
+    }
+
+    private fun logAfterTaskSuccess(batch: FetchTaskBatch, url: String, response: Response, elapsed: Duration) {
+        if (log.isInfoEnabled) {
+            val httpCode = response.httpCode
+            val length = response.length()
+            val codeMessage = if (httpCode != 200) " with code $httpCode" else ""
+            log.info("Batch {} round {} fetched{}{} in {}{} | {}",
+                    batch.batchId, String.format("%2d", batch.round),
+                    if (length < 2000) " only " else " ",
+                    Strings.readableBytes(length),
+                    DateTimes.readableDuration(elapsed),
+                    codeMessage, url)
+        }
+    }
+
+    private fun logAfterBatchAbort(batch: FetchTaskBatch, state: FetchTaskBatch.State) {
+        val proxyDisplay = (batch.lastSuccessProxy ?: batch.lastFailedProxy)?.display
+        log.warn("Batch {} is aborted ({}), finished: {}, pending: {}, failed: {}, total: {}, idle: {}s | {}",
+                batch.batchId, state,
+                batch.numFinishedTasks, batch.numWorkingTasks, batch.numTasksFailed, batch.batchSize,
+                batch.idleSeconds, proxyDisplay ?: "(all failed)")
+    }
+
     private fun logAfterBatchFinish(batch: FetchTaskBatch) {
         if (log.isInfoEnabled) {
-            val mainBatch = batch.headNode
+            val primeBatch = batch.headNode
             // val proxyDisplay = (bc.lastSuccessProxy?:bc.lastFailedProxy)?.display
-            val successProxy = mainBatch.lastSuccessProxy
-            val failedProxy = mainBatch.lastFailedProxy
+            val successProxy = primeBatch.lastSuccessProxy
+            val failedProxy = primeBatch.lastFailedProxy
             val proxyDisplay = when {
                 successProxy != null -> successProxy.display
                 failedProxy != null -> "${failedProxy.display}(failed)"
                 else -> null
             }
             log.info("Batch {} with {} tasks is finished in {}, ave time {}, ave size: {}, speed: {}/s | {}",
-                    mainBatch.batchId, mainBatch.batchSize,
-                    DateTimeUtil.readableDuration(mainBatch.elapsed),
-                    DateTimeUtil.readableDuration(mainBatch.averageTime),
-                    Strings.readableBytes(mainBatch.stat.averagePageSize.roundToLong()),
-                    mainBatch.speed,
+                    primeBatch.batchId, primeBatch.batchSize,
+                    DateTimes.readableDuration(primeBatch.elapsed),
+                    DateTimes.readableDuration(primeBatch.averageTime),
+                    Strings.readableBytes(primeBatch.universalStat.averagePageSize.roundToLong()),
+                    Strings.readableBytes(primeBatch.speed.roundToLong()),
                     proxyDisplay?:"(no proxy)"
             )
-            fetchTaskTracker.updateNetworkTraffic()
+
             if (log.isInfoEnabled) {
                 log.info(fetchTaskTracker.formatTraffic())
             }

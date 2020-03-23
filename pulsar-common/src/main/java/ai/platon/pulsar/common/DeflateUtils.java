@@ -117,8 +117,7 @@ public class DeflateUtils {
      */
     public static final byte[] deflate(byte[] in) {
         // compress using DeflaterOutputStream
-        ByteArrayOutputStream byteOut = new ByteArrayOutputStream(in.length
-                / EXPECTED_COMPRESSION_RATIO);
+        ByteArrayOutputStream byteOut = new ByteArrayOutputStream(in.length / EXPECTED_COMPRESSION_RATIO);
 
         DeflaterOutputStream outStream = new DeflaterOutputStream(byteOut);
 

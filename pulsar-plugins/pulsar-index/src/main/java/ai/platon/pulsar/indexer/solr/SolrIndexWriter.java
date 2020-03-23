@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.indexer.solr;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
 import ai.platon.pulsar.crawl.index.IndexDocument;
@@ -195,7 +195,7 @@ public class SolrIndexWriter implements IndexWriter {
                 // normalise the string representation for a Date
                 Object val2 = convertIndexField(field);
 
-                Boolean isMultiValued = indexerMapping.isMultiValued(e.getKey().toString());
+                boolean isMultiValued = indexerMapping.isMultiValued(e.getKey().toString());
                 if (!isMultiValued) {
                     if (inputDoc.getField(key) == null) {
                         inputDoc.addField(key, val2, weight);
@@ -218,9 +218,9 @@ public class SolrIndexWriter implements IndexWriter {
     private Object convertIndexField(Object field) {
         Object field2;
         if (field instanceof Date) {
-            field2 = DateTimeUtil.isoInstantFormat((Date) field);
+            field2 = DateTimes.INSTANCE.isoInstantFormat((Date) field);
         } else if (field instanceof Instant) {
-            field2 = DateTimeUtil.isoInstantFormat((Instant) field);
+            field2 = DateTimes.isoInstantFormat((Instant) field);
         } else if (field instanceof org.apache.avro.util.Utf8) {
             field2 = field.toString();
         }

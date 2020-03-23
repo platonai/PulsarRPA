@@ -16,10 +16,9 @@
  */
 package ai.platon.pulsar.protocol.httpclient;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.crawl.protocol.Response;
-import ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol;
 import ai.platon.pulsar.crawl.protocol.http.AbstractNativeHttpProtocol;
 import ai.platon.pulsar.persist.ProtocolStatus;
 import ai.platon.pulsar.persist.WebPage;
@@ -111,7 +110,7 @@ public class HttpResponse implements Response {
         get.setFollowRedirects(followRedirects);
         get.setDoAuthentication(true);
         if (page.getModifiedTime().getEpochSecond() > 0) {
-            get.setRequestHeader("If-Modified-Since", DateTimeUtil.formatHttpDateTime(page.getModifiedTime()));
+            get.setRequestHeader("If-Modified-Since", DateTimes.formatHttpDateTime(page.getModifiedTime()));
         }
 
         // Set HTTP parameters

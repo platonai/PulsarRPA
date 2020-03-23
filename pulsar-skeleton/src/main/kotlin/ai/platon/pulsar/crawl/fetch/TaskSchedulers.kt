@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
-    val name: String = this.javaClass.simpleName + "-" + DateTimeUtil.now("d.Hms")
+    val name: String = this.javaClass.simpleName + "-" + DateTimes.now("d.Hms")
     private val fetchSchedulers = Maps.newTreeMap<Int, TaskScheduler>()
     private val fetchSchedulerIds = Lists.newLinkedList<Int>()
 

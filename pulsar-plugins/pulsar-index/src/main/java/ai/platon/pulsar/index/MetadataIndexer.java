@@ -17,7 +17,7 @@
 
 package ai.platon.pulsar.index;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.crawl.common.URLUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.config.Params;
@@ -114,19 +114,19 @@ public class MetadataIndexer implements IndexingFilter {
     private void addTime(IndexDocument doc, String url, WebPage page) {
         Instant now = Instant.now();
 
-        String crawlTimeStr = DateTimeUtil.isoInstantFormat(now);
+        String crawlTimeStr = DateTimes.isoInstantFormat(now);
         Instant firstCrawlTime = page.getFirstCrawlTime(now);
         String fetchTimeHistory = page.getFetchTimeHistory(crawlTimeStr);
 
-        doc.add("first_crawl_time", DateTimeUtil.isoInstantFormat(firstCrawlTime));
+        doc.add("first_crawl_time", DateTimes.isoInstantFormat(firstCrawlTime));
         doc.add("last_crawl_time", crawlTimeStr);
         doc.add("fetch_time_history", fetchTimeHistory);
 
-        String indexTimeStr = DateTimeUtil.isoInstantFormat(now);
+        String indexTimeStr = DateTimes.isoInstantFormat(now);
         Instant firstIndexTime = page.getFirstIndexTime(now);
         String indexTimeHistory = page.getIndexTimeHistory(indexTimeStr);
 
-        doc.add("first_index_time", DateTimeUtil.isoInstantFormat(firstIndexTime));
+        doc.add("first_index_time", DateTimes.isoInstantFormat(firstIndexTime));
         doc.add("last_index_time", indexTimeStr);
         doc.add("index_time_history", indexTimeHistory);
     }

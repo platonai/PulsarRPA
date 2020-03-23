@@ -351,11 +351,11 @@ public class DateTimeDetector {
 //    System.out.println(detectDate(text) + "\t\t" + yearMonth + "\t\t" + isDaysBefore(dateTime, days)
 //        + "\t\t" + dateTime + "\t\t" + text);
 
-        if (DateTimeUtil.isDaysBefore(dateTime, days)) {
+        if (DateTimes.isDaysBefore(dateTime, days)) {
             return true;
         }
 
         dateTime = detectDate(text);
-        return dateTime != null && DateTimeUtil.isDaysBefore(dateTime, days);
+        return dateTime != null && DateTimes.isDaysBefore(dateTime, days);
     }
 }

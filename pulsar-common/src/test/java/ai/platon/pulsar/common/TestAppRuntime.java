@@ -19,7 +19,7 @@ package ai.platon.pulsar.common;
 
 import org.junit.Test;
 
-public class TestRuntime {
+public class TestAppRuntime {
 
     @Test
     public void testEnv() {

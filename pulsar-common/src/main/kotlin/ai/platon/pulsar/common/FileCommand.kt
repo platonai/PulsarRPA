@@ -24,8 +24,8 @@ object FileCommand {
      * @param checkInterval The check interval in seconds
      * @return true if the command is exists during this check period
      */
-    fun exists(command: String, checkInterval: Long): Boolean {
-        return exists(command, Duration.ofSeconds(checkInterval))
+    fun check(command: String, checkInterval: Long): Boolean {
+        return check(command, Duration.ofSeconds(checkInterval))
     }
 
     /**
@@ -40,7 +40,7 @@ object FileCommand {
      * @return true if the command is exists during this check period
      */
     @JvmOverloads
-    fun exists(command: String, checkInterval: Duration = CHECK_INTERVAL): Boolean {
+    fun check(command: String, checkInterval: Duration = CHECK_INTERVAL): Boolean {
         if (!Files.exists(COMMAND_FILE)) {
             return false
         }

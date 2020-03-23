@@ -17,7 +17,7 @@
 
 package ai.platon.pulsar.protocol.file;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.MimeUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
@@ -184,7 +184,7 @@ public class FileResponse {
 
         if (f.lastModified() <= page.getModifiedTime().toEpochMilli()) {
             this.code = 304;
-            this.headers.put("Last-Modified", DateTimeUtil.format(f.lastModified()));
+            this.headers.put("Last-Modified", DateTimes.INSTANCE.format(f.lastModified()));
             return;
         }
 
@@ -233,7 +233,7 @@ public class FileResponse {
 
         // set headers
         headers.put(HttpHeaders.CONTENT_LENGTH, Long.toString(size));
-        this.headers.put("Last-Modified", DateTimeUtil.isoInstantFormat(f.lastModified()));
+        this.headers.put("Last-Modified", DateTimes.INSTANCE.isoInstantFormat(f.lastModified()));
         String mimeType = MIME.getMimeType(f);
         String mimeTypeString = mimeType != null ? mimeType : "";
         headers.put(HttpHeaders.CONTENT_TYPE, mimeTypeString);
@@ -254,7 +254,7 @@ public class FileResponse {
         // set headers
         headers.put(HttpHeaders.CONTENT_LENGTH, Integer.toString(this.content.length));
         headers.put(HttpHeaders.CONTENT_TYPE, "text/html");
-        headers.put("Last-Modified", DateTimeUtil.isoInstantFormat(f.lastModified()));
+        headers.put("Last-Modified", DateTimes.INSTANCE.isoInstantFormat(f.lastModified()));
 
         // response code
         this.code = 200; // http OK
@@ -265,8 +265,8 @@ public class FileResponse {
                              boolean includeDotDot) {
 
         StringBuffer x = new StringBuffer("<html><head>");
-        x.append("<title>Index of " + path + "</title></head>\n");
-        x.append("<body><h1>Index of " + path + "</h1><pre>\n");
+        x.append("<title>Index of ").append(path).append("</title></head>\n");
+        x.append("<body><h1>Index of ").append(path).append("</h1><pre>\n");
 
         if (includeDotDot) {
             x.append("<a href='../'>../</a>\t-\t-\t-\n");
@@ -275,20 +275,20 @@ public class FileResponse {
         // fix me: we might want to sort list here! but not now.
 
         java.io.File f;
-        for (int i = 0; i < list.length; i++) {
-            f = list[i];
+        for (java.io.File value : list) {
+            f = value;
             String name = f.getName();
-            String time = DateTimeUtil.isoInstantFormat(f.lastModified());
+            String time = DateTimes.INSTANCE.isoInstantFormat(f.lastModified());
             if (f.isDirectory()) {
                 // java 1.4.2 service says dir itself and parent dir are not listed
                 // so the following is not needed.
                 // if (name.equals(".") || name.equals(".."))
                 // continue;
-                x.append("<a href='" + name + "/" + "'>" + name + "/</a>\t");
-                x.append(time + "\t-\n");
+                x.append("<a href='").append(name).append("/").append("'>").append(name).append("/</a>\t");
+                x.append(time).append("\t-\n");
             } else if (f.isFile()) {
-                x.append("<a href='" + name + "'>" + name + "</a>\t");
-                x.append(time + "\t" + f.length() + "\n");
+                x.append("<a href='").append(name).append("'>").append(name).append("</a>\t");
+                x.append(time).append("\t").append(f.length()).append("\n");
             } else {
                 // ignore any other
             }

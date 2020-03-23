@@ -74,10 +74,6 @@ object AppPaths {
     @RequiredDirectory @JvmField
     val PROXY_ARCHIVE_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-archived")
     @RequiredFile @JvmField
-    val LATEST_AVAILABLE_PROXY = AppPaths.get( "latest-available-proxy")
-    @RequiredFile @JvmField
-    val TEST_PROXY_FILE = AppPaths.get(PROXY_BASE_DIR, "test-ip")
-    @RequiredFile @JvmField
     val PROXY_BANNED_HOSTS_FILE = AppPaths.get(PROXY_BASE_DIR, "proxies-banned-hosts.txt")
     @RequiredFile @JvmField
     val PROXY_BANNED_SEGMENTS_FILE = AppPaths.get(PROXY_BASE_DIR, "proxies-banned-segments.txt")

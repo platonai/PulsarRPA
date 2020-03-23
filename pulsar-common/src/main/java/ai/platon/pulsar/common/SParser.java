@@ -644,7 +644,7 @@ public class SParser {
             return Instant.ofEpochMilli(getLong(defaultValue.toEpochMilli()));
         }
 
-        return DateTimeUtil.parseInstant(value, defaultValue);
+        return DateTimes.parseInstant(value, defaultValue);
     }
 
     public Path getPath(Path defaultValue, boolean createDirectories) throws IOException {

@@ -71,7 +71,7 @@ class MetricsReporter(
         val innerBorder = StringUtils.repeat('.', 100)
         log.info(outerBorder)
         log.info(innerBorder)
-        log.info("== Reporter started [ " + DateTimeUtil.now() + " ] [ " + jobName + " ] ==")
+        log.info("== Reporter started [ " + DateTimes.now() + " ] [ " + jobName + " ] ==")
         log.debug("All registered counters : " + counter.registeredCounters)
         do {
             try {
@@ -81,7 +81,7 @@ class MetricsReporter(
             counter.accumulateGlobalCounters(context)
             report()
         } while (running.get())
-        log.info("== Reporter stopped [ " + DateTimeUtil.now() + " ] ==")
+        log.info("== Reporter stopped [ " + DateTimes.now() + " ] ==")
     } // run
 
     private fun report() {

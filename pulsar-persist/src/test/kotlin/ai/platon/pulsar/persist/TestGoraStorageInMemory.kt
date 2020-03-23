@@ -17,12 +17,11 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.persist.gora.GoraStorage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
@@ -103,7 +102,7 @@ class TestGoraStorageInMemory {
 
         private val webDb = WebDb(conf)
         private var store: DataStore<String, GWebPage> = webDb.store
-        private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimeUtil.format(Instant.now(), "MMdd")
+        private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
         @BeforeClass
         fun setupClass() {

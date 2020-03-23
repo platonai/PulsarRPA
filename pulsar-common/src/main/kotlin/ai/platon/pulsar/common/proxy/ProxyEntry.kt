@@ -23,8 +23,9 @@ enum class ProxyType {
 data class ProxyEntry(
         var host: String,
         var port: Int = 0,
+        var outIp: String = "",
         var id: Int = instanceSequence.incrementAndGet(),
-        val declaredTTL: Instant? = null,
+        var declaredTTL: Instant? = null,
         var lastTarget: String? = null,
         var testUrls: List<URL> = TEST_URLS.toList(),
         var defaultTestUrl: URL = DEFAULT_TEST_URL,
@@ -35,6 +36,7 @@ data class ProxyEntry(
 ): Comparable<ProxyEntry> {
     val hostPort = "$host:$port"
     val segment = host.substringBeforeLast(".")
+    val outSegment = outIp.substringBeforeLast(".")
     val display get() = formatDisplay()
     val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
@@ -99,9 +101,9 @@ data class ProxyEntry(
         return available
     }
 
-    fun test(target: URL): Boolean {
+    fun test(target: URL, timeout: Duration = Duration.ofSeconds(5)): Boolean {
         // first, check TCP network is reachable, this is fast
-        var available = NetUtil.testTcpNetwork(host, port, Duration.ofSeconds(5))
+        var available = NetUtil.testTcpNetwork(host, port, timeout)
         if (available) {
             // second, the destination web site is reachable through this proxy
             val addr = InetSocketAddress(host, port)
@@ -141,7 +143,10 @@ data class ProxyEntry(
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is ProxyEntry && other.proxyType == proxyType && other.host == host && other.port == port
+        return other is ProxyEntry
+                && other.proxyType == proxyType
+                && other.host == host && other.port == port
+                && other.outIp == outIp
     }
 
     /**
@@ -152,13 +157,17 @@ data class ProxyEntry(
     }
 
     override fun compareTo(other: ProxyEntry): Int {
-        return hostPort.compareTo(other.hostPort)
+        var c = outIp.compareTo(other.outIp)
+        if (c == 0) {
+            c = hostPort.compareTo(other.hostPort)
+        }
+        return c
     }
 
     private fun formatDisplay(): String {
         val ban = if (isBanned) "[banned] " else ""
-        val ttlStr = ttlDuration?.let { DateTimeUtil.readableDuration(it.truncatedTo(ChronoUnit.SECONDS)) }?:"0s"
-        return "$ban$host:$port($numFailedPages/$numSuccessPages/$ttlStr)"
+        val ttlStr = ttlDuration?.let { DateTimes.readableDuration(it.truncatedTo(ChronoUnit.SECONDS)) }?:"0s"
+        return "$ban[$hostPort => $outIp]($numFailedPages/$numSuccessPages/$ttlStr)"
     }
 
     private fun formatMetadata(): String {

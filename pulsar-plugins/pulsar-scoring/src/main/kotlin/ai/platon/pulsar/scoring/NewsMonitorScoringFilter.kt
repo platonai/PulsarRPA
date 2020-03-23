@@ -17,7 +17,7 @@
 
 package ai.platon.pulsar.scoring
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.AppConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -122,7 +122,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
         // Do not care about create time if it's created longer than 3 days
         if (createdDays <= 3) {
             // yyyyMMddHH format is OK to convert to a int
-            score.setValue(Name.createTime, DateTimeUtil.format(createTime, "yyyyMMddHH").toInt())
+            score.setValue(Name.createTime, DateTimes.format(createTime, "yyyyMMddHH").toInt())
         }
 
         // TODO: use initSort
@@ -138,7 +138,7 @@ class NewsMonitorScoringFilter(conf: ImmutableConfig) : ContentAnalysisScoringFi
 
         // yyyyMMddHH format is OK to convert to a int
         score.setValue(Name.modifyTime,
-                NumberUtils.toInt(DateTimeUtil.format(modifiedTime, "yyyyMMddHH"), 0))
+                NumberUtils.toInt(DateTimes.format(modifiedTime, "yyyyMMddHH"), 0))
 
         score.setValue(Name.anchorOrder, -inlinkOrder)
 

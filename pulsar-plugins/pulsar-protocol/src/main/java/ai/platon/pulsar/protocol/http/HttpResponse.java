@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.protocol.http;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.common.proxy.ProxyEntry;
@@ -223,7 +223,7 @@ public class HttpResponse implements Response {
             }
 
             reqStr.append("If-Modified-Since: ")
-                    .append(DateTimeUtil.formatHttpDateTime(page.getModifiedTime()))
+                    .append(DateTimes.formatHttpDateTime(page.getModifiedTime()))
                     .append("\r\n").append("\r\n");
 
             byte[] reqBytes = reqStr.toString().getBytes();

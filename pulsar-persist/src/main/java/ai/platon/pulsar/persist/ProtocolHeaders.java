@@ -1,6 +1,6 @@
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.SParser;
 import com.google.common.collect.Multimap;
@@ -96,7 +96,7 @@ public class ProtocolHeaders implements HttpHeaders {
     public Instant getLastModified() {
         CharSequence lastModified = get(HttpHeaders.LAST_MODIFIED);
         if (lastModified != null) {
-            return DateTimeUtil.parseHttpDateTime(lastModified.toString(), Instant.EPOCH);
+            return DateTimes.parseHttpDateTime(lastModified.toString(), Instant.EPOCH);
         }
 
         return Instant.EPOCH;

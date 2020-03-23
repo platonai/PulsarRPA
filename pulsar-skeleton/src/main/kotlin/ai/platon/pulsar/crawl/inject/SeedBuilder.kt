@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.inject
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -27,7 +27,7 @@ class SeedBuilder(
     constructor(conf: ImmutableConfig): this(ScoringFilters(conf), conf)
 
     override fun getParams(): Params {
-        return Params.of("injectTime", DateTimeUtil.format(impreciseNow))
+        return Params.of("injectTime", DateTimes.format(impreciseNow))
     }
 
     fun create(urlArgs: Pair<String, String>): WebPage {

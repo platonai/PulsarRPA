@@ -2,10 +2,12 @@ package ai.platon.pulsar.net.browser
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.common.AppPaths
 import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
 import com.github.kklisura.cdt.protocol.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
+import org.apache.commons.io.FileUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver

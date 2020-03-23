@@ -62,7 +62,7 @@ class RobustBrowserEmulator(
         val stat = task.stat
         if (integrity.isOK && status.isSuccess && stat != null) {
             val batchAveLength = stat.averagePageSize.roundToLong()
-            if (stat.numSuccessTasks > 3 && batchAveLength > 10_000 && length < batchAveLength / 10) {
+            if (stat.numTasksSuccess > 3 && batchAveLength > 10_000 && length < batchAveLength / 10) {
                 integrity = HtmlIntegrity.TOO_SMALL_IN_BATCH
 
                 if (log.isInfoEnabled) {

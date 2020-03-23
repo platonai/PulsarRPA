@@ -227,7 +227,7 @@ class GeneralCrawler: Crawler() {
 
     fun localFileCommand() {
         while (true) {
-            if (FileCommand.exists(AppConstants.CMD_PROXY_RECONNECT)) {
+            if (FileCommand.check(AppConstants.CMD_PROXY_RECONNECT)) {
                 println("Execute local file command: " + AppConstants.CMD_PROXY_RECONNECT)
             }
             Thread.sleep(5000)

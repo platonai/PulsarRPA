@@ -1,6 +1,6 @@
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.persist.metadata.Name;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -54,7 +54,7 @@ public class Metadata {
     }
 
     public void set(Name name, Instant value) {
-        set(name, DateTimeUtil.isoInstantFormat(value));
+        set(name, DateTimes.isoInstantFormat(value));
     }
 
     public void putAll(Map<String, String> data) {
@@ -125,7 +125,7 @@ public class Metadata {
     }
 
     public Instant getInstant(Name name, Instant defaultValue) {
-        return DateTimeUtil.parseInstant(get(name), defaultValue);
+        return DateTimes.parseInstant(get(name), defaultValue);
     }
 
     public boolean contains(Name name) {

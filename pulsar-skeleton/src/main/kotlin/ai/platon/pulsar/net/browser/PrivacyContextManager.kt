@@ -1,8 +1,10 @@
 package ai.platon.pulsar.net.browser
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyManagerFactory
 import ai.platon.pulsar.persist.RetryScope
+import java.nio.file.Files
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
 
@@ -56,7 +58,6 @@ class PrivacyContextManager(
         // we need to freeze all running tasks and reset driver pool and proxy
         val context = globalActiveContext.get()
         context?.use { it.close() }
-//        context?.waitUntilClosed()
         globalActiveContext.getAndSet(null)?.let { zombieContexts.add(it) }
     }
 

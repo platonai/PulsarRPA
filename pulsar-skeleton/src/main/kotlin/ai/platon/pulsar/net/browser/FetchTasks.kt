@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.BatchStat
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -18,7 +19,6 @@ import java.time.Instant
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
 import kotlin.math.roundToLong
 
@@ -109,7 +109,7 @@ internal class FetchTaskBatch(
         val batchId: Int,
         val pages: Iterable<WebPage>,
         val conf: VolatileConfig,
-        val privacyContextManager: PrivacyContextManager,
+        val privacyContext: BrowserPrivacyContext,
         var prevNode: FetchTaskBatch? = null
 ): AutoCloseable {
     enum class State {
@@ -136,7 +136,8 @@ internal class FetchTaskBatch(
 
     val elapsed get() = Duration.between(startTime, Instant.now())
     val averageTime get() = elapsed.dividedBy(1 + batchSize.toLong())
-    val speed get() = Strings.readableBytes((1.0 * stat.totalBytes / (1 + elapsed.seconds)).roundToLong())
+    // val speed get() = Strings.readableBytes((1.0 * universalStat.totalSuccessBytes / (1 + elapsed.seconds)).roundToLong())
+    val speed get() = 1.0 * universalStat.totalSuccessBytes / (1 + elapsed.seconds)
 
     /**
      * The universal success tasks
@@ -146,6 +147,10 @@ internal class FetchTaskBatch(
      * The universal success pages
      * */
     val universalSuccessPages: MutableList<WebPage> = prevNode?.universalSuccessPages?:mutableListOf()
+    /**
+     * The universal statistics
+     * */
+    val universalStat: BatchStat = prevNode?.universalStat?:BatchStat()
     /**
      * The submitted tasks in the sub context
      * */
@@ -177,10 +182,9 @@ internal class FetchTaskBatch(
     var idleSeconds = 0
     // external connection is lost, might be caused by proxy
     var connectionLost = false
-    /**
-     * Batch statistics
-     * */
-    val stat = BatchStat()
+    var numTasksDone = 0
+    var numTasksSuccess = 0
+    var numTasksFailed = 0
     var lastSuccessTask: FetchTask? = null
     var lastFailedTask: FetchTask? = null
     var lastSuccessProxy: ProxyEntry? = null
@@ -209,8 +213,8 @@ internal class FetchTaskBatch(
 
     fun checkState(): State {
         return when {
-            stat.numTaskDone >= batchSize -> State.ALL_DONE
-            stat.numFailedTasks > numAllowedFailures -> State.TOO_MANY_FAILURE
+            numTasksDone >= batchSize -> State.ALL_DONE
+            numTasksFailed > numAllowedFailures -> State.TOO_MANY_FAILURE
             idleSeconds > idleTimeout.seconds -> State.IDLE_TIMEOUT
             connectionLost -> State.CONNECTION_LOST
             lastTaskTimeout() -> State.LAST_TASK_TIMEOUT
@@ -221,7 +225,7 @@ internal class FetchTaskBatch(
     /**
      * Create a child context to re-fetch aborted pages and privacy leaked pages
      * */
-    fun createNextNode(): FetchTaskBatch {
+    fun createNextNode(newPrivacyContext: BrowserPrivacyContext): FetchTaskBatch {
         log.info("Creating sub-batch of #{}, leaked: {} aborted: {} success: {} finished: {} expect: {}",
                 batchId, privacyLeakedTasks.size, abortedTasks.size, universalSuccessPages.size, numFinishedTasks, batchSize)
 
@@ -230,7 +234,7 @@ internal class FetchTaskBatch(
         privacyLeakedTasks.mapTo(retryPages) { it.page }
         abortedTasks.asSequence().filter { it in privacyLeakedTasks }.mapTo(retryPages) { it.page }
 
-        return FetchTaskBatch(batchId, retryPages, conf, privacyContextManager, prevNode = this).also { nextNode = it }
+        return FetchTaskBatch(batchId, retryPages, conf, newPrivacyContext, prevNode = this).also { nextNode = it }
     }
 
     fun onSuccess(task: FetchTask, result: FetchResult) {
@@ -241,10 +245,12 @@ internal class FetchTaskBatch(
 
         lastSuccessTask = result.task
         lastSuccessProxy = result.task.proxyEntry
-        stat.numSuccessTasks++
-        stat.totalBytes += result.response.length()
+        numTasksSuccess++
 
-        privacyContextManager.activeContext.informSuccess()
+        universalStat.numTasksSuccess++
+        universalStat.totalSuccessBytes += result.response.length()
+
+        privacyContext.informSuccess()
 
         afterFetchN(headNode.universalSuccessPages)
     }
@@ -254,7 +260,8 @@ internal class FetchTaskBatch(
 
         lastFailedTask = task
         lastFailedProxy = task.proxyEntry
-        ++stat.numFailedTasks
+        ++numTasksFailed
+        universalStat.numTasksFailed++
     }
 
     fun onRetry(task: FetchTask, result: FetchResult) {
@@ -262,7 +269,7 @@ internal class FetchTaskBatch(
 
         if (result.response.status.isRetry(RetryScope.PRIVACY)) {
             privacyLeakedTasks.add(task)
-            privacyContextManager.activeContext.informWarning()
+            privacyContext.informWarning()
         }
     }
 

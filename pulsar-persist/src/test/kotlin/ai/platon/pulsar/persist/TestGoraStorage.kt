@@ -1,12 +1,10 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.persist.HypeLink
-import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -36,7 +34,7 @@ class TestGoraStorage {
         private val conf = MutableConfig().also { it[CapabilityTypes.STORAGE_CRAWL_ID] = "test" }
         private val webDb = WebDb(conf)
         private var store: DataStore<String, GWebPage> = webDb.store
-        private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimeUtil.format(Instant.now(), "MMdd")
+        private var exampleUrl = AppConstants.EXAMPLE_URL + "/" + DateTimes.format(Instant.now(), "MMdd")
 
         @BeforeClass
         fun setupClass() {

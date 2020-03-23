@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.persist.metadata;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.DublinCore;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.config.AppConstants;
@@ -148,7 +148,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
     }
 
     public void put(Name name, Instant value) {
-        put(name, DateTimeUtil.isoInstantFormat(value));
+        put(name, DateTimes.isoInstantFormat(value));
     }
 
     public void set(String name, String value) {
@@ -175,7 +175,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
     }
 
     public Instant getInstant(String name, Instant defaultValue) {
-        return DateTimeUtil.parseInstant(get(name), defaultValue);
+        return DateTimes.parseInstant(get(name), defaultValue);
     }
 
     /**

@@ -129,7 +129,7 @@ class GenerateComponent(
                         "maxDistance", maxDistance,
                         "reGenerate", reGenerate,
                         "reGenerateSeeds", reGenerateSeeds,
-                        "pseudoCurrTime", DateTimeUtil.format(pseudoCurrTime.truncatedTo(ChronoUnit.SECONDS)),
+                        "pseudoCurrTime", DateTimes.format(pseudoCurrTime.truncatedTo(ChronoUnit.SECONDS)),
                         "topN", topN,
                         "lastGeneratedRows", lastGeneratedRows,
                         "lowGeneratedRowsRate", lowGeneratedRowsRate,

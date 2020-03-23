@@ -37,12 +37,12 @@ import java.util.*
 class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoCloseable {
     private val df = DecimalFormat("0.0")
     private val hostname = NetUtil.getHostname()
-    private val timeIdent = DateTimeUtil.format(System.currentTimeMillis(), "yyyyMMdd")
-    private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimeUtil.now("HHmm")]
+    private val timeIdent = DateTimes.format(System.currentTimeMillis(), "yyyyMMdd")
+    private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.get(AppPaths.REPORT_DIR, timeIdent, jobIdent)
     // TODO: job name is set in job setup phrase, so it's not available unless this is a [JobInitialized] class
     private val weakIndexer = WeakPageIndexer(AppConstants.CRAWL_LOG_HOME_URL, webDb)
-    private val urlPrefix = AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimeUtil.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
+    private val urlPrefix = AppConstants.CRAWL_LOG_INDEX_URL + "/" + DateTimes.now("yyyy/MM/dd") + "/" + jobIdent + "/" + hostname
     private var reportCount = 0
     // We need predictable iteration order, LinkedHashSet is all right
     private val metricsPageUrls: MutableSet<CharSequence> = LinkedHashSet()
@@ -102,7 +102,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         if (metricsPage == null) {
             metricsPage = WebPage.newInternalPage(url, "Pulsar Metrics Page")
             metricsPage.setContent("")
-            metricsPage.metadata["JobName"] = conf[CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimeUtil.now("MMdd.HHmm")]
+            metricsPage.metadata["JobName"] = conf[CapabilityTypes.PARAM_JOB_NAME, "job-unknown-" + DateTimes.now("MMdd.HHmm")]
         }
         return metricsPage
     }
@@ -360,14 +360,14 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
 
         override fun toString(): String {
             val pattern = "yyyy-MM-dd HH:mm:ss"
-            val fetchTimeString = (DateTimeUtil.format(prevFetchTime, pattern) + "->" + DateTimeUtil.format(fetchTime, pattern)
+            val fetchTimeString = (DateTimes.format(prevFetchTime, pattern) + "->" + DateTimes.format(fetchTime, pattern)
                     + "," + DurationFormatUtils.formatDuration(fetchInterval.toMillis(), "DdTH:mm:ss"))
 
             val params = Params.of(
                     "T", fetchTimeString,
                     "DC", "$distance,$fetchCount",
-                    "PT", DateTimeUtil.isoInstantFormat(contentPublishTime)
-                    + "," + DateTimeUtil.isoInstantFormat(refContentPublishTime),
+                    "PT", DateTimes.isoInstantFormat(contentPublishTime)
+                    + "," + DateTimes.isoInstantFormat(refContentPublishTime),
                     "C", "$refItems,$refChars",
                     "S", df.format(contentScore) + "," + df.format(score) + "," + df.format(cash),
                     pageCategory.symbol(), StringUtils.substring(url, 0, 80)
@@ -411,7 +411,7 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
                     category,
                     page.protocolStatus.minorCode,
                     Strings.readableBytes(bytes.toLong(), 7, false),
-                    DateTimeUtil.readableDuration(responseTime),
+                    DateTimes.readableDuration(responseTime),
                     if (proxy == null) "" else " via $proxy",
                     jsSate,
                     page.fetchCount,
@@ -421,8 +421,8 @@ class MetricsSystem(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
         }
 
         fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant, verbose: Boolean = false): StringBuilder {
-            val elapsed = DateTimeUtil.elapsedTime(startTime)
-            val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimeUtil.readableDuration(elapsed))
+            val elapsed = DateTimes.elapsedTime(startTime)
+            val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimes.readableDuration(elapsed))
             val sb = StringBuilder(message)
             var i = 0
             pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it, verbose)).append('\n') }

@@ -17,7 +17,9 @@
 
 package ai.platon.pulsar.schedule
 
-import ai.platon.pulsar.common.DateTimeUtil.*
+import ai.platon.pulsar.common.DateTimes.HOURS_OF_DAY
+import ai.platon.pulsar.common.DateTimes.HOURS_OF_MONTH
+import ai.platon.pulsar.common.DateTimes.HOURS_OF_YEAR
 import ai.platon.pulsar.common.MetricsSystem
 import ai.platon.pulsar.common.config.AppConstants.TCP_IP_STANDARDIZED_TIME
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING

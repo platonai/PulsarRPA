@@ -264,7 +264,7 @@ class TaskScheduler(
 
         val border = StringUtils.repeat('.', 40)
         log.info(border)
-        log.info("[Final Report - " + DateTimeUtil.now() + "]")
+        log.info("[Final Report - " + DateTimes.now() + "]")
 
         report()
 

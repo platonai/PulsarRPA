@@ -38,7 +38,7 @@ object AppFiles {
     fun appendLog(message: String, path: Path) {
         try {
             // TODO: cached
-            FileUtils.writeStringToFile(path.toFile(), DateTimeUtil.now() + SPACE + message, true)
+            FileUtils.writeStringToFile(path.toFile(), DateTimes.now() + SPACE + message, true)
         } catch (e: IOException) {
             e.printStackTrace()
         }
@@ -47,7 +47,7 @@ object AppFiles {
     fun appendLog(message: String, file: String) {
         try {
             // TODO: cached
-            FileUtils.writeStringToFile(File(file), DateTimeUtil.now() + SPACE + message, true)
+            FileUtils.writeStringToFile(File(file), DateTimes.now() + SPACE + message, true)
         } catch (e: IOException) {
             e.printStackTrace()
         }
