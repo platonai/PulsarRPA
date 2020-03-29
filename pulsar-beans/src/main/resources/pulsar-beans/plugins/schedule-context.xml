@@ -9,7 +9,7 @@
 
     <bean id="fetchSchedule" class="ai.platon.pulsar.schedule.ProductMonitorFetchSchedule">
         <constructor-arg ref="conf"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
     </bean>
 
 </beans>

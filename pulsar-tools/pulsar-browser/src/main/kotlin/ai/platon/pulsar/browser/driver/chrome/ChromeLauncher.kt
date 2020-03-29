@@ -1,9 +1,10 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.chrome.LauncherConfig.Companion.CHROME_BINARY_SEARCH_PATHS
-import ai.platon.pulsar.browser.driver.chrome.impl.ChromeServiceImpl
+import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
-import com.github.kklisura.cdt.protocol.types.security.CertificateErrorAction
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -182,21 +183,21 @@ class ChromeLauncher(
     private var userDataDirPath = config.userDataDirPath
     private val shutdownHookThread = Thread { this.close() }
 
-    fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): ChromeService {
+    fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
         val port = launchChromeProcess(chromeBinaryPath, options)
         userDataDirPath = Paths.get(options.userDataDir)
-        return ChromeServiceImpl(port)
+        return Chrome(port)
     }
 
-    fun launch(options: ChromeDevtoolsOptions): ChromeService {
+    fun launch(options: ChromeDevtoolsOptions): RemoteChrome {
         return launch(searchChromeBinary(), options)
     }
 
-    fun launch(headless: Boolean): ChromeService {
+    fun launch(headless: Boolean): RemoteChrome {
         return launch(searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
     }
 
-    fun launch(): ChromeService {
+    fun launch(): RemoteChrome {
         return launch(true)
     }
 

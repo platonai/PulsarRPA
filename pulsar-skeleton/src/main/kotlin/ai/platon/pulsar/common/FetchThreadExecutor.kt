@@ -11,6 +11,9 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * TODO: use [MultithreadEventExecutorGroup] instead
+ * */
 class FetchThreadExecutor(conf: ImmutableConfig) : AutoCloseable {
     private val log = LoggerFactory.getLogger(FetchThreadExecutor::class.java)
 

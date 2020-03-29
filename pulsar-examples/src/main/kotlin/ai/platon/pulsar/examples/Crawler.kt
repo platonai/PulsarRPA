@@ -9,8 +9,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.net.browser.BatchHandler
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.crawl.fetch.BatchHandler
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL

@@ -165,7 +165,7 @@ class SQLContext: AutoCloseable {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = pulsarContext.fetchTaskTracker.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
+            val urls = pulsarContext.lazyFetchTaskManager.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
             if (urls.isNotEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }
@@ -182,7 +182,7 @@ class SQLContext: AutoCloseable {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = pulsarContext.fetchTaskTracker.getSeeds(mode, 1000)
+            val urls = pulsarContext.lazyFetchTaskManager.getSeeds(mode, 1000)
             if (urls.isNotEmpty()) {
                 loadAll(urls, backgroundTaskBatchSize, mode)
             }

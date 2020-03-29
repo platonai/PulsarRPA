@@ -19,7 +19,7 @@
 
 package ai.platon.pulsar.examples.spider
 
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.AppConstants.DISTANCE_INFINITE
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -28,24 +28,18 @@ import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.inject.SeedBuilder
-import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
-import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebGraph
 import ai.platon.pulsar.persist.graph.WebVertex
 import ai.platon.pulsar.persist.metadata.Mark
-import ai.platon.pulsar.persist.metadata.MultiMetadata
-import org.apache.avro.util.Utf8
 import org.slf4j.LoggerFactory
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.time.Instant
-import java.util.*
-import java.util.stream.Collectors.joining
 
 class SpiderSimulator(
         val conf: ImmutableConfig,
@@ -55,7 +49,7 @@ class SpiderSimulator(
         val fetchComponent: FetchComponent,
         val loadComponent: LoadComponent,
         val parseComponent: ParseComponent,
-        val metricsSystem: MetricsSystem
+        val messageWriter: MessageWriter
 ) {
     private val log = LoggerFactory.getLogger(SpiderSimulator::class.java)
 
@@ -319,7 +313,7 @@ class SpiderSimulator(
     }
 
     fun report() {
-        store.values.forEach { metricsSystem.reportFetchSchedule(it, true) }
+        store.values.forEach { messageWriter.reportFetchSchedule(it, true) }
     }
 }
 

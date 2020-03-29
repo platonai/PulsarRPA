@@ -16,52 +16,28 @@
     <bean id="metricsCounters" class="ai.platon.pulsar.common.MetricsCounters"/>
 
     <!--System metrics -->
-    <bean id="metricsSystem" class="ai.platon.pulsar.common.MetricsSystem" destroy-method="close">
+    <bean id="messageWriter" class="ai.platon.pulsar.common.MessageWriter" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="fetchTaskTracker" class="ai.platon.pulsar.crawl.fetch.FetchTaskTracker" destroy-method="close">
         <constructor-arg ref="webDb"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchThreadExecutor" class="ai.platon.pulsar.common.FetchThreadExecutor" destroy-method="close">
+    <bean id="lazyFetchTaskManager" class="ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="fetchTaskTracker"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserControl" class="ai.platon.pulsar.net.browser.WebDriverControl">
-        <constructor-arg ref="conf"/>
+    <bean id="fetchTaskExecutor" class="io.netty.util.concurrent.DefaultEventExecutorGroup">
+        <constructor-arg value="20"/>
     </bean>
 
     <bean id="proxyManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyManagerFactory" destroy-method="close">
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="webDriverManager" class="ai.platon.pulsar.net.browser.WebDriverManager" destroy-method="close">
-        <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="proxyManagerFactory"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="privacyContextManager" class="ai.platon.pulsar.net.browser.PrivacyContextManager">
-        <constructor-arg ref="webDriverManager"/>
-        <constructor-arg ref="proxyManagerFactory"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="browserEmulator" class="ai.platon.pulsar.net.browser.RobustBrowserEmulator" destroy-method="close">
-        <constructor-arg ref="privacyContextManager"/>
-        <constructor-arg ref="fetchTaskTracker"/>
-        <constructor-arg ref="metricsSystem"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.net.browser.BrowserEmulatedFetcher" destroy-method="close">
-        <constructor-arg ref="privacyContextManager"/>
-        <constructor-arg ref="fetchThreadExecutor"/>
-        <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="conf"/>
     </bean>
 

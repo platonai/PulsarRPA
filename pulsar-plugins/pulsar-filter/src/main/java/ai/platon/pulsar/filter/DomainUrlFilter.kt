@@ -22,7 +22,7 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.UrlFilter
-import ai.platon.pulsar.net.domain.DomainSuffixes
+import ai.platon.pulsar.common.domain.DomainSuffixes
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.*

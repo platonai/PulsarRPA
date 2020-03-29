@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -26,7 +26,7 @@ import java.util.stream.IntStream
 class TestWeakIndexer {
     private val conf: MutableConfig
     private val webDb: WebDb
-    private val metricsSystem: MetricsSystem
+    private val messageWriter: MessageWriter
     private val urlTrackerIndexer: WeakPageIndexer
     private val fetchTaskTracker: FetchTaskTracker
     private val store: DataStore<String, GWebPage>
@@ -74,8 +74,8 @@ class TestWeakIndexer {
         conf = MutableConfig()
         conf[CapabilityTypes.STORAGE_CRAWL_ID] = "test"
         webDb = WebDb(conf)
-        metricsSystem = MetricsSystem(webDb, conf)
-        fetchTaskTracker = FetchTaskTracker(webDb, metricsSystem, conf)
+        messageWriter = MessageWriter(webDb, conf)
+        fetchTaskTracker = FetchTaskTracker(webDb, messageWriter, conf)
         urlTrackerIndexer = WeakPageIndexer(AppConstants.URL_TRACKER_HOME_URL, webDb)
         store = webDb.store
     }

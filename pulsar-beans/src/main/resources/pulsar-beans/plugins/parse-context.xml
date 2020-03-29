@@ -62,7 +62,7 @@
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>
         <constructor-arg ref="metricsCounters"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 

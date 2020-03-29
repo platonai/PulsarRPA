@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
@@ -33,8 +33,8 @@ import java.time.Instant
  */
 class DefaultFetchSchedule(
         conf: ImmutableConfig,
-        metricsSystem: MetricsSystem
-) : AbstractFetchSchedule(conf, metricsSystem) {
+        messageWriter: MessageWriter
+) : AbstractFetchSchedule(conf, messageWriter) {
 
     override fun setFetchSchedule(page: WebPage, prevFetchTime: Instant,
                                   prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {

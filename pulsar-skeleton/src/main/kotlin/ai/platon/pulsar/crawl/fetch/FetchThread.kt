@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.ReducerContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
@@ -29,7 +29,7 @@ class FetchThread(
         private val taskScheduler: TaskScheduler,
         immutableConfig: ImmutableConfig,
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>
-): Thread(), Comparable<FetchThread> {
+): Thread(), Comparable<FetchThread>, AutoCloseable {
     companion object {
         private val instanceSequence = AtomicInteger(0)
         val pendingTasks = ConcurrentHashMap<Int, WebPage>()
@@ -43,7 +43,7 @@ class FetchThread(
      */
     private var currPoolId: PoolId? = null
     private val servedPoolIds = TreeSet<PoolId>()
-    private var taskCount = 0
+    private var numTasksDone = 0
     private val closed = AtomicBoolean(false)
     private val tasksMonitor = taskScheduler.tasksMonitor
 
@@ -52,21 +52,13 @@ class FetchThread(
         this.name = "w$id" // w is short for worker
     }
 
-    fun exit() {
-        if (closed.compareAndSet(false, true)) {
-            interrupt()
-            join()
-        }
-    }
-
     override fun run() {
         fetchMonitor.registerFetchThread(this)
-
 
         var task: JobFetchTask? = null
 
         try {
-            while (!fetchMonitor.isMissionComplete && !closed.get() && !interrupted()) {
+            while (!fetchMonitor.isMissionComplete && !closed.get() && !currentThread().isInterrupted) {
                 task = schedule()
 
                 // TODO: block in schedule
@@ -92,13 +84,13 @@ class FetchThread(
                     pendingTasks[context.jobId] = page
                 } else if (page.isNotNil) {
                     if (log.isInfoEnabled) {
-                        log.info(MetricsSystem.getFetchCompleteReport(page))
+                        log.info(MessageWriter.getFetchCompleteReport(page))
                     }
 
                     write(page.key, page)
                 }
 
-                ++taskCount
+                ++numTasksDone
             } // while
         } catch (e: Throwable) {
             log.error("Unexpected throwable : " + Strings.stringifyException(e))
@@ -119,7 +111,7 @@ class FetchThread(
         }
 
         val report = StringBuilder()
-        report.appendln(String.format("Thread #%d served %d tasks for %d hosts : \n", getId(), taskCount, servedPoolIds.size))
+        report.appendln(String.format("Thread #%d served %d tasks for %d hosts : \n", getId(), numTasksDone, servedPoolIds.size))
 
         servedPoolIds.map {
             Urls.reverseHost("${it.protocol}://${it.host}")
@@ -129,8 +121,11 @@ class FetchThread(
         log.info(report.toString())
     }
 
-    private fun waitUntilAllFree() {
-
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            interrupt()
+            join()
+        }
     }
 
     private fun sleep() {

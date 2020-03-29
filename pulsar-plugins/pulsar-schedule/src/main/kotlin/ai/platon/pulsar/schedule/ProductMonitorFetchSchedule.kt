@@ -17,7 +17,7 @@
 
 package ai.platon.pulsar.schedule
 
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -34,8 +34,8 @@ import java.time.Instant
  */
 class ProductMonitorFetchSchedule(
         conf: ImmutableConfig,
-        metricsSystem: MetricsSystem
-): AdaptiveFetchSchedule(conf, metricsSystem) {
+        messageWriter: MessageWriter
+): AdaptiveFetchSchedule(conf, messageWriter) {
 
     override fun setFetchSchedule(page: WebPage,
                                   prevFetchTime: Instant, prevModifiedTime: Instant,

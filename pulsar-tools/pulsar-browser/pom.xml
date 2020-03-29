@@ -33,11 +33,21 @@
       <artifactId>tyrus-container-grizzly-client</artifactId>
       <version>${tyrus.version}</version>
     </dependency>
+
     <dependency>
-      <groupId>org.glassfish.tyrus</groupId>
-      <artifactId>tyrus-container-grizzly-server</artifactId>
-      <version>${tyrus.version}</version>
-      <scope>test</scope>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport</artifactId>
+      <version>${netty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
+      <version>${netty.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
+      <version>${netty.version}</version>
     </dependency>
 
     <dependency>
@@ -56,6 +66,10 @@
       <version>${jackson.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-coroutines-core</artifactId>
+    </dependency>
   </dependencies>
 
   <properties>

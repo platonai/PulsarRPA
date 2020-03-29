@@ -19,31 +19,12 @@
 package ai.platon.pulsar.crawl.protocol
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.common.WritableTestUtils.testWritable
-import ai.platon.pulsar.crawl.protocol.io.ContentWritable
 import ai.platon.pulsar.persist.metadata.MultiMetadata
-import ai.platon.pulsar.persist.metadata.SpellCheckedMultiMetadata
 import org.apache.tika.mime.MimeTypes
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 
 class TestContent {
-    @Test
-    @Ignore("Failed to write-read content")
-    @Throws(Exception::class)
-    fun testContent() {
-        val page = "<HTML><BODY><H1>Hello World</H1><P>The Quick Brown Fox Jumped Over the Lazy Fox.</BODY></HTML>"
-        val url = "http://www.foo.com/"
-        val metaData = SpellCheckedMultiMetadata()
-        metaData.put("Host", "www.foo.com")
-        metaData.put("Content-Type", "text/html")
-        val r = Content(url, url, page.toByteArray(charset("UTF-8")), "text/html", metaData, conf)
-        testWritable(ContentWritable(r))
-        Assert.assertEquals("text/html", r.metadata["Content-Type"])
-        Assert.assertEquals("text/html", r.metadata["content-type"])
-        Assert.assertEquals("text/html", r.metadata["CONTENTYPE"])
-    }
 
     @Test
     @Throws(Exception::class)

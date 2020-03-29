@@ -19,27 +19,22 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.lang3.StringUtils
-import org.apache.hadoop.mapreduce.TaskInputOutputContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * TODO: Use com.codahale.metrics.MetricRegistry or Spark Metrics System, or something similar
- */
 class MetricsReporter(
         private val jobName: String,
         private val counter: MetricsCounters,
-        private val conf: ImmutableConfig,
-        private val context: TaskInputOutputContext<*, *, *, *>
-) : Thread() {
+        private val conf: ImmutableConfig
+): Thread() {
     private val running = AtomicBoolean(false)
     private val silent = AtomicBoolean(false)
-    var log = LOG_NON_ADDITIVITY
+    private val log = LoggerFactory.getLogger(MetricsReporter::class.java)
     private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(10))
 
     init {
-        val name = "Reporter-" + counter.id()
+        val name = "Reporter-" + counter.id
         setName(name)
         isDaemon = true
         startReporter()
@@ -50,9 +45,8 @@ class MetricsReporter(
     }
 
     fun startReporter() {
-        if (!running.get()) {
+        if (running.compareAndSet(false, true)) {
             start()
-            running.set(true)
         }
     }
 
@@ -76,9 +70,11 @@ class MetricsReporter(
         do {
             try {
                 sleep(reportInterval.toMillis())
-            } catch (ignored: InterruptedException) {
-            }
-            counter.accumulateGlobalCounters(context)
+            } catch (ignored: InterruptedException) {}
+
+            // sync to hadoop counters
+//            counter.accumulateGlobalCounters(context)
+
             report()
         } while (running.get())
         log.info("== Reporter stopped [ " + DateTimes.now() + " ] ==")
@@ -92,10 +88,5 @@ class MetricsReporter(
                 log.info(status)
             }
         }
-    }
-
-    companion object {
-        val LOG_ADDITIVITY = LoggerFactory.getLogger(MetricsReporter::class.java.toString() + "Add")
-        val LOG_NON_ADDITIVITY = LoggerFactory.getLogger(MetricsReporter::class.java)
     }
 }

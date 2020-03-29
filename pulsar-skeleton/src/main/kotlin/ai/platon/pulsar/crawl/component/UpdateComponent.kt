@@ -19,7 +19,7 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.MetricsCounters
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
@@ -45,7 +45,7 @@ class UpdateComponent(
         val webDb: WebDb,
         val fetchSchedule: FetchSchedule,
         val scoringFilters: ScoringFilters,
-        val metricsSystem: MetricsSystem,
+        val messageWriter: MessageWriter,
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized {
@@ -88,7 +88,7 @@ class UpdateComponent(
 
         if (outgoingPage.protocolStatus.isFailed) {
             page.deadLinks.add(outgoingPage.url)
-            metricsSystem.debugDeadOutgoingPage(outgoingPage.url, page)
+            messageWriter.debugDeadOutgoingPage(outgoingPage.url, page)
         }
 
         scoringFilters.updateContentScore(page)
@@ -119,7 +119,7 @@ class UpdateComponent(
                     "brokenSubEntity", brokenSubEntityLastRound
             ).formatAsLine()
 
-            metricsSystem.reportBrokenEntity(page.url, message)
+            messageWriter.reportBrokenEntity(page.url, message)
             LOG.warn(message)
         }
     }
@@ -186,8 +186,8 @@ class UpdateComponent(
                 }
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    metricsCounters.increase(Counter.rBadModTime)
-                    metricsSystem.reportBadModifiedTime(Params.of(
+                    metricsCounters.inc(Counter.rBadModTime)
+                    messageWriter.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,
                             "PMT", prevModifiedTime, "MT", modifiedTime,
                             "HMT", page.headers.lastModified,

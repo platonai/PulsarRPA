@@ -1,6 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.netty.channel.DefaultEventLoopGroup
+import io.netty.channel.EventLoopGroup
+import java.time.Duration
 
 class ChromeVersion {
     @JsonProperty("Browser")
@@ -41,3 +44,13 @@ class MethodInvocation(
         var method: String,
         var params: Map<String, Any>? = null
 )
+
+class DevToolsConfig(
+        var workerGroup: EventLoopGroup = DefaultEventLoopGroup(),
+        var readTimeout: Duration = Duration.ofMinutes(READ_TIMEOUT_MINUTES)
+) {
+    companion object {
+        private const val READ_TIMEOUT_PROPERTY = "chrome.browser.services.config.readTimeout"
+        private val READ_TIMEOUT_MINUTES = System.getProperty(READ_TIMEOUT_PROPERTY, "0").toLong()
+    }
+}

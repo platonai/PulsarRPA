@@ -147,7 +147,7 @@ public abstract class AbstractHttpProtocol implements Protocol {
 
         setResponseTime(startTime, page, response);
 
-        // page.baseUrl is the last working address, and page.url is the permanent internal address
+        // page.baseUrl/page.location is the last working address, and page.url is the permanent internal key for the page
         String location = page.getLocation();
         if (location == null) {
             location = page.getUrl();

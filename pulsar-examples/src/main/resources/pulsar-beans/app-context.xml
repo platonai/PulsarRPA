@@ -15,7 +15,7 @@
         <constructor-arg ref="loadComponent" />
         <constructor-arg ref="fetchComponent" />
         <constructor-arg ref="parseComponent" />
-        <constructor-arg ref="metricsSystem" />
+        <constructor-arg ref="messageWriter" />
     </bean>
 
 </beans>

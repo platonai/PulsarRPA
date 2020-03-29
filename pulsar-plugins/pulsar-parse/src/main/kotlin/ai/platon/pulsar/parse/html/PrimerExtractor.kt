@@ -74,7 +74,7 @@ class PrimerExtractor(
         var loss = fieldCollection.loss
 
         page.pageCounters.set(Self.missingFields, loss)
-        metricsCounters.increase(Counter.brokenEntity, if (loss > 0) 1 else 0)
+        metricsCounters.inc(Counter.brokenEntity, if (loss > 0) 1 else 0)
 
         var brokenSubEntity = 0
         for (i in 1 until fieldCollections.size) {
@@ -87,7 +87,7 @@ class PrimerExtractor(
         }
 
         page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
-        metricsCounters.increase(Counter.brokenSubEntity, brokenSubEntity)
+        metricsCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
     }
 
     private fun collectPageFeatures(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {

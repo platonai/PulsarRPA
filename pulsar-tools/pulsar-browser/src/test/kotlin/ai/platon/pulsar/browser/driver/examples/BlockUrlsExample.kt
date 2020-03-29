@@ -70,7 +70,7 @@ class BlockUrlsExample: BrowserExampleBase() {
         page.enable()
         page.navigate(testUrl)
 
-        println(Gson().toJson(chrome.getVersion()))
+        println(Gson().toJson(chrome.version))
     }
 
     private fun isMainFrame(frameId: String): Boolean {

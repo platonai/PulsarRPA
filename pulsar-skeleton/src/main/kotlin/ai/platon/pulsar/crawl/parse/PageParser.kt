@@ -19,7 +19,7 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.MetricsCounters
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.common.JobInitialized
@@ -46,7 +46,7 @@ class PageParser(
         val parserFactory: ParserFactory,
         val signature: Signature,
         val metricsCounters: MetricsCounters,
-        val metricsSystem: MetricsSystem,
+        val messageWriter: MessageWriter,
         private val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
 
@@ -73,7 +73,7 @@ class PageParser(
             ParserFactory(conf),
             TextMD5Signature(),
             MetricsCounters(),
-            MetricsSystem(conf),
+            MessageWriter(conf),
             conf
     )
 
@@ -119,7 +119,7 @@ class PageParser(
                 updateCounters(parseResult)
 
                 if (parseResult.isSuccess) {
-                    metricsSystem.debugExtractedFields(page)
+                    messageWriter.debugExtractedFields(page)
                     page.marks.putIfNotNull(Mark.PARSE, page.marks[Mark.FETCH])
                 }
             }
@@ -209,7 +209,7 @@ class PageParser(
         processLinks(page, parseResult.hypeLinks)
 
         // collect page features to better detect page types
-        parseResult.domStatistics?.let { metricsSystem.reportDOMStatistics(page, it) }
+        parseResult.domStatistics?.let { messageWriter.reportDOMStatistics(page, it) }
     }
 
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
@@ -252,12 +252,12 @@ class PageParser(
             }
         }
         if (counter != null) {
-            metricsCounters.increase(counter)
+            metricsCounters.inc(counter)
         }
     }
 
     override fun close() {
-        metricsSystem.reportLabeledHyperLinks(ParseResult.labeledHypeLinks)
+        messageWriter.reportLabeledHyperLinks(ParseResult.labeledHypeLinks)
     }
 
     companion object {

@@ -1,25 +1,24 @@
 package ai.platon.pulsar.browser.driver.examples
 
+import com.google.gson.Gson
+
 class LogRequestsExample: BrowserExampleBase() {
     override fun run() {
-        val page = devTools.page
-        val network = devTools.network
-
-        // Log requests with onRequestWillBeSent event handler.
         network.onRequestWillBeSent { event ->
-            System.out.printf("request: %s %s%s", event.request.method, event.request.url, System.lineSeparator())
+            println(String.format("request: [%s] %s\n", event.request.method, event.request.url))
         }
         network.onLoadingFinished {
             // Close the tab and close the browser when loading finishes.
-            chrome.closeTab(tab)
-            launcher.close()
+//            chrome.closeTab(tab)
+//            launcher.close()
         }
 
         network.enable()
-        // Enable page events.
         page.enable()
-        // Navigate to baidu.com.
+
         page.navigate(testUrl)
+        page.resetNavigationHistory()
+        page.navigate("https://list.jd.com/list.html?cat=670,677,688")
     }
 
     private fun isBlocked(url: String): Boolean {

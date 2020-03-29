@@ -11,6 +11,8 @@ enum class FlowState {
 /** Unsafe lazy, usually be used in single thread */
 fun <T> usfLazy(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
 
+inline fun <T> silent(block: () -> T): T? = try { block() } catch (ignored: Throwable) { null }
+
 /** Always false and have no static check warning */
 fun alwaysFalse(): Boolean {
     return Predicates.alwaysFalse<Boolean>().apply(false)

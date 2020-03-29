@@ -1,27 +1,33 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.FetchThreadExecutor
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
+import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
+import io.netty.util.concurrent.EventExecutorGroup
+import io.netty.util.concurrent.Future
 import java.util.*
-import java.util.concurrent.*
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class BatchFetchComponent(
         val webDb: WebDb,
         fetchTaskTracker: FetchTaskTracker,
+        val lazyFetchTaskManager: LazyFetchTaskManager,
         protocolFactory: ProtocolFactory,
-        fetchThreadExecutor: FetchThreadExecutor,
+        val fetchTaskExecutor: EventExecutorGroup,
         immutableConfig: ImmutableConfig
-) : FetchComponent(fetchTaskTracker, protocolFactory, fetchThreadExecutor, immutableConfig) {
+) : FetchComponent(fetchTaskTracker, protocolFactory, immutableConfig) {
     /**
      * Fetch all the urls, config property 'fetch.concurrency' controls the concurrency level.
      * If concurrency level is not great than 1, fetch all urls in the caller thread
@@ -116,7 +122,7 @@ class BatchFetchComponent(
         if (LOG.isDebugEnabled) {
             LOG.debug("Parallel fetch {} urls manually", Iterables.size(urls))
         }
-        return urls.map { fetchThreadExecutor.submit { fetch(it, options) } }.map { getResponse(it) }
+        return urls.map { fetchTaskExecutor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
     }
 
     /**
@@ -164,7 +170,7 @@ class BatchFetchComponent(
         if (lazyTasks.isNotEmpty()) {
             val mode = options.fetchMode
             // TODO: save url with options
-            fetchTaskTracker.commitLazyTasks(mode, lazyTasks)
+            lazyFetchTaskManager.commitLazyTasks(mode, lazyTasks)
             if (LOG.isDebugEnabled) {
                 LOG.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
             }

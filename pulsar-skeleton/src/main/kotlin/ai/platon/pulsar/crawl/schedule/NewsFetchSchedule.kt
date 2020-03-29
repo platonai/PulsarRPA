@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
@@ -40,8 +40,8 @@ import java.time.temporal.ChronoUnit
  */
 class NewsFetchSchedule(
         conf: ImmutableConfig,
-        metricsSystem: MetricsSystem
-) : AdaptiveFetchSchedule(conf, metricsSystem) {
+        messageWriter: MessageWriter
+) : AdaptiveFetchSchedule(conf, messageWriter) {
     private val LOG = LoggerFactory.getLogger(NewsFetchSchedule::class.java)
 
     override fun setFetchSchedule(page: WebPage,
@@ -68,7 +68,7 @@ class NewsFetchSchedule(
         }
         val days = ChronoUnit.DAYS.between(time, fetchTime)
         if (days > 7) {
-            metricsSystem.reportFetchSchedule(page, false)
+            messageWriter.reportFetchSchedule(page, false)
             return Duration.ofHours(1)
         }
         return MIN_INTERVAL

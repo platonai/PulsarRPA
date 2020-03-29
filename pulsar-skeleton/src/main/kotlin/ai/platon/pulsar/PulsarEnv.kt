@@ -94,6 +94,6 @@ class PulsarEnv {
     }
 
     // other possible environment scope objects
-    // rest ports, pythonWorkers, memoryManager, metricsSystem, securityManager, blockManager
+    // rest ports, pythonWorkers, memoryManager, messageWriter, securityManager, blockManager
     // serializers, etc
 }

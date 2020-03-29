@@ -39,11 +39,11 @@ class FetchMonitor(
         private val immutableConfig: ImmutableConfig
 ) : Parameterized, Configurable, JobInitialized, AutoCloseable {
     companion object {
-        private val instanceSequence = AtomicInteger(0)
+        private val instanceSequencer = AtomicInteger(0)
     }
 
     private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
-    private val id = instanceSequence.incrementAndGet()
+    private val id = instanceSequencer.incrementAndGet()
 
     private val startTime = Instant.now()
 
@@ -106,7 +106,7 @@ class FetchMonitor(
         get() = !feedThreads.isEmpty()
 
     val isMissionComplete: Boolean
-        get() = !isFeederAlive && taskMonitor.readyTaskCount() == 0 && taskMonitor.pendingTaskCount() == 0
+        get() = !isFeederAlive && taskMonitor.numReadyTasks.get() == 0 && taskMonitor.numPendingTasks.get() == 0
 
     /**
      * Initialize in setup using job conf
@@ -220,12 +220,13 @@ class FetchMonitor(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                log.info("[Destruction] Closing FetchMonitor #$id")
+                log.info("Closing FetchMonitor #$id")
 
                 // cancel all tasks
-                feedThreads.forEach { it.exitAndJoin() }
-                activeFetchThreads.forEach { it.exit() }
-                retiredFetchThreads.forEach { it.report() }
+                feedThreads.forEach { it.use { it.close() } }
+                activeFetchThreads.forEach { it.use { it.close() } }
+                // retiredFetchThreads.forEach { it.report() }
+                retiredFetchThreads.forEach { it.use { it.close() } }
 
                 Files.deleteIfExists(finishScript)
             } catch (e: Throwable) {
@@ -316,7 +317,7 @@ class FetchMonitor(
             tuneFetchQueues(now, idleTime)
 
             // TODO: handle browse context reset
-            handleContextReset()
+            handlePrivacyContextReset()
             // TODO: merge report from AppMonitor and ProxyManager
 
             /*
@@ -419,9 +420,16 @@ class FetchMonitor(
         log.info(report)
     }
 
-    private fun handleContextReset() {
+    private fun handlePrivacyContextReset() {
         val pendingTasks = FetchThread.pendingTasks
         synchronized(FetchThread::class.java) {
+            // 1. pause feeder
+            // 2. pause all fetch threads
+            // 3. abort all working tasks
+            // 4. put all aborted tasks back into task queue
+            // 5. reset privacy context
+            // 6. resume all fetch threads
+            // 7. resume feeder
 
             while (activeFetchThreads.isNotEmpty()) {
                 // do not
@@ -458,7 +466,7 @@ class FetchMonitor(
      * Check pools to see if something is hung
      */
     private fun tuneFetchQueues(now: Instant, idleTime: Duration) {
-        if (taskMonitor.readyTaskCount() + taskMonitor.pendingTaskCount() < 20) {
+        if (taskMonitor.numReadyTasks.get() + taskMonitor.numPendingTasks.get() < 20) {
             poolPendingTimeout = Duration.ofMinutes(3)
         }
 

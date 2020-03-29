@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.CommonCounter
 import ai.platon.pulsar.persist.CrawlStatus
 
 /**
@@ -38,7 +37,7 @@ object CounterUtils {
                 CommonCounter.mDayN
             }
         }
-        metricsCounters.increase(counter)
+        metricsCounters.inc(counter)
     }
 
     fun increaseRDays(days: Long, metricsCounters: MetricsCounters) {
@@ -71,7 +70,7 @@ object CounterUtils {
                 CommonCounter.rDayN
             }
         }
-        metricsCounters.increase(counter)
+        metricsCounters.inc(counter)
     }
 
     fun increaseMDepth(depth: Int, metricsCounters: MetricsCounters) {
@@ -92,38 +91,38 @@ object CounterUtils {
                 CommonCounter.mDepthN
             }
         }
-        metricsCounters.increase(counter)
+        metricsCounters.inc(counter)
     }
 
     fun increaseRDepth(depth: Int, counter: MetricsCounters) {
         when (depth) {
             0 -> {
-                counter.increase(CommonCounter.rDepth0)
+                counter.inc(CommonCounter.rDepth0)
             }
             1 -> {
-                counter.increase(CommonCounter.rDepth1)
+                counter.inc(CommonCounter.rDepth1)
             }
             2 -> {
-                counter.increase(CommonCounter.rDepth2)
+                counter.inc(CommonCounter.rDepth2)
             }
             3 -> {
-                counter.increase(CommonCounter.rDepth3)
+                counter.inc(CommonCounter.rDepth3)
             }
             else -> {
-                counter.increase(CommonCounter.rDepthN)
+                counter.inc(CommonCounter.rDepthN)
             }
         }
     }
 
     fun updateStatusCounter(crawlStatus: CrawlStatus, counter: MetricsCounters) {
         when (crawlStatus.code.toByte()) {
-            CrawlStatus.FETCHED -> counter.increase(CommonCounter.stFetched)
-            CrawlStatus.REDIR_TEMP -> counter.increase(CommonCounter.stRedirTemp)
-            CrawlStatus.REDIR_PERM -> counter.increase(CommonCounter.stRedirPerm)
-            CrawlStatus.NOTMODIFIED -> counter.increase(CommonCounter.stNotModified)
-            CrawlStatus.RETRY -> counter.increase(CommonCounter.stRetry)
-            CrawlStatus.UNFETCHED -> counter.increase(CommonCounter.stUnfetched)
-            CrawlStatus.GONE -> counter.increase(CommonCounter.stGone)
+            CrawlStatus.FETCHED -> counter.inc(CommonCounter.stFetched)
+            CrawlStatus.REDIR_TEMP -> counter.inc(CommonCounter.stRedirTemp)
+            CrawlStatus.REDIR_PERM -> counter.inc(CommonCounter.stRedirPerm)
+            CrawlStatus.NOTMODIFIED -> counter.inc(CommonCounter.stNotModified)
+            CrawlStatus.RETRY -> counter.inc(CommonCounter.stRetry)
+            CrawlStatus.UNFETCHED -> counter.inc(CommonCounter.stUnfetched)
+            CrawlStatus.GONE -> counter.inc(CommonCounter.stGone)
             else -> {
             }
         }

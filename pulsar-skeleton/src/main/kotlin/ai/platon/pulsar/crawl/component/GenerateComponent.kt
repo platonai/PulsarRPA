@@ -52,7 +52,7 @@ class GenerateComponent(
         val urlFilters: UrlFilters,
         val urlNormalizers: UrlNormalizers,
         val fetchSchedule: FetchSchedule,
-        val metricsSystem: MetricsSystem,
+        val messageWriter: MessageWriter,
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized {
@@ -163,17 +163,17 @@ class GenerateComponent(
         }
 
         if (bannedUrls.contains(u)) {
-            metricsCounters.increase(Counter.mBanned)
+            metricsCounters.inc(Counter.mBanned)
             return false
         }
 
         if (unreachableHosts.contains(URLUtil.getHost(page.url, groupMode))) {
-            metricsCounters.increase(Counter.mHostGone)
+            metricsCounters.inc(Counter.mHostGone)
             return false
         }
 
         if (page.hasMark(Mark.GENERATE)) {
-            metricsCounters.increase(Counter.mGenerated)
+            metricsCounters.inc(Counter.mGenerated)
             /*
              * Fetch entries are generated, empty webpage entries are created in the database(HBase)
              * case 1. another fetcher job is fetching the generated batch. In this case, we should not generate it.
@@ -206,14 +206,14 @@ class GenerateComponent(
         val distanceBias = 0
         // Filter on distance
         if (page.distance > maxDistance + distanceBias) {
-            metricsCounters.increase(Counter.mTooDeep)
+            metricsCounters.inc(Counter.mTooDeep)
             return false
         }
 
         // TODO : Url range filtering should be applied to (HBase) native query filter
         // key before start key
         if (!CrawlFilter.keyGreaterEqual(reversedUrl, keyRange[0])) {
-            metricsCounters.increase(Counter.mBeforeStart)
+            metricsCounters.inc(Counter.mBeforeStart)
             return false
         }
 
@@ -227,7 +227,7 @@ class GenerateComponent(
 
         // key not fall in key ranges
         if (!crawlFilters.testKeyRangeSatisfied(reversedUrl)) {
-            metricsCounters.increase(Counter.mNotInRange)
+            metricsCounters.inc(Counter.mNotInRange)
             return false
         }
 
@@ -238,12 +238,12 @@ class GenerateComponent(
         }
 
         if (u2 == null) {
-            metricsCounters.increase(Counter.mNotNormal)
+            metricsCounters.inc(Counter.mNotNormal)
             return false
         }
 
         if (filter && urlFilters.filter(u2) == null) {
-            metricsCounters.increase(Counter.mUrlFiltered)
+            metricsCounters.inc(Counter.mUrlFiltered)
             return false
         }
 
@@ -261,7 +261,7 @@ class GenerateComponent(
 
         // INACTIVE mark is already filtered in HBase query phrase, double check here for diagnoses
         if (page.hasMark(Mark.INACTIVE)) {
-            metricsCounters.increase(Counter.mInactive)
+            metricsCounters.inc(Counter.mInactive)
         }
 
         val fetchTime = page.fetchTime
@@ -270,9 +270,9 @@ class GenerateComponent(
             // TODO : we can expend maxDistance to gain a bigger web graph if the machines are idle
             val fetchInterval = ChronoUnit.HOURS.between(page.prevFetchTime, pseudoCurrTime)
             if (fetchInterval > 6) {
-                metricsCounters.increase(Counter.mAhead)
+                metricsCounters.inc(Counter.mAhead)
                 if (page.isSeed) {
-                    metricsCounters.increase(Counter.mSeedAhead)
+                    metricsCounters.inc(Counter.mSeedAhead)
                 }
 
                 // There are plenty resource to do tasks ahead of time
@@ -283,8 +283,8 @@ class GenerateComponent(
         if (hours <= 30 * 24) {
             increaseMDaysLater(hours.toInt() / 24, metricsCounters)
             if (page.isSeed) {
-                metricsCounters.increase(Counter.mSeedLater)
-                metricsSystem.debugFetchLaterSeeds(page)
+                metricsCounters.inc(Counter.mSeedLater)
+                messageWriter.debugFetchLaterSeeds(page)
             }
         }
 
@@ -295,11 +295,11 @@ class GenerateComponent(
     private fun checkHost(url: String): Boolean {
         val host = URLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
-            metricsCounters.increase(Counter.mUrlMalformed)
+            metricsCounters.inc(Counter.mUrlMalformed)
             return false
         }
         if (unreachableHosts.contains(host)) {
-            metricsCounters.increase(Counter.mHostGone)
+            metricsCounters.inc(Counter.mHostGone)
             return false
         }
         return true
@@ -318,7 +318,7 @@ class GenerateComponent(
             else -> Counter.mLaterN
         }
 
-        metricsCounters.increase(counter)
-        metricsCounters.increase(Counter.mLater)
+        metricsCounters.inc(counter)
+        metricsCounters.inc(Counter.mLater)
     }
 }

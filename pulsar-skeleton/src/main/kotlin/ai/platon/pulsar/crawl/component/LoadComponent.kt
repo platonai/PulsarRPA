@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.MetricsSystem
-import ai.platon.pulsar.common.MetricsSystem.Companion.getBatchCompleteReport
-import ai.platon.pulsar.common.MetricsSystem.Companion.getFetchCompleteReport
+import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.MessageWriter.Companion.getBatchCompleteReport
+import ai.platon.pulsar.common.MessageWriter.Companion.getFetchCompleteReport
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
@@ -44,7 +44,7 @@ class LoadComponent(
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent,
         val updateComponent: UpdateComponent,
-        val metricsSystem: MetricsSystem
+        val messageWriter: MessageWriter
 ): AutoCloseable {
     companion object {
         private val globalFetchingUrls = ConcurrentSkipListSet<String>()
@@ -278,6 +278,7 @@ class LoadComponent(
             if (log.isInfoEnabled) {
                 val verbose = log.isDebugEnabled
                 log.info(getFetchCompleteReport(page, verbose))
+                // log.info(fetchTaskTracker.formatTraffic())
             }
         }
 
@@ -334,7 +335,7 @@ class LoadComponent(
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            metricsSystem.debugIllegalLastFetchTime(page)
+            messageWriter.debugIllegalLastFetchTime(page)
         }
 
         // if (now > lastTime + expires), it's expired
@@ -346,9 +347,9 @@ class LoadComponent(
             return FetchReason.SMALL_CONTENT
         }
 
-        val jsData = page.activeDomMultiStatus
-        if (jsData != null) {
-            val (ni, na) = jsData.lastStat ?: ActiveDomStat()
+        val domStatus = page.activeDomMultiStatus
+        if (domStatus != null) {
+            val (ni, na) = domStatus.lastStat ?: ActiveDomStat()
             if (ni < options.requireImages) {
                 return FetchReason.MISS_FIELD
             }

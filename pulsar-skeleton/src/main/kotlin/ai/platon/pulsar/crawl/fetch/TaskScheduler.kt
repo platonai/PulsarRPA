@@ -30,7 +30,7 @@ import kotlin.math.roundToInt
 
 class TaskScheduler(
         val tasksMonitor: TaskMonitor,
-        val metricsSystem: MetricsSystem,
+        val messageWriter: MessageWriter,
         val pageParser: PageParser,
         val jitIndexer: JITIndexer,
         val conf: ImmutableConfig
@@ -145,7 +145,7 @@ class TaskScheduler(
             return ArrayList()
         }
 
-        if (tasksMonitor.pendingTaskCount() * averagePageSize * 8.0 > 30 * this.bandwidth) {
+        if (tasksMonitor.numPendingTasks.get() * averagePageSize * 8.0 > 30 * this.bandwidth) {
             log.info("Bandwidth exhausted, slows down the scheduling")
             return listOf()
         }
@@ -173,7 +173,7 @@ class TaskScheduler(
     fun finishUnchecked(fetchTask: JobFetchTask) {
         tasksMonitor.finish(fetchTask)
         lastTaskFinishTime = Instant.now()
-        metricsCounters.increase(Counter.rFinishedTasks)
+        metricsCounters.inc(Counter.rFinishedTasks)
     }
 
     /**
@@ -206,7 +206,7 @@ class TaskScheduler(
 
             tasksMonitor.finishAsap(fetchTask)
             fetchErrors.incrementAndGet()
-            metricsCounters.increase(CommonCounter.errors)
+            metricsCounters.inc(CommonCounter.errors)
         } finally {
             lastTaskFinishTime = Instant.now()
         }
@@ -239,8 +239,8 @@ class TaskScheduler(
         val pagesThoRate = (totalPages.get() - pagesLastSec) / reportIntervalSec
         val bytesThoRate = (totalBytes.get() - bytesLastSec) / reportIntervalSec
 
-        val readyFetchItems = tasksMonitor.readyTaskCount()
-        val pendingFetchItems = tasksMonitor.pendingTaskCount()
+        val readyFetchItems = tasksMonitor.numReadyTasks.get()
+        val pendingFetchItems = tasksMonitor.numPendingTasks.get()
 
         metricsCounters.setValue(Counter.rReadyTasks, readyFetchItems)
         metricsCounters.setValue(Counter.rPendingTasks, pendingFetchItems)
@@ -296,7 +296,7 @@ class TaskScheduler(
 
         status.append(readyFetchItems).append(" ready ")
         status.append(pendingFetchItems).append(" pending ")
-        status.append("URLs in ").append(tasksMonitor.poolCount).append(" queues")
+        status.append("URLs in ").append(tasksMonitor.numTaskPools).append(" queues")
 
         return status.toString()
     }
@@ -304,23 +304,23 @@ class TaskScheduler(
     private fun handleResult(fetchTask: JobFetchTask, crawlStatus: CrawlStatus) {
         val page = fetchTask.page
 
-        metricsSystem.debugFetchHistory(page)
+        messageWriter.debugFetchHistory(page)
 
         if (parse && crawlStatus.isFetched) {
             val parseResult = pageParser.parse(page)
 
             if (!parseResult.isSuccess) {
-                metricsCounters.increase(Counter.rParseFailed)
+                metricsCounters.inc(Counter.rParseFailed)
                 page.pageCounters.increase<PageCounters.Self>(PageCounters.Self.parseErr)
             }
 
             // Double check success
             if (!page.hasMark(Mark.PARSE)) {
-                metricsCounters.increase(Counter.rNoParse)
+                metricsCounters.inc(Counter.rNoParse)
             }
 
             if (parseResult.minorCode != ParseStatus.SUCCESS_OK) {
-                metricsSystem.reportFlawParsedPage(page, false)
+                messageWriter.reportFlawParsedPage(page, false)
             }
 
             if (jitIndexer.isEnabled && parseResult.isSuccess) {
@@ -363,8 +363,8 @@ class TaskScheduler(
 
         page.reprUrl = reprUrl
         reprUrls[threadId] = reprUrl
-        metricsSystem.reportRedirects(String.format("[%s] - %100s -> %s\n", redirType, url, reprUrl))
-        metricsCounters.increase(Counter.rRedirect)
+        messageWriter.reportRedirects(String.format("[%s] - %100s -> %s\n", redirType, url, reprUrl))
+        metricsCounters.inc(Counter.rRedirect)
     }
 
     /**
@@ -388,19 +388,19 @@ class TaskScheduler(
     }
 
     private fun updateStatus(page: WebPage) {
-        metricsCounters.increase(CommonCounter.rPersist)
-        metricsCounters.increase(CommonCounter.rLinks, page.impreciseLinkCount)
+        metricsCounters.inc(CommonCounter.rPersist)
+        metricsCounters.inc(CommonCounter.rLinks, page.impreciseLinkCount)
 
         totalPages.incrementAndGet()
         totalBytes.addAndGet(page.contentBytes.toLong())
 
         if (page.isSeed) {
-            metricsCounters.increase(Counter.rSeeds)
+            metricsCounters.inc(Counter.rSeeds)
         }
 
         CounterUtils.increaseRDepth(page.distance, metricsCounters)
 
-        metricsCounters.increase(Counter.rMbytes, (page.contentBytes / 1024.0f).roundToInt())
+        metricsCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f).roundToInt())
     }
 
     private fun logFetchFailure(message: String) {
@@ -409,7 +409,7 @@ class TaskScheduler(
         }
 
         fetchErrors.incrementAndGet()
-        metricsCounters.increase(CommonCounter.errors)
+        metricsCounters.inc(CommonCounter.errors)
     }
 
     private fun report() {

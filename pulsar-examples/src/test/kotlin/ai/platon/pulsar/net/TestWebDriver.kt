@@ -2,10 +2,10 @@ package ai.platon.pulsar.net
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.net.browser.WebDriverControl
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
-import ai.platon.pulsar.net.browser.ManagedWebDriver
-import ai.platon.pulsar.net.browser.WebDriverPool
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPool
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
@@ -66,10 +66,7 @@ class TestWebDriver {
         val workingDrivers = mutableListOf<ManagedWebDriver>()
         repeat(10) {
             val driver = driverPool.poll(0, conf)
-            if (driver != null) {
-                assertNotNull(driver)
-                workingDrivers.add(driver)
-            }
+            workingDrivers.add(driver)
         }
 
         assertEquals(10, driverPool.numWorking)

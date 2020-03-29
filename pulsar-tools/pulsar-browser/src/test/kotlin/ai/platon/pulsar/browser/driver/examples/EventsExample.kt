@@ -10,8 +10,6 @@ class EventsExample: BrowserExampleBase() {
         network.enable()
         page.enable()
         page.navigate(testUrl)
-
-        println(Gson().toJson(chrome.getVersion()))
     }
 }
 

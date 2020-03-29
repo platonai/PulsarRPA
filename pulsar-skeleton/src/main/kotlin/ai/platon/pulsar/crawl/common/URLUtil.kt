@@ -19,8 +19,8 @@
 package ai.platon.pulsar.crawl.common
 
 import ai.platon.pulsar.common.Urls.getURLOrNull
-import ai.platon.pulsar.net.domain.DomainSuffix
-import ai.platon.pulsar.net.domain.DomainSuffixes
+import ai.platon.pulsar.common.domain.DomainSuffix
+import ai.platon.pulsar.common.domain.DomainSuffixes
 import org.slf4j.LoggerFactory
 import java.net.*
 import java.util.regex.Pattern

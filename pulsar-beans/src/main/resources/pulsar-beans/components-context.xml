@@ -28,20 +28,20 @@
         <constructor-arg ref="urlFilters"/>
         <constructor-arg ref="urlNormalizers"/>
         <constructor-arg ref="fetchSchedule"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="metricsCounters"/>
     </bean>
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchTaskTracker"/>
-        <constructor-arg ref="fetchThreadExecutor"/>
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchTaskTracker"/>
-        <constructor-arg ref="fetchThreadExecutor"/>
+        <constructor-arg ref="lazyFetchTaskManager"/>
+        <constructor-arg ref="fetchTaskExecutor"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -59,7 +59,7 @@
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="scoringFilters"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -68,7 +68,7 @@
         <constructor-arg ref="batchFetchComponent"/>
         <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="updateComponent"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
     </bean>
 
     <bean id="jitIndexer" class="ai.platon.pulsar.crawl.fetch.indexer.JITIndexer" destroy-method="close">
@@ -80,7 +80,7 @@
 
     <bean id="taskMonitor" class="ai.platon.pulsar.crawl.fetch.TaskMonitor" destroy-method="close">
         <constructor-arg ref="fetchTaskTracker"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -88,7 +88,7 @@
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="jitIndexer"/>
         <constructor-arg ref="taskMonitor"/>
-        <constructor-arg ref="metricsSystem"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 

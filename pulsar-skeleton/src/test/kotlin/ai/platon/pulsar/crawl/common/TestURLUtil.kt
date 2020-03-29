@@ -27,7 +27,7 @@ import ai.platon.pulsar.crawl.common.URLUtil.toUNICODE
 import ai.platon.pulsar.common.Urls.resolveURL
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.net.domain.DomainSuffixes
+import ai.platon.pulsar.common.domain.DomainSuffixes
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test

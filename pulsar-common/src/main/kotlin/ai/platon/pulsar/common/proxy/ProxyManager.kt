@@ -82,6 +82,10 @@ open class ProxyManager(
     open fun changeProxyIfOnline(excludedProxy: ProxyEntry, ban: Boolean) {
     }
 
+    override fun toString(): String {
+        return report
+    }
+
     override fun close() {
     }
 

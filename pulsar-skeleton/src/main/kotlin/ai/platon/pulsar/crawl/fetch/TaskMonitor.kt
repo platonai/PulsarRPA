@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
@@ -32,13 +32,13 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class TaskMonitor(
         private val taskTracker: FetchTaskTracker,
-        private val metrics: MetricsSystem,
+        private val metrics: MessageWriter,
         conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     private val log = LoggerFactory.getLogger(TaskMonitor::class.java)
 
     private lateinit var options: FetchOptions
-    private val id = instanceSequence.incrementAndGet()
+    private val id = instanceSequencer.incrementAndGet()
     private val feederCompleted = AtomicBoolean(false)
     private val taskPools = PoolQueue()
     private var lastTaskPriority = Integer.MIN_VALUE
@@ -54,9 +54,9 @@ class TaskMonitor(
     /**
      * Task counters
      */
-    private val readyTaskCount = AtomicInteger(0)
-    private val pendingTaskCount = AtomicInteger(0)
-    private val finishedTaskCount = AtomicInteger(0)
+    val numReadyTasks = AtomicInteger(0)
+    val numPendingTasks = AtomicInteger(0)
+    val numFinishedTasks = AtomicInteger(0)
 
     private var groupMode = conf.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     /**
@@ -83,7 +83,9 @@ class TaskMonitor(
      */
     private var poolPendingTimeout = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(3))
 
-    val poolCount get() = taskPools.size
+    private val closed = AtomicBoolean()
+
+    val numTaskPools get() = taskPools.size
 
     override fun setup(jobConf: ImmutableConfig) {
         // TODO: just parse from command line
@@ -212,8 +214,8 @@ class TaskMonitor(
         val item = pool.consume()
 
         if (item != null) {
-            readyTaskCount.decrementAndGet()
-            pendingTaskCount.incrementAndGet()
+            numReadyTasks.decrementAndGet()
+            numPendingTasks.incrementAndGet()
             lastTaskPriority = pool.priority
         }
 
@@ -246,7 +248,7 @@ class TaskMonitor(
         }
         pool.produce(task)
 
-        readyTaskCount.incrementAndGet()
+        numReadyTasks.incrementAndGet()
         poolTimeCosts[pool.id] = 0.0
     }
 
@@ -268,8 +270,8 @@ class TaskMonitor(
 
         pool.finish(itemId, asap)
 
-        pendingTaskCount.decrementAndGet()
-        finishedTaskCount.incrementAndGet()
+        numPendingTasks.decrementAndGet()
+        numFinishedTasks.incrementAndGet()
 
         poolTimeCosts[poolId] = pool.averageRecentTimeCost
         poolServedThreads.put(poolId.host, Thread.currentThread().name.substring(THREAD_SEQUENCE_POS))
@@ -284,15 +286,9 @@ class TaskMonitor(
     fun report() {
         dump(FETCH_TASK_REMAINDER_NUMBER, false)
 
-        taskTracker.report()
-
         reportCost()
 
         reportServedThreads()
-    }
-
-    fun trackSuccess(page: WebPage) {
-        taskTracker.trackSuccess(page)
     }
 
     fun trackHostGone(url: String) {
@@ -388,12 +384,14 @@ class TaskMonitor(
     @Synchronized
     @Throws(Exception::class)
     override fun close() {
-        log.info("[Destruction] Closing TasksMonitor #$id")
+        if (closed.compareAndSet(false, true)) {
+            log.info("Closing TasksMonitor #$id")
 
-        report()
+            report()
 
-        taskPools.clear()
-        readyTaskCount.set(0)
+            taskPools.clear()
+            numReadyTasks.set(0)
+        }
     }
 
     @Synchronized
@@ -418,35 +416,23 @@ class TaskMonitor(
 
     private fun clearPendingTasksIfFew(pool: TaskPool, limit: Int): Int {
         val deleted = pool.clearPendingTasksIfFew(limit)
-        pendingTaskCount.addAndGet(-deleted)
+        numPendingTasks.addAndGet(-deleted)
         return deleted
     }
 
     private fun clearReadyTasks(pool: TaskPool): Int {
         val deleted = pool.clearReadyQueue()
 
-        readyTaskCount.addAndGet(-deleted)
-        if (readyTaskCount.get() <= 0 && taskPools.size == 0) {
-            readyTaskCount.set(0)
+        numReadyTasks.addAndGet(-deleted)
+        if (numReadyTasks.get() <= 0 && taskPools.size == 0) {
+            numReadyTasks.set(0)
         }
 
         return deleted
     }
 
     fun taskCount(): Int {
-        return readyTaskCount() + pendingTaskCount()
-    }
-
-    fun readyTaskCount(): Int {
-        return readyTaskCount.get()
-    }
-
-    fun pendingTaskCount(): Int {
-        return pendingTaskCount.get()
-    }
-
-    fun finishedTaskCount(): Int {
-        return finishedTaskCount.get()
+        return numReadyTasks.get() + numPendingTasks.get()
     }
 
     private fun calculateTaskCounter() {
@@ -456,8 +442,8 @@ class TaskMonitor(
             readyCount += it.readyCount
             pendingCount += it.pendingCount
         }
-        readyTaskCount.set(readyCount)
-        pendingTaskCount.set(pendingCount)
+        numReadyTasks.set(readyCount)
+        numPendingTasks.set(pendingCount)
     }
 
     private fun createFetchQueue(poolId: PoolId): TaskPool {
@@ -526,7 +512,7 @@ class TaskMonitor(
     }
 
     companion object {
-        private val instanceSequence = AtomicInteger(0)
+        private val instanceSequencer = AtomicInteger(0)
         private const val THREAD_SEQUENCE_POS = "FetchThread-".length
     }
 }

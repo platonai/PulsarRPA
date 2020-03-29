@@ -27,7 +27,7 @@
     <name>Pulsar</name>
 
     <modules>
-       <module>pulsar-common</module>
+        <module>pulsar-common</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>
         <module>pulsar-beans</module>

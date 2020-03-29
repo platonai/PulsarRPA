@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
 import java.net.URL
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -16,7 +17,7 @@ interface IFetchEntry {
 /**
  * This class described the item to be fetched.
  */
-class JobFetchTask private constructor(
+class JobFetchTask(
         jobID: Int,
         val priority: Int,
         val protocol: String,
@@ -89,7 +90,7 @@ class JobFetchTask private constructor(
  * Created by vincent on 16-10-15.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
-data class FetchStat(
+data class UrlStat(
         var hostName: String,
         var urls: Int = 0,
         var indexUrls: Int = 0,
@@ -102,10 +103,10 @@ data class FetchStat(
         var unknownUrls: Int = 0,
         var urlsTooLong: Int = 0,
         var urlsFromSeed: Int = 0,
-        var cookieView: Int = 0
-) : Comparable<FetchStat> {
+        var pageViews: Int = 0
+) : Comparable<UrlStat> {
 
-    override fun compareTo(other: FetchStat): Int {
+    override fun compareTo(other: UrlStat): Int {
         val reverseHost = Urls.reverseHost(hostName)
         val reverseHost2 = Urls.reverseHost(other.hostName)
 
@@ -114,9 +115,14 @@ data class FetchStat(
 }
 
 data class BatchStat(
-        var numTasksSuccess: Int = 0,
-        var numTasksFailed: Int = 0,
+        var numTasksSuccess: Long = 0,
         var totalSuccessBytes: Long = 0L
 ) {
-    val averagePageSize get() = 1.0 * totalSuccessBytes / (0.1 + numTasksSuccess)
+    var startTime = Instant.now()
+    val elapsedTime get() = Duration.between(startTime, Instant.now())
+
+    val timePerPage get() = elapsedTime.dividedBy(1 + numTasksSuccess)
+    val bytesPerPage get() = 1.0 * totalSuccessBytes / (0.1 + numTasksSuccess)
+    val pagesPerSecond get() = numTasksSuccess / (0.1 + elapsedTime.seconds)
+    val bytesPerSecond get() = 1.0 * totalSuccessBytes / (0.1 + elapsedTime.seconds)
 }

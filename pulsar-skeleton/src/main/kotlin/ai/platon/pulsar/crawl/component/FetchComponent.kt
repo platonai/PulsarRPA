@@ -18,12 +18,11 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.FetchThreadExecutor
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
@@ -46,7 +45,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class FetchComponent(
         val fetchTaskTracker: FetchTaskTracker,
         val protocolFactory: ProtocolFactory,
-        val fetchThreadExecutor: FetchThreadExecutor,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
 
@@ -104,6 +102,7 @@ open class FetchComponent(
             return page
         }
 
+        fetchTaskTracker.totalTasks.getAndIncrement()
         val output = protocol.getProtocolOutput(page)
         return processProtocolOutput(page, output)
     }
@@ -239,7 +238,9 @@ open class FetchComponent(
     }
 
     override fun close() {
-        closed.set(true)
+        if (closed.compareAndSet(false, true)) {
+            fetchTaskTracker.formatTraffic()
+        }
     }
 
     companion object {

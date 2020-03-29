@@ -20,7 +20,7 @@ package ai.platon.pulsar.schedule
 import ai.platon.pulsar.common.DateTimes.HOURS_OF_DAY
 import ai.platon.pulsar.common.DateTimes.HOURS_OF_MONTH
 import ai.platon.pulsar.common.DateTimes.HOURS_OF_YEAR
-import ai.platon.pulsar.common.MetricsSystem
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.AppConstants.TCP_IP_STANDARDIZED_TIME
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -37,18 +37,16 @@ import java.time.temporal.ChronoUnit
 /**
  * This class implements an adaptive re-fetch algorithm.
  *
- *
  * NOTE: values of DEC_FACTOR and INC_FACTOR higher than 0.4f may destabilize
  * the algorithm, so that the fetch interval either increases or decreases
  * infinitely, with little relevance to the page changes.
- *
  *
  * @author Vincent Zhang
  */
 class NewsMonitorFetchSchedule(
         conf: ImmutableConfig,
-        metricsSystem: MetricsSystem
-): AdaptiveFetchSchedule(conf, metricsSystem) {
+        messageWriter: MessageWriter
+): AdaptiveFetchSchedule(conf, messageWriter) {
 
     private val impreciseNow = Instant.now()
     private val impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS)
@@ -120,7 +118,7 @@ class NewsMonitorFetchSchedule(
         val refArticles = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
         if (fetchCount > 5 && refArticles == 0) {
             pageCounters.increase<PageCounters.Self>(PageCounters.Self.noItem)
-            metricsSystem.reportFetchSchedule(page, false)
+            messageWriter.reportFetchSchedule(page, false)
             // Check it at 1 o'clock next night, decrease fetch frequency if no articles
             interval = Duration.between(LocalDateTime.now(), semiInactivePageCheckTime)
                     .plusDays(fetchCount / 10L).plusHours(fetchCount.toLong())
@@ -151,11 +149,11 @@ class NewsMonitorFetchSchedule(
                 }
             } else {
                 // The page is
-                metricsSystem.reportFetchSchedule(page, false)
+                messageWriter.reportFetchSchedule(page, false)
             }
         } else if (hours > 10 * HOURS_OF_YEAR) {
             // Longer than 10 years, it's very likely the publishTime/modifiedTime is wrong
-            metricsSystem.reportFetchSchedule(page, false)
+            messageWriter.reportFetchSchedule(page, false)
             return super.getFetchInterval(page, fetchTime, modifiedTime, state)
         }
 

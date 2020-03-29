@@ -25,7 +25,7 @@ class FeedThread(
         private val tasksMonitor: TaskMonitor,
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
         private val conf: ImmutableConfig
-) : Thread(), Comparable<FeedThread>, Parameterized {
+) : Thread(), Comparable<FeedThread>, Parameterized, AutoCloseable {
     private val LOG = LoggerFactory.getLogger(FeedThread::class.java)
 
     private val id = instanceSequence.incrementAndGet()
@@ -113,12 +113,12 @@ class FeedThread(
                 + batchSize + ", feed total " + totalFeed + " records. ")
     }
 
-    fun exitAndJoin() {
-        closed.set(true)
-        try {
-            join()
-        } catch (e: InterruptedException) {
-            LOG.error(e.toString())
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            try {
+                currentThread().interrupt()
+                join()
+            } catch (ignored: InterruptedException) {}
         }
     }
 
@@ -128,37 +128,37 @@ class FeedThread(
                 "batchSize", batchSize,
                 "feededInRound", feededInRound,
                 "totalFeeded", totalFeed,
-                "readyTasks", tasksMonitor.readyTaskCount(),
-                "pendingTasks", tasksMonitor.pendingTaskCount(),
-                "finishedTasks", tasksMonitor.finishedTaskCount(),
+                "readyTasks", tasksMonitor.numReadyTasks,
+                "pendingTasks", tasksMonitor.numPendingTasks,
+                "finishedTasks", tasksMonitor.numFinishedTasks,
                 "fetchThreads", fetchThreads
         ).withLogger(LOG).info(true)
     }
 
-    private fun adjustFeedBatchSize(batchSize: Float): Float {
-        var bsiz = batchSize
+    private fun adjustFeedBatchSize(batchSize_: Float): Float {
+        var batchSize = batchSize_
         // TODO : Why readyTasks is always be very small?
-        val readyTasks = tasksMonitor.readyTaskCount()
+        val readyTasks = tasksMonitor.numReadyTasks.get()
         val pagesThroughput = taskScheduler.averagePageThroughput
         val recentPages = pagesThroughput * checkInterval.seconds
         // TODO : Every batch size should be greater than pages fetched during last wait interval
 
-        if (bsiz <= 1) {
-            bsiz = 1f
+        if (batchSize <= 1) {
+            batchSize = 1f
         }
 
         if (readyTasks <= fetchThreads) {
             // No ready tasks, increase batch size
-            bsiz += (bsiz * 0.2).toFloat()
+            batchSize += (batchSize * 0.2).toFloat()
         } else if (readyTasks <= 2 * fetchThreads) {
             // Too many ready tasks, decrease batch size
-            bsiz -= (bsiz * 0.2).toFloat()
+            batchSize -= (batchSize * 0.2).toFloat()
         } else {
             // Ready task number is OK, do not feed this time
-            bsiz = 0f
+            batchSize = 0f
         }
 
-        return bsiz
+        return batchSize
     }
 
     @Throws(IOException::class, InterruptedException::class)
