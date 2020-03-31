@@ -13,6 +13,8 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.SharedMetricRegistries
 import com.google.common.collect.ConcurrentHashMultiset
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
@@ -30,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong
  * */
 class FetchTaskTracker(
         private val webDb: WebDb,
-        private val metrics: MessageWriter,
+        private val messageWriter: MessageWriter,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
@@ -44,6 +46,8 @@ class FetchTaskTracker(
     private val log = LoggerFactory.getLogger(FetchTaskTracker::class.java)!!
     private val groupMode = conf.getEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     private val systemInfo = SystemInfo()
+    private val metricRegistry = SharedMetricRegistries.getDefault()
+
     /**
      * The limitation of url length
      */
@@ -72,6 +76,10 @@ class FetchTaskTracker(
     val totalTasks = AtomicInteger(0)
     val totalSuccessTasks = AtomicInteger(0)
     val totalFinishedTasks = AtomicInteger(0)
+
+    val totalTasks0 = metricRegistry.counter("totalTasks")
+    val totalSuccessTasks0 = metricRegistry.counter("totalSuccessTasks")
+    val totalFinishedTasks0 = metricRegistry.counter("totalFinishedTasks")
 
     val successTasksPerSecond
         get() = totalSuccessTasks.get() / (0.1 + elapsedTime.seconds)
@@ -184,9 +192,11 @@ class FetchTaskTracker(
      */
     fun trackSuccess(page: WebPage) {
         totalSuccessTasks.incrementAndGet()
+        totalSuccessTasks0.inc()
 
         contentBytes.addAndGet(page.contentBytes.toLong())
         val i = totalFinishedTasks.incrementAndGet()
+        totalFinishedTasks0.inc()
         if (i % 5 == 0) {
             updateNetworkTraffic()
         }
@@ -241,7 +251,7 @@ class FetchTaskTracker(
 
         if (url.length > maxUrlLength) {
             ++fetchStatus.urlsTooLong
-            metrics.debugLongUrls(url)
+            messageWriter.debugLongUrls(url)
         }
 
         ++fetchStatus.pageViews

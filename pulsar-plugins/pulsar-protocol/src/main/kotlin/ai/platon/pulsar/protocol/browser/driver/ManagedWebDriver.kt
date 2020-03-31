@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.silent
@@ -29,21 +30,6 @@ enum class DriverStatus {
     val isRetired get() = this == RETIRED
     val isCrashed get() = this == CRASHED
     val isQuit get() = this == QUIT
-}
-
-data class DriverConfig(
-        var pageLoadTimeout: Duration,
-        var scriptTimeout: Duration,
-        var scrollDownCount: Int,
-        var scrollInterval: Duration
-) {
-    constructor(conf: ImmutableConfig) : this(
-            conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3)),
-            // wait page ready using script, so it can not smaller than pageLoadTimeout
-            conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(90)),
-            conf.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 3),
-            conf.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
-    )
 }
 
 class ManagedWebDriver(
@@ -181,15 +167,13 @@ class ManagedWebDriver(
         }
 
         if (driver is ChromeDevtoolsDriver) {
-            try {
-                driver.stopLoading()
-            } catch (e: NoSuchSessionException) {}
+            silent { driver.stopLoading() }
         } else {
             evaluateSilently(";window.stop();")
         }
     }
 
-    fun setTimeouts(driverConfig: DriverConfig) {
+    fun setTimeouts(driverConfig: BrowserControl) {
         if (isNotWorking) {
             return
         }
@@ -214,7 +198,7 @@ class ManagedWebDriver(
             synchronized(status) {
                 if (!isQuit) {
                     status.set(DriverStatus.QUIT)
-                    driver.quit()
+                    silent { driver.quit() }
                 }
             }
         }

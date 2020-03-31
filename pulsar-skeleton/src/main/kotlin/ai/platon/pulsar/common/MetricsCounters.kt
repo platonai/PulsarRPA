@@ -209,7 +209,7 @@ class MetricsCounters {
         nativeCounters[index].addAndGet(value)
     }
 
-    private fun increaseAll(vararg indexes: Int) {
+    private fun incAll(vararg indexes: Int) {
         for (index in indexes) {
             inc(index)
         }

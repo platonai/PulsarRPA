@@ -33,7 +33,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="fetchTaskExecutor" class="io.netty.util.concurrent.DefaultEventExecutorGroup">
+    <bean id="fetchTaskExecutor" class="io.netty.util.concurrent.DefaultEventExecutorGroup" destroy-method="shutdownGracefully">
         <constructor-arg value="20"/>
     </bean>
 

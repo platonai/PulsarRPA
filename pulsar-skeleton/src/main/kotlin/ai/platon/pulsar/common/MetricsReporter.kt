@@ -70,7 +70,9 @@ class MetricsReporter(
         do {
             try {
                 sleep(reportInterval.toMillis())
-            } catch (ignored: InterruptedException) {}
+            } catch (ignored: InterruptedException) {
+                currentThread().interrupt()
+            }
 
             // sync to hadoop counters
 //            counter.accumulateGlobalCounters(context)

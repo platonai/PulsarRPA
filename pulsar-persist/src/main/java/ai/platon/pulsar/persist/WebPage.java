@@ -22,14 +22,14 @@ import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.persist.model.ActiveDomUrls;
-import ai.platon.pulsar.persist.model.PageModel;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.ActiveDomMultiStatus;
+import ai.platon.pulsar.persist.model.ActiveDomUrls;
+import ai.platon.pulsar.persist.model.PageModel;
 import ai.platon.pulsar.persist.model.WebPageFormatter;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
@@ -38,11 +38,11 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import org.jetbrains.annotations.Nullable;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -64,7 +64,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
  * <p>
  * Notice: Use a build-in java string or a Utf8 to serialize strings?
  *
- * @see org.apache.gora.hbase.util.HBaseByteInterface#fromBytes
+ * see org .apache .gora. hbase. util .HBaseByteInterface #fromBytes
  * <p>
  * In serializetion phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
  * in deserialization phrase, every string are wrapped to be a Utf8
@@ -261,6 +261,7 @@ public class WebPage {
     /**
      * page.location is the last working address, and page.url is the permanent internal address
      * */
+    @NotNull
     public String getUrl() {
         return url != null ? url : "";
     }
@@ -299,6 +300,10 @@ public class WebPage {
 
     public Variables getVariables() {
         return variables;
+    }
+
+    public boolean hasVar(String name) {
+        return variables.contains(name);
     }
 
     @Nullable

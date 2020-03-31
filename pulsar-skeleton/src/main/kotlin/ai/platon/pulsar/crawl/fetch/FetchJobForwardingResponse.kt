@@ -11,7 +11,7 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 class FetchJobForwardingResponse(
         headers: MultiMetadata,
         content: ByteArray
-): ForwardingResponse(headers.get(HttpHeaders.Q_URL), content, getProtocolStatus(headers), headers, WebPage.NIL), HttpHeaders {
+): ForwardingResponse(WebPage.newWebPage(headers.get(HttpHeaders.Q_URL)), getProtocolStatus(headers)!!, headers, content), HttpHeaders {
 
     val jobId: Int
         get() = headers.getInt(HttpHeaders.Q_JOB_ID, 0)

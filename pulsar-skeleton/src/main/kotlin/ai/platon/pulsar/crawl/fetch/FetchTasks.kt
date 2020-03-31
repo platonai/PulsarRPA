@@ -41,7 +41,7 @@ class FetchTask(
         val id: Int = instanceSequence.incrementAndGet(),
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
-        var stat: BatchStat? = null,
+        var batchStat: BatchStat? = null,
         var proxyEntry: ProxyEntry? = null, // the proxy used
         var nRetries: Int = 0, // The number retries inside a privacy context
         private val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
@@ -53,7 +53,7 @@ class FetchTask(
     val isCanceled get() = canceled.get()
 
     fun reset() {
-        stat = null
+        batchStat = null
         proxyEntry = null
         nRetries = 0
         canceled.set(false)
@@ -237,7 +237,7 @@ class FetchTaskBatch(
 
         universalSuccessTasks[task.url] = result
         universalSuccessPages.add(task.page)
-        universalStat.totalSuccessBytes += result.response.length()
+        universalStat.totalSuccessBytes += result.response.length
         universalStat.numTasksSuccess++
 
         privacyContext.informSuccess()

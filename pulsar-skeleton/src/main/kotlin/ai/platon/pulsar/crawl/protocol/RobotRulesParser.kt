@@ -8,6 +8,7 @@ import crawlercommons.robots.SimpleRobotRules
 import crawlercommons.robots.SimpleRobotRules.RobotRulesMode
 import crawlercommons.robots.SimpleRobotRulesParser
 import org.apache.hadoop.conf.Configuration
+import org.jetbrains.annotations.NotNull
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
@@ -58,6 +59,7 @@ abstract class RobotRulesParser : Configurable {
     /**
      * Get the [Configuration] object
      */
+    @NotNull
     override fun getConf(): ImmutableConfig {
         return conf
     }
@@ -81,10 +83,12 @@ abstract class RobotRulesParser : Configurable {
      * matching
      * @return BaseRobotRules object
      */
+    @NotNull
     fun parseRules(url: String, content: ByteArray, contentType: String, robotName: String): BaseRobotRules {
         return robotParser.parseContent(url, content, contentType, robotName)
     }
 
+    @NotNull
     fun getRobotRulesSet(protocol: Protocol, url: String): BaseRobotRules {
         val u = try {
             URL(url)
@@ -94,6 +98,7 @@ abstract class RobotRulesParser : Configurable {
         return getRobotRulesSet(protocol, u)
     }
 
+    @NotNull
     abstract fun getRobotRulesSet(protocol: Protocol, url: URL): BaseRobotRules
 
     companion object {

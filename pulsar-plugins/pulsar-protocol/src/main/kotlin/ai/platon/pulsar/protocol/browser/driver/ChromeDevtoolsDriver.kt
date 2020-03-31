@@ -152,19 +152,39 @@ class ChromeDevtoolsDriver(
             network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
 
             // Log requests with onRequestWillBeSent event handler
-            network.onRequestWillBeSent { event: RequestWillBeSent ->
-                if (event.type == ResourceType.IMAGE) {
-                    // TODO: fetch is not supported?
-                    // fetch.failRequest(event.requestId, ErrorReason.BLOCKED_BY_CLIENT)
-                    // println(event.request.url)
-                }
-            }
+//            network.onRequestWillBeSent { event: RequestWillBeSent ->
+//                if (event.type == ResourceType.IMAGE) {
+//                    // TODO: fetch is not supported?
+//                    // fetch.failRequest(event.requestId, ErrorReason.BLOCKED_BY_CLIENT)
+//                    // println(event.request.url)
+//                }
+//            }
 
             page.enable()
             network.enable()
-    //        fetch.enable()
+//            fetch.enable()
 
             navigateUrl = url
+            page.navigate(url)
+        } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
+        }
+    }
+
+    @Throws(NoSuchSessionException::class)
+    suspend fun asyncGet(url: String) {
+        if (isGone) return
+
+        try {
+            page.addScriptToEvaluateOnNewDocument(clientLibJs)
+            network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
+
+            page.enable()
+            network.enable()
+
+            navigateUrl = url
+            // use asynchronous api
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()

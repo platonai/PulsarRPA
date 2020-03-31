@@ -81,7 +81,6 @@ class WebSocketClientImpl : WebSocketClient {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                // log.debug("Closing web socket service session | {}", session.requestURI)
                 session.close()
             } catch (e: IOException) {
                 log.error("Failed closing ws session on ${session.requestURI} ...", e)

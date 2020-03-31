@@ -5,7 +5,7 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPool
+import ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
@@ -33,7 +33,7 @@ class TestWebDriver {
         val context = PulsarContext.getOrCreate()
         val conf = context.unmodifiedConfig
         val driverControl = context.getBean(WebDriverControl::class.java)
-        val driverPool = context.getBean(WebDriverPool::class.java)
+        val driverPool = context.getBean(LoadingWebDriverPool::class.java)
         var quitMultiThreadTesting = false
 
         @BeforeClass
@@ -65,7 +65,7 @@ class TestWebDriver {
     fun testWebDriverPool() {
         val workingDrivers = mutableListOf<ManagedWebDriver>()
         repeat(10) {
-            val driver = driverPool.poll(0, conf)
+            val driver = driverPool.poll(conf)
             workingDrivers.add(driver)
         }
 
@@ -107,7 +107,7 @@ class TestWebDriver {
                 }
 
                 if (workingDrivers.size < 20) {
-                    val driver = driverPool.poll(0, conf)
+                    val driver = driverPool.poll(conf)
                     if (driver != null) {
                         assertNotNull(driver)
                         workingDrivers.add(driver)

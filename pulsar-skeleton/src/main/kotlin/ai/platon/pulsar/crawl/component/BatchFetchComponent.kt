@@ -68,8 +68,6 @@ class BatchFetchComponent(
      */
     fun parallelFetchAllGroupedBySchema(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val pages: MutableList<WebPage> = ArrayList()
-//        val groupedUrls = optimizeBatchSize(Lists.newArrayList(urls), options).stream()
-//                .collect(Collectors.groupingBy { url: String? -> StringUtils.substringBefore(url, "://") })
         val groupedUrls = optimizeBatchSize(urls, options).groupBy { it.substringBefore("://") }
         groupedUrls.forEach { (key, gUrls) ->
             val protocol = protocolFactory.getProtocol(key)
@@ -114,7 +112,7 @@ class BatchFetchComponent(
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         return urls.map { createFetchEntry(it, options) }
-                .let { protocol.getResponses(it, options.volatileConfig) }
+                .let { protocol.getResponses(it, options.volatileConfig?:immutableConfig.toVolatileConfig()) }
                 .map { getProtocolOutput(protocol, it, it.page) }
     }
 

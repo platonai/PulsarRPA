@@ -157,6 +157,8 @@ open class LoadOptions: CommonOptions {
         set(value) { field = initConfig(value) }
         get() = initConfig(field)
 
+    val ignoreQuery get() = shortenKey
+
     open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
         val fields = LoadOptions::class.java.declaredFields

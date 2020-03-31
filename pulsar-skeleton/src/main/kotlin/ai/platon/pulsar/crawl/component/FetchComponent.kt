@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -26,11 +25,14 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
+import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
+import com.codahale.metrics.MetricRegistry.name
+import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -49,6 +51,11 @@ open class FetchComponent(
 ) : AutoCloseable {
 
     private val closed = AtomicBoolean()
+
+    private val metricRegistry = SharedMetricRegistries.getDefault()
+    private val contentBytes = metricRegistry.histogram(name(FetchComponent::class.java, "contentBytes"))
+
+    val isClosed get() = closed.get()
 
     /**
      * Fetch a url
@@ -78,7 +85,7 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetchContent(page: WebPage): WebPage {
-        return fetchContentInternal(page)
+        return page.takeIf { isClosed } ?: fetchContent0(page)
     }
 
     /**
@@ -87,24 +94,54 @@ open class FetchComponent(
      * @param page The page to fetch
      * @return The fetch result
      */
-    protected fun fetchContentInternal(page: WebPage): WebPage {
-        if (closed.get()) {
-            return page
+    suspend fun fetchContentDeferred(page: WebPage): WebPage {
+        return page.takeIf { isClosed } ?: fetchContentDeferred0(page)
+    }
+
+    /**
+     * Fetch a page
+     *
+     * @param page The page to fetch
+     * @return The fetch result
+     */
+    protected fun fetchContent0(page: WebPage): WebPage {
+        return try {
+            fetchTaskTracker.totalTasks.getAndIncrement()
+            fetchTaskTracker.totalTasks0.inc()
+
+            val protocol = protocolFactory.getProtocol(page)
+            processProtocolOutput(page, protocol.getProtocolOutput(page))
+        } catch (e: ProtocolNotFound) {
+            LOG.warn("No protocol found | {}", page.url)
+            page.also { updateStatus(it, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }
         }
+    }
 
-        val url = page.url
-        val u = getURLOrNull(url) ?: return WebPage.NIL
-        val protocol = protocolFactory.getProtocol(page)
+    /**
+     * Fetch a page
+     *
+     * @param page The page to fetch
+     * @return The fetch result
+     */
+    protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
+        return try {
+            fetchTaskTracker.totalTasks.getAndIncrement()
+            fetchTaskTracker.totalTasks0.inc()
 
-        if (protocol == null) {
-            LOG.warn("No protocol found | {}", url)
-            updateStatus(page, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND)
-            return page
+            val protocol = protocolFactory.getProtocol(page)
+            processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
+        } catch (e: ProtocolNotFound) {
+            LOG.warn(e.message)
+            page.also { updateStatus(it, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }
         }
+    }
 
-        fetchTaskTracker.totalTasks.getAndIncrement()
-        val output = protocol.getProtocolOutput(page)
-        return processProtocolOutput(page, output)
+    private fun beforeFetchContent(page: WebPage): WebPage {
+        return page
+    }
+
+    private fun afterFetchContent(page: WebPage): WebPage {
+        return page
     }
 
     protected fun shouldFetch(url: String): Boolean {
@@ -214,23 +251,25 @@ open class FetchComponent(
     }
 
     fun createFetchEntry(originalUrl: String, options: LoadOptions): WebPage {
-        val page = WebPage.newWebPage(originalUrl, options.shortenKey, options.volatileConfig)
-        page.fetchMode = options.fetchMode
-        page.options = options.toString()
-        return page
+        return WebPage.newWebPage(originalUrl, options.shortenKey, options.volatileConfig).also {
+            it.fetchMode = options.fetchMode
+            it.options = options.toString()
+        }
     }
 
     fun initFetchEntry(page: WebPage, options: LoadOptions): WebPage {
-        page.volatileConfig = options.volatileConfig
-        page.fetchMode = options.fetchMode
-        page.options = options.toString()
-        return page
+        return page.also {
+            it.volatileConfig = options.volatileConfig
+            it.fetchMode = options.fetchMode
+            it.options = options.toString()
+        }
     }
 
     private fun updatePage(page: WebPage, content: Content?, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
         updateStatus(page, crawlStatus, protocolStatus)
         if (content != null && protocolStatus.isSuccess) {
             // No need to update content if the fetch is failed, just keep the last content in such cases
+            contentBytes.update(content.length)
             updateContent(page, content)
         }
         updateFetchTime(page)
@@ -264,10 +303,10 @@ open class FetchComponent(
 
         @JvmStatic
         fun updateContent(page: WebPage, content: Content) {
-            updateContent(page, content, null)
+            updateContent0(page, content, null)
         }
 
-        private fun updateContent(page: WebPage, content: Content, contentTypeHint: String?) {
+        private fun updateContent0(page: WebPage, content: Content, contentTypeHint: String?) {
             var contentType = contentTypeHint
 
             page.location = content.baseUrl

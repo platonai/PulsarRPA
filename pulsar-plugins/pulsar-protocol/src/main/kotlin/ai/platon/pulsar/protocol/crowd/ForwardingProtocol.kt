@@ -39,6 +39,13 @@ open class ForwardingProtocol : AbstractHttpProtocol() {
         return response
     }
 
+    override suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response? {
+        // TODO: wait if not in the cache?
+        val response = cache.remove(url)
+        logAfterRemoveResponse(url, response)
+        return response
+    }
+
     private fun logAfterPutResponse() {
         if (log.isTraceEnabled) {
             log.trace("Putting page to forward cache, total {}", cache.size)

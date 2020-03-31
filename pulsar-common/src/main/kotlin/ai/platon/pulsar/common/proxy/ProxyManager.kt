@@ -42,6 +42,17 @@ open class ProxyManager(
     /**
      * Run the task despite the proxy manager is disabled, it it's disabled, call the innovation directly
      * */
+    open suspend fun <R> submitAnyway(task: suspend () -> R): R {
+        return if (isDisabled) {
+            task()
+        } else {
+            submit(task)
+        }
+    }
+
+    /**
+     * Run the task despite the proxy manager is disabled, it it's disabled, call the innovation directly
+     * */
     open fun <R> runAnyway(task: () -> R): R {
         return if (isDisabled) {
             task()
@@ -53,15 +64,40 @@ open class ProxyManager(
     /**
      * Run the task in the proxy manager
      * */
-    open fun <R> run(task: () -> R): R {
+    open suspend fun <R> submit(task: suspend () -> R): R {
         if (isClosed || isDisabled) {
-            throw ProxyException("Proxy manager is " + if (isClosed) "closed" else "disabled")
+            throw ProxyDisabledException("Proxy manager is " + if (isClosed) "closed" else "disabled")
         }
 
         idleTime = Duration.ZERO
 
         if (!waitUntilOnline()) {
-            throw ProxyException("Failed to wait for an online proxy")
+            throw NoProxyException("Failed to wait for an online proxy")
+        }
+
+        return try {
+            numRunningTasks.incrementAndGet()
+            task()
+        } catch (e: Exception) {
+            throw e
+        } finally {
+            lastActiveTime = Instant.now()
+            numRunningTasks.decrementAndGet()
+        }
+    }
+
+    /**
+     * Run the task in the proxy manager
+     * */
+    open fun <R> run(task: () -> R): R {
+        if (isClosed || isDisabled) {
+            throw ProxyDisabledException("Proxy manager is " + if (isClosed) "closed" else "disabled")
+        }
+
+        idleTime = Duration.ZERO
+
+        if (!waitUntilOnline()) {
+            throw NoProxyException("Failed to wait for an online proxy")
         }
 
         return try {

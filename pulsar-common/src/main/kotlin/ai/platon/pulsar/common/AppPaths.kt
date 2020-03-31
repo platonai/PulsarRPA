@@ -52,6 +52,8 @@ object AppPaths {
     @RequiredDirectory @JvmField
     val REPORT_DIR = get(TMP_DIR, "report")
     @RequiredDirectory @JvmField
+    val METRICS_DIR = get(REPORT_DIR, "metrics")
+    @RequiredDirectory @JvmField
     val SCRIPT_DIR = get(TMP_DIR, "scripts")
     @RequiredDirectory @JvmField
     val TEST_DIR = get(TMP_DIR, "test")

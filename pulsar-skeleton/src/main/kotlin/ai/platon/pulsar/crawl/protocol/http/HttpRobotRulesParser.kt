@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.protocol.http
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.protocol.Protocol
+import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.crawl.protocol.RobotRulesParser
 import ai.platon.pulsar.persist.WebPage
 import crawlercommons.robots.BaseRobotRules
@@ -29,11 +30,11 @@ open class HttpRobotRulesParser : RobotRulesParser {
      * {{protocol://host:port/robots.txt}}. The robots.txt is then parsed and the
      * rules are cached to avoid re-fetching and re-parsing it again.
      *
-     * @param http The [Protocol] object
+     * @param protocol The [Protocol] object
      * @param url  URL robots.txt applies to
      * @return [BaseRobotRules] holding the rules from robots.txt
      */
-    override fun getRobotRulesSet(http: Protocol, url: URL): BaseRobotRules {
+    override fun getRobotRulesSet(protocol: Protocol, url: URL): BaseRobotRules {
         val cacheKey = getCacheKey(url)
         var robotRules = CACHE[cacheKey]
         var cacheRule = true
@@ -44,10 +45,12 @@ open class HttpRobotRulesParser : RobotRulesParser {
             }
 
             try {
-                var response = (http as AbstractHttpProtocol?)!!.getResponse(URL(url, "/robots.txt").toString(),
-                        WebPage.newWebPage(url.toString()), true)
+                val http = (protocol as? AbstractHttpProtocol)?:return EMPTY_RULES
+                var response: Response? = http.getResponse(URL(url, "/robots.txt").toString(),
+                        WebPage.newWebPage(url.toString()), true)?:return EMPTY_RULES
+
                 // try one level of redirection ?
-                if (response.httpCode == 301 || response.httpCode == 302) {
+                if (response != null && (response.httpCode == 301 || response.httpCode == 302)) {
                     var redirection = response.getHeader("Location")
                     if (redirection == null) { // some versions of MS IIS are known to mangle this header
                         redirection = response.getHeader("location")
@@ -62,10 +65,10 @@ open class HttpRobotRulesParser : RobotRulesParser {
                     }
                 }
 
-                val content = response.content
-                if (content != null) {
+                val content = response?.content
+                if (response != null && content != null) {
                     if (response.httpCode == 200) // found rules: parse them
-                        robotRules = parseRules(url.toString(), content, response.getHeader("Content-Type"), agentNames) else if (response.httpCode == 403 && !allowForbidden) robotRules = FORBID_ALL_RULES // use forbid all
+                        robotRules = parseRules(url.toString(), content, response.getHeader("Content-Type")?:"", agentNames) else if (response.httpCode == 403 && !allowForbidden) robotRules = FORBID_ALL_RULES // use forbid all
                     else if (response.httpCode >= 500) {
                         cacheRule = false
                         robotRules = EMPTY_RULES

@@ -33,6 +33,7 @@ internal class InvocationResult(val returnProperty: String? = null) {
         countDownLatch.countDown()
     }
 
+    // TODO: no blocking!!!
     @Throws(InterruptedException::class)
     fun waitForResult(timeout: Long, timeUnit: TimeUnit): Boolean {
         if (timeout == 0L) {

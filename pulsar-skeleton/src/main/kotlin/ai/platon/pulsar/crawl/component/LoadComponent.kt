@@ -51,10 +51,12 @@ class LoadComponent(
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
+    private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val fetchTaskTracker get() = fetchComponent.fetchTaskTracker
 
     private val closed = AtomicBoolean()
+    private val isInactive get() = closed.get() || PulsarEnv.isInactive
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -88,11 +90,11 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(originalUrl: String, options: LoadOptions): WebPage {
-        return loadOne(NormUrl(originalUrl, options))
+        return WebPage.NIL.takeIf { isInactive } ?: load0(NormUrl(originalUrl, options))
     }
 
     fun load(url: URL, options: LoadOptions): WebPage {
-        return loadOne(NormUrl(url, options))
+        return WebPage.NIL.takeIf { isInactive } ?: load0(NormUrl(url, options))
     }
 
     /**
@@ -104,13 +106,16 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(link: GHypeLink, options: LoadOptions): WebPage {
-        val page = load(link.url.toString(), options)
-        page.anchor = link.anchor.toString()
-        return page
+        if (isInactive) return WebPage.NIL
+        return load(link.url.toString(), options).also { it.anchor = link.anchor.toString() }
     }
 
     fun load(normUrl: NormUrl): WebPage {
-        return loadOne(normUrl)
+        return WebPage.NIL.takeIf { isInactive } ?: load0(normUrl)
+    }
+
+    suspend fun loadDeferred(normUrl: NormUrl): WebPage {
+        return WebPage.NIL.takeIf { isInactive } ?: loadDeferred0(normUrl)
     }
 
     /**
@@ -129,7 +134,7 @@ class LoadComponent(
      * @return Pages for all urls.
      */
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        if (closed.get() || !PulsarEnv.isActive) {
+        if (isInactive) {
             return listOf()
         }
 
@@ -147,9 +152,7 @@ class LoadComponent(
             val opt = normUrl.options
             var page = webDb.getOrNil(url, opt.shortenKey)
             val reason = getFetchReason(page, opt)
-            if (log.isTraceEnabled) {
-                log.trace("Fetch reason: {} | {} {}", FetchReason.toString(reason), url, opt)
-            }
+            tracer?.trace("Fetch reason: {} | {} {}", FetchReason.toString(reason), url, opt)
             val status = page.protocolStatus
             when (reason) {
                 FetchReason.NEW_PAGE -> {
@@ -231,12 +234,35 @@ class LoadComponent(
         return loadAll(normUrls, options)
     }
 
-    private fun loadOne(normUrl: NormUrl): WebPage {
-        if (closed.get() || !PulsarEnv.isActive) {
-            log.warn("This application is closed")
-            return WebPage.NIL
+    private fun load0(normUrl: NormUrl): WebPage {
+        var page = createLoadEntry(normUrl)
+        if (page.hasVar("refresh")) {
+            try {
+                page = beforeFetch(page, normUrl.options)
+                page = fetchComponent.fetchContent(page)
+            } finally {
+                afterFetch(page, normUrl.options)
+            }
         }
 
+        return page
+    }
+
+    private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
+        var page = createLoadEntry(normUrl)
+        if (page.hasVar("refresh")) {
+            try {
+                page = beforeFetch(page, normUrl.options)
+                page = fetchComponent.fetchContentDeferred(page)
+            } finally {
+                afterFetch(page, normUrl.options)
+            }
+        }
+
+        return page
+    }
+
+    private fun createLoadEntry(normUrl: NormUrl): WebPage {
         if (normUrl.isInvalid) {
             log.warn("Malformed url | {}", normUrl)
             return WebPage.NIL
@@ -250,36 +276,31 @@ class LoadComponent(
             return WebPage.NIL
         }
 
-        val ignoreQuery = options.shortenKey
-        var page = webDb.getOrNil(url, ignoreQuery)
+        val page = webDb.getOrNil(url, options.ignoreQuery)
         val reason = getFetchReason(page, options)
-        log.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
+        tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
             return redirect(page, options)
         }
 
-        val refresh = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
+        page.variables["refresh"] = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
                 || reason == FetchReason.SMALL_CONTENT || reason == FetchReason.MISS_FIELD
-        if (refresh) {
-            if (page.isNil) {
-                page = WebPage.newWebPage(url, ignoreQuery)
-            }
 
-            page = fetchComponent.initFetchEntry(page, options)
-            globalFetchingUrls.add(url)
-            try {
-                page = fetchComponent.fetchContent(page)
-            } catch (t: Throwable) {
-                globalFetchingUrls.remove(url)
-            }
+        return page
+    }
 
-            update(page, options)
+    private fun beforeFetch(page: WebPage, options: LoadOptions): WebPage {
+        return fetchComponent.initFetchEntry(page, options).also { globalFetchingUrls.add(it.url) }
+    }
 
-            if (log.isInfoEnabled) {
-                val verbose = log.isDebugEnabled
-                log.info(getFetchCompleteReport(page, verbose))
-                // log.info(fetchTaskTracker.formatTraffic())
-            }
+    private fun afterFetch(page: WebPage, options: LoadOptions): WebPage {
+        globalFetchingUrls.remove(page.url)
+
+        update(page, options)
+
+        if (log.isInfoEnabled) {
+            val verbose = log.isDebugEnabled
+            log.info(getFetchCompleteReport(page, verbose))
         }
 
         return page
@@ -296,13 +317,13 @@ class LoadComponent(
                 || url.contains(AppConstants.EXAMPLE_URL)) {
             return null
         }
-        if (globalFetchingUrls.contains(url)) {
-            return null
-        }
-        if (fetchTaskTracker.isFailed(url)) {
-            return null
-        }
-        if (fetchTaskTracker.isTimeout(url)) {
+
+        when {
+            globalFetchingUrls.contains(url) -> return null
+            fetchTaskTracker.isFailed(url) -> return null
+            fetchTaskTracker.isTimeout(url) -> {
+            }
+            // Might use UrlFilter/UrlNormalizer
         }
 
         // Might use UrlFilter/UrlNormalizer
@@ -313,21 +334,15 @@ class LoadComponent(
     private fun getFetchReason(page: WebPage, options: LoadOptions): Int {
         val protocolStatus = page.protocolStatus
 
-        var reason = when {
+        return when {
             closed.get() -> FetchReason.DO_NOT_FETCH
             page.isNil -> FetchReason.NEW_PAGE
             page.isInternal -> FetchReason.DO_NOT_FETCH
             protocolStatus.isNotFetched -> FetchReason.NEW_PAGE
             protocolStatus.isTempMoved -> FetchReason.TEMP_MOVED
             protocolStatus.isFailed && !options.retryFailed -> FetchReason.DO_NOT_FETCH
-            else -> FetchReason.UNKNOWN
+            else -> getFetchReasonForExistPage(page, options)
         }
-
-        if (reason == FetchReason.UNKNOWN) {
-            reason = getFetchReasonForExistPage(page, options)
-        }
-
-        return reason
     }
 
     private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {

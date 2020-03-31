@@ -16,10 +16,9 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.protocol.browser.driver.async.AsyncBrowserEmulator
 import io.netty.util.concurrent.EventExecutorGroup
 import io.netty.util.concurrent.Future
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -44,6 +43,8 @@ class BrowserEmulatedFetcher(
     private val driverManager = privacyContextManager.driverManager
     private val proxyManager = driverManager.proxyManager
     private val closed = AtomicBoolean()
+    private val messageWriter = browserEmulator.messageWriter
+    private val asyncBrowserEmulator = AsyncBrowserEmulator(privacyContextManager, messageWriter, immutableConfig)
 
     fun fetch(url: String): Response {
         return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -61,18 +62,55 @@ class BrowserEmulatedFetcher(
             return ForwardingResponse.canceled(page)
         }
 
-        val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
-        val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
-        val task = FetchTask(0, priority, page, volatileConfig)
-
         return try {
-            privacyContextManager.run(task) { _, driver ->
-                browserEmulator.fetch(task, driver)
+            privacyContextManager.run(createFetchTask(page)) { task, driver ->
+                try {
+                    browserEmulator.fetch(task, driver)
+                } catch (e: IllegalContextStateException) {
+                    log.info("Illegal context state, the task is cancelled | {}", task.url)
+                    FetchResult(task, ForwardingResponse.canceled(task.page))
+                }
             }.response
         } catch (e: ProxyException) {
             ForwardingResponse.retry(page, RetryScope.CRAWL)
-        } catch (e: IllegalContextStateException) {
-            ForwardingResponse.canceled(page)
+        } catch (e: Throwable) {
+            log.warn("Unexpected throwable", e)
+            ForwardingResponse.failed(page, e)
+        } finally {
+        }
+    }
+
+    suspend fun fetchDeferred(url: String): Response {
+        return fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
+    }
+
+    suspend fun fetchDeferred(url: String, volatileConfig: VolatileConfig): Response {
+        return fetchContentDeferred(WebPage.newWebPage(url, volatileConfig))
+    }
+
+    /**
+     * Fetch page content
+     * */
+    suspend fun fetchContentDeferred(page: WebPage): Response {
+        if (closed.get()) {
+            return ForwardingResponse.canceled(page)
+        }
+
+        return try {
+            privacyContextManager.submit(createFetchTask(page)) { task, driver ->
+                try {
+                    asyncBrowserEmulator.fetch(task, driver)
+                } catch (e: IllegalContextStateException) {
+                    log.info("Illegal context state, the task is cancelled | {}", task.url)
+                    FetchResult(task, ForwardingResponse.canceled(task.page))
+                }
+            }.response
+        } catch (e: ProxyException) {
+            ForwardingResponse.retry(page, RetryScope.CRAWL)
+        } catch (e: Throwable) {
+            log.warn("Unexpected throwable", e)
+            ForwardingResponse.failed(page, e)
+        } finally {
         }
     }
 
@@ -106,6 +144,12 @@ class BrowserEmulatedFetcher(
         return parallelFetchAllPages(nextBatchId, pages, volatileConfig)
     }
 
+    private fun createFetchTask(page: WebPage): FetchTask {
+        val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
+        val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
+        return FetchTask(0, priority, page, volatileConfig)
+    }
+
     private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
         FetchTaskBatch(batchId, pages, volatileConfig, privacyContextManager.activeContext).use { batch ->
             // allocate drivers before batch fetch context timing
@@ -135,9 +179,6 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    /**
-     * TODO: merge with [ai.platon.pulsar.crawl.fetch.FetchThread]
-     * */
     private fun parallelFetch(batch: FetchTaskBatch) {
         // Submit all tasks
         batch.pages.forEachIndexed { i, page ->
@@ -151,7 +192,6 @@ class BrowserEmulatedFetcher(
             )
 
             batch.workingTasks[task] = executor.submit(Callable { doFetch(task, batch) })
-            // batch.workingTasks[task] = executor.submit { doFetch(task, batch) }
         }
 
         // Since the urls in the batch are usually in the same domain
@@ -206,7 +246,7 @@ class BrowserEmulatedFetcher(
         val requiredDrivers = batch.batchSize - driverManager.driverPool.numFree
         if (requiredDrivers > 0) {
             log.info("Allocating $requiredDrivers drivers")
-            driverManager.allocate(0, requiredDrivers, volatileConfig)
+            driverManager.allocate(requiredDrivers, volatileConfig)
         }
     }
 
@@ -215,9 +255,6 @@ class BrowserEmulatedFetcher(
             try {
                 batch.beforeFetch(task.page)
                 browserEmulator.fetch(task, driver)
-            } catch (e: WebDriverPoolExhaust) {
-                log.warn("Too many web drivers", e)
-                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.CRAWL))
             } catch (e: IllegalContextStateException) {
                 log.info("Illegal context state, the task is cancelled | {}", task.url)
                 FetchResult(task, ForwardingResponse.canceled(task.page))
@@ -335,7 +372,7 @@ class BrowserEmulatedFetcher(
             status = ProtocolStatus.STATUS_EXCEPTION
         }
 
-        return FetchResult(task, ForwardingResponse(task.url, "", status, headers, task.page))
+        return FetchResult(task, ForwardingResponse("", status, headers, task.page))
     }
 
     private fun logBeforeBatchStart(batch: FetchTaskBatch) {
@@ -357,7 +394,7 @@ class BrowserEmulatedFetcher(
         if (log.isInfoEnabled) {
             log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
                     batch.batchId, String.format("%2d", batch.round),
-                    Strings.readableBytes(response.length()),
+                    Strings.readableBytes(response.length),
                     DateTimes.readableDuration(elapsed),
                     response.status,
                     batch.numTasksFailed,
@@ -369,7 +406,7 @@ class BrowserEmulatedFetcher(
     private fun logAfterTaskSuccess(batch: FetchTaskBatch, url: String, response: Response, elapsed: Duration) {
         if (log.isInfoEnabled) {
             val httpCode = response.httpCode
-            val length = response.length()
+            val length = response.length
             val codeMessage = if (httpCode != 200) " with code $httpCode" else ""
             log.info("Batch {} round {} fetched{}{} in {}{} | {}",
                     batch.batchId, String.format("%2d", batch.round),

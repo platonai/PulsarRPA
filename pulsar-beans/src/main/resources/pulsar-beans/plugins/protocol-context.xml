@@ -27,7 +27,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.driver.RobustBrowserEmulator" destroy-method="close">
+    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.driver.BrowserEmulator" destroy-method="close">
         <constructor-arg ref="privacyContextManager"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>

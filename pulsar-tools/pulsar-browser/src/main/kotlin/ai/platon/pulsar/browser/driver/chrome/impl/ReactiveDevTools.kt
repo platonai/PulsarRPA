@@ -26,33 +26,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import kotlin.concurrent.withLock
 
-class Task(val name: String) {
-    operator fun invoke() {
-
-    }
-}
-
-abstract class ReactiveDevTools0(
-        wsClient: WebSocketClient,
-        devToolsConfig: DevToolsConfig
-): BasicDevTools(wsClient, devToolsConfig) {
-    val pendingTasks = LinkedBlockingDeque<Task>()
-    val runningTasks = ConcurrentHashMap<String, Task>()
-    val finishedTasks = ConcurrentHashMap<String, Task>()
-    val closed = AtomicBoolean()
-
-    fun run() {
-        while (!closed.get()) {
-            val task = pendingTasks.poll()
-            runningTasks[task.name] = task
-            task()
-            runningTasks.remove(task.name)
-            finishedTasks[task.name] = task
-        }
-    }
-}
-
-internal class RpcResult(
+internal class RpcFuture(
         val returnProperty: String?,
         val clazz: Class<*>,
         val returnTypeClasses: Array<Class<out Any>>?
@@ -60,21 +34,10 @@ internal class RpcResult(
     var result: JsonNode? = null
     var isDone = false
     var isSuccess = false
-    private val countDownLatch = CountDownLatch(1)
 
-    fun signalResultReady(isSuccess: Boolean, result: JsonNode?) {
+    fun setDone(isSuccess: Boolean, result: JsonNode?) {
         this.isSuccess = isSuccess
         this.result = result
-        countDownLatch.countDown()
-    }
-
-    @Throws(InterruptedException::class)
-    fun waitForResult(timeout: Long, timeUnit: TimeUnit): Boolean {
-        if (timeout == 0L) {
-            countDownLatch.await()
-            return true
-        }
-        return countDownLatch.await(timeout, timeUnit)
     }
 }
 
@@ -98,7 +61,7 @@ abstract class ReactiveDevTools(
     }
 
     private val workerGroup = devToolsConfig.workerGroup
-    private val rpcResults: MutableMap<Long, RpcResult> = ConcurrentHashMap()
+    private val rpcResults: MutableMap<Long, RpcFuture> = ConcurrentHashMap()
     private val eventHandlers: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
@@ -125,8 +88,8 @@ abstract class ReactiveDevTools(
         }
 
         try {
-            val result = RpcResult(returnProperty, clazz, returnTypeClasses)
-            rpcResults[methodInvocation.id] = result
+            val future = RpcFuture(returnProperty, clazz, returnTypeClasses)
+            rpcResults[methodInvocation.id] = future
             wsClient.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
         } catch (e: WebSocketServiceException) {
             throw ChromeDevToolsInvocationException("Web socket connection lost", e)
@@ -193,7 +156,7 @@ abstract class ReactiveDevTools(
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)
                     if (errorNode != null) {
-                        result.signalResultReady(false, errorNode)
+                        result.setDone(false, errorNode)
                     } else {
                         if (result.returnProperty != null) {
                             if (resultNode != null) {
@@ -201,9 +164,9 @@ abstract class ReactiveDevTools(
                             }
                         }
                         if (resultNode != null) {
-                            result.signalResultReady(true, resultNode)
+                            result.setDone(true, resultNode)
                         } else {
-                            result.signalResultReady(true, null)
+                            result.setDone(true, null)
                         }
                     }
                 } else {

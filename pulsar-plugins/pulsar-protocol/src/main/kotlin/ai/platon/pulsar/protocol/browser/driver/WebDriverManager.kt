@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyManagerFactory
+import com.codahale.metrics.MetricRegistry
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -25,20 +26,20 @@ class WebDriverManager(
 
     val proxyManager = proxyManagerFactory.get()
     val driverFactory = WebDriverFactory(driverControl, proxyManager, immutableConfig)
-    val driverPool = WebDriverPool(driverFactory, immutableConfig)
+    val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 
     private val closed = AtomicBoolean()
     private var lastActiveTime = Instant.now()
-    private var idleTimeout = Duration.ofMinutes(5)
 
     val startTime = Instant.now()
     val numReset = AtomicInteger()
     val pageViews = AtomicInteger()
-    val isIdle get() = driverPool.numWorking == 0 && idleTime > idleTimeout
-    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     val speed get() = 1.0 * pageViews.get() / elapsedTime.seconds
-    val isClosed get() = closed.get()
+
+    fun allocate(n: Int, volatileConfig: VolatileConfig) {
+        allocate(0, n, volatileConfig)
+    }
 
     /**
      * Allocate [n] drivers with priority [priority]
@@ -56,25 +57,33 @@ class WebDriverManager(
         }
     }
 
+    suspend fun <R> submit(priority: Int, volatileConfig: VolatileConfig, action: suspend (driver: ManagedWebDriver) -> R): R {
+        val driver = driverPool.poll(priority, volatileConfig)
+        return try {
+            driver.startWork()
+            action(driver)
+        } finally {
+            lastActiveTime = Instant.now()
+            driverPool.put(driver)
+            driver.stat.pageViews++
+            pageViews.incrementAndGet()
+        }
+    }
+
     /**
      * Run an action in this pool
      * */
     fun <R> run(priority: Int, volatileConfig: VolatileConfig, action: (driver: ManagedWebDriver) -> R): R {
         return whenUnfrozen {
-            var driver: ManagedWebDriver? = null
+            val driver = driverPool.poll(priority, volatileConfig)
             try {
-                driver = driverPool.poll(priority, volatileConfig)
                 driver.startWork()
                 action(driver)
             } finally {
-                if (driver != null) {
-                    lastActiveTime = Instant.now()
-
-                    driverPool.put(driver)
-
-                    driver.stat.pageViews++
-                    pageViews.incrementAndGet()
-                }
+                lastActiveTime = Instant.now()
+                driverPool.put(driver)
+                driver.stat.pageViews++
+                pageViews.incrementAndGet()
             }
         }
     }
@@ -109,18 +118,19 @@ class WebDriverManager(
     }
 
     fun formatStatus(verbose: Boolean = false): String {
+        val p = driverPool
         return if (verbose) {
             String.format("online: %d, free: %d, working: %d, active: %d," +
                     " | crashed: %d, retired: %d, quit: %d, reset: %d," +
-                    " | pages: %d, elapsed: %s, speed: %.2f, pages/s",
-                    driverPool.numOnline, driverPool.numFree, driverPool.numWorking, driverPool.numActive,
-                    driverPool.numCrashed.get(), driverPool.numRetired.get(), driverPool.numQuit.get(), numReset.get(),
+                    " | pages: %d, elapsed: %s, speed: %.2f pages/s",
+                    p.numOnline, p.numFree, p.numWorking, p.numActive,
+                    p.numCrashed.get(), p.numRetired.get(), p.numQuit.get(), numReset.get(),
                     pageViews.get(), DateTimes.readableDuration(elapsedTime), speed
             )
         } else {
             String.format("%d/%d/%d/%d/%d/%d (free/working/active/online/crashed/retired)",
-                    driverPool.numFree, driverPool.numWorking, driverPool.numActive, driverPool.numOnline,
-                    driverPool.numCrashed.get(), driverPool.numRetired.get())
+                    p.numFree, p.numWorking, p.numActive, p.numOnline,
+                    p.numCrashed.get(), p.numRetired.get())
         }
     }
 
