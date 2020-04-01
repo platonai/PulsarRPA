@@ -19,15 +19,12 @@
 package ai.platon.pulsar.crawl.schedule
 
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
 
 /**
  * This interface defines the contract for implementations that manipulate fetch
  * times and re-fetch intervals.
- *
- * @author Andrzej Bialecki
  */
 interface FetchSchedule : Parameterized {
 
@@ -69,12 +66,12 @@ interface FetchSchedule : Parameterized {
      * @param modifiedTime     last time the content was modified. This information comes from
      * the protocol implementations, or is set to < 0 if not available.
      * Most FetchSchedule implementations should update the value in
-     * @param state            if [.STATUS_MODIFIED], then the content is considered to be
+     * @param state            if [STATUS_MODIFIED], then the content is considered to be
      * "changed" before the `fetchTime`, if
-     * [.STATUS_NOTMODIFIED] then the content is known to be
+     * [STATUS_NOTMODIFIED] then the content is known to be
      * unchanged. This information may be obtained by comparing page
      * signatures before and after fetching. If this is set to
-     * [.STATUS_UNKNOWN], then it is unknown whether the page was
+     * [STATUS_UNKNOWN], then it is unknown whether the page was
      * changed; implementations are free to follow a sensible default
      * behavior.
      */

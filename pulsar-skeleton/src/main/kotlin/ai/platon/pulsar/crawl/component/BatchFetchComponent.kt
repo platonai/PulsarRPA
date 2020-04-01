@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
+import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
@@ -22,12 +22,12 @@ import java.util.concurrent.TimeoutException
 
 class BatchFetchComponent(
         val webDb: WebDb,
-        fetchTaskTracker: FetchTaskTracker,
+        fetchMetrics: FetchMetrics,
         val lazyFetchTaskManager: LazyFetchTaskManager,
         protocolFactory: ProtocolFactory,
         val fetchTaskExecutor: EventExecutorGroup,
         immutableConfig: ImmutableConfig
-) : FetchComponent(fetchTaskTracker, protocolFactory, immutableConfig) {
+) : FetchComponent(fetchMetrics, protocolFactory, immutableConfig) {
     /**
      * Fetch all the urls, config property 'fetch.concurrency' controls the concurrency level.
      * If concurrency level is not great than 1, fetch all urls in the caller thread
@@ -74,7 +74,7 @@ class BatchFetchComponent(
             if (protocol != null) {
                 pages.addAll(parallelFetchAllInternal(gUrls, protocol, options))
             } else {
-                fetchTaskTracker.trackFailed(gUrls)
+                fetchMetrics.trackFailed(gUrls)
             }
         }
         return pages
@@ -111,15 +111,15 @@ class BatchFetchComponent(
     }
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
+        fetchMetrics.markTaskStart(Iterables.size(urls))
         return urls.map { createFetchEntry(it, options) }
                 .let { protocol.getResponses(it, options.volatileConfig?:immutableConfig.toVolatileConfig()) }
                 .map { getProtocolOutput(protocol, it, it.page) }
     }
 
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        if (LOG.isDebugEnabled) {
-            LOG.debug("Parallel fetch {} urls manually", Iterables.size(urls))
-        }
+        val size = Iterables.size(urls)
+        fetchMetrics.markTaskStart(size)
         return urls.map { fetchTaskExecutor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
     }
 
@@ -129,14 +129,11 @@ class BatchFetchComponent(
     private fun getProtocolOutput(protocol: Protocol, response: Response, page: WebPage): WebPage {
         // forward a response
         protocol.setResponse(response)
-        // run protocol.getProtocolOutput so the page have a chance to perform FETCH_PROTOCOL retry if necessary
-        // TODO: FETCH_PROTOCOL does not work since the response is forwarded
+        // run protocol.getProtocolOutput so the page have a chance to perform PROTOCOL scope retry if necessary
+        // TODO: RetryScope.PROTOCOL does not work since the response is forwarded
         return processProtocolOutput(page, protocol.getProtocolOutput(page))
     }
 
-    /**
-     * TODO: can be optimized in when the case the input is not a Collection
-     * */
     private fun optimizeBatchSize(urls: Iterable<String>, options: LoadOptions): Collection<String> {
         return if (urls is Collection<*>) {
             optimizeBatchSize(urls as Collection<String>, options)
@@ -169,8 +166,8 @@ class BatchFetchComponent(
             val mode = options.fetchMode
             // TODO: save url with options
             lazyFetchTaskManager.commitLazyTasks(mode, lazyTasks)
-            if (LOG.isDebugEnabled) {
-                LOG.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
+            if (log.isDebugEnabled) {
+                log.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
             }
         }
         return eagerTasks
@@ -180,11 +177,11 @@ class BatchFetchComponent(
         try {
             return future.get(35, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
-            LOG.warn("Interrupted when fetch resource $e")
+            log.warn("Interrupted when fetch resource", e)
         } catch (e: ExecutionException) {
-            LOG.warn(e.toString())
+            log.warn(e.toString())
         } catch (e: TimeoutException) {
-            LOG.warn("Fetch resource timeout, $e")
+            log.warn("Fetch resource timeout", e)
         }
         return WebPage.NIL
     }

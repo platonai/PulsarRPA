@@ -144,17 +144,6 @@ open class BrowserEmulator(
         checkState(task)
         checkState(driver)
 
-//        val navigateTime = Instant.now()
-//
-//        val url = task.url
-//        val page = task.page
-//
-//        val driverConfig = createDriverConfig(task.volatileConfig)
-//        val headers = MultiMetadata(Q_REQUEST_TIME, navigateTime.toEpochMilli().toString())
-//
-//        var status: ProtocolStatus
-//        val activeDomMessage: ActiveDomMessage?
-//        var pageSource = ""
         val browseTask = BrowseTask(task, driver, driverControl)
 
         try {
@@ -236,10 +225,6 @@ open class BrowserEmulator(
         try {
             checkState(task.driver)
             checkState(task.fetchTask)
-
-//            GlobalScope.launch {
-//                action()
-//            }
 
             action()
             result.state = FlowState.CONTINUE

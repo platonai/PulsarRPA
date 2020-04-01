@@ -18,18 +18,18 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.crawl.signature.SignatureComparator
-import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Duration
@@ -152,9 +152,12 @@ class UpdateComponent(
         }
         val crawlStatus = page.crawlStatus
         when (crawlStatus.code.toByte()) {
-            CrawlStatus.FETCHED, CrawlStatus.REDIR_TEMP, CrawlStatus.REDIR_PERM, CrawlStatus.NOTMODIFIED -> {
+            CrawlStatusCodes.FETCHED,
+            CrawlStatusCodes.REDIR_TEMP,
+            CrawlStatusCodes.REDIR_PERM,
+            CrawlStatusCodes.NOTMODIFIED -> {
                 var modified = FetchSchedule.STATUS_UNKNOWN
-                if (crawlStatus.code == CrawlStatus.NOTMODIFIED.toInt()) {
+                if (crawlStatus.code == CrawlStatusCodes.NOTMODIFIED.toInt()) {
                     modified = FetchSchedule.STATUS_NOTMODIFIED
                 }
 
@@ -195,15 +198,15 @@ class UpdateComponent(
                     ).formatAsLine())
                 }
             }
-            CrawlStatus.RETRY -> {
+            CrawlStatusCodes.RETRY -> {
                 fetchSchedule.setPageRetrySchedule(page, Instant.EPOCH, page.prevModifiedTime, page.fetchTime)
                 if (page.fetchRetries < fetchRetryMax) {
-                    page.setCrawlStatus(CrawlStatus.UNFETCHED.toInt())
+                    page.setCrawlStatus(CrawlStatusCodes.UNFETCHED.toInt())
                 } else {
-                    page.setCrawlStatus(CrawlStatus.GONE.toInt())
+                    page.setCrawlStatus(CrawlStatusCodes.GONE.toInt())
                 }
             }
-            CrawlStatus.GONE -> fetchSchedule.setPageGoneSchedule(page, Instant.EPOCH, page.prevModifiedTime, page.fetchTime)
+            CrawlStatusCodes.GONE -> fetchSchedule.setPageGoneSchedule(page, Instant.EPOCH, page.prevModifiedTime, page.fetchTime)
         }
     }
 }

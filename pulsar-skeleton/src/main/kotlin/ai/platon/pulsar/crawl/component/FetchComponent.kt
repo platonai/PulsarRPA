@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.fetch.FetchTaskTracker
+import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.Content
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
@@ -45,22 +45,21 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @Component
 open class FetchComponent(
-        val fetchTaskTracker: FetchTaskTracker,
+        val fetchMetrics: FetchMetrics,
         val protocolFactory: ProtocolFactory,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
+    protected val log = LoggerFactory.getLogger(FetchComponent::class.java)
+    private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
-
-    private val metricRegistry = SharedMetricRegistries.getDefault()
-    private val contentBytes = metricRegistry.histogram(name(FetchComponent::class.java, "contentBytes"))
 
     val isClosed get() = closed.get()
 
     /**
      * Fetch a url
      *
-     * @param url The url to fetch
+     * @param url The url of web page to fetch
      * @return The fetch result
      */
     fun fetch(url: String): WebPage {
@@ -70,7 +69,7 @@ open class FetchComponent(
     /**
      * Fetch a url
      *
-     * @param url     The url to fetch
+     * @param url The url of web page to fetch
      * @param options The options
      * @return The fetch result
      */
@@ -106,14 +105,12 @@ open class FetchComponent(
      */
     protected fun fetchContent0(page: WebPage): WebPage {
         return try {
-            fetchTaskTracker.totalTasks.getAndIncrement()
-            fetchTaskTracker.totalTasks0.inc()
-
+            fetchMetrics.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
-            LOG.warn("No protocol found | {}", page.url)
-            page.also { updateStatus(it, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }
+            log.warn("No protocol found | {}", page.url)
+            page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         }
     }
 
@@ -125,108 +122,67 @@ open class FetchComponent(
      */
     protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
         return try {
-            fetchTaskTracker.totalTasks.getAndIncrement()
-            fetchTaskTracker.totalTasks0.inc()
-
+            fetchMetrics.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
-            LOG.warn(e.message)
-            page.also { updateStatus(it, CrawlStatus.STATUS_UNFETCHED, ProtocolStatus.STATUS_PROTO_NOT_FOUND) }
+            log.warn(e.message)
+            page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         }
-    }
-
-    private fun beforeFetchContent(page: WebPage): WebPage {
-        return page
-    }
-
-    private fun afterFetchContent(page: WebPage): WebPage {
-        return page
-    }
-
-    protected fun shouldFetch(url: String): Boolean {
-        var code = 0
-
-        if (fetchTaskTracker.isFailed(url)) {
-            code = 2
-        } else if (fetchTaskTracker.isTimeout(url)) {
-            code = 3
-        }
-
-        if (code > 0 && LOG.isDebugEnabled) {
-            LOG.debug("Not fetching page, reason #{}, url: {}", code, url)
-        }
-
-        return code == 0
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
         val url = page.url
         val content = output.content
         if (content == null) {
-            LOG.warn("No content | {}", page.configuredUrl)
-            return page
+            log.warn("No content | {}", page.configuredUrl)
         }
 
         page.headers.putAll(output.headers.asMultimap())
-        val protocolStatus = output.status
-        val minorCode = protocolStatus.minorCode
-        if (protocolStatus.isSuccess) {
-            if (ProtocolStatus.NOTMODIFIED == minorCode) {
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_NOTMODIFIED)
-            } else {
-                updatePage(page, content, protocolStatus, CrawlStatus.STATUS_FETCHED)
-                fetchTaskTracker.trackSuccess(page)
-            }
-            return page
+        val protocolStatus = output.protocolStatus
+
+        val crawlStatus = when (protocolStatus.minorCode) {
+            ProtocolStatus.SUCCESS_OK -> CrawlStatus.STATUS_FETCHED
+            ProtocolStatus.NOTMODIFIED -> CrawlStatus.STATUS_NOTMODIFIED
+            ProtocolStatus.CANCELED -> CrawlStatus.STATUS_UNFETCHED
+
+            ProtocolStatus.MOVED,
+            ProtocolStatus.TEMP_MOVED -> handleMoved(page, protocolStatus).also { fetchMetrics.trackMoved(url) }
+
+            ProtocolStatus.ACCESS_DENIED,
+            ProtocolStatus.ROBOTS_DENIED,
+            ProtocolStatus.UNKNOWN_HOST,
+            ProtocolStatus.GONE,
+            ProtocolStatus.NOTFOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics.trackHostGone(url) }
+
+            ProtocolStatus.EXCEPTION,
+            ProtocolStatus.RETRY,
+            ProtocolStatus.BLOCKED -> CrawlStatus.STATUS_RETRY
+
+            ProtocolStatus.REQUEST_TIMEOUT,
+            ProtocolStatus.THREAD_TIMEOUT,
+            ProtocolStatus.WEB_DRIVER_TIMEOUT,
+            ProtocolStatus.SCRIPT_TIMEOUT -> CrawlStatus.STATUS_RETRY.also { fetchMetrics.trackTimeout(url) }
+
+            else -> CrawlStatus.STATUS_RETRY.also { log.warn("Unknown protocol status $protocolStatus") }
         }
 
-        if (LOG.isTraceEnabled) {
-            LOG.trace("Fetch failed, status: {} | {}", protocolStatus, page.configuredUrl)
+        if (crawlStatus.isFetched) {
+            fetchMetrics.trackSuccess(page)
+        } else if (crawlStatus.isFailed) {
+            fetchMetrics.trackFailed(url)
         }
 
-        when (minorCode) {
-            ProtocolStatus.MOVED, ProtocolStatus.TEMP_MOVED -> {
-                val crawlStatus = handleTmpMove(page, protocolStatus)
-                updatePage(page, content, protocolStatus, crawlStatus)
-            }
-            ProtocolStatus.CANCELED -> {
-                page.protocolStatus = protocolStatus
-                page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
-            }
-            ProtocolStatus.RETRY, ProtocolStatus.BLOCKED -> updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
-            ProtocolStatus.REQUEST_TIMEOUT, ProtocolStatus.THREAD_TIMEOUT, ProtocolStatus.WEB_DRIVER_TIMEOUT, ProtocolStatus.SCRIPT_TIMEOUT -> {
-                fetchTaskTracker.trackTimeout(url)
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
-            }
-            ProtocolStatus.UNKNOWN_HOST, ProtocolStatus.GONE, ProtocolStatus.NOTFOUND -> {
-                fetchTaskTracker.trackHostGone(url)
-                fetchTaskTracker.trackFailed(url)
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_GONE)
-            }
-            ProtocolStatus.ACCESS_DENIED, ProtocolStatus.ROBOTS_DENIED -> {
-                fetchTaskTracker.trackFailed(url)
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_GONE)
-            }
-            ProtocolStatus.WOULDBLOCK -> fetchTaskTracker.trackFailed(url)
-            ProtocolStatus.EXCEPTION -> {
-                fetchTaskTracker.trackFailed(url)
-                LOG.warn("Fetch failed, protocol status: {}", protocolStatus)
-                fetchTaskTracker.trackFailed(url)
-                LOG.warn("Unknown ProtocolStatus: $protocolStatus")
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
-            }
-            else -> {
-                fetchTaskTracker.trackFailed(url)
-                LOG.warn("Unknown ProtocolStatus: $protocolStatus")
-                updatePage(page, null, protocolStatus, CrawlStatus.STATUS_RETRY)
-            }
-        }
+        return when(crawlStatus) {
+            CrawlStatus.STATUS_FETCHED,
+            CrawlStatus.STATUS_REDIR_TEMP,
+            CrawlStatus.STATUS_REDIR_PERM -> updatePage(page, content, protocolStatus, crawlStatus)
 
-        return page
+            else -> updatePage(page, null, protocolStatus, crawlStatus)
+        }
     }
 
-    private fun handleTmpMove(page: WebPage, protocolStatus: ProtocolStatus): CrawlStatus {
+    private fun handleMoved(page: WebPage, protocolStatus: ProtocolStatus): CrawlStatus {
         val crawlStatus: CrawlStatus
         val url = page.url
         val minorCode = protocolStatus.minorCode
@@ -265,33 +221,34 @@ open class FetchComponent(
         }
     }
 
-    private fun updatePage(page: WebPage, content: Content?, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
-        updateStatus(page, crawlStatus, protocolStatus)
+    private fun updatePage(page: WebPage, content: Content?,
+                           protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
+        updateStatus(page, protocolStatus, crawlStatus)
+
         if (content != null && protocolStatus.isSuccess) {
             // No need to update content if the fetch is failed, just keep the last content in such cases
-            contentBytes.update(content.length)
             updateContent(page, content)
         }
+
         updateFetchTime(page)
         updateMarks(page)
+
+        return page
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            fetchTaskTracker.formatTraffic()
+            fetchMetrics.formatTraffic()
         }
     }
 
     companion object {
-        @JvmField
-        val LOG = LoggerFactory.getLogger(FetchComponent::class.java)
+        private val log = LoggerFactory.getLogger(FetchComponent::class.java)
 
         @JvmStatic
-        fun updateStatus(page: WebPage, crawlStatus: CrawlStatus?, protocolStatus: ProtocolStatus?) {
+        fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
             page.crawlStatus = crawlStatus
-            if (protocolStatus != null) {
-                page.protocolStatus = protocolStatus
-            }
+            page.protocolStatus = protocolStatus
             page.increaseFetchCount()
         }
 
@@ -320,7 +277,7 @@ open class FetchComponent(
             if (contentType != null) {
                 page.contentType = contentType
             } else {
-                LOG.error("Failed to determine content type!")
+                log.warn("Failed to determine content type!")
             }
         }
 

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * TODO: review locks(synchronization)
  */
 class TaskMonitor(
-        private val taskTracker: FetchTaskTracker,
+        private val fetchMetrics: FetchMetrics,
         private val metrics: MessageWriter,
         conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
@@ -159,13 +159,13 @@ class TaskMonitor(
     }
 
     private fun isConsumable(pool: TaskPool): Boolean {
-        return pool.isActive && pool.hasReadyTasks() && taskTracker.isReachable(pool.host)
+        return pool.isActive && pool.hasReadyTasks() && fetchMetrics.isReachable(pool.host)
     }
 
     /** Maintain pool life time, return true if the life time status is changed, false otherwise  */
     private fun maintain(pool: TaskPool): TaskPool {
         val lastStatus = pool.status
-        if (taskTracker.isGone(pool.host)) {
+        if (fetchMetrics.isGone(pool.host)) {
             retire(pool)
             log.info("Retire pool with unreachable host " + pool.id)
         } else if (feederCompleted.get() && !pool.hasTasks()) {
@@ -223,13 +223,13 @@ class TaskMonitor(
     }
 
     private fun doProduce(task: JobFetchTask) {
-        if (taskTracker.isGone(task.host)) {
+        if (fetchMetrics.isGone(task.host)) {
             return
         }
 
         val url = task.urlString
         val host = URLUtil.getHostName(url)
-        if (host == null || taskTracker.isGone(host) || taskTracker.isGone(url)) {
+        if (host == null || fetchMetrics.isGone(host) || fetchMetrics.isGone(url)) {
             log.warn("Ignore unreachable url (indicate task.getHost() failed) | {}", url)
             return
         }
@@ -292,7 +292,7 @@ class TaskMonitor(
     }
 
     fun trackHostGone(url: String) {
-        val isGone = taskTracker.trackHostGone(url)
+        val isGone = fetchMetrics.trackHostGone(url)
         if (isGone) {
             retune(true)
         }
@@ -309,7 +309,7 @@ class TaskMonitor(
      */
     @Synchronized
     internal fun retune(force: Boolean) {
-        val unreachablePools = taskPools.filter { taskTracker.isGone(it.host) }
+        val unreachablePools = taskPools.filter { fetchMetrics.isGone(it.host) }
 
         unreachablePools.forEach { retire(it) }
         taskPools.forEach { it.retune(force) }

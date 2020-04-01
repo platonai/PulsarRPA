@@ -2,10 +2,8 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.config.AppConstants.SEED_HOME_URL
 import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -18,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class LazyFetchTaskManager(
         private val webDb: WebDb,
-        private val fetchTaskTracker: FetchTaskTracker,
+        private val fetchMetrics: FetchMetrics,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
@@ -36,16 +34,16 @@ class LazyFetchTaskManager(
     val startTime = Instant.now()
     val elapsedTime get() = Duration.between(startTime, Instant.now())
 
-    private val timeoutUrls = fetchTaskTracker.timeoutUrls
-    private val failedUrls = fetchTaskTracker.failedUrls
-    private val deadUrls = fetchTaskTracker.deadUrls
+    private val timeoutUrls = fetchMetrics.timeoutUrls
+    private val failedUrls = fetchMetrics.failedUrls
+    private val deadUrls = fetchMetrics.deadUrls
 
     private val closed = AtomicBoolean()
 
     init {
-        urlTrackerIndexer.takeAll(FetchTaskTracker.TIMEOUT_URLS_PAGE).mapTo(timeoutUrls) { it.toString() }
-        urlTrackerIndexer.getAll(FetchTaskTracker.FAILED_URLS_PAGE).mapTo(failedUrls) { it.toString() }
-        urlTrackerIndexer.getAll(FetchTaskTracker.DEAD_URLS_PAGE).mapTo(deadUrls) { it.toString() }
+        urlTrackerIndexer.takeAll(TIMEOUT_URLS_PAGE).mapTo(timeoutUrls) { it.toString() }
+        urlTrackerIndexer.getAll(FAILED_URLS_PAGE).mapTo(failedUrls) { it.toString() }
+        urlTrackerIndexer.getAll(DEAD_URLS_PAGE).mapTo(deadUrls) { it.toString() }
 
         params.withLogger(log).info(true)
     }

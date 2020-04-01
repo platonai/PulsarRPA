@@ -11,9 +11,8 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
-import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.SharedMetricRegistries
 import com.google.common.collect.ConcurrentHashMultiset
 import org.slf4j.LoggerFactory
@@ -27,27 +26,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * TODO: do not dependent on WebDb
- * */
-class FetchTaskTracker(
-        private val webDb: WebDb,
+class FetchMetrics(
         private val messageWriter: MessageWriter,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
-    companion object {
-        const val LAZY_FETCH_URLS_PAGE_BASE = 100
-        const val TIMEOUT_URLS_PAGE = 1000
-        const val FAILED_URLS_PAGE = 1001
-        const val DEAD_URLS_PAGE = 1002
-    }
-
-    private val log = LoggerFactory.getLogger(FetchTaskTracker::class.java)!!
+    private val log = LoggerFactory.getLogger(FetchMetrics::class.java)!!
     private val groupMode = conf.getEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     private val systemInfo = SystemInfo()
     private val metricRegistry = SharedMetricRegistries.getDefault()
-
     /**
      * The limitation of url length
      */
@@ -59,7 +46,7 @@ class FetchTaskTracker(
     /**
      * Tracking statistics for each host
      */
-    val hostStatistics = ConcurrentHashMap<String, UrlStat>()
+    val urlStatistics = ConcurrentHashMap<String, UrlStat>()
     /**
      * Tracking unreachable hosts
      */
@@ -69,20 +56,22 @@ class FetchTaskTracker(
      * A host is considered to be a unreachable host if there are too many failure
      */
     val timeoutUrls = ConcurrentSkipListSet<String>()
+    val movedUrls = ConcurrentSkipListSet<String>()
     val failedUrls = ConcurrentSkipListSet<String>()
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    val totalTasks = AtomicInteger(0)
-    val totalSuccessTasks = AtomicInteger(0)
-    val totalFinishedTasks = AtomicInteger(0)
-
-    val totalTasks0 = metricRegistry.counter("totalTasks")
-    val totalSuccessTasks0 = metricRegistry.counter("totalSuccessTasks")
-    val totalFinishedTasks0 = metricRegistry.counter("totalFinishedTasks")
-
-    val successTasksPerSecond
-        get() = totalSuccessTasks.get() / (0.1 + elapsedTime.seconds)
+    private val tasks = AtomicInteger(0)
+    private val successTasks = AtomicInteger(0)
+    private val totalFinishedTasks = AtomicInteger(0)
+    /**
+     * The total bytes of page content of all success web pages
+     * */
+    private val contentBytes = AtomicLong()
+    private val tasks0 = metricRegistry.counter(name(javaClass, "tasks"))
+    private val successTasks0 = metricRegistry.counter(name(javaClass, "successTasks"))
+    private val finishedTasks0 = metricRegistry.counter(name(javaClass, "finishedTasks"))
+    private val contentBytes0 = metricRegistry.counter(name(javaClass, "contentBytes"))
 
     /**
      * The total all bytes received by the hardware at the application startup
@@ -92,7 +81,10 @@ class FetchTaskTracker(
      * The total all bytes received by the hardware last read from system
      * */
     @Volatile
-    var systemNetworkBytesRecv = 0L
+    private var systemNetworkBytesRecv = 0L
+
+    val successTasksPerSecond
+        get() = successTasks.get() / (0.1 + elapsedTime.seconds)
     /**
      * The total bytes received by the hardware from the application startup
      * */
@@ -101,15 +93,11 @@ class FetchTaskTracker(
     val networkBytesRecvPerSecond
         get() = networkBytesRecv / elapsedTime.seconds
     val networkBytesRecvPerPage
-        get() = networkBytesRecv / (1 + totalSuccessTasks.get())
-    /**
-     * The total bytes of page content of all success web pages
-     * */
-    val contentBytes = AtomicLong()
+        get() = networkBytesRecv / (1 + successTasks.get())
     val contentBytesPerSecond
         get() = contentBytes.get() / elapsedTime.seconds
-    val contentBytesPerPage
-        get() = contentBytes.get() / (1 + totalSuccessTasks.get())
+    val contentBytesPerTask
+        get() = contentBytes.get() / (1 + successTasks.get())
 
     private val closed = AtomicBoolean()
 
@@ -156,47 +144,26 @@ class FetchTaskTracker(
         return timeoutUrls.contains(url)
     }
 
-    fun trackTimeout(url: String) {
-        timeoutUrls.add(url)
+    fun markTaskStart() {
+        tasks.incrementAndGet()
+        tasks0.inc()
     }
 
-    /**
-     * @param url The url
-     * @return True if the host is gone
-     */
-    fun trackHostGone(url: String): Boolean {
-        val host = URLUtil.getHost(url, groupMode)
-        if (host == null || host.isEmpty()) {
-            log.warn("Malformed url | <{}>", url)
-            return false
-        }
-
-        if (unreachableHosts.contains(host)) {
-            return false
-        }
-
-        failedHosts.add(host)
-        // Only the exception occurs for unknownHostEventCount, it's really add to the black list
-        val failureHostEventCount = 3
-        if (failedHosts.count(host) > failureHostEventCount) {
-            log.info("Host unreachable : $host")
-            unreachableHosts.add(host)
-            return true
-        }
-
-        return false
+    fun markTaskStart(size: Int) {
+        tasks.addAndGet(size)
+        tasks0.inc(size.toLong())
     }
 
     /**
      * Available hosts statistics
      */
     fun trackSuccess(page: WebPage) {
-        totalSuccessTasks.incrementAndGet()
-        totalSuccessTasks0.inc()
+        successTasks.incrementAndGet()
+        successTasks0.inc()
 
         contentBytes.addAndGet(page.contentBytes.toLong())
         val i = totalFinishedTasks.incrementAndGet()
-        totalFinishedTasks0.inc()
+        finishedTasks0.inc()
         if (i % 5 == 0) {
             updateNetworkTraffic()
         }
@@ -209,7 +176,7 @@ class FetchTaskTracker(
             return
         }
 
-        val fetchStatus = hostStatistics.computeIfAbsent(host) { UrlStat(it) }
+        val fetchStatus = urlStatistics.computeIfAbsent(host) { UrlStat(it) }
 
         ++fetchStatus.urls
 
@@ -256,7 +223,7 @@ class FetchTaskTracker(
 
         ++fetchStatus.pageViews
 
-        hostStatistics[host] = fetchStatus
+        urlStatistics[host] = fetchStatus
 
         // The host is reachable
         unreachableHosts.remove(host)
@@ -264,24 +231,59 @@ class FetchTaskTracker(
         failedHosts.remove(host)
     }
 
-    fun updateNetworkTraffic() {
-        systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+    fun trackTimeout(url: String) {
+        timeoutUrls.add(url)
+    }
+
+    fun trackMoved(url: String) {
+        movedUrls.add(url)
+    }
+
+    /**
+     * @param url The url
+     * @return True if the host is gone
+     */
+    fun trackHostGone(url: String): Boolean {
+        val host = URLUtil.getHost(url, groupMode)
+        if (host == null || host.isEmpty()) {
+            log.warn("Malformed url | <{}>", url)
+            return false
+        }
+
+        if (unreachableHosts.contains(host)) {
+            return false
+        }
+
+        failedHosts.add(host)
+        // Only the exception occurs for unknownHostEventCount, it's really add to the black list
+        val failureHostEventCount = 3
+        if (failedHosts.count(host) > failureHostEventCount) {
+            log.info("Host unreachable : $host")
+            unreachableHosts.add(host)
+            return true
+        }
+
+        return false
     }
 
     fun countHostTasks(host: String): Int {
         val failedTasks = failedHosts.count(host)
-        val (_, numUrls) = hostStatistics[host] ?: return failedTasks
+        val (_, numUrls) = urlStatistics[host] ?: return failedTasks
         return numUrls + failedTasks
+    }
+
+    fun updateNetworkTraffic() {
+        systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     }
 
     fun formatTraffic(): String {
         return String.format("Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p | net recv: %s, %s/s, %s/p | total net recv: %s",
-                totalSuccessTasks.get(),
+                successTasks.get(),
                 DateTimes.readableDuration(elapsedTime),
                 successTasksPerSecond,
                 Strings.readableBytes(contentBytes.get()),
                 Strings.readableBytes(contentBytesPerSecond),
-                Strings.readableBytes(contentBytesPerPage),
+                Strings.readableBytes(contentBytesPerTask),
                 Strings.readableBytes(networkBytesRecv),
                 Strings.readableBytes(networkBytesRecvPerSecond),
                 Strings.readableBytes(networkBytesRecvPerPage),
@@ -290,7 +292,6 @@ class FetchTaskTracker(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info("Closing FetchTaskTracker ...")
             log.info(formatTraffic())
 
             log.info("There are " + unreachableHosts.size + " unreachable hosts")
@@ -301,10 +302,10 @@ class FetchTaskTracker(
     }
 
     private fun logAvailableHosts() {
-        val report = StringBuilder("Total " + hostStatistics.size + " available hosts")
+        val report = StringBuilder("Total " + urlStatistics.size + " available hosts")
         report.append('\n')
 
-        hostStatistics.values.sorted()
+        urlStatistics.values.sorted()
                 .map { (hostName, urls, indexUrls, detailUrls, searchUrls, mediaUrls,
                                bbsUrls, blogUrls, tiebaUrls, _, urlsTooLong) ->
                     String.format("%40s -> %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s",

@@ -19,15 +19,23 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.*
 import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.SharedMetricRegistries
+import io.netty.util.concurrent.FastThreadLocalThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.lang.IllegalClassException
 import org.apache.commons.lang.StringUtils
+import org.openqa.selenium.WebDriver
 import org.openqa.selenium.WebDriverException
+import org.openqa.selenium.support.ui.FluentWait
 import org.slf4j.LoggerFactory
+import java.time.Clock
+import java.time.Duration
+import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
@@ -37,12 +45,9 @@ open class AsyncBrowserEmulator(
         val privacyContextManager: PrivacyContextManager,
         val messageWriter: MessageWriter,
         val immutableConfig: ImmutableConfig
-) : Parameterized, AutoCloseable {
-    companion object {
-        private var sequencer = AtomicInteger()
-    }
-
+): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
+    private val tracer = log.takeIf { it.isTraceEnabled }
     private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     private val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
@@ -52,17 +57,15 @@ open class AsyncBrowserEmulator(
     private val driverControl = driverManager.driverControl
     private val driverPool = driverManager.driverPool
     private val handlers = BrowserEmulatorHandlers(driverPool, messageWriter, immutableConfig)
-    private val metrics = MetricRegistry()
+    private val metrics = SharedMetricRegistries.getDefault()
     private val numNavigates = metrics.meter("navigates")
 
     init {
-        sequencer.incrementAndGet()
         params.withLogger(log).info()
     }
 
     override fun getParams(): Params {
         return Params.of(
-                "instanceSequence", sequencer,
                 "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
                 "pageLoadTimeout", driverControl.pageLoadTimeout,
                 "scriptTimeout", driverControl.scriptTimeout,
@@ -152,6 +155,7 @@ open class AsyncBrowserEmulator(
 
         withContext(Dispatchers.IO) {
             numNavigates.mark()
+            // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
             driver.navigateTo(task.url)
         }
 
@@ -163,6 +167,10 @@ open class AsyncBrowserEmulator(
         val result = NavigateResult(ProtocolStatus.STATUS_SUCCESS, null)
 
         runScriptTask(task, result) { jsCheckDOMState(task, result) }
+
+        if (result.state.isContinue) {
+            runScriptTask(task, result) { jsScrollDown(task, result) }
+        }
 
         if (result.state.isContinue) {
             runScriptTask(task, result) { jsComputeFeature(task, result) }
@@ -218,20 +226,22 @@ open class AsyncBrowserEmulator(
 
         // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
         val expression = "__utils__.waitForReady($maxRound, $initialScroll)"
-        checkState(emulateTask.driver)
-        checkState(fetchTask)
-
         var message: Any? = null
         try {
+            var msg: Any? = null
             var i = 0
-            while (message == null && i++ < 60) {
-                message = withContext(Dispatchers.IO) {
-                    emulateTask.driver.evaluate(expression)
-                    delay(1000)
+            while ((msg == null || msg == false) && i++ < 60) {
+                withContext(Dispatchers.IO) {
+                    checkState(emulateTask.driver)
+                    checkState(fetchTask)
+                    msg = emulateTask.driver.evaluate(expression)
+                    if (msg == null || msg == false) {
+                        delay(1000)
+                    }
                 }
             }
+            message = msg
         } finally {
-            checkState(fetchTask)
             if (message == null) {
                 if (!fetchTask.isCanceled) {
                     log.warn("Unexpected script result (null) | {}", emulateTask.url)
@@ -251,11 +261,26 @@ open class AsyncBrowserEmulator(
         result.protocolStatus = status
     }
 
-    protected open fun jsComputeFeature(emulateTask: EmulateTask, result: NavigateResult) {
-        checkState(emulateTask.driver)
-        checkState(emulateTask.fetchTask)
+    protected open suspend fun jsScrollDown(emulateTask: EmulateTask, result: NavigateResult) {
+        val random = ThreadLocalRandom.current().nextInt(3)
+        val scrollDownCount = emulateTask.driverConfig.scrollDownCount + random - 1
 
-        val message = emulateTask.driver.evaluate("__utils__.compute()")
+        val expression = "__utils__.scrollDownN($scrollDownCount)"
+        withContext(Dispatchers.IO) {
+            checkState(emulateTask.driver)
+            checkState(emulateTask.fetchTask)
+            // tracer?.trace("About to scrollDownN #{} in {}", emulateTask.fetchTask.id, Thread.currentThread().name)
+            emulateTask.driver.evaluate(expression)
+        }
+    }
+
+    protected open suspend fun jsComputeFeature(emulateTask: EmulateTask, result: NavigateResult) {
+        val message = withContext(Dispatchers.IO) {
+            checkState(emulateTask.driver)
+            checkState(emulateTask.fetchTask)
+            // tracer?.trace("About to compute #{} in {}", emulateTask.fetchTask.id, Thread.currentThread().name)
+            emulateTask.driver.evaluate("__utils__.compute()")
+        }
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {

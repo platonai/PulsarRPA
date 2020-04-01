@@ -221,7 +221,6 @@ class BrowserEmulatedFetcher(
                 TimeUnit.SECONDS.sleep(1)
             } catch (e: InterruptedException) {
                 Thread.currentThread().interrupt()
-                log.warn("Browser emulator is interrupted, {} pending tasks will be canceled", batch.workingTasks.size)
             }
 
             state = checkState(batch)

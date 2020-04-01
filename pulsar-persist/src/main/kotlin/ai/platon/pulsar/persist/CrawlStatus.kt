@@ -6,73 +6,58 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- ******************************************************************************/
-package ai.platon.pulsar.persist;
+ */
+package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.persist.metadata.CrawlStatusCodes;
+import ai.platon.pulsar.persist.metadata.CrawlStatusCodes
+import java.util.*
 
-import java.util.HashMap;
-import java.util.Map;
+class CrawlStatus(private val status: Byte) : CrawlStatusCodes {
+    companion object {
+        @JvmField
+        val STATUS_UNFETCHED = CrawlStatus(CrawlStatusCodes.UNFETCHED)
+        val STATUS_FETCHED = CrawlStatus(CrawlStatusCodes.FETCHED)
+        val STATUS_NOTMODIFIED = CrawlStatus(CrawlStatusCodes.NOTMODIFIED)
 
-public class CrawlStatus implements CrawlStatusCodes {
+        val STATUS_GONE = CrawlStatus(CrawlStatusCodes.GONE)
+        val STATUS_REDIR_TEMP = CrawlStatus(CrawlStatusCodes.REDIR_TEMP)
+        val STATUS_REDIR_PERM = CrawlStatus(CrawlStatusCodes.REDIR_PERM)
+        val STATUS_RETRY = CrawlStatus(CrawlStatusCodes.RETRY)
 
-    public static final CrawlStatus STATUS_UNFETCHED = new CrawlStatus(UNFETCHED);
-    public static final CrawlStatus STATUS_FETCHED = new CrawlStatus(FETCHED);
-    public static final CrawlStatus STATUS_GONE = new CrawlStatus(GONE);
-    public static final CrawlStatus STATUS_REDIR_TEMP = new CrawlStatus(REDIR_TEMP);
-    public static final CrawlStatus STATUS_REDIR_PERM = new CrawlStatus(REDIR_PERM);
-    public static final CrawlStatus STATUS_RETRY = new CrawlStatus(RETRY);
-    public static final CrawlStatus STATUS_NOTMODIFIED = new CrawlStatus(NOTMODIFIED);
-
-    private static final Map<Byte, String> NAMES = new HashMap<>();
-
-    static {
-        NAMES.put(UNFETCHED, "status_unfetched");
-        NAMES.put(FETCHED, "status_fetched");
-        NAMES.put(GONE, "status_gone");
-        NAMES.put(REDIR_TEMP, "status_redir_temp");
-        NAMES.put(REDIR_PERM, "status_redir_perm");
-        NAMES.put(RETRY, "status_retry");
-        NAMES.put(NOTMODIFIED, "status_notmodified");
+        private val NAMES: MutableMap<Byte, String> = HashMap()
+        init {
+            NAMES[CrawlStatusCodes.UNFETCHED] = "status_unfetched"
+            NAMES[CrawlStatusCodes.FETCHED] = "status_fetched"
+            NAMES[CrawlStatusCodes.GONE] = "status_gone"
+            NAMES[CrawlStatusCodes.REDIR_TEMP] = "status_redir_temp"
+            NAMES[CrawlStatusCodes.REDIR_PERM] = "status_redir_perm"
+            NAMES[CrawlStatusCodes.RETRY] = "status_retry"
+            NAMES[CrawlStatusCodes.NOTMODIFIED] = "status_notmodified"
+        }
     }
 
-    private byte status;
+    val code get() = status.toInt()
+    val name get() = NAMES[status]?:"status_unknown"
+    val isUnFetched get() = status == CrawlStatusCodes.UNFETCHED
+    val isFetched get() = status == CrawlStatusCodes.FETCHED
+    val isFailed get() = status !in arrayOf(CrawlStatusCodes.UNFETCHED, CrawlStatusCodes.FETCHED, CrawlStatusCodes.NOTMODIFIED)
 
-    public CrawlStatus(byte status) {
-        this.status = status;
+    override fun equals(other: Any?): Boolean {
+        return other is CrawlStatus && status.toInt() == other.code
     }
 
-    public int getCode() {
-        return status;
+    override fun hashCode(): Int {
+        return code.hashCode()
     }
 
-    public String getName() {
-        String name = NAMES.get(status);
-        return name != null ? name : "status_unknown";
-    }
-
-    public boolean isFetched() {
-        return status == CrawlStatus.FETCHED;
-    }
-
-    public boolean isUnFetched() {
-        return status == CrawlStatus.UNFETCHED;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return o instanceof CrawlStatus && status == ((CrawlStatus) o).getCode();
-    }
-
-    @Override
-    public String toString() {
-        return getName();
+    override fun toString(): String {
+        return name
     }
 }

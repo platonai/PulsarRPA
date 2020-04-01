@@ -50,9 +50,9 @@ abstract class AbstractHttpProtocol: Protocol {
     /**
      * The max retry time
      */
-    var fetchMaxRetry = 3
+    private var fetchMaxRetry = 3
     /**
-     * The pulsar configuration
+     * The configuration
      */
     private lateinit var conf: ImmutableConfig
 
@@ -68,8 +68,7 @@ abstract class AbstractHttpProtocol: Protocol {
         conf = jobConf
         fetchMaxRetry = jobConf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
         mimeTypes = MimeUtil(jobConf)
-        robots = HttpRobotRulesParser()
-        robots.conf = jobConf
+        robots = HttpRobotRulesParser(jobConf)
     }
 
     override fun reset() {

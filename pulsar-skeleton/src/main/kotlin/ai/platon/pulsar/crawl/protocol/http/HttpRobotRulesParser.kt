@@ -15,13 +15,8 @@ import java.net.URL
  * extends the generic [RobotRulesParser] class and contains Http protocol
  * specific implementation for obtaining the robots file.
  */
-open class HttpRobotRulesParser : RobotRulesParser {
-    protected var allowForbidden = false
-
-    internal constructor() {}
-    constructor(conf: ImmutableConfig) : super(conf) {
-        allowForbidden = conf.getBoolean("http.robots.403.allow", false)
-    }
+open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) {
+    private val allowForbidden = conf.getBoolean("http.robots.403.allow", false)
 
     /**
      * Get the rules from robots.txt which applies for the given `url`.

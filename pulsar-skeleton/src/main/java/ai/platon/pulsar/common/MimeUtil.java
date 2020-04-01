@@ -18,7 +18,6 @@
 package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.crawl.protocol.ProtocolOutput;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
@@ -122,7 +121,7 @@ public final class MimeUtil {
      * and obtain a better-than-the-default approximation of the {@link MimeType}.
      *
      * @param typeName
-     *          The original mime type, returned from a {@link ProtocolOutput}.
+     *          The original mime type, returned from a ProtocolOutput.
      * @param url
      *          The given @see url, that AppConstants was trying to text.
      * @param data

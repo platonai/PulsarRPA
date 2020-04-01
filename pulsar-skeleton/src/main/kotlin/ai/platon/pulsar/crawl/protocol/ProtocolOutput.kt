@@ -21,7 +21,7 @@ package ai.platon.pulsar.crawl.protocol
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 
-class ProtocolOutput(val content: Content?, val headers: MultiMetadata, val status: ProtocolStatus) {
+class ProtocolOutput(val content: Content?, val headers: MultiMetadata, val protocolStatus: ProtocolStatus) {
     constructor(content: Content?) : this(content, MultiMetadata(), ProtocolStatus.STATUS_SUCCESS)
     constructor(content: Content?, headers: MultiMetadata) : this(content, headers, ProtocolStatus.STATUS_SUCCESS)
     constructor(status: ProtocolStatus) : this(null, MultiMetadata(), status)

@@ -37,7 +37,6 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
     public static final ProtocolStatus STATUS_NOTFETCHED = new ProtocolStatus(NOTFETCHED);
-    public static final ProtocolStatus STATUS_FAILED = new ProtocolStatus(FAILED);
 
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
@@ -160,6 +159,15 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         }
     }
 
+    public static boolean isTimeout(ProtocolStatus protocalStatus) {
+        int code = protocalStatus.getMinorCode();
+        return isTimeout(code);
+    }
+
+    public static boolean isTimeout(int code) {
+        return code == REQUEST_TIMEOUT || code == THREAD_TIMEOUT || code == WEB_DRIVER_TIMEOUT || code == SCRIPT_TIMEOUT;
+    }
+
     public GProtocolStatus unbox() {
         return protocolStatus;
     }
@@ -193,9 +201,12 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMinorCode() == TEMP_MOVED;
     }
 
+    public boolean isMoved() {
+        return getMinorCode() == TEMP_MOVED || getMinorCode() == MOVED;
+    }
+
     public boolean isTimeout() {
-        int code = getMinorCode();
-        return code == REQUEST_TIMEOUT || code == THREAD_TIMEOUT || code == WEB_DRIVER_TIMEOUT || code == SCRIPT_TIMEOUT;
+        return isTimeout(this);
     }
 
     public String getMajorName() {

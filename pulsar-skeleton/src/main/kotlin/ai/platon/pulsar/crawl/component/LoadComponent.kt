@@ -53,7 +53,7 @@ class LoadComponent(
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
 
-    private val fetchTaskTracker get() = fetchComponent.fetchTaskTracker
+    private val fetchTaskTracker get() = fetchComponent.fetchMetrics
 
     private val closed = AtomicBoolean()
     private val isInactive get() = closed.get() || PulsarEnv.isInactive
