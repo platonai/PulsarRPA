@@ -11,23 +11,16 @@ import kotlin.concurrent.withLock
  * 2. once a channel is open, the other one must be closed
  * */
 abstract class Freezable {
-    private val lock = ReentrantLock() // lock for containers
-    private val freezerChannelIsClosed = lock.newCondition()
-    private val taskChannelIsClosed = lock.newCondition()
-    private var pollingTimeout = Duration.ofMillis(100)
-    val numFreezers = AtomicInteger()
-    val numTasks = AtomicInteger()
+    protected val lock = ReentrantLock() // lock for containers
+    protected val freezerChannelIsClosed = lock.newCondition()
+    protected val workerChannelIsClosed = lock.newCondition()
+    protected var pollingTimeout = Duration.ofMillis(100)
+    protected val numFreezers = AtomicInteger()
+    protected val numTasks = AtomicInteger()
 
     fun <T> freeze(freezer: () -> T): T {
         // wait until the task channel is closed, meanwhile, the freezer channel is open
-        lock.withLock {
-            var nanos = pollingTimeout.toNanos()
-            while (numTasks.get() > 0 && nanos > 0) {
-                nanos = taskChannelIsClosed.awaitNanos(nanos)
-            }
-            // freezer channel is open now
-            numFreezers.incrementAndGet()
-        }
+        waitUntilWorkerChannelIsClosed()
 
         try {
             return freezer()
@@ -43,14 +36,7 @@ abstract class Freezable {
 
     fun <T> whenUnfrozen(task: () -> T): T {
         // wait until the freezer channel is closed, meanwhile, the task channel is open
-        lock.withLock {
-            var nanos = pollingTimeout.toNanos()
-            while (numFreezers.get() > 0 && nanos > 0) {
-                nanos = freezerChannelIsClosed.awaitNanos(nanos)
-            }
-            // task channel is open now
-            numTasks.incrementAndGet()
-        }
+        waitUntilFreezerChannelIsClosed()
 
         try {
             return task()
@@ -58,9 +44,31 @@ abstract class Freezable {
             lock.withLock {
                 if (numTasks.decrementAndGet() == 0) {
                     // all freezers are allowed to pass
-                    taskChannelIsClosed.signalAll()
+                    workerChannelIsClosed.signalAll()
                 }
             }
+        }
+    }
+
+    fun waitUntilWorkerChannelIsClosed() {
+        lock.withLock {
+            var nanos = pollingTimeout.toNanos()
+            while (numTasks.get() > 0 && nanos > 0) {
+                nanos = workerChannelIsClosed.awaitNanos(nanos)
+            }
+            // freezer channel is open now
+            numFreezers.incrementAndGet()
+        }
+    }
+
+    fun waitUntilFreezerChannelIsClosed() {
+        lock.withLock {
+            var nanos = pollingTimeout.toNanos()
+            while (numFreezers.get() > 0 && nanos > 0) {
+                nanos = freezerChannelIsClosed.awaitNanos(nanos)
+            }
+            // task channel is open now
+            numTasks.incrementAndGet()
         }
     }
 }

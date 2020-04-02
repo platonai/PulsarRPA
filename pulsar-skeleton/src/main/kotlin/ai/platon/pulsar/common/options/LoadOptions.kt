@@ -52,7 +52,7 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
-    var fetchMode = FetchMode.SELENIUM
+    var fetchMode = FetchMode.BROWSER
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
     var browser = BrowserType.CHROME

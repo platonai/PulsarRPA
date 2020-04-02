@@ -29,7 +29,6 @@ class WebDriverManager(
     val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 
     private val closed = AtomicBoolean()
-    private var lastActiveTime = Instant.now()
 
     val startTime = Instant.now()
     val numReset = AtomicInteger()
@@ -63,7 +62,6 @@ class WebDriverManager(
             driver.startWork()
             action(driver)
         } finally {
-            lastActiveTime = Instant.now()
             driverPool.put(driver)
             driver.stat.pageViews++
             pageViews.incrementAndGet()
@@ -80,7 +78,6 @@ class WebDriverManager(
                 driver.startWork()
                 action(driver)
             } finally {
-                lastActiveTime = Instant.now()
                 driverPool.put(driver)
                 driver.stat.pageViews++
                 pageViews.incrementAndGet()

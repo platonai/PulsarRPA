@@ -79,7 +79,7 @@ object CommonFunctions {
         if (browserType == BrowserType.NATIVE) {
             unsetFetchMode(h2session)
         } else {
-            setFetchMode(h2session, FetchMode.SELENIUM.name, ttl)
+            setFetchMode(h2session, FetchMode.BROWSER.name, ttl)
         }
 
         log.debug("Set browser to $browser")

@@ -17,7 +17,7 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
     @Parameter(names = [PulsarParams.ARG_ROUND], description = "The crawl round")
     var round = 1
     @Parameter(names = [PulsarParams.ARG_FETCH_MODE], description = "Fetch mode")
-    var fetchMode = conf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.SELENIUM)
+    var fetchMode = conf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.BROWSER)
     @Parameter(names = [PulsarParams.ARG_STRICT_DF], description = "If true, crawl the web using strict depth-first strategy")
     var strictDf = false
     @Parameter(names = [PulsarParams.ARG_REDUCER_TASKS], description = "Number of reducers")

@@ -141,12 +141,12 @@ class LoadComponent(
         val startTime = Instant.now()
 
         val filteredUrls = normUrls.mapNotNullTo(HashSet()) { filterUrlToNull(it) }
-
         if (filteredUrls.isEmpty()) {
             return listOf()
         }
-        val knownPages: MutableSet<WebPage> = HashSet()
-        val pendingUrls: MutableSet<String> = HashSet()
+
+        val knownPages: MutableSet<WebPage> = mutableSetOf()
+        val pendingUrls: MutableSet<String> = mutableSetOf()
         for (normUrl in filteredUrls) {
             val url = normUrl.url
             val opt = normUrl.options
@@ -155,15 +155,9 @@ class LoadComponent(
             tracer?.trace("Fetch reason: {} | {} {}", FetchReason.toString(reason), url, opt)
             val status = page.protocolStatus
             when (reason) {
-                FetchReason.NEW_PAGE -> {
-                    pendingUrls.add(url)
-                }
-                FetchReason.EXPIRED -> {
-                    pendingUrls.add(url)
-                }
-                FetchReason.SMALL_CONTENT -> {
-                    pendingUrls.add(url)
-                }
+                FetchReason.NEW_PAGE,
+                FetchReason.EXPIRED,
+                FetchReason.SMALL_CONTENT,
                 FetchReason.MISS_FIELD -> {
                     pendingUrls.add(url)
                 }
@@ -192,8 +186,7 @@ class LoadComponent(
         }
 
         log.debug("Fetching {} urls with options {}", pendingUrls.size, options)
-        val updatedPages: Collection<WebPage>
-        updatedPages = try {
+        val updatedPages = try {
             globalFetchingUrls.addAll(pendingUrls)
             if (options.preferParallel) {
                 fetchComponent.parallelFetchAll(pendingUrls, options)
@@ -235,30 +228,28 @@ class LoadComponent(
     }
 
     private fun load0(normUrl: NormUrl): WebPage {
-        var page = createLoadEntry(normUrl)
+        val page = createLoadEntry(normUrl)
         if (page.hasVar("refresh")) {
             try {
-                page = beforeFetch(page, normUrl.options)
-                page = fetchComponent.fetchContent(page)
+                beforeFetch(page, normUrl.options)
+                fetchComponent.fetchContent(page)
             } finally {
                 afterFetch(page, normUrl.options)
             }
         }
-
         return page
     }
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
-        var page = createLoadEntry(normUrl)
+        val page = createLoadEntry(normUrl)
         if (page.hasVar("refresh")) {
             try {
-                page = beforeFetch(page, normUrl.options)
-                page = fetchComponent.fetchContentDeferred(page)
+                beforeFetch(page, normUrl.options)
+                fetchComponent.fetchContentDeferred(page)
             } finally {
                 afterFetch(page, normUrl.options)
             }
         }
-
         return page
     }
 
@@ -267,12 +258,14 @@ class LoadComponent(
             log.warn("Malformed url | {}", normUrl)
             return WebPage.NIL
         }
+        if (normUrl.url == AppConstants.NIL_PAGE_URL) {
+            return WebPage.NIL
+        }
 
         val url = normUrl.url
         val options = normUrl.options
         if (globalFetchingUrls.contains(url)) {
             log.debug("Load later, it's fetching by someone else | {}", url)
-            // TODO: wait for finish?
             return WebPage.NIL
         }
 
@@ -289,13 +282,12 @@ class LoadComponent(
         return page
     }
 
-    private fun beforeFetch(page: WebPage, options: LoadOptions): WebPage {
-        return fetchComponent.initFetchEntry(page, options).also { globalFetchingUrls.add(it.url) }
+    private fun beforeFetch(page: WebPage, options: LoadOptions) {
+        globalFetchingUrls.add(page.url)
+        fetchComponent.initFetchEntry(page, options)
     }
 
-    private fun afterFetch(page: WebPage, options: LoadOptions): WebPage {
-        globalFetchingUrls.remove(page.url)
-
+    private fun afterFetch(page: WebPage, options: LoadOptions) {
         update(page, options)
 
         if (log.isInfoEnabled) {
@@ -303,7 +295,7 @@ class LoadComponent(
             log.info(getFetchCompleteReport(page, verbose))
         }
 
-        return page
+        globalFetchingUrls.remove(page.url)
     }
 
     private fun filterUrlToNull(url: NormUrl): NormUrl? {

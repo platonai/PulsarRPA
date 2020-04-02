@@ -64,8 +64,6 @@ class PulsarEnv {
         private val active = AtomicBoolean()
         private val closed = AtomicBoolean()
 
-        private var metricRegistry: MetricRegistry
-
         init {
             // TODO: use spring config
             // prerequisite system properties
@@ -73,9 +71,6 @@ class PulsarEnv {
             Systems.setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
             Systems.setPropertyIfAbsent(APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
             Systems.setPropertyIfAbsent(H2_SESSION_FACTORY_CLASS, AppConstants.H2_SESSION_FACTORY)
-
-            SharedMetricRegistries.setDefault("scent")
-            metricRegistry = SharedMetricRegistries.getDefault()
 
             // the spring application context
             contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
@@ -90,9 +85,6 @@ class PulsarEnv {
 
         fun initialize() {
             // Nothing to do
-            startJMXReport()
-            startCsvReporter()
-            startSlf4jReporter()
         }
 
         @Throws(BeansException::class)
@@ -107,29 +99,6 @@ class PulsarEnv {
                 applicationContext.close()
                 active.set(false)
             }
-        }
-
-        private fun startJMXReport() {
-            val reporter = JmxReporter.forRegistry(metricRegistry).build();
-            reporter.start()
-        }
-
-        private fun startCsvReporter() {
-            val reporter = CsvReporter.forRegistry(metricRegistry)
-                    .convertRatesTo(TimeUnit.SECONDS)
-                    .convertDurationsTo(TimeUnit.MILLISECONDS)
-                    .build(AppPaths.METRICS_DIR.toFile())
-            reporter.start(10, TimeUnit.SECONDS)
-        }
-
-        private fun startSlf4jReporter() {
-            val reporter = Slf4jReporter.forRegistry(metricRegistry)
-                    .outputTo(LoggerFactory.getLogger("ai.platon.pulsar"))
-//                    .withLoggingLevel(Slf4jReporter.LoggingLevel.DEBUG)
-                    .convertRatesTo(TimeUnit.SECONDS)
-                    .convertDurationsTo(TimeUnit.MILLISECONDS)
-                    .build()
-            reporter.start(10, TimeUnit.MINUTES)
         }
     }
 

@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.files.ext.export
-import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -20,21 +19,23 @@ import com.codahale.metrics.SharedMetricRegistries
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 
-open class BrowserEmulatorHandlers(
-        private val driverPool: LoadingWebDriverPool,
+open class BrowserEmulateEventHandler(
+        private val driverManager: WebDriverManager,
         private val messageWriter: MessageWriter,
         private val immutableConfig: ImmutableConfig
 ) {
-    private val log = LoggerFactory.getLogger(BrowserEmulatorHandlers::class.java)!!
+    private val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
     private val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     private val metricRegistry = SharedMetricRegistries.getDefault()
-    private val pageSourceBytes = metricRegistry.histogram(MetricRegistry.name(BrowserEmulatorHandlers::class.java, "pageSourceBytes"))
+    private val pageSourceBytes = metricRegistry.histogram(MetricRegistry.name(BrowserEmulateEventHandler::class.java, "pageSourceBytes"))
+    private val driverPool = driverManager.driverPool
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
         if (log.isTraceEnabled) {
@@ -49,8 +50,8 @@ open class BrowserEmulatorHandlers(
         }
     }
 
-    fun onAfterBrowse(browseTask: BrowseTask): Response {
-        val t = browseTask
+    fun onAfterNavigate(navigateTask: NavigateTask): Response {
+        val t = navigateTask
         pageSourceBytes.update(t.pageSource.length)
 
         val browserStatus = checkErrorPage(t.page, t.status)
@@ -102,6 +103,7 @@ open class BrowserEmulatorHandlers(
             // log.warn("Connection timed out in browser, resetting the browser context")
             browserStatus.status = ProtocolStatus.retry(RetryScope.PRIVACY, status)
             browserStatus.code = status.minorCode
+//            throw PrivacyLeakException()
         } else if (status.minorCode == ProtocolStatusCodes.BROWSER_ERROR) {
             browserStatus.status = ProtocolStatus.retry(RetryScope.CRAWL, status)
             browserStatus.code = status.minorCode
@@ -110,8 +112,49 @@ open class BrowserEmulatorHandlers(
         return browserStatus
     }
 
-    open fun checkHtmlIntegrity(pageSource: String,
-                                          page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
+    /**
+     * Check if the html is integral without field extraction, a further html integrity checking can be
+     * applied after field extraction.
+     * */
+    open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
+        val length = pageSource.length.toLong()
+        var integrity = HtmlIntegrity.OK
+
+        if (length == 0L) {
+            integrity = HtmlIntegrity.EMPTY_0B
+        } else if (length == 39L) {
+            integrity = HtmlIntegrity.EMPTY_39B
+        }
+
+        // might be caused by web driver exception
+        if (integrity.isOK && isBlankBody(pageSource)) {
+            integrity = HtmlIntegrity.EMPTY_BODY
+        }
+
+        if (integrity.isOK) {
+            integrity = checkHtmlIntegrity(pageSource)
+        }
+
+        return integrity
+    }
+
+    protected fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
+        val p1 = pageSource.indexOf("<body")
+        if (p1 <= 0) return HtmlIntegrity.OTHER
+        val p2 = pageSource.indexOf(">", p1)
+        if (p2 < p1) return HtmlIntegrity.OTHER
+        // no any link, it's broken
+        val p3 = pageSource.indexOf("<a", p2)
+        if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
+
+        // TODO: optimize using region match
+        val bodyTag = pageSource.substring(p1, p2)
+        // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
+        val r = bodyTag.contains("data-error=\"0\"")
+        if (!r) {
+            return HtmlIntegrity.NO_JS_OK_FLAG
+        }
+
         return HtmlIntegrity.OK
     }
 
@@ -194,8 +237,12 @@ open class BrowserEmulatorHandlers(
             // Create symbolic link with an url based, unique, shorter but not readable file name,
             // we can generate and refer to this path at any place
             val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
-            Files.deleteIfExists(link)
-            Files.createSymbolicLink(link, path)
+            try {
+                Files.deleteIfExists(link)
+                Files.createSymbolicLink(link, path)
+            } catch (e: IOException) {
+                log.warn(e.toString())
+            }
 
             if (log.isTraceEnabled) {
                 // takeScreenshot(pageSource.length.toLong(), page, driver.driver as RemoteWebDriver)

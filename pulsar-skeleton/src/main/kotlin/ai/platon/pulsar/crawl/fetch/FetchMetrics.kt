@@ -1,10 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.MessageWriter
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -27,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 class FetchMetrics(
+        private val metricsManagement: MetricsManagement,
         private val messageWriter: MessageWriter,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
@@ -72,6 +70,7 @@ class FetchMetrics(
     private val successTasks0 = metricRegistry.counter(name(javaClass, "successTasks"))
     private val finishedTasks0 = metricRegistry.counter(name(javaClass, "finishedTasks"))
     private val contentBytes0 = metricRegistry.counter(name(javaClass, "contentBytes"))
+    private val contentBytes1 = metricRegistry.histogram(name(javaClass, "contentBytes1"))
 
     /**
      * The total all bytes received by the hardware at the application startup
@@ -161,11 +160,19 @@ class FetchMetrics(
         successTasks.incrementAndGet()
         successTasks0.inc()
 
-        contentBytes.addAndGet(page.contentBytes.toLong())
+        val bytes = page.contentBytes.toLong()
+        contentBytes.addAndGet(bytes)
+        contentBytes0.inc(bytes)
+        contentBytes1.update(bytes)
+
         val i = totalFinishedTasks.incrementAndGet()
         finishedTasks0.inc()
         if (i % 5 == 0) {
             updateNetworkTraffic()
+        }
+
+        if (log.isInfoEnabled && i % 20 == 0) {
+            log.info(formatTraffic())
         }
 
         val url = page.url

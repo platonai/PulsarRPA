@@ -65,9 +65,7 @@ class ProxyContext(
         var result: FetchResult
         var success = false
         try {
-            result = proxyManager.submitAnyway {
-                driverContext.submit(task, browseFun)
-            }
+            result = proxyManager.submitAnyway { driverContext.submit(task, browseFun) }
             success = result.response.status.isSuccess
         } catch (e: ProxyException) {
             log.warn(Strings.simplifyException(e))
@@ -137,20 +135,25 @@ open class BrowserPrivacyContext(
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
     private val closed = AtomicBoolean()
     private val closeLatch = CountDownLatch(1)
+    val isClosed get() = closed.get()
     val numServedTasks = AtomicInteger()
     val proxyContext = ProxyContext(driverManager, proxyManager, conf)
 
-    suspend fun submit(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return proxyContext.submit(task) { _, driver -> browseFun(task, driver) }
-    }
-
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen {
-            if (closed.get()) {
+            if (isClosed) {
                 FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.PRIVACY))
             } else {
                 proxyContext.run(task, browseFun).also { numServedTasks.incrementAndGet() }
             }
+        }
+    }
+
+    suspend fun submit(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        return if (isClosed) {
+            FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.PRIVACY))
+        } else {
+            proxyContext.submit(task, browseFun).also { numServedTasks.incrementAndGet() }
         }
     }
 

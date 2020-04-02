@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import org.apache.commons.io.FileUtils
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
+import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -91,7 +92,11 @@ class LoadingWebDriverPool(
         if (incognito) {
             // Force delete all browser data
             // TODO: delete data that might leak privacy only, cookies, sessions, local storage, etc
-            FileUtils.deleteDirectory(AppPaths.BROWSER_TMP_DIR.toFile())
+            try {
+                FileUtils.deleteDirectory(AppPaths.BROWSER_TMP_DIR.toFile())
+            } catch (e: IOException) {
+                log.warn(Strings.simplifyException(e))
+            }
         }
     }
 

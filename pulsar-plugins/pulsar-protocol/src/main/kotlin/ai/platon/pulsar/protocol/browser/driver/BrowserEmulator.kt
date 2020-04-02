@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.HTTP_FETCH_MAX_RETRY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -34,6 +33,7 @@ import kotlin.random.Random
  */
 open class BrowserEmulator(
         val privacyContextManager: PrivacyContextManager,
+        val browserEmulateEventHandler: BrowserEmulateEventHandler,
         val messageWriter: MessageWriter,
         val immutableConfig: ImmutableConfig
 ) : Parameterized, AutoCloseable {
@@ -48,7 +48,6 @@ open class BrowserEmulator(
     private val driverManager = privacyContextManager.driverManager
     private val driverControl = driverManager.driverControl
     private val driverPool = driverManager.driverPool
-    private val handlers = RobustBrowserEmulatorHandlers(driverPool, messageWriter, immutableConfig)
 
     init {
         sequencer.incrementAndGet()
@@ -58,7 +57,7 @@ open class BrowserEmulator(
     override fun getParams(): Params {
         return Params.of(
                 "instanceSequence", sequencer,
-                "charsetPattern", StringUtils.abbreviateMiddle(handlers.charsetPattern.toString(), "...", 200),
+                "charsetPattern", StringUtils.abbreviateMiddle(browserEmulateEventHandler.charsetPattern.toString(), "...", 200),
                 "pageLoadTimeout", driverControl.pageLoadTimeout,
                 "scriptTimeout", driverControl.scriptTimeout,
                 "scrollDownCount", driverControl.scrollDownCount,
@@ -73,8 +72,9 @@ open class BrowserEmulator(
      * @param task The task to fetch
      * @return The result of this fetch
      * @throws IllegalContextStateException Throw if the browser is closed or the program is closed
+     * @throws CancellationException Throw if the task is cancelled
      * */
-    @Throws(IllegalContextStateException::class)
+    @Throws(IllegalContextStateException::class, CancellationException::class)
     open fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         if (isClosed) {
             return FetchResult(task, ForwardingResponse.canceled(task.page))
@@ -88,6 +88,7 @@ open class BrowserEmulator(
         driverManager.cancel(task.url)
     }
 
+    @Throws(CancellationException::class)
     protected open fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         checkState()
 
@@ -101,13 +102,9 @@ open class BrowserEmulator(
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
-        } catch (e: ai.platon.pulsar.protocol.browser.driver.CancellationException) {
+        } catch (e: CancellationException) {
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
-        } catch (e: NoProxyException) {
-            log.warn("No proxy, will retry task in privacy context | {}", task.url)
-            exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
+            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             if (!isClosed) {
                 log.warn("Web driver session of #{} is closed | {}", driver.id, e.message)
@@ -139,12 +136,11 @@ open class BrowserEmulator(
         return FetchResult(task, response?:ForwardingResponse(exception, task.page), exception)
     }
 
-    @Throws(CancellationException::class)
     private fun browseWithMinorExceptionsHandled(task: FetchTask, driver: ManagedWebDriver): Response {
         checkState(task)
         checkState(driver)
 
-        val browseTask = BrowseTask(task, driver, driverControl)
+        val browseTask = NavigateTask(task, driver, driverControl)
 
         try {
             val result = navigateAndInteract(task, driver, browseTask.driverConfig)
@@ -153,6 +149,7 @@ open class BrowserEmulator(
             browseTask.status = result.protocolStatus
             browseTask.activeDomMessage = result.activeDomMessage
             browseTask.page.activeDomMultiStatus = browseTask.activeDomMessage?.multiStatus
+            // TODO: handle exceptions of pageSource api
             browseTask.pageSource = driver.pageSource
         } catch (e: org.openqa.selenium.ScriptTimeoutException) {
             // ignore script timeout, document might lost data, but it's the page extractor's responsibility
@@ -171,18 +168,18 @@ open class BrowserEmulator(
             browseTask.status = ProtocolStatus.retry(RetryScope.CRAWL)
         }
 
-        return handlers.onAfterBrowse(browseTask)
+        return browserEmulateEventHandler.onAfterNavigate(browseTask)
     }
 
     @Throws(CancellationException::class,
             IllegalContextStateException::class,
             IllegalClassException::class,
             WebDriverException::class)
-    private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): NavigateResult {
+    private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): InteractResult {
         checkState(driver)
         checkState(task)
 
-        handlers.logBeforeNavigate(task, driverConfig)
+        browserEmulateEventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -191,12 +188,12 @@ open class BrowserEmulator(
         driver.navigateTo(task.url)
 
         // blocking
-        return emulate(EmulateTask(task, driverConfig, driver))
+        return interact(InteractTask(task, driverConfig, driver))
     }
 
     @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
-    protected open fun emulate(task: EmulateTask): NavigateResult {
-        val result = NavigateResult(ProtocolStatus.STATUS_SUCCESS, null)
+    protected open fun interact(task: InteractTask): InteractResult {
+        val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
 
         runScriptTask(task, result) { jsCheckDOMState(task, result) }
 
@@ -212,20 +209,12 @@ open class BrowserEmulator(
     }
 
     @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
-    private fun runScriptTask(task: EmulateTask, result: NavigateResult, action: () -> Unit) {
-        if (task.isCanceled) {
-            // TODO: is it better to throw an exception?
-            result.protocolStatus = ProtocolStatus.STATUS_CANCELED
-            result.state = FlowState.BREAK
-            return
-        }
-
+    private fun runScriptTask(task: InteractTask, result: InteractResult, action: () -> Unit) {
         var status: ProtocolStatus? = null
 
         try {
             checkState(task.driver)
             checkState(task.fetchTask)
-
             action()
             result.state = FlowState.CONTINUE
         } catch (e: InterruptedException) {
@@ -281,14 +270,14 @@ open class BrowserEmulator(
     }
 
     @Throws(CancellationException::class)
-    protected open fun jsCheckDOMState(emulateTask: EmulateTask, result: NavigateResult) {
+    protected open fun jsCheckDOMState(interactTask: InteractTask, result: InteractResult) {
         checkState()
 
         var status = ProtocolStatus.STATUS_SUCCESS
-        val scriptTimeout = emulateTask.driverConfig.scriptTimeout
+        val scriptTimeout = interactTask.driverConfig.scriptTimeout
 
-        val fetchTask = emulateTask.fetchTask
-        val driver = emulateTask.driver.driver
+        val fetchTask = interactTask.fetchTask
+        val driver = interactTask.driver.driver
         val clock = Clock.systemDefaultZone()
         val sleeper = CancellableSleeper(fetchTask)
         val documentWait = FluentWait<WebDriver>(driver, clock, sleeper)
@@ -302,12 +291,14 @@ open class BrowserEmulator(
 
         // TODO: wait for expected data, ni, na, nnum, nst, etc; required element
         val expression = "__utils__.waitForReady($maxRound, $initialScroll)"
-        checkState(emulateTask.driver)
-        checkState(fetchTask)
 
         var message: Any? = null
         try {
-            message = documentWait.until { emulateTask.driver.evaluate(expression) }
+            message = documentWait.until {
+                checkState(interactTask.driver)
+                checkState(fetchTask)
+                interactTask.driver.evaluate(expression)
+            }
         } catch (e: org.openqa.selenium.TimeoutException) {
             status = ProtocolStatus.failed(ProtocolStatusCodes.SCRIPT_TIMEOUT)
             result.state = FlowState.BREAK
@@ -315,34 +306,34 @@ open class BrowserEmulator(
             checkState(fetchTask)
             if (message == null) {
                 if (!fetchTask.isCanceled) {
-                    log.warn("Unexpected script result (null) | {}", emulateTask.url)
+                    log.warn("Unexpected script result (null) | {}", interactTask.url)
                 }
             } else if (message == "timeout") {
-                log.debug("Hit max round $maxRound to wait for document | {}", emulateTask.url)
+                log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val errorResult = handlers.handleChromeError(message)
+                val errorResult = browserEmulateEventHandler.handleChromeError(message)
                 status = errorResult.status
                 result.activeDomMessage = errorResult.activeDomMessage
                 result.state = FlowState.BREAK
             } else {
-                log.trace("DOM is ready {} | {}", message.toString().substringBefore("urls"), emulateTask.url)
+                log.trace("DOM is ready {} | {}", message.toString().substringBefore("urls"), interactTask.url)
             }
         }
 
         result.protocolStatus = status
     }
 
-    protected open fun jsScrollDown(emulateTask: EmulateTask, result: NavigateResult) {
+    protected open fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
         checkState()
 
         val random = Random(System.currentTimeMillis())
-        val scrollDownCount = emulateTask.driverConfig.scrollDownCount.toLong() + random.nextInt(3) - 1
-        val scrollInterval = emulateTask.driverConfig.scrollInterval.plus(Duration.ofMillis(random.nextLong(1000)))
+        val scrollDownCount = interactTask.driverConfig.scrollDownCount.toLong() + random.nextInt(3) - 1
+        val scrollInterval = interactTask.driverConfig.scrollInterval.plus(Duration.ofMillis(random.nextLong(1000)))
         val scrollTimeout = scrollDownCount * scrollInterval.toMillis() + 3 * 1000
 
-        val driver = emulateTask.driver.driver
+        val driver = interactTask.driver.driver
         val clock = Clock.systemDefaultZone()
-        val sleeper = CancellableSleeper(emulateTask.fetchTask)
+        val sleeper = CancellableSleeper(interactTask.fetchTask)
         val scrollWait = FluentWait<WebDriver>(driver, clock, sleeper)
                 .withTimeout(Duration.ofMillis(scrollTimeout))
                 .pollingEvery(scrollInterval)
@@ -350,23 +341,23 @@ open class BrowserEmulator(
 
         try {
             val expression = "__utils__.scrollDownN($scrollDownCount)"
-            checkState(emulateTask.driver)
-            checkState(emulateTask.fetchTask)
-            scrollWait.until { emulateTask.driver.evaluate(expression) }
+            checkState(interactTask.driver)
+            checkState(interactTask.fetchTask)
+            scrollWait.until { interactTask.driver.evaluate(expression) }
         } catch (ignored: org.openqa.selenium.TimeoutException) {
 
         }
     }
 
-    protected open fun jsComputeFeature(emulateTask: EmulateTask, result: NavigateResult) {
-        checkState(emulateTask.driver)
-        checkState(emulateTask.fetchTask)
+    protected open fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
+        checkState(interactTask.driver)
+        checkState(interactTask.fetchTask)
 
-        val message = emulateTask.driver.evaluate("__utils__.compute()")
+        val message = interactTask.driver.evaluate("__utils__.compute()")
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
-                log.debug("{} | {}", result.activeDomMessage?.multiStatus, emulateTask.url)
+                log.debug("{} | {}", result.activeDomMessage?.multiStatus, interactTask.url)
             }
         }
     }
@@ -424,7 +415,7 @@ open class BrowserEmulator(
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw CancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
+            throw CancellationException("Task #${task.id} is canceled | ${task.url}")
         }
     }
 

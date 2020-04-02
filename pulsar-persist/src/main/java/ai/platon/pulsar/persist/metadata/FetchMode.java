@@ -21,9 +21,9 @@ public enum FetchMode {
      * */
     CROWD_SOURCING,
     /**
-     * Selenium or selenium compatible protocol
+     * Fetch every page using a real browser
      * */
-    SELENIUM,
+    BROWSER,
     /**
      * Choose the fetcher automatically
      * Not implemented

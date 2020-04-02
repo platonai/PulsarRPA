@@ -49,7 +49,7 @@ open class FetchComponent(
         val protocolFactory: ProtocolFactory,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
-    protected val log = LoggerFactory.getLogger(FetchComponent::class.java)
+    protected final val log = LoggerFactory.getLogger(FetchComponent::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
@@ -207,14 +207,14 @@ open class FetchComponent(
     }
 
     fun createFetchEntry(originalUrl: String, options: LoadOptions): WebPage {
-        return WebPage.newWebPage(originalUrl, options.shortenKey, options.volatileConfig).also {
-            it.fetchMode = options.fetchMode
-            it.options = options.toString()
-        }
+        return WebPage.newWebPage(originalUrl, options.shortenKey, options.volatileConfig)
+                .also { initFetchEntry(it, options) }
     }
 
-    fun initFetchEntry(page: WebPage, options: LoadOptions): WebPage {
-        return page.also {
+    fun initFetchEntry(page: WebPage, options: LoadOptions) {
+        page.also {
+            it.fetchMode = options.fetchMode
+            it.options = options.toString()
             it.volatileConfig = options.volatileConfig
             it.fetchMode = options.fetchMode
             it.options = options.toString()
@@ -238,7 +238,6 @@ open class FetchComponent(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            fetchMetrics.formatTraffic()
         }
     }
 

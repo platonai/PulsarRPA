@@ -240,7 +240,7 @@ class FetchTaskBatch(
         universalStat.totalSuccessBytes += result.response.length
         universalStat.numTasksSuccess++
 
-        privacyContext.informSuccess()
+        privacyContext.markSuccess()
 
         afterFetchN(headNode.universalSuccessPages)
     }
@@ -258,7 +258,7 @@ class FetchTaskBatch(
 
         if (result.status.isRetry(RetryScope.PRIVACY)) {
             privacyLeakedTasks.add(task)
-            privacyContext.informWarning()
+            privacyContext.markWarning()
         }
     }
 

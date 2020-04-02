@@ -102,7 +102,7 @@ class GenerateComponent(
     override fun setup(jobConf: ImmutableConfig) {
         crawlId = jobConf.get(CapabilityTypes.STORAGE_CRAWL_ID)
         batchId = jobConf.get(CapabilityTypes.BATCH_ID, AppConstants.ALL_BATCHES)
-        fetchMode = jobConf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.SELENIUM)
+        fetchMode = jobConf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.BROWSER)
 
         groupMode = jobConf.getEnum(CapabilityTypes.FETCH_QUEUE_MODE, GroupMode.BY_HOST)
         reGenerate = jobConf.getBoolean(CapabilityTypes.GENERATE_REGENERATE, false)

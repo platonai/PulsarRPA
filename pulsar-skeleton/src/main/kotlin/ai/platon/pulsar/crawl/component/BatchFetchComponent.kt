@@ -54,7 +54,7 @@ class BatchFetchComponent(
     fun parallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val protocol = protocolFactory.getProtocol(options.fetchMode)
                 ?: return parallelFetchAllGroupedBySchema(urls, options)
-        return parallelFetchAllInternal(urls, protocol, options)
+        return parallelFetchAll0(urls, protocol, options)
     }
 
     /**
@@ -72,7 +72,7 @@ class BatchFetchComponent(
         groupedUrls.forEach { (key, gUrls) ->
             val protocol = protocolFactory.getProtocol(key)
             if (protocol != null) {
-                pages.addAll(parallelFetchAllInternal(gUrls, protocol, options))
+                pages.addAll(parallelFetchAll0(gUrls, protocol, options))
             } else {
                 fetchMetrics.trackFailed(gUrls)
             }
@@ -101,7 +101,7 @@ class BatchFetchComponent(
      * If the protocol supports native parallel, use the protocol's native parallel fetch method,
      * Or else parallel fetch pages in a ExecutorService
      */
-    private fun parallelFetchAllInternal(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
+    private fun parallelFetchAll0(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         val optimizedUrls = optimizeBatchSize(urls, options)
         return if (protocol.supportParallel()) {
             protocolParallelFetchAll(optimizedUrls, protocol, options)

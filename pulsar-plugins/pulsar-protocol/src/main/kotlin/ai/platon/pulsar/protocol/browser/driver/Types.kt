@@ -11,7 +11,7 @@ import org.openqa.selenium.support.ui.Sleeper
 import java.time.Duration
 import java.time.Instant
 
-class BrowseTask(
+class NavigateTask(
         val task: FetchTask,
         val driver: ManagedWebDriver,
         val driverConfig: BrowserControl
@@ -28,13 +28,13 @@ class BrowseTask(
     var pageSource = ""
 }
 
-class NavigateResult(
+class InteractResult(
         var protocolStatus: ProtocolStatus,
         var activeDomMessage: ActiveDomMessage? = null,
         var state: FlowState = FlowState.CONTINUE
 )
 
-class EmulateTask(
+class InteractTask(
         val fetchTask: FetchTask,
         val driverConfig: BrowserControl,
         val driver: ManagedWebDriver

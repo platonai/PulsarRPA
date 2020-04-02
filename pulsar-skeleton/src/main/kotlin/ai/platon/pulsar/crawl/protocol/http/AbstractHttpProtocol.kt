@@ -223,7 +223,7 @@ abstract class AbstractHttpProtocol: Protocol {
     private fun setResponseTime(startTime: Instant, page: WebPage, response: Response) {
         val elapsedTime: Duration
         val pageFetchMode = page.fetchMode
-        elapsedTime = if (pageFetchMode == FetchMode.CROWD_SOURCING || pageFetchMode == FetchMode.SELENIUM) {
+        elapsedTime = if (pageFetchMode == FetchMode.CROWD_SOURCING || pageFetchMode == FetchMode.BROWSER) {
             val requestTime = NumberUtils.toLong(response.getHeader(HttpHeaders.Q_REQUEST_TIME), -1)
             val responseTime = NumberUtils.toLong(response.getHeader(HttpHeaders.Q_RESPONSE_TIME), -1)
             if (requestTime > 0 && responseTime > 0) {

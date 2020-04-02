@@ -64,4 +64,34 @@ object Systems {
             System.setProperty(key, value)
         }
     }
+
+    fun getProperty(propertyName: String, defaultValue: String): String = System.getProperty(propertyName, defaultValue)
+
+    fun getProperty(
+            propertyName: String,
+            defaultValue: Long,
+            minValue: Long = 1,
+            maxValue: Long = Long.MAX_VALUE
+    ): Long {
+        val value = System.getProperty(propertyName) ?: return defaultValue
+        val parsed = value.toLongOrNull()?: error("System property '$propertyName' has unrecognized value '$value'")
+        if (parsed !in minValue..maxValue) {
+            error("System property '$propertyName' should be in range $minValue..$maxValue, but is '$parsed'")
+        }
+        return parsed
+    }
+
+    fun getProperty(
+            propertyName: String,
+            defaultValue: Int,
+            minValue: Int = 1,
+            maxValue: Int = Int.MAX_VALUE
+    ): Int {
+        val value = System.getProperty(propertyName) ?: return defaultValue
+        val parsed = value.toIntOrNull()?: error("System property '$propertyName' has unrecognized value '$value'")
+        if (parsed !in minValue..maxValue) {
+            error("System property '$propertyName' should be in range $minValue..$maxValue, but is '$parsed'")
+        }
+        return parsed
+    }
 }

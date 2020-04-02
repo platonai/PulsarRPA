@@ -7,10 +7,9 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
-import org.jsoup.Connection
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.withLock
 
 /**
  * TODO: multiple context support
@@ -31,26 +30,21 @@ class PrivacyContextManager(
 
     val activeContext get() = getOrCreate()
 
-    suspend fun submit(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return activeContext.submit(task) { _, driver ->
-            fetchFun(task, driver)
-        }
-    }
-
     fun run(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen { run0(task, fetchFun) }
     }
 
+    suspend fun submit(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        // TODO: have synchronization bug
+        waitUntilFreezerChannelIsClosed()
+        return submit0(task, fetchFun)
+    }
+
     fun reset() {
         freeze {
-            if (activeContext.isPrivacyLeaked) {
-                synchronized(globalActiveContext) {
-                    if (activeContext.isPrivacyLeaked) {
-                        // we need to freeze all running tasks and reset driver pool and proxy
-                        globalActiveContext.get()?.use { it.close() }
-                        globalActiveContext.getAndSet(null)?.let { zombieContexts.add(it) }
-                    }
-                }
+            globalActiveContext.getAndSet(null)?.apply {
+                zombieContexts.add(this)
+                use { it.close() }
             }
         }
     }
@@ -59,37 +53,65 @@ class PrivacyContextManager(
         var result: FetchResult
 
         var i = 1
-        var retry = false
+        var retry: Boolean
         do {
-            if (activeContext.isPrivacyLeaked) {
-                // hung up all other tasks
-                reset()
-                task.reset()
+            beforeRun(task)
+            result = try {
+                activeContext.run(task) { _, driver -> fetchFun(task, driver) }
+            } catch (e: PrivacyLeakException) {
+                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.PRIVACY))
             }
-
-            result = activeContext.run(task) { _, driver ->
-                fetchFun(task, driver)
-            }
-
-            val response = result.response
-            if (response.status.isSuccess) {
-                activeContext.informSuccess()
-                retry = false
-            } else if (response.status.isRetry(RetryScope.PRIVACY)) {
-                activeContext.informWarning()
-                retry = activeContext.isPrivacyLeaked
-            }
+            retry = afterRun(task, result)
         } while (retry && i++ <= maxRetry)
 
         return result
     }
 
+    private suspend fun submit0(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        var result: FetchResult
+
+        var i = 1
+        var retry: Boolean
+        do {
+            beforeRun(task)
+            result = try {
+                activeContext.submit(task) { _, driver -> fetchFun(task, driver) }
+            } catch (e: PrivacyLeakException) {
+                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.PRIVACY))
+            }
+            retry = afterRun(task, result)
+        } while (retry && i++ <= maxRetry)
+
+        return result
+    }
+
+    private fun beforeRun(task: FetchTask) {
+        if (activeContext.isPrivacyLeaked) {
+            // hung up all other tasks
+            reset()
+            task.reset()
+        }
+    }
+
+    /**
+     * Handle when after run
+     * @return true if privacy is leaked
+     * */
+    private fun afterRun(task: FetchTask, result: FetchResult): Boolean {
+        val status = result.response.status
+        return when {
+            status.isRetry(RetryScope.PRIVACY) -> activeContext.markWarning().let { true }
+            status.isSuccess -> activeContext.markSuccess().let { false }
+            else -> false
+        }
+    }
+
     private fun getOrCreate(): BrowserPrivacyContext {
-        synchronized(globalActiveContext) {
+        return whenUnfrozen {
             if (globalActiveContext.get() == null) {
                 globalActiveContext.set(BrowserPrivacyContext(driverManager, proxyManager, immutableConfig))
             }
-            return globalActiveContext.get()
+            globalActiveContext.get()
         }
     }
 }

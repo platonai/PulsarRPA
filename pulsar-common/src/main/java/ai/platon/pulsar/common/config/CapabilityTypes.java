@@ -168,6 +168,8 @@ public interface CapabilityTypes {
      * Fetch parameters
      */
     String FETCH_MODE = "fetch.fetch.mode";
+    String FETCH_WORKER_NAME_PREFIX = "fetch.worker.name.prefix";
+    // In browser fetch mode, the fetch concurrency depends on the number of process of browsers which is the most critical resource
     String FETCH_CONCURRENCY = "fetch.concurrency";
 
     String FETCH_CRAWL_PATH_STRATEGY = "fetch.crawl.path.strategy";

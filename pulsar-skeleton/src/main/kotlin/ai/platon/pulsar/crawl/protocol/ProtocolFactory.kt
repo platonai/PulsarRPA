@@ -24,12 +24,10 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.function.Consumer
 import java.util.stream.Collectors
 
 /**
@@ -51,10 +49,10 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
     fun getProtocol(page: WebPage): Protocol {
         var mode = page.fetchMode
         if (mode == null || mode == FetchMode.UNKNOWN) {
-            mode = FetchMode.SELENIUM
+            mode = FetchMode.BROWSER
         }
         return when (mode.also { page.fetchMode = it }) {
-            FetchMode.SELENIUM -> getProtocol("selenium:" + page.url)
+            FetchMode.BROWSER -> getProtocol("selenium:" + page.url)
             FetchMode.CROWD_SOURCING -> getProtocol("crowd:" + page.url)
             else -> getProtocol(page.url)
         }?:throw ProtocolNotFound(page.url)

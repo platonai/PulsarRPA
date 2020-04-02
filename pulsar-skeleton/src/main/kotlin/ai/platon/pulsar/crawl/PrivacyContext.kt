@@ -7,13 +7,13 @@ abstract class PrivacyContext: AutoCloseable, Freezable() {
     val privacyLeakWarnings = AtomicInteger()
     val isPrivacyLeaked get() = privacyLeakWarnings.get() > 3
 
-    fun informSuccess() {
+    fun markSuccess() {
         if (privacyLeakWarnings.get() > 0) {
             privacyLeakWarnings.decrementAndGet()
         }
     }
 
-    fun informWarning() {
+    fun markWarning() {
         privacyLeakWarnings.incrementAndGet()
     }
 }

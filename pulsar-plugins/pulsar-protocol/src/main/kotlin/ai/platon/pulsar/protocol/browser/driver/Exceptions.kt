@@ -2,7 +2,20 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.persist.ProtocolStatus
 
-class CancellationException: Exception {
+class CancellationException: IllegalStateException {
+    constructor() : super() {}
+
+    constructor(message: String) : super(message) {
+    }
+
+    constructor(message: String, cause: Throwable) : super(message, cause) {
+    }
+
+    constructor(cause: Throwable) : super(cause) {
+    }
+}
+
+class PrivacyLeakException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {
