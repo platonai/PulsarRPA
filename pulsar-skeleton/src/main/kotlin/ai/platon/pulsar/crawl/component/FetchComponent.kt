@@ -84,6 +84,7 @@ open class FetchComponent(
      * @return The fetch result
      */
     fun fetchContent(page: WebPage): WebPage {
+        require(page.isNotInternal) { "Internal page ${page.url}" }
         return page.takeIf { isClosed } ?: fetchContent0(page)
     }
 

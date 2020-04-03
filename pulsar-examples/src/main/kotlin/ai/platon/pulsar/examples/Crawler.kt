@@ -52,10 +52,6 @@ open class Crawler(
 
     val i = PulsarContext.createSession()
 
-    init {
-        System.setProperty(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(5).toString())
-    }
-
     fun load(url: String, args: String) {
         load(url, LoadOptions.parse(args))
     }

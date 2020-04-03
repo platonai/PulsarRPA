@@ -6,11 +6,6 @@ class AmazonAccess: Crawler() {
     private val url = "https://www.amazon.com/"
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
 
-    init {
-//        driverPool.imagesEnabled = false
-//        driverPool.headless = true
-    }
-
     fun load() {
         // TODO: click event support is required
         // click-and-select using javascript

@@ -47,6 +47,7 @@ class LoadComponent(
         val messageWriter: MessageWriter
 ): AutoCloseable {
     companion object {
+        private const val VAR_REFRESH = "refresh"
         private val globalFetchingUrls = ConcurrentSkipListSet<String>()
     }
 
@@ -229,9 +230,10 @@ class LoadComponent(
 
     private fun load0(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
-        if (page.hasVar("refresh")) {
+        if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
+                require(page.isNotInternal) { "Internal page ${page.url}" }
                 fetchComponent.fetchContent(page)
             } finally {
                 afterFetch(page, normUrl.options)
@@ -242,9 +244,10 @@ class LoadComponent(
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
-        if (page.hasVar("refresh")) {
+        if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
+                require(page.isNotInternal) { "Internal page ${page.url}" }
                 fetchComponent.fetchContentDeferred(page)
             } finally {
                 afterFetch(page, normUrl.options)
@@ -269,15 +272,22 @@ class LoadComponent(
             return WebPage.NIL
         }
 
-        val page = webDb.getOrNil(url, options.ignoreQuery)
+        var page = webDb.getOrNil(url, options.ignoreQuery)
         val reason = getFetchReason(page, options)
+        if (page.isNil) {
+            page = fetchComponent.createFetchEntry(url, options)
+        }
+
         tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
             return redirect(page, options)
         }
 
-        page.variables["refresh"] = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
+        val refresh = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
                 || reason == FetchReason.SMALL_CONTENT || reason == FetchReason.MISS_FIELD
+        if (refresh) {
+            page.variables[VAR_REFRESH] = refresh
+        }
 
         return page
     }

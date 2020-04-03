@@ -306,6 +306,14 @@ public class WebPage {
         return variables.contains(name);
     }
 
+    public boolean getAndRemoveVar(String name) {
+        boolean exist = variables.contains(name);
+        if (exist) {
+            variables.remove(name);
+        }
+        return exist;
+    }
+
     @Nullable
     public VolatileConfig getVolatileConfig() {
         return volatileConfig;

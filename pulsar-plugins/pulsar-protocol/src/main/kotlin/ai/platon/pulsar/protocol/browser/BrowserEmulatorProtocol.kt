@@ -62,6 +62,8 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
     }
 
     override suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response? {
+        require(page.isNotInternal) { "Internal page ${page.url}" }
+
         return try {
             val response = super.getResponse(url, page, followRedirects)
             if (response != null) {

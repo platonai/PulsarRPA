@@ -63,11 +63,15 @@ public class Variables {
         variables.put(name, value);
     }
 
-    public void remove(Name name) {
-        remove(name.text());
+    public Object remove(Name name) {
+        return remove(name.text());
     }
 
-    public void remove(String name) {
-        variables.remove(name);
+    public Object remove(String name) {
+        Object value = variables.get(name);
+        if (value != null) {
+            variables.remove(name);
+        }
+        return value;
     }
 }

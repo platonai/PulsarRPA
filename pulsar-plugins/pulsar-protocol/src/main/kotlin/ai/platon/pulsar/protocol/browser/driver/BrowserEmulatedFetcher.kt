@@ -99,12 +99,9 @@ class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     suspend fun fetchContentDeferred(page: WebPage): Response {
-        if (closed.get()) {
-            return ForwardingResponse.canceled(page)
-        }
+        require(page.isNotInternal) { "Internal page ${page.url}" }
 
-        if (page.isInternal) {
-            log.warn("Unexpected internal page")
+        if (closed.get()) {
             return ForwardingResponse.canceled(page)
         }
 
