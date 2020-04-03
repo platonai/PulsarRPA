@@ -155,22 +155,6 @@ object Queries {
         }.filterNotNull()
     }
 
-    fun getAnchors(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<Anchor> {
-        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-        return ele.select(cssQuery, offset, limit).mapNotNull {
-            it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
-                    ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(),
-                            it.left, it.top, it.width, it.height) }
-        }
-    }
-
-    fun getImages(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val cssQuery = appendSelectorIfMissing(restrictCss, "img")
-        return ele.select(cssQuery, offset, limit) {
-            it.absUrl("src").takeIf { Urls.isValidUrl(it) }
-        }.filterNotNull()
-    }
-
     fun getFeatures(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<RealVector> {
         return ele.select(restrictCss, offset, limit) { it.features }
     }

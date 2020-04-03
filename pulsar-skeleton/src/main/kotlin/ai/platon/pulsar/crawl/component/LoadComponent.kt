@@ -155,6 +155,7 @@ class LoadComponent(
             val reason = getFetchReason(page, opt)
             tracer?.trace("Fetch reason: {} | {} {}", FetchReason.toString(reason), url, opt)
             val status = page.protocolStatus
+
             when (reason) {
                 FetchReason.NEW_PAGE,
                 FetchReason.EXPIRED,

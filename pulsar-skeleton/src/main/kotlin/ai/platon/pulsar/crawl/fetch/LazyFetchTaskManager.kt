@@ -45,6 +45,10 @@ class LazyFetchTaskManager(
         urlTrackerIndexer.getAll(FAILED_URLS_PAGE).mapTo(failedUrls) { it.toString() }
         urlTrackerIndexer.getAll(DEAD_URLS_PAGE).mapTo(deadUrls) { it.toString() }
 
+        timeoutUrls.clear()
+        failedUrls.clear()
+        deadUrls.clear()
+
         params.withLogger(log).info(true)
     }
 

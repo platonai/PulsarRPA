@@ -96,11 +96,12 @@ public class WebPage {
      */
     private GWebPage page;
     /**
-     * Object scope configuration
+     * Web page scope configuration
      */
     private VolatileConfig volatileConfig;
     /**
-     * Object scope variables
+     * Web page scope variables
+     * TODO : we may use it a new CrawlContext to track all context scope variables
      */
     private Variables variables = new Variables();
 

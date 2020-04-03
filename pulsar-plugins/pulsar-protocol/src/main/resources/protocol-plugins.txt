@@ -4,5 +4,5 @@
 # file ai.platon.pulsar.protocol.file.File
 
 # Custom protocols
-selenium ai.platon.pulsar.protocol.browser.BrowserEmulatorProtocol custom=true
+browser ai.platon.pulsar.protocol.browser.BrowserEmulatorProtocol custom=true
 crowd ai.platon.pulsar.protocol.crowd.ForwardingProtocol custom=true

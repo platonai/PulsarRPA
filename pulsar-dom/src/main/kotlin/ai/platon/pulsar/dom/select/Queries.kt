@@ -1,7 +1,9 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.TraverseState
-import ai.platon.pulsar.dom.nodes.node.ext.sequence
+import ai.platon.pulsar.dom.nodes.node.ext.*
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
@@ -244,4 +246,20 @@ fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     }
 
     return q
+}
+
+fun Element.getAnchors(restrictCss: String, offset: Int = 0, limit: Int = Int.MAX_VALUE): Collection<Anchor> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+    return select(cssQuery, offset, limit).mapNotNull {
+        it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
+                ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(),
+                        it.left, it.top, it.width, it.height) }
+    }
+}
+
+fun Element.getImages(restrictCss: String, offset: Int = 0, limit: Int = Int.MAX_VALUE): Collection<String> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "img")
+    return select(cssQuery, offset, limit) {
+        it.absUrl("src").takeIf { Urls.isValidUrl(it) }
+    }.filterNotNull()
 }

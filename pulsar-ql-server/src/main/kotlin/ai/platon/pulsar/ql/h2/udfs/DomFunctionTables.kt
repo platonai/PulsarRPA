@@ -5,6 +5,7 @@ import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
+import ai.platon.pulsar.dom.select.getAnchors
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -125,7 +126,7 @@ object DomFunctionTables {
         }
 
         val doc = session.loadAndParse(portalUrl)
-        val anchors = Queries.getAnchors(doc.document, restrictCss, offset, limit)
+        val anchors = doc.document.getAnchors(restrictCss, offset, limit)
 
         return toResultSet(anchors)
     }

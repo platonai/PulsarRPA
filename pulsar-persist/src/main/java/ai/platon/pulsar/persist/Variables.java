@@ -13,7 +13,6 @@ public class Variables {
 
     /**
      * Temporary variables used in the process stream, all temporary fields will not persist to storage
-     * TODO : we may use it a new CrawlContext to track all context scope variables
      */
     private Map<String, Object> variables = new HashMap<>();
 
