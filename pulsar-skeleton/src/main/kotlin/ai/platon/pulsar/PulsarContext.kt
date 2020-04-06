@@ -18,6 +18,8 @@ import ai.platon.pulsar.persist.WebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import java.net.URL
+import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -73,11 +75,11 @@ class PulsarContext private constructor(): AutoCloseable {
     /**
      * Registered closeables, will be closed by Pulsar object
      * */
-    private val closableObjects = mutableListOf<AutoCloseable>()
+    private val closableObjects = ConcurrentSkipListSet<AutoCloseable>()
     /**
      * All open sessions
      * */
-    val sessions = mutableMapOf<Int, PulsarSession>()
+    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
     /**
      * Url normalizers
      * */

@@ -13,6 +13,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import io.netty.util.concurrent.Future
+import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -187,7 +188,7 @@ class FetchTaskBatch(
     /**
      * The submitted tasks in the sub context
      * */
-    val workingTasks = mutableMapOf<FetchTask, Future<FetchResult>>()
+    val workingTasks = mutableMapOf<FetchTask, Deferred<FetchResult>>()
     /**
      * The finished tasks in the sub context
      * */
@@ -249,6 +250,8 @@ class FetchTaskBatch(
     fun checkState(): State {
         return when {
             numTasksDone >= batchSize -> State.ALL_DONE
+            // Since the urls in the batch are usually in the same domain
+            // if there are too many failure, the rest tasks are very likely run to failure too
             numTasksFailed > numAllowedFailures -> State.TOO_MANY_FAILURE
             idleSeconds > idleTimeout.seconds -> State.IDLE_TIMEOUT
             connectionLost -> State.CONNECTION_LOST

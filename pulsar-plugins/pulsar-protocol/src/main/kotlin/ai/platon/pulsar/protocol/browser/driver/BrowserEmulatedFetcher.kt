@@ -19,12 +19,15 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.protocol.browser.driver.async.AsyncBrowserEmulator
 import io.netty.util.concurrent.EventExecutorGroup
 import io.netty.util.concurrent.Future
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
+import org.h2tools.dev.util.ConcurrentLinkedList
 import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Callable
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToLong
@@ -35,7 +38,6 @@ import kotlin.math.roundToLong
  */
 class BrowserEmulatedFetcher(
         val privacyContextManager: PrivacyContextManager,
-        private val executor: EventExecutorGroup,
         private val browserEmulator: BrowserEmulator,
         private val asyncBrowserEmulator: AsyncBrowserEmulator,
         private val immutableConfig: ImmutableConfig
@@ -45,6 +47,8 @@ class BrowserEmulatedFetcher(
     private val driverManager = privacyContextManager.driverManager
     private val proxyManager = driverManager.proxyManager
     private val closed = AtomicBoolean()
+    private val isClosed get() = closed.get()
+    private val isAlive get() = !isClosed
 
     fun fetch(url: String): Response {
         return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -100,8 +104,7 @@ class BrowserEmulatedFetcher(
      * */
     suspend fun fetchContentDeferred(page: WebPage): Response {
         require(page.isNotInternal) { "Internal page ${page.url}" }
-
-        if (closed.get()) {
+        if (isClosed) {
             return ForwardingResponse.canceled(page)
         }
 
@@ -191,22 +194,37 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetch(batch: FetchTaskBatch) {
-        // Submit all tasks
-        batch.pages.forEachIndexed { i, page ->
-            val task = FetchTask(
-                    batchId = batch.batchId,
-                    batchTaskId = 1 + i,
-                    priority = batch.priority,
-                    page = page,
-                    volatileConfig = batch.conf,
-                    batchSize = batch.batchSize
-            )
+        GlobalScope.launch {
+            // Submit all tasks
+            batch.pages.forEachIndexed { i, page ->
+                val task = FetchTask(
+                        batchId = batch.batchId,
+                        batchTaskId = 1 + i,
+                        priority = batch.priority,
+                        page = page,
+                        volatileConfig = batch.conf,
+                        batchSize = batch.batchSize
+                )
 
-            batch.workingTasks[task] = executor.submit(Callable { doFetch(task, batch) })
+                batch.workingTasks[task] = async { parallelFetch0(task, batch) }
+            }
         }
 
-        // Since the urls in the batch are usually in the same domain
-        // if there are too many failure, the rest tasks are very likely run to failure too
+//        var i = 0
+//        batch.pages.asFlow().map { page ->
+//            ++i
+//            val task = FetchTask(
+//                    batchId = batch.batchId,
+//                    batchTaskId = 1 + i,
+//                    priority = batch.priority,
+//                    page = page,
+//                    volatileConfig = batch.conf,
+//                    batchSize = batch.batchSize
+//            )
+//
+//            parallelFetch0(task, batch)
+//        }
+
         var state: FetchTaskBatch.State
         do {
             ++batch.round
@@ -214,9 +232,9 @@ class BrowserEmulatedFetcher(
             var numDone = 0
             val it = batch.workingTasks.iterator()
             while (it.hasNext()) {
-                val (task, future) = it.next()
-                if (future.isDone) {
-                    handleTaskDone(task, future, batch)
+                val (task, deferred) = it.next()
+                if (deferred.isCompleted) {
+                    handleTaskDone(task, deferred, batch)
                     ++numDone
                     it.remove()
                 }
@@ -228,11 +246,7 @@ class BrowserEmulatedFetcher(
                 logIdleLongTime(batch)
             }
 
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
+            TimeUnit.SECONDS.sleep(1)
 
             state = checkState(batch)
         } while (state == FetchTaskBatch.State.RUNNING)
@@ -244,7 +258,7 @@ class BrowserEmulatedFetcher(
 
     private fun checkState(batch: FetchTaskBatch): FetchTaskBatch.State {
         return when {
-            closed.get() -> FetchTaskBatch.State.CLOSED
+            isClosed -> FetchTaskBatch.State.CLOSED
             Thread.currentThread().isInterrupted -> FetchTaskBatch.State.INTERRUPTED
             privacyContextManager.activeContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
             else -> batch.checkState()
@@ -260,11 +274,11 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun doFetch(task: FetchTask, batch: FetchTaskBatch): FetchResult {
-        return privacyContextManager.activeContext.run(task) { _, driver ->
+    private suspend fun parallelFetch0(task: FetchTask, batch: FetchTaskBatch): FetchResult {
+        return privacyContextManager.activeContext.submit(task) { _, driver ->
             try {
                 batch.beforeFetch(task.page)
-                browserEmulator.fetch(task, driver)
+                asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
                 log.info("Illegal context state, the task is cancelled | {}", task.url)
                 FetchResult(task, ForwardingResponse.canceled(task.page))
@@ -277,10 +291,10 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun handleTaskDone(task: FetchTask, future: Future<FetchResult>, batch: FetchTaskBatch): FetchResult {
+    private fun handleTaskDone(task: FetchTask, deferred: Deferred<FetchResult>, batch: FetchTaskBatch): FetchResult {
         val url = task.url
         try {
-            val result = waitFor(task, future, batch.threadTimeout)
+            val result = deferred.getCompleted()
 
             val elapsed = Duration.ofSeconds(batch.round)
             val response = result.response
@@ -315,19 +329,14 @@ class BrowserEmulatedFetcher(
         val timeout = Duration.ofMinutes(2).seconds
         while (batch.workingTasks.isNotEmpty() && tick++ < timeout) {
             checkAndHandleTasksAbort(batch)
-
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
+            TimeUnit.SECONDS.sleep(1)
         }
 
         // Finally, if there are still working tasks, force abort the worker threads
         if (batch.workingTasks.isNotEmpty()) {
             log.warn("There are still {} working tasks, cancel worker threads", batch.numWorkingTasks)
             batch.workingTasks.forEach {
-                it.value.cancel(true)
+                it.value.cancel()
             }
 
             checkAndHandleTasksAbort(batch)
@@ -342,47 +351,18 @@ class BrowserEmulatedFetcher(
     private fun checkAndHandleTasksAbort(batch: FetchTaskBatch) {
         val it = batch.workingTasks.iterator()
         while (it.hasNext()) {
-            val (task, future) = it.next()
-            if (future.isDone) {
-                handleTaskAbort(task, future, batch)
+            val (task, deferred) = it.next()
+            if (deferred.isCompleted) {
+                handleTaskAbort(task, deferred, batch)
                 it.remove()
             }
         }
     }
 
-    private fun handleTaskAbort(task: FetchTask, future: Future<FetchResult>, batch: FetchTaskBatch): FetchResult {
-        val result = waitFor(task, future, batch.threadTimeout)
+    private fun handleTaskAbort(task: FetchTask, deferred: Deferred<FetchResult>, batch: FetchTaskBatch): FetchResult {
+        val result = deferred.getCompleted()
         batch.onAbort(task, result)
         return result
-    }
-
-    private fun waitFor(task: FetchTask, future: Future<FetchResult>, timeout: Duration): FetchResult {
-        // used only for failure
-        val status: ProtocolStatus
-        val headers = MultiMetadata()
-
-        try {
-            // Wait if necessary for at most the given time for the computation
-            // to complete, and then retrieves its result, if available.
-            return future.get(timeout.seconds, TimeUnit.SECONDS)
-        } catch (e: java.util.concurrent.CancellationException) {
-            // log.debug("Fetch thread for task #{}/{} is canceled | {}", task.batchTaskId, task.batchId, task.url)
-            status = ProtocolStatus.STATUS_CANCELED
-        } catch (e: java.util.concurrent.TimeoutException) {
-            log.warn("Timeout when retrieve task result", e)
-            status = ProtocolStatus.failed(ProtocolStatusCodes.THREAD_TIMEOUT)
-        } catch (e: java.util.concurrent.ExecutionException) {
-            log.warn("Failed to get the fetch result", e)
-            status = ProtocolStatus.retry(RetryScope.CRAWL)
-        } catch (e: InterruptedException) {
-            log.warn("Interrupted when retrieve task result", e)
-            status = ProtocolStatus.retry(RetryScope.CRAWL)
-        } catch (e: Exception) {
-            log.warn("Unexpected exception", e)
-            status = ProtocolStatus.STATUS_EXCEPTION
-        }
-
-        return FetchResult(task, ForwardingResponse("", status, headers, task.page))
     }
 
     private fun logBeforeBatchStart(batch: FetchTaskBatch) {

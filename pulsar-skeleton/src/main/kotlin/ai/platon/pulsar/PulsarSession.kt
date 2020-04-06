@@ -122,14 +122,6 @@ open class PulsarSession(
         }
     }
 
-    suspend fun loadDeferred(url: NormUrl): WebPage {
-        ensureAlive()
-
-        initOptions(url.options)
-        val page = if (enableCache) getCachedOrLoad(url) else null
-        return page?:context.loadDeferred(url)
-    }
-
     /**
      * Load a url with specified options
      *
@@ -141,6 +133,19 @@ open class PulsarSession(
         ensureAlive()
         val normUrl = normalize(url, options)
         return load(normUrl)
+    }
+
+    suspend fun loadDeferred(url: String): WebPage {
+        ensureAlive()
+        return loadDeferred(normalize(url))
+    }
+
+    suspend fun loadDeferred(url: NormUrl): WebPage {
+        ensureAlive()
+
+        initOptions(url.options)
+        val page = if (enableCache) getCachedOrLoad(url) else null
+        return page?:context.loadDeferred(url)
     }
 
     suspend fun loadDeferred(url: String, options: LoadOptions): WebPage {

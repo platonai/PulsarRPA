@@ -33,12 +33,12 @@ class FetchLoop(
     }
 
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)
-
     @Volatile
     private var lastWorkingPoolId: PoolId? = null
     private val closed = AtomicBoolean(false)
     private val concurrency = conf.getInt(FETCH_CONCURRENCY, NCPU).coerceAtLeast(2)
     private val numRunning = AtomicInteger()
+    private val isAlive get() = !fetchMonitor.missionComplete && !closed.get()
 
     fun start() {
         val loop = this
@@ -46,21 +46,18 @@ class FetchLoop(
         GlobalScope.launch {
             fetchMonitor.registerFetchLoop(loop)
 
-            while (!fetchMonitor.missionComplete && !closed.get()) {
-                while (numRunning.get() >= concurrency) {
-                    delay(1000)
+            while (isAlive) {
+                numRunning.incrementAndGet()
+                launch(Dispatchers.Default + CoroutineName("w")) {
+                    try {
+                        schedule()?.let { fetch(it) }
+                    } finally {
+                        numRunning.decrementAndGet()
+                    }
                 }
 
-                while (numRunning.get() < concurrency && !fetchMonitor.missionComplete && !closed.get()) {
-                    numRunning.incrementAndGet()
-
-                    launch(Dispatchers.Default + CoroutineName("w")) {
-                        try {
-                            schedule()?.let { fetch(it) }
-                        } finally {
-                            numRunning.decrementAndGet()
-                        }
-                    }
+                while (isAlive && numRunning.get() >= concurrency) {
+                    delay(1000)
                 }
             }
 
