@@ -51,12 +51,6 @@ class TaskMonitor(
      * Tracking access thread for each each pool
      */
     private val poolServedThreads = TreeMultimap.create<String, String>()
-    /**
-     * Task counters
-     */
-    val numReadyTasks = AtomicInteger(0)
-    val numPendingTasks = AtomicInteger(0)
-    val numFinishedTasks = AtomicInteger(0)
 
     private var groupMode = conf.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     /**
@@ -86,6 +80,13 @@ class TaskMonitor(
     private val closed = AtomicBoolean()
 
     val numTaskPools get() = taskPools.size
+    /**
+     * Task counters
+     */
+    val numReadyTasks = AtomicInteger(0)
+    val numPendingTasks = AtomicInteger(0)
+    val numFinishedTasks = AtomicInteger(0)
+    val numTasks get() = numReadyTasks.get() + numPendingTasks.get()
 
     override fun setup(jobConf: ImmutableConfig) {
         // TODO: just parse from command line
@@ -294,7 +295,7 @@ class TaskMonitor(
     fun trackHostGone(url: String) {
         val isGone = fetchMetrics.trackHostGone(url)
         if (isGone) {
-            retune(true)
+            tune(true)
         }
     }
 
@@ -308,18 +309,10 @@ class TaskMonitor(
      * @param force reload all pending fetch items immediately
      */
     @Synchronized
-    internal fun retune(force: Boolean) {
-        val unreachablePools = taskPools.filter { fetchMetrics.isGone(it.host) }
-
-        unreachablePools.forEach { retire(it) }
-        taskPools.forEach { it.retune(force) }
-
-        if (unreachablePools.isNotEmpty()) {
-            val report = unreachablePools
-                    .joinToString (", ", "Retired unavailable pools : ") { it.id.toString() }
-            log.info(report)
+    internal fun tune(force: Boolean) {
+        taskPools.filter { fetchMetrics.isGone(it.host) }.onEach { retire(it) }.takeIf { it.isNotEmpty() }?.let { pool ->
+            pool.joinToString (", ", "Unavailable pools : ") { it.id.toString() }.let { log.info(it) }
         }
-
         calculateTaskCounter()
     }
 
@@ -355,7 +348,7 @@ class TaskMonitor(
                     "PendingTasks", pool.pendingCount,
                     "FinishedTasks", pool.finishedCount,
                     "SlowTasks", pool.slowTaskCount,
-                    "Throughput, ", df.format(pool.averageTimeCost) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s"
+                    "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s"
             ).withLogger(log).info(true)
 
             return 0
@@ -375,7 +368,7 @@ class TaskMonitor(
                 "PendingTasks", pool.pendingCount,
                 "FinishedTasks", pool.finishedCount,
                 "SlowTasks", pool.slowTaskCount,
-                "Throughput, ", df.format(pool.averageTimeCost) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s",
+                "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s",
                 "Deleted", deleted).withLogger(log).info(true)
 
         return deleted
@@ -429,10 +422,6 @@ class TaskMonitor(
         }
 
         return deleted
-    }
-
-    fun taskCount(): Int {
-        return numReadyTasks.get() + numPendingTasks.get()
     }
 
     private fun calculateTaskCounter() {
@@ -506,7 +495,7 @@ class TaskMonitor(
     }
 
     private fun reportCost() {
-        var report = "Top slow hosts : \n" + taskPools.costReport
+        var report = "Top slow hosts : \n" + taskPools.timeReport
         report += "\n"
         log.info(report)
     }

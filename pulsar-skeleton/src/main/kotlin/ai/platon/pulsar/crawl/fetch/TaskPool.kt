@@ -5,16 +5,16 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.fetch.data.PoolId
-import com.google.common.collect.Lists
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import org.slf4j.LoggerFactory
 import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
-import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * This class handles FetchItems which come from the same host ID (be it
+ * This class handles FetchTasks which come from the same host ID (be it
  * a proto/hostname or proto/IP pair).
  *
  * It also keeps track of requests in progress and elapsed time between requests.
@@ -34,11 +34,11 @@ class TaskPool(val id: PoolId,
     private val log = LoggerFactory.getLogger(TaskPool::class.java)
 
     /** Hold all tasks ready to fetch  */
-    private val readyTasks = LinkedList<JobFetchTask>()
+    private val readyTasks = ConcurrentLinkedQueue<JobFetchTask>()
     /** Hold all tasks are fetching  */
-    private val pendingTasks = TreeMap<Int, JobFetchTask>()
+    private val pendingTasks = ConcurrentHashMap<Int, JobFetchTask>()
     /** If a task costs more then this duration, it's a slow task  */
-    private val slowTaskThreshold = Duration.ofMillis(500)
+    private val slowTaskThreshold = Duration.ofMinutes(2)
     /** Record timing cost of slow tasks  */
     private val slowTasksRecorder = CircularFifoQueue<Duration>(RECENT_TASKS_COUNT_LIMIT)
 
@@ -67,12 +67,12 @@ class TaskPool(val id: PoolId,
     val readyCount: Int get() = readyTasks.size
     val pendingCount: Int get() = pendingTasks.size
     val finishedCount: Int get() = totalFinishedTasks
-    val slowTaskCount: Int get() = slowTasksRecorder.size
+    val slowTaskCount: Int get() = synchronized(slowTasksRecorder) { slowTasksRecorder.size }
 
     /**
      * Average cost in seconds
      */
-    val averageTimeCost: Double get() = totalFetchMillis.toDouble() / 1000.0 / totalFinishedTasks.toDouble()
+    val averageTime: Double get() = totalFetchMillis.toDouble() / 1000.0 / totalFinishedTasks.toDouble()
     val averageRecentTimeCost: Double get() = recentFetchMillis.toDouble() / 1000.0 / recentFinishedTasks.toDouble()
     /**
      * Throughput rate in seconds
@@ -80,9 +80,9 @@ class TaskPool(val id: PoolId,
     val averageThoRate: Double get() = totalFinishedTasks / (totalFetchMillis / 1000.0)
     val averageRecentThoRate: Double get() = recentFinishedTasks / (recentFetchMillis / 1000.0)
 
-    val costReport: String
+    val timeReport: String
         get() = String.format("%1$40s -> aveTimeCost : %2$.2fs/p, avaThoRate : %3$.2fp/s",
-                id, averageTimeCost, averageThoRate)
+                id, averageTime, averageThoRate)
 
     enum class Status {
         ACTIVITY, INACTIVITY, RETIRED
@@ -101,7 +101,7 @@ class TaskPool(val id: PoolId,
                 "minCrawlDelay", minCrawlDelay,
                 "now", DateTimes.now(),
                 "nextFetchTime", DateTimes.format(nextFetchTime),
-                "aveTimeCost(s)", df.format(averageTimeCost),
+                "aveTimeCost(s)", df.format(averageTime),
                 "aveThoRate(s)", df.format(averageThoRate),
                 "readyTasks", readyCount,
                 "pendingTasks", pendingCount,
@@ -129,7 +129,6 @@ class TaskPool(val id: PoolId,
             return null
         }
 
-        // TODO : Why we need this restriction?
         if (allowedThreads > 0 && pendingTasks.size >= allowedThreads) {
             return null
         }
@@ -161,20 +160,22 @@ class TaskPool(val id: PoolId,
         val finishTime = Instant.now()
         setNextFetchTime(finishTime, asap)
 
-        val timeCost = Duration.between(fetchTask.pendingStart, finishTime)
-        if (timeCost > slowTaskThreshold) {
-            slowTasksRecorder.add(timeCost)
+        val elapsed = Duration.between(fetchTask.pendingStart, finishTime)
+        if (elapsed > slowTaskThreshold) {
+            synchronized(slowTasksRecorder) {
+                slowTasksRecorder.add(elapsed)
+            }
         }
 
         ++recentFinishedTasks
-        recentFetchMillis += timeCost.toMillis()
+        recentFetchMillis += elapsed.toMillis()
         if (recentFinishedTasks > RECENT_TASKS_COUNT_LIMIT) {
             recentFinishedTasks = 1
             recentFetchMillis = 1
         }
 
         ++totalFinishedTasks
-        totalFetchMillis += timeCost.toMillis()
+        totalFetchMillis += elapsed.toMillis()
 
         return true
     }
@@ -223,33 +224,6 @@ class TaskPool(val id: PoolId,
         this.status = Status.RETIRED
     }
 
-    /**
-     * Retune the queue to avoid hung tasks, pending tasks are push to ready queue so they can be re-fetched
-     *
-     * In crowd-sourcing mode, it's a common situation to lost
-     * the fetching mission and should the task should be restarted
-     *
-     * @param force If force is true, reload all pending fetch items immediately, otherwise, reload only exceeds pendingTimeout
-     */
-    fun retune(force: Boolean) {
-        val now = Instant.now()
-
-        val readyList = Lists.newArrayList<JobFetchTask>()
-        val pendingList = HashMap<Int, JobFetchTask>()
-
-        pendingTasks.values.forEach { fetchTask ->
-            if (force || fetchTask.pendingStart.plus(pendingTimeout).isBefore(now)) {
-                readyList.add(fetchTask)
-            } else {
-                pendingList[fetchTask.itemId] = fetchTask
-            }
-        }
-
-        pendingTasks.clear()
-        readyTasks.addAll(readyList)
-        pendingTasks.putAll(pendingList)
-    }
-
     fun clearReadyQueue(): Int {
         val count = readyTasks.size
         readyTasks.clear()
@@ -285,7 +259,7 @@ class TaskPool(val id: PoolId,
     }
 
     fun dump(drop: Boolean) {
-        log.info("Dump pool - " + params.formatAsLine())
+        log.info("Dump pool | " + params.formatAsLine())
 
         if (drop && readyTasks.isNotEmpty()) {
             var i = 0
@@ -311,10 +285,7 @@ class TaskPool(val id: PoolId,
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (other == null || other !is TaskPool) {
-            false
-        } else id == other.id
-
+        return other is TaskPool && id == other.id
     }
 
     override fun hashCode(): Int {

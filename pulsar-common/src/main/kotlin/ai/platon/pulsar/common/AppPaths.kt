@@ -59,6 +59,8 @@ object AppPaths {
     val TEST_DIR = get(TMP_DIR, "test")
     @RequiredDirectory @JvmField
     val BROWSER_TMP_DIR = get(TMP_DIR, "browser")
+    @RequiredFile @JvmField
+    val BROWSER_TMP_DIR_LOCK = get(TMP_DIR, "browser.lock")
     @RequiredDirectory @JvmField
     val CHROME_TMP_DIR = get(BROWSER_TMP_DIR, "chrome")
 

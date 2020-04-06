@@ -27,7 +27,7 @@ class MetricsManagement: AutoCloseable {
                 .build(AppPaths.METRICS_DIR.toFile())
 
         slf4jReporter = Slf4jReporter.forRegistry(metricRegistry)
-                .outputTo(LoggerFactory.getLogger("ai.platon.pulsar"))
+                .outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
 //                    .withLoggingLevel(Slf4jReporter.LoggingLevel.DEBUG)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
@@ -36,8 +36,8 @@ class MetricsManagement: AutoCloseable {
 
     fun start() {
         jmxReporter.start()
-        csvReporter.start(20, TimeUnit.SECONDS)
-        slf4jReporter.start(20, TimeUnit.MINUTES)
+        csvReporter.start(2, TimeUnit.MINUTES)
+        slf4jReporter.start(5, TimeUnit.MINUTES)
     }
 
     override fun close() {

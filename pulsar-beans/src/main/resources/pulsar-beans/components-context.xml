@@ -88,6 +88,7 @@
         <constructor-arg ref="pageParser"/>
         <constructor-arg ref="jitIndexer"/>
         <constructor-arg ref="taskMonitor"/>
+        <constructor-arg ref="fetchMetrics"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>

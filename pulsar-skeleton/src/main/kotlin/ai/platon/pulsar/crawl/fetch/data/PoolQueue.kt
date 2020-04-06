@@ -19,19 +19,17 @@ class PoolQueue: AbstractQueue<TaskPool>() {
     /** Retired queues do not serve any more, but the tasks can be find out by findExtend.  */
     private val inactiveQueues = HashMap<PoolId, TaskPool>()
 
+    @get:Synchronized
     override val size get() = priorityActiveQueues.size
 
-    val costReport: String
-        get() {
-            return activeQueues.values
-                    .sortedByDescending { it.averageTimeCost }
-                    .take(50)
-                    .joinToString("\n") { it.costReport }
-        }
+    @get:Synchronized
+    val timeReport: String get() = activeQueues.values.sortedByDescending { it.averageTime }
+            .take(50).joinToString("\n") { it.timeReport }
 
-    override fun add(taskPool: TaskPool): Boolean {
-        priorityActiveQueues.add(taskPool)
-        activeQueues[taskPool.id] = taskPool
+    @Synchronized
+    override fun add(element: TaskPool): Boolean {
+        priorityActiveQueues.add(element)
+        activeQueues[element.id] = element
 
         if (priorityActiveQueues.size != activeQueues.size) {
             LOG.error("(Add)Inconsistent status : size of activeQueues (" + priorityActiveQueues.size + ") " +
@@ -41,10 +39,12 @@ class PoolQueue: AbstractQueue<TaskPool>() {
         return true
     }
 
+    @Synchronized
     override fun offer(taskPool: TaskPool): Boolean {
         return add(taskPool)
     }
 
+    @Synchronized
     override fun poll(): TaskPool? {
         val queue = priorityActiveQueues.poll()
         if (queue != null) {
@@ -59,32 +59,37 @@ class PoolQueue: AbstractQueue<TaskPool>() {
         return queue
     }
 
+    @Synchronized
     override fun peek(): TaskPool? {
         return priorityActiveQueues.peek()
     }
 
-    override fun remove(taskPool: TaskPool): Boolean {
-        priorityActiveQueues.remove(taskPool)
-        activeQueues.remove(taskPool.id)
-        inactiveQueues.remove(taskPool.id)
+    @Synchronized
+    override fun remove(element: TaskPool): Boolean {
+        priorityActiveQueues.remove(element)
+        activeQueues.remove(element.id)
+        inactiveQueues.remove(element.id)
 
         return true
     }
 
     override fun iterator(): MutableIterator<TaskPool> {
-        return priorityActiveQueues.iterator()
+        throw IllegalAccessException("Iteration is not supported")
     }
 
+    @Synchronized
     override fun isEmpty(): Boolean {
         return priorityActiveQueues.isEmpty()
     }
 
+    @Synchronized
     override fun clear() {
         priorityActiveQueues.clear()
         activeQueues.clear()
         inactiveQueues.clear()
     }
 
+    @Synchronized
     fun enable(queue: TaskPool) {
         queue.enable()
 
@@ -101,6 +106,7 @@ class PoolQueue: AbstractQueue<TaskPool>() {
      * 1. the queue is too slow, or
      * 2. all tasks are done
      */
+    @Synchronized
     fun disable(pool: TaskPool) {
         priorityActiveQueues.remove(pool)
         activeQueues.remove(pool.id)
@@ -109,6 +115,7 @@ class PoolQueue: AbstractQueue<TaskPool>() {
         inactiveQueues[pool.id] = pool
     }
 
+    @Synchronized
     fun hasPriorPendingTasks(priority: Int): Boolean {
         var hasPrior = false
         for (queue in priorityActiveQueues) {
@@ -122,14 +129,17 @@ class PoolQueue: AbstractQueue<TaskPool>() {
         return hasPrior || inactiveQueues.values.any { it.priority >= priority && it.hasPendingTasks() }
     }
 
+    @Synchronized
     fun find(id: PoolId): TaskPool? {
         return search(id, false)
     }
 
+    @Synchronized
     fun findExtend(id: PoolId): TaskPool? {
         return search(id, true)
     }
 
+    @Synchronized
     fun search(id: PoolId?, searchInactive: Boolean): TaskPool? {
         var queue: TaskPool? = null
 
@@ -144,9 +154,10 @@ class PoolQueue: AbstractQueue<TaskPool>() {
         return queue
     }
 
+    @Synchronized
     fun dump(limit: Int, drop: Boolean) {
-        LOG.info("Report fetch queue status. "
-                + "Active : " + activeQueues.size + ", inactive : " + inactiveQueues.size + " ...")
+        LOG.info("Fetch queue status | active: {}, inactive: {}", activeQueues.size, inactiveQueues.size)
+
         activeQueues.values.take(limit).filter { it.hasTasks() }.forEach { it.dump(drop) }
         inactiveQueues.values.take(limit).filter { it.hasPendingTasks() }.forEach { it.dump(drop) }
     }

@@ -252,8 +252,7 @@ fun Element.getAnchors(restrictCss: String, offset: Int = 0, limit: Int = Int.MA
     val cssQuery = appendSelectorIfMissing(restrictCss, "a")
     return select(cssQuery, offset, limit).mapNotNull {
         it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
-                ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(),
-                        it.left, it.top, it.width, it.height) }
+                ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
     }
 }
 

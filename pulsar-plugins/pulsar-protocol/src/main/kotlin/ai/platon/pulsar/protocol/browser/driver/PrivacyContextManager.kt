@@ -9,7 +9,6 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.concurrent.withLock
 
 /**
  * TODO: multiple context support

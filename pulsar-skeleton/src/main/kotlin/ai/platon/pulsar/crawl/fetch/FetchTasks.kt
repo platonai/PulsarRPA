@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -13,6 +14,8 @@ import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import io.netty.util.concurrent.Future
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
@@ -31,6 +34,47 @@ abstract class BatchHandler: (Iterable<WebPage>) -> Unit {
 
 abstract class AfterBatchHandler: (Iterable<FetchResult>) -> Unit {
     abstract override operator fun invoke(pages: Iterable<FetchResult>)
+}
+
+/**
+ * Created by vincent on 16-10-15.
+ * Copyright @ 2013-2016 Platon AI. All rights reserved
+ */
+data class UrlStat(
+        var hostName: String,
+        var urls: Int = 0,
+        var indexUrls: Int = 0,
+        var detailUrls: Int = 0,
+        var searchUrls: Int = 0,
+        var mediaUrls: Int = 0,
+        var bbsUrls: Int = 0,
+        var blogUrls: Int = 0,
+        var tiebaUrls: Int = 0,
+        var unknownUrls: Int = 0,
+        var urlsTooLong: Int = 0,
+        var urlsFromSeed: Int = 0,
+        var pageViews: Int = 0
+) : Comparable<UrlStat> {
+
+    override fun compareTo(other: UrlStat): Int {
+        val reverseHost = Urls.reverseHost(hostName)
+        val reverseHost2 = Urls.reverseHost(other.hostName)
+
+        return reverseHost.compareTo(reverseHost2)
+    }
+}
+
+data class BatchStat(
+        var numTasksSuccess: Long = 0,
+        var totalSuccessBytes: Long = 0L
+) {
+    var startTime = Instant.now()
+    val elapsedTime get() = Duration.between(startTime, Instant.now())
+
+    val timePerPage get() = elapsedTime.dividedBy(1 + numTasksSuccess)
+    val bytesPerPage get() = 1.0 * totalSuccessBytes / (0.1 + numTasksSuccess)
+    val pagesPerSecond get() = numTasksSuccess / (0.1 + elapsedTime.seconds)
+    val bytesPerSecond get() = 1.0 * totalSuccessBytes / (0.1 + elapsedTime.seconds)
 }
 
 class FetchTask(

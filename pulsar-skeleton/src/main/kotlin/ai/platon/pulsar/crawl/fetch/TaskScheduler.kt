@@ -30,13 +30,14 @@ import kotlin.math.roundToInt
 
 class TaskScheduler(
         val tasksMonitor: TaskMonitor,
-        val messageWriter: MessageWriter,
         val pageParser: PageParser,
         val jitIndexer: JITIndexer,
+        val fetchMetrics: FetchMetrics,
+        val messageWriter: MessageWriter,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     data class Status(
-            var pagesThoRate: Double,
+            var pagesThroughputRate: Double,
             var bytesThoRate: Double,
             var readyFetchItems: Int,
             var pendingFetchItems: Int
@@ -45,8 +46,6 @@ class TaskScheduler(
     private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
     val id: Int = instanceSequence.getAndIncrement()
     private val metricsCounters = MetricsCounters()
-
-    private val fetchResultQueue = ConcurrentLinkedQueue<FetchJobForwardingResponse>()
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
@@ -80,17 +79,14 @@ class TaskScheduler(
         private set
 
     /**
-     * Output
-     */
-    private var outputDir = AppPaths.REPORT_DIR
-
-    /**
      * The reprUrl is the representative url of a redirect, we save a reprUrl for each thread
      * We use a concurrent skip list map to gain the best concurrency
      *
      * TODO : check why we store a reprUrl for each thread?
      */
     private val reprUrls = ConcurrentSkipListMap<Long, String>()
+
+    val name: String get() = javaClass.simpleName + "-" + id
 
     override fun setup(jobConf: ImmutableConfig) {
         indexJIT = jobConf.getBoolean(INDEXER_JIT, false)
@@ -108,24 +104,14 @@ class TaskScheduler(
                 "skipTruncated", skipTruncated,
                 "parse", parse,
                 "storingContent", storingContent,
-                "indexJIT", indexJIT,
-                "outputDir", outputDir
+                "indexJIT", indexJIT
         )
-    }
-
-    val name: String get() = javaClass.simpleName + "-" + id
-
-    fun produce(result: FetchJobForwardingResponse) {
-        fetchResultQueue.add(result)
     }
 
     /**
      * Schedule a queue with the given priority and given poolId
      */
-    fun schedule(poolId: PoolId? = null): JobFetchTask? {
-        val fetchTasks = schedule(poolId, 1)
-        return fetchTasks.firstOrNull()
-    }
+    fun schedule(poolId: PoolId? = null): JobFetchTask? = schedule(poolId, 1).firstOrNull()
 
     /**
      * Schedule the queues with top priority
@@ -141,12 +127,12 @@ class TaskScheduler(
     fun schedule(poolId: PoolId?, number: Int): List<JobFetchTask> {
         var num = number
         if (num <= 0) {
-            log.warn("Required no fetch item")
-            return ArrayList()
+            log.warn("The number must be positive to schedule fetch items")
+            return listOf()
         }
 
         if (tasksMonitor.numPendingTasks.get() * averagePageSize * 8.0 > 30 * this.bandwidth) {
-            log.info("Bandwidth exhausted, slows down the scheduling")
+            log.warn("Bandwidth exhausted, slows down the scheduling")
             return listOf()
         }
 
@@ -213,16 +199,9 @@ class TaskScheduler(
     }
 
     /**
-     * Poll a response if it's forwarded, for example, in crowd source mode,
-     * all fetching is done by remote agents and forwarded to TaskScheduler
-     * @return FetchJobForwardingResponse
-     */
-    fun pollForwardResponse(): FetchJobForwardingResponse? {
-        return fetchResultQueue.remove()
-    }
-
-    /**
      * Wait for a while and report task status
+     *
+     * TODO: use metrics system instead
      *
      * @param reportInterval Report interval
      * @return Status
@@ -236,27 +215,27 @@ class TaskScheduler(
         } catch (ignored: InterruptedException) {}
 
         val reportIntervalSec = reportInterval.seconds.toDouble()
-        val pagesThoRate = (totalPages.get() - pagesLastSec) / reportIntervalSec
-        val bytesThoRate = (totalBytes.get() - bytesLastSec) / reportIntervalSec
+        val pagesThroughputRate = (totalPages.get() - pagesLastSec) / reportIntervalSec
+        val bytesThroughputRate = (totalBytes.get() - bytesLastSec) / reportIntervalSec
 
-        val readyFetchItems = tasksMonitor.numReadyTasks.get()
-        val pendingFetchItems = tasksMonitor.numPendingTasks.get()
+        val readyFetchTasks = tasksMonitor.numReadyTasks.get()
+        val pendingFetchTasks = tasksMonitor.numPendingTasks.get()
 
-        metricsCounters.setValue(Counter.rReadyTasks, readyFetchItems)
-        metricsCounters.setValue(Counter.rPendingTasks, pendingFetchItems)
-        metricsCounters.setValue(Counter.rPagesTho, pagesThoRate.roundToInt())
-        metricsCounters.setValue(Counter.rMbTho, (bytesThoRate / 1000).roundToInt())
+        metricsCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
+        metricsCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
+        metricsCounters.setValue(Counter.rPagesTho, pagesThroughputRate.roundToInt())
+        metricsCounters.setValue(Counter.rMbTho, (bytesThroughputRate / 1000).roundToInt())
 
         if (indexJIT) {
             metricsCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
             metricsCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
         }
 
-        return Status(pagesThoRate, bytesThoRate, readyFetchItems, pendingFetchItems)
+        return Status(pagesThroughputRate, bytesThroughputRate, readyFetchTasks, pendingFetchTasks)
     }
 
     fun format(status: Status): String {
-        return format(status.pagesThoRate, status.bytesThoRate, status.readyFetchItems, status.pendingFetchItems)
+        return format(status.pagesThroughputRate, status.bytesThoRate, status.readyFetchItems, status.pendingFetchItems)
     }
 
     override fun close() {
@@ -272,7 +251,7 @@ class TaskScheduler(
         log.info(border)
     }
 
-    private fun format(pagesThroughput: Double, bytesThroughput: Double, readyFetchItems: Int, pendingFetchItems: Int): String {
+    private fun format(pagesThroughput: Double, bytesThroughput: Double, readyFetchTasks: Int, pendingFetchTasks: Int): String {
         val df = DecimalFormat("0.0")
 
         averagePageSize = 1.0 * bytesThroughput / pagesThroughput
@@ -294,8 +273,8 @@ class TaskScheduler(
         // instantaneous speed
         status.append(df.format(bytesThroughput * 8.0 / 1024)).append(" Kb/s, ")
 
-        status.append(readyFetchItems).append(" ready ")
-        status.append(pendingFetchItems).append(" pending ")
+        status.append(readyFetchTasks).append(" ready ")
+        status.append(pendingFetchTasks).append(" pending ")
         status.append("URLs in ").append(tasksMonitor.numTaskPools).append(" queues")
 
         return status.toString()

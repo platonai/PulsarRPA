@@ -9,7 +9,10 @@ import ai.platon.pulsar.common.config.Parameterized
 import org.apache.commons.io.FileUtils
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
-import java.io.IOException
+import java.io.FileInputStream
+import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -19,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+
 
 /**
  * Created by vincent on 18-1-1.
@@ -91,12 +95,7 @@ class LoadingWebDriverPool(
 
         if (incognito) {
             // Force delete all browser data
-            // TODO: delete data that might leak privacy only, cookies, sessions, local storage, etc
-            try {
-                FileUtils.deleteDirectory(AppPaths.BROWSER_TMP_DIR.toFile())
-            } catch (e: IOException) {
-                log.warn(Strings.simplifyException(e))
-            }
+            forceDeleteBrowserDataDir()
         }
     }
 
@@ -187,6 +186,27 @@ class LoadingWebDriverPool(
             log.info("Quit driver $it")
             it.quit()
             numQuit.incrementAndGet()
+        }
+    }
+
+    private fun forceDeleteBrowserDataDir() {
+        // Force delete all browser data
+        // TODO: delete data that might leak privacy only, cookies, sessions, local storage, etc
+        synchronized(LoadingWebDriverPool::class.java) {
+            val path = AppPaths.BROWSER_TMP_DIR
+            val lock = AppPaths.BROWSER_TMP_DIR_LOCK
+            val maxTry = 10
+            var i = 0
+            while (i++ < maxTry && Files.exists(path)) {
+                FileChannel.open(lock, StandardOpenOption.APPEND).use {
+                    it.lock()
+                    try {
+                        FileUtils.deleteDirectory(path.toFile())
+                    } catch (e: Throwable) {
+                        log.warn(Strings.simplifyException(e))
+                    }
+                }
+            }
         }
     }
 

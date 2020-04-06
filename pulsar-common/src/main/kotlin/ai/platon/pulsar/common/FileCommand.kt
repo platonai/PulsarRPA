@@ -40,10 +40,11 @@ object FileCommand {
      * @return true if the command is exists during this check period
      */
     @JvmOverloads
-    fun check(command: String, checkInterval: Duration = CHECK_INTERVAL): Boolean {
+    fun check(command: String, checkInterval: Duration = CHECK_INTERVAL, action: () -> Unit = {}): Boolean {
         if (!Files.exists(COMMAND_FILE)) {
             return false
         }
+
         var exist = false
         try {
             synchronized(FileCommand::class.java) {
@@ -59,6 +60,7 @@ object FileCommand {
                             lines.remove(command)
                             Files.write(COMMAND_FILE, lines)
                         }
+                        action()
                     }
                 }
             }

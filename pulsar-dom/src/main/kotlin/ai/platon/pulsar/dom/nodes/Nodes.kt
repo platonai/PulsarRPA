@@ -58,12 +58,14 @@ data class Anchor(
     constructor(ele: Element): this(ele.absUrl("href"), ele.cleanText, ele.cssSelector(),
             ele.left, ele.top, ele.width, ele.height)
 
+    val rect get() = Rectangle(left, top, width, height)
+
     override fun hashCode(): Int {
         return url.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is Anchor && url.equals(other.url)
+        return other is Anchor && url == other.url
     }
 
     override fun compareTo(other: Anchor): Int {
