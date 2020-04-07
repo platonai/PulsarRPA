@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.protocol.browser.driver.PrivacyContextManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -32,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class AsyncBrowserEmulator(
-        val privacyContextManager: PrivacyContextManager,
+        val privacyContextManager: BrowserPrivacyContextManager,
         val emulateEventHandler: BrowserEmulateEventHandler,
         val messageWriter: MessageWriter,
         val immutableConfig: ImmutableConfig
@@ -245,8 +244,10 @@ open class AsyncBrowserEmulator(
             message = msg
         } finally {
             if (message == null) {
-                if (!fetchTask.isCanceled) {
+                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && !isClosed) {
                     log.warn("Unexpected script result (null) | {}", interactTask.url)
+                    status = ProtocolStatus.retry(RetryScope.CRAWL)
+                    result.state = FlowState.BREAK
                 }
             } else if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)

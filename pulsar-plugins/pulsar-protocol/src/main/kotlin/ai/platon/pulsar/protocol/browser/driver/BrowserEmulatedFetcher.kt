@@ -6,28 +6,25 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyException
+import ai.platon.pulsar.common.silent
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.protocol.browser.driver.async.AsyncBrowserEmulator
-import io.netty.util.concurrent.EventExecutorGroup
-import io.netty.util.concurrent.Future
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.map
-import org.h2tools.dev.util.ConcurrentLinkedList
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.*
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToLong
@@ -37,7 +34,7 @@ import kotlin.math.roundToLong
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserEmulatedFetcher(
-        val privacyContextManager: PrivacyContextManager,
+        val privacyContextManager: BrowserPrivacyContextManager,
         private val browserEmulator: BrowserEmulator,
         private val asyncBrowserEmulator: AsyncBrowserEmulator,
         private val immutableConfig: ImmutableConfig
@@ -182,7 +179,7 @@ class BrowserEmulatedFetcher(
                     b = b.createNextNode(privacyContextManager.activeContext)
                 }
 
-                parallelFetch(b)
+                parallelFetch0(b)
             } while (i++ <= privacyContextManager.maxRetry && privacyContextManager.activeContext.isPrivacyLeaked)
 
             batch.afterFetchAll(batch.pages)
@@ -193,60 +190,32 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun parallelFetch(batch: FetchTaskBatch) {
+    private fun parallelFetch0(batch: FetchTaskBatch) {
         GlobalScope.launch {
-            // Submit all tasks
-            batch.pages.forEachIndexed { i, page ->
-                val task = FetchTask(
-                        batchId = batch.batchId,
-                        batchTaskId = 1 + i,
-                        priority = batch.priority,
-                        page = page,
-                        volatileConfig = batch.conf,
-                        batchSize = batch.batchSize
-                )
-
-                batch.workingTasks[task] = async { parallelFetch0(task, batch) }
-            }
+            batch.createTasks().associateWithTo(batch.workingTasks) { async { parallelFetch1(it, batch) } }
         }
-
-//        var i = 0
-//        batch.pages.asFlow().map { page ->
-//            ++i
-//            val task = FetchTask(
-//                    batchId = batch.batchId,
-//                    batchTaskId = 1 + i,
-//                    priority = batch.priority,
-//                    page = page,
-//                    volatileConfig = batch.conf,
-//                    batchSize = batch.batchSize
-//            )
-//
-//            parallelFetch0(task, batch)
-//        }
 
         var state: FetchTaskBatch.State
         do {
             ++batch.round
 
-            var numDone = 0
+            var numCompleted = 0
             val it = batch.workingTasks.iterator()
-            while (it.hasNext()) {
-                val (task, deferred) = it.next()
+            it.forEachRemaining { (task, deferred) ->
                 if (deferred.isCompleted) {
                     handleTaskDone(task, deferred, batch)
-                    ++numDone
+                    ++numCompleted
                     it.remove()
                 }
             }
 
-            batch.idleSeconds = if (numDone == 0) 1 + batch.idleSeconds else 0
+            batch.idleSeconds = if (numCompleted == 0) 1 + batch.idleSeconds else 0
 
             if (batch.round >= 60 && batch.round % 30 == 0L) {
                 logIdleLongTime(batch)
             }
 
-            TimeUnit.SECONDS.sleep(1)
+            silent { TimeUnit.SECONDS.sleep(1) }
 
             state = checkState(batch)
         } while (state == FetchTaskBatch.State.RUNNING)
@@ -274,7 +243,7 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private suspend fun parallelFetch0(task: FetchTask, batch: FetchTaskBatch): FetchResult {
+    private suspend fun parallelFetch1(task: FetchTask, batch: FetchTaskBatch): FetchResult {
         return privacyContextManager.activeContext.submit(task) { _, driver ->
             try {
                 batch.beforeFetch(task.page)
@@ -329,16 +298,13 @@ class BrowserEmulatedFetcher(
         val timeout = Duration.ofMinutes(2).seconds
         while (batch.workingTasks.isNotEmpty() && tick++ < timeout) {
             checkAndHandleTasksAbort(batch)
-            TimeUnit.SECONDS.sleep(1)
+            silent { TimeUnit.SECONDS.sleep(1) }
         }
 
         // Finally, if there are still working tasks, force abort the worker threads
         if (batch.workingTasks.isNotEmpty()) {
             log.warn("There are still {} working tasks, cancel worker threads", batch.numWorkingTasks)
-            batch.workingTasks.forEach {
-                it.value.cancel()
-            }
-
+            batch.workingTasks.forEach { it.value.cancel() }
             checkAndHandleTasksAbort(batch)
         }
 
@@ -350,8 +316,7 @@ class BrowserEmulatedFetcher(
 
     private fun checkAndHandleTasksAbort(batch: FetchTaskBatch) {
         val it = batch.workingTasks.iterator()
-        while (it.hasNext()) {
-            val (task, deferred) = it.next()
+        it.forEachRemaining { (task, deferred) ->
             if (deferred.isCompleted) {
                 handleTaskAbort(task, deferred, batch)
                 it.remove()

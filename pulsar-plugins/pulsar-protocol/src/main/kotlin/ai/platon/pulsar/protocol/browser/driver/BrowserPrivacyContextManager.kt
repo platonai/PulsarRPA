@@ -1,33 +1,23 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyManagerFactory
+import ai.platon.pulsar.crawl.PrivacyContextManager
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicReference
 
-/**
- * TODO: multiple context support
- * */
-class PrivacyContextManager(
+class BrowserPrivacyContextManager(
         val proxyManagerFactory: ProxyManagerFactory,
         val driverManager: WebDriverManager,
-        val immutableConfig: ImmutableConfig
-): Freezable() {
-    companion object {
-        private val globalActiveContext = AtomicReference<BrowserPrivacyContext>()
-        val zombieContexts = ConcurrentLinkedQueue<BrowserPrivacyContext>()
-    }
-
+        immutableConfig: ImmutableConfig
+): PrivacyContextManager(immutableConfig) {
     val proxyManager = proxyManagerFactory.get()
     val maxRetry = 2
 //    val retryingTasks = LinkedBlockingQueue<FetchTask>()
 
-    val activeContext get() = getOrCreate()
+    override val activeContext get() = getOrCreate()
 
     fun run(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return whenUnfrozen { run0(task, fetchFun) }
@@ -37,15 +27,6 @@ class PrivacyContextManager(
         // TODO: have synchronization bug
         waitUntilFreezerChannelIsClosed()
         return submit0(task, fetchFun)
-    }
-
-    fun reset() {
-        freeze {
-            globalActiveContext.getAndSet(null)?.apply {
-                zombieContexts.add(this)
-                use { it.close() }
-            }
-        }
     }
 
     private fun run0(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -107,10 +88,10 @@ class PrivacyContextManager(
 
     private fun getOrCreate(): BrowserPrivacyContext {
         return whenUnfrozen {
-            if (globalActiveContext.get() == null) {
+            if (globalActiveContext.get() !is BrowserPrivacyContext) {
                 globalActiveContext.set(BrowserPrivacyContext(driverManager, proxyManager, immutableConfig))
             }
-            globalActiveContext.get()
+            globalActiveContext.get() as BrowserPrivacyContext
         }
     }
 }

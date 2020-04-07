@@ -32,7 +32,7 @@ import kotlin.random.Random
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulator(
-        val privacyContextManager: PrivacyContextManager,
+        val privacyContextManager: BrowserPrivacyContextManager,
         val browserEmulateEventHandler: BrowserEmulateEventHandler,
         val messageWriter: MessageWriter,
         val immutableConfig: ImmutableConfig

@@ -83,14 +83,15 @@ class FetchTask(
         val priority: Int,
         val page: WebPage,
         val volatileConfig: VolatileConfig,
-        val id: Int = instanceSequence.incrementAndGet(),
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
         var batchStat: BatchStat? = null,
+        val id: Int = instanceSequence.incrementAndGet(),
         var proxyEntry: ProxyEntry? = null, // the proxy used
         var nRetries: Int = 0, // The number retries inside a privacy context
-        private val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
+        val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
 ): Comparable<FetchTask> {
+
     lateinit var response: Response
 
     val url get() = page.url
@@ -258,6 +259,10 @@ class FetchTaskBatch(
             isLastTaskTimeout() -> State.LAST_TASK_TIMEOUT
             else -> State.RUNNING
         }
+    }
+
+    fun createTasks(): List<FetchTask> {
+        return pages.mapIndexed { i, page -> FetchTask(batchId, priority, page, conf, batchSize, batchTaskId = i) }
     }
 
     /**
