@@ -88,15 +88,15 @@ class FetchMetrics(
      * The total bytes received by the hardware from the application startup
      * */
     val networkBytesRecv
-        get() = systemNetworkBytesRecv - initSystemNetworkBytesRecv
+        get() = (systemNetworkBytesRecv - initSystemNetworkBytesRecv).coerceAtLeast(0L)
     val networkBytesRecvPerSecond
         get() = networkBytesRecv / elapsedTime.seconds
     val networkBytesRecvPerPage
-        get() = networkBytesRecv / (1 + successTasks.get())
+        get() = networkBytesRecv / successTasks.get().coerceAtLeast(1)
     val contentBytesPerSecond
         get() = contentBytes.get() / elapsedTime.seconds
     val contentBytesPerTask
-        get() = contentBytes.get() / (1 + successTasks.get())
+        get() = contentBytes.get() / successTasks.get().coerceAtLeast(1)
 
     private val closed = AtomicBoolean()
 
@@ -104,6 +104,7 @@ class FetchMetrics(
         Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
 
         initSystemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+        systemNetworkBytesRecv = initSystemNetworkBytesRecv
 
         params.withLogger(log).info(true)
     }
@@ -286,7 +287,7 @@ class FetchMetrics(
     fun formatTraffic(): String {
         return String.format("Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p | net recv: %s, %s/s, %s/p | total net recv: %s",
                 successTasks.get(),
-                DateTimes.readableDuration(elapsedTime),
+                elapsedTime.readable(),
                 successTasksPerSecond,
                 Strings.readableBytes(contentBytes.get()),
                 Strings.readableBytes(contentBytesPerSecond),

@@ -33,6 +33,7 @@ public interface AppConstants {
     String USER = SystemUtils.USER_NAME;
 
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
+    String SCENT_CONTEXT_CONFIG_LOCATION = "classpath:/scent-beans/app-context.xml";
     String JOB_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/job-context.xml";
 
     /**

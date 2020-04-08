@@ -166,7 +166,7 @@ data class ProxyEntry(
 
     private fun formatDisplay(): String {
         val ban = if (isBanned) "[banned] " else ""
-        val ttlStr = ttlDuration?.let { DateTimes.readableDuration(it.truncatedTo(ChronoUnit.SECONDS)) }?:"0s"
+        val ttlStr = ttlDuration?.truncatedTo(ChronoUnit.SECONDS)?.readable() ?:"0s"
         return "$ban[$hostPort => $outIp]($numFailedPages/$numSuccessPages/$ttlStr)"
     }
 

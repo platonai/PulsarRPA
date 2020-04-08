@@ -14,32 +14,33 @@ object DateTimes {
     val PATH_SAFE_FORMAT_2 = SimpleDateFormat("MMdd.HH")
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
-    val HOURS_OF_DAY = 24L
-    val HOURS_OF_MONTH = HOURS_OF_DAY * 30
-    val HOURS_OF_YEAR = HOURS_OF_DAY * 365
+    const val MILLIS_OF_SECOND = 1000L
+    const val HOURS_OF_DAY = 24L
+    const val HOURS_OF_MONTH = HOURS_OF_DAY * 30
+    const val HOURS_OF_YEAR = HOURS_OF_DAY * 365
     val ONE_YEAR_LATER = Instant.now().plus(Duration.ofDays(365))
 
     fun format(time: Long): String {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(time))
     }
 
-    fun format(time: Instant?): String {
+    fun format(time: Instant): String {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.systemDefault()).format(time)
     }
 
-    fun format(time: Instant?, format: String?): String {
+    fun format(time: Instant, format: String): String {
         return DateTimeFormatter.ofPattern(format).withZone(ZoneId.systemDefault()).format(time)
     }
 
-    fun format(localTime: LocalDateTime?): String {
+    fun format(localTime: LocalDateTime): String {
         return DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(localTime)
     }
 
-    fun format(localTime: LocalDateTime?, format: String?): String {
+    fun format(localTime: LocalDateTime, format: String): String {
         return DateTimeFormatter.ofPattern(format).format(localTime)
     }
 
-    fun format(epochMilli: Long, format: String?): String {
+    fun format(epochMilli: Long, format: String): String {
         return format(Instant.ofEpochMilli(epochMilli), format)
     }
 
@@ -65,7 +66,7 @@ object DateTimes {
         return DateTimeFormatter.ISO_INSTANT.format(time)
     }
 
-    fun now(format: String?): String {
+    fun now(format: String): String {
         return format(System.currentTimeMillis(), format)
     }
 
@@ -82,7 +83,7 @@ object DateTimes {
      * Calculate the elapsed time between two times specified in milliseconds.
      */
     @JvmOverloads
-    fun elapsedTime(start: Instant?, end: Instant? = Instant.now()): Duration {
+    fun elapsedTime(start: Instant, end: Instant = Instant.now()): Duration {
         return Duration.between(start, end)
     }
 
@@ -90,7 +91,7 @@ object DateTimes {
      * RFC 2616 defines three different date formats that a conforming client must understand.
      */
     @JvmStatic
-    fun parseHttpDateTime(text: String?, defaultValue: Instant): Instant {
+    fun parseHttpDateTime(text: String, defaultValue: Instant): Instant {
         return try {
             val d = DateUtils.parseDate(text)
             d.toInstant()
@@ -104,12 +105,12 @@ object DateTimes {
     }
 
     @JvmStatic
-    fun formatHttpDateTime(time: Instant?): String {
+    fun formatHttpDateTime(time: Instant): String {
         return DateUtils.formatDate(Date.from(time))
     }
 
     @JvmStatic
-    fun parseInstant(text: String?, defaultValue: Instant): Instant {
+    fun parseInstant(text: String, defaultValue: Instant): Instant {
         try { // equals to Instant.parse()
             return DateTimeFormatter.ISO_INSTANT.parse(text) { temporal: TemporalAccessor? -> Instant.from(temporal) }
         } catch (ignored: Throwable) {
@@ -118,7 +119,7 @@ object DateTimes {
     }
 
     @JvmStatic
-    fun parseDuration(durationStr: String?, defaultValue: Duration): Duration {
+    fun parseDuration(durationStr: String, defaultValue: Duration): Duration {
         try {
             return Duration.parse(durationStr)
         } catch (ignored: Throwable) {
@@ -147,12 +148,9 @@ object DateTimes {
     }
 
     @JvmStatic
-    fun isDaysBefore(dateTime: OffsetDateTime?, days: Int): Boolean {
-        if (dateTime != null) { // ZonedDateTime ldt = date.atZone(ZoneId.systemDefault());
-            if (DateTimeDetector.CURRENT_DATE_EPOCH_DAYS - dateTime.toLocalDate().toEpochDay() > days) {
-                return true
-            }
-        }
-        return false
+    fun isDaysBefore(dateTime: OffsetDateTime, days: Int): Boolean {
+        return DateTimeDetector.CURRENT_DATE_EPOCH_DAYS - dateTime.toLocalDate().toEpochDay() > days
     }
 }
+
+fun Duration.readable() = DateTimes.readableDuration(this)

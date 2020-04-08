@@ -4,7 +4,7 @@ import org.apache.commons.lang3.StringUtils
 import java.sql.SQLException
 import java.util.*
 
-class OpenMapAnyTableFormatter(val table: OpenMapAnyTable) {
+class OpenMapAnyTableFormatter(val table: OpenMapTable) {
     private var rowCount: Int = 0
 
     @JvmOverloads

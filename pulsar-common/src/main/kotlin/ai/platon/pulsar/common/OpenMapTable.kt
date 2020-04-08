@@ -5,7 +5,7 @@ import kotlin.reflect.KProperty
 /**
  * A simple excel like table, every column, every row and every cell can hold metadata and variables
  * */
-class OpenMapAnyTable(val numColumns: Int) {
+class OpenMapTable(val numColumns: Int) {
     val metadata = Metadata(numColumns)
     val map = mutableMapOf<String, Row>()
 
@@ -91,45 +91,45 @@ class OpenMapAnyTable(val numColumns: Int) {
     }
 
     companion object {
-        val empty = OpenMapAnyTable(0)
+        val empty = OpenMapTable(0)
     }
 }
 
-class TableAttribute<T: Any>(val initializer: (OpenMapAnyTable) -> T) {
-    operator fun getValue(thisRef: OpenMapAnyTable, property: KProperty<*>): T =
+class TableAttribute<T: Any>(val initializer: (OpenMapTable) -> T) {
+    operator fun getValue(thisRef: OpenMapTable, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
-    operator fun setValue(thisRef: OpenMapAnyTable, property: KProperty<*>, value: T): T {
+    operator fun setValue(thisRef: OpenMapTable, property: KProperty<*>, value: T): T {
         thisRef.attributes[property.name] = value
         return value
     }
 }
 
-class ColumnAttribute<T: Any>(val initializer: (OpenMapAnyTable.Column) -> T) {
-    operator fun getValue(thisRef: OpenMapAnyTable.Column, property: KProperty<*>): T =
+class ColumnAttribute<T: Any>(val initializer: (OpenMapTable.Column) -> T) {
+    operator fun getValue(thisRef: OpenMapTable.Column, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
-    operator fun setValue(thisRef: OpenMapAnyTable.Column, property: KProperty<*>, value: T): T {
+    operator fun setValue(thisRef: OpenMapTable.Column, property: KProperty<*>, value: T): T {
         thisRef.attributes[property.name] = value
         return value
     }
 }
 
-class RowAttribute<T: Any>(val initializer: (OpenMapAnyTable.Row) -> T) {
-    operator fun getValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>): T =
+class RowAttribute<T: Any>(val initializer: (OpenMapTable.Row) -> T) {
+    operator fun getValue(thisRef: OpenMapTable.Row, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
-    operator fun setValue(thisRef: OpenMapAnyTable.Row, property: KProperty<*>, value: T): T {
+    operator fun setValue(thisRef: OpenMapTable.Row, property: KProperty<*>, value: T): T {
         thisRef.attributes[property.name] = value
         return value
     }
 }
 
-class CellAttribute<T: Any>(val initializer: (OpenMapAnyTable.Cell) -> T) {
-    operator fun getValue(thisRef: OpenMapAnyTable.Cell, property: KProperty<*>): T =
+class CellAttribute<T: Any>(val initializer: (OpenMapTable.Cell) -> T) {
+    operator fun getValue(thisRef: OpenMapTable.Cell, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
-    operator fun setValue(thisRef: OpenMapAnyTable.Cell, property: KProperty<*>, value: T): T {
+    operator fun setValue(thisRef: OpenMapTable.Cell, property: KProperty<*>, value: T): T {
         thisRef.attributes[property.name] = value
         return value
     }

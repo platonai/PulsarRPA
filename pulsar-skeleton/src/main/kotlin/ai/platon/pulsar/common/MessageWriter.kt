@@ -402,7 +402,7 @@ class MessageWriter(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
             val jsFmt = if (jsSate.isBlank()) "%s" else "%30s"
             val fieldFmt = if (numFields == 0) "%s" else "%-3s"
             val fmt = "Fetched %s [%4d] %13s in %10s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
-            val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
+            val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
             val url = if (redirected) page.location else page.url
             val readableUrl = if (redirected) "[R] $url" else url
             val readableLinks = if (verbose) "file://$link | $readableUrl" else readableUrl
@@ -421,7 +421,7 @@ class MessageWriter(val webDb: WebDb, private val conf: ImmutableConfig) : AutoC
 
         fun getBatchCompleteReport(pages: Collection<WebPage>, startTime: Instant, verbose: Boolean = false): StringBuilder {
             val elapsed = DateTimes.elapsedTime(startTime)
-            val message = String.format("Fetched total %d pages in %s:\n", pages.size, DateTimes.readableDuration(elapsed))
+            val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
             val sb = StringBuilder(message)
             var i = 0
             pages.forEach { sb.append(++i).append(".\t").append(getFetchCompleteReport(it, verbose)).append('\n') }

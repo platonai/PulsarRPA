@@ -52,8 +52,7 @@ class MapField<T>(val initializer: (Node) -> T) {
 }
 
 class NullableMapField<T> {
-    operator fun getValue(thisRef: Node, property: KProperty<*>): T? =
-            thisRef.variables[property.name] as T?
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T? = thisRef.variables[property.name] as T?
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: T?) {
         thisRef.variables[property.name] = value
@@ -180,7 +179,7 @@ val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HID
 /** Check if the node is visible or not */
 val Node.isVisible: Boolean get() {
     return when {
-        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have a empty rectangle?
+        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have an empty rectangle?
         else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
     }
 }

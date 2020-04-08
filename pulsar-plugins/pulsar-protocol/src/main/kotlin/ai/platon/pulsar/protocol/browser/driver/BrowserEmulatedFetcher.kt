@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyException
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.silent
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -350,7 +351,7 @@ class BrowserEmulatedFetcher(
             log.info("Batch {} round {} task failed, {} in {}, {}, total {} failed | {}",
                     batch.batchId, String.format("%2d", batch.round),
                     Strings.readableBytes(response.length),
-                    DateTimes.readableDuration(elapsed),
+                    elapsed.readable(),
                     response.status,
                     batch.numTasksFailed,
                     url
@@ -367,7 +368,7 @@ class BrowserEmulatedFetcher(
                     batch.batchId, String.format("%2d", batch.round),
                     if (length < 2000) " only " else " ",
                     Strings.readableBytes(length),
-                    DateTimes.readableDuration(elapsed),
+                    elapsed.readable(),
                     codeMessage, url)
         }
     }
@@ -395,8 +396,8 @@ class BrowserEmulatedFetcher(
             log.info(String.format("Batch %d is finished with %d/%d tasks in %s(%.2f pages/s) | time: %s/p, size: %s/p, speed: %s/s | %s",
                     primeBatch.batchId,
                     stat.numTasksSuccess, primeBatch.batchSize,
-                    DateTimes.readableDuration(stat.elapsedTime), stat.pagesPerSecond,
-                    DateTimes.readableDuration(stat.timePerPage),
+                    stat.elapsedTime.readable(), stat.pagesPerSecond,
+                    stat.timePerPage.readable(),
                     Strings.readableBytes(stat.bytesPerPage.roundToLong()),
                     Strings.readableBytes(stat.bytesPerSecond.roundToLong()),
                     proxyDisplay?:"(no proxy)"

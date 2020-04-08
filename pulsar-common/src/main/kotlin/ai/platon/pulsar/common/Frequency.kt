@@ -267,7 +267,7 @@ class Frequency<T : Comparable<T>>(val name: String = "#F$nextId"): MutableColle
      * @return a string representation.
      */
     override fun toString(): String {
-        return entrySet().joinToString { "${it.element}:${it.count}" }
+        return entrySet().joinToString { "${it.element}: ${it.count}" }
     }
 
     override fun hashCode(): Int {

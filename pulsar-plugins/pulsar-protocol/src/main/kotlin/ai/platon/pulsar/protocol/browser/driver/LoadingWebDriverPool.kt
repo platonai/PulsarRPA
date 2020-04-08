@@ -213,7 +213,7 @@ class LoadingWebDriverPool(
     private fun waitUntilIdle() {
         lock.withLock {
             var i = 0
-            while (!isClosed && numWorking > 0 && i++ < 120 && !Thread.currentThread().isInterrupted) {
+            while (!isClosed && numWorking > 0 && i++ < 120) {
                 notBusy.await(1, TimeUnit.SECONDS)
                 if (i >= 30 && i % 30 == 0) {
                     log.warn("Waited {}s for driver pool to be idle | {}", i, this)

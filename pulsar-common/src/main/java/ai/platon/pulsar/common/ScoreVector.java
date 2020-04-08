@@ -16,7 +16,6 @@ public class ScoreVector implements Comparable<ScoreVector> {
 
     // Reserved
     private int dimension;
-    // TODO: Use bigint
     private ArrayList<ScoreEntry> entries;
 
     public static ScoreVector ZERO = new ScoreVector(0);

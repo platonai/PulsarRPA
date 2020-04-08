@@ -164,7 +164,7 @@ open class BrowserEmulateEventHandler(
             val elapsed = Duration.between(startTime, Instant.now())
             val length = pageSource.length
 
-            val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
+            val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
             log.info("Timeout ({}) after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
                     status.minorName,
                     elapsed,
@@ -236,7 +236,7 @@ open class BrowserEmulateEventHandler(
 
             // Create symbolic link with an url based, unique, shorter but not readable file name,
             // we can generate and refer to this path at any place
-            val link = AppPaths.uniqueSymbolicLinkForURI(page.url)
+            val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
             try {
                 Files.deleteIfExists(link)
                 Files.createSymbolicLink(link, path)
@@ -265,7 +265,7 @@ open class BrowserEmulateEventHandler(
     fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
         val proxyEntry = task.proxyEntry
         val domain = task.domain
-        val link = AppPaths.uniqueSymbolicLinkForURI(task.url)
+        val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
         val readableLength = Strings.readableBytes(pageSource.length.toLong())
 
         if (proxyEntry != null) {

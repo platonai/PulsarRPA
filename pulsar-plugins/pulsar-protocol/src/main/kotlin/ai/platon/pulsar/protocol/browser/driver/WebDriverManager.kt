@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyManagerFactory
+import ai.platon.pulsar.common.readable
 import com.codahale.metrics.MetricRegistry
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -114,23 +115,6 @@ class WebDriverManager(
         }
     }
 
-    fun formatStatus(verbose: Boolean = false): String {
-        val p = driverPool
-        return if (verbose) {
-            String.format("online: %d, free: %d, working: %d, active: %d," +
-                    " | crashed: %d, retired: %d, quit: %d, reset: %d," +
-                    " | pages: %d, elapsed: %s, speed: %.2f pages/s",
-                    p.numOnline, p.numFree, p.numWorking, p.numActive,
-                    p.numCrashed.get(), p.numRetired.get(), p.numQuit.get(), numReset.get(),
-                    pageViews.get(), DateTimes.readableDuration(elapsedTime), speed
-            )
-        } else {
-            String.format("%d/%d/%d/%d/%d/%d (free/working/active/online/crashed/retired)",
-                    p.numFree, p.numWorking, p.numActive, p.numOnline,
-                    p.numCrashed.get(), p.numRetired.get())
-        }
-    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closeAll(true, true)
@@ -151,6 +135,23 @@ class WebDriverManager(
                 driverPool.closeAll(incognito)
             }
             log.info("Total ${driverPool.numQuit} drivers were quit | {}", formatStatus(true))
+        }
+    }
+
+    private fun formatStatus(verbose: Boolean = false): String {
+        val p = driverPool
+        return if (verbose) {
+            String.format("online: %d, free: %d, working: %d, active: %d," +
+                    " | crashed: %d, retired: %d, quit: %d, reset: %d," +
+                    " | pages: %d, elapsed: %s, speed: %.2f pages/s",
+                    p.numOnline, p.numFree, p.numWorking, p.numActive,
+                    p.numCrashed.get(), p.numRetired.get(), p.numQuit.get(), numReset.get(),
+                    pageViews.get(), elapsedTime.readable(), speed
+            )
+        } else {
+            String.format("%d/%d/%d/%d/%d/%d (free/working/active/online/crashed/retired)",
+                    p.numFree, p.numWorking, p.numActive, p.numOnline,
+                    p.numCrashed.get(), p.numRetired.get())
         }
     }
 }

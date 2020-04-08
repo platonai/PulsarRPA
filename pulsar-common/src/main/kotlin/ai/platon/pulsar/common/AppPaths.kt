@@ -153,7 +153,7 @@ object AppPaths {
         return "$prefix$path$suffix"
     }
 
-    fun uniqueSymbolicLinkForURI(uri: String, suffix: String = ".htm"): Path {
+    fun uniqueSymbolicLinkForUri(uri: String, suffix: String = ".htm"): Path {
         return SYS_TMP_LINKS_DIR.resolve(hex(uri, "", suffix))
     }
 }
