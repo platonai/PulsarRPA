@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -25,12 +24,11 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
         Files.createDirectories(reportDir)
     }
 
-    protected fun write(message: String, fileSuffix: String) {
-        val dest = Paths.get(reportDir.toString(), fileSuffix)
-        writeTo(dest, message)
+    protected fun write(message: String, filename: String) {
+        writeTo(message, AppPaths.get(reportDir, filename))
     }
 
-    protected fun writeTo(file: Path, message: String) {
+    protected fun writeTo(message: String, file: Path) {
         writers.computeIfAbsent(file) { MessageWriter(it) }.write(message)
     }
 
