@@ -201,11 +201,12 @@ open class PulsarSession(
      * @param options The load options
      * @return The web pages
      */
-    fun loadOutPages(portalUrl: String, restrictCss: String, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+    fun loadOutPages(portalUrl: String, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
+        val outlinkSelector = appendSelectorIfMissing(options.outlinkSelector, "a")
         val normUrl = normalize(portalUrl, options)
+
         val opt = normUrl.options
-        val links = parse(load(normUrl)).document.selectNotNull(cssQuery) {
+        val links = parse(load(normUrl)).document.selectNotNull(outlinkSelector) {
             getLink(it, !opt.noNorm, opt.ignoreUrlQuery)?.substringBeforeLast("#")
         }.toSet().take(opt.topLinks)
 

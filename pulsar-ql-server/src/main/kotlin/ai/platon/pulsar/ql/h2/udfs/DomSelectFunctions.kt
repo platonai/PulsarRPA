@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
-import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -29,7 +29,7 @@ object DomSelectFunctions {
             return dom
         }
 
-        val element = dom.element.first(cssQuery)
+        val element = dom.element.selectFirstOrNull(cssQuery)
         return ValueDom.getOrNil(element)
     }
 

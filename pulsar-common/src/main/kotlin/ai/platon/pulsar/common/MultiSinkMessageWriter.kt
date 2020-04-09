@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Multiple sink message writer. Messages from different source are write to different files or database.
  */
 abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable {
-    private val timeIdent = DateTimes.format(System.currentTimeMillis(), "yyyyMMdd")
+    private val timeIdent = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.get(AppPaths.REPORT_DIR, timeIdent, jobIdent)
     private val writers = ConcurrentHashMap<Path, MessageWriter>()
@@ -25,10 +25,10 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
     }
 
     protected fun write(message: String, filename: String) {
-        writeTo(message, AppPaths.get(reportDir, filename))
+        write(message, AppPaths.get(reportDir, filename))
     }
 
-    protected fun writeTo(message: String, file: Path) {
+    protected fun write(message: String, file: Path) {
         writers.computeIfAbsent(file) { MessageWriter(it) }.write(message)
     }
 

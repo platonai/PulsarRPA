@@ -110,10 +110,10 @@ fun Node.find(predicate: (Node) -> Boolean): List<Node> {
 }
 
 fun Node.first(predicate: (Node) -> Boolean): Node {
-    return firstOrNull(predicate)?:throw NoSuchElementException("Node contains no descendant matching the predicate.")
+    return selectFirstOrNull(predicate) ?:throw NoSuchElementException("Node contains no descendant matching the predicate.")
 }
 
-fun Node.firstOrNull(predicate: (Node) -> Boolean): Node? {
+fun Node.selectFirstOrNull(predicate: (Node) -> Boolean): Node? {
     var result: Node? = null
 
     NodeTraversor.filter(object: NodeFilter {
@@ -129,7 +129,7 @@ fun Node.firstOrNull(predicate: (Node) -> Boolean): Node? {
 }
 
 fun Node.any(predicate: (Node) -> Boolean): Boolean {
-    return firstOrNull(predicate) != null
+    return selectFirstOrNull(predicate) != null
 }
 
 fun Node.all(predicate: (Node) -> Boolean): Boolean {
@@ -167,6 +167,9 @@ fun <O> Node.select(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALU
     } else listOf()
 }
 
+/**
+ * TODO: Jsoup native supported selectTo
+ * */
 inline fun <R : Any, C : MutableCollection<in R>> Node.selectTo(destination: C,
         query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
         transformer: (Element) -> R) {
@@ -196,22 +199,15 @@ fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE):
     return select(cssQuery, offset, limit)
 }
 
-@Deprecated("Use first instead", ReplaceWith("Node.first(cssQuery)"))
-fun Node.selectFirst2(cssQuery: String): Element? {
+fun Node.selectFirstOrNull(cssQuery: String): Element? {
     return if (this is Element) {
         MathematicalSelector.selectFirst(cssQuery, this)
     } else null
 }
 
-fun Node.first(cssQuery: String): Element? {
+fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O? {
     return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
-}
-
-fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
-    return if (this is Element) {
-        first(cssQuery)?.let { transformer(it) }
+        selectFirstOrNull(cssQuery)?.let { transformer(it) }
     } else null
 }
 

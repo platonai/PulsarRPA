@@ -44,6 +44,10 @@ object DateTimes {
         return format(Instant.ofEpochMilli(epochMilli), format)
     }
 
+    fun formatNow(format: String): String {
+        return format(Instant.now(), format)
+    }
+
     @JvmOverloads
     fun readableDuration(duration: Duration, truncatedToUnit: ChronoUnit = ChronoUnit.SECONDS): String {
         return StringUtils.removeStart(duration.truncatedTo(truncatedToUnit).toString(), "PT").toLowerCase()

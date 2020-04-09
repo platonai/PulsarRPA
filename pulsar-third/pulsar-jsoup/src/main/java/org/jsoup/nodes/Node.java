@@ -188,6 +188,9 @@ public abstract class Node implements Cloneable {
         return ownerBody;
     }
 
+    /**
+     * Only cache text for text nodes, not for other nodes
+     * */
     public String getImmutableText() {
         if (immutableText == null) {
             if (this instanceof TextNode) {

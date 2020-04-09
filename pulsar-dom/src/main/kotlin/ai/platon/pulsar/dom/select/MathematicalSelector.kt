@@ -208,7 +208,7 @@ object MathematicalSelector {
     }
 
     // exclude set. package open so that Elements can implement .not() selector.
-    internal fun filterOut(elements: Collection<Element>, outs: Collection<Element>): Elements {
+    internal fun filterNot(elements: Collection<Element>, outs: Collection<Element>): Elements {
         val output = Elements()
         for (el in elements) {
             var found = false

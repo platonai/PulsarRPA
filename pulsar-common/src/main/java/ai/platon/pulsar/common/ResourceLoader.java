@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  */
 public class ResourceLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResourceLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(ResourceLoader.class);
 
     /**
      * The utility methods will try to use the provided class factories to
@@ -150,7 +150,7 @@ public class ResourceLoader {
                         .collect(Collectors.toList());
             }
         } catch (IOException e) {
-            LOG.error(Strings.stringifyException(e));
+            log.error(Strings.stringifyException(e));
         }
 
         return new ArrayList<>(0);
@@ -168,7 +168,7 @@ public class ResourceLoader {
                         .collect(Collectors.toList());
             }
         } catch (IOException e) {
-            LOG.error(Strings.stringifyException(e));
+            log.error(Strings.stringifyException(e));
         }
 
         return new ArrayList<>(0);
@@ -184,7 +184,7 @@ public class ResourceLoader {
                 new BufferedReader(reader).lines().forEach(sb::append);
             }
         } catch (IOException e) {
-            LOG.error(Strings.stringifyException(e));
+            log.error(Strings.stringifyException(e));
         }
 
         return sb.toString();
@@ -207,7 +207,7 @@ public class ResourceLoader {
                 // LOG.info(name + " not found");
                 return null;
             } else {
-                LOG.info("Find resource " + name + " at " + url);
+                log.info("Find resource " + name + " at " + url);
             }
 
             return url.openStream();

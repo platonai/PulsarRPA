@@ -9,7 +9,7 @@ import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
@@ -219,7 +219,7 @@ class AmazonExtractor(
 
         var id = 0
         var fields = textExtractors.entries
-                .map { it.key to body.first(it.value) { it.text() } }
+                .map { it.key to body.selectFirstOrNull(it.value) { it.text() } }
                 .filterNot { it.second.isNullOrBlank() }
                 .associate { it.first to it.second!! }
         page.pageModel.emplace(++id, "product", fields)
@@ -231,7 +231,7 @@ class AmazonExtractor(
                 "alternativeImages" to "#altImages"
         )
         fields = imagesExtractors.entries
-                .map { it.key to body.first(it.value) { it.attr("abs:src") } }
+                .map { it.key to body.selectFirstOrNull(it.value) { it.attr("abs:src") } }
                 .filterNot { it.second.isNullOrBlank() }
                 .associate { it.first to it.second!! }
         page.pageModel.emplace(++id, "images", fields)
@@ -243,7 +243,7 @@ class AmazonExtractor(
                 "offerListLink" to "#olp-upd-new a"
         )
         fields = linksExtractors.entries
-                .map { it.key to body.first(it.value) { it.attr("abs:href") } }
+                .map { it.key to body.selectFirstOrNull(it.value) { it.attr("abs:href") } }
                 .filterNot { it.second.isNullOrBlank() }
                 .associate { it.first to it.second!! }
         page.pageModel.emplace(++id, "links", fields)
@@ -259,7 +259,7 @@ class AmazonExtractor(
                 "alsoViewProducts" to "#sims-consolidated-2_feature_div ul li"
         )
         fields = listExtractors.entries
-                .map { it.key to body.first(it.value) { it.text() } }
+                .map { it.key to body.selectFirstOrNull(it.value) { it.text() } }
                 .filterNot { it.second.isNullOrBlank() }
                 .associate { it.first to it.second!! }
         page.pageModel.emplace(++id, "list", fields)

@@ -24,83 +24,84 @@ annotation class RequiredDirectory
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 object AppPaths {
-
-    @JvmField
+   
     val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
     // directory for symbolic links, this path should be as short as possible
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
 
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     // TODO: check again whether we need a separate home dir
     // val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val HOME_DIR = TMP_DIR
     /**
      * Application data are kept in the data dir
      * */
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(AppConstants.PULSAR_DEFAULT_DATA_DIR)
 
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val CACHE_DIR = get(TMP_DIR, "cache")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val WEB_CACHE_DIR = get(CACHE_DIR, "web")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
+    val DOC_EXPORT_DIR = get(WEB_CACHE_DIR, "web", "export")
+    @RequiredDirectory
     val FILE_CACHE_DIR = get(CACHE_DIR, "files")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val REPORT_DIR = get(TMP_DIR, "report")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val METRICS_DIR = get(REPORT_DIR, "metrics")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val SCRIPT_DIR = get(TMP_DIR, "scripts")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val TEST_DIR = get(TMP_DIR, "test")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val BROWSER_TMP_DIR = get(TMP_DIR, "browser")
-    @RequiredFile @JvmField
+    @RequiredFile
     val BROWSER_TMP_DIR_LOCK = get(TMP_DIR, "browser.lock")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val CHROME_TMP_DIR = get(BROWSER_TMP_DIR, "chrome")
 
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val PROXY_BASE_DIR = AppPaths.getTmp("proxy")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val ENABLED_PROVIDER_DIR = AppPaths.get(PROXY_BASE_DIR, "providers-enabled")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val AVAILABLE_PROVIDER_DIR = AppPaths.get(PROXY_BASE_DIR, "providers-available")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val ENABLED_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-enabled")
 
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val AVAILABLE_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-available")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val PROXY_ARCHIVE_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-archived")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PROXY_BANNED_HOSTS_FILE = AppPaths.get(PROXY_BASE_DIR, "proxies-banned-hosts.txt")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PROXY_BANNED_SEGMENTS_FILE = AppPaths.get(PROXY_BASE_DIR, "proxies-banned-segments.txt")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PROXY_BAN_STRATEGY = AppPaths.get(PROXY_BASE_DIR, "proxy-ban-strategy.txt")
 
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val ARCHIVE_DIR = get(HOME_DIR, "archive")
-    @RequiredDirectory @JvmField
+    @RequiredDirectory
     val TMP_ARCHIVE_DIR = get(TMP_DIR, "archive")
 
-    @RequiredFile @JvmField
+    @RequiredFile
     val PATH_LOCAL_COMMAND = get(TMP_DIR, "pulsar-commands")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PATH_EMERGENT_SEEDS = get(TMP_DIR, "emergent-seeds")
 
-    @RequiredFile @JvmField
+    @RequiredFile
     val PATH_LAST_BATCH_ID = get(REPORT_DIR, "last-batch-id")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PATH_LAST_GENERATED_ROWS = get(REPORT_DIR, "last-generated-rows")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PATH_BANNED_URLS = get(REPORT_DIR, "banned-urls")
-    @RequiredFile @JvmField
+    @RequiredFile
     val PATH_UNREACHABLE_HOSTS = get(REPORT_DIR, "unreachable-hosts.txt")
 
     // TODO: distinct tmp dir and home dir

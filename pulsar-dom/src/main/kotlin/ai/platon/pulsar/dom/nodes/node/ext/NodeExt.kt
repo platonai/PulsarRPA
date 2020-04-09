@@ -284,29 +284,26 @@ val Node.captionOrSelector: String
     }
 
 /**
- * TextNodes' clean texts are calculated and stored in advance while Elements' clean texts are calculated when required
- * This is a balance of space and time
+ * The trimmed text of this node.
+ *
+ * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
+ * This is a balance of space and time.
  * */
-val Node.cleanText: String
-    get() {
-        val text = when (this) {
-            is TextNode -> immutableText
-            is Element -> accumulateText(this)
-            else -> null
-        }
+val Node.cleanText: String get() =
+    when (this) {
+        is TextNode -> immutableText.trim()
+        is Element -> accumulateText(this).trim()
+        else -> ""
+    }.trim()
 
-        return text?:""
-    }
-
-val Node.textRepresentation: String get() {
-    return when {
+val Node.textRepresentation: String get() =
+    when {
         isImage -> attr("abs:src")
         isAnchor -> attr("abs:href")
         this is TextNode -> cleanText
         this is Element -> cleanText
         else -> ""
     }
-}
 
 val Node.slimHtml by field {
     when {
@@ -391,30 +388,18 @@ val Node.parentElement get() = this.parent() as Element
  * Returns a best element to represent this node: if the node itself is an element, returns itself
  * otherwise, returns it's parent
  * */
-val Node.bestElement: Element
-    get() {
-        return if (this is Element) {
-            this
-        } else this.parentElement
-    }
+val Node.bestElement get() = (this as? Element)?:parentElement
 
 /**
  * The caption of an Element is a joined text values of all non-blank text nodes
  * */
-val Node.caption: String
-    get() = getCaptionWords().joinToString(";")
+val Node.caption get() = getCaptionWords().joinToString(";")
 
-fun Node.getFeature(key: Int): Double {
-    return features[key]
-}
+fun Node.getFeature(key: Int): Double = features[key]
 
-fun Node.getFeature(name: String): Double {
-    return features[NodeFeature.getKey(name)]
-}
+fun Node.getFeature(name: String): Double = features[NodeFeature.getKey(name)]
 
-fun Node.getFeatureEntry(key: Int): FeatureEntry {
-    return FeatureEntry(key, getFeature(key))
-}
+fun Node.getFeatureEntry(key: Int): FeatureEntry = FeatureEntry(key, getFeature(key))
 
 fun Node.setFeature(key: Int, value: Double) {
     features[key] = value

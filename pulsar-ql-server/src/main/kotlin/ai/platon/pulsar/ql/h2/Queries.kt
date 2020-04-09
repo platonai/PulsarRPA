@@ -6,9 +6,8 @@ import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.nodes.Anchor
-import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
-import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
@@ -130,7 +129,7 @@ object Queries {
     }
 
     fun <O> selectFirst(dom: ValueDom, cssQuery: String, transformer: (Element) -> O): O? {
-        return dom.element.first(cssQuery, transformer)
+        return dom.element.selectFirstOrNull(cssQuery, transformer)
     }
 
     fun <O> selectNth(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {

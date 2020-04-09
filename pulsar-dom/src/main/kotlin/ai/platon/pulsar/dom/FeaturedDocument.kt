@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
 import org.apache.commons.math3.linear.RealVector
@@ -136,11 +136,11 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun first(query: String): Element? {
-        return document.first(query)
+        return document.selectFirstOrNull(query)
     }
 
     fun <T> first(query: String, extractor: (Element) -> T): T? {
-        return document.first(query)?.let { extractor(it) }
+        return document.selectFirstOrNull(query)?.let { extractor(it) }
     }
 
     fun getFeature(key: Int): Double {
