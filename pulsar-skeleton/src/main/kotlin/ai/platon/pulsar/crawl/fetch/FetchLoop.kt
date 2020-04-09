@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.CompletedPageFormatter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.ReducerContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.NCPU
@@ -72,7 +73,7 @@ class FetchLoop(
             if (page.isNotInternal) {
                 withContext(Dispatchers.IO) {
                     if (log.isInfoEnabled) {
-                        log.info(MessageWriter.getFetchCompleteReport(page))
+                        log.info(CompletedPageFormatter(page).toString())
                     }
 
                     write(page.key, page)

@@ -18,8 +18,8 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.persist.WebPage
 import java.time.Instant
 
@@ -33,7 +33,7 @@ import java.time.Instant
  */
 class DefaultFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MessageWriter
+        messageWriter: MiscMessageWriter
 ) : AbstractFetchSchedule(conf, messageWriter) {
 
     override fun setFetchSchedule(page: WebPage, prevFetchTime: Instant,

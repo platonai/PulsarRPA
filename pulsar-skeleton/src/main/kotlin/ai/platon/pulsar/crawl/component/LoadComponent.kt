@@ -1,13 +1,13 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.MessageWriter
-import ai.platon.pulsar.common.MessageWriter.Companion.getBatchCompleteReport
-import ai.platon.pulsar.common.MessageWriter.Companion.getFetchCompleteReport
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.message.CompletedPageFormatter
+import ai.platon.pulsar.common.message.CompletedPagesFormatter
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
@@ -44,7 +44,7 @@ class LoadComponent(
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent,
         val updateComponent: UpdateComponent,
-        val messageWriter: MessageWriter
+        val messageWriter: MiscMessageWriter
 ): AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
@@ -203,7 +203,7 @@ class LoadComponent(
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(getBatchCompleteReport(updatedPages, startTime, verbose).toString())
+            log.info(CompletedPagesFormatter(updatedPages, startTime, verbose).toString())
         }
 
         return knownPages
@@ -303,7 +303,7 @@ class LoadComponent(
 
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(getFetchCompleteReport(page, verbose))
+            log.info(CompletedPageFormatter(page, verbose).toString())
         }
 
         globalFetchingUrls.remove(page.url)

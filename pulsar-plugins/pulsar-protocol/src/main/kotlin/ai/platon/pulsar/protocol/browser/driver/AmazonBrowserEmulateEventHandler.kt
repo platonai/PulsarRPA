@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
@@ -16,7 +17,7 @@ import kotlin.math.roundToLong
  */
 class AmazonBrowserEmulateEventHandler(
         driverManager: WebDriverManager,
-        messageWriter: MessageWriter,
+        messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
 ): BrowserEmulateEventHandler(driverManager, messageWriter, immutableConfig) {
     companion object {

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.MetricRegistry.name
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 class FetchMetrics(
         private val metricsManagement: MetricsManagement,
-        private val messageWriter: MessageWriter,
+        private val messageWriter: MiscMessageWriter,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 

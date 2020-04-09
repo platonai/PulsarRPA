@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
@@ -33,7 +34,7 @@ class TaskScheduler(
         val pageParser: PageParser,
         val jitIndexer: JITIndexer,
         val fetchMetrics: FetchMetrics,
-        val messageWriter: MessageWriter,
+        val messageWriter: MiscMessageWriter,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     data class Status(

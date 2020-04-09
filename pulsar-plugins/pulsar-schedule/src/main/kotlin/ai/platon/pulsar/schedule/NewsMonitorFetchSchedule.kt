@@ -24,6 +24,7 @@ import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.config.AppConstants.TCP_IP_STANDARDIZED_TIME
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.AdaptiveFetchSchedule
 import ai.platon.pulsar.persist.PageCounters
@@ -45,7 +46,7 @@ import java.time.temporal.ChronoUnit
  */
 class NewsMonitorFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MessageWriter
+        messageWriter: MiscMessageWriter
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
     private val impreciseNow = Instant.now()

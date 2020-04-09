@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.AppPaths.PATH_BANNED_URLS
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
 import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -52,7 +53,7 @@ class GenerateComponent(
         val urlFilters: UrlFilters,
         val urlNormalizers: UrlNormalizers,
         val fetchSchedule: FetchSchedule,
-        val messageWriter: MessageWriter,
+        val messageWriter: MiscMessageWriter,
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized, JobInitialized {

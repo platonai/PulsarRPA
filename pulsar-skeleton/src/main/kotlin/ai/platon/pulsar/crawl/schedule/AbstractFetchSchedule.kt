@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit
  */
 abstract class AbstractFetchSchedule(
         var conf: ImmutableConfig,
-        var messageWriter: MessageWriter
+        var messageWriter: MiscMessageWriter
 ) : FetchSchedule {
     private var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
     private var maxInterval = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(90))

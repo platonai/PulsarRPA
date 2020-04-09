@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.HTTP_FETCH_MAX_RETRY
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -34,7 +34,7 @@ import kotlin.random.Random
 open class BrowserEmulator(
         val privacyContextManager: BrowserPrivacyContextManager,
         val browserEmulateEventHandler: BrowserEmulateEventHandler,
-        val messageWriter: MessageWriter,
+        val messageWriter: MiscMessageWriter,
         val immutableConfig: ImmutableConfig
 ) : Parameterized, AutoCloseable {
     companion object {

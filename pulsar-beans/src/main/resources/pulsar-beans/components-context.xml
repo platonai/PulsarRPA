@@ -22,7 +22,6 @@
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="generateComponent" class="ai.platon.pulsar.crawl.component.GenerateComponent">
-        <constructor-arg ref="conf"/>
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="urlFilters"/>
@@ -30,6 +29,7 @@
         <constructor-arg ref="fetchSchedule"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="conf"/>
     </bean>
     <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
         <constructor-arg ref="protocolFactory"/>

@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
@@ -40,7 +40,7 @@ import java.time.temporal.ChronoUnit
  */
 class NewsFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MessageWriter
+        messageWriter: MiscMessageWriter
 ) : AdaptiveFetchSchedule(conf, messageWriter) {
     private val LOG = LoggerFactory.getLogger(NewsFetchSchedule::class.java)
 

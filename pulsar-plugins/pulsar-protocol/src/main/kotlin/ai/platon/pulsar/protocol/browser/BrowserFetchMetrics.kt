@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.persist.WebPage
@@ -9,11 +9,9 @@ import com.codahale.metrics.SharedMetricRegistries
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 
 class BrowserFetchMetrics(
-        private val messageWriter: MessageWriter,
+        private val messageWriter: MiscMessageWriter,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 

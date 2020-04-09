@@ -19,7 +19,7 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.MetricsCounters
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.common.JobInitialized
@@ -46,7 +46,7 @@ class PageParser(
         val parserFactory: ParserFactory,
         val signature: Signature,
         val metricsCounters: MetricsCounters,
-        val messageWriter: MessageWriter,
+        val messageWriter: MiscMessageWriter,
         private val conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
 
@@ -73,7 +73,7 @@ class PageParser(
             ParserFactory(conf),
             TextMD5Signature(),
             MetricsCounters(),
-            MessageWriter(conf),
+            MiscMessageWriter(conf),
             conf
     )
 

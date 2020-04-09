@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.schedule
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit
  */
 open class AdaptiveFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MessageWriter
+        messageWriter: MiscMessageWriter
 ) : AbstractFetchSchedule(conf, messageWriter) {
 
     protected var INC_RATE = conf.getFloat(CapabilityTypes.SCHEDULE_INC_RATE, 0.2f)

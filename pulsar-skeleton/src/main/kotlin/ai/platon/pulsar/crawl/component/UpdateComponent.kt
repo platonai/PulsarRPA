@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -45,7 +45,7 @@ class UpdateComponent(
         val webDb: WebDb,
         val fetchSchedule: FetchSchedule,
         val scoringFilters: ScoringFilters,
-        val messageWriter: MessageWriter,
+        val messageWriter: MiscMessageWriter,
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : Parameterized {

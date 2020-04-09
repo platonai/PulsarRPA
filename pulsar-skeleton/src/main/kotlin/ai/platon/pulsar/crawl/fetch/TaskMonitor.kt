@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class TaskMonitor(
         private val fetchMetrics: FetchMetrics,
-        private val metrics: MessageWriter,
+        private val metrics: MiscMessageWriter,
         conf: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     private val log = LoggerFactory.getLogger(TaskMonitor::class.java)

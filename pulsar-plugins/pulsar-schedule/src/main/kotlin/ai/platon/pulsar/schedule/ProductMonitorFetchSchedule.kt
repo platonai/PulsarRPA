@@ -17,7 +17,7 @@
 
 package ai.platon.pulsar.schedule
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.AppConstants.YES_STRING
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlFilter
@@ -34,7 +34,7 @@ import java.time.Instant
  */
 class ProductMonitorFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MessageWriter
+        messageWriter: MiscMessageWriter
 ): AdaptiveFetchSchedule(conf, messageWriter) {
 
     override fun setFetchSchedule(page: WebPage,

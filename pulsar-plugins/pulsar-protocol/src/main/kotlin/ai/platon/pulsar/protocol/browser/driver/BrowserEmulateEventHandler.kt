@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.files.ext.export
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -26,7 +27,7 @@ import java.time.Instant
 
 open class BrowserEmulateEventHandler(
         private val driverManager: WebDriverManager,
-        private val messageWriter: MessageWriter,
+        private val messageWriter: MiscMessageWriter,
         private val immutableConfig: ImmutableConfig
 ) {
     private val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
