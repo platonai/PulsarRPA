@@ -7,7 +7,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool
-import ai.platon.pulsar.protocol.browser.react.WebDriverEventLoop
+import ai.platon.pulsar.protocol.browser.experimental.react.WebDriverEventLoop
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.persist.ProtocolStatus
 

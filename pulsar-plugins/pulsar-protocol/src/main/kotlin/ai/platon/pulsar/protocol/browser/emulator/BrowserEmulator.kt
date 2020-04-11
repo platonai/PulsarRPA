@@ -1,13 +1,10 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.CapabilityTypes.HTTP_FETCH_MAX_RETRY
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -16,15 +13,12 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import org.apache.commons.lang.IllegalClassException
-import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.FluentWait
-import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 /**
@@ -32,39 +26,11 @@ import kotlin.random.Random
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulator(
-        val privacyContextManager: BrowserPrivacyContextManager,
-        val browserEmulateEventHandler: BrowserEmulateEventHandler,
-        val messageWriter: MiscMessageWriter,
-        val immutableConfig: ImmutableConfig
-) : Parameterized, AutoCloseable {
-    companion object {
-        private var sequencer = AtomicInteger()
-    }
-
-    private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
-    private val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
-    private val closed = AtomicBoolean(false)
-    private val isClosed get() = closed.get()
-    private val driverManager = privacyContextManager.driverManager
-    private val driverControl = driverManager.driverControl
-    private val driverPool = driverManager.driverPool
-
-    init {
-        sequencer.incrementAndGet()
-        params.withLogger(log).info()
-    }
-
-    override fun getParams(): Params {
-        return Params.of(
-                "instanceSequence", sequencer,
-                "charsetPattern", StringUtils.abbreviateMiddle(browserEmulateEventHandler.charsetPattern.toString(), "...", 200),
-                "pageLoadTimeout", driverControl.pageLoadTimeout,
-                "scriptTimeout", driverControl.scriptTimeout,
-                "scrollDownCount", driverControl.scrollDownCount,
-                "scrollInterval", driverControl.scrollInterval,
-                "driverPoolCapacity", driverPool.capacity
-        )
-    }
+        privacyContextManager: BrowserPrivacyContextManager,
+        emulateEventHandler: BrowserEmulateEventHandler,
+        messageWriter: MiscMessageWriter,
+        immutableConfig: ImmutableConfig
+) : BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
 
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts
@@ -168,7 +134,7 @@ open class BrowserEmulator(
             browseTask.status = ProtocolStatus.retry(RetryScope.CRAWL)
         }
 
-        return browserEmulateEventHandler.onAfterNavigate(browseTask)
+        return emulateEventHandler.onAfterNavigate(browseTask)
     }
 
     @Throws(CancellationException::class,
@@ -179,7 +145,7 @@ open class BrowserEmulator(
         checkState(driver)
         checkState(task)
 
-        browserEmulateEventHandler.logBeforeNavigate(task, driverConfig)
+        emulateEventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -311,7 +277,7 @@ open class BrowserEmulator(
             } else if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val errorResult = browserEmulateEventHandler.handleChromeError(message)
+                val errorResult = emulateEventHandler.handleChromeError(message)
                 status = errorResult.status
                 result.activeDomMessage = errorResult.activeDomMessage
                 result.state = FlowState.BREAK
@@ -380,48 +346,5 @@ open class BrowserEmulator(
         }
 
         return ""
-    }
-
-    @Throws(IllegalContextStateException::class)
-    private fun checkState() {
-        if (isClosed) {
-            throw IllegalContextStateException("Context is closed")
-        }
-    }
-
-    /**
-     * Check task state
-     * every direct or indirect IO operation is a checkpoint for the context reset event
-     * */
-    @Throws(CancellationException::class, IllegalContextStateException::class)
-    private fun checkState(driver: ManagedWebDriver) {
-        checkState()
-
-        if (driver.isCanceled) {
-            // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
-            throw CancellationException("Task with driver #${driver.id} is canceled | ${driver.url}")
-        }
-    }
-
-    /**
-     * Check task state
-     * every direct or indirect IO operation is a checkpoint for the context reset event
-     * */
-    @Throws(CancellationException::class, IllegalContextStateException::class)
-    private fun checkState(task: FetchTask) {
-        checkState()
-
-        if (task.isCanceled) {
-            // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
-            throw CancellationException("Task #${task.id} is canceled | ${task.url}")
-        }
-    }
-
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-
-        }
     }
 }

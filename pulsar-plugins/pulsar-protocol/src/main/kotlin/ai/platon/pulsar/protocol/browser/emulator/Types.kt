@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
@@ -7,6 +7,7 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import org.openqa.selenium.support.ui.Sleeper
 import java.time.Duration
 import java.time.Instant

@@ -3,13 +3,14 @@ package ai.platon.pulsar.dom.select
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.TraverseState
-import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.nodes.node.ext.cleanText
+import ai.platon.pulsar.dom.nodes.node.ext.rectangle
+import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
-import kotlin.math.max
 
 /**
  * In-box syntax, cases:
@@ -200,27 +201,23 @@ fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE):
 }
 
 fun Node.selectFirstOrNull(cssQuery: String): Element? {
-    return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
+    return (this as? Element)?.let { MathematicalSelector.selectFirst(cssQuery, it) }
 }
 
 fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O? {
-    return if (this is Element) {
-        selectFirstOrNull(cssQuery)?.let { transformer(it) }
-    } else null
+    return selectFirstOrNull(cssQuery)?.let(transformer)
 }
 
-@JvmOverloads
-fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset <= 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    val drop = max(offset - 1, 0)
-    return MathematicalSelector.select(cssQuery, this).asSequence().drop(drop).take(limit)
-            .toCollection(Elements())
-}
+//@JvmOverloads
+//fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
+//    if (offset <= 1 && limit == Int.MAX_VALUE) {
+//        return MathematicalSelector.select(cssQuery, this)
+//    }
+//
+//    val drop = max(offset - 1, 0)
+//    return MathematicalSelector.select(cssQuery, this).asSequence().drop(drop).take(limit)
+//            .toCollection(Elements())
+//}
 
 /**
  * TODO: experimental

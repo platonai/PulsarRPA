@@ -19,7 +19,7 @@
 
 package ai.platon.pulsar.examples.spider
 
-import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.AppConstants.DISTANCE_INFINITE
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -49,7 +49,7 @@ class SpiderSimulator(
         val fetchComponent: FetchComponent,
         val loadComponent: LoadComponent,
         val parseComponent: ParseComponent,
-        val messageWriter: MessageWriter
+        val messageWriter: MiscMessageWriter
 ) {
     private val log = LoggerFactory.getLogger(SpiderSimulator::class.java)
 
@@ -330,8 +330,8 @@ fun main(args: Array<String>) {
     var i = 0
     while (i < args.size) {
         when (args[i]) {
-            "-depth" -> maxDepth = Integer.parseInt(args[++i])
-            "-round" -> maxRound = Integer.parseInt(args[++i])
+            "-depth" -> maxDepth = args[++i].toInt()
+            "-round" -> maxRound = args[++i].toInt()
             else -> url = URLUtil.toASCII(args[i])
         }
         i++
@@ -342,7 +342,7 @@ fun main(args: Array<String>) {
         return
     }
 
-    val applicationContext = ClassPathXmlApplicationContext("classpath:/pulsar-beans/app-context.xml")
+    val applicationContext = ClassPathXmlApplicationContext("classpath:/pulsar-beans/examples-context.xml")
     val spiderSimulator = applicationContext.getBean(SpiderSimulator::class.java)
     spiderSimulator.crawl(listOf(url), maxRound)
     spiderSimulator.report()

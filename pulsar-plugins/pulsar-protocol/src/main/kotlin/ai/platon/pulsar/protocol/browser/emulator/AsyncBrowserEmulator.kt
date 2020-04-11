@@ -1,12 +1,10 @@
-package ai.platon.pulsar.protocol.browser.driver.async
+package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes.HTTP_FETCH_MAX_RETRY
-import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS
+import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Parameterized
-import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -14,55 +12,24 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.protocol.browser.driver.*
-import com.codahale.metrics.SharedMetricRegistries
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.lang.IllegalClassException
-import org.apache.commons.lang.StringUtils
 import org.openqa.selenium.WebDriverException
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ThreadLocalRandom
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class AsyncBrowserEmulator(
-        val privacyContextManager: BrowserPrivacyContextManager,
-        val emulateEventHandler: BrowserEmulateEventHandler,
-        val messageWriter: MessageWriter,
-        val immutableConfig: ImmutableConfig
-): Parameterized, AutoCloseable {
-    private val log = LoggerFactory.getLogger(AsyncBrowserEmulator::class.java)!!
-    private val tracer = log.takeIf { it.isTraceEnabled }
-    private val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
-    private var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    private val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
-    private val closed = AtomicBoolean(false)
-    private val isClosed get() = closed.get()
-    private val driverManager = privacyContextManager.driverManager
-    private val driverControl = driverManager.driverControl
-    private val driverPool = driverManager.driverPool
-    private val metrics = SharedMetricRegistries.getDefault()
-    private val numNavigates = metrics.meter("navigates")
-
-    init {
-        params.withLogger(log).info()
-    }
-
-    override fun getParams(): Params {
-        return Params.of(
-                "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
-                "pageLoadTimeout", driverControl.pageLoadTimeout,
-                "scriptTimeout", driverControl.scriptTimeout,
-                "scrollDownCount", driverControl.scrollDownCount,
-                "scrollInterval", driverControl.scrollInterval,
-                "driverPoolCapacity", driverPool.capacity
-        )
-    }
+        privacyContextManager: BrowserPrivacyContextManager,
+        emulateEventHandler: BrowserEmulateEventHandler,
+        messageWriter: MiscMessageWriter,
+        immutableConfig: ImmutableConfig
+): BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
 
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts
@@ -289,49 +256,6 @@ open class AsyncBrowserEmulator(
             if (log.isDebugEnabled) {
                 log.debug("{} | {}", result.activeDomMessage?.multiStatus, interactTask.url)
             }
-        }
-    }
-
-    override fun close() {
-        if (closed.compareAndSet(false, true)) {
-
-        }
-    }
-
-    @Throws(IllegalContextStateException::class)
-    private fun checkState() {
-        if (isClosed) {
-            throw IllegalContextStateException("Context is closed")
-        }
-    }
-
-    /**
-     * Check task state
-     * every direct or indirect IO operation is a checkpoint for the context reset event
-     * */
-    @Throws(CancellationException::class, IllegalContextStateException::class)
-    private fun checkState(driver: ManagedWebDriver) {
-        checkState()
-
-        if (driver.isCanceled) {
-            // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
-            throw CancellationException("Task with driver #${driver.id} is canceled | ${driver.url}")
-        }
-    }
-
-    /**
-     * Check task state
-     * every direct or indirect IO operation is a checkpoint for the context reset event
-     * */
-    @Throws(CancellationException::class, IllegalContextStateException::class)
-    private fun checkState(task: FetchTask) {
-        checkState()
-
-        if (task.isCanceled) {
-            // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
-            // and all the running tasks should be redo
-            throw CancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
         }
     }
 }

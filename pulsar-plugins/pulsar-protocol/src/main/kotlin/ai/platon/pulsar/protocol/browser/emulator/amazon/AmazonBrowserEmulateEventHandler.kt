@@ -1,11 +1,15 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.emulator.amazon
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.HtmlIntegrity
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.isBlankBody
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler
 import org.slf4j.LoggerFactory
 import kotlin.math.roundToLong
 

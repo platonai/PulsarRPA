@@ -21,33 +21,33 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserPrivacyContextManager" class="ai.platon.pulsar.protocol.browser.driver.BrowserPrivacyContextManager">
+    <bean id="browserPrivacyContextManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyContextManager">
         <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="proxyManagerFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserEmulateEventHandler" class="ai.platon.pulsar.protocol.browser.driver.AmazonBrowserEmulateEventHandler">
+    <bean id="browserEmulateEventHandler" class="ai.platon.pulsar.protocol.browser.emulator.amazon.AmazonBrowserEmulateEventHandler">
         <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.driver.BrowserEmulator" destroy-method="close">
+    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator" destroy-method="close">
         <constructor-arg ref="browserPrivacyContextManager"/>
         <constructor-arg ref="browserEmulateEventHandler"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="asyncBrowserEmulator" class="ai.platon.pulsar.protocol.browser.driver.async.AsyncBrowserEmulator" destroy-method="close">
+    <bean id="asyncBrowserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.AsyncBrowserEmulator" destroy-method="close">
         <constructor-arg ref="browserPrivacyContextManager"/>
         <constructor-arg ref="browserEmulateEventHandler"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.protocol.browser.driver.BrowserEmulatedFetcher" destroy-method="close">
+    <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher" destroy-method="close">
         <constructor-arg ref="browserPrivacyContextManager"/>
         <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="asyncBrowserEmulator"/>

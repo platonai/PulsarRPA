@@ -174,7 +174,6 @@ public final class MimeUtil {
             try (InputStream stream = TikaInputStream.get(data)) {
                 magicType = tika.detect(stream, tikaMeta);
             } catch (IOException ignored) {
-
             }
 
             if (magicType != null && !magicType.equals(MimeTypes.OCTET_STREAM)

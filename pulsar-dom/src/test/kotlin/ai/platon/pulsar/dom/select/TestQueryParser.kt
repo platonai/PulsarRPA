@@ -45,12 +45,12 @@ class TestQueryParser {
         assertEquals(2, andLeft.evaluators.size.toLong())
     }
 
-    @Test(expected = MathematicalSelector.SelectorParseException::class)
+    @Test(expected = MathematicalSelectorParseException::class)
     fun exceptionOnUncloseAttribute() {
         val parse = MathematicalQueryParser.parse("section > a[href=\"]")
     }
 
-    @Test(expected = MathematicalSelector.SelectorParseException::class)
+    @Test(expected = MathematicalSelectorParseException::class)
     fun testParsesSingleQuoteInContains() {
         val parse = MathematicalQueryParser.parse("p:contains(One \" One)")
     }

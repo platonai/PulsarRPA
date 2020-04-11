@@ -1,8 +1,8 @@
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
@@ -36,7 +36,6 @@ class BrowserFetchMetrics(
 
     fun trackFailure() {
         totalFinishedPages0.inc()
-
     }
 
     fun trackAbort() {

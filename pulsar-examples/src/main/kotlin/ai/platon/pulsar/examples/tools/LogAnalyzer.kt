@@ -1,10 +1,7 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.examples.tools
 
 import java.nio.file.Files
 import java.nio.file.Paths
-
-class LogAnalyzer {
-}
 
 fun main() {
     val logDir = "/home/vincent/workspace/platon/logs"

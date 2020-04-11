@@ -36,7 +36,5 @@ class AmazonAccess: Crawler() {
 fun main() {
     // System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
 
-    AmazonAccess().use {
-        it.laptops()
-    }
+    AmazonAccess().use { it.laptops() }
 }

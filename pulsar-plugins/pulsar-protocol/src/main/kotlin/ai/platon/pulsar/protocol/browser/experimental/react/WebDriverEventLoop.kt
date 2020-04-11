@@ -1,11 +1,11 @@
-package ai.platon.pulsar.protocol.browser.react
+package ai.platon.pulsar.protocol.browser.experimental.react
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
-import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -28,13 +28,9 @@ class WebDriverEventLoop(
             val task = pendingTasks.take()
             val driver = driverPool.poll(conf)
             GlobalScope.launch {
-                println(1)
                 driver.startWork()
                 navigateTo(task, driver)
-                println(2)
                 val result = emulate(task, driver)
-                println(3)
-                println(result)
                 results.add(FetchResult(task, ForwardingResponse.canceled(task.page)))
             }
         }

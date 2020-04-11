@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.protocol.browser.driver.BrowserEmulatedFetcher
+import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
