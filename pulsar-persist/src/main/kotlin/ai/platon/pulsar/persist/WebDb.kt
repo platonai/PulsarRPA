@@ -8,6 +8,7 @@ import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.commons.collections4.CollectionUtils
+import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
 
@@ -138,6 +139,9 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         val query = store.newQuery()
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
+//        val filter = SingleFieldValueFilter<String, GWebPage>()
+//        query.filter = filter
+
         val result = store.execute(query)
         return DbIterator(result)
     }
@@ -150,6 +154,23 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      */
     fun scan(originalUrl: String, fields: Array<String>): Iterator<WebPage> {
         val query = store.newQuery()
+        query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
+        query.setFields(*fields)
+
+        val result = store.execute(query)
+        return DbIterator(result)
+    }
+
+    /**
+     * Scan all pages who's url starts with {@param originalUrl}
+     *
+     * @param originalUrl The base url
+     * @return The iterator to retrieve pages
+     */
+    fun scan(originalUrl: String, fields: Array<String>, filter: Filter<String, GWebPage>): Iterator<WebPage> {
+        val query = store.newQuery()
+
+        query.filter = filter
         query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
         query.setFields(*fields)
 

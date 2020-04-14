@@ -33,10 +33,6 @@ abstract class BrowserEmulatorBase(
     val metrics = SharedMetricRegistries.getDefault()
     val numNavigates = metrics.meter("navigates")
 
-    init {
-        params.withLogger(log).info()
-    }
-
     override fun getParams(): Params {
         return Params.of(
                 "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),

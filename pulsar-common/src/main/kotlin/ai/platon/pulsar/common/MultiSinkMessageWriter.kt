@@ -29,7 +29,7 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
     }
 
     protected fun write(message: String, file: Path) {
-        writers.computeIfAbsent(file) { MessageWriter(it) }.write(message)
+        writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
     }
 
     override fun close() {

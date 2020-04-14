@@ -31,6 +31,10 @@ open class AsyncBrowserEmulator(
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
 
+    init {
+        params.withLogger(log).info()
+    }
+
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts
      *

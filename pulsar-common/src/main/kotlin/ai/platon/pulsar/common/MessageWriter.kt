@@ -2,10 +2,7 @@ package ai.platon.pulsar.common
 
 import java.io.PrintWriter
 import java.io.Writer
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.text.SimpleDateFormat
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
@@ -24,7 +21,7 @@ class MessageWriter(
     private var printWriter: PrintWriter? = null
     private var checkSize: Int = 0
     private val closed = AtomicBoolean()
-    private var writingErrorLogged: Boolean = false
+    private var writingError: Boolean = false
 
     fun write(s: String) {
         writeFile(s)
@@ -53,15 +50,13 @@ class MessageWriter(
                 closeWriter()
                 if (maxFileSize > 0 && Files.size(path) > maxFileSize) {
                     val old = Paths.get("$path.old")
-                    Files.delete(old)
-                    Files.move(path, old)
+                    Files.move(path, old, StandardCopyOption.REPLACE_EXISTING)
                 }
             }
 
-            openWriter()?.use {
+            openWriter()?.also {
                 it.println(s)
                 t?.printStackTrace(it)
-                it.flush()
             }
         } catch (e: Exception) {
             logWritingError(e)
@@ -69,18 +64,19 @@ class MessageWriter(
     }
 
     private fun logWritingError(e: Exception) {
-        if (writingErrorLogged) {
+        if (writingError) {
             return
         }
-        writingErrorLogged = true
+        writingError = true
         e.printStackTrace()
-        writingErrorLogged = false
+        writingError = false
     }
 
     private fun openWriter(): PrintWriter? {
         if (printWriter == null) {
             try {
                 Files.createDirectories(path.parent)
+                println("Create printer writer to $path")
                 fileWriter = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
                 printWriter = PrintWriter(fileWriter!!, true)
             } catch (e: Exception) {
@@ -94,6 +90,7 @@ class MessageWriter(
 
     @Synchronized
     private fun closeWriter() {
+        println("closeWriter | $path")
         printWriter?.flush()
         printWriter?.use { it.close() }
         fileWriter?.use { it.close() }
