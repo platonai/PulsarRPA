@@ -76,7 +76,7 @@ class MessageWriter(
         if (printWriter == null) {
             try {
                 Files.createDirectories(path.parent)
-                println("Create printer writer to $path")
+                // println("Create printer writer to $path")
                 fileWriter = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
                 printWriter = PrintWriter(fileWriter!!, true)
             } catch (e: Exception) {

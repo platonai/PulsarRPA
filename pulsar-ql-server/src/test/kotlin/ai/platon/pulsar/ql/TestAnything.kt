@@ -56,7 +56,7 @@ class TestAnything {
         val b = arrayOf("a", "b", "c", "d")
         a.zip(b).map { arrayOf(it.first, it.second) }.forEach { rs.addRow(*it) }
         val fmt = ResultSetFormatter(rs)
-        println(fmt.format())
+        println(fmt.toString())
     }
 
     @Test

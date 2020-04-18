@@ -13,7 +13,7 @@ import kotlin.math.abs
  */
 class H2Db(
         sessionFactory: String = H2SessionFactory::class.java.name,
-        var config:H2DbConfig = H2DbConfig()
+        val config: H2DbConfig = H2DbConfig()
 ) {
     init {
         System.setProperty("h2.sessionFactory", sessionFactory)
@@ -22,12 +22,12 @@ class H2Db(
     /**
      * The temporary directory.
      */
-    val tmpDir = AppPaths.get(AppPaths.TMP_DIR, "h2")
+    val tmpDir = AppPaths.TMP_DIR.resolve("h2")
 
     /**
      * The base directory to write test databases.
      */
-    val baseDir = AppPaths.get(AppPaths.TEST_DIR, "h2")
+    val baseDir = AppPaths.TEST_DIR.resolve("h2")
 
     /**
      * Get the file password (only required if file encryption is used).
@@ -69,7 +69,7 @@ class H2Db(
      * @return the connection
      */
     fun getConnection(name: String): Connection {
-        return getConnectionInternal(buildURL("$name;MODE=sigma", true), user, password)
+        return getConnection0(buildURL("$name;MODE=sigma", true), user, password)
     }
 
     /**
@@ -81,7 +81,7 @@ class H2Db(
      * @return the connection
      */
     fun getConnection(name: String, user: String, password: String): Connection {
-        return getConnectionInternal(buildURL(name, false), user, password)
+        return getConnection0(buildURL(name, false), user, password)
     }
 
     /**
@@ -158,8 +158,6 @@ class H2Db(
             } else {
                 url = "tcp://localhost:$port/$name"
             }
-        } else if (config.googleAppEngine) {
-            url = "gae://$name;FILE_LOCK=NO;AUTO_SERVER=FALSE;DB_CLOSE_ON_EXIT=FALSE"
         } else {
             url = name
         }
@@ -258,8 +256,8 @@ class H2Db(
         return u
     }
 
-    private fun getConnectionInternal(url: String, user: String, password: String): Connection {
-        println("Open H2 Connection: $url")
+    private fun getConnection0(url: String, user: String, password: String): Connection {
+        // println("Open H2 Connection: $url")
 
         org.h2.Driver.load()
         return DriverManager.getConnection(url, user, password)

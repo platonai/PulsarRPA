@@ -88,8 +88,8 @@ class MultiNodeIndexer(
         return indexes.keys
     }
 
-    fun nthElements(indexerName: String, n: Int): Set<Node>? {
-        var n = n
+    fun nthElements(indexerName: String, nth: Int): Set<Node>? {
+        var n = nth
         val indexer = indexes[indexerName]
 
         if (indexer != null) {

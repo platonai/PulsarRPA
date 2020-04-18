@@ -6,27 +6,39 @@ import java.sql.SQLException
 import java.sql.Types
 import java.util.*
 
-class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean = false) {
+class ResultSetFormatter(
+        private val rs: ResultSet,
+        private val asList: Boolean = false,
+        val buffer: StringBuilder = StringBuilder()
+) {
     private val meta = rs.metaData
     private val numColumns = meta.columnCount
-    private var numRows: Int = 0
+    var numRows: Int = 0
+        private set
+    var numNonBlankFields: Int = 0
+        private set
 
     private val rows = ArrayList<List<String>>()
     private val columns = IntRange(1, numColumns).map { meta.getColumnLabel(it) ?: "" }
 
-    private val sb = StringBuilder()
-
-    fun format(): String {
-        sb.setLength(0)
-        return try {
+    fun format() {
+        buffer.setLength(0)
+        try {
             if (asList) formatResultAsList() else formatResultAsTable()
         } catch (e: SQLException) {
             "(Exception)" + e.message
         }
     }
 
+    override fun toString(): String {
+        if (buffer.isEmpty()) {
+            format()
+        }
+        return buffer.toString()
+    }
+
     @Throws(SQLException::class)
-    private fun formatResultAsTable(): String {
+    private fun formatResultAsTable() {
         rows.add(columns)
 
         while (rs.next()) {
@@ -36,43 +48,43 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
             }
         }
 
-        sb.append(formatRows())
-
-        return sb.toString()
+        buffer.append(formatRows())
     }
 
     private fun overflow() {
-        sb.append(formatRows())
-        sb.append("\n")
+        buffer.append(formatRows())
+        buffer.append("\n")
         rows.clear()
     }
 
     @Throws(SQLException::class)
-    private fun formatResultAsList(): String {
+    private fun formatResultAsList() {
         var longestLabel = 0
         val columns = arrayOfNulls<String>(numColumns)
         for (i in 0 until numColumns) {
             val s = meta.getColumnLabel(i + 1)
             columns[i] = s
-            longestLabel = Math.max(longestLabel, s.length)
+            longestLabel = longestLabel.coerceAtLeast(s.length)
         }
 
         val sb = StringBuilder()
         while (rs.next()) {
             numRows++
             sb.setLength(0)
-            if (numRows > 1) {
-                sb.append("")
-            }
 
-            for (i in 0 until numColumns) {
+            IntRange(0, numColumns - 1).forEach { i ->
                 if (i > 0) {
                     sb.append('\n')
                 }
 
-                sb.append(StringUtils.rightPad(columns[i] + ":", 15 + longestLabel))
-                        .append(rs.getString(i + 1))
+                val padding = StringUtils.rightPad(columns[i] + ":", 15 + longestLabel)
+                val value = rs.getString(i + 1)
+                if (value.isNotBlank()) {
+                    ++numNonBlankFields
+                }
+                sb.append(padding).append(value)
             }
+
             sb.append("\n")
         }
 
@@ -80,7 +92,6 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
             val s = columns.joinToString("\n")
             sb.append(s).append("\n")
         }
-        return sb.toString()
     }
 
     @Throws(SQLException::class)
@@ -125,10 +136,10 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
         for (i in 0 until numColumns) {
             var max = 0
             for (row in rows) {
-                max = Math.max(max, row[i].length)
+                max = max.coerceAtLeast(row[i].length)
             }
             if (numColumns > 1) {
-                max = Math.min(MAX_COLUMN_LENGTH, max)
+                max = MAX_COLUMN_LENGTH.coerceAtMost(max)
             }
             columnSizes[i] = max
         }
@@ -142,11 +153,16 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
                 }
 
                 val s = row[i]
+                if (s.isNotBlank()) {
+                    ++numNonBlankFields
+                }
+
                 buff.append(s)
                 if (i < numColumns - 1) {
-                    for (j in s.length until columnSizes[i]) {
-                        buff.append(' ')
-                    }
+                    repeat(columnSizes[i] - s.length) { buff.append(' ') }
+//                    for (j in s.length until columnSizes[i]) {
+//                        buff.append(' ')
+//                    }
                 }
 
                 ++i
@@ -156,10 +172,6 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
         }
 
         return buff.toString()
-    }
-
-    override fun toString(): String {
-        return format() + "Total " + numRows + " rows"
     }
 
     companion object {

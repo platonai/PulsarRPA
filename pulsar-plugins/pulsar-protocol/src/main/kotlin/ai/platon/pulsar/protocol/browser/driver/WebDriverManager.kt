@@ -35,7 +35,7 @@ class WebDriverManager(
     val numReset = AtomicInteger()
     val pageViews = AtomicInteger()
     val elapsedTime get() = Duration.between(startTime, Instant.now())
-    val speed get() = 1.0 * pageViews.get() / elapsedTime.seconds
+    val speed get() = 1.0 * pageViews.get() / (1 + elapsedTime.seconds)
 
     fun allocate(n: Int, volatileConfig: VolatileConfig) {
         allocate(0, n, volatileConfig)

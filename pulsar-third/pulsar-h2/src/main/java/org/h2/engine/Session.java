@@ -35,6 +35,7 @@ import org.h2.util.New;
 import org.h2.util.SmallLRUCache;
 import org.h2.value.*;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -892,6 +893,13 @@ public class Session extends SessionWithState {
     @Override
     public void close() {
         if (!closed) {
+            // author: Vincent Zhang, support external session, e.g. PulsarSession
+            try {
+                SessionRemote.closeSession(this);
+            } catch (Exception e) {
+                trace.debug(e.getMessage());
+            }
+
             try {
                 database.checkPowerOff();
 

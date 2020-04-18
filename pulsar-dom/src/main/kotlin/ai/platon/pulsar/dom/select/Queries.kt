@@ -151,8 +151,8 @@ fun Node.all(predicate: (Node) -> Boolean): Boolean {
 
 /**
  * Notice: do not provide default value for offset, it overrides the default version in Node
+ * offset is 1 based
  * */
-@JvmOverloads
 fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elements {
     if (this !is Element) {
         return Elements()
@@ -194,8 +194,6 @@ inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destinati
     }
 }
 
-@Deprecated("Use select instead", ReplaceWith("Node.select(cssQuery)"))
-@JvmOverloads
 fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
     return select(cssQuery, offset, limit)
 }
@@ -207,17 +205,6 @@ fun Node.selectFirstOrNull(cssQuery: String): Element? {
 fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O? {
     return selectFirstOrNull(cssQuery)?.let(transformer)
 }
-
-//@JvmOverloads
-//fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-//    if (offset <= 1 && limit == Int.MAX_VALUE) {
-//        return MathematicalSelector.select(cssQuery, this)
-//    }
-//
-//    val drop = max(offset - 1, 0)
-//    return MathematicalSelector.select(cssQuery, this).asSequence().drop(drop).take(limit)
-//            .toCollection(Elements())
-//}
 
 /**
  * TODO: experimental

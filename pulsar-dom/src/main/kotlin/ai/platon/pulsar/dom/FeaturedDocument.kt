@@ -9,9 +9,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -45,13 +45,9 @@ open class FeaturedDocument(val document: Document) {
             return doc == NIL || doc.location == NIL.location
         }
 
-        fun getExportFilename(uri: String): String {
-            return AppPaths.fromUri(uri, "", ".htm")
-        }
+        fun getExportFilename(uri: String): String = AppPaths.fromUri(uri, "", ".htm")
 
-        fun getExportPath(url: String, ident: String): Path {
-            return AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
-        }
+        fun getExportPath(url: String, ident: String): Path = AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
 
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR

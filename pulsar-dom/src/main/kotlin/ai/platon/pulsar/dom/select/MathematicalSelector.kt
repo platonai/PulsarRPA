@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.nodes.Element
-import org.jsoup.select.Collector
+import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
@@ -166,7 +166,7 @@ object MathematicalSelector {
         if (cssQuery.isBlank()) return null
 
         try {
-            return Collector.findFirst(MathematicalQueryParser.parse(cssQuery.trim()), root)
+            return MathematicalCollector.findFirst(MathematicalQueryParser.parse(cssQuery.trim()), root)
         } catch (e: MathematicalSelectorParseException) {
             log.warn(e.message)
         }
@@ -182,6 +182,6 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     private fun select(evaluator: Evaluator, root: Element): Elements {
-        return Collector.collect(evaluator, root)
+        return MathematicalCollector.collect(evaluator, root)
     }
 }

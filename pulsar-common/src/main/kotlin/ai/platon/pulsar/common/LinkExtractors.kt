@@ -27,9 +27,7 @@ open class UrlExtractor {
 class ResourceExtractor(val resource: String): UrlExtractor() {
     fun extract(): Set<String> {
         val urls = mutableSetOf<String>()
-        ResourceLoader.readAllLines(resource).forEach {
-            extractTo(it, urls)
-        }
+        ResourceLoader.readAllLines(resource).forEach { extractTo(it, urls) }
         return urls
     }
 }

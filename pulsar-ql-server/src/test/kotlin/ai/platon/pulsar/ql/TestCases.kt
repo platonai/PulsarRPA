@@ -106,7 +106,7 @@ from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.
     }
 
     @Test
-    fun loadOutPagesAndSelectCityflower() {
+    fun loadOutPagesAndSelectCityFlower() {
         val sql = """
 select
     dom_text(dom)

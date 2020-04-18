@@ -15,9 +15,11 @@ import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import java.net.URL
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
@@ -75,7 +77,7 @@ class PulsarContext private constructor(): AutoCloseable {
     /**
      * Registered closeables, will be closed by Pulsar object
      * */
-    private val closableObjects = ConcurrentSkipListSet<AutoCloseable>()
+    private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
     /**
      * All open sessions
      * */
@@ -220,6 +222,11 @@ class PulsarContext private constructor(): AutoCloseable {
     fun scan(urlPrefix: String): Iterator<WebPage> {
         ensureAlive()
         return webDb.scan(urlPrefix)
+    }
+
+    fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
+        ensureAlive()
+        return webDb.scan(urlPrefix, fields)
     }
 
     fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
@@ -388,7 +395,6 @@ class PulsarContext private constructor(): AutoCloseable {
 
     private fun ensureAlive() {
         if (closed.get()) {
-
 //            throw IllegalStateException(
 //                    """Cannot call methods on a stopped PulsarContext.""")
         }

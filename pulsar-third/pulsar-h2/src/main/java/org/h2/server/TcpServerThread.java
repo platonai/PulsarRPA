@@ -181,10 +181,6 @@ public class TcpServerThread implements Runnable {
                 server.traceError(e);
             }
             try {
-                /**
-                 * Support external session, e.g. PulsarSession
-                 * */
-                SessionRemote.closeSession(session);
                 session.close();
                 server.removeConnection(threadId);
             } catch (RuntimeException e) {

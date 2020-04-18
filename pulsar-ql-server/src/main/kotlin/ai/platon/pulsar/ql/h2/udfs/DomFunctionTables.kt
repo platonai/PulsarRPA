@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB

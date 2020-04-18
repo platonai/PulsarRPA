@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.silent
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.IteratorUtils
@@ -76,7 +77,7 @@ class SQLContext: AutoCloseable {
 
     private var handlePeriodicalFetchTasks: Boolean
 
-    private val isClosed: AtomicBoolean = AtomicBoolean()
+    private val closed: AtomicBoolean = AtomicBoolean()
 
     init {
         status = Status.INITIALIZING
@@ -90,6 +91,7 @@ class SQLContext: AutoCloseable {
         backgroundSession.disableCache()
         backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_CONCURRENCY, 20)
 
+        // TODO: use ScheduledExecutorService
         backgroundThread = Thread { runBackgroundTasks() }
         backgroundThread.isDaemon = true
         backgroundThread.start()
@@ -122,41 +124,39 @@ class SQLContext: AutoCloseable {
     }
 
     override fun close() {
-        if (isClosed.getAndSet(true)) {
-            return
+        if (closed.compareAndSet(false, true)) {
+            status = Status.CLOSING
+
+            log.info("Closing SQLContext ...")
+
+            backgroundSession.use { it.close() }
+            backgroundThread.interrupt()
+            backgroundThread.join()
+
+            // database engine will close the sessions
+            sessions.clear()
+
+            status = Status.CLOSED
         }
-
-        status = Status.CLOSING
-
-        log.info("[Destruction] Destructing SQLContext ...")
-
-        backgroundSession.use { it.close() }
-        backgroundThread.join()
-
-        // database engine will close the sessions
-        sessions.clear()
-
-        status = Status.CLOSED
     }
 
     private fun runBackgroundTasks() {
         // start after 30 seconds
-        TimeUnit.SECONDS.sleep(30)
+        silent { TimeUnit.SECONDS.sleep(30) }
 
-        while (!isClosed.get()) {
+        while (!closed.get()) {
             if (handlePeriodicalFetchTasks) {
                 loadLazyTasks()
                 fetchSeeds()
             }
 
-            try {
-                TimeUnit.SECONDS.sleep(10)
-            } catch (e: InterruptedException) {}
+            silent { TimeUnit.SECONDS.sleep(5) }
         }
     }
 
     /**
      * Get background tasks and run them
+     * TODO: should handle lazy tasks in a better place
      */
     private fun loadLazyTasks() {
         ensureRunning()
@@ -211,7 +211,7 @@ class SQLContext: AutoCloseable {
 
     private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
         ensureRunning()
-        if (!isClosed.get()) {
+        if (!closed.get()) {
             ++lazyTaskRound
             log.debug("Running {}th round for lazy tasks", lazyTaskRound)
             backgroundSession.parallelLoadAll(urls, loadOptions)
@@ -219,7 +219,7 @@ class SQLContext: AutoCloseable {
     }
 
     private fun ensureRunning() {
-        if (isClosed.get()) {
+        if (closed.get()) {
             throw IllegalStateException(
                     """Cannot call methods on a stopped SQLContext.""")
         }

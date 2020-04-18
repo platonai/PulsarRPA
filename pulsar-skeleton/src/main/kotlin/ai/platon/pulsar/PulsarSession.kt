@@ -375,7 +375,7 @@ open class PulsarSession(
             closableObjects.forEach { o -> o.use { it.close() } }
             context.closeSession(this)
 
-            log.info("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
+            log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
                     id,
                     Strings.readableBytes(Systems.getMemoryUsed()),
                     Strings.readableBytes(Systems.getMemoryFree()))

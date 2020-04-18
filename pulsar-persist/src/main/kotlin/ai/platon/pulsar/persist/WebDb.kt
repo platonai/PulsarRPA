@@ -152,6 +152,16 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @param originalUrl The base url
      * @return The iterator to retrieve pages
      */
+    fun scan(originalUrl: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
+        return scan(originalUrl, fields.map { it.toString() }.toTypedArray())
+    }
+
+    /**
+     * Scan all pages who's url starts with {@param originalUrl}
+     *
+     * @param originalUrl The base url
+     * @return The iterator to retrieve pages
+     */
     fun scan(originalUrl: String, fields: Array<String>): Iterator<WebPage> {
         val query = store.newQuery()
         query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
