@@ -22,7 +22,6 @@ class ResultSetFormatter(
     private val columns = IntRange(1, numColumns).map { meta.getColumnLabel(it) ?: "" }
 
     fun format() {
-        buffer.setLength(0)
         try {
             if (asList) formatResultAsList() else formatResultAsTable()
         } catch (e: SQLException) {
@@ -42,55 +41,59 @@ class ResultSetFormatter(
         rows.add(columns)
 
         while (rs.next()) {
+            // Overflow occurs, clear buffer
+            if (rows.isEmpty()) {
+                buffer.setLength(0)
+            }
+
             formatCurrentRow()
             if (numRows++ > MAX_ROW_BUFFER) {
                 overflow()
             }
         }
 
-        buffer.append(formatRows())
+        formatRows()
     }
 
     private fun overflow() {
-        buffer.append(formatRows())
+        formatRows()
         buffer.append("\n")
         rows.clear()
     }
 
     @Throws(SQLException::class)
     private fun formatResultAsList() {
-        var longestLabel = 0
+        var labelLength = 0
         val columns = arrayOfNulls<String>(numColumns)
         for (i in 0 until numColumns) {
-            val s = meta.getColumnLabel(i + 1)
-            columns[i] = s
-            longestLabel = longestLabel.coerceAtLeast(s.length)
+            val label = meta.getColumnLabel(i + 1).also { columns[i] = it }
+            labelLength = labelLength.coerceAtLeast(label.length)
         }
 
-        val sb = StringBuilder()
         while (rs.next()) {
             numRows++
-            sb.setLength(0)
 
             IntRange(0, numColumns - 1).forEach { i ->
                 if (i > 0) {
-                    sb.append('\n')
+                    buffer.append('\n')
                 }
 
-                val padding = StringUtils.rightPad(columns[i] + ":", 15 + longestLabel)
-                val value = rs.getString(i + 1)
-                if (value.isNotBlank()) {
+                val th = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
+                val td = rs.getString(i + 1)
+                buffer.append(th).append(td)
+
+                if (td.isNotBlank()) {
                     ++numNonBlankFields
                 }
-                sb.append(padding).append(value)
             }
 
-            sb.append("\n")
+            buffer.append("\n")
         }
 
+        // generate an empty list
         if (numRows == 0) {
-            val s = columns.joinToString("\n")
-            sb.append(s).append("\n")
+            columns.joinTo(buffer, "\n")
+            buffer.append("\n")
         }
     }
 
@@ -131,7 +134,7 @@ class ResultSetFormatter(
         return s
     }
 
-    private fun formatRows(): String {
+    private fun formatRows() {
         val columnSizes = IntArray(numColumns)
         for (i in 0 until numColumns) {
             var max = 0
@@ -144,34 +147,26 @@ class ResultSetFormatter(
             columnSizes[i] = max
         }
 
-        val buff = StringBuilder()
-        for (row in rows) {
-            var i = 0
-            while (i < numColumns) {
-                if (i > 0) {
-                    buff.append(' ').append(BOX_VERTICAL).append(' ')
+        rows.forEach { row ->
+            row.forEachIndexed { j, value ->
+                if (j > 0) {
+                    buffer.append(' ').append(BOX_VERTICAL).append(' ')
                 }
 
-                val s = row[i]
-                if (s.isNotBlank()) {
+                buffer.append(value)
+
+                if (j < numColumns - 1) {
+                    // padding
+                    repeat(columnSizes[j] - value.length) { buffer.append(' ') }
+                }
+
+                if (value.isNotBlank()) {
                     ++numNonBlankFields
                 }
-
-                buff.append(s)
-                if (i < numColumns - 1) {
-                    repeat(columnSizes[i] - s.length) { buff.append(' ') }
-//                    for (j in s.length until columnSizes[i]) {
-//                        buff.append(' ')
-//                    }
-                }
-
-                ++i
             }
 
-            buff.append("\n")
+            buffer.append("\n")
         }
-
-        return buff.toString()
     }
 
     companion object {
