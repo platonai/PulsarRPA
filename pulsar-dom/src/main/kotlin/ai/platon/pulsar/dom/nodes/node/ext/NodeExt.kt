@@ -305,16 +305,35 @@ val Node.textRepresentation: String get() =
         else -> ""
     }
 
+/**
+ * TODO: slim html for table
+ * */
 val Node.slimHtml by field {
+    val nm = it.nodeName()
     when {
-        it.isImage -> createImage(it as Element, keepMetadata = false, lazy = true).toString()
-        it.isAnchor -> createLink(it as Element, keepMetadata = false, lazy = true).toString()
-        it.isNumericLike || it.isMoneyLike -> "<em>${it.cleanText}</em>"
-        it is TextNode -> String.format("<span>%s</span>", it.cleanText)
+        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
+        it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
+            String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
         it is Element -> String.format("<div>%s</div>", it.cleanText)
         else -> String.format("<b>%s</b>", it.name)
     }
 }
+
+private fun atomSlimHtml(node: Node): String {
+    val nm = node.nodeName()
+    return when {
+        node is TextNode -> String.format("<span>%s</span>", node.cleanText)
+        node.isImage -> createSlimImageHtml(node)
+        node.isAnchor -> createLink(node as Element, keepMetadata = false, lazy = true).toString()
+        node.isNumericLike || node.isMoneyLike -> "<em>${node.cleanText}</em>"
+        nm == "li" || nm == "td" || nm == "th" -> String.format("<$nm>%s</$nm>", node.cleanText)
+        node is Element -> node.cleanText
+        else -> String.format("<b>%s</b>", node.name)
+    }
+}
+
+private fun createSlimImageHtml(node: Node): String = node.run { String.format("<img src='%s' vi='%s' alt='%s'/>",
+            absUrl("src"), attr("vi"), attr("alt")) }
 
 val Node.key: String get() = "$location#$sequence"
 
@@ -394,6 +413,8 @@ val Node.bestElement get() = (this as? Element)?:parentElement
  * The caption of an Element is a joined text values of all non-blank text nodes
  * */
 val Node.caption get() = getCaptionWords().joinToString(";")
+
+fun Node.attrOrNull(attributeKey: String): String? = (this as? Element)?.attr(attributeKey)?.takeIf { it.isNotBlank() }
 
 fun Node.getFeature(key: Int): Double = features[key]
 

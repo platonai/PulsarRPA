@@ -3,7 +3,6 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
@@ -11,7 +10,6 @@ import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
@@ -29,37 +27,26 @@ import java.time.Duration
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
 object DomFunctions {
-    // private val sqlContext = SQLContext.getOrCreate()
+    private val sqlContext = SQLContext.getOrCreate()
 
     @UDFunction(description = "Load the page specified by url from db, if absent or expired, " +
             "fetch it from the web, and then parse it into a document")
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        // TODO: we might use another H2SessionFactory implementation
-        // SQLContext.getOrCreate().getSession(h2session.serialId)
-        val session = H2SessionFactory.getSession(h2session)
-        val page = session.load(configuredUrl)
-        return session.parseToValue(page)
+        return sqlContext.getSession(h2session).run {
+            parseValueDom(load(configuredUrl))
+        }
     }
 
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        // TODO: we might use another H2SessionFactory implementation
-        val session = H2SessionFactory.getSession(h2session)
-
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.second)
-        loadOptions.expires = Duration.ZERO
+        val options = LoadOptions.parse(urlAndArgs.second).apply { expires = Duration.ZERO }
 
-        val page = session.load(urlAndArgs.first, loadOptions)
-        return session.parseToValue(page)
-    }
-
-    @UDFunction(description = "Parse a html text to a ValueDom")
-    @JvmStatic
-    fun parse(html: String): ValueDom {
-        return ValueDom.get(Documents.parse(html))
+        return sqlContext.getSession(h2session.serialId).run {
+            parseValueDom(load(urlAndArgs.first, options))
+        }
     }
 
     /**
@@ -147,6 +134,18 @@ object DomFunctions {
     @JvmStatic
     fun siblingSize(dom: ValueDom): Int {
         return dom.element.siblingSize()
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun siblingIndex(dom: ValueDom): Int {
+        return dom.element.siblingIndex()
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun elementSiblingIndex(dom: ValueDom): Int {
+        return dom.element.elementSiblingIndex()
     }
 
     @UDFunction

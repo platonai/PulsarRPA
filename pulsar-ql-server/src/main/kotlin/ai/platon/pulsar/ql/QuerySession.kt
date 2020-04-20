@@ -40,7 +40,7 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
         }
     }
 
-    fun parseToValue(page: WebPage): ValueDom {
+    fun parseValueDom(page: WebPage): ValueDom {
         return ValueDom.get(parse(page))
     }
 

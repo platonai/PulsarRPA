@@ -59,11 +59,22 @@ inline fun <C : MutableCollection<Node>> Node.collectIfTo(destination: C, crossi
     return destination
 }
 
-inline fun <O: Node> Node.collect(crossinline transform: (Node) -> O?): List<O> {
-    return collectTo(mutableListOf(), transform)
+inline fun <O> Node.collect(crossinline transform: (Node) -> O?): List<O?> {
+    val destination = mutableListOf<O?>()
+    NodeTraversor.traverse({ node, _-> destination.add(transform(node)) }, this)
+    return destination
 }
 
-inline fun <O: Node, C : MutableCollection<O>> Node.collectTo(destination: C, crossinline transform: (Node) -> O?): C {
+inline fun <O> Node.collectNotNull(crossinline transform: (Node) -> O?): List<O> {
+    return collectNotNullTo(mutableListOf(), transform)
+}
+
+inline fun <O, C : MutableCollection<O?>> Node.collectTo(destination: C, crossinline transform: (Node) -> O?): C {
+    NodeTraversor.traverse({ node, _-> destination.add(transform(node)) }, this)
+    return destination
+}
+
+inline fun <O, C : MutableCollection<O>> Node.collectNotNullTo(destination: C, crossinline transform: (Node) -> O?): C {
     NodeTraversor.traverse({ node, _-> transform(node)?.also { destination.add(it) } }, this)
     return destination
 }

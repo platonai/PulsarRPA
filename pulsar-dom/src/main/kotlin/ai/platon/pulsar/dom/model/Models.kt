@@ -72,7 +72,7 @@ fun createImage(ele: Element, keepMetadata: Boolean = true, lazy: Boolean = fals
         return image
     }
 
-    val ignoredAttrs = Arrays.asList("id", "class", "style")
+    val ignoredAttrs = listOf("id", "class", "style")
 
     // calculate attributes
     var lazySrc: String? = null
@@ -175,7 +175,7 @@ fun sniffLinkText(link: Element, image: Element?): String {
 }
 
 fun maybeUrl(attrName: String, attrValue: String): Boolean {
-    val urlAttrs = Arrays.asList("src", "url", "data-src", "data-url")
+    val urlAttrs = listOf("src", "url", "data-src", "data-url")
 
     if (urlAttrs.contains(attrName))
         return true

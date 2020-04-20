@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.AppPaths
+import org.h2.engine.SysProperties
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
 import java.sql.Connection
@@ -258,7 +259,6 @@ class H2Db(
 
     private fun getConnection0(url: String, user: String, password: String): Connection {
         // println("Open H2 Connection: $url")
-
         org.h2.Driver.load()
         return DriverManager.getConnection(url, user, password)
     }

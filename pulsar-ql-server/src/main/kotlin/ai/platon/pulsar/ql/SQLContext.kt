@@ -10,9 +10,11 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.Lists
 import org.apache.commons.collections4.IteratorUtils
 import org.h2.api.ErrorCode
+import org.h2.engine.Session
+import org.h2.engine.SessionInterface
+import org.h2.engine.SysProperties
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -71,13 +73,11 @@ class SQLContext: AutoCloseable {
 
     private var lazyTaskRound = 0
 
-    private val lazyLoadTasks = Collections.synchronizedList(LinkedList<String>())
-
     private val loading = AtomicBoolean()
 
     private var handlePeriodicalFetchTasks: Boolean
 
-    private val closed: AtomicBoolean = AtomicBoolean()
+    private val closed = AtomicBoolean()
 
     init {
         status = Status.INITIALIZING
@@ -109,6 +109,11 @@ class SQLContext: AutoCloseable {
     fun sessionCount(): Int {
         ensureRunning()
         return sessions.size
+    }
+
+    fun getSession(sessionInterface: SessionInterface): QuerySession {
+        val h2session = sessionInterface as Session
+        return getSession(h2session.serialId)
     }
 
     fun getSession(sessionId: Int): QuerySession {
@@ -198,13 +203,13 @@ class SQLContext: AutoCloseable {
 
         loading.set(true)
 
-        val loadOptions = LoadOptions.create()
-        loadOptions.fetchMode = mode
-        loadOptions.background = true
+        val options = LoadOptions.create().apply {
+            fetchMode = mode
+            background = true
+        }
 
         // TODO: lower priority
-        val partitions: List<List<String>> = Lists.partition(IteratorUtils.toList(urls.iterator()), batchSize)
-        partitions.forEach { loadAll(it, loadOptions) }
+        urls.asSequence().chunked(batchSize).forEach { loadAll(it, options) }
 
         loading.set(false)
     }
@@ -220,8 +225,7 @@ class SQLContext: AutoCloseable {
 
     private fun ensureRunning() {
         if (closed.get()) {
-            throw IllegalStateException(
-                    """Cannot call methods on a stopped SQLContext.""")
+            throw IllegalStateException("SQLContext is closed")
         }
     }
 }

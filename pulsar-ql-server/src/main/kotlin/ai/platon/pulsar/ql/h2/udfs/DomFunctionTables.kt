@@ -45,7 +45,7 @@ object DomFunctionTables {
         }
 
         val pages = Queries.loadAll(session, portalUrls)
-        val doms = pages.map { session.parseToValue(it) }
+        val doms = pages.map { session.parseValueDom(it) }
 
         return toResultSet("DOM", doms)
     }
@@ -280,7 +280,7 @@ object DomFunctionTables {
             limit: Int = 100): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         val page = session.load(portalUrl)
-        val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
+        val dom = if (page.isNil) ValueDom.NIL else session.parseValueDom(page)
         return features(conn, dom, cssQuery, offset, limit)
     }
 
@@ -338,7 +338,7 @@ object DomFunctionTables {
             limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         val page = session.load(portalUrl)
-        val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
+        val dom = if (page.isNil) ValueDom.NIL else session.parseValueDom(page)
         return getElementsWithMostSibling(conn, dom, restrictCss, offset, limit)
     }
 

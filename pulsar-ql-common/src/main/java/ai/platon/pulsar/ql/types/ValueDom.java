@@ -68,7 +68,12 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
         return element == document;
     }
 
+    /**
+     * TODO: might use lot of memory so memory should be managed
+     * */
     public String getOuterHtml() {
+        // throw new RuntimeException("From here");
+        // TODO: document scope cache
         if (outerHtml == null) outerHtml = element.outerHtml();
         return outerHtml;
     }
@@ -182,7 +187,7 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
         }
 
         ValueDom dom = (ValueDom) other;
-        return dom.element.equals(this.element) || dom.getOuterHtml().equals(this.getOuterHtml());
+        return dom.element.equals(this.element);
     }
 
     @Override

@@ -79,7 +79,7 @@ class ResultSetFormatter(
                 }
 
                 val th = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
-                val td = rs.getString(i + 1)
+                val td = rs.getString(i + 1)?:""
                 buffer.append(th).append(td)
 
                 if (td.isNotBlank()) {

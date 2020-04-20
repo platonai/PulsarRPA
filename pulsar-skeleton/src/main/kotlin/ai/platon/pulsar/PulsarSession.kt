@@ -13,7 +13,6 @@ import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Duration
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -221,21 +220,20 @@ open class PulsarSession(
      */
     fun parse(page: WebPage): FeaturedDocument {
         ensureAlive()
-        val key = page.key + "\t" + page.fetchTime
+        val url = page.url
         if (!enableCache) {
             return context.parse(page)
         }
 
-        var document = context.documentCache.get(key)
+        var document = context.documentCache.get(url)
         if (document == null) {
-            document = context.parse(page)
-            context.documentCache.put(key, document)
-
-            val prevFetchTime = page.prevFetchTime
-            if (prevFetchTime.plusSeconds(3600).isAfter(Instant.now())) {
-                // It might be still in the cache
-                val oldKey = page.key + "\t" + prevFetchTime
-                context.documentCache.tryRemove(oldKey)
+            // TODO: review if the synchronization is correct and necessary
+            synchronized(context.documentCache) {
+                document = context.documentCache.get(url)
+                if (document == null) {
+                    document = context.parse(page)
+                    context.documentCache.put(url, document)
+                }
             }
         }
 
@@ -247,6 +245,18 @@ open class PulsarSession(
         val normUrl = normalize(url, options)
         return parse(load(normUrl))
     }
+
+    fun cache(page: WebPage): WebPage = page.also { context.pageCache.put(it.url, it) }
+
+    fun removePageCache(url: String): WebPage? = context.pageCache.tryRemove(url)
+
+    fun removePageCache(urls: Iterable<String>) = urls.forEach { removePageCache(it) }
+
+    fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { context.documentCache.put(it.location, it) }
+
+    fun removeDocumentCache(url: String): FeaturedDocument? = context.documentCache.tryRemove(url)
+
+    fun removeDocumentCache(urls: Iterable<String>) = urls.forEach { removeDocumentCache(it) }
 
     private fun getCachedOrGet(url: String): WebPage? {
         ensureAlive()

@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 /**
  * Index tests.
  */
-class TestPulsarH2 : TestBase() {
+class TestSQLFeatures : TestBase() {
 
     @Test
     fun testStringConcat() {
@@ -97,6 +97,7 @@ class TestPulsarH2 : TestBase() {
             print(rs.getString(1) + " " + rs.getString(2))
             println()
         }
+
         if (localStat.moreResults) {
             println("moreResults")
             while (rs.next()) {

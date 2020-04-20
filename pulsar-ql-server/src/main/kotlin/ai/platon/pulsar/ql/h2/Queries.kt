@@ -119,20 +119,18 @@ object Queries {
     }
 
     /**
-     * TODO: any type support
+     * TODO: any type support, only array of strings are supported now
      * */
     fun <O> select(dom: ValueDom, cssQuery: String, transform: (Element) -> O): ValueArray {
-        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }
-                .toTypedArray()
-
+        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }.toTypedArray()
         return ValueArray.get(values)
     }
 
-    fun <O> selectFirst(dom: ValueDom, cssQuery: String, transformer: (Element) -> O): O? {
+    fun <O> selectFirstOrNull(dom: ValueDom, cssQuery: String, transformer: (Element) -> O): O? {
         return dom.element.selectFirstOrNull(cssQuery, transformer)
     }
 
-    fun <O> selectNth(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {
+    fun <O> selectNthOrNull(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {
         return dom.element.select(cssQuery, n, 1) { transform(it) }.firstOrNull()
     }
 
@@ -142,9 +140,7 @@ object Queries {
 
     fun getLinks(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-        return ele.select(cssQuery, offset, limit) {
-            it.absUrl("href")
-        }.filterNotNull()
+        return ele.select(cssQuery, offset, limit) { it.absUrl("href") }.filterNotNull()
     }
 
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
@@ -172,8 +168,7 @@ object Queries {
      */
     @InterfaceStability.Evolving
     fun <E> toResultSet(colName: String, collection: Iterable<E>): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = SimpleResultSet().apply { autoClose = false }
         val colType = if (colName.equals("DOM", ignoreCase = true)) ValueDom.type else Value.STRING
         rs.addColumn(colName, DataType.convertTypeToSQLType(colType), 0, 0)
 
