@@ -9,6 +9,7 @@ import java.util.*
 class ResultSetFormatter(
         private val rs: ResultSet,
         private val asList: Boolean = false,
+        private val withHeader: Boolean = false,
         val buffer: StringBuilder = StringBuilder()
 ) {
     private val meta = rs.metaData
@@ -38,11 +39,14 @@ class ResultSetFormatter(
 
     @Throws(SQLException::class)
     private fun formatResultAsTable() {
-        rows.add(columns)
+        if (withHeader) {
+            rows.add(columns)
+        }
 
+        var i = 0
         while (rs.next()) {
             // Overflow occurs, clear buffer
-            if (rows.isEmpty()) {
+            if (i++ > 0 && rows.isEmpty()) {
                 buffer.setLength(0)
             }
 
@@ -99,8 +103,7 @@ class ResultSetFormatter(
 
     @Throws(SQLException::class)
     private fun formatCurrentRow() {
-        IntRange(1, numColumns)
-                .map { StringUtils.abbreviateMiddle(formatColumn(it), "..", MAX_COLUMN_LENGTH) }
+        IntRange(1, numColumns).map { StringUtils.abbreviateMiddle(formatColumn(it), "..", MAX_COLUMN_LENGTH) }
                 .also { rows.add(it) }
     }
 
@@ -165,7 +168,7 @@ class ResultSetFormatter(
                 }
             }
 
-            buffer.append("\n")
+            // buffer.append("\n")
         }
     }
 

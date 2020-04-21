@@ -122,12 +122,12 @@ class FeedThread(
         }
     }
 
-    private fun report(round: Int, batchSize: Float, feededInRound: Int) {
+    private fun report(round: Int, batchSize: Float, feedInRound: Int) {
         Params.of(
                 "Feed round", round,
                 "batchSize", batchSize,
-                "feededInRound", feededInRound,
-                "totalFeeded", totalFeed,
+                "feedInRound", feedInRound,
+                "totalFeed", totalFeed,
                 "readyTasks", tasksMonitor.numReadyTasks,
                 "pendingTasks", tasksMonitor.numPendingTasks,
                 "finishedTasks", tasksMonitor.numFinishedTasks,
@@ -135,30 +135,30 @@ class FeedThread(
         ).withLogger(LOG).info(true)
     }
 
-    private fun adjustFeedBatchSize(batchSize_: Float): Float {
-        var batchSize = batchSize_
-        // TODO : Why readyTasks is always be very small?
+    private fun adjustFeedBatchSize(batchSize: Float): Float {
+        var size = batchSize
+        // TODO : Why readyTasks is always be very small when fetching news pages?
         val readyTasks = tasksMonitor.numReadyTasks.get()
         val pagesThroughput = taskScheduler.averagePageThroughput
         val recentPages = pagesThroughput * checkInterval.seconds
         // TODO : Every batch size should be greater than pages fetched during last wait interval
 
-        if (batchSize <= 1) {
-            batchSize = 1f
+        if (size <= 1) {
+            size = 1f
         }
 
         if (readyTasks <= fetchThreads) {
             // No ready tasks, increase batch size
-            batchSize += (batchSize * 0.2).toFloat()
+            size += size * 0.2f
         } else if (readyTasks <= 2 * fetchThreads) {
             // Too many ready tasks, decrease batch size
-            batchSize -= (batchSize * 0.2).toFloat()
+            size -= size * 0.2f
         } else {
             // Ready task number is OK, do not feed this time
-            batchSize = 0f
+            size = 0f
         }
 
-        return batchSize
+        return size
     }
 
     @Throws(IOException::class, InterruptedException::class)

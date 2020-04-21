@@ -248,13 +248,13 @@ open class PulsarSession(
 
     fun cache(page: WebPage): WebPage = page.also { context.pageCache.put(it.url, it) }
 
-    fun removePageCache(url: String): WebPage? = context.pageCache.tryRemove(url)
+    fun removePageCache(url: String): WebPage? = context.pageCache.remove(url)
 
     fun removePageCache(urls: Iterable<String>) = urls.forEach { removePageCache(it) }
 
     fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { context.documentCache.put(it.location, it) }
 
-    fun removeDocumentCache(url: String): FeaturedDocument? = context.documentCache.tryRemove(url)
+    fun removeDocumentCache(url: String): FeaturedDocument? = context.documentCache.remove(url)
 
     fun removeDocumentCache(urls: Iterable<String>) = urls.forEach { removeDocumentCache(it) }
 
