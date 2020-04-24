@@ -130,8 +130,8 @@ class GeneralCrawler: Crawler() {
                 .take(20).map { it.url }
         links.forEach { println(it) }
 
-        i.volatileConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())
-        i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
+        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())
+        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
 
         val pages = i.loadAll(links, LoadOptions.parse(args))
 

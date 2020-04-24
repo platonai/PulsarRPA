@@ -2,6 +2,8 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.FileCommand
+import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -110,6 +112,10 @@ open class ProxyManager(
             DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
                 FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
             }
+
+            if (Systems.getProperty(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
+                enableDefaultProviders()
+            }
         }
 
         fun hasEnabledProvider(): Boolean {
@@ -144,11 +150,7 @@ open class ProxyManager(
             }
 
             // if no one set the proxy availability explicitly, but we have providers, use it
-            if (hasEnabledProvider()) {
-                return true
-            }
-
-            return false
+            return hasEnabledProvider()
         }
 
         fun enableDefaultProviders() {

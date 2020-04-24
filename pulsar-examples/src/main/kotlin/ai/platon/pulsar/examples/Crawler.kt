@@ -5,7 +5,6 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
@@ -14,7 +13,6 @@ import ai.platon.pulsar.crawl.fetch.BatchHandler
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL
-import java.time.Duration
 import java.util.zip.Deflater
 
 class BeforeBatchHandler: BatchHandler() {
@@ -94,8 +92,8 @@ open class Crawler(
                 .take(options.topLinks).map { it.url }
         log.info("Total " + links.size + " items to load")
 
-        i.volatileConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
-        i.volatileConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
+        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
+        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
 
         val pages = i.loadAll(links, options.createItemOption())
 

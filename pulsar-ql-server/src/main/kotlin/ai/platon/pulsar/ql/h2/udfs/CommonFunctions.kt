@@ -62,7 +62,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetFetchMode(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_MODE)
+        return session.sessionConfig.getAndUnset(FETCH_MODE)
     }
 
     /**
@@ -92,7 +92,7 @@ object CommonFunctions {
     fun unsetBrowser(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
         unsetFetchMode(h2session)
-        return session.volatileConfig.getAndUnset(BROWSER_TYPE)
+        return session.sessionConfig.getAndUnset(BROWSER_TYPE)
     }
 
     /**
@@ -122,7 +122,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetEagerFetchLimit(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_CONCURRENCY)
+        return session.sessionConfig.getAndUnset(FETCH_CONCURRENCY)
     }
 
     /**
@@ -155,7 +155,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetPageExpires(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(STORAGE_DATUM_EXPIRES)
+        return session.sessionConfig.getAndUnset(STORAGE_DATUM_EXPIRES)
     }
 
     /**
@@ -179,7 +179,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetPageLoadTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
+        return session.sessionConfig.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
     }
 
     /**
@@ -203,7 +203,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetScriptTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_SCRIPT_TIMEOUT)
+        return session.sessionConfig.getAndUnset(FETCH_SCRIPT_TIMEOUT)
     }
 
     /**
@@ -225,7 +225,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetScrollDownCount(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
+        return session.sessionConfig.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
     }
 
     /**
@@ -248,7 +248,7 @@ object CommonFunctions {
     @JvmStatic
     fun setScrollInterval(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
+        return session.sessionConfig.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
     }
 
     /**
@@ -266,7 +266,7 @@ object CommonFunctions {
     @JvmOverloads
     fun setConfig(@H2Context h2session: Session, name: String, value: String, ttl: Int = Integer.MAX_VALUE / 2): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndSet(name, value, ttl)
+        return session.sessionConfig.getAndSet(name, value, ttl)
     }
 
     @UDFunction(description = "Set the volatileConfig property associated by name with time-to-life of the calling session")
@@ -286,7 +286,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(name)
+        return session.sessionConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
@@ -294,14 +294,14 @@ object CommonFunctions {
     @JvmStatic
     fun unsetConfig(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(name)
+        return session.sessionConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
     fun getConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.get(name)
+        return session.sessionConfig.get(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
@@ -333,7 +333,7 @@ object CommonFunctions {
         rs.addColumn("VALUE")
 
         val session = getSession(h2session)
-        for ((key, value) in session.volatileConfig.unbox()) {
+        for ((key, value) in session.sessionConfig.unbox()) {
             rs.addRow(key, value)
         }
 
@@ -432,9 +432,9 @@ object CommonFunctions {
         Objects.requireNonNull(name)
 
         val session = getSession(h2session)
-        val old = session.volatileConfig.get(name)
+        val old = session.sessionConfig.get(name)
         if (value != null) {
-            session.volatileConfig.set(name, value, ttl)
+            session.sessionConfig.set(name, value, ttl)
             return old
         }
 

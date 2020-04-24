@@ -126,25 +126,16 @@ object AppPaths {
                 }
     }
 
-    fun get(baseDirectory: Path, vararg more: String): Path {
-        return get(baseDirectory.toString(), *more)
-    }
+    fun get(baseDirectory: Path, vararg more: String): Path = get(baseDirectory.toString(), *more)
 
-    fun get(first: String, vararg more: String): Path {
-        return Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
-    }
+    fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
 
-    fun getTmp(first: String, vararg more: String): Path {
-        return Paths.get(tmpDirStr, first.removePrefix(tmpDirStr), *more)
-    }
+    fun getTmp(first: String, vararg more: String): Path = Paths.get(tmpDirStr, first.removePrefix(tmpDirStr), *more)
 
-    fun random(prefix: String = "", suffix: String = ""): String {
-        return "$prefix${UUID.randomUUID()}$suffix"
-    }
+    fun random(prefix: String = "", suffix: String = ""): String = "$prefix${UUID.randomUUID()}$suffix"
 
     fun hex(uri: String, prefix: String = "", suffix: String = ""): String {
-        val path = DigestUtils.md5Hex(uri)
-        return "$prefix$path$suffix"
+        return DigestUtils.md5Hex(uri).let { "$prefix$it$suffix" }
     }
 
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {

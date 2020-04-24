@@ -16,7 +16,9 @@ import oshi.SystemInfo
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
-import java.util.concurrent.*
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
@@ -109,6 +111,7 @@ class LoadingWebDriverPool(
                 .onFailure { log.warn("Exception occurs when quit $driver {}", Strings.simplifyException(it)) }
     }
 
+    @Throws(InterruptedException::class)
     private fun take0(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         driverFactory.takeIf { isActive && onlineDrivers.size < capacity && availableMemory > instanceRequiredMemory }
                 ?.create(priority, conf)

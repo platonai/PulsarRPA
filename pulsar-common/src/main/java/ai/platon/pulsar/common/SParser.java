@@ -310,10 +310,8 @@ public class SParser {
 
         valueString = valueString.toLowerCase();
 
-        if ("true".equals(valueString))
-            return true;
-        else if ("false".equals(valueString))
-            return false;
+        if ("true".equals(valueString)) return true;
+        else if ("false".equals(valueString)) return false;
         else return defaultValue;
     }
 

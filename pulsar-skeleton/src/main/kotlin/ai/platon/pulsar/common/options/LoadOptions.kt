@@ -152,7 +152,7 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
-    // A volatile config is usually session scoped
+    // A volatile config is usually in session scoped
     var volatileConfig: VolatileConfig? = null
         set(value) { field = initConfig(value) }
         get() = initConfig(field)
@@ -273,16 +273,14 @@ open class LoadOptions: CommonOptions {
         return this
     }
 
-    private fun initConfig(vc: VolatileConfig?): VolatileConfig? {
-        vc?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        vc?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        vc?.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        vc?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-        return vc
+    private fun initConfig(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+        setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
     companion object {
-
         val default = LoadOptions()
         val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()

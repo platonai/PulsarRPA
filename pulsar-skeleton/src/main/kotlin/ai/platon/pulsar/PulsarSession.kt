@@ -30,18 +30,18 @@ open class PulsarSession(
         /**
          * The session scope volatile volatileConfig, every item is supposed to be changed at any time and any place
          * */
-        val volatileConfig: VolatileConfig,
+        val sessionConfig: VolatileConfig,
         /**
          * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
         val id: Int = 9000000 + idGen.incrementAndGet()
 ) : AutoCloseable {
-    val log = LoggerFactory.getLogger(PulsarSession::class.java)
+    protected val log = LoggerFactory.getLogger(PulsarSession::class.java)
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * TODO: session scoped?
      * */
-    val beanFactory = BeanFactory(volatileConfig)
+    val sessionBeanFactory = BeanFactory(sessionConfig)
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
     // Session variables
@@ -52,15 +52,9 @@ open class PulsarSession(
     /**
      * Close objects when sessions closes
      * */
-    fun registerClosable(closable: AutoCloseable) {
-        ensureAlive()
-        closableObjects.add(closable)
-    }
+    fun registerClosable(closable: AutoCloseable) = ensureAlive { closableObjects.add(closable) }
 
-    fun disableCache() {
-        ensureAlive()
-        enableCache = false
-    }
+    fun disableCache() = ensureAlive { enableCache = false }
 
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
         ensureAlive()
@@ -88,15 +82,9 @@ open class PulsarSession(
      * @param configuredUrl The url followed by volatileConfig options
      * @return The web page created
      */
-    fun inject(configuredUrl: String): WebPage {
-        ensureAlive()
-        return context.inject(configuredUrl)
-    }
+    fun inject(configuredUrl: String): WebPage = ensureAlive { context.inject(configuredUrl) }
 
-    fun getOrNil(url: String): WebPage {
-        ensureAlive()
-        return context.getOrNil(url)
-    }
+    fun getOrNil(url: String): WebPage = ensureAlive { context.getOrNil(url) }
 
     /**
      * Load a url with default options
@@ -104,10 +92,7 @@ open class PulsarSession(
      * @param url The url followed by volatileConfig options
      * @return The Web page
      */
-    fun load(url: String): WebPage {
-        ensureAlive()
-        return load(normalize(url))
-    }
+    fun load(url: String): WebPage = load(normalize(url))
 
     fun load(url: NormUrl): WebPage {
         ensureAlive()
@@ -220,7 +205,7 @@ open class PulsarSession(
      * Parse the Web page into DOM.
      * If the Web page is not changed since last parse, use the last result if available
      *
-     * TODO: harvest task can not use the previous parsed document
+     * TODO: harvest task can not use the cached document since the feature vector can be changed
      */
     fun parse(page: WebPage): FeaturedDocument {
         ensureAlive()
@@ -316,13 +301,10 @@ open class PulsarSession(
         variables[name] = value
     }
 
-    fun putBean(obj: Any) {
-        ensureAlive()
-        beanFactory.putBean(obj)
-    }
+    fun putBean(obj: Any) = ensureAlive().also { sessionBeanFactory.putBean(obj) }
 
     inline fun <reified T> getBean(): T? {
-        return beanFactory.getBean()
+        return sessionBeanFactory.getBean()
     }
 
     fun delete(url: String) {
@@ -361,14 +343,9 @@ open class PulsarSession(
         return other === this || (other is PulsarSession && other.id == id)
     }
 
-    override fun hashCode(): Int {
-        // return just id itself
-        return Integer.hashCode(id)
-    }
+    override fun hashCode(): Int = id
 
-    override fun toString(): String {
-        return "#$id"
-    }
+    override fun toString(): String = "#$id"
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
@@ -378,8 +355,8 @@ open class PulsarSession(
 
             log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
                     id,
-                    Strings.readableBytes(Systems.getMemoryUsed()),
-                    Strings.readableBytes(Systems.getMemoryFree()))
+                    Strings.readableBytes(Systems.memoryUsed),
+                    Strings.readableBytes(Systems.memoryFree))
         }
     }
 
@@ -392,22 +369,23 @@ open class PulsarSession(
 
     private fun initOptions(options: LoadOptions): LoadOptions {
         if (options.volatileConfig == null) {
-            options.volatileConfig = volatileConfig
+            options.volatileConfig = sessionConfig
         }
         return options
     }
 
     private fun ensureAlive(): Boolean {
-        if (!PulsarEnv.isActive) {
-            return false
-        }
-
-        if (closed.get()) {
+        if (!isActive) {
             return false
         }
 
         return true
     }
+
+    private fun <T> ensureAlive(action: () -> T): T
+            = if (isActive) action() else throw RuntimeException("Pulsar session is not alive")
+
+    private fun <T> ensureAlive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
 
     companion object {
         val SESSION_PAGE_CACHE_TTL = Duration.ofSeconds(20)!!

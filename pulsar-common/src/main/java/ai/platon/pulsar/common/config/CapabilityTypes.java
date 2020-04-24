@@ -233,11 +233,11 @@ public interface CapabilityTypes {
     String PROXY_MANAGER_CLASS = "proxy.proxy.manager.class";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
-    String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.internal.server";
     String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
-    String PROXY_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
-    String PROXY_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";
-    String PROXY_PROXY_POOL_RECOVER_PERIOD = "proxy.proxy.pool.recover.period";
+    String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
+    String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.forward.server";
+    String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";
+    String PROXY_SERVER_WORKER_THREADS = "proxy.forward.server.worker.threads";
 
     /**
      * Network
