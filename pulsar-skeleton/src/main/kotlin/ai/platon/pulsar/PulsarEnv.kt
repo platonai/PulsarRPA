@@ -88,16 +88,14 @@ class PulsarEnv {
         }
 
         @Throws(BeansException::class)
-        fun <T> getBean(requiredType: Class<T>): T {
-            return applicationContext.getBean(requiredType)
-        }
+        fun <T> getBean(requiredType: Class<T>): T = applicationContext.getBean(requiredType)
 
         fun shutdown() {
             if (closed.compareAndSet(false, true)) {
+                active.set(false)
                 // TODO: still can be managed by spring
                 PulsarContext.getOrCreate().use { it.close() }
                 applicationContext.close()
-                active.set(false)
             }
         }
     }

@@ -26,6 +26,9 @@ annotation class RequiredDirectory
 object AppPaths {
    
     val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
+    val SYS_USER_DIR = Paths.get(AppConstants.USER_DIR)
+    val SYS_USER_HOME = Paths.get(AppConstants.USER_HOME)
+
     // directory for symbolic links, this path should be as short as possible
     @RequiredDirectory
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")

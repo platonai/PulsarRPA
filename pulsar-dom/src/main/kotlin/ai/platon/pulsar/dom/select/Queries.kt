@@ -226,6 +226,9 @@ inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, 
     return destination
 }
 
+/**
+ * TODO: use css query parser
+ * */
 fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
     val ap = appendix.trim()

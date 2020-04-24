@@ -26,7 +26,6 @@ class BrowserPrivacyContextManager(
     }
 
     suspend fun submit(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        // TODO: have synchronization bug
         waitUntilFreezerChannelIsClosed()
         return submit0(task, fetchFun)
     }

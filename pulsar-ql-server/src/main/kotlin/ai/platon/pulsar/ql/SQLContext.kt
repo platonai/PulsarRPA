@@ -5,14 +5,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.silent
 import ai.platon.pulsar.persist.metadata.FetchMode
-import com.google.common.collect.Lists
-import org.apache.commons.collections4.IteratorUtils
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
 import org.h2.engine.SessionInterface
-import org.h2.engine.SysProperties
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
@@ -147,7 +143,7 @@ class SQLContext: AutoCloseable {
 
     private fun runBackgroundTasks() {
         // start after 30 seconds
-        silent { TimeUnit.SECONDS.sleep(30) }
+        TimeUnit.SECONDS.runCatching { sleep(1) }
 
         while (!closed.get()) {
             if (handlePeriodicalFetchTasks) {
@@ -155,7 +151,7 @@ class SQLContext: AutoCloseable {
                 fetchSeeds()
             }
 
-            silent { TimeUnit.SECONDS.sleep(5) }
+            TimeUnit.SECONDS.runCatching { sleep(5) }
         }
     }
 

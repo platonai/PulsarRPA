@@ -1,12 +1,12 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.common.silent
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
@@ -44,7 +44,7 @@ class BrowserEmulatedFetcher(
     private val proxyManager = driverManager.proxyManager
     private val closed = AtomicBoolean()
     private val isClosed get() = closed.get()
-    private val isAlive get() = !isClosed
+    private val isActive get() = !isClosed && PulsarEnv.isActive
 
     fun fetch(url: String): Response {
         return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -109,7 +109,7 @@ class BrowserEmulatedFetcher(
                 try {
                     asyncBrowserEmulator.fetch(task, driver)
                 } catch (e: IllegalContextStateException) {
-                    log.info("Illegal context state, task is cancelled | {}", task.url)
+                    log.info("Task #{} is cancelled | {}", task.id, task.url)
                     FetchResult(task, ForwardingResponse.canceled(task.page))
                 }
             }.response
@@ -126,7 +126,7 @@ class BrowserEmulatedFetcher(
 
     fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
         val volatileConfig = immutableConfig.toVolatileConfig()
-        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
+        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
     fun fetchAll(urls: Iterable<String>): List<Response> {
@@ -134,7 +134,7 @@ class BrowserEmulatedFetcher(
     }
 
     fun fetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
+        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
     fun fetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
@@ -142,16 +142,16 @@ class BrowserEmulatedFetcher(
     }
 
     fun parallelFetchAll(urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return parallelFetchAllPages(nextBatchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
+        return parallelFetchAllPages0(nextBatchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
     fun parallelFetchAll(batchId: Int, urls: Iterable<String>, volatileConfig: VolatileConfig): List<Response> {
-        return parallelFetchAllPages(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
+        return parallelFetchAllPages0(batchId, urls.map { WebPage.newWebPage(it, volatileConfig) }, volatileConfig)
     }
 
     fun parallelFetchAllPages(pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
         pages.forEach { if (it.volatileConfig == null) it.volatileConfig = volatileConfig }
-        return parallelFetchAllPages(nextBatchId, pages, volatileConfig)
+        return parallelFetchAllPages0(nextBatchId, pages, volatileConfig)
     }
 
     private fun createFetchTask(page: WebPage): FetchTask {
@@ -160,7 +160,7 @@ class BrowserEmulatedFetcher(
         return FetchTask(0, priority, page, volatileConfig)
     }
 
-    private fun parallelFetchAllPages(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
+    private fun parallelFetchAllPages0(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
         FetchTaskBatch(batchId, pages, volatileConfig, privacyContextManager.activeContext).use { batch ->
             // allocate drivers before batch fetch context timing
             allocateDriversIfNecessary(batch, batch.conf)
@@ -214,7 +214,7 @@ class BrowserEmulatedFetcher(
                 logIdleLongTime(batch)
             }
 
-            silent { TimeUnit.SECONDS.sleep(1) }
+            TimeUnit.SECONDS.runCatching { sleep(1) }
 
             state = checkState(batch)
         } while (state == FetchTaskBatch.State.RUNNING)
@@ -297,7 +297,7 @@ class BrowserEmulatedFetcher(
         val timeout = Duration.ofMinutes(2).seconds
         while (batch.workingTasks.isNotEmpty() && tick++ < timeout) {
             checkAndHandleTasksAbort(batch)
-            silent { TimeUnit.SECONDS.sleep(1) }
+            TimeUnit.SECONDS.runCatching { sleep(1) }
         }
 
         // Finally, if there are still working tasks, force abort the worker threads
@@ -407,8 +407,8 @@ class BrowserEmulatedFetcher(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info("Proxy: $proxyManager")
-            log.info("Drivers: $driverManager")
+            proxyManager.takeIf { it.isEnabled }?.let { log.info(it.toString()) }
+            log.info("Web drivers: $driverManager")
         }
     }
 

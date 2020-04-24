@@ -13,6 +13,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import com.codahale.metrics.MetricRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -30,6 +31,8 @@ open class AsyncBrowserEmulator(
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
+
+    val numDeferredNavigates = metrics.meter(MetricRegistry.name(javaClass, "deferredNavigates"))
 
     init {
         params.withLogger(log).info()
@@ -52,11 +55,13 @@ open class AsyncBrowserEmulator(
     }
 
     open fun cancelNow(task: FetchTask) {
+        numCancels.mark()
         task.cancel()
         driverManager.cancel(task.url)
     }
 
     open suspend fun cancel(task: FetchTask) {
+        numCancels.mark()
         task.cancel()
         withContext(Dispatchers.IO) {
             driverManager.cancel(task.url)
@@ -149,6 +154,7 @@ open class AsyncBrowserEmulator(
 
         withContext(Dispatchers.IO) {
             numNavigates.mark()
+            numDeferredNavigates.mark()
             // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
             driver.navigateTo(task.url)
         }

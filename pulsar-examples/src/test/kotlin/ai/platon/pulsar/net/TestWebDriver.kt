@@ -65,11 +65,11 @@ class TestWebDriver {
     fun testWebDriverPool() {
         val workingDrivers = mutableListOf<ManagedWebDriver>()
         repeat(10) {
-            val driver = driverPool.poll(conf)
+            val driver = driverPool.take(conf)
             workingDrivers.add(driver)
         }
 
-        assertEquals(10, driverPool.numWorking)
+        assertEquals(10, driverPool.numWorking.get())
         assertEquals(0, driverPool.numFree)
         assertEquals(10, driverPool.numActive)
         assertEquals(10, driverPool.numOnline)
@@ -79,21 +79,21 @@ class TestWebDriver {
             driverPool.put(driver)
         }
 
-        assertEquals(0, driverPool.numWorking)
+        assertEquals(0, driverPool.numWorking.get())
         assertEquals(5, driverPool.numFree)
-        assertEquals(5, driverPool.numRetired.get())
+        assertEquals(5, driverPool.counterRetired.count)
 
         driverPool.closeAll()
 
-        assertEquals(0, driverPool.numWorking)
+        assertEquals(0, driverPool.numWorking.get())
         assertEquals(0, driverPool.numFree)
-        assertEquals(10, driverPool.numQuit.get())
+        assertEquals(10, driverPool.counterQuit.count)
 
         driverPool.closeAll()
 
-        assertEquals(0, driverPool.numWorking)
+        assertEquals(0, driverPool.numWorking.get())
         assertEquals(0, driverPool.numFree)
-        assertEquals(10, driverPool.numQuit.get())
+        assertEquals(10, driverPool.counterQuit.count)
     }
 
     @Test
@@ -107,11 +107,9 @@ class TestWebDriver {
                 }
 
                 if (workingDrivers.size < 20) {
-                    val driver = driverPool.poll(conf)
-                    if (driver != null) {
-                        assertNotNull(driver)
-                        workingDrivers.add(driver)
-                    }
+                    val driver = driverPool.take(conf)
+                    assertNotNull(driver)
+                    workingDrivers.add(driver)
                 }
             }
         }

@@ -105,9 +105,7 @@ class FetchTask(
         canceled.set(false)
     }
 
-    fun cancel() {
-        canceled.set(true)
-    }
+    fun cancel() = canceled.set(true)
 
     fun clone(): FetchTask {
         return FetchTask(
@@ -120,13 +118,9 @@ class FetchTask(
         )
     }
 
-    override fun compareTo(other: FetchTask): Int {
-        return url.compareTo(other.url)
-    }
+    override fun compareTo(other: FetchTask): Int = url.compareTo(other.url)
 
-    override fun toString(): String {
-        return "$batchTaskId/$batchId"
-    }
+    override fun toString(): String = "$batchTaskId/$batchId"
 
     companion object {
         val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id = 0)

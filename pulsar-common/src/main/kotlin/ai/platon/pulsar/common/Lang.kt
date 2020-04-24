@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import com.google.common.base.Predicates
+import java.util.concurrent.TimeUnit
 
 enum class FlowState {
     CONTINUE, BREAK;
@@ -11,7 +12,9 @@ enum class FlowState {
 /** Unsafe lazy, usually be used in single thread */
 fun <T> usfLazy(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
 
-inline fun <T> silent(block: () -> T): T? = try { block() } catch (ignored: Throwable) { null }
+fun sleepSeconds(seconds: Long) {
+    runCatching { TimeUnit.SECONDS.sleep(seconds) }.onFailure { Thread.currentThread().interrupt() }
+}
 
 /** Always false and have no static check warning */
 fun alwaysFalse(): Boolean {

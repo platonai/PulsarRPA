@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.protocol.http
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.MimeUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -35,7 +36,6 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import crawlercommons.robots.BaseRobotRules
-import org.apache.commons.lang3.math.NumberUtils
 import org.apache.http.HttpStatus
 import org.slf4j.LoggerFactory
 import java.net.*
@@ -47,6 +47,7 @@ abstract class AbstractHttpProtocol: Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
     val isClosed get() = closed.get()
+    val isActive get() = !isClosed && PulsarEnv.isActive
     /**
      * The max retry time
      */
@@ -60,9 +61,7 @@ abstract class AbstractHttpProtocol: Protocol {
 
     private lateinit var robots: HttpRobotRulesParser
 
-    override fun getConf(): ImmutableConfig {
-        return conf
-    }
+    override fun getConf(): ImmutableConfig = conf
 
     override fun setConf(jobConf: ImmutableConfig) {
         conf = jobConf
@@ -76,9 +75,9 @@ abstract class AbstractHttpProtocol: Protocol {
     }
 
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
-        return if (closed.get()) {
-            emptyList()
-        } else pages.mapNotNull { getResponseNoexcept(it.url, it, false) }
+        return pages.takeIf { isActive }
+                ?.mapNotNull { it.runCatching { getResponse(it.url, it, false) }.getOrNull() }
+                ?: listOf()
     }
 
     override fun getProtocolOutput(page: WebPage): ProtocolOutput {
@@ -110,7 +109,7 @@ abstract class AbstractHttpProtocol: Protocol {
         var retry = false
         var lastThrowable: Throwable? = null
         var i = 0
-        val maxTry = getMaxRetry(page)
+        val maxTry = fetchMaxRetry.coerceAtMost(MAX_REY_GUARD)
         do {
             if (i > 0) {
                 log.info("Protocol retry: {}/{} | {}", i, maxTry, page.url)
@@ -124,9 +123,11 @@ abstract class AbstractHttpProtocol: Protocol {
                 log.warn("Unexpected protocol exception", e)
             }
         } while (retry && ++i < maxTry && !closed.get())
+
         if (response == null) {
             return getFailedResponse(lastThrowable, i, maxTry)
         }
+
         setResponseTime(startTime, page, response)
         // page.baseUrl/page.location is the last working address, and page.url is the permanent internal key for the page
         val location = page.location?:page.url
@@ -146,23 +147,13 @@ abstract class AbstractHttpProtocol: Protocol {
         val content = Content(url, location, bytes, contentType, response.headers, mimeTypes)
         val headers = response.headers
         val status: ProtocolStatus
+        // got a good response
         when (httpCode) {
-            200 -> {
-                // got a good response
-                return ProtocolOutput(content, headers)
-            }
-            304 -> {
-                return ProtocolOutput(content, headers, ProtocolStatus.STATUS_NOTMODIFIED)
-            }
+            200 -> return ProtocolOutput(content, headers)
+            304 -> return ProtocolOutput(content, headers, ProtocolStatus.STATUS_NOTMODIFIED)
             in 300..399 -> { // handle redirect
-                var redirect = response.getHeader("Location")
                 // some broken servers, such as MS IIS, use lowercase header name...
-                if (redirect == null) {
-                    redirect = response.getHeader("location")
-                }
-                if (redirect == null) {
-                    redirect = ""
-                }
+                val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
                 u = URL(u, redirect)
                 val code = when (httpCode) {
                     HttpStatus.SC_MULTIPLE_CHOICES -> ProtocolStatus.MOVED
@@ -197,21 +188,12 @@ abstract class AbstractHttpProtocol: Protocol {
         return ProtocolOutput(content, headers, status)
     }
 
-    private fun getMaxRetry(page: WebPage): Int {
-        // Never retry if fetch mode is crowd sourcing
-        val maxRry = 1.takeIf { page.fetchMode == FetchMode.CROWD_SOURCING } ?: fetchMaxRetry
-        return maxRry.coerceAtMost(MAX_REY_GUARD)
-    }
-
     private fun getFailedResponse(lastThrowable: Throwable?, tryCount: Int, maxRry: Int): ProtocolOutput {
-        val code = if (lastThrowable is ConnectException) {
-            ProtocolStatus.REQUEST_TIMEOUT
-        } else if (lastThrowable is SocketTimeoutException) {
-            ProtocolStatus.REQUEST_TIMEOUT
-        } else if (lastThrowable is UnknownHostException) {
-            ProtocolStatus.UNKNOWN_HOST
-        } else {
-            ProtocolStatus.EXCEPTION
+        val code = when (lastThrowable) {
+            is ConnectException -> ProtocolStatus.REQUEST_TIMEOUT
+            is SocketTimeoutException -> ProtocolStatus.REQUEST_TIMEOUT
+            is UnknownHostException -> ProtocolStatus.UNKNOWN_HOST
+            else -> ProtocolStatus.EXCEPTION
         }
         val protocolStatus = ProtocolStatus.failed(code,
                 "exception", lastThrowable,
@@ -221,16 +203,15 @@ abstract class AbstractHttpProtocol: Protocol {
     }
 
     private fun setResponseTime(startTime: Instant, page: WebPage, response: Response) {
-        val elapsedTime: Duration
         val pageFetchMode = page.fetchMode
-        elapsedTime = if (pageFetchMode == FetchMode.CROWD_SOURCING || pageFetchMode == FetchMode.BROWSER) {
-            val requestTime = NumberUtils.toLong(response.getHeader(HttpHeaders.Q_REQUEST_TIME), -1)
-            val responseTime = NumberUtils.toLong(response.getHeader(HttpHeaders.Q_RESPONSE_TIME), -1)
+        val elapsedTime = if (pageFetchMode == FetchMode.BROWSER) {
+            val requestTime = response.getHeader(HttpHeaders.Q_REQUEST_TIME)?.toLongOrNull()?:-1
+            val responseTime = response.getHeader(HttpHeaders.Q_RESPONSE_TIME)?.toLongOrNull()?:-1
             if (requestTime > 0 && responseTime > 0) {
                 Duration.ofMillis(responseTime - requestTime)
             } else {
-                // -1 hour means an invalid response time which indicates a bug
-                Duration.ofHours(-1)
+                // Non-positive means an invalid response time which indicates a bug
+                Duration.ZERO
             }
         } else {
             Duration.between(startTime, Instant.now())
@@ -243,14 +224,6 @@ abstract class AbstractHttpProtocol: Protocol {
 
     @Throws(Exception::class)
     abstract suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response?
-
-    private fun getResponseNoexcept(url: String, page: WebPage, followRedirects: Boolean): Response? {
-        return try {
-            getResponse(url, page, followRedirects)
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     override fun getRobotRules(page: WebPage): BaseRobotRules {
         return robots.getRobotRulesSet(this, page.url)

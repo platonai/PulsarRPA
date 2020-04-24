@@ -5,7 +5,11 @@ import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.Slf4jReporter
 import com.codahale.metrics.jmx.JmxReporter
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import okhttp3.internal.threadName
 import org.slf4j.LoggerFactory
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 
 class MetricsManagement: AutoCloseable {
@@ -16,19 +20,18 @@ class MetricsManagement: AutoCloseable {
 
     init {
         SharedMetricRegistries.setDefault("pulsar")
-
         metricRegistry = SharedMetricRegistries.getDefault()
-
         jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
-
         csvReporter = CsvReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build(AppPaths.METRICS_DIR.toFile())
 
+        val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
+        val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
         slf4jReporter = Slf4jReporter.forRegistry(metricRegistry)
+                .scheduleOn(executor).shutdownExecutorOnStop(true)
                 .outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
-//                    .withLoggingLevel(Slf4jReporter.LoggingLevel.DEBUG)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build()
@@ -41,8 +44,8 @@ class MetricsManagement: AutoCloseable {
     }
 
     override fun close() {
-        jmxReporter.use { it.close() }
         csvReporter.use { it.close() }
         slf4jReporter.use { it.close() }
+        jmxReporter.use { it.close() }
     }
 }

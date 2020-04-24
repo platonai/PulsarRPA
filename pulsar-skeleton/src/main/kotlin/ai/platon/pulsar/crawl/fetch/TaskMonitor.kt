@@ -91,10 +91,7 @@ class TaskMonitor(
     override fun setup(jobConf: ImmutableConfig) {
         // TODO: just parse from command line
         this.options = FetchOptions(jobConf)
-
-        numPoolThreads = if (options.fetchMode == FetchMode.CROWD_SOURCING) Integer.MAX_VALUE
-        else options.numPoolThreads
-
+        numPoolThreads = options.numPoolThreads
         log.info(params.format())
     }
 

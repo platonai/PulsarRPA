@@ -1,9 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.silent
 import ai.platon.pulsar.persist.metadata.BrowserType
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
@@ -11,15 +8,10 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import java.util.logging.Level
-
-data class DriverStat(
-        var pageViews: Int = 0
-)
 
 enum class DriverStatus {
     UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
@@ -37,23 +29,17 @@ class ManagedWebDriver(
         val priority: Int = 1000
 ): Comparable<ManagedWebDriver> {
     companion object {
-        val instanceSequence = AtomicInteger()
+        val instanceSequencer = AtomicInteger()
     }
-
-    private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
 
     /**
      * The driver id
      * */
-    val id = instanceSequence.incrementAndGet()
-
-    val name = driver.javaClass.simpleName
-
+    val id = instanceSequencer.incrementAndGet()
     /**
-     * Driver statistics
+     * The driver name
      * */
-    val stat = DriverStat()
-
+    val name = driver.javaClass.simpleName + "-" + id
     /**
      * Driver status
      * */
@@ -68,80 +54,54 @@ class ManagedWebDriver(
     val isQuit get() = status.get().isQuit
 
     /**
-     * The loading page url
-     * The browser might redirect, so it might not be the same to [currentUrl]
+     * The current loading page url
+     * The browser might redirect, so it might not be the same with [currentUrl]
      * */
     var url: String = ""
 
     /**
      * The actual url return by the browser
      * */
-    val currentUrl: String get() = try {
-        if (isQuit) "" else driver.currentUrl
-    } catch (e: NoSuchSessionException) {
-        ""
-    }
+    val currentUrl: String get() = "".takeIf { isQuit }?:driver.runCatching { currentUrl }.getOrDefault("")
 
     /**
      * The real time page source return by the browser
      * */
-    val pageSource: String
-        @Throws(NoSuchSessionException::class)
-        get() = driver.pageSource
+    val pageSource: String get() = driver.runCatching { pageSource }.getOrThrow()
 
     /**
      * The id of the session to the browser
      * */
-    val sessionId: String? get() {
-        return try {
-            when {
-                isQuit -> null
-                driver is ChromeDevtoolsDriver -> driver.sessionId?.toString()
-                else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
-            }
-        } catch (e: NoSuchSessionException) {
-            null
-        }
+    val sessionId: String? get() = when {
+        isQuit -> null
+        driver is ChromeDevtoolsDriver -> driver.runCatching { sessionId }.getOrNull()?.toString()
+        else -> StringUtils.substringBetween(driver.toString(), "(", ")").takeIf { it != "null" }
     }
 
     /**
      * The browser type
      * */
-    val browserType: BrowserType get() =
-        when (driver) {
-            is ChromeDevtoolsDriver -> BrowserType.CHROME
-            is ChromeDriver -> BrowserType.SELENIUM_CHROME
-            else -> BrowserType.CHROME
-        }
+    val browserType: BrowserType get() = when (driver) {
+        is ChromeDevtoolsDriver -> BrowserType.CHROME
+        is ChromeDriver -> BrowserType.SELENIUM_CHROME
+        else -> BrowserType.CHROME
+    }
 
     init {
         setLogLevel()
     }
 
-    fun startWork() {
-        status.set(DriverStatus.WORKING)
-    }
-
-    fun cancel() {
-        stopLoading()
-        status.set(DriverStatus.CANCELED)
-    }
-
-    fun retire() {
-        status.set(DriverStatus.RETIRED)
-    }
+    fun free() = status.set(DriverStatus.FREE)
+    fun startWork() = status.set(DriverStatus.WORKING)
+    fun retire() = status.set(DriverStatus.RETIRED)
+    fun cancel() = status.set(DriverStatus.CANCELED).also { stopLoading() }
 
     /**
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
     @Throws(NoSuchSessionException::class)
-    fun navigateTo(url: String) {
-        if (isWorking) {
-            this.url = url
-            driver.get(url)
-        }
-    }
+    fun navigateTo(url: String) = url.takeIf { isWorking }?.also { this.url = it; driver.get(it) }
 
     @Throws(NoSuchSessionException::class)
     fun evaluate(expression: String): Any? {
@@ -153,13 +113,7 @@ class ManagedWebDriver(
         }
     }
 
-    fun evaluateSilently(expression: String): Any? {
-        if (isWorking) {
-            return silent { evaluate(expression) }
-        }
-
-        return null
-    }
+    fun evaluateSilently(expression: String): Any? = this.takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     fun stopLoading() {
         if (isNotWorking) {
@@ -167,7 +121,7 @@ class ManagedWebDriver(
         }
 
         if (driver is ChromeDevtoolsDriver) {
-            silent { driver.stopLoading() }
+            driver.runCatching { stopLoading() }
         } else {
             evaluateSilently(";window.stop();")
         }
@@ -198,27 +152,19 @@ class ManagedWebDriver(
             synchronized(status) {
                 if (!isQuit) {
                     status.set(DriverStatus.QUIT)
-                    silent { driver.quit() }
+                    driver.runCatching { quit() }
                 }
             }
         }
     }
 
-    override fun equals(other: Any?): Boolean {
-        return other is ManagedWebDriver && other.id == this.id
-    }
+    override fun equals(other: Any?): Boolean = other is ManagedWebDriver && other.id == this.id
 
-    override fun hashCode(): Int {
-        return id
-    }
+    override fun hashCode(): Int = id
 
-    override fun compareTo(other: ManagedWebDriver): Int {
-        return id - other.id
-    }
+    override fun compareTo(other: ManagedWebDriver): Int = id - other.id
 
-    override fun toString(): String {
-        return if (sessionId != null) "#$id-$sessionId" else "#$id(closed)"
-    }
+    override fun toString(): String = sessionId?.let { "#$id-$sessionId" }?:"#$id(closed)"
 
     private fun setLogLevel() {
         // Set log level

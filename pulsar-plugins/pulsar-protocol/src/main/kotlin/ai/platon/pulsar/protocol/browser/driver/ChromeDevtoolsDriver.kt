@@ -3,8 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
-import com.github.kklisura.cdt.protocol.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.types.network.ResourceType
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import org.openqa.selenium.NoSuchSessionException
@@ -114,20 +113,24 @@ class ChromeDevtoolsDriver(
         }
 
     init {
-        launchChromeIfNecessary(launchOptions)
+        try {
+            launchChromeIfNecessary(launchOptions)
 
-        // In chrome every tab is a separate process
-        tab = chrome.createTab()
-        navigateUrl = tab.url?:""
+            // In chrome every tab is a separate process
+            tab = chrome.createTab()
+            navigateUrl = tab.url?:""
 
-        devTools = chrome.createDevTools(tab, devToolsConfig)
-        devToolsList.add(devTools)
+            devTools = chrome.createDevTools(tab, devToolsConfig)
+            devToolsList.add(devTools)
 
-        if (userAgent.isNotEmpty()) {
-            emulation.setUserAgentOverride(userAgent)
+            if (userAgent.isNotEmpty()) {
+                emulation.setUserAgentOverride(userAgent)
+            }
+
+            numInstances.incrementAndGet()
+        } catch (t: Throwable) {
+            throw ChromeServiceException("Failed to create chrome devtools driver", t)
         }
-
-        numInstances.incrementAndGet()
     }
 
     @Throws(NoSuchSessionException::class)

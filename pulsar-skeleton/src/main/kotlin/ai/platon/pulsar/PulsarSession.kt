@@ -42,7 +42,7 @@ open class PulsarSession(
      * TODO: session scoped?
      * */
     val beanFactory = BeanFactory(volatileConfig)
-    private val variables: MutableMap<String, Any> = ConcurrentHashMap()
+    private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
@@ -115,7 +115,8 @@ open class PulsarSession(
         initOptions(url.options)
 
         return if (enableCache) {
-            getCachedOrLoad(url)
+            val cache = context.pageCache
+            cache.get(url.url)?:context.load(url).also { cache.put(it.url, it) }
         } else {
             context.load(url)
         }
@@ -143,8 +144,11 @@ open class PulsarSession(
         ensureAlive()
 
         initOptions(url.options)
-        val page = if (enableCache) getCachedOrLoad(url) else null
-        return page?:context.loadDeferred(url)
+
+        return if (enableCache) {
+            val cache = context.pageCache
+            cache.get(url.url)?:context.loadDeferred(url).also { cache.put(it.url, it) }
+        } else context.loadDeferred(url)
     }
 
     suspend fun loadDeferred(url: String, options: LoadOptions): WebPage {
@@ -267,19 +271,6 @@ open class PulsarSession(
 
         page = context.get(url)
         context.pageCache.put(url, page)
-
-        return page
-    }
-
-    private fun getCachedOrLoad(url: NormUrl): WebPage {
-        ensureAlive()
-        var page = context.pageCache.get(url.url)
-        if (page != null) {
-            return page
-        }
-
-        page = context.load(url.url, url.options)
-        context.pageCache.put(url.url, page)
 
         return page
     }

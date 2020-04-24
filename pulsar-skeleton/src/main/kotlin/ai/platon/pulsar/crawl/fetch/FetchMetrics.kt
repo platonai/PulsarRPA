@@ -1,13 +1,16 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
+import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.MetricRegistry.name
@@ -67,11 +70,11 @@ class FetchMetrics(
      * The total bytes of page content of all success web pages
      * */
     private val contentBytes = AtomicLong()
-    private val tasks0 = metricRegistry.counter(name(javaClass, "tasks"))
-    private val successTasks0 = metricRegistry.counter(name(javaClass, "successTasks"))
-    private val finishedTasks0 = metricRegistry.counter(name(javaClass, "finishedTasks"))
-    private val contentBytes0 = metricRegistry.counter(name(javaClass, "contentBytes"))
-    private val contentBytes1 = metricRegistry.histogram(name(javaClass, "contentBytes1"))
+    private val meterTasks = metricRegistry.meter(name(javaClass, "tasks"))
+    private val meterSuccessTasks = metricRegistry.meter(name(javaClass, "successTasks"))
+    private val meterFinishedTasks = metricRegistry.meter(name(javaClass, "finishedTasks"))
+    private val counterContentBytes = metricRegistry.counter(name(javaClass, "contentBytes"))
+    private val histogramContentBytes = metricRegistry.histogram(name(javaClass, "contentBytesHistogram"))
 
     /**
      * The total all bytes received by the hardware at the application startup
@@ -147,12 +150,12 @@ class FetchMetrics(
 
     fun markTaskStart() {
         tasks.incrementAndGet()
-        tasks0.inc()
+        meterTasks.mark()
     }
 
     fun markTaskStart(size: Int) {
         tasks.addAndGet(size)
-        tasks0.inc(size.toLong())
+        meterTasks.mark(size.toLong())
     }
 
     /**
@@ -160,15 +163,15 @@ class FetchMetrics(
      */
     fun trackSuccess(page: WebPage) {
         successTasks.incrementAndGet()
-        successTasks0.inc()
+        meterSuccessTasks.mark()
 
         val bytes = page.contentBytes.toLong()
         contentBytes.addAndGet(bytes)
-        contentBytes0.inc(bytes)
-        contentBytes1.update(bytes)
+        counterContentBytes.inc(bytes)
+        histogramContentBytes.update(bytes)
 
         val i = totalFinishedTasks.incrementAndGet()
-        finishedTasks0.inc()
+        meterFinishedTasks.mark()
         if (i % 5 == 0) {
             updateNetworkTraffic()
         }

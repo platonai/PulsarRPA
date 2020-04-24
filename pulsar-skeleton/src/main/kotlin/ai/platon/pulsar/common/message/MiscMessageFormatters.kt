@@ -56,7 +56,7 @@ class CompletedPageFormatter(
         private val page: WebPage,
         private val verbose: Boolean = false
 ) {
-    val bytes get() = page.contentBytes
+    val contentBytes get() = page.contentBytes
     val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
     val proxy get() = page.metadata[Name.PROXY]
     val jsData get() = page.activeDomMultiStatus
@@ -78,14 +78,10 @@ class CompletedPageFormatter(
     val readableLinks get() = if (verbose) "file://$link | $readableUrl" else readableUrl
 
     override fun toString(): String {
-        if (bytes < 0) {
-            return ""
-        }
-
         return String.format(fmt,
                 category,
                 page.protocolStatus.minorCode,
-                Strings.readableBytes(bytes.toLong(), 7, false),
+                Strings.readableBytes(contentBytes.toLong(), 7, false),
                 DateTimes.readableDuration(responseTime),
                 if (proxy == null) "" else " via $proxy",
                 jsSate,
@@ -96,7 +92,7 @@ class CompletedPageFormatter(
     }
 }
 
-class CompletedPagesFormatter(
+class LoadCompletedPagesFormatter(
         val pages: Collection<WebPage>,
         val startTime: Instant,
         val verbose: Boolean = false

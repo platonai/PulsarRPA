@@ -26,7 +26,7 @@ class WebDriverEventLoop(
     fun run() {
         while (!closed.get()) {
             val task = pendingTasks.take()
-            val driver = driverPool.poll(conf)
+            val driver = driverPool.take(conf)
             GlobalScope.launch {
                 driver.startWork()
                 navigateTo(task, driver)

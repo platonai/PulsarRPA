@@ -11,7 +11,6 @@ open class UrlExtractor {
                         + "(([\\w\\-]+\\.){1,}?([\\w\\-.~]+\\/?)*"
                         + "[\\p{Alnum}.,%_=?&#\\-+()\\[\\]\\*$~@!:/{};']*)",
                 Pattern.CASE_INSENSITIVE or Pattern.MULTILINE or Pattern.DOTALL)
-
     }
 
     protected fun extractTo(line: String, urls: MutableSet<String>) {
@@ -19,12 +18,12 @@ open class UrlExtractor {
         while (matcher.find()) {
             val start = matcher.start(1)
             val end = matcher.end()
-            urls.add((line.substring(start, end)))
+            urls.add(line.substring(start, end))
         }
     }
 }
 
-class ResourceExtractor(val resource: String): UrlExtractor() {
+internal class ResourceExtractor(val resource: String): UrlExtractor() {
     fun extract(): Set<String> {
         val urls = mutableSetOf<String>()
         ResourceLoader.readAllLines(resource).forEach { extractTo(it, urls) }
@@ -32,14 +31,19 @@ class ResourceExtractor(val resource: String): UrlExtractor() {
     }
 }
 
-class DirectoryExtractor(val baseDir: Path): UrlExtractor() {
+internal class DirectoryExtractor(val baseDir: Path): UrlExtractor() {
     fun extract(): Set<String> {
         val urls = mutableSetOf<String>()
-        Files.list(baseDir).filter { Files.isRegularFile(it) }.forEach { resourcePath ->
-            Files.newBufferedReader(resourcePath).forEachLine {
+        Files.list(baseDir).filter { Files.isRegularFile(it) }.forEach { path ->
+            Files.newBufferedReader(path).forEachLine {
                 extractTo(it, urls)
             }
         }
         return urls
     }
+}
+
+object LinkExtractors {
+    fun fromResource(resource: String) = ResourceExtractor(resource).extract()
+    fun fromDirectory(baseDir: Path) = DirectoryExtractor(baseDir).extract()
 }

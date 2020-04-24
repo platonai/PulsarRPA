@@ -36,8 +36,8 @@ open class BrowserEmulateEventHandler(
     private val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    private val metricRegistry = SharedMetricRegistries.getDefault()
-    private val pageSourceBytes = metricRegistry.histogram(MetricRegistry.name(BrowserEmulateEventHandler::class.java, "pageSourceBytes"))
+    private val metrics = SharedMetricRegistries.getDefault()
+    private val pageSourceBytes = metrics.histogram("browser.emulate.pageSourceBytes")
     private val driverPool = driverManager.driverPool
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {

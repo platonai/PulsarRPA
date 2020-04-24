@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -31,7 +32,8 @@ abstract class BrowserEmulatorBase(
     val driverControl = driverManager.driverControl
     val driverPool = driverManager.driverPool
     val metrics = SharedMetricRegistries.getDefault()
-    val numNavigates = metrics.meter("navigates")
+    val numNavigates = metrics.meter(name(javaClass, "navigates"))
+    val numCancels = metrics.meter(name(javaClass, "cancels"))
 
     override fun getParams(): Params {
         return Params.of(

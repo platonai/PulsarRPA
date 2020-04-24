@@ -1,13 +1,13 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.message.CompletedPageFormatter
-import ai.platon.pulsar.common.message.CompletedPagesFormatter
+import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
@@ -57,6 +57,7 @@ class LoadComponent(
     private val fetchTaskTracker get() = fetchComponent.fetchMetrics
 
     private val closed = AtomicBoolean()
+    private val isActive get() = !closed.get() && PulsarEnv.isActive
     private val isInactive get() = closed.get() || PulsarEnv.isInactive
 
     /**
@@ -160,9 +161,7 @@ class LoadComponent(
                 FetchReason.NEW_PAGE,
                 FetchReason.EXPIRED,
                 FetchReason.SMALL_CONTENT,
-                FetchReason.MISS_FIELD -> {
-                    pendingUrls.add(url)
-                }
+                FetchReason.MISS_FIELD -> pendingUrls.add(url)
                 FetchReason.TEMP_MOVED -> {
                     // TODO: batch redirect
                     page = redirect(page, opt)
@@ -177,9 +176,7 @@ class LoadComponent(
                         log.warn("Don't fetch page with unknown reason {} | {} {}", status, url, opt)
                     }
                 }
-                else -> {
-                    log.error("Unknown fetch reason {} | {} {}", reason, url, opt)
-                }
+                else -> log.error("Unknown fetch reason {} | {} {}", reason, url, opt)
             }
         }
 
@@ -203,7 +200,7 @@ class LoadComponent(
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(CompletedPagesFormatter(updatedPages, startTime, verbose).toString())
+            log.info(LoadCompletedPagesFormatter(updatedPages, startTime, verbose).toString())
         }
 
         return knownPages
@@ -301,7 +298,7 @@ class LoadComponent(
     private fun afterFetch(page: WebPage, options: LoadOptions) {
         update(page, options)
 
-        if (log.isInfoEnabled) {
+        if (log.isInfoEnabled && isActive) {
             val verbose = log.isDebugEnabled
             log.info(CompletedPageFormatter(page, verbose).toString())
         }

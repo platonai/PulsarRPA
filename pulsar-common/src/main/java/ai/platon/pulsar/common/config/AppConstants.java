@@ -41,6 +41,8 @@ public interface AppConstants {
      */
     int NCPU = Runtime.getRuntime().availableProcessors();
 
+    int DEFAULT_NUM_BROWSERS = NCPU;
+
     int FETCH_THREADS = NCPU;
 
     String YES_STRING = "y";
@@ -172,10 +174,13 @@ public interface AppConstants {
      * Directories
      * */
     String TMP_DIR = SystemUtils.JAVA_IO_TMPDIR;
-    String HOME_DIR = SystemUtils.USER_HOME;
+    // User's home directory
+    String USER_HOME = SystemUtils.USER_HOME;
+    // User's current working directory
+    String USER_DIR = SystemUtils.USER_DIR;
 
     Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
-    Path PULSAR_DEFAULT_DATA_DIR = Paths.get(HOME_DIR, ".pulsar");
+    Path PULSAR_DEFAULT_DATA_DIR = Paths.get(USER_HOME, ".pulsar");
 
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";

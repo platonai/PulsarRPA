@@ -218,7 +218,7 @@ public interface CapabilityTypes {
     /**
      * Browser control
      */
-    String BROWSER_MAX_DRIVERS = "browser.max.drivers";
+    String BROWSER_POOL_CAPACITY = "browser.pool.capacity";
     String BROWSER_WEB_DRIVER_CLASS = "browser.driver.class";
     String BROWSER_DRIVER_PRIORITY = "browser.driver.priority";
     String BROWSER_TYPE = "browser.type";
@@ -232,7 +232,7 @@ public interface CapabilityTypes {
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
     String PROXY_MANAGER_CLASS = "proxy.proxy.manager.class";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
-    String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
+    String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.internal.server";
     String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
     String PROXY_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";

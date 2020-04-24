@@ -67,7 +67,7 @@ class ProxyContext(
         var result: FetchResult
         var success = false
         try {
-            result = proxyManager.submitAnyway { driverContext.submit(task, browseFun) }
+            result = proxyManager.submit { driverContext.submit(task, browseFun) }
             success = result.response.status.isSuccess
         } catch (e: ProxyException) {
             log.warn(Strings.simplifyException(e))
@@ -84,7 +84,7 @@ class ProxyContext(
         var result: FetchResult
         var success = false
         try {
-            result = proxyManager.runAnyway { driverContext.run(task, browseFun) }
+            result = proxyManager.run { driverContext.run(task, browseFun) }
             success = result.response.status.isSuccess
         } catch (e: ProxyException) {
             log.warn(Strings.simplifyException(e))

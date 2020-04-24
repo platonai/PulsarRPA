@@ -181,7 +181,7 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
-    protected constructor(args: Array<String>) : super(args) {
+    protected constructor(argv: Array<String>) : super(argv) {
         addObjects(this)
     }
 

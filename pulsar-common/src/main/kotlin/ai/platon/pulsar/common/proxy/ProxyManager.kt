@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
@@ -17,13 +18,14 @@ import java.util.concurrent.atomic.AtomicInteger
 open class ProxyManager(
         private val conf: ImmutableConfig
 ): AutoCloseable {
-
     val numRunningTasks = AtomicInteger()
     var lastActiveTime = Instant.now()
+    var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(5))
+    var idleCount = 0
     var idleTime = Duration.ZERO
     val closed = AtomicBoolean()
 
-    var report: String = ""
+    var statusString: String = ""
     var verbose = false
 
     open val localPort = -1
@@ -32,54 +34,27 @@ open class ProxyManager(
     val isDisabled get() = !isEnabled
     val isClosed get() = closed.get()
 
-    open fun start() {
-        if (isDisabled) {
-            log.warn("Proxy manager is disabled")
-            return
-        }
-    }
+    open fun start() {}
 
     /**
      * Run the task despite the proxy manager is disabled, it it's disabled, call the innovation directly
      * */
-    open suspend fun <R> submitAnyway(task: suspend () -> R): R {
-        return if (isDisabled) {
-            task()
-        } else {
-            submit(task)
-        }
-    }
+    open suspend fun <R> submit(task: suspend () -> R): R = if (isDisabled) task() else submit0(task)
 
     /**
      * Run the task despite the proxy manager is disabled, it it's disabled, call the innovation directly
      * */
-    open fun <R> runAnyway(task: () -> R): R {
-        return if (isDisabled) {
-            task()
-        } else {
-            run(task)
-        }
-    }
+    open fun <R> run(task: () -> R): R = if (isDisabled) task() else run0(task)
 
     /**
      * Run the task in the proxy manager
      * */
-    open suspend fun <R> submit(task: suspend () -> R): R {
-        if (isClosed || isDisabled) {
-            throw ProxyDisabledException("Proxy manager is " + if (isClosed) "closed" else "disabled")
-        }
-
-        idleTime = Duration.ZERO
-
-        if (!waitUntilOnline()) {
-            throw NoProxyException("Failed to wait for an online proxy")
-        }
+    protected suspend fun <R> submit0(task: suspend () -> R): R {
+        beforeRun()
 
         return try {
             numRunningTasks.incrementAndGet()
             task()
-        } catch (e: Exception) {
-            throw e
         } finally {
             lastActiveTime = Instant.now()
             numRunningTasks.decrementAndGet()
@@ -89,7 +64,27 @@ open class ProxyManager(
     /**
      * Run the task in the proxy manager
      * */
-    open fun <R> run(task: () -> R): R {
+    protected fun <R> run0(task: () -> R): R {
+        beforeRun()
+
+        return try {
+            numRunningTasks.incrementAndGet()
+            task()
+        } finally {
+            lastActiveTime = Instant.now()
+            numRunningTasks.decrementAndGet()
+        }
+    }
+
+    open fun waitUntilOnline(): Boolean = false
+
+    open fun changeProxyIfOnline(excludedProxy: ProxyEntry, ban: Boolean) {}
+
+    override fun toString(): String = statusString
+
+    override fun close() {}
+
+    private fun beforeRun() {
         if (isClosed || isDisabled) {
             throw ProxyDisabledException("Proxy manager is " + if (isClosed) "closed" else "disabled")
         }
@@ -99,44 +94,20 @@ open class ProxyManager(
         if (!waitUntilOnline()) {
             throw NoProxyException("Failed to wait for an online proxy")
         }
-
-        return try {
-            numRunningTasks.incrementAndGet()
-            task()
-        } catch (e: Exception) {
-            throw e
-        } finally {
-            lastActiveTime = Instant.now()
-            numRunningTasks.decrementAndGet()
-        }
-    }
-
-    open fun waitUntilOnline(): Boolean {
-        return false
-    }
-
-    open fun changeProxyIfOnline(excludedProxy: ProxyEntry, ban: Boolean) {
-    }
-
-    override fun toString(): String {
-        return report
-    }
-
-    override fun close() {
     }
 
     companion object {
         private val log = LoggerFactory.getLogger(ProxyManager::class.java)
-
-        private val INIT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.HOME_DIR)
-                .map { Paths.get(it, "proxy.providers.txt") }
+        private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
+        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.USER_HOME)
+                .map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
 
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
 
         init {
-            INIT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
                 FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
             }
         }
@@ -178,6 +149,22 @@ open class ProxyManager(
             }
 
             return false
+        }
+
+        fun enableDefaultProviders() {
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+        }
+
+        fun enableProvider(providerPath: Path) {
+            val filename = providerPath.fileName
+            arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
+                    .map { it.resolve(filename) }
+                    .filterNot { Files.exists(it) }
+                    .forEach { Files.copy(providerPath, it) }
+        }
+
+        fun disableProviders() {
+            Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
         }
     }
 }

@@ -17,10 +17,6 @@ public enum FetchMode {
      * */
     NATIVE_RENDERER,
     /**
-     * Crowd source
-     * */
-    CROWD_SOURCING,
-    /**
      * Fetch every page using a real browser
      * */
     BROWSER,
