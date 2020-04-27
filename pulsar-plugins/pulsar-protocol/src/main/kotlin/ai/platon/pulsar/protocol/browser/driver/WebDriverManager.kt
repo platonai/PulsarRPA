@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Freezable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyManagerFactory
 import ai.platon.pulsar.common.readable
 import com.codahale.metrics.MetricRegistry
@@ -32,7 +33,7 @@ class WebDriverManager(
 
     val startTime = Instant.now()
     private val metrics = SharedMetricRegistries.getDefault()
-    val numReset = metrics.meter(MetricRegistry.name(javaClass, "numReset"))
+    val numReset = metrics.meter(prependReadableClassName(this, "numReset"))
     val elapsedTime get() = Duration.between(startTime, Instant.now())
 
     fun allocate(n: Int, volatileConfig: VolatileConfig) = allocate(0, n, volatileConfig)

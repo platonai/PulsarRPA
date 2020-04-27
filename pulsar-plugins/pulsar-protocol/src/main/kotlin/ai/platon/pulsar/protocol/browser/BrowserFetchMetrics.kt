@@ -15,7 +15,7 @@ class BrowserFetchMetrics(
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
-    private val metricRegistry = SharedMetricRegistries.getDefault()
+    private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
 
     val startTime = Instant.now()
     val elapsedTime get() = Duration.between(startTime, Instant.now())

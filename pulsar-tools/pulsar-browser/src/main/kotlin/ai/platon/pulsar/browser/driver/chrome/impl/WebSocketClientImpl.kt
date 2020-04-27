@@ -4,6 +4,10 @@ import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.prependReadableClassName
+import ai.platon.pulsar.common.readableClassName
+import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.URI
@@ -13,8 +17,11 @@ import javax.websocket.*
 
 class WebSocketClientImpl : WebSocketClient {
     private val log = LoggerFactory.getLogger(WebSocketClientImpl::class.java)
+    private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
     private lateinit var session: Session
+    private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
+    private val meterRequests = metrics.meter(prependReadableClassName(this, "requests"))
 
     override fun isClosed(): Boolean {
         return !session.isOpen || closed.get()
@@ -48,10 +55,8 @@ class WebSocketClientImpl : WebSocketClient {
     @Throws(WebSocketServiceException::class)
     override fun send(message: String) {
         try {
-            if (log.isTraceEnabled) {
-                log.trace("Sending {} | {}", message, session.requestURI)
-            }
-
+            tracer?.trace("Sending {} | {}", message, session.requestURI)
+            meterRequests.mark()
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)
@@ -69,9 +74,7 @@ class WebSocketClientImpl : WebSocketClient {
         }
 
         val messageHandle = MessageHandler.Whole<String> { message ->
-            if (log.isTraceEnabled) {
-                log.trace("Received {} | {}", message, session.requestURI)
-            }
+            tracer?.trace("Received {} | {}", message, session.requestURI)
             consumer.accept(message)
         }
 
@@ -81,9 +84,9 @@ class WebSocketClientImpl : WebSocketClient {
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                session.close()
+                session.use { it.close() }
             } catch (e: IOException) {
-                log.error("Failed closing ws session on ${session.requestURI} ...", e)
+                log.error("Failed closing ws session", e)
             }
         }
     }
@@ -115,7 +118,7 @@ class WebSocketClientImpl : WebSocketClient {
             val className = System.getProperty(WEB_SOCKET_CONTAINER_FACTORY_PROPERTY, DEFAULT_WEB_SOCKET_CONTAINER_FACTORY)
 
             try {
-                return (Class.forName(className) as Class<WebSocketContainerFactory>).newInstance().webSocketContainer
+                return (Class.forName(className) as Class<WebSocketContainerFactory>).newInstance().wsContainer
             } catch (e: IllegalAccessException) {
                 throw RuntimeException("Could not create instance of $className class")
             } catch (e: InstantiationException) {

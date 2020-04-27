@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -13,7 +14,6 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
-import com.codahale.metrics.MetricRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -26,13 +26,13 @@ import java.util.concurrent.ThreadLocalRandom
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class AsyncBrowserEmulator(
-        privacyContextManager: BrowserPrivacyContextManager,
+        privacyContextManager: BrowserPrivacyManager,
         emulateEventHandler: BrowserEmulateEventHandler,
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
 
-    val numDeferredNavigates = metrics.meter(MetricRegistry.name(javaClass, "deferredNavigates"))
+    val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
 
     init {
         params.withLogger(log).info()
@@ -47,21 +47,17 @@ open class AsyncBrowserEmulator(
      * */
     @Throws(IllegalContextStateException::class, CancellationException::class)
     open suspend fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
-        if (isClosed) {
-            return FetchResult(task, ForwardingResponse.canceled(task.page))
-        }
-
-        return browseWithDriver(task, driver)
+        return takeIf { isActive }?.browseWithDriver(task, driver)?:FetchResult.canceled(task)
     }
 
     open fun cancelNow(task: FetchTask) {
-        numCancels.mark()
+        counterCancels.inc()
         task.cancel()
         driverManager.cancel(task.url)
     }
 
     open suspend fun cancel(task: FetchTask) {
-        numCancels.mark()
+        counterCancels.inc()
         task.cancel()
         withContext(Dispatchers.IO) {
             driverManager.cancel(task.url)
@@ -76,8 +72,7 @@ open class AsyncBrowserEmulator(
         var exception: Exception? = null
 
         if (++task.nRetries > fetchMaxRetry) {
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
-            return FetchResult(task, response, exception)
+            return FetchResult.retry(task, RetryScope.CRAWL)
         }
 
         try {
@@ -86,9 +81,7 @@ open class AsyncBrowserEmulator(
             exception = e
             response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            if (!isClosed) {
-                log.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
-            }
+            log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
             response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
@@ -127,10 +120,13 @@ open class AsyncBrowserEmulator(
             val result = navigateAndInteract(task, driver, browseTask.driverConfig)
             checkState(task)
             checkState(driver)
-            browseTask.status = result.protocolStatus
-            browseTask.activeDomMessage = result.activeDomMessage
-            browseTask.page.activeDomMultiStatus = browseTask.activeDomMessage?.multiStatus
-            browseTask.pageSource = driver.pageSource
+            browseTask.apply {
+                status = result.protocolStatus
+                activeDomMessage = result.activeDomMessage
+                page.activeDomMultiStatus = browseTask.activeDomMessage?.multiStatus
+                // TODO: may throw here
+                pageSource = driver.pageSource
+            }
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
@@ -153,7 +149,7 @@ open class AsyncBrowserEmulator(
         // driver.switchTo().frame(1);
 
         withContext(Dispatchers.IO) {
-            numNavigates.mark()
+            meterNavigates.mark()
             numDeferredNavigates.mark()
             // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
             driver.navigateTo(task.url)
@@ -212,10 +208,12 @@ open class AsyncBrowserEmulator(
                 withContext(Dispatchers.IO) {
                     checkState(interactTask.driver)
                     checkState(fetchTask)
+                    counterRequests.inc()
                     msg = interactTask.driver.evaluate(expression)
-                    if (msg == null || msg == false) {
-                        delay(1_000L)
-                    }
+                }
+
+                if (msg == null || msg == false) {
+                    delay(500)
                 }
             }
             message = msg
@@ -250,6 +248,7 @@ open class AsyncBrowserEmulator(
             checkState(interactTask.driver)
             checkState(interactTask.fetchTask)
             // tracer?.trace("About to scrollDownN #{} in {}", emulateTask.fetchTask.id, Thread.currentThread().name)
+            counterRequests.inc()
             interactTask.driver.evaluate(expression)
         }
     }
@@ -259,12 +258,14 @@ open class AsyncBrowserEmulator(
             checkState(interactTask.driver)
             checkState(interactTask.fetchTask)
             // tracer?.trace("About to compute #{} in {}", emulateTask.fetchTask.id, Thread.currentThread().name)
+            counterRequests.inc()
             interactTask.driver.evaluate("__utils__.compute()")
         }
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
-                log.debug("{} | {}", result.activeDomMessage?.multiStatus, interactTask.url)
+                val page = interactTask.fetchTask.page
+                log.debug("{}. {} | {}", page.sequence, result.activeDomMessage?.multiStatus, interactTask.url)
             }
         }
     }

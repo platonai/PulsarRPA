@@ -4,10 +4,12 @@ import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_POOL_CAPACITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.prependReadableClassName
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.io.FileUtils
@@ -16,6 +18,7 @@ import oshi.SystemInfo
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.TimeUnit
@@ -34,7 +37,8 @@ class LoadingWebDriverPool(
 ): Parameterized, AutoCloseable {
 
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
-    val capacity = conf.getInt(BROWSER_POOL_CAPACITY, AppConstants.DEFAULT_NUM_BROWSERS)
+    private val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+    val capacity = conf.getInt(BROWSER_POOL_CAPACITY, concurrency)
     private val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
     private val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(capacity)
 
@@ -49,11 +53,10 @@ class LoadingWebDriverPool(
     private val instanceRequiredMemory = 200 * 1024 * 1024 // 200 MiB
 
     private val metrics = SharedMetricRegistries.getDefault()
-    val counterRetired = metrics.counter(MetricRegistry.name(javaClass, "retired"))
-    val counterQuit = metrics.counter(MetricRegistry.name(javaClass, "quit"))
+    val counterRetired = metrics.counter(prependReadableClassName(this, "retired"))
+    val counterQuit = metrics.counter(prependReadableClassName(this, "quit"))
 
-    val isClosed get() = closed.get()
-    val isActive get() = !isClosed && PulsarEnv.isActive
+    val isActive get() = !closed.get() && PulsarEnv.isActive
     val numWorking = AtomicInteger()
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
@@ -79,7 +82,7 @@ class LoadingWebDriverPool(
 
     fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
         if (!processExit) {
-            waitUntilIdle()
+            waitUntilIdleOrTimeout(Duration.ofMinutes(2))
         }
 
         closeAllDrivers(processExit)
@@ -101,7 +104,7 @@ class LoadingWebDriverPool(
     private fun offer(driver: ManagedWebDriver) = freeDrivers.offer(driver.apply { free() })
 
     private fun retire(driver: ManagedWebDriver, external: Boolean = true) {
-        if (external && isClosed) {
+        if (external && !isActive) {
             return
         }
 
@@ -125,18 +128,17 @@ class LoadingWebDriverPool(
     }
 
     private fun closeAllDrivers(processExit: Boolean = false) {
-        if (!isHeadless || onlineDrivers.isEmpty()) {
+        if (!isHeadless) {
             return
         }
 
         freeDrivers.clear()
 
         // create a non-synchronized list for quitting all drivers in parallel
-        val nonSynchronized = onlineDrivers.toList()
-        onlineDrivers.clear()
+        val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
         nonSynchronized.parallelStream().forEach {
-            it.quit()
-            counterQuit.inc()
+            it.quit().also { counterQuit.inc() }
+            log.info("Quit driver {}", it)
         }
     }
 
@@ -161,11 +163,12 @@ class LoadingWebDriverPool(
         }
     }
 
-    private fun waitUntilIdle() {
+    private fun waitUntilIdleOrTimeout(timeout: Duration = Duration.ofMinutes(2)) {
         lock.withLock {
             var i = 0
-            while (!isClosed && numWorking.get() > 0 && i++ < 120) {
-                notBusy.await(1, TimeUnit.SECONDS)
+            val pollingInterval = Duration.ofSeconds(1)
+            while (isActive && numWorking.get() > 0 && i++ < timeout.seconds) {
+                notBusy.await(pollingInterval.seconds, TimeUnit.SECONDS)
             }
         }
     }

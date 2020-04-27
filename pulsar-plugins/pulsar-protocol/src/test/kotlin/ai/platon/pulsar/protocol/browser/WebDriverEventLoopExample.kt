@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ProxyMonitor
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 fun main() {
     val conf = ImmutableConfig()
     val driverControl = WebDriverControl(conf)
-    val proxyManager = ProxyManager(conf)
+    val proxyManager = ProxyMonitor(conf = conf)
     val driverPoolFactory = WebDriverFactory(driverControl, proxyManager, conf)
     val driverPool = LoadingWebDriverPool(driverPoolFactory, conf)
     val loop = WebDriverEventLoop(driverPool, conf)

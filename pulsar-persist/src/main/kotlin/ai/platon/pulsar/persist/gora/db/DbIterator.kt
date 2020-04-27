@@ -28,18 +28,14 @@ class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
     private val log = LoggerFactory.getLogger(WebDb::class.java)
 
     private var nextPage: WebPage? = null
-    private var filter: Predicate<WebPage>? = null
+    var filter: Predicate<WebPage>? = null
 
     init {
         try {
             moveToNext()
         } catch (e: Exception) {
-            log.error("Failed to create read iterator!$e")
+            log.error("Failed to create read iterator", e)
         }
-    }
-
-    fun setFilter(filter: Predicate<WebPage>) {
-        this.filter = filter
     }
 
     override fun hasNext(): Boolean {
@@ -53,7 +49,7 @@ class DbIterator(val result: Result<String, GWebPage>) : Iterator<WebPage> {
                 result.close()
             }
         } catch (e: Exception) {
-            log.error("Failed to move to the next record$e")
+            log.error("Failed to move to the next record", e)
         }
 
         return nextPage?:WebPage.NIL

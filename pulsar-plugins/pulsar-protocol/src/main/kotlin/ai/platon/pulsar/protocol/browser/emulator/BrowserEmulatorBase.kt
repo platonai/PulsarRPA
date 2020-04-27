@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
 import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -7,16 +8,16 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
-import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
-        val privacyContextManager: BrowserPrivacyContextManager,
+        val privacyContextManager: BrowserPrivacyManager,
         val emulateEventHandler: BrowserEmulateEventHandler,
         val messageWriter: MiscMessageWriter,
         val immutableConfig: ImmutableConfig
@@ -28,12 +29,14 @@ abstract class BrowserEmulatorBase(
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
     val isClosed get() = closed.get()
+    val isActive get() = !closed.get() && PulsarEnv.isActive
     val driverManager = privacyContextManager.driverManager
     val driverControl = driverManager.driverControl
     val driverPool = driverManager.driverPool
     val metrics = SharedMetricRegistries.getDefault()
-    val numNavigates = metrics.meter(name(javaClass, "navigates"))
-    val numCancels = metrics.meter(name(javaClass, "cancels"))
+    val meterNavigates = metrics.meter(prependReadableClassName(this,"navigates"))
+    val counterRequests = metrics.counter(prependReadableClassName(this,"requests"))
+    val counterCancels = metrics.counter(prependReadableClassName(this,"cancels"))
 
     override fun getParams(): Params {
         return Params.of(

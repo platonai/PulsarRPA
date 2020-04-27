@@ -33,18 +33,17 @@ import kotlin.math.roundToLong
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserEmulatedFetcher(
-        val privacyContextManager: BrowserPrivacyContextManager,
+        private val privacyManager: BrowserPrivacyManager,
         private val browserEmulator: BrowserEmulator,
         private val asyncBrowserEmulator: AsyncBrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverManager = privacyContextManager.driverManager
-    private val proxyManager = driverManager.proxyManager
+    private val driverManager = privacyManager.driverManager
+    private val proxyManager = privacyManager.proxyManager
     private val closed = AtomicBoolean()
-    private val isClosed get() = closed.get()
-    private val isActive get() = !isClosed && PulsarEnv.isActive
+    private val isActive get() = !closed.get() && PulsarEnv.isActive
 
     fun fetch(url: String): Response {
         return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -58,7 +57,7 @@ class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     fun fetchContent(page: WebPage): Response {
-        if (closed.get()) {
+        if (!isActive) {
             return ForwardingResponse.canceled(page)
         }
 
@@ -68,7 +67,7 @@ class BrowserEmulatedFetcher(
         }
 
         return try {
-            privacyContextManager.run(createFetchTask(page)) { task, driver ->
+            privacyManager.run(createFetchTask(page)) { task, driver ->
                 try {
                     browserEmulator.fetch(task, driver)
                 } catch (e: IllegalContextStateException) {
@@ -100,12 +99,12 @@ class BrowserEmulatedFetcher(
      * */
     suspend fun fetchContentDeferred(page: WebPage): Response {
         require(page.isNotInternal) { "Internal page ${page.url}" }
-        if (isClosed) {
+        if (!isActive) {
             return ForwardingResponse.canceled(page)
         }
 
         return try {
-            privacyContextManager.submit(createFetchTask(page)) { task, driver ->
+            privacyManager.submit(createFetchTask(page)) { task, driver ->
                 try {
                     asyncBrowserEmulator.fetch(task, driver)
                 } catch (e: IllegalContextStateException) {
@@ -120,7 +119,6 @@ class BrowserEmulatedFetcher(
         } catch (e: Throwable) {
             log.warn("Unexpected throwable", e)
             ForwardingResponse.failed(page, e)
-        } finally {
         }
     }
 
@@ -161,7 +159,7 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages0(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        FetchTaskBatch(batchId, pages, volatileConfig, privacyContextManager.activeContext).use { batch ->
+        FetchTaskBatch(batchId, pages, volatileConfig, privacyManager.activeContext).use { batch ->
             // allocate drivers before batch fetch context timing
             allocateDriversIfNecessary(batch, batch.conf)
 
@@ -173,13 +171,13 @@ class BrowserEmulatedFetcher(
             var i = 1
             do {
                 var b = batch
-                if (privacyContextManager.activeContext.isPrivacyLeaked) {
-                    privacyContextManager.reset()
-                    b = b.createNextNode(privacyContextManager.activeContext)
+                if (privacyManager.activeContext.isPrivacyLeaked) {
+                    privacyManager.reset()
+                    b = b.createNextNode(privacyManager.activeContext)
                 }
 
                 parallelFetch0(b)
-            } while (i++ <= privacyContextManager.maxRetry && privacyContextManager.activeContext.isPrivacyLeaked)
+            } while (i++ <= privacyManager.maxRetry && privacyManager.activeContext.isPrivacyLeaked)
 
             batch.afterFetchAll(batch.pages)
 
@@ -226,9 +224,9 @@ class BrowserEmulatedFetcher(
 
     private fun checkState(batch: FetchTaskBatch): FetchTaskBatch.State {
         return when {
-            isClosed -> FetchTaskBatch.State.CLOSED
+            !isActive -> FetchTaskBatch.State.CLOSED
             Thread.currentThread().isInterrupted -> FetchTaskBatch.State.INTERRUPTED
-            privacyContextManager.activeContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
+            privacyManager.activeContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
             else -> batch.checkState()
         }
     }
@@ -243,7 +241,7 @@ class BrowserEmulatedFetcher(
     }
 
     private suspend fun parallelFetch1(task: FetchTask, batch: FetchTaskBatch): FetchResult {
-        return privacyContextManager.activeContext.submit(task) { _, driver ->
+        return privacyManager.activeContext.submit(task) { _, driver ->
             try {
                 batch.beforeFetch(task.page)
                 asyncBrowserEmulator.fetch(task, driver)

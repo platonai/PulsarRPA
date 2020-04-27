@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyManager
+import ai.platon.pulsar.common.proxy.ProxyMonitor
 import ai.platon.pulsar.persist.metadata.BrowserType
 import org.openqa.selenium.Capabilities
 import org.openqa.selenium.WebDriver
@@ -16,7 +16,7 @@ import java.lang.reflect.InvocationTargetException
 
 class WebDriverFactory(
         val driverControl: WebDriverControl,
-        val proxyManager: ProxyManager,
+        val proxyMonitor: ProxyMonitor,
         val conf: ImmutableConfig
 ) {
     private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
@@ -35,7 +35,7 @@ class WebDriverFactory(
     fun create(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         val capabilities = driverControl.createGeneralOptions()
 
-        if (proxyManager.isEnabled) {
+        if (proxyMonitor.isEnabled) {
             setProxy(capabilities)
         }
 
@@ -75,12 +75,12 @@ class WebDriverFactory(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
-        if (proxyManager.waitUntilOnline()) {
-            val port = proxyManager.localPort
+        if (proxyMonitor.waitUntilOnline()) {
+            val port = proxyMonitor.localPort
             if (port > 0) {
                 // TODO: proxy connector can be run at another host
-                proxyEntry = proxyManager.currentProxyEntry
-                hostPort = "127.0.0.1:${proxyManager.localPort}"
+                proxyEntry = proxyMonitor.currentProxyEntry
+                hostPort = "127.0.0.1:${proxyMonitor.localPort}"
             } else {
                 log.info("Invalid port for proxy connector, proxy is disabled")
             }

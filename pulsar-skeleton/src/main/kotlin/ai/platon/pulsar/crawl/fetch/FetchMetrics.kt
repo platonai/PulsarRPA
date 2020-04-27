@@ -1,19 +1,15 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.MetricsManagement
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebPage
-import com.codahale.metrics.MetricRegistry.name
 import com.codahale.metrics.SharedMetricRegistries
 import com.google.common.collect.ConcurrentHashMultiset
 import org.slf4j.LoggerFactory
@@ -24,8 +20,6 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 
 class FetchMetrics(
         private val metricsManagement: MetricsManagement,
@@ -36,7 +30,7 @@ class FetchMetrics(
     private val log = LoggerFactory.getLogger(FetchMetrics::class.java)!!
     private val groupMode = conf.getEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     private val systemInfo = SystemInfo()
-    private val metricRegistry = SharedMetricRegistries.getDefault()
+    private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
     /**
      * The limitation of url length
      */
@@ -63,18 +57,14 @@ class FetchMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    private val tasks = AtomicInteger(0)
-    private val successTasks = AtomicInteger(0)
-    private val totalFinishedTasks = AtomicInteger(0)
     /**
      * The total bytes of page content of all success web pages
      * */
-    private val contentBytes = AtomicLong()
-    private val meterTasks = metricRegistry.meter(name(javaClass, "tasks"))
-    private val meterSuccessTasks = metricRegistry.meter(name(javaClass, "successTasks"))
-    private val meterFinishedTasks = metricRegistry.meter(name(javaClass, "finishedTasks"))
-    private val counterContentBytes = metricRegistry.counter(name(javaClass, "contentBytes"))
-    private val histogramContentBytes = metricRegistry.histogram(name(javaClass, "contentBytesHistogram"))
+    private val tasks = metricRegistry.meter(prependReadableClassName(this,"tasks"))
+    private val successTasks = metricRegistry.meter(prependReadableClassName(this,"successTasks"))
+    private val finishedTasks = metricRegistry.meter(prependReadableClassName(this,"finishedTasks"))
+    private val contentBytes = metricRegistry.histogram(prependReadableClassName(this,"contentBytes"))
+    private val totalContentBytes = metricRegistry.meter(prependReadableClassName(this,"totalContentBytes"))
 
     /**
      * The total all bytes received by the hardware at the application startup
@@ -86,8 +76,6 @@ class FetchMetrics(
     @Volatile
     private var systemNetworkBytesRecv = 0L
 
-    val successTasksPerSecond
-        get() = successTasks.get() / (0.1 + elapsedTime.seconds)
     /**
      * The total bytes received by the hardware from the application startup
      * */
@@ -96,11 +84,7 @@ class FetchMetrics(
     val networkBytesRecvPerSecond
         get() = networkBytesRecv / elapsedTime.seconds
     val networkBytesRecvPerPage
-        get() = networkBytesRecv / successTasks.get().coerceAtLeast(1)
-    val contentBytesPerSecond
-        get() = contentBytes.get() / elapsedTime.seconds
-    val contentBytesPerTask
-        get() = contentBytes.get() / successTasks.get().coerceAtLeast(1)
+        get() = networkBytesRecv / successTasks.count.coerceAtLeast(1)
 
     private val closed = AtomicBoolean()
 
@@ -149,34 +133,30 @@ class FetchMetrics(
     }
 
     fun markTaskStart() {
-        tasks.incrementAndGet()
-        meterTasks.mark()
+        tasks.mark()
     }
 
     fun markTaskStart(size: Int) {
-        tasks.addAndGet(size)
-        meterTasks.mark(size.toLong())
+        tasks.mark(size.toLong())
     }
 
     /**
      * Available hosts statistics
      */
     fun trackSuccess(page: WebPage) {
-        successTasks.incrementAndGet()
-        meterSuccessTasks.mark()
+        successTasks.mark()
+        finishedTasks.mark()
 
         val bytes = page.contentBytes.toLong()
-        contentBytes.addAndGet(bytes)
-        counterContentBytes.inc(bytes)
-        histogramContentBytes.update(bytes)
+        contentBytes.update(bytes)
+        totalContentBytes.mark(bytes)
 
-        val i = totalFinishedTasks.incrementAndGet()
-        meterFinishedTasks.mark()
-        if (i % 5 == 0) {
+        val i = finishedTasks.count
+        if (i % 5 == 0L) {
             updateNetworkTraffic()
         }
 
-        if (log.isInfoEnabled && i % 20 == 0) {
+        if (log.isInfoEnabled && i % 20 == 0L) {
             log.info(formatTraffic())
         }
 
@@ -191,36 +171,19 @@ class FetchMetrics(
         val fetchStatus = urlStatistics.computeIfAbsent(host) { UrlStat(it) }
 
         ++fetchStatus.urls
+        ++fetchStatus.pageViews
 
         // PageCategory pageCategory = CrawlFilter.sniffPageCategory(page);
         val pageCategory = page.pageCategory
         when {
-            pageCategory.isIndex -> {
-                ++fetchStatus.indexUrls
-            }
-            pageCategory.isDetail -> {
-                ++fetchStatus.detailUrls
-            }
-            pageCategory.isMedia -> {
-                ++fetchStatus.mediaUrls
-            }
-            pageCategory.isSearch -> {
-                ++fetchStatus.searchUrls
-            }
-            pageCategory.isBBS -> {
-                ++fetchStatus.bbsUrls
-            }
-            pageCategory.isTieBa -> {
-                ++fetchStatus.tiebaUrls
-            }
-            pageCategory.isBlog -> {
-                ++fetchStatus.blogUrls
-            }
-            pageCategory.isUnknown -> {
-                ++fetchStatus.unknownUrls
-            }
-
-            // The host is reachable
+            pageCategory.isIndex -> ++fetchStatus.indexUrls
+            pageCategory.isDetail -> ++fetchStatus.detailUrls
+            pageCategory.isMedia -> ++fetchStatus.mediaUrls
+            pageCategory.isSearch -> ++fetchStatus.searchUrls
+            pageCategory.isBBS -> ++fetchStatus.bbsUrls
+            pageCategory.isTieBa -> ++fetchStatus.tiebaUrls
+            pageCategory.isBlog -> ++fetchStatus.blogUrls
+            pageCategory.isUnknown -> ++fetchStatus.unknownUrls
         }
 
         val depth = page.distance
@@ -232,8 +195,6 @@ class FetchMetrics(
             ++fetchStatus.urlsTooLong
             messageWriter.debugLongUrls(url)
         }
-
-        ++fetchStatus.pageViews
 
         urlStatistics[host] = fetchStatus
 
@@ -258,7 +219,7 @@ class FetchMetrics(
     fun trackHostGone(url: String): Boolean {
         val host = URLUtil.getHost(url, groupMode)
         if (host == null || host.isEmpty()) {
-            log.warn("Malformed url | <{}>", url)
+            log.warn("Malformed url identified as gone | <{}>", url)
             return false
         }
 
@@ -270,7 +231,7 @@ class FetchMetrics(
         // Only the exception occurs for unknownHostEventCount, it's really add to the black list
         val failureHostEventCount = 3
         if (failedHosts.count(host) > failureHostEventCount) {
-            log.info("Host unreachable : $host")
+            log.info("Host unreachable | {}", host)
             unreachableHosts.add(host)
             return true
         }
@@ -284,18 +245,22 @@ class FetchMetrics(
         return numUrls + failedTasks
     }
 
-    fun updateNetworkTraffic() {
+    private fun updateNetworkTraffic() {
         systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     }
 
     fun formatTraffic(): String {
-        return String.format("Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p | net recv: %s, %s/s, %s/p | total net recv: %s",
-                successTasks.get(),
+        val seconds = elapsedTime.seconds.coerceAtLeast(1)
+        val count = successTasks.count.coerceAtLeast(1)
+        val bytes = contentBytes.count
+        return String.format("Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p" +
+                " | net recv: %s, %s/s, %s/p | total net recv: %s",
+                count,
                 elapsedTime.readable(),
-                successTasksPerSecond,
-                Strings.readableBytes(contentBytes.get()),
-                Strings.readableBytes(contentBytesPerSecond),
-                Strings.readableBytes(contentBytesPerTask),
+                successTasks.meanRate,
+                Strings.readableBytes(bytes),
+                Strings.readableBytes(bytes / seconds),
+                Strings.readableBytes(bytes / count),
                 Strings.readableBytes(networkBytesRecv),
                 Strings.readableBytes(networkBytesRecvPerSecond),
                 Strings.readableBytes(networkBytesRecvPerPage),

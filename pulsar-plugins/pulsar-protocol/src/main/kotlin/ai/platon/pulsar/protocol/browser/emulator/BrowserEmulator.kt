@@ -17,7 +17,6 @@ import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import org.apache.commons.lang.IllegalClassException
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.FluentWait
-import java.lang.RuntimeException
 import java.time.Clock
 import java.time.Duration
 import kotlin.random.Random
@@ -27,7 +26,7 @@ import kotlin.random.Random
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulator(
-        privacyContextManager: BrowserPrivacyContextManager,
+        privacyContextManager: BrowserPrivacyManager,
         emulateEventHandler: BrowserEmulateEventHandler,
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
@@ -51,7 +50,7 @@ open class BrowserEmulator(
     }
 
     open fun cancel(task: FetchTask) {
-        numCancels.mark()
+        counterCancels.inc()
         task.cancel()
         driverManager.cancel(task.url)
     }
@@ -153,7 +152,7 @@ open class BrowserEmulator(
         // driver.switchTo().frame(1);
 
         // blocking
-        numNavigates.mark()
+        meterNavigates.mark()
         driver.navigateTo(task.url)
 
         // blocking

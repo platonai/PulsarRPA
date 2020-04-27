@@ -11,7 +11,6 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.roundToInt
@@ -34,9 +33,13 @@ data class ProxyEntry(
         var user: String? = null, // reserved
         var pwd: String? = null // reserved
 ): Comparable<ProxyEntry> {
+    enum class Status { FREE, WORKING, RETIRED, EXPIRED, GONE }
+
     val hostPort = "$host:$port"
     val segment = host.substringBeforeLast(".")
     val outSegment = outIp.substringBeforeLast(".")
+    val startTime = Instant.now()
+    val elapsedTime get() = Duration.between(startTime, Instant.now())
     val display get() = formatDisplay()
     val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
@@ -51,14 +54,15 @@ data class ProxyEntry(
     // number of success pages
     val numSuccessPages = AtomicInteger()
     val servedDomains = ConcurrentHashMultiset.create<String>()
-    val speed get() = (1000 * accumResponseMillis.get() / 1000 / (0.1 + numTests.get())).roundToInt() / 1000.0
+    var status = Status.FREE
+    val testSpeed get() = accumResponseMillis.get() / numTests.get().coerceAtLeast(1) / 1000.0
     val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
-    val isRetired = AtomicBoolean()
-    val isBanned = isRetired.get() && !isExpired
+    val isRetired = status == Status.RETIRED
+    val isBanned = isRetired && !isExpired
     val isFailed get() = numConnectionLosts.get() >= 3 // large value means ignoring failures
-    val isGone get() = isRetired.get() || isFailed
+    val isGone get() = isRetired || isFailed
 
     enum class BanState {
         OK, SEGMENT, HOST, OTHER;
@@ -67,21 +71,15 @@ data class ProxyEntry(
         val isBanned get() = !isOK
     }
 
-    fun willExpireAt(instant: Instant): Boolean {
-        return ttl < instant
-    }
+    fun willExpireAt(instant: Instant): Boolean = ttl < instant
 
-    fun willExpireAfter(duration: Duration): Boolean {
-        return ttl < Instant.now() + duration
-    }
+    fun willExpireAfter(duration: Duration): Boolean = ttl < Instant.now() + duration
 
-    fun retire() {
-        isRetired.set(true)
-    }
+    fun startWork() { status = Status.WORKING }
 
-    fun refresh() {
-        availableTime = Instant.now()
-    }
+    fun retire() { status = Status.RETIRED }
+
+    fun refresh() { availableTime = Instant.now() }
 
     fun test(): Boolean {
         val target = if (lastTarget != null) {
@@ -138,9 +136,7 @@ data class ProxyEntry(
         return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, $metadata"
     }
 
-    override fun hashCode(): Int {
-        return 31 * proxyType.hashCode() + hostPort.hashCode()
-    }
+    override fun hashCode(): Int = 31 * proxyType.hashCode() + hostPort.hashCode()
 
     override fun equals(other: Any?): Boolean {
         return other is ProxyEntry
@@ -152,9 +148,7 @@ data class ProxyEntry(
     /**
      * The string representation, can be parsed using [parse]
      * */
-    override fun toString(): String {
-        return "$display $metadata"
-    }
+    override fun toString(): String = "$display $metadata"
 
     override fun compareTo(other: ProxyEntry): Int {
         var c = outIp.compareTo(other.outIp)
@@ -172,7 +166,7 @@ data class ProxyEntry(
 
     private fun formatMetadata(): String {
         val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "pg:$nPages, spd:$speed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
+        return "pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
     }
 
     companion object {

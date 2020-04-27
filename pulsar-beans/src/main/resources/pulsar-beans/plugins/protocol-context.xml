@@ -21,7 +21,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserPrivacyContextManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyContextManager">
+    <bean id="browserPrivacyContextManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyManager">
         <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="proxyManagerFactory"/>
         <constructor-arg ref="conf"/>

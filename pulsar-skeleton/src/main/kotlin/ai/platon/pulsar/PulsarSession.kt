@@ -291,46 +291,33 @@ open class PulsarSession(
         return pages
     }
 
-    fun getVariable(name: String): Any? {
-        ensureAlive()
-        return variables[name]
-    }
+    fun getVariable(name: String): Any? = ensureAlive(null) { variables[name] }
 
-    fun setVariable(name: String, value: Any) {
-        ensureAlive()
-        variables[name] = value
-    }
+    fun setVariable(name: String, value: Any) = ensureAlive { variables[name] = value }
 
-    fun putBean(obj: Any) = ensureAlive().also { sessionBeanFactory.putBean(obj) }
+    fun putSessionBean(obj: Any) = ensureAlive { sessionBeanFactory.putBean(obj) }
 
-    inline fun <reified T> getBean(): T? {
+    inline fun <reified T> getSessionBean(): T? {
         return sessionBeanFactory.getBean()
     }
 
-    fun delete(url: String) {
-        ensureAlive()
-        context.delete(url)
-    }
+    fun delete(url: String) = ensureAlive { context.delete(url) }
 
-    fun flush() {
-        ensureAlive()
-        context.webDb.flush()
-    }
+    fun flush() = ensureAlive { context.webDb.flush() }
 
-    fun persist(page: WebPage) {
-        ensureAlive()
-        context.webDb.put(page)
-    }
+    fun persist(page: WebPage) = ensureAlive { context.webDb.put(page) }
 
     fun export(page: WebPage, ident: String = ""): Path {
         ensureAlive()
-        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(page.url, "", ".htm"))
+        val filename = AppPaths.fromUri(page.url, "", ".htm")
+        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, filename)
         return AppFiles.saveTo(page.contentAsString, path, true)
     }
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
         ensureAlive()
-        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, AppPaths.fromUri(doc.location, "", ".htm"))
+        val filename = AppPaths.fromUri(doc.location, "", ".htm")
+        val path = AppPaths.get(WEB_CACHE_DIR, "export", ident, filename)
         return AppFiles.saveTo(doc.prettyHtml, path, true)
     }
 

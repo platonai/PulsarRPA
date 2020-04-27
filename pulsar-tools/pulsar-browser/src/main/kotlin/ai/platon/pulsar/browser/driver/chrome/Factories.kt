@@ -13,10 +13,10 @@ interface WebSocketServiceFactory {
 
 @FunctionalInterface
 interface WebSocketContainerFactory {
-    val webSocketContainer: WebSocketContainer
+    val wsContainer: WebSocketContainer
 }
 
 class DefaultWebSocketContainerFactory : WebSocketContainerFactory {
-    override val webSocketContainer
-        get() = ClientManager.createClient(GrizzlyClientContainer::class.java.name)
+    // override val webSocketContainer get() = ClientManager.createClient(GrizzlyClientContainer::class.java.name)
+    override val wsContainer get() = ClientManager.createClient()
 }

@@ -20,7 +20,7 @@ class MetricsManagement: AutoCloseable {
 
     init {
         SharedMetricRegistries.setDefault("pulsar")
-        metricRegistry = SharedMetricRegistries.getDefault()
+        metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
         jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
         csvReporter = CsvReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)
@@ -44,6 +44,8 @@ class MetricsManagement: AutoCloseable {
     }
 
     override fun close() {
+        slf4jReporter.report()
+
         csvReporter.use { it.close() }
         slf4jReporter.use { it.close() }
         jmxReporter.use { it.close() }

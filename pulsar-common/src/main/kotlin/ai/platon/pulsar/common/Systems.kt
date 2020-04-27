@@ -49,6 +49,10 @@ object Systems {
         }
     }
 
+    fun setProperty(key: String, value: Any) {
+        System.setProperty(key, value.toString())
+    }
+
     fun setPropertyIfAbsent(key: String, value: String) {
         if (System.getProperty(key) == null) {
             System.setProperty(key, value)

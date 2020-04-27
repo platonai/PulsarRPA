@@ -11,12 +11,15 @@ import kotlin.concurrent.withLock
  * 2. once a channel is open, the other one must be closed
  * */
 abstract class Freezable {
-    protected val lock = ReentrantLock() // lock for containers
-    protected val freezerChannelIsClosed = lock.newCondition()
-    protected val workerChannelIsClosed = lock.newCondition()
-    protected var pollingTimeout = Duration.ofMillis(100)
-    protected val numFreezers = AtomicInteger()
-    protected val numTasks = AtomicInteger()
+    private val lock = ReentrantLock() // lock for containers
+    private val freezerChannelIsClosed = lock.newCondition()
+    private val workerChannelIsClosed = lock.newCondition()
+    private val numFreezers = AtomicInteger()
+    private val numTasks = AtomicInteger()
+    private var pollingTimeout = Duration.ofMillis(100)
+
+    val isFrozen get() = numFreezers.get() > 0
+    val isUnfrozen get() = !isFrozen
 
     fun <T> freeze(freezer: () -> T): T {
         // wait until the task channel is closed, meanwhile, the freezer channel is open
@@ -50,7 +53,7 @@ abstract class Freezable {
         }
     }
 
-    fun waitUntilWorkerChannelIsClosed() {
+    private fun waitUntilWorkerChannelIsClosed() {
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
             while (numTasks.get() > 0 && nanos > 0) {
@@ -61,7 +64,7 @@ abstract class Freezable {
         }
     }
 
-    fun waitUntilFreezerChannelIsClosed() {
+    private fun waitUntilFreezerChannelIsClosed() {
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
             while (numFreezers.get() > 0 && nanos > 0) {

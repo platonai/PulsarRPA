@@ -17,12 +17,12 @@ import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
-import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
@@ -37,7 +37,8 @@ open class BrowserEmulateEventHandler(
     private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     private val metrics = SharedMetricRegistries.getDefault()
-    private val pageSourceBytes = metrics.histogram("browser.emulate.pageSourceBytes")
+    private val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
+    private val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
     private val driverPool = driverManager.driverPool
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
@@ -55,7 +56,9 @@ open class BrowserEmulateEventHandler(
 
     fun onAfterNavigate(navigateTask: NavigateTask): Response {
         val t = navigateTask
-        pageSourceBytes.update(t.pageSource.length)
+        val length = t.pageSource.length
+        pageSourceBytes.update(length)
+        totalPageSourceBytes.mark(length.toLong())
 
         val browserStatus = checkErrorPage(t.page, t.status)
         t.status = browserStatus.status
@@ -180,8 +183,10 @@ open class BrowserEmulateEventHandler(
 
     open fun handleBrowseFinish(page: WebPage, headers: MultiMetadata) {
         // The page content's encoding is already converted to UTF-8 by Web driver
-        headers.put(HttpHeaders.CONTENT_ENCODING, "UTF-8")
-        headers.put(HttpHeaders.Q_TRUSTED_CONTENT_ENCODING, "UTF-8")
+        val utf8 = StandardCharsets.UTF_8.name()
+        require(utf8 == "UTF-8")
+        headers.put(HttpHeaders.CONTENT_ENCODING, utf8)
+        headers.put(HttpHeaders.Q_TRUSTED_CONTENT_ENCODING, utf8)
         headers.put(HttpHeaders.Q_RESPONSE_TIME, System.currentTimeMillis().toString())
 
         val urls = page.activeDomUrls

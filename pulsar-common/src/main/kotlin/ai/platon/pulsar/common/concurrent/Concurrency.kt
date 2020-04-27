@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.concurrent
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future

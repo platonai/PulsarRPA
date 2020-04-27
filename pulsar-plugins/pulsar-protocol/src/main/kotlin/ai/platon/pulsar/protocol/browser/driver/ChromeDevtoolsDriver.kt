@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
+import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.SharedMetricRegistries
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import org.openqa.selenium.NoSuchSessionException
@@ -54,8 +56,8 @@ class ChromeDevtoolsDriver(
                         chromeProcessLaunched = false
 
                         // require devToolsList.isEmpty()
-                        devToolsList.toList().parallelStream().forEach { it.waitUntilClosed() }
-                        devToolsList.clear()
+                        val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
+                        nonSynchronized.parallelStream().forEach { it.waitUntilClosed() }
 
                         chrome.use { it.close() }
                         launcher.use { it.close() }
@@ -164,30 +166,13 @@ class ChromeDevtoolsDriver(
 //            }
 
             page.enable()
+
+            // NOTE: There are too many network relative traffic, especially when the proxy is disabled
+            // TODO: Find out the reason why there are too many network relative traffic, especially when the proxy is disabled
             network.enable()
 //            fetch.enable()
 
             navigateUrl = url
-            page.navigate(url)
-        } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
-        }
-    }
-
-    @Throws(NoSuchSessionException::class)
-    suspend fun asyncGet(url: String) {
-        if (isGone) return
-
-        try {
-            page.addScriptToEvaluateOnNewDocument(clientLibJs)
-            network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
-
-            page.enable()
-            network.enable()
-
-            navigateUrl = url
-            // use asynchronous api
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()

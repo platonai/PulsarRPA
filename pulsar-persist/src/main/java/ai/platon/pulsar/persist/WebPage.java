@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static ai.platon.pulsar.common.config.AppConstants.*;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -81,8 +82,13 @@ public class WebPage {
     public static LocalDateTime middleNight = LocalDateTime.now().truncatedTo(DAYS);
     public static Instant middleNightInstant = Instant.now().truncatedTo(DAYS);
     public static ZoneId defaultZoneId = ZoneId.systemDefault();
-
+    public static AtomicInteger sequencer = new AtomicInteger();
     public static WebPage NIL = newInternalPage(NIL_PAGE_URL, "nil", "nil");
+
+    /**
+     * The process scope WebPage instance sequence
+     */
+    private Integer sequence = sequencer.incrementAndGet();
     /**
      * The url is the permanent internal address, and the location is the last working address
      * */
@@ -273,6 +279,10 @@ public class WebPage {
 
     public String getReversedUrl() {
         return reversedUrl != null ? reversedUrl : "";
+    }
+
+    public Integer getSequence() {
+        return sequence;
     }
 
     public boolean isNil() {

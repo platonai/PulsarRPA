@@ -2,31 +2,32 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyManagerFactory
-import ai.platon.pulsar.crawl.PrivacyContextManager
+import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import org.slf4j.LoggerFactory
 
-class BrowserPrivacyContextManager(
-        val proxyManagerFactory: ProxyManagerFactory,
+class BrowserPrivacyManager(
+        proxyManagerFactory: ProxyManagerFactory,
         val driverManager: WebDriverManager,
         immutableConfig: ImmutableConfig
-): PrivacyContextManager(immutableConfig) {
-    val proxyManager = proxyManagerFactory.get()
+): PrivacyManager(immutableConfig) {
+    val log = LoggerFactory.getLogger(BrowserPrivacyManager::class.java)
+    val maxAllowedBadContexts = 10
+    val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
     val maxRetry = 2
-//    val retryingTasks = LinkedBlockingQueue<FetchTask>()
-
-    override val activeContext get() = getOrCreate()
+    val proxyManager = proxyManagerFactory.get()
+    override val activeContext
+        get() = computeIfAbsent { BrowserPrivacyContext(driverManager, proxyManager, immutableConfig) }
 
     fun run(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return whenUnfrozen { run0(task, fetchFun) }
+        return run0(task, fetchFun)
     }
 
     suspend fun submit(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        waitUntilFreezerChannelIsClosed()
         return submit0(task, fetchFun)
     }
 
@@ -40,7 +41,8 @@ class BrowserPrivacyContextManager(
             result = try {
                 activeContext.run(task) { _, driver -> fetchFun(task, driver) }
             } catch (e: PrivacyLeakException) {
-                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.PRIVACY))
+                // TODO: no PrivacyLeakException is thrown actually
+                FetchResult.retry(task, RetryScope.PRIVACY)
             }
             retry = afterRun(task, result)
         } while (retry && i++ <= maxRetry)
@@ -58,7 +60,8 @@ class BrowserPrivacyContextManager(
             result = try {
                 activeContext.submit(task) { _, driver -> fetchFun(task, driver) }
             } catch (e: PrivacyLeakException) {
-                FetchResult(task, ForwardingResponse.retry(task.page, RetryScope.PRIVACY))
+                // TODO: no PrivacyLeakException is thrown actually
+                FetchResult.retry(task, RetryScope.PRIVACY)
             }
             retry = afterRun(task, result)
         } while (retry && i++ <= maxRetry)
@@ -68,9 +71,19 @@ class BrowserPrivacyContextManager(
 
     private fun beforeRun(task: FetchTask) {
         if (activeContext.isPrivacyLeaked) {
-            // hung up all other tasks
+            // all other tasks are waiting until freezer channel is closed
             reset()
             task.reset()
+            report()
+        }
+    }
+
+    private fun report() {
+        zombieContexts.take(15).map { it.throughput }
+                .joinToString(", ", "The latest context throughput: ", " (success/sec)")
+                .let { log.info(it) }
+        if (numBadContexts > maxAllowedBadContexts) {
+            log.warn("Warning!!! There latest $numBadContexts contexts are bad, the proxy vendor is untrusted")
         }
     }
 
@@ -84,15 +97,6 @@ class BrowserPrivacyContextManager(
             status.isRetry(RetryScope.PRIVACY) -> activeContext.markWarning().let { true }
             status.isSuccess -> activeContext.markSuccess().let { false }
             else -> false
-        }
-    }
-
-    private fun getOrCreate(): BrowserPrivacyContext {
-        return whenUnfrozen {
-            if (globalActiveContext.get() !is BrowserPrivacyContext) {
-                globalActiveContext.set(BrowserPrivacyContext(driverManager, proxyManager, immutableConfig))
-            }
-            globalActiveContext.get() as BrowserPrivacyContext
         }
     }
 }

@@ -3,6 +3,9 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.prependReadableClassName
+import com.codahale.metrics.MetricRegistry
+import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
@@ -73,6 +76,9 @@ abstract class BasicDevTools(
     private val workerGroup = devToolsConfig.workerGroup
     private val invocationResults: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
     private val eventHandlers: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
+    private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
+    private val counterInvokes = metrics.counter(prependReadableClassName(this, "invokes"))
+    private val counterAccepts = metrics.counter(prependReadableClassName(this, "accepts"))
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
@@ -101,6 +107,7 @@ abstract class BasicDevTools(
             val result = InvocationResult(returnProperty)
 
             invocationResults[methodInvocation.id] = result
+            counterInvokes.inc()
             wsClient.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
 
             // blocking, should move to a coroutine context
@@ -161,8 +168,9 @@ abstract class BasicDevTools(
     }
 
     override fun accept(message: String) {
-        LOG.trace(message)
+        LOG.takeIf { it.isTraceEnabled }?.trace("Accept {}", message)
 
+        counterAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
             val idNode = jsonNode.get(ID_PROPERTY)
@@ -204,9 +212,7 @@ abstract class BasicDevTools(
     }
 
     override fun waitUntilClosed() {
-        try {
-            closeLatch.await()
-        } catch (ignored: InterruptedException) {}
+        closeLatch.runCatching { await() }
     }
 
     override fun close() {

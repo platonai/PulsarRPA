@@ -12,7 +12,6 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
-import io.netty.util.concurrent.Future
 import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -138,6 +137,12 @@ class FetchResult(
     operator fun component3() = exception
 
     val status get() = response.status
+
+    companion object {
+        fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
+        fun retry(task: FetchTask, retryScope: RetryScope) = FetchResult(task, ForwardingResponse.retry(task.page, retryScope))
+        fun failed(task: FetchTask, e: Throwable?) = FetchResult(task, ForwardingResponse.failed(task.page, e))
+    }
 }
 
 class FetchTaskBatch(

@@ -54,16 +54,8 @@ open class ForwardingResponse(
             : this(page, status, headers, content.toByteArray())
 
     companion object {
-        fun canceled(page: WebPage): ForwardingResponse {
-            return ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
-        }
-
-        fun retry(page: WebPage, retryScope: RetryScope?): ForwardingResponse {
-            return ForwardingResponse(retryScope, page)
-        }
-
-        fun failed(page: WebPage, e: Throwable?): ForwardingResponse {
-            return ForwardingResponse(e, page)
-        }
+        fun canceled(page: WebPage): ForwardingResponse = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
+        fun retry(page: WebPage, retryScope: RetryScope?): ForwardingResponse = ForwardingResponse(retryScope, page)
+        fun failed(page: WebPage, e: Throwable?): ForwardingResponse = ForwardingResponse(e, page)
     }
 }

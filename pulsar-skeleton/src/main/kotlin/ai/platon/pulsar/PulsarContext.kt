@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.reflect.KClass
 
 /**
  * Main entry point for Pulsar functionality.
@@ -143,6 +144,12 @@ class PulsarContext private constructor(): AutoCloseable {
         ensureAlive()
         return PulsarEnv.getBean(requiredType)
     }
+
+    @Throws(BeansException::class)
+    fun <T : Any> getBean(requiredType: KClass<T>): T = getBean(requiredType.java)
+
+    @Throws(BeansException::class)
+    inline fun <reified T : Any> getBean(): T = getBean(T::class)
 
     /**
      * Close objects when sessions closes

@@ -41,8 +41,6 @@ public interface AppConstants {
      */
     int NCPU = Runtime.getRuntime().availableProcessors();
 
-    int DEFAULT_NUM_BROWSERS = NCPU;
-
     int FETCH_THREADS = NCPU;
 
     String YES_STRING = "y";

@@ -6,26 +6,24 @@ import java.util.concurrent.atomic.AtomicReference
 
 class ProxyManagerFactory(val conf: ImmutableConfig): AutoCloseable {
 
-    private val proxyManager = AtomicReference<ProxyManager>()
+    private val proxyManager = AtomicReference<ProxyMonitor>()
 
-    fun get(): ProxyManager {
-        createProxyManagerIfAbsent(conf)
-        return proxyManager.get()
-    }
+    fun get(): ProxyMonitor = createIfAbsent(conf)
 
     override fun close() {
         proxyManager.get()?.use { it.close() }
     }
 
-    private fun createProxyManagerIfAbsent(conf: ImmutableConfig) {
+    private fun createIfAbsent(conf: ImmutableConfig): ProxyMonitor {
         if (proxyManager.get() == null) {
             synchronized(ProxyManagerFactory::class) {
                 if (proxyManager.get() == null) {
-                    val clazz = conf.getClass(PROXY_MANAGER_CLASS, ProxyManager::class.java)
-                    proxyManager.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyManager)
+                    val clazz = conf.getClass(PROXY_MANAGER_CLASS, ProxyMonitor::class.java)
+                    proxyManager.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyMonitor)
                     proxyManager.get().start()
                 }
             }
         }
+        return proxyManager.get()
     }
 }
