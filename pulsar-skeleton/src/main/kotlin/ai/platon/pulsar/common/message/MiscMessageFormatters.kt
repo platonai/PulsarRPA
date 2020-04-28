@@ -71,7 +71,7 @@ class CompletedPageFormatter(
     val proxyFmt get() = if (proxy == null) "%s" else "%26s"
     val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
     val fieldFmt get() = if (numFields == 0) "%s" else "%-3s"
-    val fmt get() = "Fetched %3d %s [%4d] %13s in %10s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
+    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
     val link get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     val url get() = if (redirected) page.location else page.url
     val readableUrl get() = if (redirected) "[R] $url" else url

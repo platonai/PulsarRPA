@@ -5,9 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.prependReadableClassName
-import ai.platon.pulsar.common.proxy.ProxyManagerFactory
-import ai.platon.pulsar.common.readable
-import com.codahale.metrics.MetricRegistry
+import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -20,12 +18,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class WebDriverManager(
         val driverControl: WebDriverControl,
-        val proxyManagerFactory: ProxyManagerFactory,
+        val proxyMonitorFactory: ProxyMonitorFactory,
         val immutableConfig: ImmutableConfig
 ): Parameterized, Freezable(), AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
-    val proxyManager = proxyManagerFactory.get()
+    val proxyManager = proxyMonitorFactory.get()
     val driverFactory = WebDriverFactory(driverControl, proxyManager, immutableConfig)
     val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 

@@ -39,7 +39,7 @@
         <constructor-arg value="20"/>
     </bean>
 
-    <bean id="proxyManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyManagerFactory" destroy-method="close">
+    <bean id="proxyManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyMonitorFactory" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 

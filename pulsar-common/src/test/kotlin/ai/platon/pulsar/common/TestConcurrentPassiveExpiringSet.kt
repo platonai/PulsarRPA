@@ -1,0 +1,37 @@
+package ai.platon.pulsar.common
+
+import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
+import com.google.common.math.IntMath
+import org.junit.Test
+import java.time.Duration
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+class TestConcurrentPassiveExpiringSet {
+
+    @Test
+    fun testPassiveExpiring() {
+        val set = ConcurrentPassiveExpiringSet<Int>(Duration.ofSeconds(10))
+        IntRange(1, 100).toCollection(set)
+        sleepSeconds(11)
+        assert(set.isEmpty())
+    }
+
+    @Test
+    fun testIterator() {
+        val set = ConcurrentPassiveExpiringSet<Int>(Duration.ofMinutes(10))
+        assertFalse(1 in set)
+        
+        IntRange(1, 100).toCollection(set)
+        set.map { IntMath.pow(it, 2) }.toCollection(set)
+        assertTrue { set.isNotEmpty() }
+        assertTrue(121 in set)
+        assertTrue(64 in set)
+        assertTrue(101 !in set)
+
+        val sorted = set.sorted()
+        assertTrue { sorted.isNotEmpty() }
+        assertEquals(10000, sorted.last())
+    }
+}

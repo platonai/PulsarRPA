@@ -16,7 +16,7 @@ import kotlin.math.abs
 open class StreamingCrawler(
         private val urls: Sequence<String>,
         private val options: LoadOptions = LoadOptions.create(),
-        val destination: MutableList<WebPage>? = null,
+        val pageCollector: MutableList<WebPage>? = null,
         session: PulsarSession = PulsarContext.createSession(),
         val conf: ImmutableConfig = session.sessionConfig
 ): Crawler(session) {
@@ -68,7 +68,7 @@ open class StreamingCrawler(
                 launch(context) {
                     val page =session.loadDeferred(url, options)
                     numRunning.decrementAndGet()
-                    destination?.add(page)
+                    pageCollector?.add(page)
                 }
             }
         }

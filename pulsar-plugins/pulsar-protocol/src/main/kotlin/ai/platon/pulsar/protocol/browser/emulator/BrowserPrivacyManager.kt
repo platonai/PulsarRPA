@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyManagerFactory
+import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
 import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -11,7 +11,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import org.slf4j.LoggerFactory
 
 class BrowserPrivacyManager(
-        proxyManagerFactory: ProxyManagerFactory,
+        proxyMonitorFactory: ProxyMonitorFactory,
         val driverManager: WebDriverManager,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
@@ -19,7 +19,7 @@ class BrowserPrivacyManager(
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
     val maxRetry = 2
-    val proxyManager = proxyManagerFactory.get()
+    val proxyManager = proxyMonitorFactory.get()
     override val activeContext
         get() = computeIfAbsent { BrowserPrivacyContext(driverManager, proxyManager, immutableConfig) }
 

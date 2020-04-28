@@ -3,49 +3,55 @@ package ai.platon.pulsar.common.concurrent
 import org.apache.commons.collections4.map.PassiveExpiringMap
 import java.time.Duration
 import java.util.*
+import java.util.function.IntFunction
 
 /**
  * Decorates a <code>Set</code> to evict expired entries once their expiration
  * time has been reached.
+ *
+ * Constructs a map decorator that decorates the given map and results in
+ * entries NEVER expiring. If there are any elements already in the map
+ * being decorated, they also will NEVER expire.
  */
-class ConcurrentPassiveExpiringSet<E>(val ttl: Duration = Duration.ZERO): MutableSet<E> {
+class ConcurrentPassiveExpiringSet<E>(val ttl: Duration = Duration.ofSeconds(-1)): MutableSet<E> {
     /**
      * A fast yet short life least recently used cache
      */
-    private val cache = Collections.synchronizedMap(PassiveExpiringMap<E, Any>(ttl.toMillis()))
+    private val map = Collections.synchronizedMap(PassiveExpiringMap<E, Any>(ttl.toMillis()))
 
-    override fun add(element: E): Boolean = cache.put(element, {}) != null
+    override fun add(element: E): Boolean = map.put(element, {}) != null
 
-    override fun remove(element: E): Boolean = cache.remove(element) != null
+    override fun remove(element: E): Boolean = map.remove(element) != null
 
-    override fun clear() = cache.clear()
+    override fun clear() = map.clear()
 
-    override val size: Int = cache.size
+    override val size: Int get() = map.size
 
-    override fun contains(element: E): Boolean = cache.containsValue(element)
+    override fun contains(element: E): Boolean = map.containsKey(element)
 
-    override fun containsAll(elements: Collection<E>): Boolean = cache.values.containsAll(elements)
+    override fun containsAll(elements: Collection<E>): Boolean = map.keys.containsAll(elements)
 
-    override fun isEmpty(): Boolean = cache.isEmpty()
+    override fun isEmpty(): Boolean = map.isEmpty()
 
-    override fun iterator(): MutableIterator<E> {
-        return object: MutableIterator<E> {
-            private val it = cache.entries.iterator()
-            override operator fun next(): E = it.next().key
-            override operator fun hasNext(): Boolean = it.hasNext()
-            override fun remove() = it.remove()
-        }
-    }
+    override fun iterator(): MutableIterator<E> = map.keys.iterator()
 
     override fun addAll(elements: Collection<E>): Boolean {
-        return elements.map { add(it) }.all { it }
+        val size = map.size
+        elements.map { add(it) }
+        return size != map.size
     }
 
-    override fun removeAll(elements: Collection<E>): Boolean {
-        return elements.map { remove(it) }.all { it }
+    override fun removeAll(elements: Collection<E>): Boolean = map.keys.removeAll(elements)
+
+    override fun retainAll(elements: Collection<E>): Boolean = map.keys.retainAll(elements)
+
+    override fun <T : Any> toArray(generator: IntFunction<Array<T>>): Array<out T> {
+        return map.keys.toArray(generator)
     }
 
-    override fun retainAll(elements: Collection<E>): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun equals(other: Any?): Boolean {
+        return map.keys == other
     }
+
+    override fun hashCode(): Int = map.keys.hashCode()
 }
