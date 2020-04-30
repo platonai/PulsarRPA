@@ -44,7 +44,7 @@ open class ProxyMonitor(
     open val currentProxyEntry: ProxyEntry? = null
     open val isEnabled = false
     val isDisabled get() = !isEnabled
-    val isActive get() = isEnabled && !closed.get()
+    val isActive get() = isDisabled || !closed.get()
 
     /**
      * Starts the reporter polling at the given period with the specific runnable action.
@@ -65,7 +65,7 @@ open class ProxyMonitor(
     /**
      * Run the task, it it's disabled, call the innovation directly
      * */
-    open suspend fun <R> submit(task: suspend () -> R): R = if (isDisabled) task() else submit0(task)
+    open suspend fun <R> runDeferred(task: suspend () -> R): R = if (isDisabled) task() else submit0(task)
 
     /**
      * Run the task, it it's disabled, call the innovation directly
@@ -104,18 +104,22 @@ open class ProxyMonitor(
 
     open fun waitUntilOnline(): Boolean = false
 
-    open fun changeProxyIfOnline(excludedProxy: ProxyEntry, ban: Boolean) {}
+    open fun takeOff(excludedProxy: ProxyEntry, ban: Boolean) {}
 
     override fun toString(): String = statusString
 
     override fun close() {
-        executor?.also { stopExecution(it, scheduledFuture, true) }
-        executor = null
+        try {
+            executor?.also { stopExecution(it, scheduledFuture, true) }
+            executor = null
+        } catch (e: Exception) {
+            log.warn("Unexpected exception when close proxy monitor", e)
+        }
     }
 
     private fun beforeRun() {
         idleTime = Duration.ZERO.takeIf { isActive }
-                ?:throw ProxyInactiveException("Proxy monitor is inactive | $currentProxyEntry")
+                ?:throw ProxyInactiveException("Proxy monitor is closed | $currentProxyEntry")
         if (!waitUntilOnline()) {
             throw NoProxyException("Failed to wait for an online proxy")
         }

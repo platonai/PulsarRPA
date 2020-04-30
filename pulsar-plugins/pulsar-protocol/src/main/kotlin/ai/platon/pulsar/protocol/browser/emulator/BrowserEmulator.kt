@@ -187,10 +187,11 @@ open class BrowserEmulator(
             result.state = FlowState.CONTINUE
         } catch (e: InterruptedException) {
             log.warn("Interrupted waiting for document, cancel it | {}", task.url)
-            status = ProtocolStatus.retry(RetryScope.WEB_DRIVER)
+            status = ProtocolStatus.retry(RetryScope.PRIVACY)
             result.state = FlowState.BREAK
         } catch (e: NoSuchSessionException) {
-            status = ProtocolStatus.retry(RetryScope.WEB_DRIVER)
+            log.warn("Session lost waiting for document | {}", task.url)
+            status = ProtocolStatus.retry(RetryScope.PRIVACY)
             result.state = FlowState.BREAK
             throw e
         } catch (e: WebDriverException) {
@@ -202,7 +203,7 @@ open class BrowserEmulator(
                     throw e
                 }
                 e.cause is InterruptedException -> {
-                    status = ProtocolStatus.retry(RetryScope.WEB_DRIVER)
+                    status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     // Web driver closed
                     if (message.contains("sleep interrupted")) {
                         // throw if we use default sleeper, if we use CancellableSleeper, this must not happen

@@ -71,15 +71,17 @@ class CompletedPageFormatter(
     val proxyFmt get() = if (proxy == null) "%s" else "%26s"
     val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
     val fieldFmt get() = if (numFields == 0) "%s" else "%-3s"
-    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt | %s"
+    val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     val link get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     val url get() = if (redirected) page.location else page.url
     val readableUrl get() = if (redirected) "[R] $url" else url
     val readableLinks get() = if (verbose) "file://$link | $readableUrl" else readableUrl
 
+    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s$proxyFmt, $jsFmt fc:%-2d nf:$fieldFmt$failure | %s"
+
     override fun toString(): String {
         return String.format(fmt,
-                page.sequence,
+                page.id,
                 category,
                 page.protocolStatus.minorCode,
                 Strings.readableBytes(contentBytes.toLong(), 7, false),
@@ -102,8 +104,9 @@ class LoadCompletedPagesFormatter(
         val elapsed = DateTimes.elapsedTime(startTime)
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
-        var i = 0
-        pages.forEach { sb.append(++i).append(".\t").append(CompletedPageFormatter(it, verbose)).append('\n') }
+        pages.forEachIndexed { i, p ->
+            sb.append(i.inc()).append(".\t").append(CompletedPageFormatter(p, verbose)).append('\n')
+        }
         return sb.toString()
     }
 }

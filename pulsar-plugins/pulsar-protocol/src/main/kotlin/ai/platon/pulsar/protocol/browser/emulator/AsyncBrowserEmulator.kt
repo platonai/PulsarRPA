@@ -72,19 +72,19 @@ open class AsyncBrowserEmulator(
         var exception: Exception? = null
 
         if (++task.nRetries > fetchMaxRetry) {
-            return FetchResult.retry(task, RetryScope.CRAWL)
+            return FetchResult.retry(task, RetryScope.CRAWL).also { log.info("Too many retries, retry in CRAWL scope") }
         }
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: CancellationException) {
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
+            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
+            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
@@ -130,7 +130,7 @@ open class AsyncBrowserEmulator(
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            browseTask.status = ProtocolStatus.retry(RetryScope.CRAWL)
+            browseTask.status = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
         emulateEventHandler.onAfterNavigate(browseTask)
@@ -221,7 +221,7 @@ open class AsyncBrowserEmulator(
             if (message == null) {
                 if (!fetchTask.isCanceled && !interactTask.driver.isQuit && !isClosed) {
                     log.warn("Unexpected script result (null) | {}", interactTask.url)
-                    status = ProtocolStatus.retry(RetryScope.CRAWL)
+                    status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK
                 }
             } else if (message == "timeout") {
@@ -265,7 +265,7 @@ open class AsyncBrowserEmulator(
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
                 val page = interactTask.fetchTask.page
-                log.debug("{}. {} | {}", page.sequence, result.activeDomMessage?.multiStatus, interactTask.url)
+                log.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
             }
         }
     }

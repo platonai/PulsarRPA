@@ -223,17 +223,12 @@ open class BrowserEmulateEventHandler(
 
     fun handleBrokenPageSource(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
         return when {
-            htmlIntegrity.isBanned -> {
-                // should cancel all running tasks and reset the privacy context and then re-fetch them
-                ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
-            }
-            task.nRetries > fetchMaxRetry -> {
-                // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
-                ProtocolStatus.retry(RetryScope.CRAWL)
-            }
-            htmlIntegrity.isEmpty -> {
-                ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
-            }
+            // should cancel all running tasks and reset the privacy context and then re-fetch them
+            htmlIntegrity.isBanned -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
+            // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
+            task.nRetries > fetchMaxRetry -> ProtocolStatus.retry(RetryScope.CRAWL)
+                    .also { log.info("Retry task ${task.id} in the next crawl round") }
+            htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
             else -> ProtocolStatus.retry(RetryScope.CRAWL)
         }
     }

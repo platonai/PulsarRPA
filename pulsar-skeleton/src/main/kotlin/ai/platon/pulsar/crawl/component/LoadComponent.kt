@@ -58,7 +58,6 @@ class LoadComponent(
 
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get() && PulsarEnv.isActive
-    private val isInactive get() = closed.get() || PulsarEnv.isInactive
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -92,11 +91,11 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(originalUrl: String, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { isInactive } ?: load0(NormUrl(originalUrl, options))
+        return WebPage.NIL.takeIf { !isActive } ?: load0(NormUrl(originalUrl, options))
     }
 
     fun load(url: URL, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { isInactive } ?: load0(NormUrl(url, options))
+        return WebPage.NIL.takeIf { !isActive } ?: load0(NormUrl(url, options))
     }
 
     /**
@@ -108,16 +107,16 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(link: GHypeLink, options: LoadOptions): WebPage {
-        if (isInactive) return WebPage.NIL
-        return load(link.url.toString(), options).also { it.anchor = link.anchor.toString() }
+        return WebPage.NIL.takeIf { !isActive } ?: load(link.url.toString(), options)
+                .also { it.anchor = link.anchor.toString() }
     }
 
     fun load(normUrl: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { isInactive } ?: load0(normUrl)
+        return WebPage.NIL.takeIf { !isActive } ?: load0(normUrl)
     }
 
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { isInactive } ?: loadDeferred0(normUrl)
+        return WebPage.NIL.takeIf { !isActive } ?: loadDeferred0(normUrl)
     }
 
     /**
@@ -136,7 +135,7 @@ class LoadComponent(
      * @return Pages for all urls.
      */
     fun loadAll(normUrls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        if (isInactive) {
+        if (!isActive) {
             return listOf()
         }
 

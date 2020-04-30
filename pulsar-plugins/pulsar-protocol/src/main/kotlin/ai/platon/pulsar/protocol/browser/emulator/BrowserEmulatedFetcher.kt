@@ -76,9 +76,11 @@ class BrowserEmulatedFetcher(
                 }
             }.response
         } catch (e: ProxyException) {
-            ForwardingResponse.retry(page, RetryScope.CRAWL)
+            log.warn(e.message)
+            ForwardingResponse.retry(page, RetryScope.PRIVACY)
         } catch (e: NoSuchSessionException) {
-            ForwardingResponse.retry(page, RetryScope.CRAWL)
+            log.warn(e.message)
+            ForwardingResponse.retry(page, RetryScope.PRIVACY)
         } catch (e: Throwable) {
             log.warn("Unexpected throwable", e)
             ForwardingResponse.failed(page, e)
@@ -104,7 +106,7 @@ class BrowserEmulatedFetcher(
         }
 
         return try {
-            privacyManager.submit(createFetchTask(page)) { task, driver ->
+            privacyManager.runDeferred(createFetchTask(page)) { task, driver ->
                 try {
                     asyncBrowserEmulator.fetch(task, driver)
                 } catch (e: IllegalContextStateException) {
@@ -113,9 +115,11 @@ class BrowserEmulatedFetcher(
                 }
             }.response
         } catch (e: ProxyException) {
-            ForwardingResponse.retry(page, RetryScope.CRAWL)
+            log.warn(e.message)
+            ForwardingResponse.retry(page, RetryScope.PRIVACY)
         } catch (e: NoSuchSessionException) {
-            ForwardingResponse.retry(page, RetryScope.CRAWL)
+            log.warn(e.message)
+            ForwardingResponse.retry(page, RetryScope.PRIVACY)
         } catch (e: Throwable) {
             log.warn("Unexpected throwable", e)
             ForwardingResponse.failed(page, e)
@@ -159,7 +163,7 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages0(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        FetchTaskBatch(batchId, pages, volatileConfig, privacyManager.activeContext).use { batch ->
+        FetchTaskBatch(batchId, pages, volatileConfig, privacyManager.autoRefreshContext).use { batch ->
             // allocate drivers before batch fetch context timing
             allocateDriversIfNecessary(batch, batch.conf)
 
@@ -171,13 +175,13 @@ class BrowserEmulatedFetcher(
             var i = 1
             do {
                 var b = batch
-                if (privacyManager.activeContext.isPrivacyLeaked) {
+                if (privacyManager.autoRefreshContext.isPrivacyLeaked) {
                     privacyManager.reset()
-                    b = b.createNextNode(privacyManager.activeContext)
+                    b = b.createNextNode(privacyManager.autoRefreshContext)
                 }
 
                 parallelFetch0(b)
-            } while (i++ <= privacyManager.maxRetry && privacyManager.activeContext.isPrivacyLeaked)
+            } while (i++ <= privacyManager.maxRetry && privacyManager.autoRefreshContext.isPrivacyLeaked)
 
             batch.afterFetchAll(batch.pages)
 
@@ -226,7 +230,7 @@ class BrowserEmulatedFetcher(
         return when {
             !isActive -> FetchTaskBatch.State.CLOSED
             Thread.currentThread().isInterrupted -> FetchTaskBatch.State.INTERRUPTED
-            privacyManager.activeContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
+            privacyManager.autoRefreshContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
             else -> batch.checkState()
         }
     }
@@ -241,7 +245,7 @@ class BrowserEmulatedFetcher(
     }
 
     private suspend fun parallelFetch1(task: FetchTask, batch: FetchTaskBatch): FetchResult {
-        return privacyManager.activeContext.submit(task) { _, driver ->
+        return privacyManager.autoRefreshContext.runDeferred(task) { _, driver ->
             try {
                 batch.beforeFetch(task.page)
                 asyncBrowserEmulator.fetch(task, driver)

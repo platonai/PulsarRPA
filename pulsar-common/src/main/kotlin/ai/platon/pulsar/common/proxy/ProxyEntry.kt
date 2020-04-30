@@ -13,6 +13,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 enum class ProxyType {
@@ -54,13 +55,15 @@ data class ProxyEntry(
     // number of success pages
     val numSuccessPages = AtomicInteger()
     val servedDomains = ConcurrentHashMultiset.create<String>()
-    var status = Status.FREE
+    val status = AtomicReference<Status>(Status.FREE)
     val testSpeed get() = accumResponseMillis.get() / numTests.get().coerceAtLeast(1) / 1000.0
     val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
-    val isRetired = status == Status.RETIRED
-    val isBanned = isRetired && !isExpired
+    val isRetired get() = status.get() == Status.RETIRED
+    val isFree get() = status.get() == Status.FREE
+    val isWorking get() = status.get() == Status.WORKING
+    val isBanned get() = isRetired && !isExpired
     val isFailed get() = numConnectionLosts.get() >= 3 // large value means ignoring failures
     val isGone get() = isRetired || isFailed
 
@@ -75,9 +78,11 @@ data class ProxyEntry(
 
     fun willExpireAfter(duration: Duration): Boolean = ttl < Instant.now() + duration
 
-    fun startWork() { status = Status.WORKING }
+    fun setFree() { status.set(Status.FREE) }
 
-    fun retire() { status = Status.RETIRED }
+    fun startWork() { status.set(Status.WORKING) }
+
+    fun retire() { status.set(Status.RETIRED) }
 
     fun refresh() { availableTime = Instant.now() }
 
@@ -166,7 +171,7 @@ data class ProxyEntry(
 
     private fun formatMetadata(): String {
         val nPages = numSuccessPages.get() + numFailedPages.get()
-        return "pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
+        return "st:${status.get().ordinal} pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
     }
 
     companion object {

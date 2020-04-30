@@ -86,11 +86,6 @@ class LoadingWebDriverPool(
         }
 
         closeAllDrivers(processExit)
-
-        if (incognito) {
-            // Force delete all browser data
-            forceDeleteBrowserDataDir()
-        }
     }
 
     override fun close() {
@@ -139,27 +134,6 @@ class LoadingWebDriverPool(
         nonSynchronized.parallelStream().forEach {
             it.quit().also { counterQuit.inc() }
             log.info("Quit driver {}", it)
-        }
-    }
-
-    /**
-     * Force delete all browser data
-     * */
-    private fun forceDeleteBrowserDataDir() {
-        // TODO: delete data that might leak privacy only, cookies, sessions, local storage, etc
-        synchronized(LoadingWebDriverPool::class.java) {
-            val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-            val pathToDelete = AppPaths.BROWSER_TMP_DIR
-
-            val maxTry = 10
-            var i = 0
-            while (i++ < maxTry && Files.exists(pathToDelete)) {
-                FileChannel.open(lock, StandardOpenOption.APPEND).use {
-                    it.lock()
-                    kotlin.runCatching { FileUtils.deleteDirectory(pathToDelete.toFile()) }
-                            .onFailure { log.warn(Strings.simplifyException(it)) }
-                }
-            }
         }
     }
 

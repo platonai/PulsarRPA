@@ -83,15 +83,15 @@ public class WebPage {
     public static Instant middleNightInstant = Instant.now().truncatedTo(DAYS);
     public static ZoneId defaultZoneId = ZoneId.systemDefault();
     public static AtomicInteger sequencer = new AtomicInteger();
-    public static WebPage NIL = newInternalPage(NIL_PAGE_URL, "nil", "nil");
+    public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
     /**
      * The process scope WebPage instance sequence
      */
-    private Integer sequence = sequencer.incrementAndGet();
+    private Integer id = sequencer.incrementAndGet();
     /**
      * The url is the permanent internal address, and the location is the last working address
-     * */
+     */
     private String url = "";
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this object
@@ -189,11 +189,19 @@ public class WebPage {
 
     @NotNull
     public static WebPage newInternalPage(String url, String title, String content) {
+        return newInternalPage(url, -1, title, content);
+    }
+
+    @NotNull
+    public static WebPage newInternalPage(String url, Integer id, String title, String content) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(title);
         Objects.requireNonNull(content);
 
         WebPage page = WebPage.newWebPage(url, false);
+        if (id >= 0) {
+            page.id = id;
+        }
 
         page.setLocation(url);
         page.setModifiedTime(Instant.now());
@@ -281,8 +289,8 @@ public class WebPage {
         return reversedUrl != null ? reversedUrl : "";
     }
 
-    public Integer getSequence() {
-        return sequence;
+    public Integer getId() {
+        return id;
     }
 
     public boolean isNil() {

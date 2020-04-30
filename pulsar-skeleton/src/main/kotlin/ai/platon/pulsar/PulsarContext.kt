@@ -73,7 +73,7 @@ class PulsarContext private constructor(): AutoCloseable {
     /**
      * Whether this pulsar object is already closed
      * */
-    val isClosed = closed.get()
+    val isActive = !closed.get() && PulsarEnv.isActive
     /**
      * Registered closeables, will be closed by Pulsar object
      * */
@@ -129,7 +129,6 @@ class PulsarContext private constructor(): AutoCloseable {
     }
 
     fun createSession(): PulsarSession {
-        ensureAlive()
         val session = PulsarSession(this, VolatileConfig(unmodifiedConfig))
         sessions[session.id] = session
         return session
@@ -141,7 +140,6 @@ class PulsarContext private constructor(): AutoCloseable {
 
     @Throws(BeansException::class)
     fun <T> getBean(requiredType: Class<T>): T {
-        ensureAlive()
         return PulsarEnv.getBean(requiredType)
     }
 
@@ -155,7 +153,6 @@ class PulsarContext private constructor(): AutoCloseable {
      * Close objects when sessions closes
      * */
     fun registerClosable(closable: AutoCloseable) {
-        ensureAlive()
         closableObjects.add(closable)
     }
 
@@ -170,12 +167,10 @@ class PulsarContext private constructor(): AutoCloseable {
     }
 
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
-        ensureAlive()
         return normalize(url, LoadOptions.create(), isItemOption)
     }
 
     fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
-        ensureAlive()
         val parts = Urls.splitUrlArgs(url)
         var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
         if (!options.noNorm) {
@@ -195,13 +190,13 @@ class PulsarContext private constructor(): AutoCloseable {
     }
 
     fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
-        ensureAlive()
-        return urls.mapNotNull { normalize(it, isItemOption).takeIf { it.isNotNil } }
+        return urls.takeIf { isActive }?.mapNotNull { normalize(it, isItemOption).takeIf { it.isNotNil } }
+                ?:listOf()
     }
 
     fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl> {
-        ensureAlive()
-        return urls.mapNotNull { normalize(it, options, isItemOption).takeIf { it.isNotNil } }
+        return urls.takeIf { isActive }?.mapNotNull { normalize(it, options, isItemOption).takeIf { it.isNotNil } }
+                ?: listOf()
     }
 
     /**
@@ -211,33 +206,27 @@ class PulsarContext private constructor(): AutoCloseable {
      * @return The web page created
      */
     fun inject(url: String): WebPage {
-        ensureAlive()
-        return injectComponent.inject(Urls.splitUrlArgs(url))
+        return WebPage.NIL.takeUnless { isActive }?:injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
     fun get(url: String): WebPage? {
-        ensureAlive()
-        return webDb.get(normalize(url).url, false)
+        return webDb.takeIf { isActive }?.get(normalize(url).url, false)
     }
 
     fun getOrNil(url: String): WebPage {
-        ensureAlive()
-        return webDb.getOrNil(normalize(url).url, false)
+        return webDb.takeIf { isActive }?.getOrNil(normalize(url).url, false)?: WebPage.NIL
     }
 
     fun scan(urlPrefix: String): Iterator<WebPage> {
-        ensureAlive()
-        return webDb.scan(urlPrefix)
+        return webDb.takeIf { isActive }?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
 
     fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
-        ensureAlive()
-        return webDb.scan(urlPrefix, fields)
+        return webDb.takeIf { isActive }?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
-        ensureAlive()
-        return webDb.scan(urlPrefix, fields)
+        return webDb.takeIf { isActive }?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     /**
@@ -247,9 +236,8 @@ class PulsarContext private constructor(): AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: String): WebPage {
-        ensureAlive()
         val normUrl = normalize(url)
-        return loadComponent.load(normUrl)
+        return loadComponent.takeIf { isActive }?.load(normUrl)?: WebPage.NIL
     }
 
     /**
@@ -260,9 +248,8 @@ class PulsarContext private constructor(): AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: String, options: LoadOptions): WebPage {
-        ensureAlive()
         val normUrl = normalize(url, options)
-        return loadComponent.load(normUrl)
+        return loadComponent.takeIf { isActive }?.load(normUrl)?: WebPage.NIL
     }
 
     /**
@@ -272,8 +259,7 @@ class PulsarContext private constructor(): AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: URL): WebPage {
-        ensureAlive()
-        return loadComponent.load(url, LoadOptions.create())
+        return loadComponent.takeIf { isActive }?.load(url, LoadOptions.create())?: WebPage.NIL
     }
 
     /**
@@ -284,8 +270,7 @@ class PulsarContext private constructor(): AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: URL, options: LoadOptions): WebPage {
-        ensureAlive()
-        return loadComponent.load(url, initOptions(options))
+        return loadComponent.takeIf { isActive }?.load(url, initOptions(options))?: WebPage.NIL
     }
 
     /**
@@ -295,15 +280,13 @@ class PulsarContext private constructor(): AutoCloseable {
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     fun load(url: NormUrl): WebPage {
-        ensureAlive()
         initOptions(url.options)
-        return loadComponent.load(url)
+        return loadComponent.takeIf { isActive }?.load(url)?: WebPage.NIL
     }
 
     suspend fun loadDeferred(url: NormUrl): WebPage {
-        ensureAlive()
         initOptions(url.options)
-        return loadComponent.loadDeferred(url)
+        return loadComponent.takeIf { isActive }?.loadDeferred(url)?: WebPage.NIL
     }
 
     /**
@@ -321,14 +304,12 @@ class PulsarContext private constructor(): AutoCloseable {
      */
     @JvmOverloads
     fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        ensureAlive()
-        return loadComponent.loadAll(normalize(urls, options), options)
+        return loadComponent.takeIf { isActive }?.loadAll(normalize(urls, options), options)?: listOf()
     }
 
     @JvmOverloads
     fun loadAll(urls: Collection<NormUrl>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        ensureAlive()
-        return loadComponent.loadAll(urls, initOptions(options))
+        return loadComponent.takeIf { isActive }?.loadAll(urls, initOptions(options))?: listOf()
     }
 
     /**
@@ -346,50 +327,39 @@ class PulsarContext private constructor(): AutoCloseable {
      */
     @JvmOverloads
     fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        ensureAlive()
-        return loadComponent.parallelLoadAll(normalize(urls, options), options)
+        return loadComponent.takeIf { isActive }?.parallelLoadAll(normalize(urls, options), options)?: listOf()
     }
 
     @JvmOverloads
     fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions = LoadOptions.create()): Collection<WebPage> {
-        ensureAlive()
-        return loadComponent.loadAll(urls, initOptions(options))
+        return loadComponent.takeIf { isActive }?.loadAll(urls, initOptions(options))?: listOf()
     }
 
     /**
      * Parse the WebPage using Jsoup
      */
     fun parse(page: WebPage): FeaturedDocument {
-        ensureAlive()
-        val parser = JsoupParser(page, unmodifiedConfig)
-        return parser.parse()
+        return FeaturedDocument.NIL.takeUnless { isActive }?:JsoupParser(page, unmodifiedConfig).parse()
     }
 
     fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument {
-        ensureAlive()
-        val parser = JsoupParser(page, mutableConfig)
-        return parser.parse()
+        return FeaturedDocument.NIL.takeUnless { isActive }?:JsoupParser(page, mutableConfig).parse()
     }
 
     fun persist(page: WebPage) {
-        ensureAlive()
-        webDb.put(page, false)
+        webDb.takeIf { isActive }?.put(page, false)
     }
 
     fun delete(url: String) {
-        ensureAlive()
-        webDb.delete(url)
-        webDb.delete(normalize(url).url)
+        webDb.takeIf { isActive }?.apply { delete(url); delete(normalize(url).url) }
     }
 
     fun delete(page: WebPage) {
-        ensureAlive()
-        webDb.delete(page.url)
+        webDb.takeIf { isActive }?.delete(page.url)
     }
 
     fun flush() {
-        ensureAlive()
-        webDb.flush()
+        webDb.takeIf { isActive }?.flush()
     }
 
     override fun close() {

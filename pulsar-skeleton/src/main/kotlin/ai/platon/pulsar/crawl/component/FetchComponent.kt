@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -53,8 +54,7 @@ open class FetchComponent(
     private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
-
-    val isClosed get() = closed.get()
+    val isActive get() = !closed.get() && PulsarEnv.isActive
 
     /**
      * Fetch a url
@@ -85,7 +85,7 @@ open class FetchComponent(
      */
     fun fetchContent(page: WebPage): WebPage {
         require(page.isNotInternal) { "Internal page ${page.url}" }
-        return page.takeIf { isClosed } ?: fetchContent0(page)
+        return page.takeIf { !isActive } ?: fetchContent0(page)
     }
 
     /**
@@ -95,7 +95,7 @@ open class FetchComponent(
      * @return The fetch result
      */
     suspend fun fetchContentDeferred(page: WebPage): WebPage {
-        return page.takeIf { isClosed } ?: fetchContentDeferred0(page)
+        return page.takeIf { !isActive } ?: fetchContentDeferred0(page)
     }
 
     /**

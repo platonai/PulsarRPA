@@ -43,38 +43,22 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
             return emulator?.parallelFetchAllPages(pages, volatileConfig)?: emptyList()
         } catch (e: Exception) {
             log.warn("Unexpected exception", e)
+            throw e
         }
-        return emptyList()
     }
 
     override fun getResponse(url: String, page: WebPage, followRedirects: Boolean): Response? {
-        return try {
-            val response = super.getResponse(url, page, followRedirects)
-            if (response != null) {
-                return response
-            }
-            return emulator?.fetchContent(page)?:ForwardingResponse.canceled(page)
-        } catch (e: Exception) {
-            log.warn("Unexpected exception", e)
-            // Unexpected exception, cancel the request, hope to retry in CRAWL_SOLUTION scope
-            ForwardingResponse.canceled(page)
-        }
+        return kotlin.runCatching {
+            super.getResponse(url, page, followRedirects)?:fetchContent(page)?:ForwardingResponse.canceled(page)
+        }.onFailure { log.warn("Unexpected exception", it) }.getOrThrow()
     }
 
     override suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Internal page ${page.url}" }
 
-        return try {
-            val response = super.getResponse(url, page, followRedirects)
-            if (response != null) {
-                return response
-            }
-            return emulator?.fetchContentDeferred(page)?:ForwardingResponse.canceled(page)
-        } catch (e: Exception) {
-            log.warn("Unexpected exception", e)
-            // Unexpected exception, cancel the request, hope to retry in CRAWL_SOLUTION scope
-            ForwardingResponse.canceled(page)
-        }
+        return kotlin.runCatching {
+            super.getResponse(url, page, followRedirects)?:fetchContentDeferred(page)?:ForwardingResponse.canceled(page)
+        }.onFailure { log.warn("Unexpected exception", it) }.getOrThrow()
     }
 
     override fun reset() {
@@ -92,11 +76,11 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
     }
 
     override fun cancelAll() {
-        val fetcher = emulator
-        if (fetcher != null) {
-            // fetcher.privacyContext.cancelAll();
-        }
     }
+
+    private fun fetchContent(page: WebPage): Response? = emulator?.fetchContent(page)
+
+    private suspend fun fetchContentDeferred(page: WebPage): Response? = emulator?.fetchContentDeferred(page)
 
     @get:Synchronized
     private val emulator: BrowserEmulatedFetcher?
@@ -109,7 +93,9 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
                 browserEmulator.compareAndSet(null, getBean(BrowserEmulatedFetcher::class.java))
             } catch (e: BeansException) {
                 log.warn("{}", Strings.simplifyException(e))
+                throw e
             }
+
             return browserEmulator.get()
         }
 }

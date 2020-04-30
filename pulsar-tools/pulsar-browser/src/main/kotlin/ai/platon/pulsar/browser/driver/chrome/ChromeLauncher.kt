@@ -5,14 +5,17 @@ import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.Strings
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -231,12 +234,23 @@ class ChromeLauncher(
                     process.destroyForcibly()
                     process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
                 }
-                log.info("Chrome process is closed")
+
+                log.info("Chrome process is exit")
             } catch (e: InterruptedException) {
                 log.error("Interrupted while waiting for chrome process to shutdown", e)
                 process.destroyForcibly()
             } finally {
-                FileUtils.deleteQuietly(userDataDirPath.toFile())
+                kotlin.runCatching {
+                    FileUtils.deleteQuietly(userDataDirPath.toFile())
+                    if (Files.exists(userDataDirPath)) {
+                        log.warn("Failed to delete browser data, try again | {}", userDataDirPath)
+                        forceDeleteDirectory(userDataDirPath)
+
+                        if (Files.exists(userDataDirPath)) {
+                            log.error("Can not delete browser data | {}", userDataDirPath)
+                        }
+                    }
+                }
             }
 
             try {
@@ -341,6 +355,26 @@ class ChromeLauncher(
         try {
             thread.join(config.threadWaitTime.toMillis())
         } catch (ignored: InterruptedException) {}
+    }
+
+    /**
+     * Force delete all browser data
+     * */
+    private fun forceDeleteDirectory(dirToDelete: Path) {
+        // TODO: delete data only if they contain privacy data, cookies, sessions, local storage, etc
+        synchronized(ChromeLauncher::class.java) {
+            val lock = dirToDelete.parent.resolve("${dirToDelete.fileName}.lock")
+
+            val maxTry = 10
+            var i = 0
+            while (i++ < maxTry && Files.exists(dirToDelete)) {
+                FileChannel.open(lock, StandardOpenOption.APPEND).use {
+                    it.lock()
+                    kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
+                            .onFailure { log.warn(Strings.simplifyException(it)) }
+                }
+            }
+        }
     }
 
     interface ShutdownHookRegistry {

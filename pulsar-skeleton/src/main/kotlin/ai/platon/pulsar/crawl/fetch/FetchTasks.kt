@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
 abstract class TaskHandler: (WebPage) -> Unit {
@@ -85,12 +84,15 @@ class FetchTask(
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
         var batchStat: BatchStat? = null,
-        val id: Int = instanceSequence.incrementAndGet(),
         var proxyEntry: ProxyEntry? = null, // the proxy used
-        var nRetries: Int = 0, // The number retries inside a privacy context
+        var nRetries: Int = 0, // The total number retries in a crawl
         val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
 ): Comparable<FetchTask> {
-
+    // The task id
+    val id: Int = page.id
+    // The number retries inside a privacy context
+    var nPrivacyRetries: Int = 0
+    // The response
     lateinit var response: Response
 
     val url get() = page.url
@@ -113,7 +115,8 @@ class FetchTask(
                 batchSize = batchSize,
                 priority = priority,
                 page = page,
-                volatileConfig = volatileConfig
+                volatileConfig = volatileConfig,
+                nRetries = ++nRetries
         )
     }
 
@@ -122,21 +125,35 @@ class FetchTask(
     override fun toString(): String = "$batchTaskId/$batchId"
 
     companion object {
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id = 0)
-        private val instanceSequence = AtomicInteger(0)
+        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY)
     }
 }
 
 class FetchResult(
         val task: FetchTask,
         var response: Response,
-        var exception: Exception? = null
+        var exception: Throwable? = null
 ) {
     operator fun component1() = task
     operator fun component2() = response
     operator fun component3() = exception
 
     val status get() = response.status
+    val isSuccess get() = status.isSuccess
+    val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
+
+    fun canceled() {
+        response = ForwardingResponse.canceled(task.page)
+    }
+
+    fun retry(retryScope: RetryScope) {
+        response = ForwardingResponse.retry(task.page, retryScope)
+    }
+
+    fun failed(t: Throwable?) {
+        response = ForwardingResponse.failed(task.page, t)
+        exception = t
+    }
 
     companion object {
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
@@ -291,7 +308,7 @@ class FetchTaskBatch(
         universalStat.totalSuccessBytes += result.response.length
         universalStat.numTasksSuccess++
 
-        privacyContext.markSuccess()
+        privacyContext.markSuccessDeprecated()
 
         afterFetchN(headNode.universalSuccessPages)
     }
@@ -309,7 +326,7 @@ class FetchTaskBatch(
 
         if (result.status.isRetry(RetryScope.PRIVACY)) {
             privacyLeakedTasks.add(task)
-            privacyContext.markWarning()
+            privacyContext.markWarningDeprecated()
         }
     }
 
@@ -387,17 +404,5 @@ class FetchTaskBatch(
 
     private fun isLastTaskTimeout(): Boolean {
         return batchSize > 10 && workingTasks.size == 1 && idleSeconds >= 45
-    }
-}
-
-class FetchTaskStream(
-        val pages: Sequence<WebPage>,
-        val conf: VolatileConfig,
-        val privacyContext: PrivacyContext,
-        var prevNode: FetchTaskBatch? = null
-): AutoCloseable {
-
-    override fun close() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

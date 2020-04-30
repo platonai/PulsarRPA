@@ -8,7 +8,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.persist.WebPage
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import oshi.SystemInfo
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
@@ -21,8 +24,7 @@ open class StreamingCrawler(
         val conf: ImmutableConfig = session.sessionConfig
 ): Crawler(session) {
     private val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
-    private val privacyContextManager = session.context.getBean(PrivacyManager::class)
-    private val activePrivacyContext get() = privacyContextManager.activeContext
+    private val privacyManager = session.context.getBean(PrivacyManager::class)
     private val isAppActive get() = isAlive
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
@@ -39,9 +41,12 @@ open class StreamingCrawler(
 
                 // log.info("$j.\t$url")
 
-                while (isAppActive && activePrivacyContext.isPrivacyLeaked) {
-                    log.info("Privacy is leaked, wait for privacy context reset")
-                    Thread.sleep(200)
+                var k = 0
+                while (isAppActive && privacyManager.activeContext.isPrivacyLeaked) {
+                    if (k++ % 10 == 0) {
+                        log.info("Privacy is leaked, wait for privacy context reset")
+                    }
+                    Thread.sleep(1000)
                 }
 
                 while (isAppActive && numRunning.get() >= concurrency) {
@@ -66,7 +71,7 @@ open class StreamingCrawler(
                 numRunning.incrementAndGet()
                 val context = Dispatchers.Default + CoroutineName("w")
                 launch(context) {
-                    val page =session.loadDeferred(url, options)
+                    val page = session.loadDeferred(url, options)
                     numRunning.decrementAndGet()
                     pageCollector?.add(page)
                 }
