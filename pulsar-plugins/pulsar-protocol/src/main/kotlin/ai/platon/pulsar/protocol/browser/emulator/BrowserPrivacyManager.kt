@@ -27,22 +27,16 @@ class BrowserPrivacyManager(
     override var activeContext: PrivacyContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
 
     fun run(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        if (!isActive) return FetchResult.retry(task, RetryScope.CRAWL)
-
-        return run0(task, fetchFun).takeUnless { it.status.isRetry(RetryScope.PRIVACY) }
-                ?:FetchResult.retry(task, RetryScope.CRAWL)
+        return takeIf { isActive }?.run0(task, fetchFun)?.takeUnless { it.isPrivacyRetry }
+                ?:FetchResult.crawlRetry(task)
     }
 
     suspend fun runDeferred(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        val result = FetchResult.retry(task, RetryScope.CRAWL)
-
-        if (!isActive) return result
-
-        return runDeferred0(task, fetchFun).takeUnless { it.status.isRetry(RetryScope.PRIVACY) }
-                ?:result.also {
+        return takeIf { isActive }?.runDeferred0(task, fetchFun)?.takeUnless { it.isPrivacyRetry }
+                ?:FetchResult.crawlRetry(task).also {
                     log.warn("{}. Task is still privacy leaked after {} tries | {}",
-                            task.page.id, task.nPrivacyRetries, task.url)
-        }
+                    task.page.id, task.nPrivacyRetries, task.url)
+                }
     }
 
     private fun run0(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -63,7 +57,7 @@ class BrowserPrivacyManager(
                     updateState(context, result)
                 }
             }
-        } while (!result.isSuccess && context.isPrivacyLeaked && i++ <= maxRetry)
+        } while (!result.isSuccess && context.isLeaked && i++ <= maxRetry)
 
         return result
     }
@@ -77,9 +71,12 @@ class BrowserPrivacyManager(
             // freezer is not reentrant
             val task0 = if (i == 1) task else task.clone()
 
-            result = FetchResult.retry(task0, RetryScope.CRAWL)
+            result = FetchResult.crawlRetry(task0)
 
+            // if the current context is not leaked, return the current context, or block and create a new one
             val context = computePureContextIfAbsent()
+            // can leak immediately theoretically, but should not happen and no harm
+            // require(context.isActive)
 
             tracer?.trace("{}. Ready to fetch task the {}th times in context #{} | {}",
                     task0.page.id, i, context.id, task0.url)
@@ -91,15 +88,13 @@ class BrowserPrivacyManager(
                     require(!task0.isCanceled)
                     require(task0.proxyEntry == null)
 
-                    tracer?.trace("{}. Fetching task in context #{} | {}", task0.page.id, context.id, task0.url)
                     task0.nPrivacyRetries = i
                     result = context.runDeferred(task0) { _, driver -> fetchFun(task0, driver) }
-                    tracer?.trace("{}. Task is fetched in context #{} | {} | {}", task0.page.id, context.id, result.status, task0.url)
                 } finally {
                     updateState(context, result)
                 }
             }
-        } while (!result.isSuccess && context.isPrivacyLeaked && i++ <= maxRetry)
+        } while (!result.isSuccess && context.isLeaked && i++ <= maxRetry)
 
         return result
     }
@@ -110,6 +105,12 @@ class BrowserPrivacyManager(
     private fun computePureContextIfAbsent(): BrowserPrivacyContext {
         val oldContext = activeContext
         return computeIfLeaked {
+            require(numWorkers.get() == 0)
+            require(numFreezers.get() > 0)
+            require(numRunningFreezers.get() > 0)
+            require(oldContext.isLeaked)
+            require(oldContext.closed.get())
+
             val newContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
             if (oldContext != newContext) {
                 report()

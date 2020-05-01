@@ -61,21 +61,8 @@ class ChromeDevtoolsDriver(
 
                         chrome.use { it.close() }
                         launcher.use { it.close() }
-
-                        checkChromeProcesses()
                     }
                 }
-            }
-        }
-
-        private fun checkChromeProcesses() {
-            val process = ProcessLauncher().launch("ps", listOf("-efw"))
-            val runningChromes = BufferedReader(InputStreamReader(process.inputStream)).use {
-                reader -> reader.lines().filter { it.contains("chrome.+--headless".toRegex()) }.toList()
-            }
-
-            if (runningChromes.isNotEmpty()) {
-                log.warn("There are still {} running chrome processes after closing", runningChromes.size)
             }
         }
     }

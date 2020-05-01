@@ -36,13 +36,13 @@ abstract class PrivacyManager(
 
     inline fun <reified C: PrivacyContext> computeIfLeaked(crossinline mappingFunction: () -> C): C {
         synchronized(PrivacyContext::class.java) {
-            if (!activeContext.isPrivacyLeaked) {
+            if (!activeContext.isLeaked) {
                 return activeContext as C
             }
 
             // Refresh the context if privacy leaked
             return freeze {
-                if (activeContext.isPrivacyLeaked) {
+                if (activeContext.isLeaked) {
                     // all other tasks are waiting until freezer channel is closed
                     // close the current context
                     // until the old context is closed entirely

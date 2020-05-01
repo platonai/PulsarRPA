@@ -109,11 +109,11 @@ class ProxyContext(
     val isActive get() = proxyMonitor.isActive && !closed.get()
 
     suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.let { runDeferred0(task, browseFun) }?:FetchResult.retry(task, RetryScope.PRIVACY)
+        return takeIf { isActive }?.let { runDeferred0(task, browseFun) }?:FetchResult.privacyRetry(task)
     }
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.let { run0(task, browseFun) }?:FetchResult.retry(task, RetryScope.PRIVACY)
+        return takeIf { isActive }?.let { run0(task, browseFun) }?:FetchResult.privacyRetry(task)
     }
 
     private fun run0(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -128,10 +128,10 @@ class ProxyContext(
                 throw ProxyVendorUnTrustedException("No proxy available from proxy vendor, the vendor is untrusted")
             }
 
-            result = FetchResult.retry(task, RetryScope.CRAWL)
+            result = FetchResult.crawlRetry(task)
             log.warn("No proxy available temporary", e.message)
         } catch (e: ProxyException) {
-            result = FetchResult.retry(task, RetryScope.PRIVACY)
+            result = FetchResult.privacyRetry(task)
             log.warn("Task failed with proxy {} | {}", proxyEntry, e.message)
         } finally {
             afterTaskFinished(task, success)
@@ -148,19 +148,21 @@ class ProxyContext(
             result = proxyMonitor.runDeferred { driverContext.runDeferred(task, browseFun) }
             success = result.response.status.isSuccess
         } catch (e: ProxyException) {
-            result = FetchResult.retry(task, RetryScope.PRIVACY)
+            result = FetchResult.privacyRetry(task)
             log.warn("Task failed with proxy {} | {}", proxyEntry, Strings.simplifyException(e))
         } finally {
             afterTaskFinished(task, success)
         }
 
         val proxy = proxyEntry
+        // used for test purpose
+        val maximumSuccessPages = 250000
         if (proxy != null) {
             // TEST code, trigger the privacy context reset
             val successPages = proxy.numSuccessPages.get()
-            if (successPages > 25 && result.status.isSuccess) {
-                log.info("[TEST] Force return a PRIVACY retry after $successPages pages served | {}", proxy)
-                result = FetchResult.retry(task, RetryScope.PRIVACY)
+            if (successPages > maximumSuccessPages && result.status.isSuccess) {
+                log.info("[TEST] Force emit a PRIVACY retry after $successPages pages served | {}", proxy)
+                result = FetchResult.privacyRetry(task)
             }
         }
 
@@ -224,28 +226,27 @@ open class BrowserPrivacyContext(
     private val proxyContext = ProxyContext(proxyMonitor, driverContext, conf)
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        if (!isActive) return FetchResult.retry(task, RetryScope.PRIVACY)
+        if (!isActive) return FetchResult.privacyRetry(task)
 
         beforeRun()
         return try {
             proxyContext.run(task, browseFun).also { afterRun(it) }
         } catch (e: PrivacyLeakException) {
-            FetchResult.retry(task, RetryScope.PRIVACY)
+            FetchResult.privacyRetry(task)
         }
     }
 
     open suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         // TODO: return or throw?
         if (!isActive) {
-            return FetchResult.retry(task, RetryScope.PRIVACY)
-                    .also { log.info("Context #{} is closed | {}", id, task.url) }
+            return FetchResult.privacyRetry(task).also { log.info("Context #{} is closed | {}", id, task.url) }
         }
 
         beforeRun()
         return try {
             proxyContext.runDeferred(task, browseFun).also { afterRun(it) }
         } catch (e: PrivacyLeakException) {
-            FetchResult.retry(task, RetryScope.PRIVACY)
+            FetchResult.privacyRetry(task)
         }
     }
 

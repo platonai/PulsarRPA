@@ -42,7 +42,7 @@ open class StreamingCrawler(
                 // log.info("$j.\t$url")
 
                 var k = 0
-                while (isAppActive && privacyManager.activeContext.isPrivacyLeaked) {
+                while (isAppActive && privacyManager.activeContext.isLeaked) {
                     if (k++ % 10 == 0) {
                         log.info("Privacy is leaked, wait for privacy context reset")
                     }

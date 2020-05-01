@@ -5,121 +5,116 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.filter;
+package ai.platon.pulsar.filter
+
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.crawl.filter.UrlFilter
+import org.junit.Assert
+import java.io.BufferedReader
+import java.io.FileReader
+import java.io.IOException
+import java.io.Reader
+import java.nio.file.Paths
+import java.util.function.BiConsumer
+import java.util.function.Consumer
+import java.util.function.Supplier
+import kotlin.streams.toList
 
 // JDK imports
+abstract class RegexUrlFilterBaseTest : UrlFilterTestBase {
+    protected var sampleDir = Paths.get(TEST_DIR, "sample").toString()
 
-import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.crawl.filter.UrlFilter;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-
-import static org.junit.Assert.*;
-
-public abstract class RegexUrlFilterBaseTest extends UrlFilterTestBase {
-
-    protected String sampleDir = Paths.get(TEST_DIR, "sample").toString();
-
-    protected RegexUrlFilterBaseTest() {
+    protected constructor() {}
+    protected constructor(sampleDir: String) {
+        this.sampleDir = sampleDir
     }
 
-    protected RegexUrlFilterBaseTest(String sampleDir) {
-        this.sampleDir = sampleDir;
-    }
+    protected abstract fun getURLFilter(reader: Reader): UrlFilter
 
-    private static ArrayList<FilteredURL> readURLFile(Reader reader) throws IOException {
-        return new BufferedReader(reader).lines().map(FilteredURL::new).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-    }
-
-    protected abstract UrlFilter getURLFilter(Reader rules);
-
-    protected void bench(int loops, String file) {
+    protected fun bench(loops: Int, file: String) {
         try {
-            Path rulesPath = Paths.get(sampleDir, file + ".rules");
-            Path urlPath = Paths.get(sampleDir, file + ".urls");
-            bench(loops, new FileReader(rulesPath.toFile()), new FileReader(urlPath.toFile()));
-        } catch (Exception e) {
-            fail(e.toString());
+            val rulesPath = Paths.get(sampleDir, "$file.rules")
+            val urlPath = Paths.get(sampleDir, "$file.urls")
+            bench(loops, FileReader(rulesPath.toFile()), FileReader(urlPath.toFile()))
+        } catch (e: Exception) {
+            Assert.fail(e.toString())
         }
     }
 
-    protected void bench(int loops, Reader rules, Reader urls) {
-        long start = System.currentTimeMillis();
+    protected fun bench(loops: Int, reader: Reader, urls: Reader) {
+        val start = System.currentTimeMillis()
         try {
-            UrlFilter filter = getURLFilter(rules);
-            ArrayList<FilteredURL> expected = readURLFile(urls);
-            for (int i = 0; i < loops; i++) {
-                test(filter, expected);
+            val filter = getURLFilter(reader)
+            val expected = readURLFile(urls)
+            for (i in 0 until loops) {
+                test(filter, expected)
             }
-        } catch (Exception e) {
-            fail(e.toString());
+        } catch (e: Exception) {
+            Assert.fail(e.toString())
         }
-        LOG.info("bench time (" + loops + ") " + (System.currentTimeMillis() - start) + "ms");
+        LOG.info("bench time (" + loops + ") " + (System.currentTimeMillis() - start) + "ms")
     }
 
-    protected void test(String file) {
+    protected fun test(file: String) {
         try {
-            Path rulesPath = Paths.get(sampleDir, file + ".rules");
-            Path urlPath = Paths.get(sampleDir, file + ".urls");
-            LOG.info("Rules File : " + rulesPath);
-            LOG.info("Urls File : " + urlPath);
-
-            test(new FileReader(rulesPath.toFile()), new FileReader(urlPath.toFile()));
-        } catch (Exception e) {
-            fail(e.toString());
+            val rulesPath = Paths.get(sampleDir, "$file.rules")
+            val urlPath = Paths.get(sampleDir, "$file.urls")
+            LOG.info("Rules File : $rulesPath")
+            LOG.info("Urls File : $urlPath")
+            test(FileReader(rulesPath.toFile()), FileReader(urlPath.toFile()))
+        } catch (e: Exception) {
+            Assert.fail(e.toString())
         }
     }
 
-    protected void test(Reader rules, Reader urls) {
+    protected fun test(reader: Reader, urls: Reader) {
         try {
-            test(getURLFilter(rules), readURLFile(urls));
-        } catch (Exception e) {
-            fail(Strings.stringifyException(e));
+            test(getURLFilter(reader), readURLFile(urls))
+        } catch (e: Exception) {
+            Assert.fail(Strings.stringifyException(e))
         }
     }
 
-    protected void test(UrlFilter filter, ArrayList<FilteredURL> expected) {
-        expected.forEach(url -> {
-            String result = filter.filter(url.url);
+    protected fun test(filter: UrlFilter, expected: List<FilteredURL>) {
+        expected.forEach(Consumer { url: FilteredURL ->
+            val result = filter.filter(url.url)
             if (result != null) {
-                assertTrue(url.url, url.sign);
+                Assert.assertTrue(url.url, url.sign)
             } else {
-                assertFalse(url.url, url.sign);
+                Assert.assertFalse(url.url, url.sign)
             }
-        });
+        })
     }
 
-    private static class FilteredURL {
-        boolean sign;
-        String url;
+    class FilteredURL(line: String) {
+        var sign = false
+        var url: String
 
-        FilteredURL(String line) {
-            switch (line.charAt(0)) {
-                case '+':
-                    sign = true;
-                    break;
-                case '-':
-                    sign = false;
-                    break;
-                default:
-                    // Simply ignore...
+        init {
+            when (line[0]) {
+                '+' -> sign = true
+                '-' -> sign = false
+                else -> {
+                }
             }
-            url = line.substring(1);
+            url = line.substring(1)
+        }
+    }
+
+    companion object {
+        private fun readURLFile(reader: Reader): List<FilteredURL> {
+            return BufferedReader(reader).lines().map { line: String -> FilteredURL(line) }.toList()
         }
     }
 }

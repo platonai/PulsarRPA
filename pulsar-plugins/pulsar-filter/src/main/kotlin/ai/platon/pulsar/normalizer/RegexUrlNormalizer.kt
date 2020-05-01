@@ -63,21 +63,15 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : UrlNormalizer {
     }
 
     private val defaultRules: List<Rule>
-    val scopedRules: HashMap<String, List<Rule>>
-        get() = scopedRulesThreadLocal.get()
+    val scopedRules: HashMap<String, List<Rule>> get() = scopedRulesThreadLocal.get()
 
     @Throws(FileNotFoundException::class)
     protected fun getRulesReader(conf: ImmutableConfig): Reader {
-        //    String stringResource = conf.get(URLNORMALIZER_REGEX_RULES);
-        //    if (stringResource != null) {
-        //      return new StringReader(stringResource);
-        //    }
-        //    String fileRules = conf.get(URLNORMALIZER_REGEX_FILE, "regex-normalize.xml");
-        //    return conf.getConfResourceAsReader(fileRules);
         val stringResource = conf[URLNORMALIZER_REGEX_RULES]
         val fileResource = conf[URLNORMALIZER_REGEX_FILE, "regex-normalize.xml"]
         val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
+                ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }
 
     // used in JUnit test.

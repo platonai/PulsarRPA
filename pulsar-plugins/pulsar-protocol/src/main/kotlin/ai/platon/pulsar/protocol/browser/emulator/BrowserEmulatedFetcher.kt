@@ -175,13 +175,13 @@ class BrowserEmulatedFetcher(
             var i = 1
             do {
                 var b = batch
-                if (privacyManager.autoRefreshContext.isPrivacyLeaked) {
+                if (privacyManager.autoRefreshContext.isLeaked) {
                     privacyManager.reset()
                     b = b.createNextNode(privacyManager.autoRefreshContext)
                 }
 
                 parallelFetch0(b)
-            } while (i++ <= privacyManager.maxRetry && privacyManager.autoRefreshContext.isPrivacyLeaked)
+            } while (i++ <= privacyManager.maxRetry && privacyManager.autoRefreshContext.isLeaked)
 
             batch.afterFetchAll(batch.pages)
 
@@ -230,7 +230,7 @@ class BrowserEmulatedFetcher(
         return when {
             !isActive -> FetchTaskBatch.State.CLOSED
             Thread.currentThread().isInterrupted -> FetchTaskBatch.State.INTERRUPTED
-            privacyManager.autoRefreshContext.isPrivacyLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
+            privacyManager.autoRefreshContext.isLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
             else -> batch.checkState()
         }
     }

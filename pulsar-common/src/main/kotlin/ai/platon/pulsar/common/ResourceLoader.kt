@@ -14,62 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.common;
+package ai.platon.pulsar.common
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.io.*;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
+import java.io.*
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.time.Duration
+import java.time.Instant
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.stream.Stream
+import kotlin.streams.toList
 
 /**
  * Load resources
  */
-public class ResourceLoader {
-
-    private static final Logger log = LoggerFactory.getLogger(ResourceLoader.class);
-
-    /**
-     * The utility methods will try to use the provided class factories to
-     * convert binary name of class to Class object. Used by H2 OSGi Activator
-     * in order to provide a class from another bundle ClassLoader.
-     */
-    public interface ClassFactory {
-
-        /**
-         * Check whether the factory can return the named class.
-         *
-         * @param name the binary name of the class
-         * @return true if this factory can return a valid class for the provided class name
-         */
-        boolean match(String name);
-
-        /**
-         * Load the class.
-         *
-         * @param name the binary name of the class
-         * @return the class object
-         * @throws ClassNotFoundException If the class is not handle by this factory
-         */
-        Class<?> loadClass(String name) throws ClassNotFoundException;
-    }
-
-    private static List<ClassFactory> userClassFactories = Collections.synchronizedList(new ArrayList<>());
+object ResourceLoader {
+    private val log = LoggerFactory.getLogger(ResourceLoader::class.java)
+    private val lastModifiedTimes = ConcurrentHashMap<Path, Instant>()
+    private val userClassFactories = ConcurrentLinkedDeque<ClassFactory>()
+    private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
 
     /**
      * Add a class factory in order to manage more than one class loader.
      *
      * @param classFactory An object that implements ClassFactory
      */
-    public static void addClassFactory(ClassFactory classFactory) {
-        userClassFactories.add(classFactory);
+    fun addClassFactory(classFactory: ClassFactory) {
+        userClassFactories.add(classFactory)
     }
 
     /**
@@ -77,25 +54,8 @@ public class ResourceLoader {
      *
      * @param classFactory Already inserted class factory instance
      */
-    public static void removeClassFactory(ClassFactory classFactory) {
-        userClassFactories.remove(classFactory);
-    }
-
-    private static List<ClassFactory> getUserClassFactories() {
-        return userClassFactories;
-    }
-
-    private static ClassLoader classLoader;
-    static {
-        classLoader = Thread.currentThread().getContextClassLoader();
-        if (classLoader == null) {
-            classLoader = ResourceLoader.class.getClassLoader();
-        }
-    }
-
-    // private static Map<String, byte[]> loadedResources = Collections.synchronizedMap(new HashMap<>());
-
-    public ResourceLoader() {
+    fun removeClassFactory(classFactory: ClassFactory) {
+        userClassFactories.remove(classFactory)
     }
 
     /**
@@ -106,210 +66,209 @@ public class ResourceLoader {
      * @param className the name of the class
      * @return the class object
      */
-    @SuppressWarnings("unchecked")
-    public static <Z> Class<Z> loadUserClass(String className) throws ClassNotFoundException {
+    @Throws(ClassNotFoundException::class)
+    fun <Z> loadUserClass(className: String): Class<Z> {
         // Use provided class factory first.
-        for (ClassFactory classFactory : getUserClassFactories()) {
+        for (classFactory in userClassFactories) {
             if (classFactory.match(className)) {
                 try {
-                    Class<?> userClass = classFactory.loadClass(className);
+                    val userClass = classFactory.loadClass(className)
                     if (userClass != null) {
-                        return (Class<Z>) userClass;
+                        return userClass as Class<Z>
                     }
-                } catch (ClassNotFoundException e) {
-                    // ignore, try other class loaders
-                } catch (Exception e) {
-                    throw e;
+                } catch (e: ClassNotFoundException) { // ignore, try other class loaders
+                } catch (e: Exception) {
+                    throw e
                 }
             }
         }
 
         // Use local ClassLoader
-        try {
-            return (Class<Z>) Class.forName(className);
-        } catch (ClassNotFoundException e) {
+        return try {
+            Class.forName(className) as Class<Z>
+        } catch (e: ClassNotFoundException) {
             try {
-                return (Class<Z>) Class.forName(className, true, Thread.currentThread().getContextClassLoader());
-            } catch (Exception e2) {
-                throw e2;
+                Class.forName(className, true, Thread.currentThread().contextClassLoader) as Class<Z>
+            } catch (e2: Exception) {
+                throw e2
             }
-        } catch (Error e) {
-            throw e;
+        } catch (e: Error) {
+            throw e
         }
     }
 
     /**
      * Read all lines from one of the following resource: string, file by file name and resource by resource name
      * The front resource have higher priority
-     * */
-    public static List<String> readAllLines(String stringResource, String fileResource, String resourcePrefix) {
-        try (Reader reader = getMultiSourceReader(stringResource, fileResource, resourcePrefix)) {
-            if (reader != null) {
-                return new BufferedReader(reader).lines()
-                        .filter(l -> !l.startsWith("#") && StringUtils.isNotBlank(l))
-                        .collect(Collectors.toList());
+     */
+    @JvmOverloads
+    fun readAllLines(stringResource: String?, fileResource: String, resourcePrefix: String = ""): List<String> {
+        return kotlin.runCatching {
+            getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.use { reader ->
+                BufferedReader(reader).lines().filter { !it.startsWith("#") && StringUtils.isNotBlank(it) }.toList()
             }
-        } catch (IOException e) {
-            log.error(Strings.stringifyException(e));
-        }
-
-        return new ArrayList<>(0);
+        }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
     }
 
-    public static List<String> readAllLines(String stringResource, String fileResource) {
-        return readAllLines(stringResource, fileResource, "");
-    }
-
-    public static List<String> readAllLines(String fileResource) {
-        try (Reader reader = getResourceAsReader(fileResource)) {
-            if (reader != null) {
-                return new BufferedReader(reader).lines()
-                        .filter(l -> !l.startsWith("#") && StringUtils.isNotBlank(l))
-                        .collect(Collectors.toList());
+    @JvmStatic
+    fun readAllLines(fileResource: String): List<String> {
+        return kotlin.runCatching {
+            getResourceAsReader(fileResource)?.use { reader ->
+                BufferedReader(reader).lines().filter { !it.startsWith("#") && StringUtils.isNotBlank(it) }.toList()
             }
-        } catch (IOException e) {
-            log.error(Strings.stringifyException(e));
-        }
-
-        return new ArrayList<>(0);
+        }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
     }
 
-    public static String readString(String fileResource) {
-        return readStringTo(fileResource, new StringBuilder());
+    fun readAllLinesIfModified(path: Path): List<String> {
+        val lastModified = lastModifiedTimes.getOrDefault(path, Instant.EPOCH)
+        val modified = Files.getLastModifiedTime(path).toInstant()
+
+        return takeIf { modified > lastModified }
+                ?.let { Files.readAllLines(path).also { lastModifiedTimes[path] = modified } }
+                ?: listOf()
     }
 
-    public static String readStringTo(String fileResource, StringBuilder sb) {
-        try (Reader reader = getResourceAsReader(fileResource)) {
-            if (reader != null) {
-                new BufferedReader(reader).lines().forEach(sb::append);
+    fun readString(fileResource: String): String {
+        return readStringTo(fileResource, StringBuilder()).toString()
+    }
+
+    fun readStringTo(fileResource: String, sb: StringBuilder): StringBuilder {
+        kotlin.runCatching {
+            getResourceAsReader(fileResource)?.use { reader ->
+                BufferedReader(reader).lines().forEach { sb.append(it) }
             }
-        } catch (IOException e) {
-            log.error(Strings.stringifyException(e));
-        }
+        }.onFailure { log.error("IO failure {}", it.message) }
 
-        return sb.toString();
+        return sb
     }
 
     /**
-     * Get a {@link Reader} attached to the configuration resource with the
-     * given <code>name</code>.
+     * Get a [Reader] attached to the configuration resource with the
+     * given `name`.
      *
      * @param name resource name.
      * @return a reader attached to the resource.
      */
-    @Nullable
-    public static InputStream getResourceAsStream(String name) {
-        Objects.requireNonNull(name);
-        try {
-            URL url = getResource(name);
-
+    fun getResourceAsStream(name: String): InputStream? {
+        Objects.requireNonNull(name)
+        return try {
+            val url = getResource(name)
             if (url == null) {
                 // LOG.info(name + " not found");
-                return null;
+                return null
             } else {
-                log.info("Find resource " + name + " at " + url);
+                log.info("Find resource $name at $url")
             }
-
-            return url.openStream();
-        } catch (Exception e) {
-            return null;
+            url.openStream()
+        } catch (e: Exception) {
+            null
         }
     }
 
     /**
      * Find the first resource associated by prefix/name
-     * */
-    @Nullable
-    public static InputStream getResourceAsStream(String name, String... resourcePrefixes) {
-        Objects.requireNonNull(name);
-        InputStream[] streams = {null};
-        return Stream.of(resourcePrefixes)
-                .filter(StringUtils::isNotBlank)
-                .map(resourcePrefix -> {
-                    if (streams[0] == null) {
-                        streams[0] = getResourceAsStream(resourcePrefix + "/" + name);
-                    }
-                    return streams[0];
-                })
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElse(getResourceAsStream(name));
+     */
+    fun getResourceAsStream(name: String, vararg resourcePrefixes: String): InputStream? {
+        var found = false
+        return resourcePrefixes.asIterable().filter { StringUtils.isNotBlank(it) }
+                .mapNotNull { if (!found) getResourceAsStream("$it/$name") else null }
+                .onEach { found = true }
+                .firstOrNull() ?: getResourceAsStream(name)
     }
 
     /**
-     * Get a {@link Reader} attached to the configuration resource with the
-     * given <code>name</code>.
+     * Get a [Reader] attached to the configuration resource with the
+     * given `name`.
      *
      * @param fileResource configuration resource name.
      * @return a reader attached to the resource.
      */
-    @Nullable
-    public static Reader getResourceAsReader(String fileResource, String... resourcePrefixes) {
-        Objects.requireNonNull(fileResource);
-        InputStream stream = getResourceAsStream(fileResource, resourcePrefixes);
-        return stream == null ? null : new InputStreamReader(stream);
+    fun getResourceAsReader(fileResource: String, vararg resourcePrefixes: String): Reader? {
+        return getResourceAsStream(fileResource, *resourcePrefixes)?.let { InputStreamReader(it) }
     }
 
     /**
-     * Get the {@link URL} for the named resource.
+     * Get the [URL] for the named resource.
      *
      * Finds a resource with a given name.
      * Find resources first by each registered class loader and then by the default class loader.
      *
-     * @see Class#getResource(java.lang.String)
-     *
+     * @see Class.getResource
      * @param  name name of the desired resource
-     * @return      A  {@link java.net.URL} object or {@code null} if no
-     *              resource with this name is found
+     * @return      A  [java.net.URL] object or `null` if no
+     * resource with this name is found
      */
-    public static URL getResource(String name) {
-        URL url = null;
+    fun getResource(name: String): URL? {
+        var url: URL? = null
         // User provided class loader first
-        Iterator<ClassFactory> it = userClassFactories.iterator();
+        val it: Iterator<ClassFactory> = userClassFactories.iterator()
         while (url == null && it.hasNext()) {
-            url = it.next().getClass().getResource(name);
+            url = it.next().javaClass.getResource(name)
         }
-        return url != null ? url : classLoader.getResource(name);
+        return url ?: classLoader!!.getResource(name)
     }
 
     /**
-     * Get the {@link URL} for the named resource.
+     * Get the [URL] for the named resource.
      *
      * @param name resource name.
      * @param preferredClassLoader preferred class loader, this class loader is used first,
-     *                             fallback to other class loaders if the resource not found by preferred class loader.
+     * fallback to other class loaders if the resource not found by preferred class loader.
      * @return the url for the named resource.
      */
-    public static <T> URL getResource(String name, Class<T> preferredClassLoader) {
-        URL url = preferredClassLoader.getResource(name);
-        return url != null ? url : getResource(name);
+    fun <T> getResource(name: String, preferredClassLoader: Class<T>): URL? {
+        return preferredClassLoader.getResource(name) ?: getResource(name)
     }
 
-    public static Reader getMultiSourceReader(String stringResource, String fileResource) throws FileNotFoundException {
-        return getMultiSourceReader(stringResource, fileResource, "");
+    @Throws(FileNotFoundException::class)
+    fun getMultiSourceReader(stringResource: String?, fileResource: String): Reader? {
+        return getMultiSourceReader(stringResource, fileResource, "")
     }
 
-    public static Reader getMultiSourceReader(String stringResource, String namedResource, String resourcePrefix)
-            throws FileNotFoundException {
-        Reader reader = null;
-        if (!StringUtils.isBlank(stringResource)) {
-            reader = new StringReader(stringResource);
+    @Throws(FileNotFoundException::class)
+    fun getMultiSourceReader(stringResource: String?, namedResource: String, resourcePrefix: String): Reader? {
+        var reader: Reader? = null
+        if (!stringResource.isNullOrBlank()) {
+            reader = StringReader(stringResource)
         } else {
             if (Files.exists(Paths.get(namedResource))) {
-                reader = new FileReader(namedResource);
-            } else {
-                // Read specified location
-                if (!namedResource.startsWith("/") && StringUtils.isNotBlank(resourcePrefix)) {
-                    reader = getResourceAsReader(resourcePrefix + "/" + namedResource);
+                reader = FileReader(namedResource)
+            } else { // Read specified location
+                if (!namedResource.startsWith("/") && resourcePrefix.isNotBlank()) {
+                    reader = getResourceAsReader("$resourcePrefix/$namedResource")
                 }
-
                 // Search in classpath
                 if (reader == null) {
-                    reader = getResourceAsReader(namedResource);
+                    reader = getResourceAsReader(namedResource)
                 }
             }
         }
-
-        return reader;
+        return reader
     }
+
+    /**
+     * The utility methods will try to use the provided class factories to
+     * convert binary name of class to Class object. Used by H2 OSGi Activator
+     * in order to provide a class from another bundle ClassLoader.
+     */
+    interface ClassFactory {
+        /**
+         * Check whether the factory can return the named class.
+         *
+         * @param name the binary name of the class
+         * @return true if this factory can return a valid class for the provided class name
+         */
+        fun match(name: String): Boolean
+
+        /**
+         * Load the class.
+         *
+         * @param name the binary name of the class
+         * @return the class object
+         * @throws ClassNotFoundException If the class is not handle by this factory
+         */
+        @Throws(ClassNotFoundException::class)
+        fun loadClass(name: String): Class<*>?
+    }
+
 }

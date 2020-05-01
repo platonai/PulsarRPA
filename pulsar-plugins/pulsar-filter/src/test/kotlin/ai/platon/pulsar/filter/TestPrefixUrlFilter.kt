@@ -5,49 +5,50 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * <p>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.filter;
+package ai.platon.pulsar.filter
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import java.io.IOException
+import java.util.stream.Stream
 
-import java.io.IOException;
-import java.util.stream.Stream;
-
-import static org.junit.Assert.assertArrayEquals;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {"classpath:/test-context/filter-beans.xml"})
-public class TestPrefixUrlFilter extends UrlFilterTestBase {
-    private static final String prefixes = "# this is a comment\n" + "\n"
-            + "http://\n" + "https://\n" + "file://\n" + "ftp://\n";
-
-    private static final String[] urls = {
-            "http://www.example.com/", "https://www.example.com/",
-            "ftp://www.example.com/", "file://www.example.com/",
-            "abcd://www.example.com/", "www.example.com/"
-    };
-
-    private static String[] urlsModeAccept = new String[]{urls[0], urls[1], urls[2], urls[3], null, null};
-
+@RunWith(SpringJUnit4ClassRunner::class)
+@ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
+class TestPrefixUrlFilter : UrlFilterTestBase() {
     @Autowired
-    private PrefixUrlFilter prefixUrlFilter;
+    private val prefixUrlFilter: PrefixUrlFilter? = null
 
     @Test
-    public void testModeAccept() throws IOException {
-        prefixUrlFilter.reload(prefixes);
-        String[] filteredUrls = Stream.of(urls).map(url -> prefixUrlFilter.filter(url)).toArray(String[]::new);
-        assertArrayEquals(urlsModeAccept, filteredUrls);
+    @Throws(IOException::class)
+    fun testModeAccept() {
+        prefixUrlFilter!!.reload(prefixes)
+        val filteredUrls = urls.map { prefixUrlFilter.filter(it) }.toTypedArray()
+        Assert.assertArrayEquals(urlsModeAccept, filteredUrls)
+    }
+
+    companion object {
+        private const val prefixes = ("# this is a comment\n" + "\n"
+                + "http://\n" + "https://\n" + "file://\n" + "ftp://\n")
+        private val urls = arrayOf(
+                "http://www.example.com/", "https://www.example.com/",
+                "ftp://www.example.com/", "file://www.example.com/",
+                "abcd://www.example.com/", "www.example.com/"
+        )
+        private val urlsModeAccept = arrayOf(urls[0], urls[1], urls[2], urls[3], null, null)
     }
 }

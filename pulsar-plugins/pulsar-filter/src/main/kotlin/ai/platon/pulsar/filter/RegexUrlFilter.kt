@@ -26,6 +26,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.filter.UrlFilter
 import ai.platon.pulsar.filter.common.RegexRule
 import ai.platon.pulsar.filter.common.RegexUrlFilterBase
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.Reader
 import java.util.regex.Pattern
@@ -45,12 +46,13 @@ class RegexUrlFilter(
      * Rules specified as a config property will override rules specified as a
      * config file.
      */
-    @Throws(IOException::class)
+    @Throws(FileNotFoundException::class)
     override fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLFILTER_REGEX_RULES]
         val fileResource = conf[URLFILTER_REGEX_FILE, "regex-urlfilter.txt"]
         val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
+                ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }
 
     // Inherited Javadoc

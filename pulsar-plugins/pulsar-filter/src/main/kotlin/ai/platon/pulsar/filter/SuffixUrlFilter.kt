@@ -217,9 +217,8 @@ class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : UrlFilter {
         fun main(args: Array<String>) {
             val conf = ImmutableConfig()
             val filter = if (args.isNotEmpty()) {
-                SuffixUrlFilter(ResourceLoader.readAllLines(args[0], null), conf)
-            }
-            else {
+                SuffixUrlFilter(ResourceLoader.readAllLines(args[0]), conf)
+            } else {
                 SuffixUrlFilter(conf)
             }
 

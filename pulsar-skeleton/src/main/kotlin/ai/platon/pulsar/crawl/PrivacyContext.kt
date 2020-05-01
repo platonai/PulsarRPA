@@ -29,8 +29,8 @@ abstract class PrivacyContext: AutoCloseable {
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     val throughput get() = 1.0 * numSuccesses.get() / elapsedTime.seconds.coerceAtLeast(1)
     val isGood get() = throughput >= minimumThroughput
-    val isPrivacyLeaked get() = privacyLeakWarnings.get() > maximumWarnings
-    val isActive get() = !isPrivacyLeaked && !closed.get()
+    val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
+    val isActive get() = !isLeaked && !closed.get()
 
     fun markSuccess() = privacyLeakWarnings.takeIf { it.get() > 0 }?.decrementAndGet()
 
@@ -39,5 +39,4 @@ abstract class PrivacyContext: AutoCloseable {
     fun markWarningDeprecated() = markWarning()
 
     fun markSuccessDeprecated() = markSuccess()
-
 }

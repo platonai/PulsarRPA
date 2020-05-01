@@ -141,6 +141,7 @@ class FetchResult(
     val status get() = response.status
     val isSuccess get() = status.isSuccess
     val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
+    val isCrawlRetry get() = status.isRetry(RetryScope.CRAWL)
 
     fun canceled() {
         response = ForwardingResponse.canceled(task.page)
@@ -158,6 +159,8 @@ class FetchResult(
     companion object {
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
         fun retry(task: FetchTask, retryScope: RetryScope) = FetchResult(task, ForwardingResponse.retry(task.page, retryScope))
+        fun privacyRetry(task: FetchTask) = retry(task, RetryScope.PRIVACY)
+        fun crawlRetry(task: FetchTask) = retry(task, RetryScope.CRAWL)
         fun failed(task: FetchTask, e: Throwable?) = FetchResult(task, ForwardingResponse.failed(task.page, e))
     }
 }

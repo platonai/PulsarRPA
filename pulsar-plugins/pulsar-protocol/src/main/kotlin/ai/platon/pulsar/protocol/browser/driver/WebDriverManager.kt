@@ -46,11 +46,13 @@ class WebDriverManager(
     }
 
     suspend fun <R> submit(priority: Int, volatileConfig: VolatileConfig, action: suspend (driver: ManagedWebDriver) -> R): R {
-        val driver = driverPool.take(priority, volatileConfig).apply { startWork() }
-        return try {
-            action(driver)
-        } finally {
-            driverPool.put(driver)
+        return whenUnfrozenDeferred {
+            val driver = driverPool.take(priority, volatileConfig).apply { startWork() }
+            try {
+                action(driver)
+            } finally {
+                driverPool.put(driver)
+            }
         }
     }
 

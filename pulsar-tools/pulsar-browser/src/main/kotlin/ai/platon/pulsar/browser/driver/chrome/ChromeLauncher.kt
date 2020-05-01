@@ -19,8 +19,10 @@ import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
+import java.util.stream.Collectors
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.streams.toList
 
 class LauncherConfig {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
@@ -159,9 +161,7 @@ class ChromeDevtoolsOptions(
 class ProcessLauncher {
     @Throws(IOException::class)
     fun launch(program: String, args: List<String>): Process {
-        val arguments = mutableListOf<String>()
-        arguments.add(program)
-        arguments.addAll(args)
+        val arguments = mutableListOf<String>().apply { add(program); addAll(args) }
         val processBuilder = ProcessBuilder()
                 .command(arguments)
                 .redirectErrorStream(true)
@@ -192,17 +192,13 @@ class ChromeLauncher(
         return Chrome(port)
     }
 
-    fun launch(options: ChromeDevtoolsOptions): RemoteChrome {
-        return launch(searchChromeBinary(), options)
-    }
+    fun launch(options: ChromeDevtoolsOptions): RemoteChrome = launch(searchChromeBinary(), options)
 
     fun launch(headless: Boolean): RemoteChrome {
         return launch(searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
     }
 
-    fun launch(): RemoteChrome {
-        return launch(true)
-    }
+    fun launch(): RemoteChrome = launch(true)
 
     /**
      * Returns the chrome binary path.
@@ -228,34 +224,35 @@ class ChromeLauncher(
         val process = chromeProcess?:return
         chromeProcess = null
         if (process.isAlive) {
-            process.destroy()
-            try {
-                if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
-                    process.destroyForcibly()
-                    process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
-                }
+            destroyChrome(process)
+            kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+        }
+    }
 
-                log.info("Chrome process is exit")
-            } catch (e: InterruptedException) {
-                log.error("Interrupted while waiting for chrome process to shutdown", e)
+    private fun destroyChrome(process: Process) {
+        process.destroy()
+        try {
+            if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
                 process.destroyForcibly()
-            } finally {
-                kotlin.runCatching {
-                    FileUtils.deleteQuietly(userDataDirPath.toFile())
-                    if (Files.exists(userDataDirPath)) {
-                        log.warn("Failed to delete browser data, try again | {}", userDataDirPath)
-                        forceDeleteDirectory(userDataDirPath)
+                process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
+            }
 
-                        if (Files.exists(userDataDirPath)) {
-                            log.error("Can not delete browser data | {}", userDataDirPath)
-                        }
+            log.info("Chrome processes are exit")
+        } catch (e: InterruptedException) {
+            log.error("Interrupted while waiting for chrome process to shutdown", e)
+            process.destroyForcibly()
+        } finally {
+            kotlin.runCatching {
+                FileUtils.deleteQuietly(userDataDirPath.toFile())
+                if (Files.exists(userDataDirPath)) {
+                    log.warn("Failed to delete browser data, try again | {}", userDataDirPath)
+                    forceDeleteDirectory(userDataDirPath)
+
+                    if (Files.exists(userDataDirPath)) {
+                        log.error("Can not delete browser data | {}", userDataDirPath)
                     }
                 }
             }
-
-            try {
-                shutdownHookRegistry.remove(shutdownHookThread)
-            } catch (ignored: Exception) {}
         }
     }
 
@@ -345,8 +342,8 @@ class ChromeLauncher(
             }
         } catch (e: InterruptedException) {
             close(readLineThread)
-            log.error("Interrupted while waiting for dev tools server.", e)
-            throw RuntimeException("Interrupted while waiting for dev tools server.", e)
+            log.error("Interrupted while waiting for dev tools server", e)
+            throw RuntimeException("Interrupted while waiting for dev tools server", e)
         }
         return port
     }
@@ -373,7 +370,11 @@ class ChromeLauncher(
                     kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
                             .onFailure { log.warn(Strings.simplifyException(it)) }
                 }
+
+                Thread.sleep(500)
             }
+
+            require(Files.exists(lock))
         }
     }
 

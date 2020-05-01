@@ -87,6 +87,7 @@ class PrefixUrlFilter(conf: ImmutableConfig) : UrlFilter {
         val fileResource = conf[URLFILTER_PREFIX_FILE, "prefix-urlfilter.txt"]
         val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
+                ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }
 
     companion object {

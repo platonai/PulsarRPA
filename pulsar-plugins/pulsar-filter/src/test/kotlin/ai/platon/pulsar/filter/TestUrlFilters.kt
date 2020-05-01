@@ -14,25 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.filter;
+package ai.platon.pulsar.filter
 
-import ai.platon.pulsar.crawl.filter.UrlFilters;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import ai.platon.pulsar.crawl.filter.UrlFilters
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 
-import static org.junit.Assert.assertNull;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-public class TestUrlFilters extends UrlFilterTestBase {
-
+@RunWith(SpringJUnit4ClassRunner::class)
+class TestUrlFilters : UrlFilterTestBase() {
     @Autowired
-    private UrlFilters urlFilters;
+    private val urlFilters: UrlFilters? = null
 
     @Test
-    public void testUrlFilter() {
-        String url = urlFilters.filter("http://someurl/");
-        assertNull(url);
+    fun testUrlFilter() {
+        val url = urlFilters!!.filter("http://someurl/")
+        Assert.assertNull(url)
     }
 }
