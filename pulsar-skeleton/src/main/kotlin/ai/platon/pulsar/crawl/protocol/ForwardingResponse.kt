@@ -40,7 +40,7 @@ open class ForwardingResponse(
     /**
      * The page should keep status unchanged
      */
-    constructor(retryScope: RetryScope?, page: WebPage) : this("", ProtocolStatus.retry(retryScope), MultiMetadata(), page)
+    constructor(retryScope: RetryScope, page: WebPage) : this("", ProtocolStatus.retry(retryScope), MultiMetadata(), page)
 
     /**
      * The page should keep status unchanged
@@ -55,7 +55,9 @@ open class ForwardingResponse(
 
     companion object {
         fun canceled(page: WebPage): ForwardingResponse = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
-        fun retry(page: WebPage, retryScope: RetryScope?): ForwardingResponse = ForwardingResponse(retryScope, page)
+        fun retry(page: WebPage, retryScope: RetryScope): ForwardingResponse = ForwardingResponse(retryScope, page)
+        fun privacyRetry(page: WebPage): ForwardingResponse = retry(page, RetryScope.PRIVACY)
+        fun crawlRetry(page: WebPage): ForwardingResponse = retry(page, RetryScope.CRAWL)
         fun failed(page: WebPage, e: Throwable?): ForwardingResponse = ForwardingResponse(e, page)
     }
 }

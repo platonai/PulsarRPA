@@ -35,10 +35,6 @@ open class StreamingCrawler(
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
-                if (!isAppActive) {
-                    return@supervisorScope
-                }
-
                 // log.info("$j.\t$url")
 
                 var k = 0

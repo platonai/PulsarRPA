@@ -68,23 +68,23 @@ open class AsyncBrowserEmulator(
     protected open suspend fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         checkState()
 
+        if (++task.nRetries > fetchMaxRetry) {
+            return FetchResult.crawlRetry(task).also { log.info("Too many retries, retry in CRAWL") }
+        }
+
         var response: Response? = null
         var exception: Exception? = null
-
-        if (++task.nRetries > fetchMaxRetry) {
-            return FetchResult.retry(task, RetryScope.CRAWL).also { log.info("Too many retries, retry in CRAWL scope") }
-        }
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: CancellationException) {
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
+            response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PRIVACY)
+            response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))

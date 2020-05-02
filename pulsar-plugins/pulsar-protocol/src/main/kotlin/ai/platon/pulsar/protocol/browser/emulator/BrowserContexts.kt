@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import org.slf4j.LoggerFactory
@@ -35,7 +34,7 @@ class WebDriverContext(
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) {
-            return FetchResult.retry(task, RetryScope.PRIVACY)
+            return FetchResult.privacyRetry(task)
         }
 
         runningTasks.add(task)
@@ -53,7 +52,7 @@ class WebDriverContext(
 
     suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) {
-            return FetchResult.retry(task, RetryScope.PRIVACY)
+            return FetchResult.privacyRetry(task)
         }
 
         runningTasks.add(task)
@@ -86,6 +85,10 @@ class WebDriverContext(
                         notBusy.await(1, TimeUnit.SECONDS)
                     }
                 }
+
+                if (runningTasks.isNotEmpty()) {
+                    log.warn("There are still {} running tasks after context reset", runningTasks.size)
+                }
             }.onFailure { log.warn("Unexpected exception", it) }
         }
     }
@@ -100,6 +103,11 @@ class ProxyContext(
         val numNoProxyException = AtomicInteger()
     }
     private val log = LoggerFactory.getLogger(ProxyContext::class.java)!!
+    /**
+     * If the number of success exceeds [maxFetchSuccess], force emit PrivacyRetry result.
+     * It's used for test purpose
+     * */
+    private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE)
     private val closed = AtomicBoolean()
     /**
      * The proxy for this context
@@ -108,12 +116,12 @@ class ProxyContext(
         private set
     val isActive get() = proxyMonitor.isActive && !closed.get()
 
-    suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.let { runDeferred0(task, browseFun) }?:FetchResult.privacyRetry(task)
+    fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        return takeIf { isActive }?.run0(task, browseFun)?:FetchResult.privacyRetry(task)
     }
 
-    fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.let { run0(task, browseFun) }?:FetchResult.privacyRetry(task)
+    suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        return takeIf { isActive }?.runDeferred0(task, browseFun)?:FetchResult.privacyRetry(task)
     }
 
     private fun run0(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -156,12 +164,11 @@ class ProxyContext(
 
         val proxy = proxyEntry
         // used for test purpose
-        val maximumSuccessPages = 250000
         if (proxy != null) {
             // TEST code, trigger the privacy context reset
             val successPages = proxy.numSuccessPages.get()
-            if (successPages > maximumSuccessPages && result.status.isSuccess) {
-                log.info("[TEST] Force emit a PRIVACY retry after $successPages pages served | {}", proxy)
+            if (successPages > maxFetchSuccess && result.status.isSuccess) {
+                log.info("[TEST] Emit a PRIVACY retry after $successPages pages served | {}", proxy)
                 result = FetchResult.privacyRetry(task)
             }
         }
@@ -226,28 +233,15 @@ open class BrowserPrivacyContext(
     private val proxyContext = ProxyContext(proxyMonitor, driverContext, conf)
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        if (!isActive) return FetchResult.privacyRetry(task)
-
-        beforeRun()
-        return try {
-            proxyContext.run(task, browseFun).also { afterRun(it) }
-        } catch (e: PrivacyLeakException) {
-            FetchResult.privacyRetry(task)
-        }
+        return takeIf { isActive }?.let {
+            beforeRun().runCatching { proxyContext.run(task, browseFun).also { afterRun(it) } }.getOrNull()
+        }?:FetchResult.privacyRetry(task)
     }
 
     open suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        // TODO: return or throw?
-        if (!isActive) {
-            return FetchResult.privacyRetry(task).also { log.info("Context #{} is closed | {}", id, task.url) }
-        }
-
-        beforeRun()
-        return try {
-            proxyContext.runDeferred(task, browseFun).also { afterRun(it) }
-        } catch (e: PrivacyLeakException) {
-            FetchResult.privacyRetry(task)
-        }
+        return takeIf { isActive }?.let {
+            beforeRun().runCatching { proxyContext.runDeferred(task, browseFun).also { afterRun(it) } }.getOrNull()
+        }?:FetchResult.privacyRetry(task).also { log.info("Context #{} is closed | {}", id, task.url) }
     }
 
     /**

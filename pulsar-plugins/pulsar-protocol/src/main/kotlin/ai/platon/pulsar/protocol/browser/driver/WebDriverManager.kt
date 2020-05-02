@@ -1,12 +1,15 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.Freezable
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
 import com.codahale.metrics.SharedMetricRegistries
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -28,6 +31,7 @@ class WebDriverManager(
     val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 
     private val closed = AtomicBoolean()
+    private val pageLoadTimeout = immutableConfig.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
 
     val startTime = Instant.now()
     private val metrics = SharedMetricRegistries.getDefault()
@@ -49,6 +53,10 @@ class WebDriverManager(
         return whenUnfrozenDeferred {
             val driver = driverPool.take(priority, volatileConfig).apply { startWork() }
             try {
+                // make sure the task never run out of control
+//                withTimeout(pageLoadTimeout.toMillis()) {
+//                    action(driver)
+//                }
                 action(driver)
             } finally {
                 driverPool.put(driver)
@@ -72,22 +80,25 @@ class WebDriverManager(
 
     /**
      * Cancel the fetch task specified by [url] remotely
+     * NOTE: A cancel request should run immediately not waiting for any browser task return
      * */
-    fun cancel(url: String): ManagedWebDriver? =
-            freeze { driverPool.firstOrNull { it.url == url }?.also { it.cancel() } }
+    fun cancel(url: String): ManagedWebDriver? {
+        return driverPool.firstOrNull { it.url == url }?.also { it.cancel() }
+    }
 
     /**
      * Cancel all the fetch tasks remotely
      * */
-    fun cancelAll() = freeze { driverPool.forEach { it.cancel() } }
+    fun cancelAll() = driverPool.forEach { it.cancel() }
 
     /**
      * Cancel all running tasks and close all web drivers
      * */
     fun reset() {
+        cancelAll()
+
         freeze {
             numReset.mark()
-            cancelAll()
             closeAll(incognito = true)
         }
     }

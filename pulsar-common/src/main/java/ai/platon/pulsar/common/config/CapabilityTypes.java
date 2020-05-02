@@ -230,7 +230,8 @@ public interface CapabilityTypes {
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
-    String PROXY_MANAGER_CLASS = "proxy.proxy.manager.class";
+    String PROXY_MANAGER_CLASS = "proxy.manager.class";
+    String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";

@@ -1,23 +1,16 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_POOL_CAPACITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.prependReadableClassName
-import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
-import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
-import java.nio.channels.FileChannel
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentSkipListSet
@@ -38,7 +31,7 @@ class LoadingWebDriverPool(
 
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
     private val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
-    val capacity = conf.getInt(BROWSER_POOL_CAPACITY, concurrency)
+    val capacity = conf.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrency)
     private val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
     private val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(capacity)
 
