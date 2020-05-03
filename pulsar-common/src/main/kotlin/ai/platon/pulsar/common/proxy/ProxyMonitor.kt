@@ -37,7 +37,7 @@ open class ProxyMonitor(
     val closed = AtomicBoolean()
 
     val numRunningTasks = AtomicInteger()
-    var statusString: String = ""
+    var statusString: String = "<status unavailable>"
     var verbose = false
 
     open val localPort = -1
@@ -47,8 +47,8 @@ open class ProxyMonitor(
     val isActive get() = isDisabled || !closed.get()
 
     /**
-     * Starts the reporter polling at the given period with the specific runnable action.
-     * Visible only for testing.
+     * Starts the reporter polling at the given period with the specific runnable action
+     * Visible only for testing
      */
     @Synchronized
     fun start(initialDelay: Duration, period: Duration, runnable: () -> Unit) {
@@ -65,17 +65,20 @@ open class ProxyMonitor(
     /**
      * Run the task, it it's disabled, call the innovation directly
      * */
-    open suspend fun <R> runDeferred(task: suspend () -> R): R = if (isDisabled) task() else submit0(task)
+    @Throws(NoProxyException::class)
+    open suspend fun <R> runDeferred(task: suspend () -> R): R = if (isDisabled) task() else runDeferred0(task)
 
     /**
      * Run the task, it it's disabled, call the innovation directly
      * */
+    @Throws(NoProxyException::class)
     open fun <R> run(task: () -> R): R = if (isDisabled) task() else run0(task)
 
     /**
      * Run the task in the proxy manager
      * */
-    private suspend fun <R> submit0(task: suspend () -> R): R {
+    @Throws(NoProxyException::class)
+    private suspend fun <R> runDeferred0(task: suspend () -> R): R {
         beforeRun()
 
         return try {
@@ -90,6 +93,7 @@ open class ProxyMonitor(
     /**
      * Run the task in the proxy manager
      * */
+    @Throws(NoProxyException::class)
     private fun <R> run0(task: () -> R): R {
         beforeRun()
 
@@ -102,6 +106,7 @@ open class ProxyMonitor(
         }
     }
 
+    @Throws(NoProxyException::class)
     open fun waitUntilOnline(): Boolean = false
 
     open fun takeOff(excludedProxy: ProxyEntry, ban: Boolean) {}
@@ -117,12 +122,10 @@ open class ProxyMonitor(
         }
     }
 
+    @Throws(NoProxyException::class)
     private fun beforeRun() {
-        idleTime = Duration.ZERO.takeIf { isActive }
-                ?:throw ProxyInactiveException("Proxy monitor is closed | $currentProxyEntry")
-        if (!waitUntilOnline()) {
-            throw NoProxyException("Failed to wait for an online proxy")
-        }
+        idleTime = Duration.ZERO
+        waitUntilOnline()
     }
 
     companion object {

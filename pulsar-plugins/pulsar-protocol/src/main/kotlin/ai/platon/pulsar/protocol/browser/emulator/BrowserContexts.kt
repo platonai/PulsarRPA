@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
@@ -33,12 +32,8 @@ class WebDriverContext(
     private val notBusy = lock.newCondition()
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        if (!isActive) {
-            return FetchResult.privacyRetry(task)
-        }
-
-        runningTasks.add(task)
-        return try {
+        return checkPrecondition(task) ?: try {
+            runningTasks.add(task)
             driverManager.run(task.priority, task.volatileConfig) { browseFun(task, it) }
         } finally {
             runningTasks.remove(task)
@@ -51,12 +46,8 @@ class WebDriverContext(
     }
 
     suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        if (!isActive) {
-            return FetchResult.privacyRetry(task)
-        }
-
-        runningTasks.add(task)
-        return try {
+        return checkPrecondition(task) ?: try {
+            runningTasks.add(task)
             driverManager.submit(task.priority, task.volatileConfig) { browseFun(task, it) }
         } finally {
             runningTasks.remove(task)
@@ -71,10 +62,10 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching {
-                // Mark all tasks are canceled
-                runningTasks.forEach { it.cancel() }
-                // Stop loading all pages, so every browser operation return as soon as possible
+                // Mark all drivers are canceled
                 driverManager.cancelAll()
+                // Mark all tasks are canceled, so they return as soon as possible
+                runningTasks.forEach { it.cancel() }
                 // may wait for cancelling finish?
                 // Close all online drivers and delete the browser data
                 driverManager.reset()
@@ -91,6 +82,18 @@ class WebDriverContext(
                 }
             }.onFailure { log.warn("Unexpected exception", it) }
         }
+    }
+
+    private fun checkPrecondition(task: FetchTask): FetchResult? {
+        if (!isActive) {
+            return FetchResult.privacyRetry(task)
+        }
+
+        if (++task.nRetries > fetchMaxRetry) {
+            return FetchResult.crawlRetry(task).also { log.info("Too many retries, retry in CRAWL") }
+        }
+
+        return null
     }
 }
 
@@ -133,14 +136,14 @@ class ProxyContext(
             success = result.response.status.isSuccess
         } catch (e: NoProxyException) {
             if (numNoProxyException.incrementAndGet() > 10) {
-                throw ProxyVendorUnTrustedException("No proxy available from proxy vendor, the vendor is untrusted")
+                throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
             }
 
             result = FetchResult.crawlRetry(task)
-            log.warn("No proxy available temporary", e.message)
+            log.warn("No proxy available temporary the {}th times, cause: {}", numNoProxyException, e.message)
         } catch (e: ProxyException) {
             result = FetchResult.privacyRetry(task)
-            log.warn("Task failed with proxy {} | {}", proxyEntry, e.message)
+            log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
         } finally {
             afterTaskFinished(task, success)
         }
@@ -148,16 +151,25 @@ class ProxyContext(
         return result
     }
 
-    private suspend fun runDeferred0(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+    @Throws(ProxyVendorUntrustedException::class)
+    private suspend fun runDeferred0(
+            task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         var result: FetchResult
         var success = false
         try {
             beforeTaskStart()
             result = proxyMonitor.runDeferred { driverContext.runDeferred(task, browseFun) }
             success = result.response.status.isSuccess
+        } catch (e: NoProxyException) {
+            if (numNoProxyException.incrementAndGet() > 10) {
+                throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
+            }
+
+            result = FetchResult.crawlRetry(task)
+            log.warn("No proxy available temporary the {}th times, cause: {}", numNoProxyException, e.message)
         } catch (e: ProxyException) {
             result = FetchResult.privacyRetry(task)
-            log.warn("Task failed with proxy {} | {}", proxyEntry, Strings.simplifyException(e))
+            log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
         } finally {
             afterTaskFinished(task, success)
         }

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.Freezable
+import ai.platon.pulsar.common.PreemptChannelSupport
 import ai.platon.pulsar.common.config.ImmutableConfig
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
  * */
 abstract class PrivacyManager(
         val immutableConfig: ImmutableConfig
-): Freezable("PrivacyManager"), AutoCloseable {
+): PreemptChannelSupport("PrivacyManager"), AutoCloseable {
     companion object {
         val globalAutoRefreshContext = AtomicReference<PrivacyContext>()
         val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
@@ -41,7 +41,7 @@ abstract class PrivacyManager(
             }
 
             // Refresh the context if privacy leaked
-            return freeze {
+            return preempt {
                 if (activeContext.isLeaked) {
                     // all other tasks are waiting until freezer channel is closed
                     // close the current context

@@ -43,7 +43,7 @@ open class BrowserEmulator(
     @Throws(IllegalContextStateException::class, CancellationException::class)
     open fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         if (isClosed) {
-            return FetchResult(task, ForwardingResponse.canceled(task.page))
+            return FetchResult.canceled(task)
         }
 
         return browseWithDriver(task, driver)
@@ -55,30 +55,24 @@ open class BrowserEmulator(
         driverManager.cancel(task.url)
     }
 
-    @Throws(CancellationException::class)
+    @Throws(IllegalContextStateException::class)
     protected open fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         checkState()
 
-        var response: Response? = null
         var exception: Exception? = null
-
-        if (++task.nRetries > fetchMaxRetry) {
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
-            return FetchResult(task, response, exception)
-        }
+        var response: Response?
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: CancellationException) {
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
+            log.info("Task #{} is canceled | {}", task.id, task.url)
+            response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
-            if (!isClosed) {
-                log.warn("Web driver session of #{} is closed | {}", driver.id, e.message)
-            }
+            log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.CRAWL)
+            response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.WebDriverException) {
             if (e.cause is org.apache.http.conn.HttpHostConnectException) {
                 log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
@@ -90,10 +84,7 @@ open class BrowserEmulator(
             exception = e
             response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
-            if (!isClosed) {
-                log.warn("Web driver is disconnected - {}", Strings.simplifyException(e))
-            }
-
+            log.takeIf { isActive }?.warn("Web driver is disconnected", e)
             driver.retire()
             exception = e
             response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)

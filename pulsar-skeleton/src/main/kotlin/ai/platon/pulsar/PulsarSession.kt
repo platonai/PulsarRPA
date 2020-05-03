@@ -92,8 +92,10 @@ open class PulsarSession(
      * @param url The url followed by volatileConfig options
      * @return The Web page
      */
+    @Throws(Exception::class)
     fun load(url: String): WebPage = load(normalize(url))
 
+    @Throws(Exception::class)
     fun load(url: NormUrl): WebPage {
         ensureAlive()
 
@@ -114,17 +116,20 @@ open class PulsarSession(
      * @param options The load options
      * @return The web page
      */
+    @Throws(Exception::class)
     fun load(url: String, options: LoadOptions): WebPage {
         ensureAlive()
         val normUrl = normalize(url, options)
         return load(normUrl)
     }
 
+    @Throws(Exception::class)
     suspend fun loadDeferred(url: String): WebPage {
         ensureAlive()
         return loadDeferred(normalize(url))
     }
 
+    @Throws(Exception::class)
     suspend fun loadDeferred(url: NormUrl): WebPage {
         ensureAlive()
 
@@ -136,6 +141,7 @@ open class PulsarSession(
         } else context.loadDeferred(url)
     }
 
+    @Throws(Exception::class)
     suspend fun loadDeferred(url: String, options: LoadOptions): WebPage {
         ensureAlive()
         val normUrl = normalize(url, options)

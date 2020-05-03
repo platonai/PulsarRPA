@@ -54,6 +54,8 @@ open class ForwardingResponse(
             : this(page, status, headers, content.toByteArray())
 
     companion object {
+        fun unfetched(page: WebPage): ForwardingResponse = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
+        fun unchanged(page: WebPage): ForwardingResponse = ForwardingResponse(page.protocolStatus, page)
         fun canceled(page: WebPage): ForwardingResponse = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
         fun retry(page: WebPage, retryScope: RetryScope): ForwardingResponse = ForwardingResponse(retryScope, page)
         fun privacyRetry(page: WebPage): ForwardingResponse = retry(page, RetryScope.PRIVACY)

@@ -75,6 +75,7 @@ class WebDriverFactory(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
+        // TODO: handle no proxy exception
         if (proxyMonitor.waitUntilOnline()) {
             val port = proxyMonitor.localPort
             if (port > 0) {

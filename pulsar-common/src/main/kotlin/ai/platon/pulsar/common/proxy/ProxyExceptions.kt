@@ -11,8 +11,6 @@ open class ProxyException : RuntimeException {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-open class ProxyInactiveException(message: String) : ProxyException(message)
-
 open class NoProxyException(message: String) : ProxyException(message)
 
 open class ProxyGoneException(message: String) : ProxyException(message)
@@ -28,4 +26,4 @@ open class ProxyVendorException : Exception {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-open class ProxyVendorUnTrustedException(message: String) : ProxyVendorException(message)
+open class ProxyVendorUntrustedException(message: String) : RuntimeException(message)

@@ -94,14 +94,14 @@ class ManagedWebDriver(
     fun free() = status.set(DriverStatus.FREE)
     fun startWork() = status.set(DriverStatus.WORKING)
     fun retire() = status.set(DriverStatus.RETIRED)
-    fun cancel() = status.set(DriverStatus.CANCELED).also { stopLoading() }
+    fun cancel() = stopLoading().also { status.set(DriverStatus.CANCELED) }
 
     /**
      * Navigate to the url
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
     @Throws(NoSuchSessionException::class)
-    fun navigateTo(url: String) = url.takeIf { isWorking }?.also { this.url = it; driver.get(it) }
+    fun navigateTo(url: String) = driver.takeIf { isWorking }?.get(url.also { this.url = it })
 
     @Throws(NoSuchSessionException::class)
     fun evaluate(expression: String): Any? {
@@ -113,15 +113,11 @@ class ManagedWebDriver(
         }
     }
 
-    fun evaluateSilently(expression: String): Any? = this.takeIf { isWorking }?.runCatching { evaluate(expression) }
+    fun evaluateSilently(expression: String): Any? = takeIf { isWorking }?.runCatching { evaluate(expression) }
 
     fun stopLoading() {
-        if (isNotWorking) {
-            return
-        }
-
         if (driver is ChromeDevtoolsDriver) {
-            driver.runCatching { stopLoading() }
+            driver.takeIf { isWorking }?.runCatching { stopLoading() }
         } else {
             evaluateSilently(";window.stop();")
         }

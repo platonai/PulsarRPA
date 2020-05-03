@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.persist.WebPage
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
@@ -64,12 +65,20 @@ open class StreamingCrawler(
                     return@supervisorScope
                 }
 
+                var exception: Throwable? = null
                 numRunning.incrementAndGet()
                 val context = Dispatchers.Default + CoroutineName("w")
                 launch(context) {
-                    val page = session.loadDeferred(url, options)
+                    session.runCatching { loadDeferred(url, options) }
+                            .onFailure { exception = it; log.warn(it.message) }
+                            .getOrNull()
+                            ?.also { pageCollector?.add(it) }
                     numRunning.decrementAndGet()
-                    pageCollector?.add(page)
+                }
+
+                if (exception is ProxyVendorUntrustedException) {
+                    log.error(exception?.message?:"Unexpected error")
+                    return@supervisorScope
                 }
             }
         }

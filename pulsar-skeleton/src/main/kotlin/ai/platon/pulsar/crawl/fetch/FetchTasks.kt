@@ -93,17 +93,18 @@ class FetchTask(
     // The number retries inside a privacy context
     var nPrivacyRetries: Int = 0
     // The response
-    lateinit var response: Response
+    var response: Response = ForwardingResponse.unfetched(page)
 
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = canceled.get()
+    val isSuccess get() = response.status.isSuccess
 
     fun reset() {
         batchStat = null
         proxyEntry = null
-        nRetries = 0
         canceled.set(false)
+        response = ForwardingResponse.unfetched(page)
     }
 
     fun cancel() = canceled.set(true)
@@ -115,14 +116,13 @@ class FetchTask(
                 batchSize = batchSize,
                 priority = priority,
                 page = page,
-                volatileConfig = volatileConfig,
-                nRetries = ++nRetries
+                volatileConfig = volatileConfig
         )
     }
 
     override fun compareTo(other: FetchTask): Int = url.compareTo(other.url)
 
-    override fun toString(): String = "$batchTaskId/$batchId"
+    override fun toString(): String = "$id"
 
     companion object {
         val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY)
@@ -157,6 +157,8 @@ class FetchResult(
     }
 
     companion object {
+        fun unchanged(task: FetchTask) = FetchResult(task, ForwardingResponse.unchanged(task.page))
+        fun unfetched(task: FetchTask) = FetchResult(task, ForwardingResponse.unfetched(task.page))
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
         fun retry(task: FetchTask, retryScope: RetryScope) = FetchResult(task, ForwardingResponse.retry(task.page, retryScope))
         fun privacyRetry(task: FetchTask) = retry(task, RetryScope.PRIVACY)
