@@ -46,8 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class AbstractHttpProtocol: Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
-    val isClosed get() = closed.get()
-    val isActive get() = !isClosed && PulsarEnv.isActive
+    val isActive get() = !closed.get() && PulsarEnv.isActive
     /**
      * The max retry time
      */
@@ -76,7 +75,8 @@ abstract class AbstractHttpProtocol: Protocol {
 
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
         return pages.takeIf { isActive }
-                ?.mapNotNull { it.runCatching { getResponse(it.url, it, false) }.getOrNull() }
+                ?.mapNotNull { it.runCatching { getResponse(it, false) }
+                        .onFailure { log.warn(it.message) }.getOrNull() }
                 ?: listOf()
     }
 
@@ -90,17 +90,12 @@ abstract class AbstractHttpProtocol: Protocol {
     }
 
     override suspend fun getProtocolOutputDeferred(page: WebPage): ProtocolOutput {
-        return try {
-            val startTime = Instant.now()
-            val response = getResponseDeferred(page.url, page, false)
-                    ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL))
-            setResponseTime(startTime, page, response)
-            val location = page.location?:page.url
-            getOutputWithHttpStatusTransformed(page.url, location, response)
-        } catch (e: Throwable) {
-            log.warn("Unexpected exception", e)
-            ProtocolOutput(ProtocolStatus.failed(e))
-        }
+        val startTime = Instant.now()
+        val response = getResponseDeferred(page, false)
+                ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL))
+        setResponseTime(startTime, page, response)
+        val location = page.location?:page.url
+        return getOutputWithHttpStatusTransformed(page.url, location, response)
     }
 
     private fun getProtocolOutputWithRetry(page: WebPage): ProtocolOutput {
@@ -115,7 +110,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 log.info("Protocol retry: {}/{} | {}", i, maxTry, page.url)
             }
             try { // TODO: FETCH_PROTOCOL does not work if the response is forwarded
-                response = getResponse(page.url, page, false)
+                response = getResponse(page, false)
                 retry = response == null || response.status.isRetry(RetryScope.PROTOCOL)
             } catch (e: Throwable) {
                 response = null
@@ -220,10 +215,10 @@ abstract class AbstractHttpProtocol: Protocol {
     }
 
     @Throws(Exception::class)
-    abstract fun getResponse(url: String, page: WebPage, followRedirects: Boolean): Response?
+    abstract fun getResponse(page: WebPage, followRedirects: Boolean): Response?
 
     @Throws(Exception::class)
-    abstract suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response?
+    abstract suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response?
 
     override fun getRobotRules(page: WebPage): BaseRobotRules {
         return robots.getRobotRulesSet(this, page.url)

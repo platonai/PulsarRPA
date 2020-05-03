@@ -52,13 +52,15 @@ open class StreamingCrawler(
 
                 val memoryRemaining = availableMemory - requiredMemory
                 while (isAppActive && memoryRemaining < 0) {
-                    log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
-                            numRunning,
-                            Strings.readableBytes(availableMemory),
-                            Strings.readableBytes(requiredMemory),
-                            Strings.readableBytes(abs(memoryRemaining))
-                    )
-                    Thread.sleep(200)
+                    if (j % 10 == 0) {
+                        log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
+                                numRunning,
+                                Strings.readableBytes(availableMemory),
+                                Strings.readableBytes(requiredMemory),
+                                Strings.readableBytes(abs(memoryRemaining))
+                        )
+                    }
+                    Thread.sleep(1000)
                 }
 
                 if (!isAppActive) {
@@ -70,7 +72,7 @@ open class StreamingCrawler(
                 val context = Dispatchers.Default + CoroutineName("w")
                 launch(context) {
                     session.runCatching { loadDeferred(url, options) }
-                            .onFailure { exception = it; log.warn(it.message) }
+                            .onFailure { exception = it; log.warn(it.toString()) }
                             .getOrNull()
                             ?.also { pageCollector?.add(it) }
                     numRunning.decrementAndGet()

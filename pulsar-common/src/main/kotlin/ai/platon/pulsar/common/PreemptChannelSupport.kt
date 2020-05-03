@@ -53,8 +53,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
         waitUntilNoNormalTasks()
 
         try {
-            trace("Perform preemptive action ...")
             numRunningPreemptiveTasks.incrementAndGet()
+            trace("Performing preemptive action ...")
             return preemptiveTask()
         } finally {
             numRunningPreemptiveTasks.decrementAndGet()

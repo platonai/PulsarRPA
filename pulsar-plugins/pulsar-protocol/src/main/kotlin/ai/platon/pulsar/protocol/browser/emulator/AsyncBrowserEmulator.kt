@@ -69,7 +69,7 @@ open class AsyncBrowserEmulator(
         checkState()
 
         if (task.nRetries > fetchMaxRetry) {
-            return FetchResult.crawlRetry(task).also { log.info("Too many retries, retry in CRAWL") }
+            return FetchResult.crawlRetry(task).also { log.info("Too many task retries, emit crawl retry | {}", task.url) }
         }
 
         var exception: Exception? = null
@@ -79,7 +79,7 @@ open class AsyncBrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: CancellationException) {
             exception = e
-            log.info("{}. Task is canceled | {}", task.id, task.url)
+            log.info("{}. Task is canceled, emit privacy retry | {}", task.id, task.url)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))

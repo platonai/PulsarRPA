@@ -23,21 +23,25 @@ class WebDriverContext(
         private val driverManager: WebDriverManager,
         private val conf: ImmutableConfig
 ): AutoCloseable {
+    companion object {
+        private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
+        private val lock = ReentrantLock()
+        private val notBusy = lock.newCondition()
+    }
+
     private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val fetchMaxRetry = conf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
-    private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
-    private val lock = ReentrantLock() // lock for containers
-    private val notBusy = lock.newCondition()
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return checkPrecondition(task) ?: try {
+        return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             driverManager.run(task.priority, task.volatileConfig) { browseFun(task, it) }
         } finally {
             runningTasks.remove(task)
             if (runningTasks.isEmpty()) {
+                log.info("No running task now")
                 lock.withLock {
                     notBusy.signalAll()
                 }
@@ -46,13 +50,14 @@ class WebDriverContext(
     }
 
     suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return checkPrecondition(task) ?: try {
+        return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             driverManager.submit(task.priority, task.volatileConfig) { browseFun(task, it) }
         } finally {
             runningTasks.remove(task)
             if (runningTasks.isEmpty()) {
                 lock.withLock {
+                    log.info("No running task now")
                     notBusy.signalAll()
                 }
             }
@@ -62,10 +67,10 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching {
-                // Mark all drivers are canceled
-                driverManager.cancelAll()
                 // Mark all tasks are canceled, so they return as soon as possible
                 runningTasks.forEach { it.cancel() }
+                // Mark all drivers are canceled
+                driverManager.cancelAll()
                 // may wait for cancelling finish?
                 // Close all online drivers and delete the browser data
                 driverManager.reset()
@@ -78,19 +83,19 @@ class WebDriverContext(
                 }
 
                 if (runningTasks.isNotEmpty()) {
-                    log.warn("There are still {} running tasks after context reset", runningTasks.size)
+                    log.warn("Still {} running tasks after context close", runningTasks.size)
                 }
             }.onFailure { log.warn("Unexpected exception", it) }
         }
     }
 
-    private fun checkPrecondition(task: FetchTask): FetchResult? {
+    private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
             return FetchResult.privacyRetry(task)
         }
 
         if (++task.nRetries > fetchMaxRetry) {
-            return FetchResult.crawlRetry(task).also { log.info("Too many retries, retry in CRAWL") }
+            return FetchResult.crawlRetry(task).also { log.info("Too many task retries, emit a crawl retry | {}", task.url) }
         }
 
         return null
@@ -135,12 +140,14 @@ class ProxyContext(
             result = proxyMonitor.run { driverContext.run(task, browseFun) }
             success = result.response.status.isSuccess
         } catch (e: NoProxyException) {
-            if (numNoProxyException.incrementAndGet() > 10) {
+            val count = numNoProxyException.incrementAndGet()
+
+            if (count > 10) {
                 throw ProxyVendorUntrustedException("No proxy available from proxy vendor, the vendor is untrusted")
             }
 
             result = FetchResult.crawlRetry(task)
-            log.warn("No proxy available temporary the {}th times, cause: {}", numNoProxyException, e.message)
+            log.warn("No proxy available temporary the {}th times, cause: {}", count, e.message)
         } catch (e: ProxyException) {
             result = FetchResult.privacyRetry(task)
             log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
@@ -245,19 +252,19 @@ open class BrowserPrivacyContext(
     private val proxyContext = ProxyContext(proxyMonitor, driverContext, conf)
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.let {
-            beforeRun().runCatching { proxyContext.run(task, browseFun).also { afterRun(it) } }.getOrNull()
-        }?:FetchResult.privacyRetry(task)
+        if (!isActive) return FetchResult.privacyRetry(task)
+        beforeRun()
+        return proxyContext.run(task, browseFun).also { afterRun(it) }
     }
 
     open suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.let {
-            beforeRun().runCatching { proxyContext.runDeferred(task, browseFun).also { afterRun(it) } }.getOrNull()
-        }?:FetchResult.privacyRetry(task).also { log.info("Context #{} is closed | {}", id, task.url) }
+        if (!isActive) return FetchResult.privacyRetry(task)
+        beforeRun()
+        return proxyContext.runDeferred(task, browseFun).also { afterRun(it) }
     }
 
     /**
-     * Block until the all drivers are closed and the proxy is offline
+     * Block until all the drivers are closed and the proxy is offline
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
@@ -276,7 +283,7 @@ open class BrowserPrivacyContext(
                 numTasks, numTotalRun, proxyContext.proxyEntry ?: "no proxy")
 
         if (throughput < 1) {
-            log.info("It is expected at least 120 pages in 120 seconds within a context")
+            log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", id)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
         }
     }

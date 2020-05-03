@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
 abstract class TaskHandler: (WebPage) -> Unit {
@@ -85,11 +86,11 @@ class FetchTask(
         val batchTaskId: Int = 0,
         var batchStat: BatchStat? = null,
         var proxyEntry: ProxyEntry? = null, // the proxy used
+        // The task id
+        val id: Int = instanceSequencer.incrementAndGet(),
         var nRetries: Int = 0, // The total number retries in a crawl
         val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
 ): Comparable<FetchTask> {
-    // The task id
-    val id: Int = page.id
     // The number retries inside a privacy context
     var nPrivacyRetries: Int = 0
     // The response
@@ -116,16 +117,22 @@ class FetchTask(
                 batchSize = batchSize,
                 priority = priority,
                 page = page,
-                volatileConfig = volatileConfig
+                volatileConfig = volatileConfig,
+                nRetries = nRetries
         )
     }
 
-    override fun compareTo(other: FetchTask): Int = url.compareTo(other.url)
+    override fun compareTo(other: FetchTask): Int = id.compareTo(other.id)
+
+    override fun equals(other: Any?): Boolean = other is FetchTask && id == other.id
+
+    override fun hashCode(): Int = id
 
     override fun toString(): String = "$id"
 
     companion object {
-        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY)
+        val NIL = FetchTask(0, 0, WebPage.NIL, VolatileConfig.EMPTY, id = 0)
+        val instanceSequencer = AtomicInteger()
     }
 }
 

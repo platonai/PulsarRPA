@@ -31,71 +31,37 @@ import org.springframework.beans.BeansException
 import java.util.concurrent.atomic.AtomicReference
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
-    private val log = LoggerFactory.getLogger(BrowserEmulatorProtocol::class.java)
-    private val browserEmulator = AtomicReference<BrowserEmulatedFetcher?>()
+    private val browserEmulator by lazy { getBean(BrowserEmulatedFetcher::class.java) }
 
-    override fun supportParallel(): Boolean {
-        return true
-    }
+    override fun supportParallel(): Boolean = true
 
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
-        try {
-            return emulator?.parallelFetchAllPages(pages, volatileConfig)?: emptyList()
-        } catch (e: Exception) {
-            log.warn("Unexpected exception", e)
-            throw e
-        }
+        return browserEmulator.parallelFetchAllPages(pages, volatileConfig)
     }
 
-    override fun getResponse(url: String, page: WebPage, followRedirects: Boolean): Response? {
-        return kotlin.runCatching {
-            super.getResponse(url, page, followRedirects)?:fetchContent(page)?:ForwardingResponse.canceled(page)
-        }.onFailure { log.warn("Unexpected exception", it) }.getOrThrow()
+    override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {
+        require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
+        return super.getResponse(page, followRedirects)
+                ?:browserEmulator.fetchContent(page)
+                ?:ForwardingResponse.canceled(page)
     }
 
-    override suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response? {
-        require(page.isNotInternal) { "Internal page ${page.url}" }
-
-        return kotlin.runCatching {
-            super.getResponse(url, page, followRedirects)?:fetchContentDeferred(page)?:ForwardingResponse.canceled(page)
-        }.onFailure { log.warn("Unexpected exception", it) }.getOrThrow()
+    override suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response? {
+        require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
+        return super.getResponse(page, followRedirects)
+                ?:browserEmulator.fetchContentDeferred(page)
+                ?:ForwardingResponse.canceled(page)
     }
 
     override fun reset() {
-        val fetcher = emulator
-        if (fetcher != null) {
-            // fetcher.privacyContext.reset();
-        }
+        browserEmulator.reset()
     }
 
     override fun cancel(page: WebPage) {
-        val fetcher = emulator
-        if (fetcher != null) {
-            // fetcher.privacyContext.cancel(page);
-        }
+        browserEmulator.cancel(page)
     }
 
     override fun cancelAll() {
+        browserEmulator.cancelAll()
     }
-
-    private fun fetchContent(page: WebPage): Response? = emulator?.fetchContent(page)
-
-    private suspend fun fetchContentDeferred(page: WebPage): Response? = emulator?.fetchContentDeferred(page)
-
-    @get:Synchronized
-    private val emulator: BrowserEmulatedFetcher?
-        get() {
-            if (isClosed) {
-                return null
-            }
-
-            try {
-                browserEmulator.compareAndSet(null, getBean(BrowserEmulatedFetcher::class.java))
-            } catch (e: BeansException) {
-                log.warn("{}", Strings.simplifyException(e))
-                throw e
-            }
-
-            return browserEmulator.get()
-        }
 }

@@ -32,8 +32,8 @@ class LoadingWebDriverPool(
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
     private val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     val capacity = conf.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrency)
-    private val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
-    private val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(capacity)
+    val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
+    val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(capacity)
 
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
@@ -50,6 +50,7 @@ class LoadingWebDriverPool(
     val counterQuit = metrics.counter(prependReadableClassName(this, "quit"))
 
     val isActive get() = !closed.get() && PulsarEnv.isActive
+    val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
@@ -112,7 +113,8 @@ class LoadingWebDriverPool(
                     logDriverOnline(it)
                 }
 
-        return freeDrivers.take()
+        numWaiting.incrementAndGet()
+        return freeDrivers.take().also { numWaiting.decrementAndGet() }
     }
 
     private fun closeAllDrivers(processExit: Boolean = false) {
@@ -133,9 +135,12 @@ class LoadingWebDriverPool(
     private fun waitUntilIdleOrTimeout(timeout: Duration = Duration.ofMinutes(2)) {
         lock.withLock {
             var i = 0
-            val pollingInterval = Duration.ofSeconds(1)
+            val time = Duration.ofSeconds(1)
             while (isActive && numWorking.get() > 0 && i++ < timeout.seconds) {
-                notBusy.await(pollingInterval.seconds, TimeUnit.SECONDS)
+                notBusy.await(time.seconds, TimeUnit.SECONDS)
+                if (i % 10 == 0) {
+                    log.info(toString())
+                }
             }
         }
     }

@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.PreemptChannelSupport
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -82,7 +81,9 @@ class WebDriverManager(
     /**
      * Cancel all the fetch tasks, stop loading all pages
      * */
-    fun cancelAll() = driverPool.forEach { it.cancel() }
+    fun cancelAll() {
+        driverPool.onlineDrivers.toList().parallelStream().forEach { it.cancel() }
+    }
 
     /**
      * Cancel all running tasks and close all web drivers
@@ -116,11 +117,11 @@ class WebDriverManager(
     private fun formatStatus(verbose: Boolean = false): String {
         val p = driverPool
         return if (verbose) {
-            String.format("online: %d, free: %d, working: %d, active: %d",
-                    p.numOnline, p.numFree, p.numWorking.get(), p.numActive)
+            String.format("online: %d, free: %d, waiting: %d, working: %d, active: %d",
+                    p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
         } else {
-            String.format("%d/%d/%d/%d (free/working/active/online)",
-                    p.numFree, p.numWorking.get(), p.numActive, p.numOnline)
+            String.format("%d/%d/%d/%d (online/free/waiting/working/active)",
+                    p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
         }
     }
 }

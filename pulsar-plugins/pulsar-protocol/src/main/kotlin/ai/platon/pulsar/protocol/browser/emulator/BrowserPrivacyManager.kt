@@ -79,8 +79,6 @@ class BrowserPrivacyManager(
 
         var i = 1
         do {
-            // Note: must create a new object when retry is needed, otherwise, not all tasks return correctly,
-            // it might be caused by a leak of WebDriverContext.runningTasks, TODO: find out the real cause
             val task0 = if (i == 1) task else task.clone()
             result = FetchResult.crawlRetry(task0)
 
@@ -132,7 +130,7 @@ class BrowserPrivacyManager(
             reportZombieContexts()
 
             val newContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
-            log.info("Privacy context is changed #{} -> #{}", oldContext.id, newContext.id)
+            log.info("Privacy context has been changed #{} -> #{}", oldContext.id, newContext.id)
 
             newContext
         }

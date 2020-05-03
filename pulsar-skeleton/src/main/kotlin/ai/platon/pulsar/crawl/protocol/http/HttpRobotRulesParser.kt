@@ -41,8 +41,8 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
 
             try {
                 val http = (protocol as? AbstractHttpProtocol)?:return EMPTY_RULES
-                var response: Response? = http.getResponse(URL(url, "/robots.txt").toString(),
-                        WebPage.newWebPage(url.toString()), true)?:return EMPTY_RULES
+                val page = WebPage.newWebPage(URL(url, "/robots.txt").toString())
+                var response: Response? = http.getResponse(page, true)?:return EMPTY_RULES
 
                 // try one level of redirection ?
                 if (response != null && (response.httpCode == 301 || response.httpCode == 302)) {
@@ -56,7 +56,7 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
                         } else {
                             URL(redirection)
                         }
-                        response = http.getResponse(redir.toString(), WebPage.newWebPage(url.toString()), true)
+                        response = http.getResponse(WebPage.newWebPage(redir.toString()), true)
                     }
                 }
 

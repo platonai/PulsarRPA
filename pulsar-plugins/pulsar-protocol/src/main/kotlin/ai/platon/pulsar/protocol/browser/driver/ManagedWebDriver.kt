@@ -1,17 +1,22 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.persist.metadata.BrowserType
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import java.util.logging.Level
+import kotlin.system.measureTimeMillis
 
 enum class DriverStatus {
     UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
@@ -31,6 +36,8 @@ class ManagedWebDriver(
     companion object {
         val instanceSequencer = AtomicInteger()
     }
+
+    private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
 
     /**
      * The driver id
@@ -94,7 +101,24 @@ class ManagedWebDriver(
     fun free() = status.set(DriverStatus.FREE)
     fun startWork() = status.set(DriverStatus.WORKING)
     fun retire() = status.set(DriverStatus.RETIRED)
-    fun cancel() = stopLoading().also { status.set(DriverStatus.CANCELED) }
+    fun cancel() {
+        if (isCanceled) {
+            return
+        }
+
+        log.info("Canceling driver $this")
+        if (isWorking) {
+            runBlocking {
+                val timeout = Duration.ofSeconds(30)
+                val millis = measureTimeMillis {
+                    withTimeout(timeout.toMillis()) { stopLoading() }
+                }
+                log.takeIf { millis >= timeout.toMillis() }
+                        ?.info("It takes {} to stop loading", Duration.ofMillis(millis).readable())
+            }
+        }
+        status.set(DriverStatus.CANCELED)
+    }
 
     /**
      * Navigate to the url

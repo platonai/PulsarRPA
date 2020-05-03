@@ -33,16 +33,16 @@ open class ForwardingProtocol : AbstractHttpProtocol() {
         logAfterPutResponse()
     }
 
-    override fun getResponse(url: String, page: WebPage, followRedirects: Boolean): Response? {
-        val response = cache.remove(url)
-        logAfterRemoveResponse(url, response)
+    override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {
+        val response = cache.remove(page.url)
+        logAfterRemoveResponse(page.url, response)
         return response
     }
 
-    override suspend fun getResponseDeferred(url: String, page: WebPage, followRedirects: Boolean): Response? {
+    override suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response? {
         // TODO: wait if not in the cache?
-        val response = cache.remove(url)
-        logAfterRemoveResponse(url, response)
+        val response = cache.remove(page.url)
+        logAfterRemoveResponse(page.url, response)
         return response
     }
 

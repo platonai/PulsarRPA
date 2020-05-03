@@ -5,21 +5,18 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.proxy.ProxyException
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
-import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.openqa.selenium.NoSuchSessionException
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -62,30 +59,18 @@ class BrowserEmulatedFetcher(
         }
 
         if (page.isInternal) {
-            log.warn("Unexpected internal page")
+            log.warn("Unexpected internal page | {}", page.url)
             return ForwardingResponse.canceled(page)
         }
 
-        return try {
-            privacyManager.run(createFetchTask(page)) { task, driver ->
-                try {
-                    browserEmulator.fetch(task, driver)
-                } catch (e: IllegalContextStateException) {
-                    log.info("Illegal context state, task is cancelled | {}", task.url)
-                    FetchResult(task, ForwardingResponse.canceled(task.page))
-                }
-            }.response
-        } catch (e: ProxyException) {
-            log.warn(e.message)
-            ForwardingResponse.retry(page, RetryScope.PRIVACY)
-        } catch (e: NoSuchSessionException) {
-            log.warn(e.message)
-            ForwardingResponse.retry(page, RetryScope.PRIVACY)
-        } catch (e: Throwable) {
-            log.warn("Unexpected throwable", e)
-            ForwardingResponse.failed(page, e)
-        } finally {
-        }
+        return privacyManager.run(createFetchTask(page)) { task, driver ->
+            try {
+                browserEmulator.fetch(task, driver)
+            } catch (e: IllegalContextStateException) {
+                log.info("Illegal context state, task is cancelled | {}", task.url)
+                FetchResult(task, ForwardingResponse.canceled(task.page))
+            }
+        }.response
     }
 
     suspend fun fetchDeferred(url: String): Response {
@@ -100,30 +85,19 @@ class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     suspend fun fetchContentDeferred(page: WebPage): Response {
-        require(page.isNotInternal) { "Internal page ${page.url}" }
+        require(page.isNotInternal) { "Unexpected internal page | ${page.url}" }
         if (!isActive) {
             return ForwardingResponse.canceled(page)
         }
 
-        return try {
-            privacyManager.runDeferred(createFetchTask(page)) { task, driver ->
-                try {
-                    asyncBrowserEmulator.fetch(task, driver)
-                } catch (e: IllegalContextStateException) {
-                    log.info("Task #{} is cancelled | {}", task.id, task.url)
-                    FetchResult(task, ForwardingResponse.canceled(task.page))
-                }
-            }.response
-        } catch (e: ProxyException) {
-            log.warn(e.message)
-            ForwardingResponse.retry(page, RetryScope.PRIVACY)
-        } catch (e: NoSuchSessionException) {
-            log.warn(e.message)
-            ForwardingResponse.retry(page, RetryScope.PRIVACY)
-        } catch (e: Throwable) {
-            log.warn("Unexpected throwable", e)
-            ForwardingResponse.failed(page, e)
-        }
+        return privacyManager.runDeferred(createFetchTask(page)) { task, driver ->
+            try {
+                asyncBrowserEmulator.fetch(task, driver)
+            } catch (e: IllegalContextStateException) {
+                log.info("Task #{} is cancelled | {}", task.id, task.url)
+                FetchResult(task, ForwardingResponse.canceled(task.page))
+            }
+        }.response
     }
 
     fun fetchAll(batchId: Int, urls: Iterable<String>): List<Response> {
@@ -154,6 +128,18 @@ class BrowserEmulatedFetcher(
     fun parallelFetchAllPages(pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
         pages.forEach { if (it.volatileConfig == null) it.volatileConfig = volatileConfig }
         return parallelFetchAllPages0(nextBatchId, pages, volatileConfig)
+    }
+
+    fun reset() {
+        TODO("Not implemented")
+    }
+
+    fun cancel(page: WebPage) {
+        TODO("Not implemented")
+    }
+
+    fun cancelAll() {
+        TODO("Not implemented")
     }
 
     private fun createFetchTask(page: WebPage): FetchTask {
