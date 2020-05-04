@@ -31,7 +31,7 @@ open class ProxyMonitor(
 
     var initialDelay = Duration.ofSeconds(5)
     var lastActiveTime = Instant.now()
-    var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(5))
+    var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(15))
     var idleCount = 0
     var idleTime = Duration.ZERO
     val closed = AtomicBoolean()
@@ -44,7 +44,7 @@ open class ProxyMonitor(
     open val currentProxyEntry: ProxyEntry? = null
     open val isEnabled = false
     val isDisabled get() = !isEnabled
-    val isActive get() = isDisabled || !closed.get()
+    val isActive get() = isEnabled && !closed.get()
 
     /**
      * Starts the reporter polling at the given period with the specific runnable action
@@ -124,6 +124,7 @@ open class ProxyMonitor(
 
     @Throws(NoProxyException::class)
     private fun beforeRun() {
+        if (!isActive) return
         idleTime = Duration.ZERO
         waitUntilOnline()
     }

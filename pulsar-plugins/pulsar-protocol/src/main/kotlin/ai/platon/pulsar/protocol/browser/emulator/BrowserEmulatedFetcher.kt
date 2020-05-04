@@ -94,7 +94,7 @@ class BrowserEmulatedFetcher(
             try {
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
-                log.info("Task #{} is cancelled | {}", task.id, task.url)
+                log.info("Illegal context state, task is cancelled | {}", task.url)
                 FetchResult(task, ForwardingResponse.canceled(task.page))
             }
         }.response

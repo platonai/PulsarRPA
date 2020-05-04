@@ -17,7 +17,7 @@ abstract class PrivacyContext: AutoCloseable {
     val id = instanceSequencer.incrementAndGet()
 
     var minimumThroughput = 0.3
-    var maximumWarnings = 5
+    var maximumWarnings = 10
     val privacyLeakWarnings = AtomicInteger()
 
     val startTime = Instant.now()

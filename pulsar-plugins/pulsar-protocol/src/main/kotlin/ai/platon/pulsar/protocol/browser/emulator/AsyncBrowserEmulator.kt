@@ -45,7 +45,7 @@ open class AsyncBrowserEmulator(
      * @return The result of this fetch
      * @throws IllegalContextStateException Throw if the browser is closed or the program is closed
      * */
-    @Throws(IllegalContextStateException::class, CancellationException::class)
+    @Throws(IllegalContextStateException::class)
     open suspend fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         return takeIf { isActive }?.browseWithDriver(task, driver)?:FetchResult.canceled(task)
     }
@@ -112,28 +112,26 @@ open class AsyncBrowserEmulator(
         checkState(task)
         checkState(driver)
 
-        val browseTask = NavigateTask(task, driver, driverControl)
+        val navigateTask = NavigateTask(task, driver, driverControl)
 
         try {
-            val result = navigateAndInteract(task, driver, browseTask.driverConfig)
+            val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
             checkState(task)
             checkState(driver)
-            browseTask.apply {
-                status = result.protocolStatus
-                activeDomMessage = result.activeDomMessage
-                page.activeDomMultiStatus = browseTask.activeDomMessage?.multiStatus
+            navigateTask.apply {
+                status = interactResult.protocolStatus
+                activeDomMessage = interactResult.activeDomMessage
+                page.activeDomMultiStatus = navigateTask.activeDomMessage?.multiStatus
                 // TODO: may throw here
                 pageSource = driver.pageSource
             }
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            browseTask.status = ProtocolStatus.retry(RetryScope.PRIVACY)
+            navigateTask.status = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
-        emulateEventHandler.onAfterNavigate(browseTask)
-
-        return ForwardingResponse(browseTask.pageSource, browseTask.status, browseTask.headers, browseTask.page)
+        return emulateEventHandler.onAfterNavigate(navigateTask)
     }
 
     @Throws(CancellationException::class,
@@ -217,7 +215,7 @@ open class AsyncBrowserEmulator(
             message = msg
         } finally {
             if (message == null) {
-                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && !isClosed) {
+                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && !isActive) {
                     log.warn("Unexpected script result (null) | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK

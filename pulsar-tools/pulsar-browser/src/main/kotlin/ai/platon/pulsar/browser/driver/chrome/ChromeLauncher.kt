@@ -243,6 +243,9 @@ class ChromeLauncher(
             process.destroyForcibly()
         } finally {
             kotlin.runCatching {
+                // wait for 1 second to hope every thing is clean
+                Thread.sleep(1000)
+
                 FileUtils.deleteQuietly(userDataDirPath.toFile())
                 if (Files.exists(userDataDirPath)) {
                     log.warn("Failed to delete browser data, try again | {}", userDataDirPath)

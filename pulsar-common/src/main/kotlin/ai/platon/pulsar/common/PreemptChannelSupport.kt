@@ -34,6 +34,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numReadyPreemptiveTasks = AtomicInteger()
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numTasks = AtomicInteger()
+    protected val numRunningTasks = AtomicInteger()
     private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numReadyPreemptiveTasks.get() > 0
@@ -72,9 +73,11 @@ abstract class PreemptChannelSupport(val name: String = "") {
         waitUntilNotPreempted()
 
         try {
+            numRunningTasks.incrementAndGet()
             return task()
         } finally {
             lock.withLock {
+                numRunningTasks.decrementAndGet()
                 if (numTasks.decrementAndGet() == 0) {
                     // all preemptive tasks  are allowed to pass
                     noTasks.signalAll()

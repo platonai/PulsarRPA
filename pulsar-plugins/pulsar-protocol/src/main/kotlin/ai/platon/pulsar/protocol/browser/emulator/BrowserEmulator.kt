@@ -42,7 +42,7 @@ open class BrowserEmulator(
      * */
     @Throws(IllegalContextStateException::class, CancellationException::class)
     open fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
-        if (isClosed) {
+        if (!isActive) {
             return FetchResult.canceled(task)
         }
 

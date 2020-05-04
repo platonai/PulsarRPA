@@ -166,6 +166,11 @@ class PulsarContext private constructor(): AutoCloseable {
         return if (isItemOption) options.createItemOption() else options
     }
 
+    fun clearCache() {
+        pageCache.clear()
+        documentCache.clear()
+    }
+
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
         return normalize(url, LoadOptions.create(), isItemOption)
     }

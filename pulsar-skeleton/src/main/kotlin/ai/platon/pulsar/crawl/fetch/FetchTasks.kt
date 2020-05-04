@@ -16,8 +16,8 @@ import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
 
 abstract class TaskHandler: (WebPage) -> Unit {
@@ -88,9 +88,11 @@ class FetchTask(
         var proxyEntry: ProxyEntry? = null, // the proxy used
         // The task id
         val id: Int = instanceSequencer.incrementAndGet(),
-        var nRetries: Int = 0, // The total number retries in a crawl
-        val canceled: AtomicBoolean = AtomicBoolean() // whether this task is canceled
+        var nRetries: Int = 0 // The total number retries in a crawl
 ): Comparable<FetchTask> {
+    enum class State { UNKNOWN, READY, WORKING, CANCELED, DONE }
+    val state = AtomicReference<State>(State.UNKNOWN)
+    
     // The number retries inside a privacy context
     var nPrivacyRetries: Int = 0
     // The response
@@ -98,17 +100,21 @@ class FetchTask(
 
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
-    val isCanceled get() = canceled.get()
+    val isCanceled get() = state.get() == State.CANCELED
+    val isWorking get() = state.get() == State.WORKING
     val isSuccess get() = response.status.isSuccess
+
+    fun markReady() = state.set(State.READY)
+    fun startWork() = state.set(State.WORKING)
+    fun cancel() = state.set(State.CANCELED)
+    fun done() = state.set(State.DONE)
 
     fun reset() {
         batchStat = null
         proxyEntry = null
-        canceled.set(false)
+        state.set(State.UNKNOWN)
         response = ForwardingResponse.unfetched(page)
     }
-
-    fun cancel() = canceled.set(true)
 
     fun clone(): FetchTask {
         return FetchTask(

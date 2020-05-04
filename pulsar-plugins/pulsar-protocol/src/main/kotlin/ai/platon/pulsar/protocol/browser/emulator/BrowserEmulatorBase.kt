@@ -57,8 +57,8 @@ abstract class BrowserEmulatorBase(
 
     @Throws(IllegalContextStateException::class)
     protected fun checkState() {
-        if (isClosed) {
-            throw IllegalContextStateException("Context is closed")
+        if (!isActive) {
+            throw IllegalContextStateException("Emulator is inactive")
         }
     }
 

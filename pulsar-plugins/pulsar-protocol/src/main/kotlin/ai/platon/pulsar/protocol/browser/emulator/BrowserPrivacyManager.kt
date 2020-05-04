@@ -27,13 +27,11 @@ class BrowserPrivacyManager(
     override var activeContext: PrivacyContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
 
     fun run(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.run0(task, fetchFun)?.takeUnless { it.isPrivacyRetry }
-                ?:FetchResult.crawlRetry(task).also { logCrawlRetry(task) }
+        return takeIf { isActive }?.run0(task, fetchFun)?:FetchResult.crawlRetry(task)
     }
 
     suspend fun runDeferred(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return takeIf { isActive }?.runDeferred0(task, fetchFun)?.takeUnless { it.isPrivacyRetry }
-                ?:FetchResult.crawlRetry(task).also { logCrawlRetry(task) }
+        return takeIf { isActive }?.runDeferred0(task, fetchFun)?:FetchResult.crawlRetry(task)
     }
 
     private fun run0(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -62,13 +60,19 @@ class BrowserPrivacyManager(
                     require(!task0.isCanceled)
                     require(task0.proxyEntry == null)
 
+                    task0.markReady()
                     task0.nPrivacyRetries = i
-                    result = context.run(task0) { _, driver -> fetchFun(task0, driver) }
+                    result = context.run(task0) { _, driver -> task0.startWork(); fetchFun(task0, driver) }
                 } finally {
+                    task0.done()
                     updatePrivacyContext(context, result)
                 }
             }
         } while (!result.isSuccess && context.isLeaked && i++ <= maxRetry)
+
+        if (result.isPrivacyRetry) {
+            result.status.upgradeRetry(RetryScope.CRAWL).also { logCrawlRetry(task) }
+        }
 
         return result
     }
@@ -101,13 +105,19 @@ class BrowserPrivacyManager(
                     require(!task0.isCanceled)
                     require(task0.proxyEntry == null)
 
+                    task0.markReady()
                     task0.nPrivacyRetries = i
-                    result = context.runDeferred(task0) { _, driver -> fetchFun(task0, driver) }
+                    result = context.runDeferred(task0) { _, driver -> task0.startWork(); fetchFun(task0, driver) }
                 } finally {
+                    task0.done()
                     updatePrivacyContext(context, result)
                 }
             }
         } while (!result.isSuccess && context.isLeaked && i++ <= maxRetry)
+
+        if (result.isPrivacyRetry) {
+            result.status.upgradeRetry(RetryScope.CRAWL).also { logCrawlRetry(task) }
+        }
 
         return result
     }
@@ -130,7 +140,7 @@ class BrowserPrivacyManager(
             reportZombieContexts()
 
             val newContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
-            log.info("Privacy context has been changed #{} -> #{}", oldContext.id, newContext.id)
+            log.info("Privacy context is changed #{} -> #{} <<<<<<<Bye", oldContext.id, newContext.id)
 
             newContext
         }

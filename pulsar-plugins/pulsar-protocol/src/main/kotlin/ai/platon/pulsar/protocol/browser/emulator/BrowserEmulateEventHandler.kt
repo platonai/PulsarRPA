@@ -39,6 +39,9 @@ open class BrowserEmulateEventHandler(
     private val metrics = SharedMetricRegistries.getDefault()
     private val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
     private val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
+    private val bannedPages = metrics.meter(prependReadableClassName(this, "bannedPages"))
+    private val smallPages = metrics.meter(prependReadableClassName(this, "smallPages"))
+    private val emptyPages = metrics.meter(prependReadableClassName(this, "emptyPages"))
     private val driverPool = driverManager.driverPool
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
@@ -54,51 +57,51 @@ open class BrowserEmulateEventHandler(
         }
     }
 
-    fun onAfterNavigate(navigateTask: NavigateTask): Response {
-        val t = navigateTask
-        val length = t.pageSource.length
+    fun onAfterNavigate(task: NavigateTask): Response {
+        val length = task.pageSource.length
         pageSourceBytes.update(length)
         totalPageSourceBytes.mark(length.toLong())
 
-        val browserStatus = checkErrorPage(t.page, t.status)
-        t.status = browserStatus.status
+        val browserStatus = checkErrorPage(task.page, task.status)
+        task.status = browserStatus.status
         if (browserStatus.code != ProtocolStatusCodes.SUCCESS_OK) {
-            t.pageSource = ""
-            return ForwardingResponse(t.pageSource, t.status, t.headers, t.page)
+            // The browser shows it's own error page, which is no value to store
+            task.pageSource = ""
+            return ForwardingResponse(task.pageSource, task.status, task.headers, task.page)
         }
 
-        // Check quality of the page source, throw an exception if content is broken
-        val integrity = checkHtmlIntegrity(t.pageSource, t.page, t.status, t.task)
+        // Check if the page source is integral
+        val integrity = checkHtmlIntegrity(task.pageSource, task.page, task.status, task.task)
 
         // Check browse timeout event, transform status to be success if the page source is good
-        if (t.status.isTimeout) {
+        if (task.status.isTimeout) {
             if (integrity.isOK) {
                 // fetch timeout but content is OK
-                t.status = ProtocolStatus.STATUS_SUCCESS
+                task.status = ProtocolStatus.STATUS_SUCCESS
             }
-            handleBrowseTimeout(t.navigateTime, t.pageSource, t.status, t.page, t.driverConfig)
+            handleBrowseTimeout(task)
         }
 
-        t.headers.put(HttpHeaders.CONTENT_LENGTH, t.pageSource.length.toString())
+        task.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
-            t.pageSource = handlePageSource(t.pageSource).toString()
+            task.pageSource = handlePageSource(task.pageSource).toString()
         } else {
-            // The page seems to be broken, retry it, if there are too many broken pages in a certain period, reset the browse context
-            t.status = handleBrokenPageSource(t.task, integrity)
-            logBrokenPage(t.task, t.pageSource, integrity)
+            // The page seems to be broken, retry it
+            task.status = handleBrokenPageSource(task.task, integrity)
+            logBrokenPage(task.task, task.pageSource, integrity)
         }
 
         // Update headers, metadata, do the logging stuff
-        t.page.lastBrowser = t.driver.browserType
-        t.page.htmlIntegrity = integrity
-        handleBrowseFinish(t.page, t.headers)
+        task.page.lastBrowser = task.driver.browserType
+        task.page.htmlIntegrity = integrity
+        handleBrowseFinish(task.page, task.headers)
 
-        exportIfNecessary(t.pageSource, t.status, t.page, t.driver)
+        exportIfNecessary(task)
 
         // TODO: collect response headers of main resource
 
-        return ForwardingResponse(t.pageSource, t.status, t.headers, t.page)
+        return ForwardingResponse(task.pageSource, task.status, task.headers, task.page)
     }
 
     open fun checkErrorPage(page: WebPage, status: ProtocolStatus): BrowserStatus {
@@ -164,15 +167,14 @@ open class BrowserEmulateEventHandler(
         return HtmlIntegrity.OK
     }
 
-    open fun handleBrowseTimeout(startTime: Instant, pageSource: String,
-                                 status: ProtocolStatus, page: WebPage, driverConfig: BrowserControl) {
+    open fun handleBrowseTimeout(task: NavigateTask) {
         if (log.isInfoEnabled) {
-            val elapsed = Duration.between(startTime, Instant.now())
-            val length = pageSource.length
-
-            val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
+            val elapsed = Duration.between(task.startTime, Instant.now())
+            val length = task.pageSource.length
+            val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
+            val driverConfig = task.driverConfig
             log.info("Timeout ({}) after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
-                    status.minorName,
+                    task.status.minorName,
                     elapsed,
                     Strings.readableBytes(length.toLong()),
                     driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
@@ -224,17 +226,27 @@ open class BrowserEmulateEventHandler(
     fun handleBrokenPageSource(task: FetchTask, htmlIntegrity: HtmlIntegrity): ProtocolStatus {
         return when {
             // should cancel all running tasks and reset the privacy context and then re-fetch them
-            htmlIntegrity.isBanned -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
+            htmlIntegrity.isBanned -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { bannedPages.mark() }
             // must come after privacy context reset, PRIVACY_CONTEXT reset have the higher priority
             task.nRetries > fetchMaxRetry -> ProtocolStatus.retry(RetryScope.CRAWL)
                     .also { log.info("Retry task ${task.id} in the next crawl round") }
-            htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity)
-            else -> ProtocolStatus.retry(RetryScope.CRAWL)
+            htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
+            htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also { smallPages.mark() }
+            else -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
         }
     }
 
-    fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver) {
-        if (log.isDebugEnabled && pageSource.isNotEmpty()) {
+    private fun exportIfNecessary(task: NavigateTask) {
+        exportIfNecessary(task.pageSource, task.status, task.page, task.driver)
+    }
+
+    private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver) {
+        if (pageSource.isEmpty()) {
+            return
+        }
+
+        val shouldExport = (log.isInfoEnabled && !status.isSuccess) || log.isDebugEnabled
+        if (shouldExport) {
             val path = AppFiles.export(status, pageSource, page)
 
             // Create symbolic link with an url based, unique, shorter but not readable file name,

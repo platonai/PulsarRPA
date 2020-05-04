@@ -17,12 +17,12 @@ class NavigateTask(
         val driver: ManagedWebDriver,
         val driverConfig: BrowserControl
 ) {
-    val navigateTime = Instant.now()
+    val startTime = Instant.now()
 
     val url = task.url
     val page = task.page
 
-    val headers = MultiMetadata(HttpHeaders.Q_REQUEST_TIME, navigateTime.toEpochMilli().toString())
+    val headers = MultiMetadata(HttpHeaders.Q_REQUEST_TIME, startTime.toEpochMilli().toString())
 
     var status: ProtocolStatus = ProtocolStatus.STATUS_CANCELED
     var activeDomMessage: ActiveDomMessage? = null

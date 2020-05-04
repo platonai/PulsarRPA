@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.prependReadableClassName
+import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
@@ -45,9 +46,9 @@ class LoadingWebDriverPool(
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val instanceRequiredMemory = 200 * 1024 * 1024 // 200 MiB
 
-    private val metrics = SharedMetricRegistries.getDefault()
-    val counterRetired = metrics.counter(prependReadableClassName(this, "retired"))
-    val counterQuit = metrics.counter(prependReadableClassName(this, "quit"))
+    private val metricRegistry = SharedMetricRegistries.getDefault()
+    val counterRetired = metricRegistry.counter(prependReadableClassName(this, "retired"))
+    val counterQuit = metricRegistry.counter(prependReadableClassName(this, "quit"))
 
     val isActive get() = !closed.get() && PulsarEnv.isActive
     val numWaiting = AtomicInteger()
@@ -55,6 +56,16 @@ class LoadingWebDriverPool(
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
     val numOnline get() = onlineDrivers.size
+
+    init {
+        metricRegistry.register(prependReadableClassName(this,"waitingDrivers"), object: Gauge<Int> {
+            override fun getValue(): Int = numWaiting.get()
+        })
+
+        metricRegistry.register(prependReadableClassName(this,"workingDrivers"), object: Gauge<Int> {
+            override fun getValue(): Int = numWorking.get()
+        })
+    }
 
     fun take(conf: ImmutableConfig): ManagedWebDriver = take(0, conf)
 
@@ -138,8 +149,8 @@ class LoadingWebDriverPool(
             val time = Duration.ofSeconds(1)
             while (isActive && numWorking.get() > 0 && i++ < timeout.seconds) {
                 notBusy.await(time.seconds, TimeUnit.SECONDS)
-                if (i % 10 == 0) {
-                    log.info(toString())
+                if (i % 20 == 0) {
+                    log.info("Round $i waiting for idle | $this")
                 }
             }
         }

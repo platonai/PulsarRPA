@@ -258,6 +258,10 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getArgs().getOrDefault(name, defaultValue).toString();
     }
 
+    public void upgradeRetry(RetryScope scope) {
+        getArgs().put(ARG_RETRY_SCOPE, scope.toString());
+    }
+
     @Override
     public String toString() {
         String str = getName() + " (" + getMajorCode() + "/" + getMinorCode() + ")";

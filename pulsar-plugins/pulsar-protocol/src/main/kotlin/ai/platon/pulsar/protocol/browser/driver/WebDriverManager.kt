@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
+import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -28,11 +29,25 @@ class WebDriverManager(
     val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 
     private val closed = AtomicBoolean()
-
     val startTime = Instant.now()
-    private val metrics = SharedMetricRegistries.getDefault()
-    val numReset = metrics.meter(prependReadableClassName(this, "numReset"))
+    private val metricRegistry = SharedMetricRegistries.getDefault()
+    val numReset = metricRegistry.meter(prependReadableClassName(this, "numReset"))
     val elapsedTime get() = Duration.between(startTime, Instant.now())
+
+    init {
+        metricRegistry.register(prependReadableClassName(this,"tasks"), object: Gauge<Int> {
+            override fun getValue(): Int = numTasks.get()
+        })
+        metricRegistry.register(prependReadableClassName(this,"runningTasks"), object: Gauge<Int> {
+            override fun getValue(): Int = numRunningTasks.get()
+        })
+        metricRegistry.register(prependReadableClassName(this,"readyPreemptiveTasks"), object: Gauge<Int> {
+            override fun getValue(): Int = numReadyPreemptiveTasks.get()
+        })
+        metricRegistry.register(prependReadableClassName(this,"runningPreemptiveTasks"), object: Gauge<Int> {
+            override fun getValue(): Int = numRunningPreemptiveTasks.get()
+        })
+    }
 
     fun allocate(n: Int, volatileConfig: VolatileConfig) = allocate(0, n, volatileConfig)
 
@@ -120,7 +135,7 @@ class WebDriverManager(
             String.format("online: %d, free: %d, waiting: %d, working: %d, active: %d",
                     p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
         } else {
-            String.format("%d/%d/%d/%d (online/free/waiting/working/active)",
+            String.format("%d/%d/%d/%d/%d (online/free/waiting/working/active)",
                     p.numOnline, p.numFree, p.numWaiting.get(), p.numWorking.get(), p.numActive)
         }
     }
