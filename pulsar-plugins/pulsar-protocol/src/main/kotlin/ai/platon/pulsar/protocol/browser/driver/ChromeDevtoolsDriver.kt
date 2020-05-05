@@ -4,8 +4,10 @@ import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
-import com.codahale.metrics.MetricRegistry
-import com.codahale.metrics.SharedMetricRegistries
+import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
+import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
+import ai.platon.pulsar.protocol.browser.conf.blockingUrls
+import ai.platon.pulsar.protocol.browser.conf.mustPassUrlPatterns
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import org.openqa.selenium.NoSuchSessionException
@@ -13,12 +15,9 @@ import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.streams.toList
 
 /**
  * TODO: more compatible methods with RemoteWebDriver, or disable them explicitly
@@ -86,6 +85,8 @@ class ChromeDevtoolsDriver(
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
 
+    // TODO: load blocking rules from config files
+    private val enableBlockingReport = true
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
     private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
@@ -139,18 +140,24 @@ class ChromeDevtoolsDriver(
 
             // block urls by url pattern
 //            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
-//
 //            }
-            network.setBlockedURLs(listOf("*.png", "*.jpg", "*.gif", "*.ico"))
+            network.setBlockedURLs(blockingUrls)
+            network.takeIf { enableBlockingReport }?.onRequestWillBeSent {
+                val requestUrl = it.request.url
+                if (mustPassUrlPatterns.any { requestUrl.matches(it) }) {
+                    return@onRequestWillBeSent
+                }
 
-            // Log requests with onRequestWillBeSent event handler
-//            network.onRequestWillBeSent { event: RequestWillBeSent ->
-//                if (event.type == ResourceType.IMAGE) {
-//                    // TODO: fetch is not supported?
-//                    // fetch.failRequest(event.requestId, ErrorReason.BLOCKED_BY_CLIENT)
-//                    // println(event.request.url)
-//                }
-//            }
+                if (it.type in blockingResourceTypes) {
+                    if (blockingUrlPatterns.none { requestUrl.matches(it) }) {
+                        log.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
+                    }
+
+                    // TODO: when fetch is enabled, no resources is return
+                    // fetch.failRequest(it.requestId, ErrorReason.BLOCKED_BY_RESPONSE)
+                    // fetch.fulfillRequest(it.requestId, 200, listOf())
+                }
+            }
 
             page.enable()
 

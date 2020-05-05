@@ -90,8 +90,8 @@ class FetchTask(
         val id: Int = instanceSequencer.incrementAndGet(),
         var nRetries: Int = 0 // The total number retries in a crawl
 ): Comparable<FetchTask> {
-    enum class State { UNKNOWN, READY, WORKING, CANCELED, DONE }
-    val state = AtomicReference<State>(State.UNKNOWN)
+    enum class State { NOT_READY, READY, WORKING, CANCELED, DONE }
+    val state = AtomicReference<State>(State.NOT_READY)
     
     // The number retries inside a privacy context
     var nPrivacyRetries: Int = 0
@@ -104,15 +104,18 @@ class FetchTask(
     val isWorking get() = state.get() == State.WORKING
     val isSuccess get() = response.status.isSuccess
 
+    // A task is ready when it about to enter a privacy context
     fun markReady() = state.set(State.READY)
+    // A task is working when it enters the the web driver
     fun startWork() = state.set(State.WORKING)
     fun cancel() = state.set(State.CANCELED)
+    // A task is done if it exit from a privacy context
     fun done() = state.set(State.DONE)
 
     fun reset() {
         batchStat = null
         proxyEntry = null
-        state.set(State.UNKNOWN)
+        state.set(State.NOT_READY)
         response = ForwardingResponse.unfetched(page)
     }
 

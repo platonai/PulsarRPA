@@ -103,6 +103,7 @@ class BrowserPrivacyManager(
 
                 try {
                     require(!task0.isCanceled)
+                    require(task0.state.get() == FetchTask.State.NOT_READY)
                     require(task0.proxyEntry == null)
 
                     task0.markReady()

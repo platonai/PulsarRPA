@@ -54,6 +54,8 @@ object AppPaths {
     @RequiredDirectory
     val FILE_CACHE_DIR = get(CACHE_DIR, "files")
     @RequiredDirectory
+    val CONF_DIR = get(TMP_DIR, "etc")
+    @RequiredDirectory
     val REPORT_DIR = get(TMP_DIR, "report")
     @RequiredDirectory
     val METRICS_DIR = get(REPORT_DIR, "metrics")

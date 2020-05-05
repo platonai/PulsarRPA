@@ -168,19 +168,21 @@ open class FetchComponent(
             else -> CrawlStatus.STATUS_RETRY.also { log.warn("Unknown protocol status $protocolStatus") }
         }
 
-        if (crawlStatus.isFetched) {
-            fetchMetrics.trackSuccess(page)
-        } else if (crawlStatus.isFailed) {
-            fetchMetrics.trackFailed(url)
-        }
-
-        return when(crawlStatus) {
+        val updatedPage = when(crawlStatus) {
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
             CrawlStatus.STATUS_REDIR_PERM -> updatePage(page, content, protocolStatus, crawlStatus)
 
             else -> updatePage(page, null, protocolStatus, crawlStatus)
         }
+
+        if (crawlStatus.isFetched) {
+            fetchMetrics.trackSuccess(page)
+        } else if (crawlStatus.isFailed) {
+            fetchMetrics.trackFailed(url)
+        }
+
+        return updatedPage
     }
 
     private fun handleMoved(page: WebPage, protocolStatus: ProtocolStatus): CrawlStatus {

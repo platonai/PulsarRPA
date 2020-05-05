@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.prependReadableClassName
@@ -13,7 +14,9 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
+import oshi.SystemInfo
 import java.lang.Thread.currentThread
+import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -77,14 +80,20 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching {
-                // Mark all working tasks are canceled, so they return as soon as possible,
-                // the ready tasks are blocked to wait for driverManager.closeAll() finish
-                runningTasks.forEach { it.takeIf { it.isWorking }?.cancel() }
-                // Mark all drivers are canceled
-                driverManager.cancelAll()
                 // may wait for cancelling finish?
                 // Close all online drivers and delete the browser data
-                driverManager.reset()
+                driverManager.reset(
+                        timeToWait = Duration.ofMinutes(1),
+                        onBeforeClose = {
+                            // lock driver manager and perform
+
+                            // Mark all working tasks are canceled, so they return as soon as possible,
+                            // the ready tasks are blocked to wait for driverManager.reset() finish
+                            runningTasks.forEach { it.takeIf { it.isWorking }?.cancel() }
+                            // Mark all drivers are canceled
+                            driverManager.cancelAll()
+                        }
+                )
                 // Wait for all tasks return
                 lock.withLock {
                     var i = 0
@@ -94,7 +103,8 @@ class WebDriverContext(
                 }
 
                 if (runningTasks.isNotEmpty()) {
-                    log.warn("Still {} running tasks after context close", runningTasks.size)
+                    log.warn("Still {} running tasks after context close | {}",
+                            runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
                 }
             }.onFailure { log.warn("Unexpected exception", it) }
         }
@@ -284,9 +294,9 @@ open class BrowserPrivacyContext(
 ): PrivacyContext() {
 
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
-    private val closeLatch = CountDownLatch(1)
     private val driverContext = WebDriverContext(driverManager, conf)
     private val proxyContext = ProxyContext(proxyMonitor, driverContext, conf)
+    private val closeLatch = CountDownLatch(1)
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)
@@ -314,10 +324,14 @@ open class BrowserPrivacyContext(
     }
 
     private fun report() {
-        log.info("Privacy context #{} has lived for {} | success: {}({} pages/s) | tasks: {} run: {} with {}",
+        log.info("Privacy context #{} has lived for {}" +
+                " | success: {}({} pages/s) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
                 id, elapsedTime.readable(),
                 numSuccesses, String.format("%.2f", throughput),
-                numTasks, numTotalRun, proxyContext.proxyEntry ?: "no proxy")
+                Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
+                numTasks, numTotalRun,
+                proxyContext.proxyEntry ?: "no proxy"
+        )
 
         if (throughput < 1) {
             log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", id)

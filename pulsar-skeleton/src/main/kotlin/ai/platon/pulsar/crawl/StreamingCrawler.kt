@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import oshi.SystemInfo
+import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
@@ -39,7 +41,7 @@ open class StreamingCrawler(
         }
     }
 
-    private val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+    private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     private val privacyManager = session.context.getBean(PrivacyManager::class)
     private val isAppActive get() = isAlive
     private val systemInfo = SystemInfo()
@@ -60,6 +62,17 @@ open class StreamingCrawler(
                         log.info("Privacy is leaked, wait for privacy context reset")
                     }
                     Thread.sleep(1000)
+                }
+
+                // update fetch concurrency on command
+                if (numRunningTasks.get() == concurrency) {
+                    val path = AppPaths.get(AppPaths.CONF_DIR, "fetch-concurrency-override")
+                    if (Files.exists(path)) {
+                        val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:concurrency
+                        if (concurrencyOverride != concurrency) {
+                            session.sessionConfig.setInt(CapabilityTypes.FETCH_CONCURRENCY, concurrencyOverride)
+                        }
+                    }
                 }
 
                 while (isAppActive && numRunningTasks.get() >= concurrency) {

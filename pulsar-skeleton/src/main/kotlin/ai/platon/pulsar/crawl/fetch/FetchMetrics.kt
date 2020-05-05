@@ -63,8 +63,8 @@ class FetchMetrics(
     private val tasks = metricRegistry.meter(prependReadableClassName(this,"tasks"))
     private val successTasks = metricRegistry.meter(prependReadableClassName(this,"successTasks"))
     private val finishedTasks = metricRegistry.meter(prependReadableClassName(this,"finishedTasks"))
-    private val contentBytes = metricRegistry.histogram(prependReadableClassName(this,"contentBytes"))
-    private val totalContentBytes = metricRegistry.meter(prependReadableClassName(this,"totalContentBytes"))
+    private val histogramContentBytes = metricRegistry.histogram(prependReadableClassName(this,"hContentBytes"))
+    private val meterContentBytes = metricRegistry.meter(prependReadableClassName(this,"mContentBytes"))
 
     /**
      * The total all bytes received by the hardware at the application startup
@@ -144,12 +144,14 @@ class FetchMetrics(
      * Available hosts statistics
      */
     fun trackSuccess(page: WebPage) {
+        // TODO: ensure the page is updated
+
         successTasks.mark()
         finishedTasks.mark()
 
         val bytes = page.contentBytes.toLong()
-        contentBytes.update(bytes)
-        totalContentBytes.mark(bytes)
+        histogramContentBytes.update(bytes)
+        meterContentBytes.mark(bytes)
 
         val i = finishedTasks.count
         if (i % 5 == 0L) {
@@ -252,7 +254,7 @@ class FetchMetrics(
     fun formatTraffic(): String {
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
-        val bytes = contentBytes.count
+        val bytes = meterContentBytes.count
         return String.format("Fetched total %d pages in %s(%.2f pages/s) successfully | content: %s, %s/s, %s/p" +
                 " | net recv: %s, %s/s, %s/p | total net recv: %s",
                 count,

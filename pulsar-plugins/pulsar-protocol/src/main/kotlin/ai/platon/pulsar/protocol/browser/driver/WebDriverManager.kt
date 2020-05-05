@@ -28,6 +28,7 @@ class WebDriverManager(
     val driverFactory = WebDriverFactory(driverControl, proxyManager, immutableConfig)
     val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 
+    private val defaultTimeToWaitForCloseAll = Duration.ofMinutes(2)
     private val closed = AtomicBoolean()
     val startTime = Instant.now()
     private val metricRegistry = SharedMetricRegistries.getDefault()
@@ -60,6 +61,12 @@ class WebDriverManager(
         }
     }
 
+    /**
+     * TODO: proactor model might be better: here is a task in the queue, tell me if you have finished it
+     *
+     * reactor： tell me if you can do this job
+     * proactor: here is a job, tell me if you finished it
+     * */
     suspend fun <R> submit(priority: Int, volatileConfig: VolatileConfig, action: suspend (driver: ManagedWebDriver) -> R): R {
         return whenNormalDeferred {
             val driver = driverPool.take(priority, volatileConfig).apply { startWork() }
@@ -103,9 +110,13 @@ class WebDriverManager(
     /**
      * Cancel all running tasks and close all web drivers
      * */
-    fun reset() {
+    fun reset(
+            timeToWait: Duration = Duration.ofMinutes(2),
+            onBeforeClose: () -> Unit = {},
+            onAfterClose: () -> Unit = {}
+    ) {
         numReset.mark()
-        closeAll(incognito = true)
+        closeAll(incognito = true, timeToWait = timeToWait, onBeforeClose = onBeforeClose, onAfterClose = onAfterClose)
     }
 
     override fun close() {
@@ -117,15 +128,23 @@ class WebDriverManager(
 
     override fun toString(): String = formatStatus(false)
 
-    private fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
+    private fun closeAll(
+            incognito: Boolean = true,
+            processExit: Boolean = false,
+            timeToWait: Duration = defaultTimeToWaitForCloseAll,
+            onBeforeClose: () -> Unit = {},
+            onAfterClose: () -> Unit = {}
+    ) {
         preempt {
             log.info("Closing all web drivers | {}", formatStatus(verbose = true))
+            onBeforeClose()
             cancelAll()
             if (processExit) {
                 driverPool.use { it.close() }
             } else {
                 driverPool.closeAll(incognito)
             }
+            onAfterClose()
         }
     }
 

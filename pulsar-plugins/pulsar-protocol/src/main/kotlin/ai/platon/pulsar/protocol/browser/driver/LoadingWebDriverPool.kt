@@ -26,20 +26,20 @@ import kotlin.concurrent.withLock
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class LoadingWebDriverPool(
-        val driverFactory: WebDriverFactory,
-        val conf: ImmutableConfig
+        private val driverFactory: WebDriverFactory,
+        immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
-    private val concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
-    val capacity = conf.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrency)
+    val concurrency = immutableConfig.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+    val capacity = immutableConfig.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrency)
     val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
-    val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(capacity)
+    val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(500)
 
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
 
-    private val isHeadless = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
+    private val isHeadless = immutableConfig.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
@@ -85,9 +85,9 @@ class LoadingWebDriverPool(
 
     fun firstOrNull(predicate: (ManagedWebDriver) -> Boolean) = onlineDrivers.firstOrNull(predicate)
 
-    fun closeAll(incognito: Boolean = true, processExit: Boolean = false) {
+    fun closeAll(incognito: Boolean = true, processExit: Boolean = false, timeToWait: Duration = Duration.ofMinutes(2)) {
         if (!processExit) {
-            waitUntilIdleOrTimeout(Duration.ofMinutes(2))
+            waitUntilIdleOrTimeout(timeToWait)
         }
 
         closeAllDrivers(processExit)
@@ -116,7 +116,10 @@ class LoadingWebDriverPool(
 
     @Throws(InterruptedException::class)
     private fun take0(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
-        driverFactory.takeIf { isActive && onlineDrivers.size < capacity && availableMemory > instanceRequiredMemory }
+        val concurrencyOverride = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, this.concurrency)
+        val capacityOverride = conf.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrencyOverride)
+
+        driverFactory.takeIf { isActive && onlineDrivers.size < capacityOverride && availableMemory > instanceRequiredMemory }
                 ?.create(priority, conf)
                 ?.also {
                     freeDrivers.add(it)

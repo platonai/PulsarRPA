@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl
 
+import oshi.SystemInfo
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,6 +26,17 @@ abstract class PrivacyContext: AutoCloseable {
     val numSuccesses = AtomicInteger()
     val numTotalRun = AtomicInteger()
     val closed = AtomicBoolean()
+
+    private val systemInfo = SystemInfo()
+    /**
+     * The total all bytes received by the hardware at the application startup
+     * */
+    private val currentSystemNetworkBytesRecv: Long
+        get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+
+    val initSystemNetworkBytesRecv: Long = currentSystemNetworkBytesRecv
+    val systemNetworkBytesRecv get() = currentSystemNetworkBytesRecv - initSystemNetworkBytesRecv
+    val networkSpeed get() = systemNetworkBytesRecv / elapsedTime.seconds.coerceAtLeast(1)
 
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     val throughput get() = 1.0 * numSuccesses.get() / elapsedTime.seconds.coerceAtLeast(1)
