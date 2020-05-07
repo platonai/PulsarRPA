@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
 open class BrowserEmulateEventHandler(
         private val driverManager: WebDriverManager,
@@ -41,7 +42,9 @@ open class BrowserEmulateEventHandler(
     private val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
     private val bannedPages = metrics.meter(prependReadableClassName(this, "bannedPages"))
     private val smallPages = metrics.meter(prependReadableClassName(this, "smallPages"))
+    private val smallPageRate = metrics.histogram(prependReadableClassName(this, "smallPageRate"))
     private val emptyPages = metrics.meter(prependReadableClassName(this, "emptyPages"))
+    private val numNavigates = AtomicInteger()
     private val driverPool = driverManager.driverPool
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
@@ -58,6 +61,8 @@ open class BrowserEmulateEventHandler(
     }
 
     fun onAfterNavigate(task: NavigateTask): Response {
+        numNavigates.incrementAndGet()
+
         val length = task.pageSource.length
         pageSourceBytes.update(length)
         totalPageSourceBytes.mark(length.toLong())
@@ -95,13 +100,10 @@ open class BrowserEmulateEventHandler(
         // Update headers, metadata, do the logging stuff
         task.page.lastBrowser = task.driver.browserType
         task.page.htmlIntegrity = integrity
-        handleBrowseFinish(task.page, task.headers)
-
-        exportIfNecessary(task)
 
         // TODO: collect response headers of main resource
 
-        return ForwardingResponse(task.pageSource, task.status, task.headers, task.page)
+        return createResponse(task)
     }
 
     open fun checkErrorPage(page: WebPage, status: ProtocolStatus): BrowserStatus {
@@ -183,7 +185,11 @@ open class BrowserEmulateEventHandler(
         }
     }
 
-    open fun handleBrowseFinish(page: WebPage, headers: MultiMetadata) {
+    open fun createResponse(task: NavigateTask): ForwardingResponse {
+        val response = ForwardingResponse(task.pageSource, task.status, task.headers, task.page)
+        val headers = task.headers
+        val page = task.page
+
         // The page content's encoding is already converted to UTF-8 by Web driver
         val utf8 = StandardCharsets.UTF_8.name()
         require(utf8 == "UTF-8")
@@ -191,14 +197,19 @@ open class BrowserEmulateEventHandler(
         headers.put(HttpHeaders.Q_TRUSTED_CONTENT_ENCODING, utf8)
         headers.put(HttpHeaders.Q_RESPONSE_TIME, System.currentTimeMillis().toString())
 
+        // TODO: Update all page data in the same place
         val urls = page.activeDomUrls
         if (urls != null) {
-            page.location = urls.location
-            if (page.url != page.location) {
+            response.location = urls.location
+            if (page.url != response.location) {
                 // in-browser redirection
                 messageWriter.debugRedirects(page.url, urls)
             }
         }
+
+        exportIfNecessary(task)
+
+        return response
     }
 
     fun handlePageSource(pageSource: String): StringBuilder {
@@ -231,7 +242,10 @@ open class BrowserEmulateEventHandler(
             task.nRetries > fetchMaxRetry -> ProtocolStatus.retry(RetryScope.CRAWL)
                     .also { log.info("Retry task ${task.id} in the next crawl round") }
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
-            htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also { smallPages.mark() }
+            htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also {
+                smallPages.mark()
+                smallPageRate.update(100 * smallPages.count / numNavigates.get())
+            }
             else -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
         }
     }
@@ -285,11 +299,11 @@ open class BrowserEmulateEventHandler(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Page is broken with {}({}) using proxy {} in {}({}) | file://{} | {}",
-                    readableLength, integrity.name,
+            log.warn("Page is {}({}) with {} in {}({}) | file://{} | {}",
+                    integrity.name, readableLength,
                     proxyEntry.display, domain, count, link, task.url)
         } else {
-            log.warn("Page is broken with {}({}) | file://{} | {}", readableLength, integrity.name, link, task.url)
+            log.warn("Page is {}({}) | file://{} | {}", integrity.name, readableLength, link, task.url)
         }
     }
 }

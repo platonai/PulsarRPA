@@ -1,5 +1,8 @@
 package ai.platon.pulsar.crawl
 
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.readable
+import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
 import java.time.Instant
@@ -15,6 +18,7 @@ abstract class PrivacyContext: AutoCloseable {
         private val instanceSequencer = AtomicInteger()
     }
 
+    val log = LoggerFactory.getLogger(PrivacyContext::class.java)
     val id = instanceSequencer.incrementAndGet()
 
     var minimumThroughput = 0.3
@@ -25,17 +29,19 @@ abstract class PrivacyContext: AutoCloseable {
     val numTasks = AtomicInteger()
     val numSuccesses = AtomicInteger()
     val numTotalRun = AtomicInteger()
+    val numSmallPages = AtomicInteger()
+    val smallPageRate get() = 1.0 * numSmallPages.get() / numTasks.get()
     val closed = AtomicBoolean()
 
     private val systemInfo = SystemInfo()
     /**
      * The total all bytes received by the hardware at the application startup
      * */
-    private val currentSystemNetworkBytesRecv: Long
+    private val realTimeSystemNetworkBytesRecv: Long
         get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
 
-    val initSystemNetworkBytesRecv: Long = currentSystemNetworkBytesRecv
-    val systemNetworkBytesRecv get() = currentSystemNetworkBytesRecv - initSystemNetworkBytesRecv
+    val initSystemNetworkBytesRecv by lazy { realTimeSystemNetworkBytesRecv }
+    val systemNetworkBytesRecv get() = realTimeSystemNetworkBytesRecv - initSystemNetworkBytesRecv
     val networkSpeed get() = systemNetworkBytesRecv / elapsedTime.seconds.coerceAtLeast(1)
 
     val elapsedTime get() = Duration.between(startTime, Instant.now())
@@ -51,4 +57,15 @@ abstract class PrivacyContext: AutoCloseable {
     fun markWarningDeprecated() = markWarning()
 
     fun markSuccessDeprecated() = markSuccess()
+
+    open fun report() {
+        log.info("Privacy context #{} has lived for {}" +
+                " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {}",
+                id, elapsedTime.readable(),
+                numSuccesses, String.format("%.2f", throughput),
+                numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
+                Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
+                numTasks, numTotalRun
+        )
+    }
 }

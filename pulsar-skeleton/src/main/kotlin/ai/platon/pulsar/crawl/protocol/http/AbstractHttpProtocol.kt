@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.MimeUtil
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.protocol.Content
+import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.Response
@@ -139,13 +139,13 @@ abstract class AbstractHttpProtocol: Protocol {
         val bytes = response.content
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         val contentType = response.getHeader(HttpHeaders.CONTENT_TYPE)
-        val content = Content(url, location, bytes, contentType, response.headers, mimeTypes)
+        val pageDatum = PageDatum(url, location, bytes, contentType, response.headers, mimeTypes)
         val headers = response.headers
         val status: ProtocolStatus
         // got a good response
         when (httpCode) {
-            200 -> return ProtocolOutput(content, headers)
-            304 -> return ProtocolOutput(content, headers, ProtocolStatus.STATUS_NOTMODIFIED)
+            200 -> return ProtocolOutput(pageDatum, headers)
+            304 -> return ProtocolOutput(pageDatum, headers, ProtocolStatus.STATUS_NOTMODIFIED)
             in 300..399 -> { // handle redirect
                 // some broken servers, such as MS IIS, use lowercase header name...
                 val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
@@ -180,7 +180,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 status = response.status
             }
         }
-        return ProtocolOutput(content, headers, status)
+        return ProtocolOutput(pageDatum, headers, status)
     }
 
     private fun getFailedResponse(lastThrowable: Throwable?, tryCount: Int, maxRry: Int): ProtocolOutput {

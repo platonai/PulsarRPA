@@ -66,10 +66,11 @@ class FetchMetrics(
     private val histogramContentBytes = metricRegistry.histogram(prependReadableClassName(this,"hContentBytes"))
     private val meterContentBytes = metricRegistry.meter(prependReadableClassName(this,"mContentBytes"))
 
+    private val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     /**
      * The total all bytes received by the hardware at the application startup
      * */
-    private var initSystemNetworkBytesRecv = 0L
+    private val initSystemNetworkBytesRecv by lazy { realTimeSystemNetworkBytesRecv }
     /**
      * The total all bytes received by the hardware last read from system
      * */
@@ -91,7 +92,6 @@ class FetchMetrics(
     init {
         Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
 
-        initSystemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
         systemNetworkBytesRecv = initSystemNetworkBytesRecv
 
         params.withLogger(log).info(true)
@@ -154,9 +154,6 @@ class FetchMetrics(
         meterContentBytes.mark(bytes)
 
         val i = finishedTasks.count
-        if (i % 5 == 0L) {
-            updateNetworkTraffic()
-        }
 
         if (log.isInfoEnabled && i % 20 == 0L) {
             log.info(formatTraffic())
@@ -247,11 +244,9 @@ class FetchMetrics(
         return numUrls + failedTasks
     }
 
-    private fun updateNetworkTraffic() {
-        systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
-    }
-
     fun formatTraffic(): String {
+        updateNetworkTraffic()
+
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
@@ -278,6 +273,10 @@ class FetchMetrics(
 
             logAvailableHosts()
         }
+    }
+
+    private fun updateNetworkTraffic() {
+        systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     }
 
     private fun logAvailableHosts() {

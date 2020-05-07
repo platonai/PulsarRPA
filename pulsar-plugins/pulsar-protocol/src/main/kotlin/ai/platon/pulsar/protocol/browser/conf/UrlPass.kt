@@ -15,7 +15,7 @@ val mustPassUrls = listOf("*.woff", "*.mp4")
  * Blocking urls patten using widcards
  * */
 val blockingUrls = listOf(
-        "*.png", "*.jpg", "*.gif", "*.ico", "*.webp",
+        "*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.webp",
         "*.woff", "*.woff2",
         "*.mp4", "*.svg",
         "*.png?*", "*.jpg?*", "*.gif?*", "*.ico?*", "*.webp?*",
@@ -26,10 +26,12 @@ val mustPassUrlPatterns = listOf(
         "about:blank",
         "data:.+",
         ".+/gp/.+",
+        ".+/dp/.+",
         "https://fls-na.amazon.com/1/batch/1/OP/ATVPDKIKX0DER.+",
         "https://fls-na.amazon.com/1/remote-weblab-triggers.+",
         "https://fls-na.amazon.com/1/action-impressions.+",
-        "https://aax-us-east.amazon-adsystem.com/x/px/.+"
+        "https://aax-us-east.amazon-adsystem.com.+",
+        "https://assoc-na.associates-amazon.com.+"
 ).map { it.toRegex() }.union(mustPassUrls.map { Wildchar(it).toRegex() })
 
 val blockingUrlPatterns = blockingUrls.map { Wildchar(it).toRegex() }

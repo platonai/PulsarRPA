@@ -24,7 +24,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
-import ai.platon.pulsar.crawl.protocol.Content
+import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.ProtocolNotFound
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
@@ -32,8 +32,6 @@ import ai.platon.pulsar.persist.CrawlStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
-import com.codahale.metrics.MetricRegistry.name
-import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -134,7 +132,7 @@ open class FetchComponent(
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
         val url = page.url
-        val content = output.content
+        val content = output.pageDatum
         if (content == null) {
             log.warn("No content | {}", page.configuredUrl)
         }
@@ -172,7 +170,6 @@ open class FetchComponent(
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
             CrawlStatus.STATUS_REDIR_PERM -> updatePage(page, content, protocolStatus, crawlStatus)
-
             else -> updatePage(page, null, protocolStatus, crawlStatus)
         }
 
@@ -224,13 +221,13 @@ open class FetchComponent(
         }
     }
 
-    private fun updatePage(page: WebPage, content: Content?,
+    private fun updatePage(page: WebPage, pageDatum: PageDatum?,
                            protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
 
-        if (content != null && protocolStatus.isSuccess) {
+        if (pageDatum != null && protocolStatus.isSuccess) {
             // No need to update content if the fetch is failed, just keep the last content in such cases
-            updateContent(page, content)
+            updateContent(page, pageDatum)
         }
 
         updateFetchTime(page)
@@ -261,19 +258,19 @@ open class FetchComponent(
         }
 
         @JvmStatic
-        fun updateContent(page: WebPage, content: Content) {
-            updateContent0(page, content, null)
+        fun updateContent(page: WebPage, pageDatum: PageDatum) {
+            updateContent0(page, pageDatum, null)
         }
 
-        private fun updateContent0(page: WebPage, content: Content, contentTypeHint: String?) {
+        private fun updateContent0(page: WebPage, pageDatum: PageDatum, contentTypeHint: String?) {
             var contentType = contentTypeHint
 
-            page.location = content.baseUrl
-            page.setContent(content.content)
+            page.location = pageDatum.location
+            page.setContent(pageDatum.content)
             if (contentType != null) {
-                content.contentType = contentType
+                pageDatum.contentType = contentType
             } else {
-                contentType = content.contentType
+                contentType = pageDatum.contentType
             }
 
             if (contentType != null) {

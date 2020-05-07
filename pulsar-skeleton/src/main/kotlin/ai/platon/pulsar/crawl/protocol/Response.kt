@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 
 /**
  * A response interface. Makes all protocols model HTTP
+ * TODO: use PageDatum to hold data
  */
 abstract class Response(
         val page: WebPage,
@@ -33,7 +34,9 @@ abstract class Response(
         /** All the headers */
         val headers: MultiMetadata,
         /** Returns the full content of the response */
-        val content: ByteArray? = null
+        val content: ByteArray? = null,
+        /** The page's last internet location */
+        var location: String = page.url
 ) {
     /** The permanent internal address */
     val url get() = page.url

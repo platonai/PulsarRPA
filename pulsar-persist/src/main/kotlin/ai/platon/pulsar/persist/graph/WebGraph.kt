@@ -1,19 +1,15 @@
 package ai.platon.pulsar.persist.graph
 
 import ai.platon.pulsar.persist.WebPage
-import org.apache.commons.collections4.CollectionUtils
 import org.jgrapht.ext.*
 import org.jgrapht.graph.DirectedWeightedPseudograph
 import java.io.StringWriter
 import java.io.Writer
 import java.util.*
-import java.util.function.Consumer
-import kotlin.IllegalStateException
 
 /**
  * Created by vincent on 16-12-21.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
- *
  *
  * A pseudograph is a non-simple graph in which both graph loops and multiple edges are permitted.
  */
@@ -130,14 +126,14 @@ class WebGraph : DirectedWeightedPseudograph<WebVertex, WebEdge> {
                 m["depth"] = v.page!!.distance.toString()
                 m
             }
-            exporter.setVertexAttributeProvider(vertexAttributeProvider)
+            exporter.vertexAttributeProvider = vertexAttributeProvider
             // create provider of edge attributes
             val edgeAttributeProvider = ComponentAttributeProvider { e: WebEdge ->
                 val m: MutableMap<String, String> = HashMap()
                 m["name"] = e.toString()
                 m
             }
-            exporter.setEdgeAttributeProvider(edgeAttributeProvider)
+            exporter.edgeAttributeProvider = edgeAttributeProvider
             return exporter
         }
 
@@ -157,6 +153,7 @@ class WebGraph : DirectedWeightedPseudograph<WebVertex, WebEdge> {
             val edgeProvider = EdgeProvider<WebVertex, WebEdge> {
                 from: WebVertex, to: WebVertex, label: String, attributes: Map<String, String> -> WebEdge()
             }
+
             // create GraphML importer
             return GraphMLImporter(vertexProvider, edgeProvider)
         }

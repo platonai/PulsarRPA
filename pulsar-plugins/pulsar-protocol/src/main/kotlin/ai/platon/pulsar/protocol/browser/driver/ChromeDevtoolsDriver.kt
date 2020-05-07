@@ -86,7 +86,8 @@ class ChromeDevtoolsDriver(
     private val emulation get() = devTools.emulation
 
     // TODO: load blocking rules from config files
-    private val enableBlockingReport = true
+    private val enableUrlBlocking = true
+    private val enableBlockingReport = false
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
     private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
@@ -141,24 +142,8 @@ class ChromeDevtoolsDriver(
             // block urls by url pattern
 //            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
 //            }
-            network.setBlockedURLs(blockingUrls)
-            network.takeIf { enableBlockingReport }?.onRequestWillBeSent {
-                val requestUrl = it.request.url
-                if (mustPassUrlPatterns.any { requestUrl.matches(it) }) {
-                    return@onRequestWillBeSent
-                }
 
-                if (it.type in blockingResourceTypes) {
-                    if (blockingUrlPatterns.none { requestUrl.matches(it) }) {
-                        log.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
-                    }
-
-                    // TODO: when fetch is enabled, no resources is return
-                    // fetch.failRequest(it.requestId, ErrorReason.BLOCKED_BY_RESPONSE)
-                    // fetch.fulfillRequest(it.requestId, 200, listOf())
-                }
-            }
-
+            setupUrlBlocking()
             page.enable()
 
             // NOTE: There are too many network relative traffic, especially when the proxy is disabled
@@ -316,6 +301,29 @@ class ChromeDevtoolsDriver(
         if (closed.compareAndSet(false, true)) {
             devTools.use { it.close() }
             numInstances.decrementAndGet()
+        }
+    }
+
+    private fun setupUrlBlocking() {
+        if (!enableUrlBlocking) return
+
+        // TODO: case sensitive or not?
+        network.setBlockedURLs(blockingUrls)
+        network.takeIf { enableBlockingReport }?.onRequestWillBeSent {
+            val requestUrl = it.request.url
+            if (mustPassUrlPatterns.any { requestUrl.matches(it) }) {
+                return@onRequestWillBeSent
+            }
+
+            if (it.type in blockingResourceTypes) {
+                if (blockingUrlPatterns.none { requestUrl.matches(it) }) {
+                    log.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
+                }
+
+                // TODO: when fetch is enabled, no resources is return
+                // fetch.failRequest(it.requestId, ErrorReason.BLOCKED_BY_RESPONSE)
+                // fetch.fulfillRequest(it.requestId, 200, listOf())
+            }
         }
     }
 

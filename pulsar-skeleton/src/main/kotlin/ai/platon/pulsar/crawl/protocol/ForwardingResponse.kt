@@ -30,8 +30,10 @@ open class ForwardingResponse(
         page: WebPage,
         status: ProtocolStatus,
         headers: MultiMetadata,
-        content: ByteArray
-) : Response(page, status, headers, content) {
+        content: ByteArray,
+        /** The last location */
+        location: String = page.url
+) : Response(page, status, headers, content, location) {
     /**
      * The page should keep status unchanged
      */

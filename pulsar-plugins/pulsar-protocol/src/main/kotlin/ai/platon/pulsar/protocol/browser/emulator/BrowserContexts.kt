@@ -14,7 +14,6 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
-import oshi.SystemInfo
 import java.lang.Thread.currentThread
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -80,20 +79,15 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching {
+                // Mark all working tasks are canceled, so they return as soon as possible,
+                // the ready tasks are blocked to wait for driverManager.reset() finish
+                runningTasks.forEach { it.cancel() }
+                // Mark all drivers are canceled
+                driverManager.cancelAll()
                 // may wait for cancelling finish?
                 // Close all online drivers and delete the browser data
-                driverManager.reset(
-                        timeToWait = Duration.ofMinutes(1),
-                        onBeforeClose = {
-                            // lock driver manager and perform
+                driverManager.reset(timeToWait = Duration.ofMinutes(2))
 
-                            // Mark all working tasks are canceled, so they return as soon as possible,
-                            // the ready tasks are blocked to wait for driverManager.reset() finish
-                            runningTasks.forEach { it.takeIf { it.isWorking }?.cancel() }
-                            // Mark all drivers are canceled
-                            driverManager.cancelAll()
-                        }
-                )
                 // Wait for all tasks return
                 lock.withLock {
                     var i = 0
@@ -150,6 +144,7 @@ class ProxyContext(
      * */
     private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE)
     private val maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
+    private val minTimeToLive = Duration.ofSeconds(10)
     private val closed = AtomicBoolean()
     /**
      * The proxy for this context
@@ -222,14 +217,21 @@ class ProxyContext(
     }
 
     private fun handleProxyException(task: FetchTask, e: ProxyException): FetchResult {
-        return if (e is NoProxyException) {
-            numProxyAbsence.incrementAndGet()
-            checkProxyAbsence()
-            log.warn("No proxy available temporary the {}th times, cause: {}", numProxyAbsence, e.message)
-            FetchResult.crawlRetry(task)
-        } else {
-            log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
-            FetchResult.privacyRetry(task)
+        return when (e) {
+            is ProxyExpireException -> {
+                log.warn("The proxy is expired, context reset will be triggered | {}", proxyEntry?:"<no proxy>")
+                FetchResult.privacyRetry(task)
+            }
+            is NoProxyException -> {
+                numProxyAbsence.incrementAndGet()
+                checkProxyAbsence()
+                log.warn("No proxy available temporary the {}th times, cause: {}", numProxyAbsence, e.message)
+                FetchResult.crawlRetry(task)
+            }
+            else -> {
+                log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
+                FetchResult.privacyRetry(task)
+            }
         }
     }
 
@@ -246,6 +248,12 @@ class ProxyContext(
             proxyEntry = proxyMonitor.currentProxyEntry
         }
         task.proxyEntry = proxyEntry
+
+        proxyEntry?.also {
+            if (it.willExpireAfter(minTimeToLive)) {
+                throw ProxyExpireException("The proxy expires in $minTimeToLive")
+            }
+        }
     }
 
     private fun afterTaskFinished(task: FetchTask, success: Boolean) {
@@ -293,7 +301,6 @@ open class BrowserPrivacyContext(
         val conf: ImmutableConfig
 ): PrivacyContext() {
 
-    private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)!!
     private val driverContext = WebDriverContext(driverManager, conf)
     private val proxyContext = ProxyContext(proxyMonitor, driverContext, conf)
     private val closeLatch = CountDownLatch(1)
@@ -310,6 +317,29 @@ open class BrowserPrivacyContext(
         return proxyContext.runDeferred(task, browseFun).also { afterRun(it) }
     }
 
+    override fun report() {
+        log.info("Privacy context #{} has lived for {}" +
+                " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
+                id, elapsedTime.readable(),
+                numSuccesses, String.format("%.2f", throughput),
+                numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
+                Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
+                numTasks, numTotalRun,
+                proxyContext.proxyEntry ?: "<no proxy>"
+        )
+
+        if (smallPageRate > 0.5) {
+            log.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
+                    id,
+                    numSmallPages, String.format("%.1f%%", 100 * smallPageRate))
+        }
+
+        if (throughput < 1) {
+            log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", id)
+            // check the zombie context list, if the context keeps go bad, the proxy provider is bad
+        }
+    }
+
     /**
      * Block until all the drivers are closed and the proxy is offline
      * */
@@ -323,22 +353,6 @@ open class BrowserPrivacyContext(
         }
     }
 
-    private fun report() {
-        log.info("Privacy context #{} has lived for {}" +
-                " | success: {}({} pages/s) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
-                id, elapsedTime.readable(),
-                numSuccesses, String.format("%.2f", throughput),
-                Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
-                numTasks, numTotalRun,
-                proxyContext.proxyEntry ?: "no proxy"
-        )
-
-        if (throughput < 1) {
-            log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", id)
-            // check the zombie context list, if the context keeps go bad, the proxy provider is bad
-        }
-    }
-
     private fun beforeRun(task: FetchTask) {
         numTasks.incrementAndGet()
     }
@@ -347,6 +361,10 @@ open class BrowserPrivacyContext(
         numTotalRun.incrementAndGet()
         if (result.status.isSuccess) {
             numSuccesses.incrementAndGet()
+        }
+
+        if (result.isSmall) {
+            numSmallPages.incrementAndGet()
         }
     }
 }

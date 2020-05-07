@@ -45,6 +45,7 @@ class AmazonBrowserEmulateEventHandler(
         }
 
         // might be caused by web driver exception
+        // TODO: failed to figure out a html have a blank body correctly
         if (integrity.isOK && isBlankBody(pageSource)) {
             integrity = HtmlIntegrity.EMPTY_BODY
 //            throw PrivacyLeakException()

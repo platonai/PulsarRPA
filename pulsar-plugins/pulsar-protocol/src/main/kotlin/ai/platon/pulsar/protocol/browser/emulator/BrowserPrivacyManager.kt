@@ -16,7 +16,7 @@ class BrowserPrivacyManager(
         val driverManager: WebDriverManager,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
-    private val log = LoggerFactory.getLogger(BrowserPrivacyManager::class.java)
+    private val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
@@ -41,9 +41,6 @@ class BrowserPrivacyManager(
         do {
             val task0 = if (i == 1) task else task.clone()
             result = FetchResult.crawlRetry(task0)
-
-//            task0.takeIf { i > 1 }?.reset()
-//            result = FetchResult.unfetched(task0)
 
             // if the current context is not leaked, return the current context, or block and create a new one
             val context = computeContextIfLeaked()
@@ -85,10 +82,6 @@ class BrowserPrivacyManager(
         do {
             val task0 = if (i == 1) task else task.clone()
             result = FetchResult.crawlRetry(task0)
-
-//            if (i > 1) {
-//                log.info("{}. Ready to fetch task the {}th times | {}", task0.id, i, task0.url)
-//            }
 
             // if the current context is not leaked, return the current context, or block and create a new one
             val context = computeContextIfLeaked()
@@ -136,8 +129,8 @@ class BrowserPrivacyManager(
             require(oldContext.isLeaked) { "Privacy context #${oldContext.id} should be leaked" }
             // TODO: check why there are still workers
             // require(numWorkers.get() == 0) { "Should have no workers, actual $numWorkers" }
-            require(numReadyPreemptiveTasks.get() > 0) { "Should have at least one active freezers" }
-            require(numRunningPreemptiveTasks.get() > 0) { "Should have at least one running freezers" }
+            require(numReadyPreemptiveTasks.get() > 0) { "Should have at least one active preemptive task" }
+            require(numRunningPreemptiveTasks.get() > 0) { "Should have at least one running preemptive task" }
             reportZombieContexts()
 
             val newContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
@@ -152,6 +145,10 @@ class BrowserPrivacyManager(
      * @return true if privacy is leaked
      * */
     private fun updatePrivacyContext(privacyContext: PrivacyContext, result: FetchResult) {
+        if (privacyContext.numTasks.get() % 30 == 0) {
+            privacyContext.report()
+        }
+
         val status = result.response.status
         if (privacyContext.isActive && result.task.nPrivacyRetries == 1) {
             when {
@@ -166,6 +163,9 @@ class BrowserPrivacyManager(
 
     private fun logPrivacyLeakWarning(privacyContext: PrivacyContext) {
         log.info("Privacy leak warning {}/#{}", privacyContext.privacyLeakWarnings, privacyContext.id)
+        if (privacyContext.privacyLeakWarnings.get() == 6) {
+            privacyContext.report()
+        }
     }
 
     private fun tracePrivacyContextInactive(privacyContext: PrivacyContext, result: FetchResult) {

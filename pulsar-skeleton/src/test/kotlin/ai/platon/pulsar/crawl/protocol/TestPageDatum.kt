@@ -24,35 +24,35 @@ import org.apache.tika.mime.MimeTypes
 import org.junit.Assert
 import org.junit.Test
 
-class TestContent {
+class TestPageDatum {
 
     @Test
     @Throws(Exception::class)
     fun testGetContentType() {
-        var c: Content
+        var c: PageDatum
         val p = MultiMetadata()
-        c = Content("http://www.foo.com/", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
                 "".toByteArray(charset("UTF8")), "text/html; charset=UTF-8", p, conf)
         Assert.assertEquals("text/html", c.contentType)
-        c = Content("http://www.foo.com/foo.html", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
                 "".toByteArray(charset("UTF8")), "", p, conf)
         Assert.assertEquals("text/html", c.contentType)
-        c = Content("http://www.foo.com/foo.html", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
                 "".toByteArray(charset("UTF8")), null, p, conf)
         Assert.assertEquals("text/html", c.contentType)
-        c = Content("http://www.foo.com/", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
                 "<html></html>".toByteArray(charset("UTF8")), "", p, conf)
         Assert.assertEquals("text/html", c.contentType)
-        c = Content("http://www.foo.com/foo.html", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
                 "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, conf)
         Assert.assertEquals("text/html", c.contentType)
-        c = Content("http://www.foo.com/foo.png", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/foo.png", "http://www.foo.com/",
                 "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, conf)
         Assert.assertEquals("text/html", c.contentType)
-        c = Content("http://www.foo.com/", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
                 "".toByteArray(charset("UTF8")), "", p, conf)
         Assert.assertEquals(MimeTypes.OCTET_STREAM, c.contentType)
-        c = Content("http://www.foo.com/", "http://www.foo.com/",
+        c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
                 "".toByteArray(charset("UTF8")), null, p, conf)
         Assert.assertNotNull(c.contentType)
     }

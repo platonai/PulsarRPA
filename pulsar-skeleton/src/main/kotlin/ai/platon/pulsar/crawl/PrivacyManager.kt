@@ -42,8 +42,10 @@ abstract class PrivacyManager(
 
             // Refresh the context if privacy leaked
             return preempt {
+                // normal tasks must wait until all preemptive tasks are finished, but no new task enters the
+                // critical section
+
                 if (activeContext.isLeaked) {
-                    // all other tasks are waiting until freezer channel is closed
                     // close the current context
                     // until the old context is closed entirely
                     activeContext.use { it.close() }

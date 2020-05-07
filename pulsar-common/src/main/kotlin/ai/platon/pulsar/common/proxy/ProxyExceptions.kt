@@ -13,6 +13,8 @@ open class ProxyException : RuntimeException {
 
 open class NoProxyException(message: String) : ProxyException(message)
 
+open class ProxyExpireException(message: String) : ProxyException(message)
+
 open class ProxyGoneException(message: String) : ProxyException(message)
 
 open class ProxyVendorException : Exception {

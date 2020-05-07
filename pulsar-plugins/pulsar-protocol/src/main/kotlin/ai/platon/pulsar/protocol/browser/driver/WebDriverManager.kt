@@ -36,11 +36,11 @@ class WebDriverManager(
     val elapsedTime get() = Duration.between(startTime, Instant.now())
 
     init {
-        metricRegistry.register(prependReadableClassName(this,"tasks"), object: Gauge<Int> {
-            override fun getValue(): Int = numTasks.get()
+        metricRegistry.register(prependReadableClassName(this,"normalTasks"), object: Gauge<Int> {
+            override fun getValue(): Int = numNormalTasks.get()
         })
-        metricRegistry.register(prependReadableClassName(this,"runningTasks"), object: Gauge<Int> {
-            override fun getValue(): Int = numRunningTasks.get()
+        metricRegistry.register(prependReadableClassName(this,"runningNormalTasks"), object: Gauge<Int> {
+            override fun getValue(): Int = numRunningNormalTasks.get()
         })
         metricRegistry.register(prependReadableClassName(this,"readyPreemptiveTasks"), object: Gauge<Int> {
             override fun getValue(): Int = numReadyPreemptiveTasks.get()
@@ -67,7 +67,8 @@ class WebDriverManager(
      * reactor： tell me if you can do this job
      * proactor: here is a job, tell me if you finished it
      * */
-    suspend fun <R> submit(priority: Int, volatileConfig: VolatileConfig, action: suspend (driver: ManagedWebDriver) -> R): R {
+    suspend fun <R> submit(
+            priority: Int, volatileConfig: VolatileConfig, action: suspend (driver: ManagedWebDriver) -> R): R {
         return whenNormalDeferred {
             val driver = driverPool.take(priority, volatileConfig).apply { startWork() }
             try {
@@ -110,13 +111,9 @@ class WebDriverManager(
     /**
      * Cancel all running tasks and close all web drivers
      * */
-    fun reset(
-            timeToWait: Duration = Duration.ofMinutes(2),
-            onBeforeClose: () -> Unit = {},
-            onAfterClose: () -> Unit = {}
-    ) {
+    fun reset(timeToWait: Duration = Duration.ofMinutes(2)) {
         numReset.mark()
-        closeAll(incognito = true, timeToWait = timeToWait, onBeforeClose = onBeforeClose, onAfterClose = onAfterClose)
+        closeAll(incognito = true, timeToWait = timeToWait)
     }
 
     override fun close() {
@@ -131,20 +128,16 @@ class WebDriverManager(
     private fun closeAll(
             incognito: Boolean = true,
             processExit: Boolean = false,
-            timeToWait: Duration = defaultTimeToWaitForCloseAll,
-            onBeforeClose: () -> Unit = {},
-            onAfterClose: () -> Unit = {}
+            timeToWait: Duration = defaultTimeToWaitForCloseAll
     ) {
+        cancelAll()
         preempt {
             log.info("Closing all web drivers | {}", formatStatus(verbose = true))
-            onBeforeClose()
-            cancelAll()
             if (processExit) {
                 driverPool.use { it.close() }
             } else {
-                driverPool.closeAll(incognito)
+                driverPool.closeAll(incognito, timeToWait = timeToWait)
             }
-            onAfterClose()
         }
     }
 

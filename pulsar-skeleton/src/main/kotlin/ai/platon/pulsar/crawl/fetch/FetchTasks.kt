@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -9,6 +10,7 @@ import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
@@ -158,6 +160,7 @@ class FetchResult(
     val isSuccess get() = status.isSuccess
     val isPrivacyRetry get() = status.isRetry(RetryScope.PRIVACY)
     val isCrawlRetry get() = status.isRetry(RetryScope.CRAWL)
+    val isSmall get() = status.args[ProtocolStatus.ARG_RETRY_REASON] == HtmlIntegrity.TOO_SMALL.toString()
 
     fun canceled() {
         response = ForwardingResponse.canceled(task.page)

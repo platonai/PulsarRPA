@@ -24,18 +24,20 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import java.util.*
 
-class Content {
-    private val version = 0
+/**
+ * The page datum to update a WebPage
+ * */
+class PageDatum {
     /**
-     * The url fetched.
+     * The permanent internal address, the storage key, and is the same as the page's url if not redirected
      */
     var url: String? = null
         private set
     /**
      * The base url for relative links contained in the content. Maybe be
-     * different from url if the request redirected.
+     * different from url if the request redirected
      */
-    var baseUrl: String? = null
+    var location: String? = null
         private set
     /**
      * The binary content retrieved.
@@ -48,7 +50,6 @@ class Content {
     /**
      * Other protocol-specific data.
      */
-    // TODO: when metadata is used?
     var metadata: MultiMetadata
 
     val length get() = (content?.size?:0).toLong()
@@ -62,38 +63,38 @@ class Content {
     /**
      * The url is the permanent internal address, it might not still available to access the target.
      *
-     * BaseUrl is the last working address, it might redirect to url, or it might have additional random parameters.
+     * location is the last working address, it might redirect to url, or it might have additional random parameters.
      *
-     * BaseUrl may be different from url, it's generally normalized.
+     * location may be different from url, it's generally normalized.
      */
-    constructor(url: String, baseUrl: String, content: ByteArray, contentType: String?, metadata: MultiMetadata,
+    constructor(url: String, location: String, content: ByteArray, contentType: String?, metadata: MultiMetadata,
                 conf: ImmutableConfig) {
         this.url = url
-        this.baseUrl = baseUrl
+        this.location = location
         this.content = content
         this.metadata = metadata
         mimeTypes = MimeUtil(conf)
         this.contentType = getContentType(contentType, url, content)
     }
 
-    // The baseUrl where the HTML was retrieved from, to resolve relative links against.
-    constructor(url: String, baseUrl: String, content: ByteArray?, contentType: String?, metadata: MultiMetadata,
+    // The location where the HTML was retrieved from, to resolve relative links against.
+    constructor(url: String, location: String, content: ByteArray?, contentType: String?, metadata: MultiMetadata,
                 mimeTypes: MimeUtil?) {
         this.url = url
-        this.baseUrl = baseUrl
+        this.location = location
         this.content = content
         this.metadata = metadata
         this.mimeTypes = mimeTypes
         this.contentType = getContentType(contentType, url, content)
     }
 
-    override fun equals(o: Any?): Boolean {
-        return o is Content
-                && url == o.url
-                && baseUrl == o.baseUrl
-                && Arrays.equals(content, o.content)
-                && contentType == o.contentType
-                && metadata == o.metadata
+    override fun equals(other: Any?): Boolean {
+        return other is PageDatum
+                && url == other.url
+                && location == other.location
+                && Arrays.equals(content, other.content)
+                && contentType == other.contentType
+                && metadata == other.metadata
     }
 
     override fun hashCode(): Int {
@@ -106,9 +107,9 @@ class Content {
 
     override fun toString(): String {
         return Params.of(
-                "version", version,
+                "version", serializeId,
                 "url", url,
-                "baseUrl", baseUrl,
+                "location", location,
                 "metadata", metadata,
                 "contentType", contentType,
                 "content", String(content!!)
@@ -117,5 +118,6 @@ class Content {
 
     companion object {
         val EMPTY_CONTENT = ByteArray(0)
+        val serializeId = 0L
     }
 }

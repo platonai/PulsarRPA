@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -30,11 +31,12 @@ import kotlin.concurrent.withLock
 abstract class PreemptChannelSupport(val name: String = "") {
     private val lock = ReentrantLock()
     private val noPreemptiveTasks = lock.newCondition()
-    private val noTasks = lock.newCondition()
+    private val noNormalTasks = lock.newCondition()
     protected val numReadyPreemptiveTasks = AtomicInteger()
     protected val numRunningPreemptiveTasks = AtomicInteger()
-    protected val numTasks = AtomicInteger()
-    protected val numRunningTasks = AtomicInteger()
+    protected val numNormalTasks = AtomicInteger()
+    protected val numRunningNormalTasks = AtomicInteger()
+    protected val normalTaskTimeout = Duration.ofMinutes(3)
     private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numReadyPreemptiveTasks.get() > 0
@@ -73,14 +75,14 @@ abstract class PreemptChannelSupport(val name: String = "") {
         waitUntilNotPreempted()
 
         try {
-            numRunningTasks.incrementAndGet()
+            numRunningNormalTasks.incrementAndGet()
             return task()
         } finally {
             lock.withLock {
-                numRunningTasks.decrementAndGet()
-                if (numTasks.decrementAndGet() == 0) {
+                numRunningNormalTasks.decrementAndGet()
+                if (numNormalTasks.decrementAndGet() == 0) {
                     // all preemptive tasks  are allowed to pass
-                    noTasks.signalAll()
+                    noNormalTasks.signalAll()
                 }
             }
         }
@@ -94,19 +96,20 @@ abstract class PreemptChannelSupport(val name: String = "") {
             return task()
         } finally {
             lock.withLock {
-                if (numTasks.decrementAndGet() == 0) {
+                if (numNormalTasks.decrementAndGet() == 0) {
                     // all preemptive tasks  are allowed to pass
-                    noTasks.signalAll()
+                    noNormalTasks.signalAll()
                 }
             }
         }
     }
 
     private fun waitUntilNoNormalTasks() {
+        val ttl = Instant.now().plus(normalTaskTimeout).toEpochMilli()
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
-            while (numTasks.get() > 0 && nanos > 0) {
-                nanos = noTasks.awaitNanos(nanos)
+            while (numNormalTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
+                nanos = noNormalTasks.awaitNanos(nanos)
             }
         }
     }
@@ -114,7 +117,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
     private fun waitUntilNotPreempted() {
         lock.withLock {
             if (numReadyPreemptiveTasks.get() > 0) {
-                trace("There are $numTasks tasks waiting for $numReadyPreemptiveTasks preemptive tasks to finish")
+                trace("There are $numNormalTasks tasks waiting for $numReadyPreemptiveTasks preemptive tasks to finish")
             }
 
             var nanos = pollingTimeout.toNanos()
@@ -123,7 +126,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
             }
 
             // task channel is open now
-            numTasks.incrementAndGet()
+            numNormalTasks.incrementAndGet()
         }
     }
 
@@ -137,6 +140,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
     private fun formatStatus(): String {
         return "preemptive tasks : $numReadyPreemptiveTasks, " +
                 " running preemptive tasks: $numRunningPreemptiveTasks," +
-                " normal tasks: $numTasks"
+                " normal tasks: $numNormalTasks"
     }
 }

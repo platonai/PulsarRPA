@@ -57,12 +57,12 @@ interface Protocol : Configurable, AutoCloseable {
     fun cancelAll() {}
 
     /**
-     * Returns the [Content] for a fetch list entry.
+     * Returns the [ProtocolOutput] for a fetch list entry.
      */
     fun getProtocolOutput(page: WebPage): ProtocolOutput
 
     /**
-     * Returns the [Content] for a fetch list entry.
+     * Returns the [ProtocolOutput] for a fetch list entry.
      */
     suspend fun getProtocolOutputDeferred(page: WebPage): ProtocolOutput
 
