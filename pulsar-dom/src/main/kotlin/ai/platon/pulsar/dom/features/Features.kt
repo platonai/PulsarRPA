@@ -100,6 +100,7 @@ data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = 
             primaryFeatureNames = primaryFeatures.map { it.name }
             floatFeatureNames = floatFeatures.map { it.name }
 
+            // featureNamesToKeys = registeredFeatures.associate { it.name to it.key }
             featureNamesToKeys = registeredFeatures.associateBy({ it.name }, { it.key })
             featureKeysToNames = registeredFeatures.associateBy({ it.key }, { it.name })
 

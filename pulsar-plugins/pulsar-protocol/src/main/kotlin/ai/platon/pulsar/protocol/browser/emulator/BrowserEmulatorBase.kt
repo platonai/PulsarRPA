@@ -18,12 +18,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
         val privacyContextManager: BrowserPrivacyManager,
-        val emulateEventHandler: BrowserEmulateEventHandler,
+        val eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
         val messageWriter: MiscMessageWriter,
         val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
     val tracer = log.takeIf { it.isTraceEnabled }
+    val eventHandler = eventHandlerFactory.eventHandler
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     var charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)

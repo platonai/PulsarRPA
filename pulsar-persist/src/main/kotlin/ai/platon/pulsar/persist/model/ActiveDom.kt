@@ -5,7 +5,6 @@ import com.google.gson.Gson
 /**
  * An active DOM is a DOM inside a real browser
  * */
-
 data class ActiveDomStatus(
         val n: Int = 0,
         val scroll: Int = 0,

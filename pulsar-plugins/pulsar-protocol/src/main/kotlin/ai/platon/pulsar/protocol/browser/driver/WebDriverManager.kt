@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -28,6 +29,7 @@ class WebDriverManager(
     val driverFactory = WebDriverFactory(driverControl, proxyManager, immutableConfig)
     val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
 
+    private val taskTimeout = Duration.ofMinutes(5)
     private val defaultTimeToWaitForCloseAll = Duration.ofMinutes(2)
     private val closed = AtomicBoolean()
     val startTime = Instant.now()
@@ -72,7 +74,9 @@ class WebDriverManager(
         return whenNormalDeferred {
             val driver = driverPool.take(priority, volatileConfig).apply { startWork() }
             try {
-                action(driver)
+                withTimeout(taskTimeout.toMillis()) {
+                    action(driver)
+                }
             } finally {
                 driverPool.put(driver)
             }

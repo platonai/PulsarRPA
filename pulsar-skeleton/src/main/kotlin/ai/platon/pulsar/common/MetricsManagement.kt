@@ -1,5 +1,8 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
@@ -8,24 +11,31 @@ import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import okhttp3.internal.threadName
 import org.slf4j.LoggerFactory
+import java.nio.file.Files
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 
-class MetricsManagement: AutoCloseable {
+class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
+    private val timeIdent = DateTimes.formatNow("MMdd")
+    private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
+    private val reportDir = AppPaths.get(AppPaths.METRICS_DIR, timeIdent, jobIdent)
+
     private val metricRegistry: MetricRegistry
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: Slf4jReporter
 
     init {
+        Files.createDirectories(reportDir)
+
         SharedMetricRegistries.setDefault("pulsar")
         metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
         jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
         csvReporter = CsvReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build(AppPaths.METRICS_DIR.toFile())
+                .build(reportDir.toFile())
 
         val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
         val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)

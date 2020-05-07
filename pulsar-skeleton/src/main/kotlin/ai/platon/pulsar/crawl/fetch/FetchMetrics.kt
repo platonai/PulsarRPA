@@ -63,8 +63,14 @@ class FetchMetrics(
     private val tasks = metricRegistry.meter(prependReadableClassName(this,"tasks"))
     private val successTasks = metricRegistry.meter(prependReadableClassName(this,"successTasks"))
     private val finishedTasks = metricRegistry.meter(prependReadableClassName(this,"finishedTasks"))
-    private val histogramContentBytes = metricRegistry.histogram(prependReadableClassName(this,"hContentBytes"))
     private val meterContentBytes = metricRegistry.meter(prependReadableClassName(this,"mContentBytes"))
+    private val histogramContentBytes = metricRegistry.histogram(prependReadableClassName(this,"hContentBytes"))
+
+    private val pageImages = metricRegistry.histogram(prependReadableClassName(this, "pageImages"))
+    private val pageAnchors = metricRegistry.histogram(prependReadableClassName(this, "pageAnchors"))
+    private val pageNumbers = metricRegistry.histogram(prependReadableClassName(this, "pageNumbers"))
+    private val pageSmallTexts = metricRegistry.histogram(prependReadableClassName(this, "pageSmallTexts"))
+    private val pageHeights = metricRegistry.histogram(prependReadableClassName(this, "pageHeights"))
 
     private val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     /**
@@ -152,6 +158,14 @@ class FetchMetrics(
         val bytes = page.contentBytes.toLong()
         histogramContentBytes.update(bytes)
         meterContentBytes.mark(bytes)
+
+        page.activeDomMultiStatus?.lastStat?.apply {
+            pageAnchors.update(na)
+            pageImages.update(ni)
+            pageNumbers.update(nnm)
+            pageSmallTexts.update(nst)
+            pageHeights.update(h)
+        }
 
         val i = finishedTasks.count
 
@@ -277,6 +291,7 @@ class FetchMetrics(
 
     private fun updateNetworkTraffic() {
         systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+                .coerceAtLeast(systemNetworkBytesRecv)
     }
 
     private fun logAvailableHosts() {

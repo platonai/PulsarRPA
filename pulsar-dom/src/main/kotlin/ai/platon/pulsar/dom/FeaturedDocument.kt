@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.config.AppConstants.DEFAULT_NODE_FEATURE_CALCULAT
 import ai.platon.pulsar.common.config.AppConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.common.math.vectors.isNotEmpty
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.select
@@ -24,10 +25,7 @@ import java.nio.file.Path
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
-        private val nodeFeatureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
-        // TODO: create only once, and use ReflectionUtils
-        val nodeFeatureCalculator: NodeVisitor get() = nodeFeatureCalculatorClass.newInstance()
-        // Class.forName(nodeFeatureCalculatorClass.name)
+        private val FEATURE_CALCULATOR_CLASS: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
 
         val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -64,8 +62,9 @@ open class FeaturedDocument(val document: Document) {
 
     init {
         if (features.isEmpty) {
-            // TODO: avoid reflection every time
-            NodeTraversor.traverse(nodeFeatureCalculator, document)
+            val featureCalculator = FEATURE_CALCULATOR_CLASS.newInstance()
+            NodeTraversor.traverse(featureCalculator, document)
+            require(features.isNotEmpty)
         }
     }
 

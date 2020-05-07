@@ -226,6 +226,7 @@ public interface CapabilityTypes {
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
+    String BROWSER_EMULATE_EVENT_HANDLER = "browser.emulate.event.handler";
     /**
      * Proxy
      */

@@ -27,10 +27,10 @@ import kotlin.random.Random
  */
 open class BrowserEmulator(
         privacyContextManager: BrowserPrivacyManager,
-        emulateEventHandler: BrowserEmulateEventHandler,
+        eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
-) : BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
+) : BrowserEmulatorBase(privacyContextManager, eventHandlerFactory, messageWriter, immutableConfig) {
 
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts
@@ -126,7 +126,7 @@ open class BrowserEmulator(
             browseTask.status = ProtocolStatus.retry(RetryScope.CRAWL)
         }
 
-        return emulateEventHandler.onAfterNavigate(browseTask)
+        return eventHandler.onAfterNavigate(browseTask)
     }
 
     @Throws(CancellationException::class,
@@ -137,7 +137,7 @@ open class BrowserEmulator(
         checkState(driver)
         checkState(task)
 
-        emulateEventHandler.logBeforeNavigate(task, driverConfig)
+        eventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -271,7 +271,7 @@ open class BrowserEmulator(
             } else if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val errorResult = emulateEventHandler.handleChromeError(message)
+                val errorResult = eventHandler.handleChromeError(message)
                 status = errorResult.status
                 result.activeDomMessage = errorResult.activeDomMessage
                 result.state = FlowState.BREAK

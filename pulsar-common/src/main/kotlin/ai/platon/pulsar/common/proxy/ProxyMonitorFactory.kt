@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 class ProxyMonitorFactory(val conf: ImmutableConfig): AutoCloseable {
 
-    // TODO: by lazy is just OK
     private val proxyMonitor = AtomicReference<ProxyMonitor>()
     fun get(): ProxyMonitor = createIfAbsent(conf)
 

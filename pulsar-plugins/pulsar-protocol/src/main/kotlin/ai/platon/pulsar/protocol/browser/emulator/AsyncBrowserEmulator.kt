@@ -27,10 +27,10 @@ import java.util.concurrent.ThreadLocalRandom
  */
 open class AsyncBrowserEmulator(
         privacyContextManager: BrowserPrivacyManager,
-        emulateEventHandler: BrowserEmulateEventHandler,
+        eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(privacyContextManager, emulateEventHandler, messageWriter, immutableConfig) {
+): BrowserEmulatorBase(privacyContextManager, eventHandlerFactory, messageWriter, immutableConfig) {
 
     val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
 
@@ -121,7 +121,8 @@ open class AsyncBrowserEmulator(
             navigateTask.apply {
                 status = interactResult.protocolStatus
                 activeDomMessage = interactResult.activeDomMessage
-                page.activeDomMultiStatus = navigateTask.activeDomMessage?.multiStatus
+                page.activeDomMultiStatus = activeDomMessage?.multiStatus
+                page.activeDomUrls = activeDomMessage?.urls
                 // TODO: may throw here
                 pageSource = driver.pageSource
             }
@@ -131,7 +132,7 @@ open class AsyncBrowserEmulator(
             navigateTask.status = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
-        return emulateEventHandler.onAfterNavigate(navigateTask)
+        return eventHandler.onAfterNavigate(navigateTask)
     }
 
     @Throws(CancellationException::class,
@@ -139,7 +140,7 @@ open class AsyncBrowserEmulator(
             IllegalClassException::class,
             WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): InteractResult {
-        emulateEventHandler.logBeforeNavigate(task, driverConfig)
+        eventHandler.logBeforeNavigate(task, driverConfig)
         driver.setTimeouts(driverConfig)
         // TODO: handle frames
         // driver.switchTo().frame(1);
@@ -223,7 +224,7 @@ open class AsyncBrowserEmulator(
             } else if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val errorResult = emulateEventHandler.handleChromeError(message)
+                val errorResult = eventHandler.handleChromeError(message)
                 status = errorResult.status
                 result.activeDomMessage = errorResult.activeDomMessage
                 result.state = FlowState.BREAK

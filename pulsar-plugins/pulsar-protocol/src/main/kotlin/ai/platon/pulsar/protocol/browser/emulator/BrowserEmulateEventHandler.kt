@@ -44,6 +44,7 @@ open class BrowserEmulateEventHandler(
     private val smallPages = metrics.meter(prependReadableClassName(this, "smallPages"))
     private val smallPageRate = metrics.histogram(prependReadableClassName(this, "smallPageRate"))
     private val emptyPages = metrics.meter(prependReadableClassName(this, "emptyPages"))
+
     private val numNavigates = AtomicInteger()
     private val driverPool = driverManager.driverPool
 

@@ -953,28 +953,46 @@ public class WebPage {
     }
 
     // TODO: use a separate avro field to hold BROWSER_JS_DATA
-    // TODO: it's very slow if deserialize from json every time
     @Nullable
     public ActiveDomMultiStatus getActiveDomMultiStatus() {
-        String json = getMetadata().get(Name.ACTIVE_DOM_MULTI_STATUS);
-        if (json != null) {
-            return ActiveDomMultiStatus.Companion.fromJson(json);
+        // cached
+        Name name = Name.ACTIVE_DOM_MULTI_STATUS;
+        Object value = variables.get(name);
+        if (value instanceof ActiveDomMultiStatus) {
+            return (ActiveDomMultiStatus)value;
+        } else {
+            String json = getMetadata().get(name);
+            if (json != null) {
+                ActiveDomMultiStatus status = ActiveDomMultiStatus.Companion.fromJson(json);
+                variables.set(name, status);
+                return status;
+            }
         }
 
         return null;
     }
 
-    public void setActiveDomMultiStatus(ActiveDomMultiStatus jsData) {
-        if (jsData != null) {
-            getMetadata().set(Name.ACTIVE_DOM_MULTI_STATUS, jsData.toJson());
+    public void setActiveDomMultiStatus(ActiveDomMultiStatus domStatus) {
+        if (domStatus != null) {
+            variables.set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus);
+            getMetadata().set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus.toJson());
         }
     }
 
     @Nullable
     public ActiveDomUrls getActiveDomUrls() {
-        String json = getMetadata().get(Name.ACTIVE_DOM_URLS);
-        if (json != null) {
-            return ActiveDomUrls.Companion.fromJson(json);
+        // cached
+        Name name = Name.ACTIVE_DOM_URLS;
+        Object value = variables.get(name);
+        if (value instanceof ActiveDomUrls) {
+            return (ActiveDomUrls)value;
+        } else {
+            String json = getMetadata().get(name);
+            if (json != null) {
+                ActiveDomUrls status = ActiveDomUrls.Companion.fromJson(json);
+                variables.set(name, status);
+                return status;
+            }
         }
 
         return null;
@@ -982,6 +1000,7 @@ public class WebPage {
 
     public void setActiveDomUrls(ActiveDomUrls urls) {
         if (urls != null) {
+            variables.set(Name.ACTIVE_DOM_URLS, urls);
             getMetadata().set(Name.ACTIVE_DOM_URLS, urls.toJson());
         }
     }

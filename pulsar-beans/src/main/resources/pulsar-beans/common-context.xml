@@ -21,7 +21,9 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close"/>
+    <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
 
     <bean id="fetchMetrics" class="ai.platon.pulsar.crawl.fetch.FetchMetrics" destroy-method="close">
         <constructor-arg ref="metricsManagement"/>

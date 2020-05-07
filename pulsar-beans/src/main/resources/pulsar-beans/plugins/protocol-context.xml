@@ -27,7 +27,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserEmulateEventHandler" class="ai.platon.pulsar.protocol.browser.emulator.amazon.AmazonBrowserEmulateEventHandler">
+    <bean id="browserEmulatorEventHandlerFactory" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatorEventHandlerFactory">
         <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
@@ -35,14 +35,14 @@
 
     <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator" destroy-method="close">
         <constructor-arg ref="browserPrivacyManager"/>
-        <constructor-arg ref="browserEmulateEventHandler"/>
+        <constructor-arg ref="browserEmulatorEventHandlerFactory"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="asyncBrowserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.AsyncBrowserEmulator" destroy-method="close">
         <constructor-arg ref="browserPrivacyManager"/>
-        <constructor-arg ref="browserEmulateEventHandler"/>
+        <constructor-arg ref="browserEmulatorEventHandlerFactory"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
