@@ -146,11 +146,14 @@ class ProxyContext(
     private val maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     private val minTimeToLive = Duration.ofSeconds(10)
     private val closed = AtomicBoolean()
+
     /**
      * The proxy for this context
      * */
     var proxyEntry: ProxyEntry? = null
         private set
+    val isEnabled get() = proxyMonitor.isEnabled
+    val isDisabled get() = !isEnabled
     val isActive get() = proxyMonitor.isActive && !closed.get()
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -308,13 +311,19 @@ open class BrowserPrivacyContext(
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)
         beforeRun(task)
-        return proxyContext.run(task, browseFun).also { afterRun(it) }
+        val result = proxyContext.takeIf { it.isEnabled }
+                ?.run(task, browseFun)
+                ?:driverContext.run(task, browseFun)
+        return result.also { afterRun(it) }
     }
 
     open suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)
         beforeRun(task)
-        return proxyContext.runDeferred(task, browseFun).also { afterRun(it) }
+        val result = proxyContext.takeIf { it.isEnabled }
+                ?.runDeferred(task, browseFun)
+                ?:driverContext.runDeferred(task, browseFun)
+        return result.also { afterRun(it) }
     }
 
     override fun report() {
@@ -330,11 +339,11 @@ open class BrowserPrivacyContext(
 
         if (smallPageRate > 0.5) {
             log.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
-                    id,
-                    numSmallPages, String.format("%.1f%%", 100 * smallPageRate))
+                    id, numSmallPages, String.format("%.1f%%", 100 * smallPageRate))
         }
 
-        if (throughput < 1) {
+        // 0 to disable
+        if (throughput < 0) {
             log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", id)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
         }

@@ -43,6 +43,8 @@ public interface CapabilityTypes {
     String PULSAR_CLUSTER_SLAVES = "pulsar.cluster.slaves";
     String DRY_RUN = "pulsar.dry.run";
 
+    String APPLICATION_METRICS_ENABLED = "application.metrics.enabled";
+
     /**
      * Args
      */

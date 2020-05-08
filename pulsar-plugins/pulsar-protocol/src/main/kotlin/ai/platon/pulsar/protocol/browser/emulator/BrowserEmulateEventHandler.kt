@@ -252,10 +252,10 @@ open class BrowserEmulateEventHandler(
     }
 
     private fun exportIfNecessary(task: NavigateTask) {
-        exportIfNecessary(task.pageSource, task.status, task.page, task.driver)
+        exportIfNecessary(task.pageSource, task.status, task.page)
     }
 
-    private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage, driver: ManagedWebDriver) {
+    private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage) {
         if (pageSource.isEmpty()) {
             return
         }

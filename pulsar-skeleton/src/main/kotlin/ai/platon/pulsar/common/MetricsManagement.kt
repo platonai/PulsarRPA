@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
@@ -9,17 +8,16 @@ import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.Slf4jReporter
 import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import okhttp3.internal.threadName
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.util.concurrent.Executors
-import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 
 class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.get(AppPaths.METRICS_DIR, timeIdent, jobIdent)
+    val metricsEnabled = conf.getBoolean(CapabilityTypes.APPLICATION_METRICS_ENABLED, true)
 
     private val metricRegistry: MetricRegistry
     private val jmxReporter: JmxReporter

@@ -265,7 +265,7 @@ class LoadComponent(
         val url = normUrl.url
         val options = normUrl.options
         if (globalFetchingUrls.contains(url)) {
-            log.debug("Load later, it's fetching by someone else | {}", url)
+            log.takeIf { it.isDebugEnabled }?.debug("Page is already being fetched | {}", url)
             return WebPage.NIL
         }
 
