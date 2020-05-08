@@ -103,7 +103,7 @@ open class PulsarSession(
 
         return if (enableCache) {
             val cache = context.pageCache
-            cache.get(url.url)?:context.load(url).also { cache.put(it.url, it) }
+            cache.get(url.url) ?: context.load(url).also { cache.put(it.url, it) }
         } else {
             context.load(url)
         }
@@ -137,7 +137,7 @@ open class PulsarSession(
 
         return if (enableCache) {
             val cache = context.pageCache
-            cache.get(url.url)?:context.loadDeferred(url).also { cache.put(it.url, it) }
+            cache.get(url.url) ?: context.loadDeferred(url).also { cache.put(it.url, it) }
         } else context.loadDeferred(url)
     }
 
@@ -159,7 +159,7 @@ open class PulsarSession(
     fun loadAll(urls: Iterable<String>, options: LoadOptions, itemPages: Boolean = false): Collection<WebPage> {
         ensureAlive()
         val normUrls = normalize(urls, options, itemPages)
-        val opt = normUrls.firstOrNull()?.options?:return listOf()
+        val opt = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
             getCachedOrLoadAll(normUrls, opt)
@@ -179,7 +179,7 @@ open class PulsarSession(
         ensureAlive()
         options.preferParallel = true
         val normUrls = normalize(urls, options, itemPages)
-        val opt = normUrls.firstOrNull()?.options?:return listOf()
+        val opt = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
             getCachedOrLoadAll(normUrls, opt)
@@ -210,11 +210,14 @@ open class PulsarSession(
     /**
      * Parse the Web page into DOM.
      * If the Web page is not changed since last parse, use the last result if available
-     *
-     * TODO: harvest task can not use the cached document since the feature vector can be changed
      */
-    fun parse(page: WebPage): FeaturedDocument {
+    fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument {
         ensureAlive()
+
+        if (noCache) {
+            return context.parse(page)
+        }
+
         val url = page.url
         if (!enableCache) {
             return context.parse(page)

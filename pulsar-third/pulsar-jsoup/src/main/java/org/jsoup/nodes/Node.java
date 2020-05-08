@@ -12,6 +12,7 @@ import org.jsoup.select.NodeVisitor;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.

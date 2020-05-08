@@ -195,9 +195,8 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val docs = Queries.loadOutPages(session,
-                portal, restrictCss, offset, limit, normalize, ignoreQuery)
-                .map(session::parse)
+        val docs = Queries.loadOutPages(session, portal, restrictCss, offset, limit, normalize, ignoreQuery)
+                .map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
@@ -251,7 +250,7 @@ object DomFunctionTables {
 
         val docs =
                 Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
-                .map(session::parse)
+                .map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
