@@ -4,6 +4,8 @@ import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
+import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
 import ai.platon.pulsar.protocol.browser.conf.blockingUrls
@@ -86,7 +88,7 @@ class ChromeDevtoolsDriver(
     private val emulation get() = devTools.emulation
 
     // TODO: load blocking rules from config files
-    private val enableUrlBlocking = true
+    private val enableUrlBlocking = Systems.getProperty(CapabilityTypes.BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING, false)
     private val enableBlockingReport = false
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
@@ -143,12 +145,14 @@ class ChromeDevtoolsDriver(
 //            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
 //            }
 
-            setupUrlBlocking()
             page.enable()
 
             // NOTE: There are too many network relative traffic, especially when the proxy is disabled
             // TODO: Find out the reason why there are too many network relative traffic, especially when the proxy is disabled
-            network.enable()
+            if (enableUrlBlocking) {
+                setupUrlBlocking()
+                network.enable()
+            }
 //            fetch.enable()
 
             navigateUrl = url
@@ -320,7 +324,7 @@ class ChromeDevtoolsDriver(
                     log.info("Resource ({}) might be blocked | {}", it.type, it.request.url)
                 }
 
-                // TODO: when fetch is enabled, no resources is return
+                // TODO: when fetch is enabled, no resources is return, find out the reason
                 // fetch.failRequest(it.requestId, ErrorReason.BLOCKED_BY_RESPONSE)
                 // fetch.fulfillRequest(it.requestId, 200, listOf())
             }

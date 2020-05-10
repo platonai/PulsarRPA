@@ -229,6 +229,7 @@ public interface CapabilityTypes {
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATE_EVENT_HANDLER = "browser.emulate.event.handler";
+    String BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING = "browser.devtools.enable.url.blocking";
     /**
      * Proxy
      */

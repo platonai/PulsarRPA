@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.examples.Crawler
+import ai.platon.pulsar.examples.common.Crawler
 
 class AmazonAccess: Crawler() {
     private val url = "https://www.amazon.com/"

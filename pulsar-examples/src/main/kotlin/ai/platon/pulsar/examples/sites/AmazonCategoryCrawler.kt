@@ -1,15 +1,9 @@
 package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.Documents
-import ai.platon.pulsar.dom.nodes.node.ext.name
-import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
-import ai.platon.pulsar.examples.Crawler
-import ai.platon.pulsar.persist.WebPage
-import org.apache.commons.lang3.StringUtils
-import org.jsoup.nodes.Element
+import ai.platon.pulsar.examples.common.Crawler
 
 class AmazonCategories: Crawler() {
     private val url = "https://www.amazon.com/"

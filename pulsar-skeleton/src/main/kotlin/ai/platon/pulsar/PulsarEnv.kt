@@ -1,6 +1,7 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -95,6 +96,7 @@ class PulsarEnv {
                 active.set(false)
                 // TODO: still can be managed by spring
                 PulsarContext.getOrCreate().use { it.close() }
+//                applicationContext.getBean(MetricsManagement::class.java).use { it.close() }
                 applicationContext.close()
             }
         }

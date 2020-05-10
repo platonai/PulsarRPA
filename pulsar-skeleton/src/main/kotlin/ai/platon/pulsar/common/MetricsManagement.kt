@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
     private val timeIdent = DateTimes.formatNow("MMdd")
@@ -23,6 +24,7 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: Slf4jReporter
+    private val closed = AtomicBoolean()
 
     init {
         Files.createDirectories(reportDir)
@@ -52,10 +54,12 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
     }
 
     override fun close() {
-        slf4jReporter.report()
+        if (closed.compareAndSet(false, true)) {
+            slf4jReporter.report()
 
-        csvReporter.use { it.close() }
-        slf4jReporter.use { it.close() }
-        jmxReporter.use { it.close() }
+            csvReporter.use { it.close() }
+            slf4jReporter.use { it.close() }
+            jmxReporter.use { it.close() }
+        }
     }
 }

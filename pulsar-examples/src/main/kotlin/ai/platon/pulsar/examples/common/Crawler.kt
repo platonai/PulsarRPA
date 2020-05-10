@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.examples.common
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv

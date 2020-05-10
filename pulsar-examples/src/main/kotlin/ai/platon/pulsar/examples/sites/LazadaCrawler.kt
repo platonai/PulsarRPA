@@ -1,6 +1,6 @@
 package ai.platon.pulsar.examples.sites
 
-import ai.platon.pulsar.examples.Crawler
+import ai.platon.pulsar.examples.common.Crawler
 
 /**
  * Test for Thai language
@@ -8,7 +8,7 @@ import ai.platon.pulsar.examples.Crawler
 fun main() {
     val portalUrl = "https://www.lazada.com.my/shop-pressure-cookers/"
     val args = """
-        -ic -i 1s -ii 1s -ol ".product-recommend-items__item-wrapper > a" -query .product-briefing
+        -i 1s -ii 1s -ol ".product-recommend-items__item-wrapper > a" -query .product-briefing
     """.trimIndent()
     Crawler().loadOutPages(portalUrl, args)
 }

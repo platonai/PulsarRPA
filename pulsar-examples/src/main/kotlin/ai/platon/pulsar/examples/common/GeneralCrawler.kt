@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples
+package ai.platon.pulsar.examples.common
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.FileCommand
@@ -134,10 +134,10 @@ class GeneralCrawler: Crawler() {
         i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
 
         val pages = i.loadAll(links, LoadOptions.parse(args))
-
-        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
-            println(it?.text()?:"(null)")
-        }
+//
+//        pages.map { i.parse(it) }.map { it.first(".goods_price") }.forEach {
+//            println(it?.text()?:"(null)")
+//        }
 
         println("All done.")
         // page.liveLinks.keys.stream().parallel().forEach { i.load(it.toString()) }
@@ -235,9 +235,9 @@ class GeneralCrawler: Crawler() {
     }
 
     fun run() {
-        load()
+        // load()
         // collectLinks()
-        // loadOutPages()
+        loadOutPages()
         // loadOutPagesSinopr()
         // repeat(10) {
         //   parallelLoadOutPages()
@@ -250,5 +250,5 @@ class GeneralCrawler: Crawler() {
 }
 
 fun main() {
-    GeneralCrawler().run()
+    GeneralCrawler().use { it.run() }
 }

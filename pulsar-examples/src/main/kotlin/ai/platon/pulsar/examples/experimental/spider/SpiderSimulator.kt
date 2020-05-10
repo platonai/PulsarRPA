@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package ai.platon.pulsar.examples.spider
+package ai.platon.pulsar.examples.experimental.spider
 
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil

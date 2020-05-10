@@ -23,13 +23,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 open class ProxyMonitor(
-        private val watchInterval: Duration = Duration.ofSeconds(1),
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private var executor: ScheduledExecutorService? = null
     private var scheduledFuture: ScheduledFuture<*>? = null
 
     var initialDelay = Duration.ofSeconds(5)
+    var watchInterval: Duration = Duration.ofSeconds(1)
     var lastActiveTime = Instant.now()
     var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(15))
     var idleCount = 0
