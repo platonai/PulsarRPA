@@ -22,7 +22,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.5.0</version>
+    <version>1.5.1</version>
 
     <name>Pulsar</name>
 
