@@ -13,12 +13,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- TODO: maven may not support locally relative parent path -->
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
-        <version>1</version>
-        <relativePath>./platon/pom.xml</relativePath>
+        <version>2</version>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
@@ -29,28 +27,31 @@
     <name>Pulsar</name>
 
     <modules>
-        <module>platon</module>
         <module>pulsar-common</module>
-        <module>pulsar-proxy</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>
-        <module>pulsar-dom</module>
-        <module>pulsar-mapr</module>
         <module>pulsar-beans</module>
-        <module>pulsar-ql-common</module>
-        <module>pulsar-ql-server</module>
-        <module>pulsar-app</module>
-        <module>pulsar-examples</module>
     </modules>
 
     <profiles>
+
+        <profile>
+            <id>dom</id>
+            <activation>
+                <property>
+                    <name>active-dom</name>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-dom</module>
+            </modules>
+        </profile>
 
         <profile>
             <id>plugins</id>
             <activation>
                 <property>
                     <name>active-plugins</name>
-                    <value>true</value>
                 </property>
             </activation>
             <modules>
@@ -59,16 +60,27 @@
         </profile>
 
         <profile>
+            <id>sql</id>
+            <activation>
+                <property>
+                    <name>active-sql</name>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-ql-common</module>
+                <module>pulsar-ql-server</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>rest</id>
             <activation>
                 <property>
-                    <name>active-rest-api</name>
-                    <value>true</value>
+                    <name>active-rest</name>
                 </property>
             </activation>
             <modules>
                 <module>pulsar-rest</module>
-                <module>pulsar-rest-example</module>
             </modules>
         </profile>
 
@@ -77,7 +89,6 @@
             <activation>
                 <property>
                     <name>active-third</name>
-                    <value>true</value>
                 </property>
             </activation>
             <modules>
@@ -86,10 +97,46 @@
         </profile>
 
         <profile>
+            <id>tools</id>
+            <activation>
+                <property>
+                    <name>active-tools</name>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-tools</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>app</id>
+            <activation>
+                <property>
+                    <name>active-app</name>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-app</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>examples</id>
+            <activation>
+                <property>
+                    <name>active-examples</name>
+                </property>
+            </activation>
+            <modules>
+                <module>pulsar-examples</module>
+            </modules>
+        </profile>
+
+        <profile>
             <id>assembly</id>
             <properties>
-                <active-plugins>true</active-plugins>
                 <pulsar.skip.assembly>false</pulsar.skip.assembly>
+                <pulsar.active.all.modules>true</pulsar.active.all.modules>
             </properties>
             <modules>
                 <module>pulsar-distribution</module>
@@ -133,17 +180,7 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-proxy</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-skeleton</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-mapr</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -169,6 +206,11 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-schedule</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-index</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -177,11 +219,18 @@
                 <artifactId>pulsar-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-proxyee</artifactId>
+                <artifactId>pulsar-browser</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-chrome-devtools</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-dom</artifactId>

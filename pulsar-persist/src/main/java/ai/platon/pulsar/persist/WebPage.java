@@ -16,8 +16,9 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
-import ai.platon.pulsar.common.DateTimeUtil;
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.DateTimes;
+import ai.platon.pulsar.common.HtmlIntegrity;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
@@ -26,18 +27,22 @@ import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
 import ai.platon.pulsar.persist.metadata.*;
+import ai.platon.pulsar.persist.model.ActiveDomMultiStatus;
+import ai.platon.pulsar.persist.model.ActiveDomUrls;
+import ai.platon.pulsar.persist.model.PageModel;
+import ai.platon.pulsar.persist.model.WebPageFormatter;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.gora.util.ByteUtils;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -50,8 +55,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static ai.platon.pulsar.common.config.PulsarConstants.*;
+import static ai.platon.pulsar.common.config.AppConstants.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
@@ -59,7 +65,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
  * <p>
  * Notice: Use a build-in java string or a Utf8 to serialize strings?
  *
- * @see org.apache.gora.hbase.util.HBaseByteInterface#fromBytes
+ * see org .apache .gora. hbase. util .HBaseByteInterface #fromBytes
  * <p>
  * In serializetion phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
  * in deserialization phrase, every string are wrapped to be a Utf8
@@ -76,11 +82,16 @@ public class WebPage {
     public static LocalDateTime middleNight = LocalDateTime.now().truncatedTo(DAYS);
     public static Instant middleNightInstant = Instant.now().truncatedTo(DAYS);
     public static ZoneId defaultZoneId = ZoneId.systemDefault();
+    public static AtomicInteger sequencer = new AtomicInteger();
+    public static WebPage NIL = newInternalPage(NIL_PAGE_URL, 0, "nil", "nil");
 
-    public static WebPage NIL = newInternalPage(NIL_PAGE_URL, "nil", "nil");
+    /**
+     * The process scope WebPage instance sequence
+     */
+    private Integer id = sequencer.incrementAndGet();
     /**
      * The url is the permanent internal address, and the location is the last working address
-     * */
+     */
     private String url = "";
     /**
      * The reversed url of the web page, it's also the key of the underlying storage of this object
@@ -91,11 +102,12 @@ public class WebPage {
      */
     private GWebPage page;
     /**
-     * Object scope configuration
+     * Web page scope configuration
      */
     private VolatileConfig volatileConfig;
     /**
-     * Object scope variables
+     * Web page scope variables
+     * TODO : we may use it a new CrawlContext to track all context scope variables
      */
     private Variables variables = new Variables();
 
@@ -123,26 +135,26 @@ public class WebPage {
         }
     }
 
-    @Nonnull
+    @NotNull
     public static WebPage newWebPage(String originalUrl) {
         return newWebPage(originalUrl, false);
     }
 
-    @Nonnull
+    @NotNull
     public static WebPage newWebPage(String originalUrl, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(volatileConfig);
         return newWebPageInternal(originalUrl, volatileConfig);
     }
 
-    @Nonnull
+    @NotNull
     public static WebPage newWebPage(String originalUrl, boolean shortenKey) {
         Objects.requireNonNull(originalUrl);
         String url = shortenKey ? Urls.normalize(originalUrl, shortenKey) : originalUrl;
         return newWebPageInternal(url, null);
     }
 
-    @Nonnull
+    @NotNull
     public static WebPage newWebPage(String originalUrl, boolean shortenKey, VolatileConfig volatileConfig) {
         Objects.requireNonNull(originalUrl);
         Objects.requireNonNull(volatileConfig);
@@ -158,33 +170,41 @@ public class WebPage {
         page.setLocation(url);
         page.setVolatileConfig(volatileConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
-        page.setCreateTime(impreciseNow);
+        page.setCreateTime(Instant.now());
         page.setScore(0);
         page.setFetchCount(0);
 
         return page;
     }
 
-    @Nonnull
-    public static WebPage newInternalPage(@Nonnull String url) {
+    @NotNull
+    public static WebPage newInternalPage(@NotNull String url) {
         return newInternalPage(url, "internal", "internal");
     }
 
-    @Nonnull
-    public static WebPage newInternalPage(@Nonnull String url, @Nonnull String title) {
+    @NotNull
+    public static WebPage newInternalPage(@NotNull String url, @NotNull String title) {
         return newInternalPage(url, title, "internal");
     }
 
-    @Nonnull
+    @NotNull
     public static WebPage newInternalPage(String url, String title, String content) {
+        return newInternalPage(url, -1, title, content);
+    }
+
+    @NotNull
+    public static WebPage newInternalPage(String url, Integer id, String title, String content) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(title);
         Objects.requireNonNull(content);
 
         WebPage page = WebPage.newWebPage(url, false);
+        if (id >= 0) {
+            page.id = id;
+        }
 
         page.setLocation(url);
-        page.setModifiedTime(impreciseNow);
+        page.setModifiedTime(Instant.now());
         page.setFetchTime(Instant.parse("3000-01-01T00:00:00Z"));
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());
         page.setFetchPriority(FETCH_PRIORITY_MIN);
@@ -203,7 +223,7 @@ public class WebPage {
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      */
-    @Nonnull
+    @NotNull
     public static WebPage box(String url, String reversedUrl, GWebPage page) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(reversedUrl);
@@ -215,7 +235,7 @@ public class WebPage {
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      */
-    @Nonnull
+    @NotNull
     public static WebPage box(String url, GWebPage page) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(page);
@@ -226,7 +246,7 @@ public class WebPage {
     /**
      * Initialize a WebPage with the underlying GWebPage instance.
      */
-    @Nonnull
+    @NotNull
     public static WebPage box(String url, GWebPage page, boolean urlReversed) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(page);
@@ -256,6 +276,7 @@ public class WebPage {
     /**
      * page.location is the last working address, and page.url is the permanent internal address
      * */
+    @NotNull
     public String getUrl() {
         return url != null ? url : "";
     }
@@ -266,6 +287,10 @@ public class WebPage {
 
     public String getReversedUrl() {
         return reversedUrl != null ? reversedUrl : "";
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public boolean isNil() {
@@ -296,6 +321,18 @@ public class WebPage {
         return variables;
     }
 
+    public boolean hasVar(String name) {
+        return variables.contains(name);
+    }
+
+    public boolean getAndRemoveVar(String name) {
+        boolean exist = variables.contains(name);
+        if (exist) {
+            variables.remove(name);
+        }
+        return exist;
+    }
+
     @Nullable
     public VolatileConfig getVolatileConfig() {
         return volatileConfig;
@@ -305,7 +342,7 @@ public class WebPage {
         this.volatileConfig = volatileConfig;
     }
 
-    @Nonnull
+    @NotNull
     public MutableConfig getMutableConfigOrElse(MutableConfig fallbackConfig) {
         Objects.requireNonNull(fallbackConfig);
         return volatileConfig != null ? volatileConfig : fallbackConfig;
@@ -330,11 +367,11 @@ public class WebPage {
     /**
      * All options are saved here, including crawl options, link options, entity options and so on
      */
-    public CharSequence getOptions() {
+    public String getOptions() {
         return page.getOptions() == null ? "" : page.getOptions().toString();
     }
 
-    public void setOptions(CharSequence options) {
+    public void setOptions(String options) {
         page.setOptions(options);
     }
 
@@ -421,6 +458,14 @@ public class WebPage {
         getMetadata().set(Name.BROWSER, browser.name());
     }
 
+    public HtmlIntegrity getHtmlIntegrity() {
+        return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
+    }
+
+    public void setHtmlIntegrity(HtmlIntegrity integrity) {
+        getMetadata().set(Name.HTML_INTEGRITY, integrity.name());
+    }
+
     public int getFetchPriority() {
         return page.getFetchPriority() > 0 ? page.getFetchPriority() : FETCH_PRIORITY_DEFAULT;
     }
@@ -499,16 +544,6 @@ public class WebPage {
     }
 
     /**
-     * WebPage.url is the permanent internal address, it might not still available to access the target.
-     * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
-     * or it might have additional random parameters.
-     * WebPage.location may be different from url, it's generally normalized.
-     */
-    public String getLocation() {
-        return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
-    }
-
-    /**
      * The baseUrl is as the same as Location
      *
      * A baseUrl has the same semantic with Jsoup.parse:
@@ -516,7 +551,17 @@ public class WebPage {
      * @see WebPage#getLocation
      * */
     public String getBaseUrl() {
-        return getLocation();
+        return page.getBaseUrl() == null ? "" : page.getBaseUrl().toString();
+    }
+
+    /**
+     * WebPage.url is the permanent internal address, it might not still available to access the target.
+     * And WebPage.location or WebPage.baseUrl is the last working address, it might redirect to url,
+     * or it might have additional random parameters.
+     * WebPage.location may be different from url, it's generally normalized.
+     */
+    public String getLocation() {
+        return getBaseUrl();
     }
 
     /**
@@ -554,9 +599,8 @@ public class WebPage {
      */
     public Instant getLastFetchTime(Instant now) {
         Instant lastFetchTime = getFetchTime();
-        // Minus 1 seconds to protect from inaccuracy
-        if (lastFetchTime.isAfter(now.plusSeconds(1))) {
-            // updated by schedule
+        if (lastFetchTime.isAfter(now)) {
+            // fetch time is in the further, updated by schedule
             lastFetchTime = getPrevFetchTime();
         }
         return lastFetchTime;
@@ -612,7 +656,7 @@ public class WebPage {
         return ProtocolHeaders.box(page.getHeaders());
     }
 
-    @Nonnull
+    @NotNull
     public String getReprUrl() {
         return page.getReprUrl() == null ? "" : page.getReprUrl().toString();
     }
@@ -621,10 +665,18 @@ public class WebPage {
         page.setReprUrl(value);
     }
 
+    /**
+     * Get the number of crawl scope retries
+     * @see ai.platon.pulsar.persist.RetryScope
+     * */
     public int getFetchRetries() {
         return page.getFetchRetries();
     }
 
+    /**
+     * Set the number of crawl scope retries
+     * @see ai.platon.pulsar.persist.RetryScope
+     * */
     public void setFetchRetries(int value) {
         page.setFetchRetries(value);
     }
@@ -688,7 +740,7 @@ public class WebPage {
 
     public void putFetchTimeHistory(Instant fetchTime) {
         String fetchTimeHistory = getMetadata().get(Name.FETCH_TIME_HISTORY);
-        fetchTimeHistory = DateTimeUtil.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
+        fetchTimeHistory = DateTimes.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
         getMetadata().set(Name.FETCH_TIME_HISTORY, fetchTimeHistory);
     }
 
@@ -698,7 +750,7 @@ public class WebPage {
         String fetchTimeHistory = getFetchTimeHistory("");
         if (!fetchTimeHistory.isEmpty()) {
             String[] times = fetchTimeHistory.split(",");
-            Instant time = DateTimeUtil.parseInstant(times[0], Instant.EPOCH);
+            Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
             if (time.isAfter(Instant.EPOCH)) {
                 firstCrawlTime = time;
             }
@@ -734,7 +786,7 @@ public class WebPage {
     }
 
     /**
-     * category : index, detail, media, search
+     * category : index, detail, review, media, search, etc
      */
     public void setPageCategory(PageCategory pageCategory) {
         page.setPageCategory(pageCategory.name());
@@ -782,7 +834,7 @@ public class WebPage {
         setContent(value.getBytes());
     }
 
-    @Nonnull
+    @NotNull
     public byte[] getContentAsBytes() {
         ByteBuffer content = getContent();
         if (content == null) {
@@ -794,12 +846,12 @@ public class WebPage {
     /**
      * TODO: Encoding is always UTF-8?
      */
-    @Nonnull
+    @NotNull
     public String getContentAsString() {
         return Bytes.toString(getContentAsBytes());
     }
 
-    @Nonnull
+    @NotNull
     public ByteArrayInputStream getContentAsInputStream() {
         ByteBuffer contentInOctets = getContent();
         if (contentInOctets == null) {
@@ -811,7 +863,7 @@ public class WebPage {
                 contentInOctets.remaining());
     }
 
-    @Nonnull
+    @NotNull
     public InputSource getContentAsSaxInputSource() {
         InputSource inputSource = new InputSource(getContentAsInputStream());
         String encoding = getEncoding();
@@ -886,26 +938,70 @@ public class WebPage {
         if (sig == null) {
             sig = ByteBuffer.wrap("".getBytes());
         }
-        return StringUtil.toHexString(sig);
+        return Strings.toHexString(sig);
+    }
+
+    @Nullable
+    public String getProxy() {
+        return getMetadata().get(Name.PROXY);
+    }
+
+    public void setProxy(@Nullable String proxy) {
+        if (proxy != null) {
+            getMetadata().set(Name.PROXY, proxy);
+        }
     }
 
     // TODO: use a separate avro field to hold BROWSER_JS_DATA
-    private BrowserJsData browserJsData = null;
-    public BrowserJsData getBrowserJsData() {
-        if (browserJsData == null) {
-            String json = getMetadata().get(Name.BROWSER_JS_DATA);
+    @Nullable
+    public ActiveDomMultiStatus getActiveDomMultiStatus() {
+        // cached
+        Name name = Name.ACTIVE_DOM_MULTI_STATUS;
+        Object value = variables.get(name);
+        if (value instanceof ActiveDomMultiStatus) {
+            return (ActiveDomMultiStatus)value;
+        } else {
+            String json = getMetadata().get(name);
             if (json != null) {
-                browserJsData = BrowserJsData.Companion.fromJson(json);
+                ActiveDomMultiStatus status = ActiveDomMultiStatus.Companion.fromJson(json);
+                variables.set(name, status);
+                return status;
             }
         }
 
-        return browserJsData;
+        return null;
     }
 
-    public void setBrowserJsData(BrowserJsData jsData) {
-        if (jsData != null) {
-            browserJsData = null;
-            getMetadata().set(Name.BROWSER_JS_DATA, jsData.toJson());
+    public void setActiveDomMultiStatus(ActiveDomMultiStatus domStatus) {
+        if (domStatus != null) {
+            variables.set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus);
+            getMetadata().set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus.toJson());
+        }
+    }
+
+    @Nullable
+    public ActiveDomUrls getActiveDomUrls() {
+        // cached
+        Name name = Name.ACTIVE_DOM_URLS;
+        Object value = variables.get(name);
+        if (value instanceof ActiveDomUrls) {
+            return (ActiveDomUrls)value;
+        } else {
+            String json = getMetadata().get(name);
+            if (json != null) {
+                ActiveDomUrls status = ActiveDomUrls.Companion.fromJson(json);
+                variables.set(name, status);
+                return status;
+            }
+        }
+
+        return null;
+    }
+
+    public void setActiveDomUrls(ActiveDomUrls urls) {
+        if (urls != null) {
+            variables.set(Name.ACTIVE_DOM_URLS, urls);
+            getMetadata().set(Name.ACTIVE_DOM_URLS, urls.toJson());
         }
     }
 
@@ -922,16 +1018,16 @@ public class WebPage {
         page.setSignature(ByteBuffer.wrap(value));
     }
 
-    @Nonnull
+    @NotNull
     public String getSignatureAsString() {
         ByteBuffer sig = getSignature();
         if (sig == null) {
             sig = ByteBuffer.wrap("".getBytes());
         }
-        return StringUtil.toHexString(sig);
+        return Strings.toHexString(sig);
     }
 
-    @Nonnull
+    @NotNull
     public String getPageTitle() {
         return page.getPageTitle() == null ? "" : page.getPageTitle().toString();
     }
@@ -940,7 +1036,7 @@ public class WebPage {
         page.setPageTitle(pageTitle);
     }
 
-    @Nonnull
+    @NotNull
     public String getContentTitle() {
         return page.getContentTitle() == null ? "" : page.getContentTitle().toString();
     }
@@ -951,7 +1047,7 @@ public class WebPage {
         }
     }
 
-    @Nonnull
+    @NotNull
     public String sniffTitle() {
         String title = getContentTitle();
         if (title.isEmpty()) {
@@ -969,7 +1065,7 @@ public class WebPage {
         return title;
     }
 
-    @Nonnull
+    @NotNull
     public String getPageText() {
         return page.getPageText() == null ? "" : page.getPageText().toString();
     }
@@ -978,7 +1074,7 @@ public class WebPage {
         if (value != null && !value.isEmpty()) page.setPageText(value);
     }
 
-    @Nonnull
+    @NotNull
     public String getContentText() {
         return page.getContentText() == null ? "" : page.getContentText().toString();
     }
@@ -1006,7 +1102,7 @@ public class WebPage {
     /**
      * {WebPage#setParseStatus} must be called later if the status is empty
      */
-    @Nonnull
+    @NotNull
     public ParseStatus getParseStatus() {
         GParseStatus parseStatus = page.getParseStatus();
         return ParseStatus.box(parseStatus == null ? GParseStatus.newBuilder().build() : parseStatus);
@@ -1141,7 +1237,7 @@ public class WebPage {
         return page.getInlinks();
     }
 
-    @Nonnull
+    @NotNull
     public CharSequence getAnchor() {
         return page.getAnchor() != null ? page.getAnchor() : "";
     }
@@ -1271,7 +1367,7 @@ public class WebPage {
         return false;
     }
 
-    @Nonnull
+    @NotNull
     public String getReferrer() {
         return page.getReferrer() == null ? "" : page.getReferrer().toString();
     }
@@ -1286,7 +1382,7 @@ public class WebPage {
      * Page Model
      ********************************************************************************/
 
-    @Nonnull
+    @NotNull
     public PageModel getPageModel() {
         return PageModel.box(page.getPageModel());
     }
@@ -1311,7 +1407,7 @@ public class WebPage {
         page.setContentScore(score);
     }
 
-    @Nonnull
+    @NotNull
     public String getSortScore() {
         return page.getSortScore() == null ? "" : page.getSortScore().toString();
     }
@@ -1328,7 +1424,7 @@ public class WebPage {
         getMetadata().set(Name.CASH_KEY, String.valueOf(cash));
     }
 
-    @Nonnull
+    @NotNull
     public PageCounters getPageCounters() {
         return PageCounters.box(page.getPageCounters());
     }
@@ -1344,7 +1440,7 @@ public class WebPage {
 
     public void putIndexTimeHistory(Instant indexTime) {
         String indexTimeHistory = getMetadata().get(Name.INDEX_TIME_HISTORY);
-        indexTimeHistory = DateTimeUtil.constructTimeHistory(indexTimeHistory, indexTime, 10);
+        indexTimeHistory = DateTimes.constructTimeHistory(indexTimeHistory, indexTime, 10);
         getMetadata().set(Name.INDEX_TIME_HISTORY, indexTimeHistory);
     }
 
@@ -1354,7 +1450,7 @@ public class WebPage {
         String indexTimeHistory = getIndexTimeHistory("");
         if (!indexTimeHistory.isEmpty()) {
             String[] times = indexTimeHistory.split(",");
-            Instant time = DateTimeUtil.parseInstant(times[0], Instant.EPOCH);
+            Instant time = DateTimes.parseInstant(times[0], Instant.EPOCH);
             if (time.isAfter(Instant.EPOCH)) {
                 firstIndexTime = time;
             }

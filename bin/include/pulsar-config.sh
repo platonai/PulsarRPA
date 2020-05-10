@@ -28,35 +28,41 @@
 # resolve links - "${BASH_SOURCE-$0}" may be a softlink
 this="${BASH_SOURCE-$0}"
 while [ -h "$this" ]; do
-  ls=`ls -ld "$this"`
-  link=`expr "$ls" : '.*-> \(.*\)$'`
+  ls=$(ls -ld "$this")
+  link=$(expr "$ls" : '.*-> \(.*\)$')
   if expr "$link" : '.*/.*' > /dev/null; then
     this="$link"
   else
-    this=`dirname "$this"`/"$link"
+    this=$(dirname "$this")/"$link"
   fi
 done
 
-# Convert relative path to absolute path
-bin=`dirname "$this"`
-script=`basename "$this"`
-bin=`cd "$bin">/dev/null; pwd`
-this="$bin/$script"
-
 # The root dir of this program
 if [ "$PULSAR_HOME" = "" ]; then
-  PULSAR_HOME=`dirname "$this"`/../..
-  PULSAR_HOME=`cd "$PULSAR_HOME">/dev/null; pwd`
+  # Convert relative path to absolute path
+  bin=$(dirname "$this")/..
+  script=$(basename "$this")
+  this="$bin/$script"
+  bin=$(cd "$bin">/dev/null || exit; pwd)
+
+  PULSAR_HOME=$(dirname "$bin")
+  PULSAR_HOME=$(cd "$PULSAR_HOME">/dev/null || exit; pwd)
   export PULSAR_HOME=$PULSAR_HOME
 fi
 
-# The runtime mode
-if [ -f "${PULSAR_HOME}"/pulsar-enterprise-*-job.jar ]; then
-  export PULSAR_RUNTIME_MODE="PACKED"
-elif [ -f "$PULSAR_HOME/pom.xml" ]; then
-  export PULSAR_RUNTIME_MODE="DEVELOPMENT"
-else
-  export PULSAR_RUNTIME_MODE="ASSEMBLY"
+# Detect the runtime mode
+for f in "${PULSAR_HOME}"/pulsar-enterprise-*-job.jar; do
+  if [ -f "$f" ]; then
+    export PULSAR_RUNTIME_MODE="PACKED"
+  fi
+done
+
+if [ "$PULSAR_RUNTIME_MODE" = ""  ]; then
+  if [ -f "$PULSAR_HOME/pom.xml" ]; then
+    export PULSAR_RUNTIME_MODE="DEVELOPMENT"
+  else
+    export PULSAR_RUNTIME_MODE="ASSEMBLY"
+  fi
 fi
 
 # The log dir
@@ -77,7 +83,7 @@ fi
 mkdir -p "$PULSAR_TMP_DIR"
 
 # The directory to keep process PIDs
-if [ "$PULSAR_PID_DIR"="" ]; then
+if [ "$PULSAR_PID_DIR" = "" ]; then
   export PULSAR_PID_DIR="$PULSAR_TMP_DIR"
 fi
 
@@ -87,16 +93,6 @@ if [ "$PULSAR_DB_KEY" = "" ]; then
 fi
 if [ "$PULSAR_DB_PASSWORD" = "" ]; then
   export PULSAR_DB_PASSWORD="pulsar"
-fi
-
-# REST JMX opts
-if [[ -n "$PULSAR_JMX_OPTS" && -z "$PULSAR_REST_JMX_OPTS" ]]; then
-  PULSAR_REST_JMX_OPTS="$PULSAR_JMX_OPTS -Dcom.sun.management.jmxremote.port=10105"
-fi
-
-# REST opts
-if [[ -z "$PULSAR_REST_OPTS" ]]; then
-  export PULSAR_REST_OPTS="$PULSAR_REST_JMX_OPTS"
 fi
 
 if [[ "$PULSAR_NICENESS" = "" ]]; then
@@ -123,4 +119,9 @@ if [[ -z "$JAVA_HOME" ]]; then
 +======================================================================+
 EOF
     exit 1
+fi
+
+if [[ "$JAVA_HOME" != "/usr/lib/jvm/java-8-sun" ]]; then
+  echo "Since the latest gora still uses hadoop-2.5.2 which is not compitable with java 9 or later, we have to use java 8"
+  exit 1
 fi

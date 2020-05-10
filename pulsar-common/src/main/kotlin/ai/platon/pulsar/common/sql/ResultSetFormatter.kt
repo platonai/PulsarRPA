@@ -6,87 +6,104 @@ import java.sql.SQLException
 import java.sql.Types
 import java.util.*
 
-class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean = false) {
+class ResultSetFormatter(
+        private val rs: ResultSet,
+        private val asList: Boolean = false,
+        private val withHeader: Boolean = false,
+        val buffer: StringBuilder = StringBuilder()
+) {
     private val meta = rs.metaData
     private val numColumns = meta.columnCount
-    private var numRows: Int = 0
+    var numRows: Int = 0
+        private set
+    var numNonBlankFields: Int = 0
+        private set
 
     private val rows = ArrayList<List<String>>()
     private val columns = IntRange(1, numColumns).map { meta.getColumnLabel(it) ?: "" }
 
-    private val sb = StringBuilder()
-
-    fun format(): String {
-        sb.setLength(0)
-        return try {
+    fun format() {
+        try {
             if (asList) formatResultAsList() else formatResultAsTable()
         } catch (e: SQLException) {
             "(Exception)" + e.message
         }
     }
 
-    @Throws(SQLException::class)
-    private fun formatResultAsTable(): String {
-        rows.add(columns)
+    override fun toString(): String {
+        if (buffer.isEmpty()) {
+            format()
+        }
+        return buffer.toString()
+    }
 
+    @Throws(SQLException::class)
+    private fun formatResultAsTable() {
+        if (withHeader) {
+            rows.add(columns)
+        }
+
+        var i = 0
         while (rs.next()) {
+            // Overflow occurs, clear buffer
+            if (i++ > 0 && rows.isEmpty()) {
+                buffer.setLength(0)
+            }
+
             formatCurrentRow()
             if (numRows++ > MAX_ROW_BUFFER) {
                 overflow()
             }
         }
 
-        sb.append(formatRows())
-
-        return sb.toString()
+        formatRows()
     }
 
     private fun overflow() {
-        sb.append(formatRows())
-        sb.append("\n")
+        formatRows()
+        buffer.append("\n")
         rows.clear()
     }
 
     @Throws(SQLException::class)
-    private fun formatResultAsList(): String {
-        var longestLabel = 0
+    private fun formatResultAsList() {
+        var labelLength = 0
         val columns = arrayOfNulls<String>(numColumns)
         for (i in 0 until numColumns) {
-            val s = meta.getColumnLabel(i + 1)
-            columns[i] = s
-            longestLabel = Math.max(longestLabel, s.length)
+            val label = meta.getColumnLabel(i + 1).also { columns[i] = it }
+            labelLength = labelLength.coerceAtLeast(label.length)
         }
 
-        val sb = StringBuilder()
         while (rs.next()) {
             numRows++
-            sb.setLength(0)
-            if (numRows > 1) {
-                sb.append("")
-            }
 
-            for (i in 0 until numColumns) {
+            IntRange(0, numColumns - 1).forEach { i ->
                 if (i > 0) {
-                    sb.append('\n')
+                    buffer.append('\n')
                 }
 
-                sb.append(StringUtils.rightPad(columns[i] + ":", 15 + longestLabel))
-                        .append(rs.getString(i + 1))
+                val th = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
+                val td = rs.getString(i + 1)?:""
+                buffer.append(th).append(td)
+
+                if (td.isNotBlank()) {
+                    ++numNonBlankFields
+                }
             }
-            sb.append("\n")
+
+            buffer.append("\n")
         }
 
+        // generate an empty list
         if (numRows == 0) {
-            val s = columns.joinToString("\n")
-            sb.append(s).append("\n")
+            columns.joinTo(buffer, "\n")
+            buffer.append("\n")
         }
-        return sb.toString()
     }
 
     @Throws(SQLException::class)
     private fun formatCurrentRow() {
-        IntRange(1, numColumns)
-                .map { StringUtils.abbreviateMiddle(formatColumn(it), "..", MAX_COLUMN_LENGTH) }
+        IntRange(1, numColumns).map { StringUtils.abbreviateMiddle(formatColumn(it), "..", MAX_COLUMN_LENGTH) }
                 .also { rows.add(it) }
     }
 
@@ -120,46 +137,39 @@ class ResultSetFormatter(private val rs: ResultSet, private val asList: Boolean 
         return s
     }
 
-    private fun formatRows(): String {
+    private fun formatRows() {
         val columnSizes = IntArray(numColumns)
         for (i in 0 until numColumns) {
             var max = 0
             for (row in rows) {
-                max = Math.max(max, row[i].length)
+                max = max.coerceAtLeast(row[i].length)
             }
             if (numColumns > 1) {
-                max = Math.min(MAX_COLUMN_LENGTH, max)
+                max = MAX_COLUMN_LENGTH.coerceAtMost(max)
             }
             columnSizes[i] = max
         }
 
-        val buff = StringBuilder()
-        for (row in rows) {
-            var i = 0
-            while (i < numColumns) {
-                if (i > 0) {
-                    buff.append(' ').append(BOX_VERTICAL).append(' ')
+        rows.forEach { row ->
+            row.forEachIndexed { j, value ->
+                if (j > 0) {
+                    buffer.append(' ').append(BOX_VERTICAL).append(' ')
                 }
 
-                val s = row[i]
-                buff.append(s)
-                if (i < numColumns - 1) {
-                    for (j in s.length until columnSizes[i]) {
-                        buff.append(' ')
-                    }
+                buffer.append(value)
+
+                if (j < numColumns - 1) {
+                    // padding
+                    repeat(columnSizes[j] - value.length) { buffer.append(' ') }
                 }
 
-                ++i
+                if (value.isNotBlank()) {
+                    ++numNonBlankFields
+                }
             }
 
-            buff.append("\n")
+            // buffer.append("\n")
         }
-
-        return buff.toString()
-    }
-
-    override fun toString(): String {
-        return format() + "Total " + numRows + " rows"
     }
 
     companion object {

@@ -24,7 +24,7 @@ public class TestDateTimeDetector {
     @Test
     public void testParseDateTime() {
         String t = "2017-02-06T02:15:11.174Z";
-        Instant dateTime = DateTimeUtil.parseInstant(t, Instant.EPOCH);
+        Instant dateTime = DateTimes.parseInstant(t, Instant.EPOCH);
         assertEquals(t, DateTimeFormatter.ISO_INSTANT.format(dateTime));
 //    System.out.println(dateTime);
 //    System.out.println(Instant.parse(t));

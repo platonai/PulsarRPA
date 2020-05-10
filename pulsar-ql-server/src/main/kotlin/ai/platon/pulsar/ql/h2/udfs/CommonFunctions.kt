@@ -1,12 +1,9 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.NetUtil.testNetwork
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.URLUtil
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
@@ -33,14 +30,7 @@ object CommonFunctions {
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
     private val sqlContext = SQLContext.getOrCreate()
-    private val proxyPool = PulsarEnv.proxyPool
     private val unmodifiedConfig = sqlContext.unmodifiedConfig
-
-    @UDFunction(description = "Get the proxy pool status")
-    @JvmStatic
-    fun getProxyPoolStatus(): String {
-        return proxyPool.toString()
-    }
 
     /**
      * Set volatileConfig to the given value
@@ -72,7 +62,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetFetchMode(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_MODE)
+        return session.sessionConfig.getAndUnset(FETCH_MODE)
     }
 
     /**
@@ -89,11 +79,11 @@ object CommonFunctions {
         if (browserType == BrowserType.NATIVE) {
             unsetFetchMode(h2session)
         } else {
-            setFetchMode(h2session, FetchMode.SELENIUM.name, ttl)
+            setFetchMode(h2session, FetchMode.BROWSER.name, ttl)
         }
 
         log.debug("Set browser to $browser")
-        return getAndSetConf(h2session, SELENIUM_BROWSER, browserType.name, ttl)
+        return getAndSetConf(h2session, BROWSER_TYPE, browserType.name, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
@@ -102,7 +92,7 @@ object CommonFunctions {
     fun unsetBrowser(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
         unsetFetchMode(h2session)
-        return session.volatileConfig.getAndUnset(SELENIUM_BROWSER)
+        return session.sessionConfig.getAndUnset(BROWSER_TYPE)
     }
 
     /**
@@ -124,7 +114,7 @@ object CommonFunctions {
     @UDFunction
     @JvmStatic
     fun setEagerFetchLimit(@H2Context h2session: Session, parallel: Boolean, ttl: Int): String? {
-        return getAndSetConf(h2session, FETCH_EAGER_FETCH_LIMIT, parallel.toString(), ttl)
+        return getAndSetConf(h2session, FETCH_CONCURRENCY, parallel.toString(), ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
@@ -132,7 +122,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetEagerFetchLimit(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_EAGER_FETCH_LIMIT)
+        return session.sessionConfig.getAndUnset(FETCH_CONCURRENCY)
     }
 
     /**
@@ -165,7 +155,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetPageExpires(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(STORAGE_DATUM_EXPIRES)
+        return session.sessionConfig.getAndUnset(STORAGE_DATUM_EXPIRES)
     }
 
     /**
@@ -189,7 +179,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetPageLoadTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
+        return session.sessionConfig.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
     }
 
     /**
@@ -213,7 +203,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetScriptTimeout(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_SCRIPT_TIMEOUT)
+        return session.sessionConfig.getAndUnset(FETCH_SCRIPT_TIMEOUT)
     }
 
     /**
@@ -235,7 +225,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetScrollDownCount(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
+        return session.sessionConfig.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
     }
 
     /**
@@ -258,14 +248,14 @@ object CommonFunctions {
     @JvmStatic
     fun setScrollInterval(@H2Context h2session: Session): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
+        return session.sessionConfig.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
     }
 
     /**
      * Set h2session scope configuration.
      *
      * SQL examples:
-     * `CALL setConf('fetch.page.load.timeout', '1d')`
+     * `CALL setConf('fetch.page.load.timeout', '1m')`
      * `CALL setConf('fetch.fetch.mode', 'NATIVE')`
      *
      * @param h2session The H2 session, auto injected by h2 runtime
@@ -276,7 +266,7 @@ object CommonFunctions {
     @JvmOverloads
     fun setConfig(@H2Context h2session: Session, name: String, value: String, ttl: Int = Integer.MAX_VALUE / 2): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndSet(name, value, ttl)
+        return session.sessionConfig.getAndSet(name, value, ttl)
     }
 
     @UDFunction(description = "Set the volatileConfig property associated by name with time-to-life of the calling session")
@@ -296,7 +286,7 @@ object CommonFunctions {
     @JvmStatic
     fun unsetConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(name)
+        return session.sessionConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
@@ -304,14 +294,14 @@ object CommonFunctions {
     @JvmStatic
     fun unsetConfig(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.getAndUnset(name)
+        return session.sessionConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
     fun getConf(@H2Context h2session: Session, name: String): String? {
         val session = getSession(h2session)
-        return session.volatileConfig.get(name)
+        return session.sessionConfig.get(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
@@ -343,7 +333,7 @@ object CommonFunctions {
         rs.addColumn("VALUE")
 
         val session = getSession(h2session)
-        for ((key, value) in session.volatileConfig.unbox()) {
+        for ((key, value) in session.sessionConfig.unbox()) {
             rs.addRow(key, value)
         }
 
@@ -382,57 +372,6 @@ object CommonFunctions {
         }
 
         return rs
-    }
-
-    @UDFunction(description = "Add a proxy into the proxy pool")
-    @JvmStatic
-    fun addProxy(ipPort: String): Boolean {
-        val proxyEntry = ProxyEntry.parse(ipPort)
-        if (proxyEntry != null && proxyEntry.test()) {
-            return proxyPool.offer(proxyEntry)
-        }
-
-        return false
-    }
-
-    @UDFunction(description = "Add a proxy into the proxy pool")
-    @JvmStatic
-    fun addProxy(ip: String, port: Int): Boolean {
-        if (testNetwork(ip, port)) {
-            return proxyPool.offer(ProxyEntry(ip, port))
-        }
-
-        return false
-    }
-
-    @UDFunction(description = "Add a list of proxies into the proxy pool, i.e. call add_proxies(array(ip1, ip2, ip3))")
-    @JvmStatic
-    fun addProxies(ipPorts: ValueArray): Int {
-        var count = 0
-
-        for (value in ipPorts.list) {
-            if (addProxy(value.string)) {
-                ++count
-            }
-        }
-
-        return count
-    }
-
-    @UDFunction(description = "Add a proxy into the proxy pool without checking it's availability")
-    @JvmStatic
-    fun addProxiesUnchecked(ipPorts: ValueArray): Int {
-        var count = 0
-
-        for (value in ipPorts.list) {
-            val proxyEntry = ProxyEntry.parse(value.string)
-            if (proxyEntry != null) {
-                proxyPool.offer(proxyEntry)
-                ++count
-            }
-        }
-
-        return count
     }
 
     @UDFunction(description = "Test if the given string is a number")
@@ -493,9 +432,9 @@ object CommonFunctions {
         Objects.requireNonNull(name)
 
         val session = getSession(h2session)
-        val old = session.volatileConfig.get(name)
+        val old = session.sessionConfig.get(name)
         if (value != null) {
-            session.volatileConfig.set(name, value, ttl)
+            session.sessionConfig.set(name, value, ttl)
             return old
         }
 

@@ -1,13 +1,13 @@
 package ai.platon.pulsar.dom.select
 
-import org.apache.commons.lang3.Validate
 import org.jsoup.nodes.Element
-import org.jsoup.select.Collector
+import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
 import java.util.*
-import kotlin.math.max
+
+class MathematicalSelectorParseException(msg: String, vararg params: Any) : IllegalStateException(String.format(msg, *params))
 
 /**
  * CSS element selector, that finds elements matching a query.
@@ -89,13 +89,12 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, root: Element): Elements {
-        if (cssQuery.isBlank()) {
-            return Elements()
-        }
+        val q = cssQuery.trim().removeSurrounding("\"").takeIf { it.isNotBlank() }?:return Elements()
 
         try {
-            return select(MathematicalQueryParser.parse(cssQuery.trim()), root)
-        } catch (e: SelectorParseException) {
+            // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
+            return select(MathematicalQueryParser.parse(q), root)
+        } catch (e: MathematicalSelectorParseException) {
             log.warn(e.message)
         }
 
@@ -103,53 +102,22 @@ object MathematicalSelector {
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        if (cssQuery.isBlank()) {
+        if (offset < 1 || limit <= 0) {
             return Elements()
-        }
-
-        if (limit <= 0) {
-            return Elements()
-        }
-
-        // all items match cssQuery are fine
-        if (offset < 1 && limit > 100_000) {
-            return select(cssQuery, root)
         }
 
         // TODO: do the filter inside Collector.collect
-        val drop = max(offset - 1, 0)
-        return select(cssQuery, root).asSequence().drop(drop).take(limit)
-                .toCollection(Elements())
+        return select(cssQuery, root).asSequence().drop(offset - 1).take(limit).toCollection(Elements())
     }
 
-    fun <O> select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE,
-                        transformer: (Element) -> O): List<O> {
-        Validate.notEmpty(cssQuery)
-
-        if (limit <= 0) {
+    fun <O> select(cssQuery: String,
+                   root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> O): List<O> {
+        if (offset < 1 || limit <= 0) {
             return listOf()
         }
 
-        // take all
-        if (offset <= 1 && limit > 100_000) {
-            return select(cssQuery, root).map { transformer(it) }
-        }
-
         // TODO: do the filter inside Collector.collect
-        val drop = max(offset - 1, 0)
-        return select(cssQuery, root).asSequence().drop(drop).take(limit)
-                .map { transformer(it) }.toList()
-    }
-
-    /**
-     * Find elements matching selector.
-     *
-     * @param evaluator CSS selector
-     * @param root root element to descend into
-     * @return matching elements, empty if none
-     */
-    fun select(evaluator: Evaluator, root: Element): Elements {
-        return Collector.collect(evaluator, root)
+        return select(cssQuery, root).asSequence().drop(offset - 1).take(limit).map { transformer(it) }.toList()
     }
 
     /**
@@ -181,7 +149,7 @@ object MathematicalSelector {
             }
 
             return Elements(elements)
-        } catch (e: SelectorParseException) {
+        } catch (e: MathematicalSelectorParseException) {
             log.warn(e.message)
         }
 
@@ -196,31 +164,24 @@ object MathematicalSelector {
      */
     fun selectFirst(cssQuery: String, root: Element): Element? {
         if (cssQuery.isBlank()) return null
+
         try {
-            return Collector.findFirst(MathematicalQueryParser.parse(cssQuery.trim()), root)
-        } catch (e: SelectorParseException) {
+            return MathematicalCollector.findFirst(MathematicalQueryParser.parse(cssQuery.trim()), root)
+        } catch (e: MathematicalSelectorParseException) {
             log.warn(e.message)
         }
 
         return null
     }
 
-    // exclude set. package open so that Elements can implement .not() selector.
-    internal fun filterOut(elements: Collection<Element>, outs: Collection<Element>): Elements {
-        val output = Elements()
-        for (el in elements) {
-            var found = false
-            for (out in outs) {
-                if (el == out) {
-                    found = true
-                    break
-                }
-            }
-            if (!found)
-                output.add(el)
-        }
-        return output
+    /**
+     * Find elements matching selector.
+     *
+     * @param evaluator CSS selector
+     * @param root root element to descend into
+     * @return matching elements, empty if none
+     */
+    private fun select(evaluator: Evaluator, root: Element): Elements {
+        return MathematicalCollector.collect(evaluator, root)
     }
-
-    class SelectorParseException(msg: String, vararg params: Any) : IllegalStateException(String.format(msg, *params))
 }

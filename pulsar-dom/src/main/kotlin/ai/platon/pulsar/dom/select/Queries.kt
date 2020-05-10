@@ -1,13 +1,16 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.TraverseState
+import ai.platon.pulsar.dom.nodes.node.ext.cleanText
+import ai.platon.pulsar.dom.nodes.node.ext.rectangle
 import ai.platon.pulsar.dom.nodes.node.ext.sequence
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
-import kotlin.math.max
 
 /**
  * In-box syntax, cases:
@@ -56,11 +59,22 @@ inline fun <C : MutableCollection<Node>> Node.collectIfTo(destination: C, crossi
     return destination
 }
 
-inline fun <O: Node> Node.collect(crossinline transform: (Node) -> O?): List<O> {
-    return collectTo(mutableListOf(), transform)
+inline fun <O> Node.collect(crossinline transform: (Node) -> O?): List<O?> {
+    val destination = mutableListOf<O?>()
+    NodeTraversor.traverse({ node, _-> destination.add(transform(node)) }, this)
+    return destination
 }
 
-inline fun <O: Node, C : MutableCollection<O>> Node.collectTo(destination: C, crossinline transform: (Node) -> O?): C {
+inline fun <O> Node.collectNotNull(crossinline transform: (Node) -> O?): List<O> {
+    return collectNotNullTo(mutableListOf(), transform)
+}
+
+inline fun <O, C : MutableCollection<O?>> Node.collectTo(destination: C, crossinline transform: (Node) -> O?): C {
+    NodeTraversor.traverse({ node, _-> destination.add(transform(node)) }, this)
+    return destination
+}
+
+inline fun <O, C : MutableCollection<O>> Node.collectNotNullTo(destination: C, crossinline transform: (Node) -> O?): C {
     NodeTraversor.traverse({ node, _-> transform(node)?.also { destination.add(it) } }, this)
     return destination
 }
@@ -108,10 +122,10 @@ fun Node.find(predicate: (Node) -> Boolean): List<Node> {
 }
 
 fun Node.first(predicate: (Node) -> Boolean): Node {
-    return firstOrNull(predicate)?:throw NoSuchElementException("Node contains no descendant matching the predicate.")
+    return selectFirstOrNull(predicate) ?:throw NoSuchElementException("Node contains no descendant matching the predicate.")
 }
 
-fun Node.firstOrNull(predicate: (Node) -> Boolean): Node? {
+fun Node.selectFirstOrNull(predicate: (Node) -> Boolean): Node? {
     var result: Node? = null
 
     NodeTraversor.filter(object: NodeFilter {
@@ -127,7 +141,7 @@ fun Node.firstOrNull(predicate: (Node) -> Boolean): Node? {
 }
 
 fun Node.any(predicate: (Node) -> Boolean): Boolean {
-    return firstOrNull(predicate) != null
+    return selectFirstOrNull(predicate) != null
 }
 
 fun Node.all(predicate: (Node) -> Boolean): Boolean {
@@ -148,8 +162,8 @@ fun Node.all(predicate: (Node) -> Boolean): Boolean {
 
 /**
  * Notice: do not provide default value for offset, it overrides the default version in Node
+ * offset is 1 based
  * */
-@JvmOverloads
 fun Node.select(cssQuery: String, offset: Int, limit: Int = Int.MAX_VALUE): Elements {
     if (this !is Element) {
         return Elements()
@@ -165,6 +179,9 @@ fun <O> Node.select(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALU
     } else listOf()
 }
 
+/**
+ * TODO: Jsoup native supported selectTo
+ * */
 inline fun <R : Any, C : MutableCollection<in R>> Node.selectTo(destination: C,
         query: String, offset: Int = 1, limit: Int = Int.MAX_VALUE,
         transformer: (Element) -> R) {
@@ -188,40 +205,16 @@ inline fun <R : Any, C : MutableCollection<in R>> Node.selectNotNullTo(destinati
     }
 }
 
-@Deprecated("Use select instead", ReplaceWith("Node.select(cssQuery)"))
-@JvmOverloads
 fun Node.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
     return select(cssQuery, offset, limit)
 }
 
-@Deprecated("Use first instead", ReplaceWith("Node.first(cssQuery)"))
-fun Node.selectFirst2(cssQuery: String): Element? {
-    return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
+fun Node.selectFirstOrNull(cssQuery: String): Element? {
+    return (this as? Element)?.let { MathematicalSelector.selectFirst(cssQuery, it) }
 }
 
-fun Node.first(cssQuery: String): Element? {
-    return if (this is Element) {
-        MathematicalSelector.selectFirst(cssQuery, this)
-    } else null
-}
-
-fun <O> Node.first(cssQuery: String, transformer: (Element) -> O): O? {
-    return if (this is Element) {
-        first(cssQuery)?.let { transformer(it) }
-    } else null
-}
-
-@JvmOverloads
-fun Elements.select2(cssQuery: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-    if (offset <= 1 && limit == Int.MAX_VALUE) {
-        return MathematicalSelector.select(cssQuery, this)
-    }
-
-    val drop = max(offset - 1, 0)
-    return MathematicalSelector.select(cssQuery, this).asSequence().drop(drop).take(limit)
-            .toCollection(Elements())
+fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O? {
+    return selectFirstOrNull(cssQuery)?.let(transformer)
 }
 
 /**
@@ -233,6 +226,9 @@ inline fun <C : MutableCollection<Element>> Element.collectIfTo(destination: C, 
     return destination
 }
 
+/**
+ * TODO: use css query parser
+ * */
 fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     var q = cssQuery.replace("\\s+".toRegex(), " ").trim()
     val ap = appendix.trim()
@@ -244,4 +240,19 @@ fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     }
 
     return q
+}
+
+fun Element.getAnchors(restrictCss: String, offset: Int = 0, limit: Int = Int.MAX_VALUE): Collection<Anchor> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "a")
+    return select(cssQuery, offset, limit).mapNotNull {
+        it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
+                ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(), it.rectangle) }
+    }
+}
+
+fun Element.getImages(restrictCss: String, offset: Int = 0, limit: Int = Int.MAX_VALUE): Collection<String> {
+    val cssQuery = appendSelectorIfMissing(restrictCss, "img")
+    return select(cssQuery, offset, limit) {
+        it.absUrl("src").takeIf { Urls.isValidUrl(it) }
+    }.filterNotNull()
 }

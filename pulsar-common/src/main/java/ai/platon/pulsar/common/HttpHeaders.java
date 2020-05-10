@@ -39,7 +39,6 @@ public interface HttpHeaders {
 
     // Internal usage
     String Q_TRUSTED_CONTENT_ENCODING = "Q-Trusted-Content-Encoding";
-    String Q_WEB_DRIVER = "Q-Web-Driver";
     String Q_VERSION = "Q-Version";
     String Q_USERNAME = "Q-Username";
     String Q_PASSWORD = "Q-Password";

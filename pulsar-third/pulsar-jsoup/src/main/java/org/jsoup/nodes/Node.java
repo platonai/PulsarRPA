@@ -12,6 +12,7 @@ import org.jsoup.select.NodeVisitor;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
@@ -25,14 +26,12 @@ public abstract class Node implements Cloneable {
     Node parentNode;
     int siblingIndex;
 
-    Attributes attributes = new Attributes();
-
     Node ownerDocumentNode = null;
     Node ownerBody = null;
     String immutableText = null;
     RealVector features = EMPTY_FEATURE;
-    Map<String, Object> variables = new HashMap<>();
-    Map<String, List<Object>> tuples = new HashMap<>();
+    Map<String, Object> variables = null;
+    Map<String, List<Object>> tuples = null;
 
     /**
      * Default constructor. Doesn't setup base uri, children, or attributes; use with caution.
@@ -188,6 +187,9 @@ public abstract class Node implements Cloneable {
         return ownerBody;
     }
 
+    /**
+     * Only cache text for text nodes, not for other nodes
+     * */
     public String getImmutableText() {
         if (immutableText == null) {
             if (this instanceof TextNode) {
@@ -212,11 +214,17 @@ public abstract class Node implements Cloneable {
 
     @Nonnull
     public Map<String, Object> getVariables() {
+        if (variables == null) {
+            variables = new HashMap<>();
+        }
         return variables;
     }
 
     @Nonnull
     public Map<String, List<Object>> getTuples() {
+        if (tuples == null) {
+            tuples = new HashMap<>();
+        }
         return tuples;
     }
 

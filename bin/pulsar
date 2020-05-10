@@ -24,6 +24,7 @@ function printUsage() {
   echo "  stop          Stop pulsar server safely"
   echo "  server        Run pulsar server with parameters"
   echo "  sql           Run h2 sql client"
+  echo "  example       Run a example program"
 
   echo
   echo "Options: "
@@ -35,12 +36,14 @@ function printUsage() {
 }
 
 MODULE=
+# the default number of fetch thread is the number of cpu cores
+FETCH_THREADS=$(nproc)
 while [[ $# -gt 0 ]]
 do
 case $1 in
-    -c|--config)
+    -ft|--fetch-threads)
         shift
-        PULSAR_EXTRA_CONF_DIR=$1
+        export FETCH_THREADS=$1
         shift
         ;;
     -m|--module)
@@ -78,10 +81,13 @@ done
 COMMAND=$1
 shift
 
-bin=`dirname "$0"`
-bin=`cd "$bin">/dev/null; pwd`
+bin=$(dirname "$0")
+bin=$(cd "$bin">/dev/null || exit; pwd)
 
- . "$bin"/include/pulsar-config.sh
+if [ "$PULSAR_HOME" = "" ]; then
+ # shellcheck source=bin/include/scent-config.sh
+source "$bin"/include/pulsar-config.sh
+fi
 
 bin="$PULSAR_HOME"/bin
 
@@ -105,17 +111,21 @@ CLASSPATH="${CLASSPATH}:$JAVA_HOME/lib/tools.jar"
 # Choose runnable
 if [[ "$COMMAND" = "start" ]] ; then
   export RUN_AS_DAEMON=true
-  $bin/pulsar server -tcp -web -webAllowOthers
+  "$bin"/pulsar server -tcp -web -webAllowOthers
   exit 0
 elif [[ "$COMMAND" = "stop" ]] ; then
-  $bin/pulsar server -tcpShutdown tcp://127.0.1.1:9092
+  "$bin"/pulsar server -tcpShutdown tcp://127.0.1.1:9092
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-app
-  CLASS=ai.platon.pulsar.app.PulsarMasterKt
+  CLASS=ai.platon.pulsar.app.AppMasterKt
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-app
   CLASS=ai.platon.pulsar.app.H2ShellKt
+elif [[ "$COMMAND" = "example" ]] ; then
+  MODULE=pulsar-examples
+  CLASS="ai.platon.pulsar.examples.$1"
+  shift
 elif [[ -n "$MODULE" ]]; then
   CLASS=$COMMAND
 else
@@ -123,9 +133,5 @@ else
   exit 0
 fi
 
-if [[ "$PULSAR_RUNTIME_MODE" == "PACKED" ]]; then
- # cluster mode, just pull the job file into hadoop, and exit
- . "$bin"/include/run-cluster.sh
-else
+ . "$bin"/include/pulsar-common.sh
  . "$bin"/include/run-local.sh
-fi

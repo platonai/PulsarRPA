@@ -1,11 +1,11 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.common.config.PulsarConstants.URL_TRACKER_HOME_URL
+import ai.platon.pulsar.common.config.AppConstants.URL_TRACKER_HOME_URL
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.fetch.FetchTaskTracker.Companion.LAZY_FETCH_URLS_PAGE_BASE
-import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager.Companion.LAZY_FETCH_URLS_PAGE_BASE
 import ai.platon.pulsar.persist.metadata.FetchMode
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.TimeUnit
@@ -67,7 +67,7 @@ class TestExtractCases : TestBase() {
         var page2 = session.getOrNil(URL_TRACKER_HOME_URL)
         println(WebPageFormatter(page2))
         for (i in 1..60) {
-            page2 = session.getOrNil(URL_TRACKER_HOME_URL + "/" + (LAZY_FETCH_URLS_PAGE_BASE + FetchMode.SELENIUM.ordinal))
+            page2 = session.getOrNil(URL_TRACKER_HOME_URL + "/" + (LAZY_FETCH_URLS_PAGE_BASE + FetchMode.BROWSER.ordinal))
             println(WebPageFormatter(page2).toMap()["linksMessage"])
 
             TimeUnit.SECONDS.sleep(30)

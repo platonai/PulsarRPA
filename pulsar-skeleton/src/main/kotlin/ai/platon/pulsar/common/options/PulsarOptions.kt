@@ -1,10 +1,9 @@
 package ai.platon.pulsar.common.options
 
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Parameterized
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
-import com.google.common.collect.Sets
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -19,6 +18,8 @@ open class PulsarOptions : Parameterized {
     protected val log = LoggerFactory.getLogger(PulsarOptions::class.java)
 
     var expandAtSign = true
+    var acceptUnknownOptions = true
+    var allowParameterOverwriting = true
     // arguments
     val args: String
     // argument vector
@@ -53,22 +54,22 @@ open class PulsarOptions : Parameterized {
         this.objects.addAll(objects.toList())
     }
 
-    fun parse(): Boolean {
+    open fun parse(): Boolean {
         try {
             doParse()
         } catch (e: Throwable) {
-            log.warn(StringUtil.stringifyException(e))
+            log.warn(Strings.stringifyException(e))
             return false
         }
 
         return true
     }
 
-    fun parseOrExit() {
-        parseOrExit(Sets.newHashSet())
+    open fun parseOrExit() {
+        parseOrExit(mutableSetOf())
     }
 
-    protected fun parseOrExit(objects: Set<Any>) {
+    protected open fun parseOrExit(objects: Set<Any>) {
         try {
             addObjects(objects)
             doParse()
@@ -86,35 +87,35 @@ open class PulsarOptions : Parameterized {
     private fun doParse() {
         objects.add(this)
 
-        jc = JCommander(objects)
+        jc = JCommander.newBuilder()
+                .acceptUnknownOptions(acceptUnknownOptions)
+                .allowParameterOverwriting(allowParameterOverwriting)
+                .expandAtSign(expandAtSign).build()
+        objects.forEach { jc.addObject(it) }
 
-        jc.setAcceptUnknownOptions(true)
-        jc.setAllowParameterOverwriting(true)
-        //      jc.setAllowAbbreviatedOptions(false);
-        jc.setExpandAtSign(expandAtSign)
         if (argv.isNotEmpty()) {
             jc.parse(*argv)
         }
     }
 
-    fun usage() {
+    open fun usage() {
         jc.usage()
     }
 
-    fun toCmdLine(): String {
+    open fun toCmdLine(): String {
         return params.withKVDelimiter(" ").formatAsLine()
                 .replace("\\s+".toRegex(), " ")
     }
 
-    fun toArgsMap(): Map<String, String> {
+    open fun toArgsMap(): Map<String, String> {
         return params.asStringMap()
     }
 
-    fun toMutableArgsMap(): MutableMap<String, String> {
+    open fun toMutableArgsMap(): MutableMap<String, String> {
         return params.asStringMap()
     }
 
-    fun toArgv(): Array<String> {
+    open fun toArgv(): Array<String> {
         return params.withKVDelimiter(" ").formatAsLine()
                 .split("\\s+".toRegex())
                 .toTypedArray()

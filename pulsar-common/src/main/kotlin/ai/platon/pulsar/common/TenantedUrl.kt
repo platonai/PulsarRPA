@@ -51,7 +51,7 @@ class TenantedUrl(val tenantId: Int, var url: String) : Comparable<TenantedUrl> 
          * @return if the url start with a digit number, returns true
          */
         fun isTenanted(url: String): Boolean {
-            return !url.isEmpty() && Character.isDigit(url[0])
+            return url.isNotEmpty() && Character.isDigit(url[0])
         }
 
         fun of(tenantId: Int, url: String): TenantedUrl {

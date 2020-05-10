@@ -2,27 +2,24 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.reverseUrlOrNull
+import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.apache.commons.collections4.CollectionUtils
+import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
 
-class WebDb(
-        val conf: ImmutableConfig,
-        val storeService: AutoDetectedStorageService
-): AutoCloseable {
+class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
-    val log = LoggerFactory.getLogger(WebDb::class.java)
+    private val log = LoggerFactory.getLogger(WebDb::class.java)
 
-    val store: DataStore<String, GWebPage> get() = storeService.pageStore
-    val schemaName: String get() = store.schemaName
-
-    // required by Jvm language
-    constructor(conf: ImmutableConfig): this(conf, AutoDetectedStorageService(conf))
+    val store: DataStore<String, GWebPage>
+        get() = AutoDetectedStorageService.create(conf).pageStore
+    val schemaName: String
+        get() = store.schemaName
 
     /**
      * Returns the WebPage corresponding to the given url.
@@ -67,7 +64,7 @@ class WebDb(
 
     @JvmOverloads
     fun put(page: WebPage, replaceIfExists: Boolean = false): Boolean {
-        return putInteranl(page, replaceIfExists)
+        return putInternal(page, replaceIfExists)
     }
 
     /**
@@ -75,7 +72,7 @@ class WebDb(
      * There are comments in gora-hbase-0.6.1, HBaseStore.java, line 259:
      * "HBase sometimes does not delete arbitrarily"
      */
-    private fun putInteranl(page: WebPage, replaceIfExists: Boolean): Boolean {
+    private fun putInternal(page: WebPage, replaceIfExists: Boolean): Boolean {
         // Never update NIL page
         if (page.isNil) {
             return false
@@ -142,8 +139,21 @@ class WebDb(
         val query = store.newQuery()
         query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
+//        val filter = SingleFieldValueFilter<String, GWebPage>()
+//        query.filter = filter
+
         val result = store.execute(query)
         return DbIterator(result)
+    }
+
+    /**
+     * Scan all pages who's url starts with {@param originalUrl}
+     *
+     * @param originalUrl The base url
+     * @return The iterator to retrieve pages
+     */
+    fun scan(originalUrl: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
+        return scan(originalUrl, fields.map { it.toString() }.toTypedArray())
     }
 
     /**
@@ -162,6 +172,23 @@ class WebDb(
     }
 
     /**
+     * Scan all pages who's url starts with {@param originalUrl}
+     *
+     * @param originalUrl The base url
+     * @return The iterator to retrieve pages
+     */
+    fun scan(originalUrl: String, fields: Array<String>, filter: Filter<String, GWebPage>): Iterator<WebPage> {
+        val query = store.newQuery()
+
+        query.filter = filter
+        query.setKeyRange(reverseUrlOrNull(originalUrl), reverseUrlOrNull(originalUrl + UNICODE_LAST_CODE_POINT))
+        query.setFields(*fields)
+
+        val result = store.execute(query)
+        return DbIterator(result)
+    }
+
+    /**
      * Scan all pages matches the {@param query}
      *
      * @param query The query
@@ -170,8 +197,8 @@ class WebDb(
     fun query(query: DbQuery): Iterator<WebPage> {
         val goraQuery = store.newQuery()
 
-        val startKey: String? = reverseUrlOrNull(query.startUrl)
-        var endKey: String? = reverseUrlOrNull(query.endUrl)
+        val startKey = query.startUrl?.let { reverseUrlOrNull(it) }
+        var endKey = query.endUrl?.let { reverseUrlOrNull(it) }
 
         // The placeholder is used to mark the last character, it's required for serialization, especially for json format
         if (endKey != null) {

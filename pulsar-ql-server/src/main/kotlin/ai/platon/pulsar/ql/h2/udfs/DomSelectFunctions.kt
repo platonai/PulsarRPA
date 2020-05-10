@@ -1,10 +1,11 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.dom.nodes.A_LABELS
+import ai.platon.pulsar.dom.nodes.node.ext.slimHtml
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
-import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -22,23 +23,22 @@ import org.jsoup.nodes.Element
 @UDFGroup(namespace = "DOM")
 object DomSelectFunctions {
 
+    @UDFunction(description = "Select the nth element from a DOM by the given css query and return a DOM")
+    @JvmStatic
+    fun selectAll(dom: ValueDom, cssQuery: String): ValueArray {
+        return Queries.select(dom, cssQuery) { it }
+    }
+
     @UDFunction(description = "Select the first element from a DOM by the given css query and return a DOM")
     @JvmStatic
     fun selectFirst(dom: ValueDom, cssQuery: String): ValueDom {
-        if (dom.isNil) {
-            return dom
-        }
-
-        val element = dom.element.first(cssQuery)
-        return ValueDom.getOrNil(element)
+        return dom.takeIf { it.isNil }?:ValueDom.getOrNil(dom.element.selectFirstOrNull(cssQuery))
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return a DOM")
     @JvmStatic
     fun selectNth(dom: ValueDom, cssQuery: String, n: Int): ValueDom {
-        return if (dom.isNil) {
-            dom
-        } else ValueDom.getOrNil(nthElement(dom.element, cssQuery, n))
+        return dom.takeIf { it.isNil }?:ValueDom.getOrNil(nthElement(dom.element, cssQuery, n))
     }
 
     @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
@@ -50,13 +50,31 @@ object DomSelectFunctions {
     @UDFunction(description = "Select the first element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun firstText(dom: ValueDom, cssQuery: String): String {
-        return Queries.selectFirst(dom, cssQuery) { it.text() } ?: ""
+        return Queries.selectFirstOrNull(dom, cssQuery) { it.text() } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element text")
     @JvmStatic
     fun nthText(dom: ValueDom, cssQuery: String, n: Int): String {
-        return Queries.selectNth(dom, cssQuery, n) { it.text() } ?: ""
+        return Queries.selectNthOrNull(dom, cssQuery, n) { it.text() } ?: ""
+    }
+
+    @UDFunction(description = "Select all elements from a DOM by the given css query and return the the element texts")
+    @JvmStatic
+    fun allSlimHtmls(dom: ValueDom, cssQuery: String): ValueArray {
+        return Queries.select(dom, cssQuery) { it.slimHtml }
+    }
+
+    @UDFunction(description = "Select the first element from a DOM by the given css query and return the element text")
+    @JvmStatic
+    fun firstSlimHtml(dom: ValueDom, cssQuery: String): String {
+        return Queries.selectFirstOrNull(dom, cssQuery) { it.slimHtml } ?: ""
+    }
+
+    @UDFunction(description = "Select the nth element from a DOM by the given css query and return the element text")
+    @JvmStatic
+    fun nthSlimHtml(dom: ValueDom, cssQuery: String, n: Int): String {
+        return Queries.selectNthOrNull(dom, cssQuery, n) { it.slimHtml } ?: ""
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -64,7 +82,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstInteger(dom: ValueDom, cssQuery: String, defaultValue: Int = 0): Int {
         val s = firstText(dom, cssQuery)
-        return StringUtil.getFirstInteger(s, defaultValue)
+        return Strings.getFirstInteger(s, defaultValue)
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
@@ -73,7 +91,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun nthInteger(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Int = 0): Int {
         val s = nthText(dom, cssQuery, n)
-        return StringUtil.getFirstInteger(s, defaultValue)
+        return Strings.getFirstInteger(s, defaultValue)
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -81,7 +99,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun firstNumber(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): Float {
         val s = firstText(dom, cssQuery)
-        return StringUtil.getFirstFloatNumber(s, defaultValue)
+        return Strings.getFirstFloatNumber(s, defaultValue)
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
@@ -90,7 +108,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun nthNumber(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): Float {
         val s = nthText(dom, cssQuery, n)
-        return StringUtil.getFirstFloatNumber(s, defaultValue)
+        return Strings.getFirstFloatNumber(s, defaultValue)
     }
 
     @UDFunction(description = "Select all the element from a DOM by the given css query " +
@@ -106,14 +124,14 @@ object DomSelectFunctions {
     @JvmStatic
     @JvmOverloads
     fun firstAttr(dom: ValueDom, cssQuery: String = ":root", attrName: String): String {
-        return Queries.selectFirst(dom, cssQuery) { it.attr(attrName) } ?: ""
+        return Queries.selectFirstOrNull(dom, cssQuery) { it.attr(attrName) } ?: ""
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
             "and return the attribute value associated by the attribute name")
     @JvmStatic
     fun nthAttr(dom: ValueDom, cssQuery: String, n: Int, attrName: String): String {
-        return Queries.selectNth(dom, cssQuery, n) { it.attr(attrName) } ?: ""
+        return Queries.selectNthOrNull(dom, cssQuery, n) { it.attr(attrName) } ?: ""
     }
 
     @UDFunction(description = "Select all the image elements from a DOM by the given css query " +
@@ -131,7 +149,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun firstImg(dom: ValueDom, cssQuery: String = ":root"): String {
         val q = appendSelectorIfMissing(cssQuery, "img")
-        return Queries.selectFirst(dom, q) { it.attr("abs:src") } ?: ""
+        return Queries.selectFirstOrNull(dom, q) { it.attr("abs:src") } ?: ""
     }
 
     @UDFunction(description = "Select the nth image element from a DOM by the given css query " +
@@ -139,7 +157,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun nthImg(dom: ValueDom, cssQuery: String, n: Int): String {
         val q = appendSelectorIfMissing(cssQuery, "img")
-        return Queries.selectNth(dom, q, n) { it.attr("abs:src") } ?: ""
+        return Queries.selectNthOrNull(dom, q, n) { it.attr("abs:src") } ?: ""
     }
 
     @UDFunction
@@ -156,7 +174,7 @@ object DomSelectFunctions {
     @JvmOverloads
     fun firstHref(dom: ValueDom, cssQuery: String = ":root"): String {
         val q = appendSelectorIfMissing(cssQuery, "a")
-        return Queries.selectFirst(dom, q) { it.attr("abs:href") } ?: ""
+        return Queries.selectFirstOrNull(dom, q) { it.attr("abs:href") } ?: ""
     }
 
     @UDFunction(description = "Select the nth anchor element from a DOM by the given css query " +
@@ -164,7 +182,7 @@ object DomSelectFunctions {
     @JvmStatic
     fun nthHref(dom: ValueDom, cssQuery: String, n: Int): String {
         val q = appendSelectorIfMissing(cssQuery, "a")
-        return Queries.selectNth(dom, q, n) { it.attr("abs:href") } ?: ""
+        return Queries.selectNthOrNull(dom, q, n) { it.attr("abs:href") } ?: ""
     }
 
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
@@ -269,8 +287,6 @@ object DomSelectFunctions {
 
     private fun nthElement(root: Element, cssQuery: String, n: Int): Element? {
         val elements = root.select2(cssQuery)
-        return if (elements.size > n) {
-            elements[n]
-        } else null
+        return if (elements.size > n) { elements[n] } else null
     }
 }

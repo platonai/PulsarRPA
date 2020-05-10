@@ -3,16 +3,14 @@ package ai.platon.pulsar.ql.h2
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.nodes.Anchor
-import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
-import ai.platon.pulsar.dom.select.first
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.WebPageFormatter
+import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.QuerySession
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
@@ -121,20 +119,18 @@ object Queries {
     }
 
     /**
-     * TODO: any type support
+     * TODO: any type support, only array of strings are supported now
      * */
     fun <O> select(dom: ValueDom, cssQuery: String, transform: (Element) -> O): ValueArray {
-        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }
-                .toTypedArray()
-
+        val values = dom.element.select(cssQuery) { ValueString.get(transform(it).toString()) }.toTypedArray()
         return ValueArray.get(values)
     }
 
-    fun <O> selectFirst(dom: ValueDom, cssQuery: String, transformer: (Element) -> O): O? {
-        return dom.element.first(cssQuery, transformer)
+    fun <O> selectFirstOrNull(dom: ValueDom, cssQuery: String, transformer: (Element) -> O): O? {
+        return dom.element.selectFirstOrNull(cssQuery, transformer)
     }
 
-    fun <O> selectNth(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {
+    fun <O> selectNthOrNull(dom: ValueDom, cssQuery: String, n: Int, transform: (Element) -> O): O? {
         return dom.element.select(cssQuery, n, 1) { transform(it) }.firstOrNull()
     }
 
@@ -144,31 +140,13 @@ object Queries {
 
     fun getLinks(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-        return ele.select(cssQuery, offset, limit) {
-            it.absUrl("href")
-        }.filterNotNull()
+        return ele.select(cssQuery, offset, limit) { it.absUrl("href") }.filterNotNull()
     }
 
     fun getLinksIgnoreQuery(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
         val cssQuery = appendSelectorIfMissing(restrictCss, "a")
         return ele.select(cssQuery, offset, limit) {
             it.absUrl("href").takeIf { Urls.isValidUrl(it) }?.substringBefore("?")
-        }.filterNotNull()
-    }
-
-    fun getAnchors(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<Anchor> {
-        val cssQuery = appendSelectorIfMissing(restrictCss, "a")
-        return ele.select(cssQuery, offset, limit).mapNotNull {
-            it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
-                    ?.let { Anchor(it.absUrl("href"), it.cleanText, it.cssSelector(),
-                            it.left, it.top, it.width, it.height) }
-        }
-    }
-
-    fun getImages(ele: Element, restrictCss: String, offset: Int, limit: Int): Collection<String> {
-        val cssQuery = appendSelectorIfMissing(restrictCss, "img")
-        return ele.select(cssQuery, offset, limit) {
-            it.absUrl("src").takeIf { Urls.isValidUrl(it) }
         }.filterNotNull()
     }
 
@@ -190,8 +168,7 @@ object Queries {
      */
     @InterfaceStability.Evolving
     fun <E> toResultSet(colName: String, collection: Iterable<E>): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = SimpleResultSet().apply { autoClose = false }
         val colType = if (colName.equals("DOM", ignoreCase = true)) ValueDom.type else Value.STRING
         rs.addColumn(colName, DataType.convertTypeToSQLType(colType), 0, 0)
 
@@ -262,7 +239,7 @@ object Queries {
 
         val fields = WebPageFormatter(page).toMap()
         for (entry in fields.entries) {
-            val value = if (entry.value == null) null else entry.value.toString()
+            val value = entry.value.toString()
             rs.addRow(entry.key, value)
         }
 

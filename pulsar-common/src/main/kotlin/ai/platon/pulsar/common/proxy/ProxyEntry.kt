@@ -10,9 +10,10 @@ import java.net.Proxy
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import java.util.regex.Pattern
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.roundToInt
 
 enum class ProxyType {
@@ -22,57 +23,90 @@ enum class ProxyType {
 data class ProxyEntry(
         var host: String,
         var port: Int = 0,
+        var outIp: String = "",
+        var id: Int = instanceSequence.incrementAndGet(),
+        var declaredTTL: Instant? = null,
+        var lastTarget: String? = null,
+        var testUrls: List<URL> = TEST_URLS.toList(),
+        var defaultTestUrl: URL = DEFAULT_TEST_URL,
+        var isTestIp: Boolean = false,
         var proxyType: ProxyType = ProxyType.HTTP, // reserved
-        var user: String? = null,
-        var pwd: String? = null,
-        val declaredTTL: Instant? = null,
-        var targetHost: String? = null
-) : Comparable<ProxyEntry> {
+        var user: String? = null, // reserved
+        var pwd: String? = null // reserved
+): Comparable<ProxyEntry> {
+    enum class Status { FREE, WORKING, RETIRED, EXPIRED, GONE }
+
     val hostPort = "$host:$port"
-    val display get() = "$host:$port" + ttlDuration?.let { "(${DateTimeUtil.readableDuration(it)})" }
+    val segment = host.substringBeforeLast(".")
+    val outSegment = outIp.substringBeforeLast(".")
+    val startTime = Instant.now()
+    val elapsedTime get() = Duration.between(startTime, Instant.now())
+    val display get() = formatDisplay()
+    val metadata get() = formatMetadata()
     var networkTester: (URL, Proxy) -> Boolean = NetUtil::testHttpNetwork
-    val testCount = AtomicInteger()
-    val testTime = AtomicLong()
-    val servedDomains = ConcurrentHashMultiset.create<String>()
-    var failedCount: Int = 0
-    val speed: Double get() = (1000 * testTime.get() / 1000 / (0.1 + testCount.get())).roundToInt() / 1000.0
+    val numTests = AtomicInteger()
+    val numConnectionLosts = AtomicInteger()
+    // accumulated test time
+    val accumResponseMillis = AtomicLong()
+    // failed connection count
     var availableTime: Instant = Instant.now()
-    val ttl: Instant get() = declaredTTL ?: availableTime + PROXY_EXPIRED
-    val ttlDuration: Duration? get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
+    // number of failed pages
+    val numFailedPages = AtomicInteger()
+    // number of success pages
+    val numSuccessPages = AtomicInteger()
+    val servedDomains = ConcurrentHashMultiset.create<String>()
+    val status = AtomicReference<Status>(Status.FREE)
+    val testSpeed get() = accumResponseMillis.get() / numTests.get().coerceAtLeast(1) / 1000.0
+    val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
+    val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
-    val isGone get() = failedCount >= 3
+    val isRetired get() = status.get() == Status.RETIRED
+    val isFree get() = status.get() == Status.FREE
+    val isWorking get() = status.get() == Status.WORKING
+    val isBanned get() = isRetired && !isExpired
+    val isFailed get() = numConnectionLosts.get() >= 3 // large value means ignoring failures
+    val isGone get() = isRetired || isFailed
 
-    fun willExpireAt(instant: Instant): Boolean {
-        return ttl < instant
+    enum class BanState {
+        OK, SEGMENT, HOST, OTHER;
+
+        val isOK get() = this == OK
+        val isBanned get() = !isOK
     }
 
-    fun willExpireAfter(duration: Duration): Boolean {
-        return ttl < Instant.now() + duration
-    }
+    fun willExpireAt(instant: Instant): Boolean = ttl < instant
 
-    fun refresh() {
-        availableTime = Instant.now()
-    }
+    fun willExpireAfter(duration: Duration): Boolean = ttl < Instant.now() + duration
+
+    fun setFree() { status.set(Status.FREE) }
+
+    fun startWork() { status.set(Status.WORKING) }
+
+    fun retire() { status.set(Status.RETIRED) }
+
+    fun refresh() { availableTime = Instant.now() }
 
     fun test(): Boolean {
-        val target = if (targetHost != null) {
-            URL(targetHost)
-        } else TEST_WEB_SITES.random()
+        val target = if (lastTarget != null) {
+            URL(lastTarget)
+        } else testUrls.random()
 
         var available = test(target)
-        if (!available && target != DEFAULT_TEST_WEB_SITE) {
-            available = test(DEFAULT_TEST_WEB_SITE)
+        if (!available && !isGone && target != defaultTestUrl) {
+            available = test(defaultTestUrl)
             if (available) {
-                log.warn("Test web site is unreachable | <{}> - {}", this, target)
+                log.warn("Target unreachable via {} | {} | {}", display, metadata, target.host)
+            } else if (!isGone) {
+                log.warn("Proxy connection lost {} | {} | {}", display, metadata, target.host)
             }
         }
 
         return available
     }
 
-    fun test(target: URL): Boolean {
+    fun test(target: URL, timeout: Duration = Duration.ofSeconds(5)): Boolean {
         // first, check TCP network is reachable, this is fast
-        var available = NetUtil.testTcpNetwork(host, port, Duration.ofSeconds(5))
+        var available = NetUtil.testTcpNetwork(host, port, timeout)
         if (available) {
             // second, the destination web site is reachable through this proxy
             val addr = InetSocketAddress(host, port)
@@ -82,60 +116,88 @@ data class ProxyEntry(
             available = networkTester(target, proxy)
             val end = System.currentTimeMillis()
 
-            testCount.incrementAndGet()
-            testTime.addAndGet(end - start)
+            numTests.incrementAndGet()
+            accumResponseMillis.addAndGet(end - start)
         }
 
         if (!available) {
-            ++failedCount
+            numConnectionLosts.incrementAndGet()
+            if (isGone) {
+                log.warn("Proxy is gone after {} tests | {}", numTests, this)
+            }
         } else {
-            // test if the proxy is expired
-            failedCount = 0
+            numConnectionLosts.set(0)
             refresh()
         }
 
         return available
     }
 
-    override fun hashCode(): Int {
-        return 31 * proxyType.hashCode() + hostPort.hashCode()
+    /**
+     * The string representation, can be parsed using [parse]
+     * */
+    fun serialize(): String {
+        val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
+        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, $metadata"
     }
+
+    override fun hashCode(): Int = 31 * proxyType.hashCode() + hostPort.hashCode()
 
     override fun equals(other: Any?): Boolean {
-        return other is ProxyEntry && other.proxyType == proxyType && other.host == host && other.port == port
+        return other is ProxyEntry
+                && other.proxyType == proxyType
+                && other.host == host && other.port == port
+                && other.outIp == outIp
     }
 
-    override fun toString(): String {
-        val ttlStr = if (declaredTTL != null) ", ttl:$declaredTTL" else ""
-        return "$host:$port${META_DELIMITER}at:$availableTime$ttlStr, spd:$speed"
-    }
+    /**
+     * The string representation, can be parsed using [parse]
+     * */
+    override fun toString(): String = "$display $metadata"
 
     override fun compareTo(other: ProxyEntry): Int {
-        return hostPort.compareTo(other.hostPort)
+        var c = outIp.compareTo(other.outIp)
+        if (c == 0) {
+            c = hostPort.compareTo(other.hostPort)
+        }
+        return c
+    }
+
+    private fun formatDisplay(): String {
+        val ban = if (isBanned) "[banned] " else ""
+        val ttlStr = ttlDuration?.truncatedTo(ChronoUnit.SECONDS)?.readable() ?:"0s"
+        return "$ban[$hostPort => $outIp]($numFailedPages/$numSuccessPages/$ttlStr)"
+    }
+
+    private fun formatMetadata(): String {
+        val nPages = numSuccessPages.get() + numFailedPages.get()
+        return "st:${status.get().ordinal} pg:$nPages, spd:$testSpeed, tt:$numTests, ftt:$numConnectionLosts, fpg:$numFailedPages"
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyPool::class.java)
+        private val log = LoggerFactory.getLogger(ProxyEntry::class.java)
 
+        private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
-        private const val IP_PORT_REGEX = "^((25[0-5]|2[0-4]\\d|1?\\d?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1?\\d?\\d)(:[0-9]{2,5})"
-        private val IP_PORT_PATTERN = Pattern.compile(IP_PORT_REGEX)
         // Check if the proxy server is still available if it's not used for 30 seconds
         private val PROXY_EXPIRED = Duration.ofSeconds(30)
         // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
         private const val DEFAULT_PROXY_SERVER_PORT = 80
         private const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
-        val DEFAULT_TEST_WEB_SITE = URL("https://www.baidu.com")
-        val TEST_WEB_SITES = mutableSetOf<URL>()
+        val DEFAULT_TEST_URL = URL("https://www.baidu.com")
+        val TEST_URLS = mutableSetOf<URL>()
 
         init {
-            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_WEB_SITES) { Urls.getURLOrNull(it) }
+            ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { Urls.getURLOrNull(it) }
         }
 
+        /**
+         * Parse a proxy from a string. A string generated by ProxyEntry.serialize can be parsed.
+         * */
         fun parse(str: String): ProxyEntry? {
             val ipPort = str.substringBefore(META_DELIMITER)
-            if (!StringUtil.isIpPortLike(ipPort)) {
+            if (!Strings.isIpPortLike(ipPort)) {
                 log.warn("Malformed ip port - {}", str)
                 return null
             }
@@ -151,11 +213,11 @@ data class ProxyEntry(
                 parts.forEach { item ->
                     try {
                         when {
-                            item.startsWith("at:") -> availableTime = Instant.parse(item.substring("at:".length))
-                            item.startsWith("ttl:") -> ttl = Instant.parse(item.substring("ttl:".length))
+                            item.startsWith("at:") -> availableTime = Instant.parse(item.substring("at:".length).trimEnd())
+                            item.startsWith("ttl:") -> ttl = Instant.parse(item.substring("ttl:".length).trimEnd())
                         }
                     } catch (e: Throwable) {
-                        log.warn("Malformed proxy metadata {}", item)
+                        log.warn("Ignore malformed proxy metadata <{}>", item)
                     }
                 }
 

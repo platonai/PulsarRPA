@@ -1,25 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration scan="true" scanPeriod="30 seconds" debug="true">
-    <property name="pulsar.log.dir" value="${pulsar.log.dir:-logs}" />
-    <property name="pulsar.log.file" value="${pulsar.log.file:-pulsar.log}" />
+<configuration>
+    <property name="logging.dir" value="${logging.dir:-logs}" />
+    <property name="logging.file" value="${logging.file:-pulsar.log}" />
+
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
     <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
         <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy-->
         <!--for further documentation-->
-        <File>${pulsar.log.dir}/${pulsar.log.file}</File>
+        <File>${logging.dir}/${logging.file}</File>
         <encoder>
             <!--<pattern>%d{ISO8601} %t %-5p %c{2} - %m%n</pattern>-->
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${pulsar.log.dir}/${pulsar.log.file}.%d{.yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${logging.dir}/${logging.file}.%d{.yyyy-MM-dd}</fileNamePattern>
         </rollingPolicy>
     </appender>
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{ISO8601} %c{2} - %m%n</pattern>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
         </encoder>
     </appender>
 
@@ -42,9 +45,10 @@
     <logger name="org.apache.hadoop" level="WARN"/>
     <logger name="org.springframework" level="WARN"/>
     <logger name="io.netty.channel.AbstractChannelHandlerContext" level="ERROR"/>
+    <logger name="org.hibernate.type.descriptor.sql" level="WARN"/>
 
     <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>
-        <appender-ref ref="stdout"/>
+        <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

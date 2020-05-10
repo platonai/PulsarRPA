@@ -82,7 +82,7 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue { dom.element.uniqueName.contains("nfItem") }
 
         rs.beforeFirst()
-        println(ResultSetFormatter(rs).format())
+        println(ResultSetFormatter(rs).toString())
 
         println(sql)
         println(SysProperties.serializeJavaObject)
@@ -103,7 +103,7 @@ class TestJavaObjectSerializer : TestBase() {
             LIMIT 30"""
         val rs = stat.executeQuery(sql)
 
-        println(ResultSetFormatter(rs).format())
+        println(ResultSetFormatter(rs).toString())
 
         println(sql)
         println(SysProperties.serializeJavaObject)

@@ -16,10 +16,10 @@
  */
 package ai.platon.pulsar.persist.metadata;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.DublinCore;
 import ai.platon.pulsar.common.HttpHeaders;
-import ai.platon.pulsar.common.config.PulsarConstants;
+import ai.platon.pulsar.common.config.AppConstants;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * @author Chris Mattmann
  * @author J&eacute;r&ocirc;me Charron
  */
-public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
+public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
 
     public static final String META_TMP = "TMP_";
 
@@ -51,6 +51,20 @@ public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
      */
     public MultiMetadata() {
 
+    }
+
+    /**
+     * Constructs a new, empty data.
+     */
+    public MultiMetadata(String... kvs) {
+        int length = kvs.length;
+        if (length % 2 == 0) {
+            for (int i = 0; i < length; i += 2) {
+                put(kvs[i], kvs[1 + i]);
+            }
+        } else {
+            throw new IllegalArgumentException("Length of the variable argument 'kvs' must be an even number");
+        }
     }
 
     /**
@@ -134,7 +148,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
     }
 
     public void put(Name name, Instant value) {
-        put(name, DateTimeUtil.isoInstantFormat(value));
+        put(name, DateTimes.isoInstantFormat(value));
     }
 
     public void set(String name, String value) {
@@ -161,7 +175,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, PulsarConstants {
     }
 
     public Instant getInstant(String name, Instant defaultValue) {
-        return DateTimeUtil.parseInstant(get(name), defaultValue);
+        return DateTimes.parseInstant(get(name), defaultValue);
     }
 
     /**

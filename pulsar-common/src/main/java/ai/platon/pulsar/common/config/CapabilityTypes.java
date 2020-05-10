@@ -30,7 +30,7 @@ public interface CapabilityTypes {
     String PULSAR_CONFIG_DIR = "pulsar.configuration.dir";
     String PULSAR_CONFIG_ID = "pulsar.config.id";
     String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
-    String PULSAR_CONFIG_RESOURCES = "pulsar.config.resources";
+    String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
     String PARAM_HOME_DIR = "pulsar.home.dir";
     String PARAM_TMP_DIR = "pulsar.tmp.dir";
@@ -42,6 +42,8 @@ public interface CapabilityTypes {
 
     String PULSAR_CLUSTER_SLAVES = "pulsar.cluster.slaves";
     String DRY_RUN = "pulsar.dry.run";
+
+    String APPLICATION_METRICS_ENABLED = "application.metrics.enabled";
 
     /**
      * Args
@@ -168,19 +170,21 @@ public interface CapabilityTypes {
      * Fetch parameters
      */
     String FETCH_MODE = "fetch.fetch.mode";
-    String FETCH_EAGER_FETCH_LIMIT = "fetch.eager.fetch.limit";
+    String FETCH_WORKER_NAME_PREFIX = "fetch.worker.name.prefix";
+    // In browser fetch mode, the fetch concurrency depends on the number of process of browsers which is the most critical resource
+    String FETCH_CONCURRENCY = "fetch.concurrency";
 
-    String FETCH_THREADS_FETCH = "fetch.threads.fetch";
     String FETCH_CRAWL_PATH_STRATEGY = "fetch.crawl.path.strategy";
     String FETCH_JOB_TIMEOUT = "fetch.job.timeout";
     String FETCH_TASK_TIMEOUT = "fetch.task.timeout";
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
     String FETCH_SERVER_REQUIRED = "fetch.fetch.server.required";
+    // TODO: name "queue" has changed to be "pool"
     String FETCH_QUEUE_MODE = "fetch.queue.mode";
     String FETCH_QUEUE_USE_HOST_SETTINGS = "fetch.queue.use.host.settings";
     String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
     String FETCH_FEEDER_INIT_BATCH_SIZE = "fetch.feeder.init.batch.size";
-    String FETCH_THREADS_PER_QUEUE = "fetch.threads.per.queue";
+    String FETCH_THREADS_PER_POOL = "fetch.threads.per.pool";
     String FETCH_THROUGHPUT_THRESHOLD_PAGES = "fetch.throughput.threshold.pages";
     String FETCH_THROUGHPUT_THRESHOLD_SEQENCE = "fetch.throughput.threshold.sequence";
     String FETCH_THROUGHPUT_CHECK_INTERVAL = "fetch.throughput.check.interval";
@@ -194,6 +198,7 @@ public interface CapabilityTypes {
     String FETCH_MAX_RETRY = "db.fetch.retry.max";
     String FETCH_STORE_CONTENT = "fetch.store.content";
     String FETCH_PROTOCOL_SHARED_FILE_TIMEOUT = "fetch.protocol.shared.file.timeout";
+    String FETCH_NET_BANDWIDTH_M = "fetcher.net.bandwidth.m";
 
     String FETCH_BEFORE_FETCH_HANDLER = "onBeforeFetch";
     String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
@@ -211,29 +216,34 @@ public interface CapabilityTypes {
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
-    String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.required.property.names";
+    String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
-     * Selenium
+     * Browser control
      */
-    String SELENIUM_BROWSER = "selenium.browser";
-    String SELENIUM_BROWSER_INCOGNITO = "selenium.browser.incognito";
-    String SELENIUM_MAX_WEB_DRIVERS = "selenium.max.web.drivers";
-    String SELENIUM_BROWSER_HEADLESS = "selenium.browser.headless";
-    String SELENIUM_WEB_DRIVER_CLASS = "selenium.web.driver.class";
-    String SELENIUM_WEB_DRIVER_PRIORITY = "selenium.web.driver.priority";
-    String SELENIUM_WEB_DRIVER_DELETE_ALL_COOKIES = "selenium.web.driver.delete.all.cookies";
-
+    String BROWSER_POOL_CAPACITY = "browser.pool.capacity";
+    String BROWSER_WEB_DRIVER_CLASS = "browser.driver.class";
+    String BROWSER_DRIVER_PRIORITY = "browser.driver.priority";
+    String BROWSER_TYPE = "browser.type";
+    String BROWSER_INCOGNITO = "browser.incognito";
+    String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
+    String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
+    String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
+    String BROWSER_EMULATE_EVENT_HANDLER = "browser.emulate.event.handler";
+    String BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING = "browser.devtools.enable.url.blocking";
     /**
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
+    String PROXY_MANAGER_CLASS = "proxy.manager.class";
+    String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
+    String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.no.proxy.exception";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
-    String PROXY_POOL_POLLING_INTERVAL = "proxy.pool.polling.interval";
-    String PROXY_ENABLE_INTERNAL_SERVER = "proxy.enable.internal.server";
-    String PROXY_INTERNAL_SERVER_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
-    String PROXY_INTERNAL_SERVER_BOSS_THREADS = "proxy.internal.server.boss.threads";
-    String PROXY_INTERNAL_SERVER_WORKER_THREADS = "proxy.internal.server.worker.threads";
-    String PROXY_PROXY_POOL_RECOVER_PERIOD = "proxy.proxy.pool.recover.period";
+    String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
+    String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
+    String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
+    String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.forward.server";
+    String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";
+    String PROXY_SERVER_WORKER_THREADS = "proxy.forward.server.worker.threads";
 
     /**
      * Network
@@ -255,7 +265,7 @@ public interface CapabilityTypes {
     String GENERATE_FILTER = "generate.filter";
     String GENERATE_NORMALISE = "generate.normalise";
     String GENERATE_MAX_TASKS_PER_HOST = "generate.max.tasks.per.host";
-    String GENERATE_COUNT_MODE = "generate.count.mode";
+    String GENERATE_SITE_GROUP_MODE = "generate.count.mode";
     String GENERATE_TOP_N = "generate.topN";
     String GENERATE_LAST_GENERATED_ROWS = "generate.last.generated.rows";
     String GENERATE_CUR_TIME = "generate.curr.time";
@@ -281,13 +291,25 @@ public interface CapabilityTypes {
     String PARSE_SUPPORTED_CHARSETS = "parser.supported.charsets";
     String PARSE_DEFAULT_ENCODING = "parser.character.encoding.default";
     String PARSE_CACHING_FORBIDDEN_POLICY = "parser.caching.forbidden.policy";
+    String PARSE_TIKA_HTML_MAPPER_NAME = "tika.htmlmapper.classname";
+
     // TODO: not used, may be caused by a git merge problem
     String PARSE_RETRIEVE_FADED_LINKS = "parse.retrieve.faded.links";
 
     /**
      * DbUpdater parameters
      */
-    String UPDATE_MAX_INLINKS = "db.update.max.inlinks";
+    String UPDATE_MAX_INLINKS = "update.max.inlinks";
+    String UPDATE_IGNORE_IN2OUT_GRAPH = "update.ignore.in.graph";
+
+    String SCHEDULE_INC_RATE = "db.fetch.schedule.adaptive.inc_rate";
+    String SCHEDULE_DEC_RATE = "db.fetch.schedule.adaptive.dec_rate";
+    String SCHEDULE_MIN_INTERVAL = "db.fetch.schedule.adaptive.min_interval";
+    String SCHEDULE_MAX_INTERVAL = "db.fetch.schedule.adaptive.max_interval";
+    String SCHEDULE_SEED_MAX_INTERVAL = "db.fetch.schedule.adaptive.seed_max_interval";
+    String SCHEDULE_SYNC_DELTA = "db.fetch.schedule.adaptive.sync_delta";
+    String SCHEDULE_SYNC_DELTA_RATE = "db.fetch.schedule.adaptive.sync_delta_rate";
+
     /**
      * Scoring
      */
@@ -298,7 +320,7 @@ public interface CapabilityTypes {
     /**
      * Indexing parameters
      */
-    String INDEX_JIT = "fetch.index.just.in.time";
+    String INDEXER_JIT = "indexer.just.in.time";
     String INDEXER_HOSTNAME = "index.server.hostname";
     String INDEXER_PORT = "index.server.port";
     String INDEXER_URL = "indexer.url";
@@ -373,4 +395,7 @@ public interface CapabilityTypes {
 
     // Spark
     String SPARK_MASTER = "spark.master";
+
+    // H2
+    String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
 }

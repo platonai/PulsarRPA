@@ -48,8 +48,6 @@
 
     <properties>
         <skipTests>true</skipTests>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <derby.version>10.10.1.1</derby.version>
         <osgi.version>4.2.0</osgi.version>
         <slf4j.version>1.6.0</slf4j.version>
@@ -222,6 +220,19 @@
         </testResources>
 
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <verbose>true</verbose>
+                    <fork>true</fork>
+                    <!-- Compatible with projects with lower java version support, e.g. metabase platon -->
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
             <!-- Add h2tools folder to test sources but consider moving them to src/test -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

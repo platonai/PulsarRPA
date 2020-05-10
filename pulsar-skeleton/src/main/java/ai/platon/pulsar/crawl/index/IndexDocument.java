@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.crawl.index;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.scoring.ScoringFilters;
@@ -24,8 +24,6 @@ import ai.platon.pulsar.persist.WebPage;
 import org.apache.commons.collections4.map.LinkedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -178,18 +176,15 @@ public class IndexDocument {
 
     private String format(Object obj) {
         if (obj instanceof Date) {
-            return DateTimeUtil.isoInstantFormat((Date) obj);
+            return DateTimes.INSTANCE.isoInstantFormat((Date) obj);
         } else if (obj instanceof Instant) {
-            return DateTimeUtil.isoInstantFormat((Instant) obj);
+            return DateTimes.isoInstantFormat((Instant) obj);
         } else {
             return obj.toString();
         }
     }
 
     public static class Builder {
-        private static final Log LOG = LogFactory.getLog(new Object() {
-        }.getClass().getEnclosingClass());
-
         private ImmutableConfig conf;
         private IndexingFilters indexingFilters;
         private ScoringFilters scoringFilters;

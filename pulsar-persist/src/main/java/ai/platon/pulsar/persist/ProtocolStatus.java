@@ -18,33 +18,35 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public static final String ARG_HTTP_CODE = "httpCode";
     public static final String ARG_REDIRECT_TO_URL = "redirectTo";
     public static final String ARG_URL = "url";
+    public static final String ARG_RETRY_SCOPE = "rsp";
+    public static final String ARG_RETRY_REASON = "rrs";
 
-    public static final short NOTFETCHED = 0;
+    /**
+     * Content was not retrieved yet.
+     */
+    private static final short NOTFETCHED = 0;
     /**
      * Content was retrieved without errors.
      */
-    public static final short SUCCESS = 1;
+    private static final short SUCCESS = 1;
     /**
      * Content was not retrieved. Any further errors may be indicated in args.
      */
-    public static final short FAILED = 2;
+    private static final short FAILED = 2;
 
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
     public static final ProtocolStatus STATUS_NOTFETCHED = new ProtocolStatus(NOTFETCHED);
-    public static final ProtocolStatus STATUS_FAILED = new ProtocolStatus(FAILED);
 
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
-    public static final ProtocolStatus STATUS_RETRY = ProtocolStatus.failed(RETRY);
-    public static final ProtocolStatus STATUS_INCOMPLETE_RETRY = ProtocolStatus.failed(DOCUMENT_INCOMPLETE);
-    public static final ProtocolStatus STATUS_BROWSER_RETRY = ProtocolStatus.failed(WEB_DRIVER_GONE);
+    // if a task is canceled, we do not save anything, if a task is retry, all the metadata is saved
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
     public static final ProtocolStatus STATUS_EXCEPTION = ProtocolStatus.failed(EXCEPTION);
 
-    public static final HashMap<Short, String> majorCodes = new HashMap<>();
-    public static final HashMap<Integer, String> minorCodes = new HashMap<>();
+    private static final HashMap<Short, String> majorCodes = new HashMap<>();
+    private static final HashMap<Integer, String> minorCodes = new HashMap<>();
 
     static {
         majorCodes.put(NOTFETCHED, "nofetched");
@@ -73,7 +75,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(CANCELED, "canceled");
         minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
         minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
-        minorCodes.put(DOCUMENT_READY_TIMEOUT, "document_ready_timeout");
+        minorCodes.put(SCRIPT_TIMEOUT, "script_timeout");
     }
 
     private GProtocolStatus protocolStatus;
@@ -106,6 +108,21 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     public static String getMinorName(int code) {
         return minorCodes.getOrDefault(code, "unknown");
+    }
+
+    @Nonnull
+    public static ProtocolStatus retry(RetryScope scope) {
+        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope);
+    }
+
+    @Nonnull
+    public static ProtocolStatus retry(RetryScope scope, Object reason) {
+        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope, ARG_RETRY_REASON, reason);
+    }
+
+    @Nonnull
+    public static ProtocolStatus cancel(Object... args) {
+        return failed(ProtocolStatusCodes.CANCELED, args);
     }
 
     @Nonnull
@@ -142,6 +159,15 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         }
     }
 
+    public static boolean isTimeout(ProtocolStatus protocalStatus) {
+        int code = protocalStatus.getMinorCode();
+        return isTimeout(code);
+    }
+
+    public static boolean isTimeout(int code) {
+        return code == REQUEST_TIMEOUT || code == THREAD_TIMEOUT || code == WEB_DRIVER_TIMEOUT || code == SCRIPT_TIMEOUT;
+    }
+
     public GProtocolStatus unbox() {
         return protocolStatus;
     }
@@ -162,12 +188,25 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMinorCode() == CANCELED;
     }
 
+    public boolean isRetry() {
+        return getMinorCode() == RETRY;
+    }
+
+    public boolean isRetry(RetryScope scope) {
+        RetryScope defaultScope = RetryScope.CRAWL;
+        return getMinorCode() == RETRY && getArgOrDefault(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
+    }
+
     public boolean isTempMoved() {
         return getMinorCode() == TEMP_MOVED;
     }
 
+    public boolean isMoved() {
+        return getMinorCode() == TEMP_MOVED || getMinorCode() == MOVED;
+    }
+
     public boolean isTimeout() {
-        return getMinorCode() == REQUEST_TIMEOUT || getMinorCode() == THREAD_TIMEOUT;
+        return isTimeout(this);
     }
 
     public String getMajorName() {
@@ -186,6 +225,9 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMinorName(getMinorCode());
     }
 
+    /**
+     * The detailed status code of the protocol, it must be compatible with standard http response code
+     * */
     public int getMinorCode() {
         return protocolStatus.getMinorCode();
     }
@@ -216,12 +258,19 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getArgs().getOrDefault(name, defaultValue).toString();
     }
 
+    public void upgradeRetry(RetryScope scope) {
+        getArgs().put(ARG_RETRY_SCOPE, scope.toString());
+    }
+
     @Override
     public String toString() {
-        String args = getArgs().entrySet().stream().map(e -> e.getKey().toString() + ": " + e.getValue().toString())
-                .collect(Collectors.joining(", "));
-        return getName() +
-                " (" + getMajorCode() + "/" + getMinorCode() + ")" +
-                ", args=[" + args + "]";
-    }
+        String str = getName() + " (" + getMajorCode() + "/" + getMinorCode() + ")";
+        if (!getArgs().isEmpty()) {
+            String args = getArgs().entrySet().stream()
+                    .map(e -> e.getKey().toString() + ": " + e.getValue().toString())
+                    .collect(Collectors.joining(", "));
+            str += ", args=[" + args + "]";
+        }
+        return str;
+   }
 }

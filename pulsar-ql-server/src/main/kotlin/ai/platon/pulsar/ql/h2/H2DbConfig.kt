@@ -58,11 +58,6 @@ class H2DbConfig {
     var traceTest: Boolean = false
 
     /**
-     * If testing on Google App Engine.
-     */
-    var googleAppEngine: Boolean = false
-
-    /**
      * If a small cache and a low number for MAX_MEMORY_ROWS should be used.
      */
     var diskResult: Boolean = false

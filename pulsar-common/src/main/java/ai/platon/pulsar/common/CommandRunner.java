@@ -29,78 +29,40 @@ import java.util.concurrent.TimeoutException;
 public class CommandRunner {
 
     private static final int BUF = 4096;
-    private boolean _waitForExit = true;
-    private String _command;
-    private int _timeout = 10;
-    private InputStream _stdin;
-    private OutputStream _stdout;
-    private OutputStream _stderr;
-    private int _xit;
+    private boolean waitForExit = true;
+    private String command;
+    private int timeout = 10;
+    private InputStream stdin;
+    private OutputStream stdout;
+    private OutputStream stderr;
+    private int xit;
 
     private Throwable _thrownError;
 
-    private CyclicBarrier _barrier;
-
-    public static void main(String[] args) throws Exception {
-        String commandPath = null;
-        String filePath = null;
-        int timeout = 10;
-
-        String usage = "Usage: CommandRunner [-timeout timeoutSecs] commandPath filePath";
-
-        if (args.length < 2) {
-            System.err.println(usage);
-            System.exit(-1);
-        }
-
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-timeout")) {
-                timeout = Integer.parseInt(args[++i]);
-            } else if (i != args.length - 2) {
-                System.err.println(usage);
-                System.exit(-1);
-            } else {
-                commandPath = args[i];
-                filePath = args[++i];
-            }
-        }
-
-        CommandRunner cr = new CommandRunner();
-
-        cr.setCommand(commandPath);
-        cr.setInputStream(new java.io.FileInputStream(filePath));
-        cr.setStdErrorStream(System.err);
-        cr.setStdOutputStream(System.out);
-
-        cr.setTimeout(timeout);
-
-        cr.evaluate();
-
-        System.err.println("output value: " + cr.getExitValue());
-    }
+    private CyclicBarrier barrier;
 
     public int getExitValue() {
-        return _xit;
+        return xit;
     }
 
     public String getCommand() {
-        return _command;
+        return command;
     }
 
     public void setCommand(String s) {
-        _command = s;
+        command = s;
     }
 
     public void setInputStream(InputStream is) {
-        _stdin = is;
+        stdin = is;
     }
 
     public void setStdOutputStream(OutputStream os) {
-        _stdout = os;
+        stdout = os;
     }
 
     public void setStdErrorStream(OutputStream os) {
-        _stderr = os;
+        stderr = os;
     }
 
     public void evaluate() throws IOException {
@@ -113,38 +75,38 @@ public class CommandRunner {
      * @throws IOException
      */
     public int exec() throws IOException {
-        Process proc = Runtime.getRuntime().exec(_command);
-        _barrier = new CyclicBarrier(3 + ((_stdin != null) ? 1 : 0));
+        Process proc = Runtime.getRuntime().exec(command);
+        barrier = new CyclicBarrier(3 + ((stdin != null) ? 1 : 0));
 
-        PullerThread so = new PullerThread("STDOUT", proc.getInputStream(), _stdout);
+        PullerThread so = new PullerThread("STDOUT", proc.getInputStream(), stdout);
         so.setDaemon(true);
         so.start();
 
-        PullerThread se = new PullerThread("STDERR", proc.getErrorStream(), _stderr);
+        PullerThread se = new PullerThread("STDERR", proc.getErrorStream(), stderr);
         se.setDaemon(true);
         se.start();
 
         PusherThread si = null;
-        if (_stdin != null) {
-            si = new PusherThread("STDIN", _stdin, proc.getOutputStream());
+        if (stdin != null) {
+            si = new PusherThread("STDIN", stdin, proc.getOutputStream());
             si.setDaemon(true);
             si.start();
         }
 
-        boolean _timedout = false;
-        long end = System.currentTimeMillis() + _timeout * 1000;
+        boolean timedout = false;
+        long end = System.currentTimeMillis() + timeout * 1000;
 
         //
         try {
-            if (_timeout == 0) {
-                _barrier.await();
+            if (timeout == 0) {
+                barrier.await();
             } else {
-                _barrier.await(_timeout, TimeUnit.SECONDS);
+                barrier.await(timeout, TimeUnit.SECONDS);
             }
         } catch (TimeoutException ex) {
-            _timedout = true;
+            timedout = true;
         } catch (BrokenBarrierException | InterruptedException bbe) {
-      /* IGNORE */
+          /* IGNORE */
         }
 
         // tell the io threads we are finished
@@ -154,14 +116,14 @@ public class CommandRunner {
         so.interrupt();
         se.interrupt();
 
-        _xit = -1;
+        xit = -1;
 
-        if (!_timedout) {
-            if (_waitForExit) {
+        if (!timedout) {
+            if (waitForExit) {
                 do {
                     try {
                         Thread.sleep(1000);
-                        _xit = proc.exitValue();
+                        xit = proc.exitValue();
                     } catch (InterruptedException ie) {
                         if (Thread.interrupted()) {
                             break; // stop waiting on an interrupt for this thread
@@ -172,20 +134,20 @@ public class CommandRunner {
                         continue;
                     }
                     break;
-                } while (!(_timedout = (System.currentTimeMillis() > end)));
+                } while (!(timedout = (System.currentTimeMillis() > end)));
             } else {
                 try {
-                    _xit = proc.exitValue();
+                    xit = proc.exitValue();
                 } catch (IllegalThreadStateException iltse) {
-                    _timedout = true;
+                    timedout = true;
                 }
             }
         }
 
-        if (_waitForExit) {
+        if (waitForExit) {
             proc.destroy();
         }
-        return _xit;
+        return xit;
     }
 
     public Throwable getThrownError() {
@@ -193,19 +155,19 @@ public class CommandRunner {
     }
 
     public int getTimeout() {
-        return _timeout;
+        return timeout;
     }
 
     public void setTimeout(int timeout) {
-        _timeout = timeout;
+        this.timeout = timeout;
     }
 
     public boolean getWaitForExit() {
-        return _waitForExit;
+        return waitForExit;
     }
 
     public void setWaitForExit(boolean waitForExit) {
-        _waitForExit = waitForExit;
+        this.waitForExit = waitForExit;
     }
 
     private class PumperThread extends Thread {
@@ -249,7 +211,7 @@ public class CommandRunner {
                 }
             }
             try {
-                _barrier.await();
+                barrier.await();
             } catch (InterruptedException ie) {
         /* IGNORE */
             } catch (BrokenBarrierException bbe) {
@@ -268,5 +230,43 @@ public class CommandRunner {
         PullerThread(String name, InputStream is, OutputStream os) {
             super(name, is, os, true);
         }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        String commandPath = null;
+        String filePath = null;
+        int timeout = 10;
+
+        String usage = "Usage: CommandRunner [-timeout timeoutSecs] commandPath filePath";
+
+        if (args.length < 2) {
+            System.err.println(usage);
+            System.exit(-1);
+        }
+
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("-timeout")) {
+                timeout = Integer.parseInt(args[++i]);
+            } else if (i != args.length - 2) {
+                System.err.println(usage);
+                System.exit(-1);
+            } else {
+                commandPath = args[i];
+                filePath = args[++i];
+            }
+        }
+
+        CommandRunner cr = new CommandRunner();
+
+        cr.setCommand(commandPath);
+        cr.setInputStream(new java.io.FileInputStream(filePath));
+        cr.setStdErrorStream(System.err);
+        cr.setStdOutputStream(System.out);
+
+        cr.setTimeout(timeout);
+
+        cr.evaluate();
+
+        System.err.println("output value: " + cr.getExitValue());
     }
 }

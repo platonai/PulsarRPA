@@ -7,13 +7,13 @@
 
     <import resource="../common-context.xml"/>
 
-    <bean id="opicScoringFilter" class="ai.platon.pulsar.scoring.opic.OPICScoringFilter">
+    <bean id="productScoringFilter" class="ai.platon.pulsar.scoring.ProductMonitorScoringFilter">
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="scoringFilters" class="ai.platon.pulsar.crawl.scoring.ScoringFilters">
         <constructor-arg>
             <list>
-                <ref bean="opicScoringFilter" />
+                <ref bean="productScoringFilter" />
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>

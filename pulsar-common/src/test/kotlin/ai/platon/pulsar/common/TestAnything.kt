@@ -66,6 +66,12 @@ class TestAnything {
     }
 
     @Test
+    fun testA() {
+        println(1e6)
+        println(1_000_000)
+    }
+
+    @Test
     fun testNumber() {
         val a = 100000
         val b = 23
@@ -124,11 +130,11 @@ class TestAnything {
         println(' '.isWhitespace())
 
         var text = "¥58.00"
-        assertTrue { StringUtil.isMoneyLike(text) }
-        assertTrue { StringUtil.isNumericLike(text) }
+        assertTrue { Strings.isMoneyLike(text) }
+        assertTrue { Strings.isNumericLike(text) }
 
         text = "10+"
-        assertTrue { StringUtil.isNumericLike(text) }
+        assertTrue { Strings.isNumericLike(text) }
 
         text = "￥669.00"
 
@@ -157,22 +163,22 @@ class TestAnything {
 
         // text.forEachIndexed { i, it -> println("$i.\t$it -> ${StringUtil.isActuallyWhitespace(it.toInt())}") }
 
-        assertEquals("helloworld", StringUtil.stripNonCJKChar(text))
+        assertEquals("helloworld", Strings.stripNonCJKChar(text))
 
-        assertEquals("hell\uE60Do\uDF21world", StringUtil.stripNonPrintableChar(text))
-        assertEquals("", StringUtil.stripNonPrintableChar("              "))
-        assertEquals("a b c d e f g", StringUtil.stripNonPrintableChar(" a b c d e f g "))
+        assertEquals("hell\uE60Do\uDF21world", Strings.stripNonPrintableChar(text))
+        assertEquals("", Strings.stripNonPrintableChar("              "))
+        assertEquals("a b c d e f g", Strings.stripNonPrintableChar(" a b c d e f g "))
 
         val unicodeChars = arrayOf('', 'Ɑ', 'ⰿ', '', '?', 'И', ' ')
         unicodeChars.forEach {
-            print(StringUtil.stripNonPrintableChar("<$it>"))
+            print(Strings.stripNonPrintableChar("<$it>"))
             print('\t')
-            print(StringUtil.stripNonCJKChar("<$it>", StringUtil.DEFAULT_KEEP_CHARS))
+            print(Strings.stripNonCJKChar("<$it>", Strings.DEFAULT_KEEP_CHARS))
             println()
         }
 
         arrayOf("hello world", " hello      world ", " hello world ", "                 hello world").forEach {
-            assertEquals("hello world", StringUtil.stripNonPrintableChar(it))
+            assertEquals("hello world", Strings.stripNonPrintableChar(it))
         }
     }
 

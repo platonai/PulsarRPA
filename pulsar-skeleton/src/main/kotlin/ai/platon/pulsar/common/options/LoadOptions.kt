@@ -52,22 +52,22 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
-    var fetchMode = FetchMode.SELENIUM
+    var fetchMode = FetchMode.BROWSER
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
     var browser = BrowserType.CHROME
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
-    var scrollCount = 5
+    var scrollCount = 3
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
     var scrollInterval = Duration.ofMillis(500)
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
-    var scriptTimeout = Duration.ofSeconds(60)
+    var scriptTimeout = Duration.ofSeconds(90)
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
-            description = "The maximum time to wait for a page to be finished by selenium")
-    var pageLoadTimeout = Duration.ofSeconds(60)
+            description = "The maximum time to wait for a page to finish from the first http request start")
+    var pageLoadTimeout = Duration.ofMinutes(3)
 
     // itemXXX should be available for all index-item pattern pages
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
@@ -114,7 +114,7 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-retry", "--retry"],
             description = "Retry fetching the page if it's failed last time")
-    var retry = false
+    var retryFailed = false
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
             description = "If false, flush persisted pages into database as soon as possible")
     var lazyFlush = false
@@ -152,10 +152,12 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
-    // A volatile config is usually session scoped
+    // A volatile config is usually in session scoped
     var volatileConfig: VolatileConfig? = null
         set(value) { field = initConfig(value) }
         get() = initConfig(field)
+
+    val ignoreQuery get() = shortenKey
 
     open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
@@ -179,7 +181,7 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
-    protected constructor(args: Array<String>) : super(args) {
+    protected constructor(argv: Array<String>) : super(argv) {
         addObjects(this)
     }
 
@@ -202,7 +204,6 @@ open class LoadOptions: CommonOptions {
 
         itemOptions.browser = itemBrowser
         if (itemOptions.browser == BrowserType.NATIVE) {
-            // TODO: merge browser and fetch mode
             itemOptions.fetchMode = FetchMode.NATIVE
         }
 
@@ -236,6 +237,11 @@ open class LoadOptions: CommonOptions {
         return other is LoadOptions && other.toString() == toString()
     }
 
+    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode but none of the fileds is initialized
+    override fun hashCode(): Int {
+        return super.hashCode()
+    }
+
     /**
      * Create a new LoadOptions
      * */
@@ -267,21 +273,21 @@ open class LoadOptions: CommonOptions {
         return this
     }
 
-    private fun initConfig(vc: VolatileConfig?): VolatileConfig? {
-        vc?.setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
-        vc?.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
-        vc?.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
-        vc?.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-        return vc
+    private fun initConfig(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
+        setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
+        setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
+        setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
+        setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
     }
 
     companion object {
-
         val default = LoadOptions()
         val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
-        val optionNames = LoadOptions::class.java.declaredFields.flatMap { it.annotations.toList() }.filter { it is Parameter }
-                .map { it as Parameter }.flatMap { it.names.toList() }
+        val optionNames = LoadOptions::class.java.declaredFields
+                .flatMap { it.annotations.toList() }
+                .filterIsInstance<Parameter>()
+                .flatMap { it.names.toList() }
 
         val helpList: List<List<String>> get() =
                 LoadOptions::class.java.declaredFields

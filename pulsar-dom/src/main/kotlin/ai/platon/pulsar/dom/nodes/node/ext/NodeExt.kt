@@ -1,10 +1,10 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.config.PulsarConstants
-import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_HIDDEN
-import ai.platon.pulsar.common.config.PulsarConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_HIDDEN
+import ai.platon.pulsar.common.config.AppConstants.PULSAR_ATTR_OVERFLOW_HIDDEN
 import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
@@ -52,8 +52,7 @@ class MapField<T>(val initializer: (Node) -> T) {
 }
 
 class NullableMapField<T> {
-    operator fun getValue(thisRef: Node, property: KProperty<*>): T? =
-            thisRef.variables[property.name] as T?
+    operator fun getValue(thisRef: Node, property: KProperty<*>): T? = thisRef.variables[property.name] as T?
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: T?) {
         thisRef.variables[property.name] = value
@@ -76,9 +75,9 @@ val nilDocument = Document.createShell("")
 
 val Document.isNil get() = this === nilDocument
 
-val Document.pulsarMetaElement get() = getElementById("#${PulsarConstants.PULSAR_META_INFORMATION_ID}")
+val Document.pulsarMetaElement get() = getElementById("#${AppConstants.PULSAR_META_INFORMATION_ID}")
 
-val Document.pulsarScriptElement get() = getElementById("#${PulsarConstants.PULSAR_SCRIPT_SECTION_ID}")
+val Document.pulsarScriptElement get() = getElementById("#${AppConstants.PULSAR_SCRIPT_SECTION_ID}")
 
 val Document.pulsarScript get() = ownerDocument.pulsarScriptElement.text()
 
@@ -105,7 +104,7 @@ fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
 }
 
 fun Element.parseStyle(): Array<String> {
-    return StringUtil.stripNonChar(attr("style"), ":;")
+    return Strings.stripNonChar(attr("style"), ":;")
             .split(";".toRegex())
             .dropLastWhile { it.isEmpty() }
             .toTypedArray()
@@ -180,7 +179,7 @@ val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HID
 /** Check if the node is visible or not */
 val Node.isVisible: Boolean get() {
     return when {
-        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have a empty rectangle?
+        isImage -> !hasHiddenFlag && !hasOverflowHiddenFlag // TODO: why a visible image have an empty rectangle?
         else -> !hasHiddenFlag && !hasOverflowHiddenFlag && x >= 0 && y >= 0 && !rectangle.isEmpty
     }
 }
@@ -237,14 +236,14 @@ val Node.isNumeric get() = isMediumText && StringUtils.isNumeric(cleanText)
 // TODO: detect all SQL types
 val Node.isInt get() = isShortText && StringUtils.isNumeric(cleanText)
 
-val Node.isFloat get() = isShortText && StringUtil.isFloat(cleanText)
+val Node.isFloat get() = isShortText && Strings.isFloat(cleanText)
 
 /**
  * If the text is numeric and have non-numeric surroundings
  * */
-val Node.isNumericLike get() = isMediumText && StringUtil.isNumericLike(cleanText)
+val Node.isNumericLike get() = isMediumText && Strings.isNumericLike(cleanText)
 
-val Node.isMoneyLike get() = isShortText && StringUtil.isMoneyLike(cleanText)
+val Node.isMoneyLike get() = isShortText && Strings.isMoneyLike(cleanText)
 
 val Node.intValue by field { SParser(it.cleanText).getInt(Int.MIN_VALUE) }
 
@@ -285,40 +284,56 @@ val Node.captionOrSelector: String
     }
 
 /**
- * TextNodes' clean texts are calculated and stored in advance while Elements' clean texts are calculated when required
- * This is a balance of space and time
+ * The trimmed text of this node.
+ *
+ * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
+ * This is a balance of space and time.
  * */
-val Node.cleanText: String
-    get() {
-        val text = when (this) {
-            is TextNode -> immutableText
-            is Element -> accumulateText(this)
-            else -> null
-        }
+val Node.cleanText: String get() =
+    when (this) {
+        is TextNode -> immutableText.trim()
+        is Element -> accumulateText(this).trim()
+        else -> ""
+    }.trim()
 
-        return text?:""
-    }
-
-val Node.textRepresentation: String get() {
-    return when {
+val Node.textRepresentation: String get() =
+    when {
         isImage -> attr("abs:src")
         isAnchor -> attr("abs:href")
         this is TextNode -> cleanText
         this is Element -> cleanText
         else -> ""
     }
-}
 
+/**
+ * TODO: slim html for table
+ * */
 val Node.slimHtml by field {
+    val nm = it.nodeName()
     when {
-        it.isImage -> createImage(it as Element, keepMetadata = false, lazy = true).toString()
-        it.isAnchor -> createLink(it as Element, keepMetadata = false, lazy = true).toString()
-        it.isNumericLike || it.isMoneyLike -> "<em>${it.cleanText}</em>"
-        it is TextNode -> String.format("<span>%s</span>", it.cleanText)
+        it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
+        it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
+            String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
         it is Element -> String.format("<div>%s</div>", it.cleanText)
         else -> String.format("<b>%s</b>", it.name)
     }
 }
+
+private fun atomSlimHtml(node: Node): String {
+    val nm = node.nodeName()
+    return when {
+        node is TextNode -> String.format("<span>%s</span>", node.cleanText)
+        node.isImage -> createSlimImageHtml(node)
+        node.isAnchor -> createLink(node as Element, keepMetadata = false, lazy = true).toString()
+        node.isNumericLike || node.isMoneyLike -> "<em>${node.cleanText}</em>"
+        nm == "li" || nm == "td" || nm == "th" -> String.format("<$nm>%s</$nm>", node.cleanText)
+        node is Element -> node.cleanText
+        else -> String.format("<b>%s</b>", node.name)
+    }
+}
+
+private fun createSlimImageHtml(node: Node): String = node.run { String.format("<img src='%s' vi='%s' alt='%s'/>",
+            absUrl("src"), attr("vi"), attr("alt")) }
 
 val Node.key: String get() = "$location#$sequence"
 
@@ -392,30 +407,20 @@ val Node.parentElement get() = this.parent() as Element
  * Returns a best element to represent this node: if the node itself is an element, returns itself
  * otherwise, returns it's parent
  * */
-val Node.bestElement: Element
-    get() {
-        return if (this is Element) {
-            this
-        } else this.parentElement
-    }
+val Node.bestElement get() = (this as? Element)?:parentElement
 
 /**
  * The caption of an Element is a joined text values of all non-blank text nodes
  * */
-val Node.caption: String
-    get() = getCaptionWords().joinToString(";")
+val Node.caption get() = getCaptionWords().joinToString(";")
 
-fun Node.getFeature(key: Int): Double {
-    return features[key]
-}
+fun Node.attrOrNull(attributeKey: String): String? = (this as? Element)?.attr(attributeKey)?.takeIf { it.isNotBlank() }
 
-fun Node.getFeature(name: String): Double {
-    return features[NodeFeature.getKey(name)]
-}
+fun Node.getFeature(key: Int): Double = features[key]
 
-fun Node.getFeatureEntry(key: Int): FeatureEntry {
-    return FeatureEntry(key, getFeature(key))
-}
+fun Node.getFeature(name: String): Double = features[NodeFeature.getKey(name)]
+
+fun Node.getFeatureEntry(key: Int): FeatureEntry = FeatureEntry(key, getFeature(key))
 
 fun Node.setFeature(key: Int, value: Double) {
     features[key] = value
@@ -592,7 +597,7 @@ fun Node.clearMlLabels() {
 }
 
 fun Node.addCaptionWord(word: String) {
-    addTupleItem(A_CAPTION, ai.platon.pulsar.common.StringUtil.stripNonCJKChar(word))
+    addTupleItem(A_CAPTION, Strings.stripNonCJKChar(word))
 }
 
 fun Node.removeCaptionWord(word: String): Boolean {

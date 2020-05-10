@@ -17,7 +17,6 @@
 package ai.platon.pulsar.persist.metadata;
 
 /**
- * See ai.platon.pulsar.crawl.protocol.http.AbstractHttpProtocol#getProtocolOutput for more information
  * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
  * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
  * */
@@ -100,23 +99,28 @@ public interface ProtocolStatusCodes {
     /**
      * Selenium web driver is timeout.
      */
-    int DOCUMENT_READY_TIMEOUT = 1472;
+    int SCRIPT_TIMEOUT = 1472;
     /**
-     * Selenium web driver is timeout.
+     * Selenium web driver is timeout
+     * @deprecated
      */
     int DOCUMENT_INCOMPLETE = 1473;
     /**
      * Selenium web driver is timeout.
      */
-    int PROXY_ERROR = 1480;
+    int BROWSER_ERR_CONNECTION_TIMED_OUT = 1480;
     /**
      * Selenium web driver is timeout.
      */
-    int IP_BANNED = 1481;
+    int PROXY_ERROR = 1481;
     /**
      * Selenium web driver is timeout.
      */
     int WEB_DRIVER_GONE = 1482;
+    /**
+     * The browser reports an error, ERR_CONNECTION_TIMED_OUT, for example.
+     */
+    int BROWSER_ERROR = 1483;
     /**
      * This protocol was not found. Application may attempt to retry later.
      */

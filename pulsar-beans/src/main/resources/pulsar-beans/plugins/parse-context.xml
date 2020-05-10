@@ -16,8 +16,6 @@
     </bean>
 
     <bean id="htmlParser" class="ai.platon.pulsar.parse.html.HtmlParser">
-        <constructor-arg ref="webDb"/>
-        <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parseFilters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -44,22 +42,28 @@
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
+    <bean id="extractorFilter" class="ai.platon.pulsar.parse.html.PrimerExtractor">
+        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="conf"/>
+    </bean>
     <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters">
         <constructor-arg>
             <list>
-                <ref bean="jsParseFilter" />
-                <ref bean="boilerpipeFilter" />
+<!--                <ref bean="jsParseFilter" />-->
+<!--                <ref bean="boilerpipeFilter" />-->
+                <ref bean="extractorFilter" />
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser">
+    <bean id="pageParser" class="ai.platon.pulsar.crawl.parse.PageParser" destroy-method="close">
         <constructor-arg ref="crawlFilters"/>
         <constructor-arg ref="parserFactory"/>
         <constructor-arg ref="signature"/>
+        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
-        <property name="linkFilter" ref="linkFilter"/>
     </bean>
 
 </beans>

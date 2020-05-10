@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.DateTimeUtil
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
-    val name: String = this.javaClass.simpleName + "-" + DateTimeUtil.now("d.Hms")
+    val name: String = this.javaClass.simpleName + "-" + DateTimes.now("d.Hms")
     private val fetchSchedulers = Maps.newTreeMap<Int, TaskScheduler>()
     private val fetchSchedulerIds = Lists.newLinkedList<Int>()
 
@@ -72,30 +72,25 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
      * Random get @param count fetch items from an iterative selected job
      */
     @Synchronized
-    fun randomFetchItems(count: Int): List<FetchTask.Key> {
-        val keys = Lists.newArrayList<FetchTask.Key>()
-
-        val id = fetchSchedulerIds.poll()
-                ?: // log.debug("No running fetcher job");
-                return Lists.newArrayList()
+    fun randomFetchItems(count: Int): List<JobFetchTask.Key> {
+        val keys = mutableListOf<JobFetchTask.Key>()
+        val id = fetchSchedulerIds.poll()?: return listOf()
 
         try {
             val taskScheduler = fetchSchedulers[id]
             if (taskScheduler == null) {
                 LOG.error("Failed to find out the fetch scheduler with id #$id")
-
                 remove(id)
-                return Lists.newArrayList()
+                return listOf()
             }
 
-            for (item in taskScheduler.schedule(count)) {
-                keys.add(item.key)
-            }
+            taskScheduler.schedule(count).mapTo(keys) { it.key }
         } catch (e: Throwable) {
-            LOG.error(e.toString())
+            LOG.error("Unexpected exception", e)
         }
 
-        fetchSchedulerIds.add(id) // put back to the queue
+        // put back to the queue
+        fetchSchedulerIds.add(id)
 
         return keys
     }

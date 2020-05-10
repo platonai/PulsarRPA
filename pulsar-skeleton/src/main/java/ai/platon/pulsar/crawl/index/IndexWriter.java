@@ -1,7 +1,8 @@
 package ai.platon.pulsar.crawl.index;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
-import ai.platon.pulsar.common.config.ReloadableParameterized;
+import ai.platon.pulsar.common.config.Parameterized;
+import ai.platon.pulsar.crawl.common.JobInitialized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by vincent on 16-8-1.
  */
-public interface IndexWriter extends ReloadableParameterized, AutoCloseable {
+public interface IndexWriter extends Parameterized, JobInitialized, AutoCloseable {
 
     Logger LOG = LoggerFactory.getLogger(IndexWriter.class);
 

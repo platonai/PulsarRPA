@@ -3,22 +3,20 @@ package ai.platon.pulsar.common;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * A very simple yet fast LRU cache with TTL support
- * TODO: compare with Collections.synchronizedMap(LRUMap<K, V>)
  */
-public class ConcurrentLRUCache<KEY, VALUE> {
+public class ConcurrentLRUCache<K, V> {
     /**
      * A fast yet short life least recently used cache
      */
-    private final LinkedHashMap<String, VALUE> cache;
+    private final LinkedHashMap<String, V> cache;
     /**
      * Expires in second
      */
     private long ttl;
-
-    private int threshold;
 
     public ConcurrentLRUCache(int capacity) {
         this(0, capacity);
@@ -32,9 +30,9 @@ public class ConcurrentLRUCache<KEY, VALUE> {
      */
     public ConcurrentLRUCache(Duration ttl, int capacity) {
         this.ttl = ttl.getSeconds();
-        this.cache = new LinkedHashMap<String, VALUE>(capacity, 0.75F, true) {
+        this.cache = new LinkedHashMap<String, V>(capacity, 0.75F, true) {
             @Override
-            protected boolean removeEldestEntry(Map.Entry<String, VALUE> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, V> eldest) {
                 return size() > capacity;
             }
         };
@@ -48,9 +46,9 @@ public class ConcurrentLRUCache<KEY, VALUE> {
      */
     public ConcurrentLRUCache(long ttl, int capacity) {
         this.ttl = ttl;
-        this.cache = new LinkedHashMap<String, VALUE>(capacity, 0.75F, true) {
+        this.cache = new LinkedHashMap<>(capacity, 0.75F, true) {
             @Override
-            protected boolean removeEldestEntry(Map.Entry<String, VALUE> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, V> eldest) {
                 return size() > capacity;
             }
         };
@@ -60,43 +58,43 @@ public class ConcurrentLRUCache<KEY, VALUE> {
         return ttl;
     }
 
-    public int getThreshold() {
-        return threshold;
-    }
-
-    public void setThreshold(int threshold) {
-        this.threshold = threshold;
-    }
-
-    public VALUE get(KEY key) {
-        String k = getTTLKey(key);
-        VALUE v;
+    public V get(K key) {
+        String ttlKey = getTTLKey(key);
+        V v;
         synchronized (cache) {
-            v = cache.get(k);
+            v = cache.get(ttlKey);
         }
 
         return v;
     }
 
-    public void put(KEY key, VALUE v) {
-        String k = getTTLKey(key);
-        int size;
+    public void put(K key, V v) {
+        String ttlKey = getTTLKey(key);
         synchronized (cache) {
-            cache.put(k, v);
-            size = cache.size();
-        }
-
-        if (threshold > 0 && size > threshold) {
-            // TODO: remove all dead items to keep the cache is small and fast
+            cache.put(ttlKey, v);
         }
     }
 
-    public VALUE tryRemove(KEY key) {
-        String k = getTTLKey(key);
-        VALUE v;
+    public V remove(K key) {
+        String ttlKey = getTTLKey(key);
+        V v;
         synchronized (cache) {
-            v = cache.remove(k);
+            v = cache.remove(ttlKey);
         }
+        return v;
+    }
+
+    public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        String ttlKey = getTTLKey(key);
+        V v;
+        synchronized (cache) {
+            v = cache.get(ttlKey);
+            if (v == null) {
+                v = mappingFunction.apply(key);
+                cache.put(ttlKey, v);
+            }
+        }
+
         return v;
     }
 
@@ -106,7 +104,7 @@ public class ConcurrentLRUCache<KEY, VALUE> {
         }
     }
 
-    private String getTTLKey(KEY key) {
+    private String getTTLKey(K key) {
         if (ttl <= 0) {
             return key.toString();
         }

@@ -1,14 +1,20 @@
 package ai.platon.pulsar.crawl.fetch.indexer
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.fetch.FetchMonitor
+import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * This class picks items from queues and fetches the pages.
  */
-class IndexThread(private val JITIndexer: JITIndexer, private val conf: ImmutableConfig) : Thread(), Comparable<IndexThread> {
+class IndexThread(
+        private val jitIndexer: JITIndexer,
+        private val conf: ImmutableConfig
+) : Thread(), Comparable<IndexThread> {
+
+    private val log = LoggerFactory.getLogger(IndexThread::class.java)
+
     private val id: Int
     private val halt = AtomicBoolean(false)
 
@@ -19,7 +25,7 @@ class IndexThread(private val JITIndexer: JITIndexer, private val conf: Immutabl
         this.id = instanceSequence.incrementAndGet()
 
         this.isDaemon = true
-        this.name = "IndexThread-$id"
+        this.name = "Indexer-$id"
     }
 
     fun halt() {
@@ -31,26 +37,25 @@ class IndexThread(private val JITIndexer: JITIndexer, private val conf: Immutabl
         try {
             join()
         } catch (e: InterruptedException) {
-            LOG.error(e.toString())
+            log.error(e.toString())
         }
-
     }
 
     override fun run() {
-        JITIndexer.registerFetchThread(this)
+        jitIndexer.registerFetchThread(this)
 
         while (!isHalted) {
             try {
-                val item = JITIndexer.consume()
+                val item = jitIndexer.consume()
                 if (item?.page != null) {
-                    JITIndexer.index(item)
+                    jitIndexer.index(item)
                 }
             } catch (e: Exception) {
-                LOG.error("Indexer failed, $e")
+                log.error("Indexer failed, $e")
             }
         }
 
-        JITIndexer.unregisterFetchThread(this)
+        jitIndexer.unregisterFetchThread(this)
     }
 
     override fun compareTo(other: IndexThread): Int {
@@ -58,7 +63,6 @@ class IndexThread(private val JITIndexer: JITIndexer, private val conf: Immutabl
     }
 
     companion object {
-        val LOG = FetchMonitor.LOG
         private val instanceSequence = AtomicInteger(0)
     }
 }

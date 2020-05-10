@@ -1,145 +1,208 @@
 package ai.platon.pulsar.common.proxy
 
-import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.RuntimeUtils
-import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_PROXY_POOL_RECOVER_PERIOD
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.FileCommand
+import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.concurrent.stopExecution
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.PulsarConstants.CMD_PROXY_POOL_DUMP
+import com.google.common.util.concurrent.ThreadFactoryBuilder
+import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * TODO: merge all monitor threads
- * */
-class ProxyMonitor(
-        val proxyPool: ProxyPool,
+open class ProxyMonitor(
         private val conf: ImmutableConfig
 ): AutoCloseable {
-    private var recoverPeriod = conf.getDuration(PROXY_PROXY_POOL_RECOVER_PERIOD, Duration.ofSeconds(120))
-    private var updateThread = Thread(this::update)
-    // no recover thread, the proxy provider should do the job
-    private var recoverThread = Thread(this::recover)
+    private var executor: ScheduledExecutorService? = null
+    private var scheduledFuture: ScheduledFuture<*>? = null
 
-    private val closed = AtomicBoolean()
+    var initialDelay = Duration.ofSeconds(5)
+    var watchInterval: Duration = Duration.ofSeconds(1)
+    var lastActiveTime = Instant.now()
+    var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(15))
+    var idleCount = 0
+    var idleTime = Duration.ZERO
+    val closed = AtomicBoolean()
 
-    val isClosed get() = closed.get()
+    val numRunningTasks = AtomicInteger()
+    var statusString: String = "<status unavailable>"
+    var verbose = false
 
-    fun start() {
-        updateThread.isDaemon = true
-        updateThread.start()
+    open val localPort = -1
+    open val currentProxyEntry: ProxyEntry? = null
+    open val isEnabled = false
+    val isDisabled get() = !isEnabled
+    val isActive get() = isEnabled && !closed.get()
+
+    /**
+     * Starts the reporter polling at the given period with the specific runnable action
+     * Visible only for testing
+     */
+    @Synchronized
+    fun start(initialDelay: Duration, period: Duration, runnable: () -> Unit) {
+        log.takeIf { isDisabled }?.info("Proxy manager is disabled")?.let { return@start }
+        require(scheduledFuture == null) { "Reporter already started" }
+        if (executor == null) executor = createDefaultExecutor()
+        scheduledFuture = executor?.scheduleAtFixedRate(runnable, initialDelay.seconds, period.seconds, TimeUnit.SECONDS)
     }
+
+    fun start() = start(initialDelay, watchInterval) { watch() }
+
+    open fun watch() {}
+
+    /**
+     * Run the task, it it's disabled, call the innovation directly
+     * */
+    @Throws(NoProxyException::class)
+    open suspend fun <R> runDeferred(task: suspend () -> R): R = if (isDisabled) task() else runDeferred0(task)
+
+    /**
+     * Run the task, it it's disabled, call the innovation directly
+     * */
+    @Throws(NoProxyException::class)
+    open fun <R> run(task: () -> R): R = if (isDisabled) task() else run0(task)
+
+    /**
+     * Run the task in the proxy manager
+     * */
+    @Throws(NoProxyException::class)
+    private suspend fun <R> runDeferred0(task: suspend () -> R): R {
+        beforeRun()
+
+        return try {
+            numRunningTasks.incrementAndGet()
+            task()
+        } finally {
+            lastActiveTime = Instant.now()
+            numRunningTasks.decrementAndGet()
+        }
+    }
+
+    /**
+     * Run the task in the proxy manager
+     * */
+    @Throws(NoProxyException::class)
+    private fun <R> run0(task: () -> R): R {
+        beforeRun()
+
+        return try {
+            numRunningTasks.incrementAndGet()
+            task()
+        } finally {
+            lastActiveTime = Instant.now()
+            numRunningTasks.decrementAndGet()
+        }
+    }
+
+    @Throws(NoProxyException::class)
+    open fun waitUntilOnline(): Boolean = false
+
+    open fun takeOff(excludedProxy: ProxyEntry, ban: Boolean) {}
+
+    override fun toString(): String = statusString
 
     override fun close() {
-        if (closed.getAndSet(true)) {
-            return
-        }
-
-        updateThread.join()
-    }
-
-    private fun update() {
-        var tick = 0
-        while (!isClosed && !Thread.currentThread().isInterrupted) {
-            if (!proxyPool.isIdle) {
-                when {
-                    proxyPool.numFreeProxies == 0 -> proxyPool.updateProxies(asap = true)
-                    proxyPool.numFreeProxies < 3 -> proxyPool.updateProxies()
-                }
-            }
-
-            if (tick % 20 == 0) {
-                if (RuntimeUtils.hasLocalFileCommand(CMD_PROXY_POOL_DUMP)) {
-                    proxyPool.dump()
-                }
-            }
-
-            ++tick
-
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
+        try {
+            executor?.also { stopExecution(it, scheduledFuture, true) }
+            executor = null
+        } catch (e: Exception) {
+            log.warn("Unexpected exception when close proxy monitor", e)
         }
     }
 
-    private fun testTestWebSites() {
-        val removal = mutableSetOf<URL>()
-        ProxyEntry.TEST_WEB_SITES.forEach {
-            if (!NetUtil.testHttpNetwork(it)) {
-                removal.add(it)
-            }
-        }
-        ProxyEntry.TEST_WEB_SITES.removeAll(removal)
-        log.warn("Unreachable test sites: {}", removal.joinToString(", ") { it.toString() })
-    }
-
-    private fun recover() {
-        var tick = 0
-
-        while (!isClosed && !proxyPool.isClosed) {
-            if (tick++ % recoverPeriod.seconds.toInt() != 0) {
-                continue
-            }
-
-            val start = Instant.now()
-            val recovered = proxyPool.recover(5)
-            val elapsed = Duration.between(start, Instant.now())
-
-            if (recovered > 0) {
-                log.info("Recovered {} from proxy pool", recovered)
-            }
-
-            // Too often, enlarge review period
-            if (elapsed > recoverPeriod) {
-                recoverPeriod = recoverPeriod.plus(elapsed)
-                log.info("It takes {} to check retired proxy, increase interval to {}", elapsed, recoverPeriod)
-            }
-
-            try {
-                TimeUnit.SECONDS.sleep(1)
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-            }
-        }
+    @Throws(NoProxyException::class)
+    private fun beforeRun() {
+        if (!isActive) return
+        idleTime = Duration.ZERO
+        waitUntilOnline()
     }
 
     companion object {
         private val log = LoggerFactory.getLogger(ProxyMonitor::class.java)
-    }
-}
+        private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
+        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.USER_HOME)
+                .map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
 
-fun main() {
-    val log = LoggerFactory.getLogger(ProxyMonitor::class.java)
+        private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
+        private var providerDirLastWatchTime = Instant.EPOCH
+        private var numEnabledProviderFiles = 0L
 
-    val conf = ImmutableConfig()
-    val proxyPool = ProxyPool(conf)
-    val proxyManager = ProxyMonitor(proxyPool, conf)
-    proxyManager.start()
-
-    while (true) {
-        val proxy = proxyPool.poll()
-
-        if (proxy != null) {
-            if (proxy.test()) {
-                log.info("Proxy is available | {} ", proxy)
-
-                System.setProperty("java.net.useSystemProxies", "true")
-                System.setProperty("http.proxyHost", proxy.host)
-                System.setProperty("http.proxyPort", proxy.port.toString())
-            } else {
-                log.info("Proxy is unavailable | {}", proxy)
+        init {
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+                FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
             }
 
-            // Do something
-
-            proxyPool.offer(proxy)
+            if (Systems.getProperty(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
+                enableDefaultProviders()
+            }
         }
 
-        TimeUnit.SECONDS.sleep(5)
+        fun hasEnabledProvider(): Boolean {
+            val now = Instant.now()
+            synchronized(ProxyMonitor::class.java) {
+                if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
+                    providerDirLastWatchTime = now
+                    numEnabledProviderFiles = try {
+                        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
+                    } catch (e: Throwable) { 0 }
+                }
+            }
+
+            return numEnabledProviderFiles > 0
+        }
+
+        /**
+         * Proxy system can be enabled/disabled at runtime
+         * */
+        fun isProxyEnabled(): Boolean {
+            if (FileCommand.check(AppConstants.CMD_ENABLE_PROXY)) {
+                return true
+            }
+
+            // explicit set system environment property
+            val useProxy = System.getProperty(CapabilityTypes.PROXY_USE_PROXY)
+            if (useProxy != null) {
+                when (useProxy) {
+                    "yes" -> return true
+                    "no" -> return false
+                }
+            }
+
+            // if no one set the proxy availability explicitly, but we have providers, use it
+            return hasEnabledProvider()
+        }
+
+        fun enableDefaultProviders() {
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+        }
+
+        fun enableProvider(providerPath: Path) {
+            val filename = providerPath.fileName
+            arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
+                    .map { it.resolve(filename) }
+                    .filterNot { Files.exists(it) }
+                    .forEach { Files.copy(providerPath, it) }
+        }
+
+        fun disableProviders() {
+            Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
+        }
+
+        private fun createDefaultExecutor(): ScheduledExecutorService {
+            val factory = ThreadFactoryBuilder().setNameFormat("pm-%d").build()
+            return Executors.newSingleThreadScheduledExecutor(factory)
+        }
     }
 }

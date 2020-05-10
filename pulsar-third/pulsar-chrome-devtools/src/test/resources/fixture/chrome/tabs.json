@@ -1,0 +1,21 @@
+[
+  {
+    "description": "",
+    "devtoolsFrontendUrl": "/devtools/inspector.html?ws=localhost:9222/devtools/page/(2C5C79DD1137419CC8839D61D91CEB2A)",
+    "faviconUrl": "https://www.google.ba/images/branding/product/ico/googleg_lodp.ico",
+    "id": "(2C5C79DD1137419CC8839D61D91CEB2A)",
+    "title": "Google",
+    "type": "page",
+    "url": "https://www.google.ba/?gws_rd=cr&dcr=0&ei=93piWq2oKqqJmgWIzbdg",
+    "webSocketDebuggerUrl": "ws://localhost:9222/devtools/page/(2C5C79DD1137419CC8839D61D91CEB2A)"
+  },
+  {
+    "description": "",
+    "devtoolsFrontendUrl": "/devtools/inspector.html?ws=localhost:9222/devtools/page/(199C89058E598898EA40AFA81EB69E60)",
+    "id": "(199C89058E598898EA40AFA81EB69E60)",
+    "title": "Example Domain",
+    "type": "page",
+    "url": "http://example.com/",
+    "webSocketDebuggerUrl": "ws://localhost:9222/devtools/page/(199C89058E598898EA40AFA81EB69E60)"
+  }
+]

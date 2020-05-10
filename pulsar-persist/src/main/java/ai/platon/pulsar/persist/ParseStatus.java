@@ -53,7 +53,7 @@ public class ParseStatus implements ParseStatusCodes {
         this.parseStatus = GParseStatus.newBuilder().build();
         setMajorCode(majorCode);
         setMinorCode(minorCode);
-        getArgs().put(getMinorName(minorCode), message);
+        getArgs().put(getMinorName(minorCode), message == null ? "(unknown)" : message);
     }
 
     private ParseStatus(GParseStatus parseStatus) {
@@ -157,9 +157,11 @@ public class ParseStatus implements ParseStatusCodes {
     @Override
     public String toString() {
         String args = getArgs().entrySet().stream()
+                .filter(e -> !(e instanceof WebPage))
                 .map(e -> Pair.of(e.getKey().toString(), e.getValue() == null ? "(null)" : e.getValue().toString()))
                 .map(e -> e.getKey() + ": " + e.getValue())
                 .collect(Collectors.joining(", "));
+
         return getName() +
                 " (" + getMajorCode() + "/" + getMinorCode() + ")" +
                 ", args=[" + args + "]";

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest.api.resources
 
-import ai.platon.pulsar.common.config.PulsarConstants.METRICS_HOME_URL
+import ai.platon.pulsar.common.config.AppConstants.METRICS_HOME_URL
 import ai.platon.pulsar.persist.WebDb
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping

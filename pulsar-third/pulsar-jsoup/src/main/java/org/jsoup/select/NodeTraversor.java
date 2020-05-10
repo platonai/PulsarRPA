@@ -40,7 +40,7 @@ public class NodeTraversor {
     public static void traverse(NodeVisitor visitor, Node root) {
         Node node = root;
         int depth = 0;
-        
+
         while (node != null) {
             visitor.head(node, depth);
             if (node.childNodeSize() > 0) {

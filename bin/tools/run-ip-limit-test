@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+function __is_crawl_loop_stopped {
+  STOP=0
+  if [ -e ".STOP" ] || [ -e ".KEEP_STOP" ]; then
+   if [ -e ".STOP" ]; then
+     mv .STOP ".STOP_EXECUTED_$(date +%Y%m%d.%H%M%S)"
+   fi
+
+    STOP=1
+  fi
+
+  (( $STOP == 1 )) && return 0 || return 1
+}
+
+this=$(dirname "$0")
+bin=$(cd "$this/..">/dev/null || exit; pwd)
+
+if [ "$PULSAR_HOME" = "" ]; then
+ # shellcheck source=bin/include/scent-config.sh
+source "$bin"/include/pulsar-config.sh
+fi
+
+bin="$PULSAR_HOME"/bin
+
+LIMIT=2000
+# main loop : rounds of generate - fetch - parse - update
+for ((round=1; round <= LIMIT ; round++))
+do
+  if ( __is_crawl_loop_stopped ); then
+     echo "STOP file found - escaping loop"
+     exit 0
+  fi
+
+  echo ""
+  echo ""
+  echo "=================IP LIMIT TEST ROUND $round==================="
+  . "$bin"/pulsar example sites.AmazonAccessKt
+done

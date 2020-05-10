@@ -8,10 +8,6 @@ import com.beust.jcommander.Parameter
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class CommonOptions : PulsarOptions {
-    @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "crawl id, (default : \"storage.crawl.id\")")
-    var crawlId = ""
-    @Parameter(names = ["-config"], description = "config dir")
-    var config = ""
     @Parameter(names = ["-h", "-help", "--help"], help = true, description = "Print help text")
     override var isHelp: Boolean = false
 

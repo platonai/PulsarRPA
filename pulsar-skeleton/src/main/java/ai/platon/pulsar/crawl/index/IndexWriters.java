@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.index;
 
-import ai.platon.pulsar.common.StringUtil;
+import ai.platon.pulsar.common.Strings;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import org.slf4j.Logger;
 
@@ -36,7 +36,7 @@ public class IndexWriters implements AutoCloseable {
             try {
                 indexWriter.open(conf);
             } catch (Throwable e) {
-                LOG.error("Failed to open indexer. " + StringUtil.stringifyException(e));
+                LOG.error("Failed to open indexer. " + Strings.stringifyException(e));
             }
         }
     }
@@ -46,7 +46,7 @@ public class IndexWriters implements AutoCloseable {
             try {
                 indexWriter.open(indexerUrl);
             } catch (Throwable e) {
-                LOG.error("Failed to open indexer. " + StringUtil.stringifyException(e));
+                LOG.error("Failed to open indexer. " + Strings.stringifyException(e));
             }
         }
     }
@@ -56,7 +56,7 @@ public class IndexWriters implements AutoCloseable {
             try {
                 indexWriter.write(doc);
             } catch (Throwable e) {
-                LOG.error("Failed to write indexer. " + StringUtil.stringifyException(e));
+                LOG.error("Failed to write indexer. " + Strings.stringifyException(e));
             }
         }
     }
@@ -66,7 +66,7 @@ public class IndexWriters implements AutoCloseable {
             try {
                 indexWriter.update(doc);
             } catch (Throwable e) {
-                LOG.error("Failed to update indexer. " + StringUtil.stringifyException(e));
+                LOG.error("Failed to update indexer. " + Strings.stringifyException(e));
             }
         }
     }
@@ -76,7 +76,7 @@ public class IndexWriters implements AutoCloseable {
             try {
                 indexWriter.delete(key);
             } catch (Throwable e) {
-                LOG.error("Failed to delete indexer. " + StringUtil.stringifyException(e));
+                LOG.error("Failed to delete indexer. " + Strings.stringifyException(e));
             }
         }
     }
@@ -89,7 +89,7 @@ public class IndexWriters implements AutoCloseable {
                 indexWriter.close();
             } catch (Throwable e) {
                 LOG.error("Failed to close IndexWriter " + indexWriter.getName());
-                LOG.error(StringUtil.stringifyException(e));
+                LOG.error(Strings.stringifyException(e));
             }
         }
 
@@ -101,7 +101,7 @@ public class IndexWriters implements AutoCloseable {
             try {
                 indexWriter.commit();
             } catch (Throwable e) {
-                LOG.error("Failed to commit indexer. " + StringUtil.stringifyException(e));
+                LOG.error("Failed to commit indexer. " + Strings.stringifyException(e));
             }
         }
     }

@@ -50,7 +50,7 @@ public class CrawlMarks {
         marks.put(wrapKey(mark), value);
     }
 
-    public void putIfNonNull(Mark mark, Utf8 value) {
+    public void putIfNotNull(Mark mark, Utf8 value) {
         if (value != null) {
             put(mark, value);
         }
@@ -61,6 +61,12 @@ public class CrawlMarks {
             marks.put(wrapKey(mark), null);
         }
     }
+
+    public void removeAll(Iterable<Mark> marks) {
+        marks.forEach(this::remove);
+    }
+
+    public void clear() { marks.clear(); }
 
     public Map<String, String> asStringMap() {
         return marks.entrySet().stream()

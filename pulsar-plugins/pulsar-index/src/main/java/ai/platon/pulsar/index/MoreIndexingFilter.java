@@ -1,6 +1,6 @@
 package ai.platon.pulsar.index;
 
-import ai.platon.pulsar.common.DateTimeUtil;
+import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.MimeUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
@@ -42,7 +42,7 @@ public class MoreIndexingFilter implements IndexingFilter {
 
     public MoreIndexingFilter(MimeUtil MIME, ImmutableConfig conf) {
         this.MIME = MIME;
-        reload(conf);
+        setup(conf);
     }
 
     /**
@@ -56,14 +56,14 @@ public class MoreIndexingFilter implements IndexingFilter {
     }
 
     @Override
-    public void reload(ImmutableConfig conf) {
-        this.conf = conf;
-        MIME = new MimeUtil(conf);
+    public ImmutableConfig getConf() {
+        return conf;
     }
 
     @Override
-    public ImmutableConfig getConf() {
-        return this.conf;
+    public void setup(ImmutableConfig conf) {
+        this.conf = conf;
+        MIME = new MimeUtil(conf);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class MoreIndexingFilter implements IndexingFilter {
         String lastModified = page.getHeaders().get(HttpHeaders.LAST_MODIFIED);
         if (lastModified != null) {
             // try parse last-modified
-            time = DateTimeUtil.parseHttpDateTime(lastModified, Instant.EPOCH); // use as time
+            time = DateTimes.parseHttpDateTime(lastModified, Instant.EPOCH); // use as time
         }
 
         if (time.toEpochMilli() > 0) { // if no last-modified
@@ -97,8 +97,8 @@ public class MoreIndexingFilter implements IndexingFilter {
 
         // un-stored, indexed and un-tokenized
         if (time.toEpochMilli() > 0) {
-            doc.add("header_last_modified", DateTimeUtil.isoInstantFormat(time));
-            doc.add("last_modified_s", DateTimeUtil.isoInstantFormat(time));
+            doc.add("header_last_modified", DateTimes.isoInstantFormat(time));
+            doc.add("last_modified_s", DateTimes.isoInstantFormat(time));
         }
 
         return doc;

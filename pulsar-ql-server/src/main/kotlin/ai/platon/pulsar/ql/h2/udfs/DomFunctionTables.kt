@@ -1,10 +1,10 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
+import ai.platon.pulsar.dom.select.getAnchors
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -45,7 +45,7 @@ object DomFunctionTables {
         }
 
         val pages = Queries.loadAll(session, portalUrls)
-        val doms = pages.map { session.parseToValue(it) }
+        val doms = pages.map { session.parseValueDom(it) }
 
         return toResultSet("DOM", doms)
     }
@@ -125,7 +125,7 @@ object DomFunctionTables {
         }
 
         val doc = session.loadAndParse(portalUrl)
-        val anchors = Queries.getAnchors(doc.document, restrictCss, offset, limit)
+        val anchors = doc.document.getAnchors(restrictCss, offset, limit)
 
         return toResultSet(anchors)
     }
@@ -195,9 +195,8 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<Element>())
         }
 
-        val docs = Queries.loadOutPages(session,
-                portal, restrictCss, offset, limit, normalize, ignoreQuery)
-                .map(session::parse)
+        val docs = Queries.loadOutPages(session, portal, restrictCss, offset, limit, normalize, ignoreQuery)
+                .map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
@@ -251,7 +250,7 @@ object DomFunctionTables {
 
         val docs =
                 Queries.loadOutPages(session, portalUrl, restrictCss, offset, limit, normalize, ignoreQuery)
-                .map(session::parse)
+                .map { session.parse(it) }
 
         val elements = if (targetCss == ":root") {
             docs.map { it.document }
@@ -280,7 +279,7 @@ object DomFunctionTables {
             limit: Int = 100): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         val page = session.load(portalUrl)
-        val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
+        val dom = if (page.isNil) ValueDom.NIL else session.parseValueDom(page)
         return features(conn, dom, cssQuery, offset, limit)
     }
 
@@ -338,7 +337,7 @@ object DomFunctionTables {
             limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         val page = session.load(portalUrl)
-        val dom = if (page.isNil) ValueDom.NIL else session.parseToValue(page)
+        val dom = if (page.isNil) ValueDom.NIL else session.parseValueDom(page)
         return getElementsWithMostSibling(conn, dom, restrictCss, offset, limit)
     }
 

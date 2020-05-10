@@ -23,7 +23,7 @@
 
     <build>
         <plugins>
-            <!-- H2 runtime need local libs -->
+            <!-- H2 runtime, scripts need local libs -->
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <inherited>true</inherited>

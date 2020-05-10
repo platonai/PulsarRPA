@@ -22,17 +22,17 @@ public class TextDocument implements Cloneable {
   }
 
   private final List<TextBlock> textBlocks;
-  private CharSequence baseUrl;
-  private CharSequence pageTitle;
-  private CharSequence contentTitle;
+  private String baseUrl;
+  private String pageTitle;
+  private String contentTitle;
   private Instant publishTime = Instant.EPOCH;
   private Instant modifiedTime = Instant.EPOCH;
   private int dateTimeCount = 0;
   private Stat stat = new Stat();
   private PageCategory pageCategory = PageCategory.UNKNOWN;
-  private Map<CharSequence, CharSequence> fields = new LinkedHashMap<>();
+  private Map<String, String> fields = new LinkedHashMap<>();
 
-  public TextDocument(CharSequence baseUrl, CharSequence pageTitle, List<TextBlock> textBlocks) {
+  public TextDocument(String baseUrl, String pageTitle, List<TextBlock> textBlocks) {
     this.baseUrl = baseUrl;
     this.pageTitle = pageTitle;
     this.textBlocks = textBlocks;
@@ -42,15 +42,15 @@ public class TextDocument implements Cloneable {
 
   public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
 
-  public String getBaseUrl() { return baseUrl.toString(); }
+  public String getBaseUrl() { return baseUrl; }
 
-  public String getPageTitle() { return pageTitle == null ? "" : pageTitle.toString(); }
+  public String getPageTitle() { return pageTitle == null ? "" : pageTitle; }
 
   public void setPageTitle(String pageTitle) { this.pageTitle = pageTitle; }
 
-  public String getContentTitle() { return contentTitle == null ? "" : contentTitle.toString(); }
+  public String getContentTitle() { return contentTitle == null ? "" : contentTitle; }
 
-  public void setContentTitle(CharSequence contentTitle) { this.contentTitle = contentTitle; }
+  public void setContentTitle(String contentTitle) { this.contentTitle = contentTitle; }
 
   public Instant getPublishTime() { return publishTime; }
 
@@ -80,19 +80,19 @@ public class TextDocument implements Cloneable {
     this.pageCategory = pageCategory;
   }
 
-  public Map<CharSequence, CharSequence> getFields() {
+  public Map<String, String> getFields() {
     return fields;
   }
 
-  public CharSequence getField(CharSequence name) {
+  public String getField(String name) {
     return fields.get(name);
   }
 
-  public CharSequence getFieldOrDefault(CharSequence name, CharSequence defaultValue) {
+  public String getFieldOrDefault(String name, String defaultValue) {
     return fields.getOrDefault(name, defaultValue);
   }
 
-  public void setField(CharSequence name, CharSequence value) {
+  public void setField(String name, String value) {
     fields.put(name, value);
   }
 

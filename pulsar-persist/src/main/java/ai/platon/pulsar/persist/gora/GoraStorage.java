@@ -14,15 +14,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static ai.platon.pulsar.common.config.AppConstants.MONGO_STORE_CLASS;
 import static ai.platon.pulsar.common.config.CapabilityTypes.*;
-import static ai.platon.pulsar.common.config.PulsarConstants.HBASE_STORE_CLASS;
 
 /**
  * Created by vincent on 17-5-15.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 public class GoraStorage {
-    public static final Logger LOG = LoggerFactory.getLogger(GoraStorage.class);
+    public static final Logger log = LoggerFactory.getLogger(GoraStorage.class);
 
     // load properties from gora.properties
     public static Properties properties = DataStoreFactory.createProps();
@@ -30,12 +30,9 @@ public class GoraStorage {
 
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(
-            Configuration conf,
-            Class<K> keyClass,
-            Class<V> persistentClass
-    ) throws GoraException, ClassNotFoundException {
-        String className = conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS);
+    createDataStore(Configuration conf, Class<K> keyClass, Class<V> persistentClass)
+            throws GoraException, ClassNotFoundException {
+        String className = conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS);
         Class<? extends DataStore<K, V>> dataStoreClass = (Class<? extends DataStore<K, V>>)Class.forName(className);
         return createDataStore(conf, keyClass, persistentClass, dataStoreClass);
     }
@@ -45,11 +42,8 @@ public class GoraStorage {
      */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
-    createDataStore(
-            Configuration conf,
-            Class<K> keyClass,
-            Class<V> persistentClass,
-            Class<? extends DataStore<K, V>> dataStoreClass
+    createDataStore(Configuration conf,
+                    Class<K> keyClass, Class<V> persistentClass, Class<? extends DataStore<K, V>> dataStoreClass
     ) throws GoraException {
         String crawlId = conf.get(STORAGE_CRAWL_ID, "");
         String schemaPrefix = "";
@@ -75,7 +69,7 @@ public class GoraStorage {
             Params.of(
                     "Backend data store", dataStore.getClass().getSimpleName(),
                     "realSchema", dataStore.getSchemaName()
-            ).withLogger(LOG).info(true);
+            ).withLogger(log).info(true);
 
             return dataStore;
         }

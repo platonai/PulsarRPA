@@ -1,10 +1,10 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.DateTimeUtil
-import ai.platon.pulsar.common.PulsarFiles
-import ai.platon.pulsar.common.PulsarPaths
-import ai.platon.pulsar.common.StringUtil
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2SessionFactory
@@ -56,7 +56,7 @@ abstract class TestBase {
                 remoteConnection = remoteDB.getConnection(remoteDbName)
                 remoteStat = remoteConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
             } catch (e: Throwable) {
-                println(StringUtil.stringifyException(e))
+                println(Strings.stringifyException(e))
             }
         }
 
@@ -65,10 +65,10 @@ abstract class TestBase {
         fun teardown() {
             history.add(0, "-- Time: $startTime")
             val sqls = history.joinToString("\n") { it }
-            val ident = DateTimeUtil.now("MMdd.HH")
-            val path = PulsarPaths.get(PulsarConstants.PULSAR_DEFAULT_TMP_DIR, "history", "sql-history-$ident.sql")
+            val ident = DateTimes.now("MMdd.HH")
+            val path = AppPaths.get(AppConstants.PULSAR_DEFAULT_TMP_DIR, "history", "sql-history-$ident.sql")
             Files.createDirectories(path.parent)
-            PulsarFiles.saveTo(sqls, path, deleteIfExists = true)
+            AppFiles.saveTo(sqls, path, deleteIfExists = true)
 
             destroyDatabase()
         }

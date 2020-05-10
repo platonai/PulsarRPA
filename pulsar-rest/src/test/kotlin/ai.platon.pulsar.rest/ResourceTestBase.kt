@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest
 
-import ai.platon.pulsar.common.config.PulsarConstants
+import ai.platon.pulsar.common.config.AppConstants
 import org.junit.After
 import org.junit.Before
 import org.slf4j.LoggerFactory
@@ -14,7 +14,7 @@ open class ResourceTestBase  {
     val restTemplate = RestTemplate()
 
     init {
-        this.baseUri = String.format("http://%s:%d/%s", "localhost", PulsarConstants.DEFAULT_PULSAR_MASTER_PORT, ROOT_PATH)
+        this.baseUri = String.format("http://%s:%d/%s", "localhost", AppConstants.DEFAULT_PULSAR_MASTER_PORT, ROOT_PATH)
     }
 
 

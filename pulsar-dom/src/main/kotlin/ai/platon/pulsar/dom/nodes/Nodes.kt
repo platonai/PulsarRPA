@@ -2,9 +2,7 @@ package ai.platon.pulsar.dom.nodes
 
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.nodes.node.ext.left
-import ai.platon.pulsar.dom.nodes.node.ext.sequence
-import ai.platon.pulsar.dom.nodes.node.ext.top
+import ai.platon.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.lang3.StringUtils.SPACE
 import org.apache.commons.lang3.math.NumberUtils
 import org.jsoup.nodes.Document
@@ -12,6 +10,7 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
+import java.awt.Rectangle
 import java.util.regex.Pattern
 
 /**
@@ -51,13 +50,25 @@ data class Anchor(
         val top: Int,
         val width: Int,
         val height: Int
-) {
+): Comparable<Anchor> {
+    constructor(url: String, text: String, path: String, rect: Rectangle):
+            this(url, text, path, rect.x, rect.y, rect.width, rect.height)
+
+    constructor(ele: Element): this(ele.absUrl("href"), ele.cleanText, ele.cssSelector(),
+            ele.left, ele.top, ele.width, ele.height)
+
+    val rect get() = Rectangle(left, top, width, height)
+
     override fun hashCode(): Int {
         return url.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is Anchor && url.equals(other.url)
+        return other is Anchor && url == other.url
+    }
+
+    override fun compareTo(other: Anchor): Int {
+        return url.compareTo(other.url)
     }
 }
 

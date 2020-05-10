@@ -11,4 +11,47 @@
         <constructor-arg ref="conf" />
     </bean>
 
+    <bean id="browserControl" class="ai.platon.pulsar.protocol.browser.driver.WebDriverControl">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="webDriverManager" class="ai.platon.pulsar.protocol.browser.driver.WebDriverManager" destroy-method="close">
+        <constructor-arg ref="browserControl"/>
+        <constructor-arg ref="proxyManagerFactory"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserPrivacyManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyManager">
+        <constructor-arg ref="webDriverManager"/>
+        <constructor-arg ref="proxyManagerFactory"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserEmulatorEventHandlerFactory" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatorEventHandlerFactory">
+        <constructor-arg ref="webDriverManager"/>
+        <constructor-arg ref="messageWriter"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator" destroy-method="close">
+        <constructor-arg ref="browserPrivacyManager"/>
+        <constructor-arg ref="browserEmulatorEventHandlerFactory"/>
+        <constructor-arg ref="messageWriter"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="asyncBrowserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.AsyncBrowserEmulator" destroy-method="close">
+        <constructor-arg ref="browserPrivacyManager"/>
+        <constructor-arg ref="browserEmulatorEventHandlerFactory"/>
+        <constructor-arg ref="messageWriter"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher" destroy-method="close">
+        <constructor-arg ref="browserPrivacyManager"/>
+        <constructor-arg ref="browserEmulator"/>
+        <constructor-arg ref="asyncBrowserEmulator"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
 </beans>

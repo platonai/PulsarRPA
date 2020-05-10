@@ -80,7 +80,7 @@ class MathematicalQueryParser(private val query: String) {
                 }
                 currentEval = or
             }
-            else -> throw MathematicalSelector.SelectorParseException("Unknown combinator: $combinator")
+            else -> throw MathematicalSelectorParseException("Unknown combinator: $combinator")
         }
         if (replaceRightMost) (rootEval as CombiningEvaluator.Or).replaceRightMostEvaluator(currentEval) else rootEval = currentEval
         evals.add(rootEval)
@@ -163,7 +163,7 @@ class MathematicalQueryParser(private val query: String) {
         else if (tq.matchChomp(":matchText"))
             evals.add(MatchText())
         else
-            throw MathematicalSelector.SelectorParseException(
+            throw MathematicalSelectorParseException(
                     "Could not parse query '%s': unexpected token at '%s'", query, tq.remainder())
     }
 
@@ -209,7 +209,7 @@ class MathematicalQueryParser(private val query: String) {
                 cq.matchChomp("$=") -> evals.add(AttributeWithValueEnding(key, cq.remainder()))
                 cq.matchChomp("*=") -> evals.add(AttributeWithValueContaining(key, cq.remainder()))
                 cq.matchChomp("~=") -> evals.add(AttributeWithValueMatching(key, Pattern.compile(cq.remainder())))
-                else -> throw MathematicalSelector.SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder())
+                else -> throw MathematicalSelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder())
             }
         }
     }
@@ -260,7 +260,7 @@ class MathematicalQueryParser(private val query: String) {
                 b = mB.group().replaceFirst("^\\+".toRegex(), "").toInt()
             }
             else -> {
-                throw MathematicalSelector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS)
+                throw MathematicalSelectorParseException("Could not parse nth-index '%s': unexpected format", argS)
             }
         }
         if (ofType) if (backwards) evals.add(IsNthLastOfType(a, b)) else evals.add(IsNthOfType(a, b)) else {
@@ -375,7 +375,7 @@ class MathematicalQueryParser(private val query: String) {
                 allowError = NumberUtils.toInt(s.replaceFirst(",".toRegex(), ""))
             }
         } else {
-            throw MathematicalSelector.SelectorParseException("Could not parse in-box '%s': unexpected format", argS)
+            throw MathematicalSelectorParseException("Could not parse in-box '%s': unexpected format", argS)
         }
 
         evals.add(MathematicalEvaluator.ByBox(ops, operands, allowError))
@@ -394,7 +394,7 @@ class MathematicalQueryParser(private val query: String) {
                 val p = MathematicalQueryParser(query)
                 p.parse()
             } catch (e: IllegalArgumentException) {
-                throw MathematicalSelector.SelectorParseException(e.message ?: "Unknown IllegalArgumentException")
+                throw MathematicalSelectorParseException(e.message ?: "Unknown IllegalArgumentException")
             }
         }
 

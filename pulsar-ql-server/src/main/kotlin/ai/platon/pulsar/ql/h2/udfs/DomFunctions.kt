@@ -7,9 +7,9 @@ import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.ql.SQLContext
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.Session
 import org.h2.ext.pulsar.annotation.H2Context
@@ -27,26 +27,26 @@ import java.time.Duration
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
 object DomFunctions {
+    private val sqlContext = SQLContext.getOrCreate()
+
     @UDFunction(description = "Load the page specified by url from db, if absent or expired, " +
             "fetch it from the web, and then parse it into a document")
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        val session = H2SessionFactory.getSession(h2session.serialId)
-        val page = session.load(configuredUrl)
-        return session.parseToValue(page)
+        return sqlContext.getSession(h2session).run {
+            parseValueDom(load(configuredUrl))
+        }
     }
 
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
-        val session = H2SessionFactory.getSession(h2session.serialId)
-
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
-        val loadOptions = LoadOptions.parse(urlAndArgs.second)
-        loadOptions.expires = Duration.ZERO
+        val options = LoadOptions.parse(urlAndArgs.second).apply { expires = Duration.ZERO }
 
-        val page = session.load(urlAndArgs.first, loadOptions)
-        return session.parseToValue(page)
+        return sqlContext.getSession(h2session.serialId).run {
+            parseValueDom(load(urlAndArgs.first, options))
+        }
     }
 
     /**
@@ -138,6 +138,18 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
+    fun siblingIndex(dom: ValueDom): Int {
+        return dom.element.siblingIndex()
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun elementSiblingIndex(dom: ValueDom): Int {
+        return dom.element.elementSiblingIndex()
+    }
+
+    @UDFunction
+    @JvmStatic
     fun baseUri(dom: ValueDom): String {
         return dom.element.baseUri()
     }
@@ -146,6 +158,12 @@ object DomFunctions {
     @JvmStatic
     fun absUrl(dom: ValueDom, attributeKey: String): String {
         return dom.element.absUrl(attributeKey)
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun location(dom: ValueDom): String {
+        return dom.element.location
     }
 
     @UDFunction

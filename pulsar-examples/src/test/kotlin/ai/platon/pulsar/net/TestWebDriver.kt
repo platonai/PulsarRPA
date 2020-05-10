@@ -1,10 +1,11 @@
 package ai.platon.pulsar.net
 
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.BrowserControl
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
-import ai.platon.pulsar.net.browser.ManagedWebDriver
-import ai.platon.pulsar.net.browser.WebDriverPool
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
+import ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
@@ -14,11 +15,13 @@ import org.openqa.selenium.remote.CapabilityType
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.BlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+/**
+ * TODO: move to pulsar-skeleton module
+ * */
 class TestWebDriver {
     companion object {
         val log = LoggerFactory.getLogger(TestWebDriver::class.java)
@@ -27,9 +30,10 @@ class TestWebDriver {
             System.setProperty(PROXY_USE_PROXY, "no")
         }
 
-        val env = PulsarEnv.getOrCreate()
-        val conf = PulsarEnv.unmodifiedConfig
-        val pool = PulsarEnv.monitor.webDriverPool
+        val context = PulsarContext.getOrCreate()
+        val conf = context.unmodifiedConfig
+        val driverControl = context.getBean(WebDriverControl::class.java)
+        val driverPool = context.getBean(LoadingWebDriverPool::class.java)
         var quitMultiThreadTesting = false
 
         @BeforeClass
@@ -39,18 +43,18 @@ class TestWebDriver {
 
         @AfterClass
         fun teardown() {
-            PulsarEnv.getOrCreate().shutdown()
+            PulsarEnv.shutdown()
         }
     }
 
     @Test
     fun testCapabilities() {
-        val generalOptions = BrowserControl.createGeneralOptions()
+        val generalOptions = driverControl.createGeneralOptions()
         generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
         generalOptions.setCapability(CapabilityType.PROXY, null as Any?)
         var driver: WebDriver = ChromeDriver(generalOptions)
 
-        val chromeOptions = BrowserControl.createChromeOptions()
+        val chromeOptions = driverControl.createChromeOptions()
         chromeOptions.addArguments("--blink-settings=imagesEnabled=false")
         chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
         chromeOptions.setCapability(CapabilityType.PROXY, null as Any?)
@@ -61,42 +65,39 @@ class TestWebDriver {
     fun testWebDriverPool() {
         val workingDrivers = mutableListOf<ManagedWebDriver>()
         repeat(10) {
-            val driver = pool.poll(0, conf)
-            if (driver != null) {
-                assertNotNull(driver)
-                workingDrivers.add(driver)
-            }
+            val driver = driverPool.take(conf)
+            workingDrivers.add(driver)
         }
 
-        assertEquals(10, pool.workingSize)
-        assertEquals(0, pool.freeSize)
-        assertEquals(10, pool.aliveSize)
-        assertEquals(10, pool.totalSize)
+        assertEquals(10, driverPool.numWorking.get())
+        assertEquals(0, driverPool.numFree)
+        assertEquals(10, driverPool.numActive)
+        assertEquals(10, driverPool.numOnline)
 
         workingDrivers.forEachIndexed { i, driver ->
-            if (i % 2 == 0) pool.offer(driver)
-            else pool.retire(driver, null)
+            if (i % 2 == 0) driver.retire()
+            driverPool.put(driver)
         }
 
-        assertEquals(0, pool.workingSize)
-        assertEquals(5, pool.freeSize)
-        assertEquals(5, WebDriverPool.numRetired.get())
+        assertEquals(0, driverPool.numWorking.get())
+        assertEquals(5, driverPool.numFree)
+        assertEquals(5, driverPool.counterRetired.count)
 
-        pool.closeAll()
+        driverPool.closeAll()
 
-        assertEquals(0, pool.workingSize)
-        assertEquals(0, pool.freeSize)
-        assertEquals(10, WebDriverPool.numQuit.get())
+        assertEquals(0, driverPool.numWorking.get())
+        assertEquals(0, driverPool.numFree)
+        assertEquals(10, driverPool.counterQuit.count)
 
-        pool.closeAll()
+        driverPool.closeAll()
 
-        assertEquals(0, pool.workingSize)
-        assertEquals(0, pool.freeSize)
-        assertEquals(10, WebDriverPool.numQuit.get())
+        assertEquals(0, driverPool.numWorking.get())
+        assertEquals(0, driverPool.numFree)
+        assertEquals(10, driverPool.counterQuit.count)
     }
 
     @Test
-    fun testWebDriverPoolMultThreaded() {
+    fun testWebDriverPoolMultiThreaded() {
         val workingDrivers = ArrayBlockingQueue<ManagedWebDriver>(30)
 
         val consumer = Thread {
@@ -106,11 +107,9 @@ class TestWebDriver {
                 }
 
                 if (workingDrivers.size < 20) {
-                    val driver = pool.poll(0, conf)
-                    if (driver != null) {
-                        assertNotNull(driver)
-                        workingDrivers.add(driver)
-                    }
+                    val driver = driverPool.take(conf)
+                    assertNotNull(driver)
+                    workingDrivers.add(driver)
                 }
             }
         }
@@ -122,10 +121,11 @@ class TestWebDriver {
                 if (driver != null) {
                     if (i % 3 == 0) {
                         log.info("Offer {}", driver)
-                        pool.offer(driver)
+                        driverPool.put(driver)
                     } else {
                         log.info("Retire {}", driver)
-                        pool.retire(driver, null)
+                        driver.retire()
+                        driverPool.put(driver)
                     }
                 }
             }
@@ -134,8 +134,8 @@ class TestWebDriver {
         val closer = Thread {
             while (!quitMultiThreadTesting) {
                 log.info("Close all")
-                pool.closeAll()
-                pool.closeAll()
+                driverPool.closeAll()
+                driverPool.closeAll()
                 Thread.sleep(1000)
             }
         }

@@ -1,17 +1,18 @@
 package ai.platon.pulsar.dom
 
-import ai.platon.pulsar.common.PulsarFiles
-import ai.platon.pulsar.common.PulsarPaths
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_NODE_FEATURE_CALCULATOR
+import ai.platon.pulsar.common.config.AppConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
-import ai.platon.pulsar.common.config.PulsarConstants.DEFAULT_NODE_FEATURE_CALCULATOR
-import ai.platon.pulsar.common.config.PulsarConstants.NIL_PAGE_URL
 import ai.platon.pulsar.common.math.vectors.isEmpty
+import ai.platon.pulsar.common.math.vectors.isNotEmpty
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.dom.select.first
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import org.apache.commons.math3.linear.RealVector
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -24,8 +25,7 @@ import java.nio.file.Path
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
-        private val nodeFeatureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
-        val nodeFeatureCalculator: NodeVisitor get() = nodeFeatureCalculatorClass.newInstance()
+        private val FEATURE_CALCULATOR_CLASS: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
 
         val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -35,18 +35,17 @@ open class FeaturedDocument(val document: Document) {
             val document = Document.createShell(baseUri)
             return FeaturedDocument(document)
         }
+
         /**
          * An node is Nil, if it's owner document is nil
          * */
         fun isNil(doc: FeaturedDocument): Boolean {
             return doc == NIL || doc.location == NIL.location
         }
-        fun getExportFilename(uri: String): String {
-            return PulsarPaths.fromUri(uri, ".htm")
-        }
-        fun getExportPath(url: String, ident: String): Path {
-            return PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
-        }
+
+        fun getExportFilename(uri: String): String = AppPaths.fromUri(uri, "", ".htm")
+
+        fun getExportPath(url: String, ident: String): Path = AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
 
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
@@ -63,7 +62,9 @@ open class FeaturedDocument(val document: Document) {
 
     init {
         if (features.isEmpty) {
-            NodeTraversor.traverse(nodeFeatureCalculator, document)
+            val featureCalculator = FEATURE_CALCULATOR_CLASS.newInstance()
+            NodeTraversor.traverse(featureCalculator, document)
+            require(features.isNotEmpty)
         }
     }
 
@@ -130,11 +131,11 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun first(query: String): Element? {
-        return document.first(query)
+        return document.selectFirstOrNull(query)
     }
 
     fun <T> first(query: String, extractor: (Element) -> T): T? {
-        return document.first(query)?.let { extractor(it) }
+        return document.selectFirstOrNull(query)?.let { extractor(it) }
     }
 
     fun getFeature(key: Int): Double {
@@ -166,13 +167,13 @@ open class FeaturedDocument(val document: Document) {
     }
 
     fun export(): Path {
-        val filename = PulsarPaths.fromUri(location, ".html")
-        val path = PulsarPaths.get(PulsarPaths.WEB_CACHE_DIR, "featured", filename)
+        val filename = AppPaths.fromUri(location, "", ".htm")
+        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "featured", filename)
         return exportTo(path)
     }
 
     fun exportTo(path: Path): Path {
-        return PulsarFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
+        return AppFiles.saveTo(prettyHtml.toByteArray(), path, deleteIfExists = true)
     }
 
     override fun equals(other: Any?): Boolean {

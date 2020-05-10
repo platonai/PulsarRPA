@@ -18,8 +18,9 @@
 package ai.platon.pulsar.common.config;
 
 import ai.platon.pulsar.common.SParser;
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,10 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 /**
  * Created by vincent on 17-1-17.
@@ -40,7 +44,14 @@ public abstract class AbstractConfiguration {
 
     public static final Logger LOG = LoggerFactory.getLogger(AbstractConfiguration.class);
 
-    public static final List<String> DEFAULT_RESOURCES = Lists.newArrayList();
+    // A LinkedHashSet's iterator preserves insertion order, and because it's a Set, its elements are unique.
+    public static final LinkedHashSet<String> DEFAULT_RESOURCES = new LinkedHashSet<>();
+
+    private final LinkedHashSet<String> resources = new LinkedHashSet<>();
+
+    private String preferredDir = "";
+
+    private final LinkedHashSet<String> fullPathResources = new LinkedHashSet<>();
 
     private Configuration conf;
 
@@ -70,7 +81,7 @@ public abstract class AbstractConfiguration {
      *
      * @see Configuration#addDefaultResource
      */
-    public AbstractConfiguration(boolean loadDefaults, String preferredDir, List<String> resources) {
+    public AbstractConfiguration(boolean loadDefaults, String preferredDir, Iterable<String> resources) {
         loadConfResources(loadDefaults, preferredDir, resources);
     }
 
@@ -78,34 +89,42 @@ public abstract class AbstractConfiguration {
         this.conf = new Configuration(conf);
     }
 
-    private void loadConfResources(boolean loadDefaults, String preferredDir, List<String> resources) {
+    private void loadConfResources(boolean loadDefaults, String preferredDir, Iterable<String> extraResources) {
         conf = new Configuration(loadDefaults);
+        extraResources.forEach(resources::add);
+        this.preferredDir = preferredDir;
 
         if (!loadDefaults) {
             return;
         }
 
         if (!preferredDir.isEmpty()) {
-            conf.setIfUnset(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
+            conf.set(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
         }
 
-        String extraResources = System.getProperty(CapabilityTypes.PULSAR_CONFIG_RESOURCES);
-        if (extraResources != null) {
-            resources.addAll(Arrays.asList(extraResources.split(",")));
+        String specifiedResources = System.getProperty(CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES);
+        if (specifiedResources != null) {
+            Arrays.spliterator(specifiedResources.split(",")).forEachRemaining(resources::add);
         }
 
-        List<String> realResources = new ArrayList<>();
         String dir = isDistributedFs() ? "cluster" : "local";
         for (String name : resources) {
             String realResource = getRealResource(preferredDir, dir, name);
             if (realResource != null) {
-                realResources.add(realResource);
+                fullPathResources.add(realResource);
             } else {
                 LOG.warn("Failed to find resource " + name);
             }
         }
 
-        realResources.forEach(conf::addResource);
+        fullPathResources.forEach(conf::addResource);
+
+        // read system properties
+        System.getProperties().forEach((name, value) -> {
+            if (name instanceof String && value instanceof String) {
+                conf.set(name.toString(), value.toString());
+            }
+        });
 
         LOG.info(toString());
     }
@@ -331,6 +350,7 @@ public abstract class AbstractConfiguration {
      * @throws IllegalArgumentException If mapping is illegal for the type
      *                                  provided
      */
+    @NotNull
     public <T extends Enum<T>> T getEnum(String name, T defaultValue) {
         return p(name).getEnum(defaultValue);
     }
@@ -530,6 +550,10 @@ public abstract class AbstractConfiguration {
 
     @Override
     public String toString() {
-        return "Expected " + conf;
+        StringBuilder sb = new StringBuilder("Expected " + conf);
+        if (!preferredDir.isEmpty()) {
+            sb.append(", preferred dir: ").append(preferredDir);
+        }
+        return sb.toString();
     }
 }

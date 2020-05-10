@@ -81,7 +81,7 @@ public class Database implements DataHandler {
     private final HashMap<String, TableEngine> tableEngines = New.hashMap();
 
     private final Set<Session> userSessions =
-            Collections.synchronizedSet(new HashSet<Session>());
+            Collections.synchronizedSet(new HashSet<>());
     private final AtomicReference<Session> exclusiveSession = new AtomicReference<Session>();
     private final BitField objectIds = new BitField();
     private final Object lobSyncObject = new Object();

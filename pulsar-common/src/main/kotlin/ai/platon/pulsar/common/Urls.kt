@@ -1,14 +1,19 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
+import org.apache.http.NameValuePair
+import org.apache.http.client.utils.URIBuilder
 import java.net.MalformedURLException
 import java.net.URI
+import java.net.URISyntaxException
 import java.net.URL
+
 
 object Urls {
 
     @JvmStatic
     fun getURLOrNull(url: String): URL? {
+        if (url.isBlank()) return null
         return try { URL(url) } catch (ignored: MalformedURLException) { null }
     }
 
@@ -35,6 +40,21 @@ object Urls {
     @JvmStatic
     fun normalizeUrls(urls: Iterable<String>, ignoreQuery: Boolean = false): List<String> {
         return urls.mapNotNull { normalize(it, ignoreQuery).takeIf { it.isNotBlank() } }
+    }
+
+    @Throws(URISyntaxException::class)
+    fun removeQueryParameter(url: String, parameterName: String): String {
+        val uriBuilder = URIBuilder(url)
+        val queryParameters: MutableList<NameValuePair> = uriBuilder.queryParams
+        val queryParameterItr: MutableIterator<NameValuePair> = queryParameters.iterator()
+        while (queryParameterItr.hasNext()) {
+            val queryParameter: NameValuePair = queryParameterItr.next()
+            if (queryParameter.getName().equals(parameterName)) {
+                queryParameterItr.remove()
+            }
+        }
+        uriBuilder.setParameters(queryParameters)
+        return uriBuilder.build().toString()
     }
 
     /**
@@ -427,9 +447,10 @@ object Urls {
      *
      * @param utf8 Utf8 object
      * @return string-ifed Utf8 object or null if Utf8 instance is null
+     * @deprecated purpose not clear
      */
     @JvmStatic
     fun toString(utf8: CharSequence?): String? {
-        return if (utf8 == null) null else StringUtil.cleanField(utf8.toString())
+        return if (utf8 == null) null else Strings.cleanField(utf8.toString())
     }
 }

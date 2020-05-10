@@ -13,7 +13,8 @@ public class NetUtil {
 
     private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
-    public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(10);
+    public static Duration CONNECTION_TIMEOUT = Duration.ofSeconds(3);
+    public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(3);
 
     // Pattern for matching ip[:port]
     public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
@@ -39,7 +40,7 @@ public class NetUtil {
             con.setConnectTimeout((int) PROXY_CONNECTION_TIMEOUT.toMillis());
             con.connect();
 
-            // log.debug("Proxy is available {} for {}", proxy, url);
+            log.debug("Proxy is available {} for {}", proxy, url);
 
             reachable = true;
             con.disconnect();
@@ -60,17 +61,17 @@ public class NetUtil {
     }
 
     public static boolean testTcpNetwork(String ip, int port) {
-        return testTcpNetwork(ip, port, PROXY_CONNECTION_TIMEOUT);
+        return testTcpNetwork(ip, port, CONNECTION_TIMEOUT);
     }
 
     public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
         boolean reachable = false;
-        Socket con = new Socket();
+        Socket socket = new Socket();
 
         try {
-            con.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
-            reachable = true;
-            con.close();
+            socket.connect(new InetSocketAddress(ip, port), (int)timeout.toMillis());
+            reachable = socket.isConnected();
+            socket.close();
         } catch (Exception ignored) {
             // logger.warn("can not connect to " + ip + ":" + port);
         }
@@ -121,6 +122,11 @@ public class NetUtil {
         return buf.toString();
     }
 
+    public static String getChromeUserAgent(String mozilla, String appleWebKit, String chrome, String safari) {
+        return String.format("Mozilla/%s (X11; Linux x86_64) AppleWebKit/%s (KHTML, like Gecko) Chrome/%s Safari/%s",
+                mozilla, appleWebKit, chrome, safari);
+    }
+
     /**
      * Return hostname without throwing exception.
      * @return hostname
@@ -160,7 +166,7 @@ public class NetUtil {
         return masterHostname.equals("localhost") || masterHostname.equals(getHostname());
     }
 
-    public static URL getUrl(Configuration conf, String path) throws MalformedURLException {
+    public static URL getMasterURL(Configuration conf, String path) throws MalformedURLException {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
 

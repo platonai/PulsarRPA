@@ -1,23 +1,23 @@
 package ai.platon.pulsar.crawl.fetch.indexer
 
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.PulsarParams.DOC_FIELD_TEXT_CONTENT
-import ai.platon.pulsar.common.StringUtil
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes.INDEX_JIT
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.ReloadableParameterized
-import ai.platon.pulsar.crawl.fetch.FetchMonitor
-import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.CapabilityTypes.INDEXER_JIT
+import ai.platon.pulsar.crawl.common.JobInitialized
+import ai.platon.pulsar.crawl.fetch.JobFetchTask
 import ai.platon.pulsar.crawl.index.IndexDocument
 import ai.platon.pulsar.crawl.index.IndexWriters
 import ai.platon.pulsar.crawl.index.IndexingFilters
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import com.google.common.collect.Lists
 import com.google.common.collect.Queues
+import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -29,49 +29,56 @@ class JITIndexer(
         private val scoringFilters: ScoringFilters,
         private val indexingFilters: IndexingFilters,
         private val indexWriters: IndexWriters,
-        private val conf: ImmutableConfig
-) : ReloadableParameterized, AutoCloseable {
+        val conf: ImmutableConfig
+) : Parameterized, JobInitialized, AutoCloseable {
 
     private val id: Int = instanceSequence.incrementAndGet()
-    private var indexJIT: Boolean = conf.getBoolean(INDEX_JIT, false)
-    private var indexDocumentBuilder: IndexDocument.Builder? = null
+
+    var isEnabled: Boolean = false
+        private set
+
+    /**
+     * Index server
+     */
+    val indexServerHost = conf.get(CapabilityTypes.INDEXER_HOSTNAME, AppConstants.DEFAULT_INDEX_SERVER_HOSTNAME)
+    val indexServerPort = conf.getInt(CapabilityTypes.INDEXER_PORT, AppConstants.DEFAULT_INDEX_SERVER_PORT)
 
     private var batchSize: Int = conf.getInt("index.index.batch.size", 2000)
     var indexThreadCount: Int = conf.getInt("index.index.thread.count", 1)
-    private var minTextLenght: Int = conf.getInt("index.minimal.text.length", 300)
+    private var minTextLength: Int = conf.getInt("index.minimal.text.length", 300)
     // All object inside a process shares the same counters
     private val indexedPages = AtomicInteger(0)
     private val ignoredPages = AtomicInteger(0)
 
+    private val indexThreads = mutableListOf<IndexThread>()
     private val activeIndexThreads = ConcurrentSkipListSet<IndexThread>()
-    private val indexTasks = Queues.newLinkedBlockingQueue<FetchTask>(batchSize)
-
-    private val indexThreads = Lists.newLinkedList<IndexThread>()
+    private lateinit var indexTasks: Queue<JobFetchTask>
+    private lateinit var indexDocumentBuilder: IndexDocument.Builder
 
     val indexedPageCount: Int get() = indexedPages.get()
     val ignoredPageCount: Int get() = ignoredPages.get()
 
-    init {
-        if (indexJIT) {
+    override fun setup(jobConf: ImmutableConfig) {
+        isEnabled = jobConf.getBoolean(INDEXER_JIT, false)
+        if (isEnabled) {
+            indexTasks = Queues.newLinkedBlockingQueue<JobFetchTask>(batchSize)
+
             this.indexDocumentBuilder = IndexDocument.Builder(conf).with(indexingFilters).with(scoringFilters)
             this.indexWriters.open()
         }
     }
 
-    override fun getConf(): ImmutableConfig {
-        return conf
-    }
-
     override fun getParams(): Params {
         return Params.of(
+                "isEnabled", isEnabled,
                 "batchSize", batchSize,
                 "indexThreadCount", indexThreadCount,
-                "minTextLenght", minTextLenght
+                "minTextLength", minTextLength
         )
     }
 
-    override fun reload(conf: ImmutableConfig) {
-        //
+    fun isIndexServerAvailable(): Boolean {
+        return NetUtil.testHttpNetwork(indexServerHost, indexServerPort)
     }
 
     internal fun registerFetchThread(indexThread: IndexThread) {
@@ -86,16 +93,12 @@ class JITIndexer(
      * Add fetch item to index indexTasks
      * Thread safe
      */
-    fun produce(fetchTask: FetchTask) {
-        if (!indexJIT) {
+    fun produce(fetchTask: JobFetchTask) {
+        if (!isEnabled) {
             return
         }
 
         val page = fetchTask.page
-        if (page == null) {
-            LOG.warn("Invalid FetchTask to index, ignore it")
-            return
-        }
 
         if (!shouldProduce(page)) {
             return
@@ -107,14 +110,18 @@ class JITIndexer(
     /**
      * Thread safe
      */
-    fun consume(): FetchTask? {
+    fun consume(): JobFetchTask? {
         return indexTasks.poll()
     }
 
     override fun close() {
+        if (!isEnabled) {
+            return
+        }
+
         LOG.info("[Destruction] Closing JITIndexer #$id ...")
 
-        indexThreads.forEach{ it.exitAndJoin() }
+        indexThreads.forEach { it.exitAndJoin() }
 
         try {
             var fetchTask = consume()
@@ -132,8 +139,8 @@ class JITIndexer(
     /**
      * Thread safe
      */
-    fun index(fetchTask: FetchTask?) {
-        if (!indexJIT) {
+    fun index(fetchTask: JobFetchTask?) {
+        if (!isEnabled) {
             return
         }
 
@@ -143,7 +150,7 @@ class JITIndexer(
                 return
             }
 
-            val url = fetchTask.url
+            val url = fetchTask.urlString
             val reverseUrl = Urls.reverseUrl(url)
             val page = fetchTask.page
 
@@ -156,7 +163,7 @@ class JITIndexer(
                 indexedPages.incrementAndGet()
             } // if
         } catch (e: Throwable) {
-            LOG.error("Failed to index a page " + StringUtil.stringifyException(e))
+            LOG.error("Failed to index a page " + Strings.stringifyException(e))
         }
 
     }
@@ -167,7 +174,7 @@ class JITIndexer(
         }
 
         val textContent = doc.getFieldValueAsString(DOC_FIELD_TEXT_CONTENT)
-        if (textContent == null || textContent.length < minTextLenght) {
+        if (textContent == null || textContent.length < minTextLength) {
             ignoredPages.incrementAndGet()
             LOG.warn("Invalid text content to index, url : " + doc.url)
             return false
@@ -187,7 +194,7 @@ class JITIndexer(
             return false
         }
 
-        if (page.contentText.length < minTextLenght) {
+        if (page.contentText.length < minTextLength) {
             ignoredPages.incrementAndGet()
             return false
         }
@@ -196,7 +203,7 @@ class JITIndexer(
     }
 
     companion object {
-        val LOG = FetchMonitor.LOG
+        val LOG = LoggerFactory.getLogger(JITIndexer::class.java)
         private val instanceSequence = AtomicInteger(0)
     }
 }

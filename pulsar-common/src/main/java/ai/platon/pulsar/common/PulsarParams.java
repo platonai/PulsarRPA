@@ -46,9 +46,17 @@ public class PulsarParams extends Params {
      */
     public static final String ARG_THREADS = "-threads";
     /**
+     * Number of fetcher threads per queue.
+     */
+    public static final String ARG_POOL_THREADS = "-queueThreads";
+    /**
+     * Number of crawl rounds.
+     */
+    public static final String ARG_ROUND = "-round";
+    /**
      * Number of fetcher tasks.
      */
-    public static final String ARG_NUMTASKS = "-numTasks";
+    public static final String ARG_REDUCER_TASKS = "-reducerTasks";
     /**
      * The notion of current time.
      */

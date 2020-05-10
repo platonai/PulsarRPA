@@ -1,16 +1,18 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.MetricsSystem
-import ai.platon.pulsar.common.URLUtil
+import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.config.PulsarConstants.FETCH_TASK_REMAINDER_NUMBER
-import ai.platon.pulsar.crawl.data.PoolId
-import ai.platon.pulsar.crawl.data.PoolQueue
-import ai.platon.pulsar.crawl.data.TaskPool
+import ai.platon.pulsar.common.options.FetchOptions
+import ai.platon.pulsar.crawl.common.JobInitialized
+import ai.platon.pulsar.crawl.fetch.data.PoolId
+import ai.platon.pulsar.crawl.fetch.data.PoolQueue
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.TreeMultimap
@@ -29,14 +31,16 @@ import java.util.concurrent.atomic.AtomicInteger
  * TODO: review locks(synchronization)
  */
 class TaskMonitor(
-        private val taskTracker: FetchTaskTracker,
-        val metrics: MetricsSystem,
+        private val fetchMetrics: FetchMetrics,
+        private val metrics: MiscMessageWriter,
         conf: ImmutableConfig
-) : Parameterized, AutoCloseable {
+) : Parameterized, JobInitialized, AutoCloseable {
+    private val log = LoggerFactory.getLogger(TaskMonitor::class.java)
 
-    private val id = instanceSequence.incrementAndGet()
+    private lateinit var options: FetchOptions
+    private val id = instanceSequencer.incrementAndGet()
     private val feederCompleted = AtomicBoolean(false)
-    private val fetchPools = PoolQueue()
+    private val taskPools = PoolQueue()
     private var lastTaskPriority = Integer.MIN_VALUE
 
     /**
@@ -47,14 +51,6 @@ class TaskMonitor(
      * Tracking access thread for each each pool
      */
     private val poolServedThreads = TreeMultimap.create<String, String>()
-    /**
-     * Task counters
-     */
-    private val readyTaskCount = AtomicInteger(0)
-    private val pendingTaskCount = AtomicInteger(0)
-    private val finishedTaskCount = AtomicInteger(0)
-
-    private val fetchMode = conf.getEnum(FETCH_MODE, FetchMode.NATIVE)
 
     private var groupMode = conf.getEnum(FETCH_QUEUE_MODE, URLUtil.GroupMode.BY_HOST)
     /**
@@ -70,44 +66,40 @@ class TaskMonitor(
     /**
      * The maximal number of threads allowed to access a task pool
      */
-    private var poolThreads: Int = if (fetchMode == FetchMode.CROWDSOURCING) Integer.MAX_VALUE
-        else conf.getInt(FETCH_THREADS_PER_QUEUE, 1)
+    private var numPoolThreads: Int = 5
+    /**
+     * Fetch threads
+     */
+    private var initFetchThreadCount: Int = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
 
     /**
      * Once timeout, the pending items should be put to the ready pool again.
      */
-    private var poolPendingTimeout: Duration = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(3))
+    private var poolPendingTimeout = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(3))
+
+    private val closed = AtomicBoolean()
+
+    val numTaskPools get() = taskPools.size
     /**
-     * @return Return true if the feeder is completed
+     * Task counters
      */
-    val isFeederCompleted get() = feederCompleted.get()
+    val numReadyTasks = AtomicInteger(0)
+    val numPendingTasks = AtomicInteger(0)
+    val numFinishedTasks = AtomicInteger(0)
+    val numTasks get() = numReadyTasks.get() + numPendingTasks.get()
 
-    val queueCount get() = fetchPools.size
-
-    private val slowestQueue: TaskPool?
-        get() {
-            var pool: TaskPool? = null
-
-            while (!fetchPools.isEmpty() && pool == null) {
-                val maxCost = poolTimeCosts.inverseBidiMap().lastKey()
-                val id = poolTimeCosts.inverseBidiMap()[maxCost]
-                if (id != null) {
-                    poolTimeCosts.remove(id)
-                    pool = fetchPools.find(id)
-                }
-            }
-
-            return pool
-        }
-
-    init {
-        LOG.info(params.format())
+    override fun setup(jobConf: ImmutableConfig) {
+        // TODO: just parse from command line
+        this.options = FetchOptions(jobConf)
+        numPoolThreads = options.numPoolThreads
+        log.info(params.format())
     }
 
     override fun getParams(): Params {
         return Params.of(
                 "className", this.javaClass.simpleName,
-                "poolThreads", poolThreads,
+                "numPoolThreads", numPoolThreads,
+                "initFetchThreadCount", initFetchThreadCount,
                 "groupMode", groupMode,
                 "crawlDelay", crawlDelay,
                 "minCrawlDelay", minCrawlDelay,
@@ -115,100 +107,68 @@ class TaskMonitor(
         )
     }
 
-    @Synchronized
-    fun produce(jobID: Int, url: String, page: WebPage) {
-        val priority = page.fetchPriority
-        val task = FetchTask.create(jobID, priority, url, page, groupMode!!)
-
-        if (task != null) {
-            produce(task)
-        } else {
-            LOG.warn("Failed to create FetchTask. Url : $url")
-        }
-    }
-
-    @Synchronized
-    fun produce(item: FetchTask) {
-        doProduce(item)
-    }
-
-    /**
-     * Find out the FetchQueue with top priority,
-     * wait for all pending tasks with higher priority are finished
-     */
-    @Synchronized
-    fun consume(): FetchTask? {
-        if (fetchPools.isEmpty()) {
-            return null
-        }
-
-        val nextPriority = fetchPools.peek()!!.priority
-        val priorityChanged = nextPriority < lastTaskPriority
-        if (priorityChanged && fetchPools.hasPriorPendingTasks(nextPriority)) {
-            // Waiting for all pending tasks with higher priority to be finished
-            return null
-        }
-
-        if (priorityChanged) {
-            LOG.info("Fetch priority changed : $lastTaskPriority -> $nextPriority")
-        }
-
-        val pool = fetchPools.find { isConsumable(it) }
-
-        if (pool == null) {
-            maintain()
-            return null
-        }
-
-        return consumeUnchecked(pool)
-    }
-
-    @Synchronized
-    fun consume(poolId: PoolId): FetchTask? {
-        val pool = fetchPools.find(poolId) ?: return null
-
-        return if (isConsumable(pool)) {
-            consumeUnchecked(pool)
-        } else null
-
-    }
-
-    @Synchronized
-    fun finish(priority: Int, protocol: String, host: String, itemId: Int, asap: Boolean) {
-        doFinish(PoolId(priority, protocol, host), itemId, asap)
-    }
-
-    @Synchronized
-    fun finish(item: FetchTask) {
-        finish(item.priority, item.protocol, item.host, item.itemId, false)
-    }
-
-    @Synchronized
-    fun finishAsap(item: FetchTask) {
-        finish(item.priority, item.protocol, item.host, item.itemId, true)
-    }
-
     fun setFeederCompleted() {
         feederCompleted.set(true)
     }
 
-    private fun isConsumable(pool: TaskPool): Boolean {
-        return pool.isActive && pool.hasReadyTasks() && taskTracker.isReachable(pool.host)
+    @Synchronized
+    fun produce(jobID: Int, page: WebPage) {
+        page.fetchMode = options.fetchMode
+
+        val task = JobFetchTask.create(jobID, page.fetchPriority, page.url, page, groupMode)
+
+        if (task != null) {
+            produce(task)
+        } else {
+            log.warn("Failed to create FetchTask | {}", page.url)
+        }
     }
 
-    private fun maintain() {
-        fetchPools.forEach { maintain(it) }
+    @Synchronized
+    fun produce(task: JobFetchTask) {
+        doProduce(task)
+    }
+
+    @Synchronized
+    fun consume(poolId: PoolId? = null): JobFetchTask? {
+        if (poolId == null) {
+            return consumeFromAnyPool()
+        }
+
+        val pool = taskPools.find(poolId) ?: return null
+
+        return if (isConsumable(pool)) {
+            consumeUnchecked(pool)
+        } else null
+    }
+
+    @Synchronized
+    fun finish(item: JobFetchTask) {
+        doFinish(PoolId(item.priority, item.protocol, item.host), item.itemId, false)
+    }
+
+    @Synchronized
+    fun finishAsap(item: JobFetchTask) {
+        doFinish(PoolId(item.priority, item.protocol, item.host), item.itemId, true)
+    }
+
+    fun maintain() {
+        taskPools.forEach { maintain(it) }
+    }
+
+    private fun isConsumable(pool: TaskPool): Boolean {
+        return pool.isActive && pool.hasReadyTasks() && fetchMetrics.isReachable(pool.host)
     }
 
     /** Maintain pool life time, return true if the life time status is changed, false otherwise  */
     private fun maintain(pool: TaskPool): TaskPool {
         val lastStatus = pool.status
-        if (taskTracker.isGone(pool.host)) {
+        if (fetchMetrics.isGone(pool.host)) {
             retire(pool)
-            LOG.info("Retire pool with unreachable host " + pool.id)
-        } else if (isFeederCompleted && !pool.hasTasks()) {
-            // All tasks are finished, including pending tasks, we can remove the pool from the pools safely
-            fetchPools.disable(pool)
+            log.info("Retire pool with unreachable host " + pool.id)
+        } else if (feederCompleted.get() && !pool.hasTasks()) {
+            // All tasks are finished, including pending tasks, we can remove the pool from the pool list safely
+            taskPools.disable(pool)
         }
 
         val status = pool.status
@@ -219,64 +179,88 @@ class TaskMonitor(
                     "ready", pool.readyCount,
                     "pending", pool.pendingCount,
                     "finished", pool.finishedCount
-            ).withLogger(LOG).info(true)
+            ).withLogger(log).info(true)
         }
 
         return pool
     }
 
-    private fun consumeUnchecked(pool: TaskPool): FetchTask? {
+    /**
+     * Find out the FetchQueue with top priority,
+     * wait for all pending tasks with higher priority are finished
+     */
+    private fun consumeFromAnyPool(): JobFetchTask? {
+        var pool = taskPools.peek() ?: return null
+
+        val nextPriority = pool.priority
+        val priorityChanged = nextPriority < lastTaskPriority
+        if (priorityChanged && taskPools.hasPriorPendingTasks(nextPriority)) {
+            // Waiting for all pending tasks with higher priority to be finished
+            return null
+        }
+
+        if (priorityChanged) {
+            log.info("Fetch priority changed : $lastTaskPriority -> $nextPriority")
+        }
+
+        pool = taskPools.find { isConsumable(it) } ?: return null
+
+        return consumeUnchecked(pool)
+    }
+
+    private fun consumeUnchecked(pool: TaskPool): JobFetchTask? {
         val item = pool.consume()
 
         if (item != null) {
-            readyTaskCount.decrementAndGet()
-            pendingTaskCount.incrementAndGet()
+            numReadyTasks.decrementAndGet()
+            numPendingTasks.incrementAndGet()
             lastTaskPriority = pool.priority
         }
 
         return item
     }
 
-    private fun doProduce(task: FetchTask) {
-        if (taskTracker.isGone(task.host)) {
+    private fun doProduce(task: JobFetchTask) {
+        if (fetchMetrics.isGone(task.host)) {
             return
         }
 
-        val url = task.url
-        if (taskTracker.isGone(URLUtil.getHostName(url)) || taskTracker.isGone(url)) {
-            LOG.warn("Ignore unreachable url (indicate task.getHost() failed) $url")
+        val url = task.urlString
+        val host = URLUtil.getHostName(url)
+        if (host == null || fetchMetrics.isGone(host) || fetchMetrics.isGone(url)) {
+            log.warn("Ignore unreachable url (indicate task.getHost() failed) | {}", url)
             return
         }
 
-        val poolId = PoolId(task.priority, task.protocol, task.host)
-        var pool = fetchPools.find(poolId)
+        val poolId = task.poolId
+        var pool = taskPools.find(poolId)
 
         if (pool == null) {
-            pool = fetchPools.findExtend(poolId)
+            pool = taskPools.findExtend(poolId)
             if (pool != null) {
-                fetchPools.enable(pool)
+                taskPools.enable(pool)
             } else {
                 pool = createFetchQueue(poolId)
-                fetchPools.add(pool)
+                taskPools.add(pool)
             }
         }
         pool.produce(task)
 
-        readyTaskCount.incrementAndGet()
+        numReadyTasks.incrementAndGet()
         poolTimeCosts[pool.id] = 0.0
     }
 
     private fun doFinish(poolId: PoolId, itemId: Int, asap: Boolean) {
-        val pool = fetchPools.findExtend(poolId)
+        val pool = taskPools.findExtend(poolId)
 
         if (pool == null) {
-            LOG.warn("Attempt to finish item from unknown pool $poolId")
+            log.warn("Attempt to finish item from unknown pool $poolId")
             return
         }
 
         if (!pool.pendingTaskExists(itemId)) {
-            if (!fetchPools.isEmpty()) {
-                LOG.warn("Attempt to finish unknown item: <{}, {}>", poolId, itemId)
+            if (!taskPools.isEmpty()) {
+                log.warn("Attempt to finish unknown item: <{}, {}>", poolId, itemId)
             }
 
             return
@@ -284,8 +268,8 @@ class TaskMonitor(
 
         pool.finish(itemId, asap)
 
-        pendingTaskCount.decrementAndGet()
-        finishedTaskCount.incrementAndGet()
+        numPendingTasks.decrementAndGet()
+        numFinishedTasks.incrementAndGet()
 
         poolTimeCosts[poolId] = pool.averageRecentTimeCost
         poolServedThreads.put(poolId.host, Thread.currentThread().name.substring(THREAD_SEQUENCE_POS))
@@ -293,28 +277,22 @@ class TaskMonitor(
 
     private fun retire(pool: TaskPool) {
         pool.retire()
-        fetchPools.remove(pool)
+        taskPools.remove(pool)
     }
 
     @Synchronized
     fun report() {
-        dump(FETCH_TASK_REMAINDER_NUMBER)
-
-        taskTracker.report()
+        dump(FETCH_TASK_REMAINDER_NUMBER, false)
 
         reportCost()
 
         reportServedThreads()
     }
 
-    fun trackSuccess(page: WebPage) {
-        taskTracker.trackSuccess(page)
-    }
-
     fun trackHostGone(url: String) {
-        val isGone = taskTracker.trackHostGone(url)
+        val isGone = fetchMetrics.trackHostGone(url)
         if (isGone) {
-            retune(true)
+            tune(true)
         }
     }
 
@@ -328,43 +306,35 @@ class TaskMonitor(
      * @param force reload all pending fetch items immediately
      */
     @Synchronized
-    internal fun retune(force: Boolean) {
-        val unreachablePools = fetchPools.filter { taskTracker.isGone(it.host) }
-
-        unreachablePools.forEach { retire(it) }
-        fetchPools.forEach { it.retune(force) }
-
-        if (!unreachablePools.isEmpty()) {
-            val report = unreachablePools
-                    .joinToString (", ", "Retired unavailable pools : ") { it.id.toString() }
-            LOG.info(report)
+    internal fun tune(force: Boolean) {
+        taskPools.filter { fetchMetrics.isGone(it.host) }.onEach { retire(it) }.takeIf { it.isNotEmpty() }?.let { pool ->
+            pool.joinToString (", ", "Unavailable pools : ") { it.id.toString() }.let { log.info(it) }
         }
-
         calculateTaskCounter()
     }
 
     @Synchronized
-    fun findPendingTask(priority: Int, url: URL, itemID: Int): FetchTask? {
-        val pool = fetchPools.findExtend(PoolId(priority, url))
+    fun findPendingTask(priority: Int, url: URL, itemID: Int): JobFetchTask? {
+        val pool = taskPools.findExtend(PoolId(priority, url))
         return pool?.getPendingTask(itemID)
     }
 
     /** Get a pending task, the task can be in working pools or in detached pools  */
     @Synchronized
-    fun findPendingTask(poolId: PoolId, itemID: Int): FetchTask? {
-        val pool = fetchPools.findExtend(poolId)
+    fun findPendingTask(poolId: PoolId, itemID: Int): JobFetchTask? {
+        val pool = taskPools.findExtend(poolId)
         return pool?.getPendingTask(itemID)
     }
 
     @Synchronized
-    internal fun dump(limit: Int) {
-        fetchPools.dump(limit)
+    internal fun dump(limit: Int, drop: Boolean) {
+        taskPools.dump(limit, drop)
         calculateTaskCounter()
     }
 
     @Synchronized
     internal fun tryClearSlowestQueue(): Int {
-        val pool = slowestQueue ?: return 0
+        val pool = getSlowestPool() ?: return 0
 
         val df = DecimalFormat("0.##")
 
@@ -375,8 +345,8 @@ class TaskMonitor(
                     "PendingTasks", pool.pendingCount,
                     "FinishedTasks", pool.finishedCount,
                     "SlowTasks", pool.slowTaskCount,
-                    "Throughput, ", df.format(pool.averageTimeCost) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s"
-            ).withLogger(LOG).info(true)
+                    "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s"
+            ).withLogger(log).info(true)
 
             return 0
         }
@@ -395,8 +365,8 @@ class TaskMonitor(
                 "PendingTasks", pool.pendingCount,
                 "FinishedTasks", pool.finishedCount,
                 "SlowTasks", pool.slowTaskCount,
-                "Throughput, ", df.format(pool.averageTimeCost) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s",
-                "Deleted", deleted).withLogger(LOG).info(true)
+                "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s",
+                "Deleted", deleted).withLogger(log).info(true)
 
         return deleted
     }
@@ -404,12 +374,14 @@ class TaskMonitor(
     @Synchronized
     @Throws(Exception::class)
     override fun close() {
-        LOG.info("[Destruction] Closing TasksMonitor #$id")
+        if (closed.compareAndSet(false, true)) {
+            log.info("Closing TasksMonitor #$id")
 
-        report()
+            report()
 
-        fetchPools.clear()
-        readyTaskCount.set(0)
+            taskPools.clear()
+            numReadyTasks.set(0)
+        }
     }
 
     @Synchronized
@@ -417,7 +389,7 @@ class TaskMonitor(
         var count = 0
 
         val costRecorder = TreeMap<Double, String>(Comparator.reverseOrder())
-        for (pool in fetchPools) {
+        for (pool in taskPools) {
             costRecorder[pool.averageRecentTimeCost] = pool.id.host
 
             if (pool.readyCount == 0) {
@@ -434,56 +406,57 @@ class TaskMonitor(
 
     private fun clearPendingTasksIfFew(pool: TaskPool, limit: Int): Int {
         val deleted = pool.clearPendingTasksIfFew(limit)
-        pendingTaskCount.addAndGet(-deleted)
+        numPendingTasks.addAndGet(-deleted)
         return deleted
     }
 
     private fun clearReadyTasks(pool: TaskPool): Int {
         val deleted = pool.clearReadyQueue()
 
-        readyTaskCount.addAndGet(-deleted)
-        if (readyTaskCount.get() <= 0 && fetchPools.size == 0) {
-            readyTaskCount.set(0)
+        numReadyTasks.addAndGet(-deleted)
+        if (numReadyTasks.get() <= 0 && taskPools.size == 0) {
+            numReadyTasks.set(0)
         }
 
         return deleted
     }
 
-    fun taskCount(): Int {
-        return readyTaskCount.get() + pendingTaskCount()
-    }
-
-    fun readyTaskCount(): Int {
-        return readyTaskCount.get()
-    }
-
-    fun pendingTaskCount(): Int {
-        return pendingTaskCount.get()
-    }
-
-    fun getFinishedTaskCount(): Int {
-        return finishedTaskCount.get()
-    }
-
     private fun calculateTaskCounter() {
         var readyCount = 0
         var pendingCount = 0
-        fetchPools.forEach {
+        taskPools.forEach {
             readyCount += it.readyCount
             pendingCount += it.pendingCount
         }
-        readyTaskCount.set(readyCount)
-        pendingTaskCount.set(pendingCount)
+        numReadyTasks.set(readyCount)
+        numPendingTasks.set(pendingCount)
     }
 
     private fun createFetchQueue(poolId: PoolId): TaskPool {
         val pool = TaskPool(poolId,
-                groupMode!!,
-                poolThreads,
-                crawlDelay!!,
-                minCrawlDelay!!,
+                groupMode,
+                numPoolThreads,
+                crawlDelay,
+                minCrawlDelay,
                 poolPendingTimeout)
-        LOG.info("FetchQueue created : $pool")
+
+        log.info("FetchQueue created : $pool")
+
+        return pool
+    }
+
+    private fun getSlowestPool(): TaskPool? {
+        var pool: TaskPool? = null
+
+        while (!taskPools.isEmpty() && pool == null) {
+            val maxCost = poolTimeCosts.inverseBidiMap().lastKey()
+            val id = poolTimeCosts.inverseBidiMap()[maxCost]
+            if (id != null) {
+                poolTimeCosts.remove(id)
+                pool = taskPools.find(id)
+            }
+        }
+
         return pool
     }
 
@@ -499,7 +472,7 @@ class TaskMonitor(
                     report.append(line)
                 }
 
-        LOG.info("Served threads : \n$report")
+        log.info("Served threads : \n$report")
     }
 
     private fun reportCost(costRecorder: Map<Double, String>) {
@@ -515,19 +488,17 @@ class TaskMonitor(
             sb.append("\n")
         }
 
-        LOG.info(sb.toString())
+        log.info(sb.toString())
     }
 
     private fun reportCost() {
-        var report = "Top slow hosts : \n" + fetchPools.costReport
+        var report = "Top slow hosts : \n" + taskPools.timeReport
         report += "\n"
-        LOG.info(report)
+        log.info(report)
     }
 
     companion object {
-        val LOG = LoggerFactory.getLogger(TaskMonitor::class.java)
-        private val instanceSequence = AtomicInteger(0)
-
-        private val THREAD_SEQUENCE_POS = "FetchThread-".length
+        private val instanceSequencer = AtomicInteger(0)
+        private const val THREAD_SEQUENCE_POS = "FetchThread-".length
     }
 }

@@ -33,6 +33,9 @@ public class PulsarObjectSerializer implements JavaObjectSerializer {
             buffer.writeInt(ValueDom.type);
             new ValueDomWritable(dom).write(buffer);
 
+            // Make a trace who is calling this method
+//            if (buffer.size() > 0) throw new RuntimeException("Throw from here");
+
             return buffer.getData();
         } else {
             throw DbException.get(ErrorCode.SERIALIZATION_FAILED_1);

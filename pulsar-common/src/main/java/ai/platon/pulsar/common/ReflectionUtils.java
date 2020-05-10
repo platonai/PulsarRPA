@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common;
 
 import org.apache.hadoop.io.serializer.SerializationFactory;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,5 +36,23 @@ public class ReflectionUtils {
             throw new RuntimeException(e);
         }
         return result;
+    }
+
+    public static <T> T forName(@NotNull String className) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+         return (T)Class.forName(className).newInstance();
+    }
+
+    public static <T> T forNameOrNull(@NotNull String className) {
+        try {
+            return (T)Class.forName(className).newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
