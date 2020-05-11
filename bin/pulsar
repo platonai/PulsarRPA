@@ -118,7 +118,7 @@ elif [[ "$COMMAND" = "stop" ]] ; then
   exit 0
 elif [[ "$COMMAND" = "server" ]] ; then
   MODULE=pulsar-app
-  CLASS=ai.platon.pulsar.app.AppMasterKt
+  CLASS=ai.platon.pulsar.app.master.PulsarMasterKt
 elif [[ "$COMMAND" = "sql" ]] ; then
   MODULE=pulsar-app
   CLASS=ai.platon.pulsar.app.H2ShellKt
