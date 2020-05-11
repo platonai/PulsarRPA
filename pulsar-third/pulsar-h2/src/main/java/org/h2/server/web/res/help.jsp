@@ -89,7 +89,7 @@ function setBy(css) {
     </tr>
     <tr>
         <th><a href="javascript:setBy('.meta-load');">The metadata of a page</a></th>
-        <td class="meta-load">SELECT * FROM META_LOAD('https://www.mia.com/formulas.html');</td>
+        <td class="meta-load">SELECT * FROM META_LOAD('https://list.jd.com/list.html?cat=652,12345,12349');</td>
     </tr>
     <tr>
         <th><a href="javascript:setBy('.xsql-help');">X-SQL help</a></th>
