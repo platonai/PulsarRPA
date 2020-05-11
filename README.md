@@ -102,6 +102,10 @@ Ubuntu/Debian:
     git clone https://github.com/platonai/pulsar.git
     cd pulsar && mvn
     
+## Run the native api demo
+
+    bin/pulsar example ManualKt
+
 ## Start pulsar server
     
     bin/pulsar
