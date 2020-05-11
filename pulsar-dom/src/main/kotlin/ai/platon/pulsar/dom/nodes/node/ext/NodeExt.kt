@@ -289,7 +289,7 @@ val Node.captionOrSelector: String
  * TextNodes' texts are calculated and stored while Elements' clean texts are calculated on the fly.
  * This is a balance of space and time.
  * */
-val Node.cleanText: String get() =
+val Node?.cleanText: String get() =
     when (this) {
         is TextNode -> immutableText.trim()
         is Element -> accumulateText(this).trim()

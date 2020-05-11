@@ -130,6 +130,22 @@ open class FeaturedDocument(val document: Document) {
         return document.select(query, offset, limit, transformer = transformer)
     }
 
+    fun selectFirst(query: String): Element {
+        return document.selectFirstOrNull(query)?:throw NoSuchElementException()
+    }
+
+    fun <T> selectFirst(query: String, extractor: (Element) -> T): T {
+        return document.selectFirstOrNull(query)?.let { extractor(it) }?:throw NoSuchElementException()
+    }
+
+    fun selectFirstOrNull(query: String): Element? {
+        return document.selectFirstOrNull(query)
+    }
+
+    fun <T> selectFirstOrNull(query: String, extractor: (Element) -> T): T? {
+        return document.selectFirstOrNull(query)?.let { extractor(it) }
+    }
+
     fun first(query: String): Element? {
         return document.selectFirstOrNull(query)
     }

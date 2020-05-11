@@ -157,7 +157,7 @@ FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('$url', '$expr', 1, 1000)
     fun testLoadOutPagesForJd() {
         val url = urlGroups["jd"]!![0]
         execute("CALL SET_SCROLL_DOWN_COUNT(3, 1)")
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
+        // execute("SELECT * FROM LOAD_AND_GET_FEATURES('$url') WHERE SIBLING > 20")
 
         // stat.execute("CALL SET_PAGE_EXPIRES('1d', 1)")
 //        val restrictCss = "*:expr(IMG>0 && WIDTH>200 && HEIGHT>200 && SIBLING>30)"

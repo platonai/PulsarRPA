@@ -113,6 +113,16 @@ open class PulsarSession(
      * Load a url with specified options
      *
      * @param url     The url to load
+     * @param args The load args
+     * @return The web page
+     */
+    @Throws(Exception::class)
+    fun load(url: String, args: String): WebPage = load(url, LoadOptions.parse(args))
+
+    /**
+     * Load a url with specified options
+     *
+     * @param url     The url to load
      * @param options The load options
      * @return The web page
      */
@@ -186,6 +196,17 @@ open class PulsarSession(
         } else {
             context.loadAll(normUrls, opt)
         }
+    }
+
+    /**
+     * Load all out pages in a portal page
+     *
+     * @param portalUrl    The portal url from where to load pages
+     * @param args         The load args
+     * @return The web pages
+     */
+    fun loadOutPages(portalUrl: String, args: String): Collection<WebPage> {
+        return loadOutPages(portalUrl, LoadOptions.parse(args))
     }
 
     /**
@@ -333,6 +354,10 @@ open class PulsarSession(
     fun exportTo(doc: FeaturedDocument, path: Path): Path {
         ensureAlive()
         return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
+    }
+
+    fun shutdown() {
+        PulsarEnv.shutdown()
     }
 
     override fun equals(other: Any?): Boolean {

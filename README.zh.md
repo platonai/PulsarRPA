@@ -13,21 +13,60 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
 
 更多信息请访问 [platonic.fun](http://platonic.fun)
 
+## Native API
+启动一个会话：
+
+    val session = PulsarContext.createSession()
+    # specify a test url
+    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
+
+采集单个网页：
+
+    session.load(url, "-expires 1d")
+
+从一个入口链接采集一组网页：
+
+    session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+
+采集并提取单个网页：
+
+        val page = session.load(url, "-expires 1d")
+        val document = session.parse(page)
+        val products = document.select("li[data-sku]").map {
+            it.selectFirstOrNull(".p-name em")?.text() to it.selectFirstOrNull(".p-price")?.text()
+        }
+        products.forEach { (name, price) -> println("$price $name") }
+
+从一个入口链接采集页面并进行网页提取：
+
+        val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+        val documents = pages.map { session.parse(it) }
+        val products = documents.mapNotNull { it.selectFirstOrNull(".product-intro") }.map {
+            it.selectFirstOrNull(".sku-name")?.text() to it.selectFirstOrNull(".p-price")?.text()
+        }
+        products.forEach { (name, price) -> println("$price $name") }
+
+上述例子可以在 [示例](pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/Manual.kt) 中找到。
+
 ## X-SQL
-将网页转变为表格：
+
+采集并提取一组网页，并将其转变为 SQL 表：
 
     SELECT
-      DOM_BASE_URI(DOM) AS BaseUri,
-      DOM_FIRST_TEXT(DOM, '.brand') AS Title,
-      DOM_FIRST_TEXT(DOM, '.titlecon') AS Memo,
-      DOM_FIRST_TEXT(DOM, '.pbox_price') AS Price,
-      DOM_FIRST_TEXT(DOM, '#wrap_con') AS Parameters
-    FROM LOAD_OUT_PAGES_IGNORE_URL_QUERY('https://www.mia.com/formulas.html', '*:expr(width>=250 && width<=260 && height>=360 && height<=370 && sibling>30 ) a', 1, 20);
+      DOM_FIRST_TEXT(DOM, '.sku-name') AS NAME,
+      DOM_FIRST_TEXT(DOM, '.summary-price') AS PRICE,
+      DOM_BASE_URI(DOM) AS URI,
+      DOM_FIRST_IMG(DOM, '.main-img') AS MAIN_IMAGE,
+      DOM_FIRST_IMG(DOM, '460x460') AS MAIN_IMAGE2,
+      DOM_FIRST_TEXT(DOM, '.parameter2') AS PARAMETERS,
+      DOM_FIRST_TEXT(DOM, '.comment-item') AS COMMENT1
+    FROM LOAD_OUT_PAGES('https://list.jd.com/list.html?cat=652,12345,12349', 'a[href~=item]', 1, 20)
+    WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
 
 你可以下载 pulsar 源代码自己运行上述 X-SQL 或者通过我们的[在线演示版](http://bi.platonic.fun/question/65)运行。
 
-文件 [sql-history.sql](https://github.com/platonai/pulsar/blob/master/sql-history.sql) 中包含了所有测试用的X-SQL。
-更多 X-SQL 函数可以在 [ai.platon.pulsar.ql.h2.udfs](https://github.com/platonai/pulsar/tree/master/pulsar-ql-server/src/main/kotlin/fun/platonic/pulsar/ql/h2/udfs) 目录下找到。
+文件 [sql-history.sql](sql-history.sql) 中包含了所有测试用的X-SQL。
+更多 X-SQL 函数可以在 [ai.platon.pulsar.ql.h2.udfs](pulsar-ql-server/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs) 目录下找到。
 
 ## BI 集成
 使用定制的 [Metabase](https://github.com/platonai/metabase) 编写 X-SQL 并将网页转变为报表。

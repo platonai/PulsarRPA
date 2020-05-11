@@ -241,7 +241,7 @@ abstract class TestBase {
                 "https://www.baidu.com/s?wd=马航&oq=马航&ie=utf-8"
         )
         urlGroups["jd"] = arrayOf(
-                "https://list.jd.com/list.html?cat=670,671,672",
+                "https://list.jd.com/list.html?cat=652,12345,12349",
                 "https://item.jd.com/1238838350.html",
                 "http://search.jd.com/Search?keyword=长城葡萄酒&enc=utf-8&wq=长城葡萄酒",
                 "https://detail.tmall.com/item.htm?id=536690467392",
@@ -296,7 +296,7 @@ abstract class TestBase {
             if (sql.toUpperCase().filter { it != '\n' }.trimIndent().matches(regex)) {
                 val rs = stat.executeQuery(sql)
                 if (printResult) {
-                    println(ResultSetFormatter(rs))
+                    println(ResultSetFormatter(rs, withHeader = true))
                 }
             } else {
                 val r = stat.execute(sql)
