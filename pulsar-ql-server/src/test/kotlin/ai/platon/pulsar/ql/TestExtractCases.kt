@@ -179,6 +179,24 @@ WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
     }
 
     @Test
+    fun testLoadOutPagesForJd2() {
+        val sql = """
+SELECT
+    DOM_FIRST_TEXT(DOM, '.sku-name') AS Name,
+    DOM_FIRST_NUMBER(DOM, '.p-price .price', 0.00) AS Price,
+    DOM_FIRST_NUMBER(DOM, '#page_opprice', 0.00) AS Tag_Price,
+    DOM_FIRST_TEXT(DOM, '#comment-count .count') AS Comments,
+    DOM_FIRST_TEXT(DOM, '#summary-service') AS Logistics,
+    DOM_BASE_URI(DOM) AS BaseUri
+FROM LOAD_OUT_PAGES('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
+WHERE DOM_FIRST_NUMBER(DOM, '.p-price .price', 0.00) > 0
+ORDER BY DOM_FIRST_NUMBER(DOM, '.p-price .price', 0.00);
+""".trimIndent()
+
+        execute(sql)
+    }
+
+    @Test
     @Ignore("Takes too much time to finish")
     fun testLoadAll() {
         val expr = "div:expr(WIDTH>=200 && WIDTH<=300 &&      HEIGHT>=200 && HEIGHT<=400  && SIBLING>30 )"

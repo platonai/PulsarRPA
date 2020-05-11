@@ -65,19 +65,19 @@ The SQL above downloads a Web page from wikipedia, find out the references secti
 Crawl and scrape data from a batch of pages, and turn them into a table:
 
     SELECT
-      DOM_FIRST_TEXT(DOM, '.sku-name') AS NAME,
-      DOM_FIRST_TEXT(DOM, '.summary-price') AS PRICE,
-      DOM_BASE_URI(DOM) AS URI,
-      DOM_FIRST_IMG(DOM, '.main-img') AS MAIN_IMAGE,
-      DOM_FIRST_IMG(DOM, '460x460') AS MAIN_IMAGE2,
-      DOM_FIRST_TEXT(DOM, '.parameter2') AS PARAMETERS,
-      DOM_FIRST_TEXT(DOM, '.comment-item') AS COMMENT1
-    FROM LOAD_OUT_PAGES('https://list.jd.com/list.html?cat=652,12345,12349', 'a[href~=item]', 1, 20)
-    WHERE LOCATE('item', DOM_BASE_URI(DOM)) > 0;
+        DOM_FIRST_TEXT(DOM, '.sku-name') AS Name,
+        DOM_FIRST_NUMBER(DOM, '.p-price .price', 0.00) AS Price,
+        DOM_FIRST_NUMBER(DOM, '#page_opprice', 0.00) AS Tag_Price,
+        DOM_FIRST_TEXT(DOM, '#comment-count .count') AS Comments,
+        DOM_FIRST_TEXT(DOM, '#summary-service') AS Logistics,
+        DOM_BASE_URI(DOM) AS BaseUri
+    FROM LOAD_OUT_PAGES('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
+    WHERE DOM_FIRST_NUMBER(DOM, '.p-price .price', 0.00) > 0
+    ORDER BY DOM_FIRST_NUMBER(DOM, '.p-price .price', 0.00);
 
 The SQL above visits a portal page in jd.com, download detail pages and then extract data from them.
 
-You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/question/65).
+You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/question/355).
 
 Check [sql-history.sql](sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](pulsar-ql-server/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs).
 
@@ -112,7 +112,7 @@ Web console [http://localhost:8082](http://localhost:8082) is already open in yo
 ## Use Metabase
 [Metabase](https://github.com/platonai/metabase) is the easy, open source way for everyone in your company to ask questions and learn from data.
 With X-SQL support, everyone can organize knowledge not just from the company's internal data, but also
-from the WWW.
+from the web.
 
     git clone https://github.com/platonai/metabase.git
     cd metabase
@@ -121,4 +121,4 @@ from the WWW.
 # Enterprise Edition:
 
 Pulsar Enterprise Edition supports Auto Web Mining: unsupervised machine learning, no rules or training required, 
-turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/dashboard/20)
+turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/dashboard/101)
