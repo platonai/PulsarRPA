@@ -88,17 +88,24 @@ Everyone in your company can ask questions and learn from WEB DATA now, for the 
 
 # Build & Run
 ## Install dependencies
+    
     bin/tools/install-depends.sh
+    
 ## Install mongodb
 You can skip this step, in such case, all data will lose after pulsar shutdown.
 Ubuntu/Debian:
 
     sudo apt-get install mongodb
+    
 ## Build from source
+    
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn -Pthird -Pplugins
+    cd pulsar && mvn
+    
 ## Start pulsar server
+    
     bin/pulsar
+    
 ## Execute X-SQLs
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
 

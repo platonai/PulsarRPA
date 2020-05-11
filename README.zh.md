@@ -75,6 +75,7 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
 
 # Build & Run
 ## 安装依赖项
+
     bin/tools/install-depends.sh
 
 ## 安装 MongoDB
@@ -84,10 +85,14 @@ Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL �
         sudo apt-get install mongodb
 
 ## 从源代码构建
+    
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn -Pthird -Pplugins
+    cd pulsar && mvn
+    
 ## 启动 pulsar 服务器
+
     bin/pulsar
+    
 ## 使用 Web 控制台
 Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with Web SQL.
 
