@@ -111,7 +111,7 @@ Ubuntu/Debian:
     bin/pulsar
     
 ## Execute X-SQLs
-Web console [http://localhost:8082](http://localhost:8082) is already open in your browser now, enjoy playing with X-SQL.
+Open web console [http://localhost:8082](http://localhost:8082) using your favourite browser now, enjoy playing with X-SQL.
 
 ## Use Metabase
 [Metabase](https://github.com/platonai/metabase) is the easy, open source way for everyone in your company to ask questions and learn from data.
