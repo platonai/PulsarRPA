@@ -25,7 +25,7 @@ open class LoadOptions: CommonOptions {
     var incognito = false
 
     /** Arrange links */
-    @Parameter(names = ["-ol", "-outlink", "-outlinkSelector", "--outlink-selector"],
+    @Parameter(names = ["-ol", "-outlink", "-outLink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
     var outlinkSelector = ""

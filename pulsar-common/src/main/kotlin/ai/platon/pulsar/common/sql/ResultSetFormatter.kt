@@ -168,7 +168,7 @@ class ResultSetFormatter(
                 }
             }
 
-            // buffer.append("\n")
+            buffer.append("\n")
         }
     }
 
