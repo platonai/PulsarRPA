@@ -66,6 +66,7 @@ if [[ "$CHROME_VERSION" == "" ]]; then
     install_chrome
 fi
 
-install_chrome_driver
+# chrome driver is optional since 1.5.0
+# install_chrome_driver
 
 cd - || exit
