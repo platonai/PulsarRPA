@@ -24,7 +24,6 @@ class PulsarEnv {
          * If the system is active
          * */
         val isActive get() = !closed.get() && applicationContext.isActive
-        val isInactive get() = !isActive
 
         private val shutdownHookThread: Thread = Thread { this.shutdown() }
 
@@ -42,7 +41,7 @@ class PulsarEnv {
             // the spring application context
             contextConfigLocation = System.getProperty(APPLICATION_CONTEXT_CONFIG_LOCATION)
             applicationContext = ClassPathXmlApplicationContext(contextConfigLocation)
-//            applicationContext.registerShutdownHook()
+            // applicationContext.registerShutdownHook()
 
             // shutdown application context before progress exit
             Runtime.getRuntime().addShutdownHook(shutdownHookThread)
@@ -62,7 +61,7 @@ class PulsarEnv {
                 active.set(false)
                 // TODO: still can be managed by spring
                 PulsarContext.getOrCreate().use { it.close() }
-//                applicationContext.getBean(MetricsManagement::class.java).use { it.close() }
+
                 applicationContext.close()
             }
         }

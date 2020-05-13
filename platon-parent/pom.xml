@@ -20,12 +20,11 @@
     </parent>
 
     <groupId>ai.platon</groupId>
-    <artifactId>pulsar-parent</artifactId>
+    <artifactId>platon-parent</artifactId>
+    <name>Platon Parent</name>
     <version>2</version>
-
     <packaging>pom</packaging>
 
-    <name>Platon</name>
     <description/>
     <url>http://platonic.fun</url>
     <inceptionYear>2014</inceptionYear>
@@ -54,31 +53,6 @@
         <system>GitHub</system>
         <url>http://www.github.com/platonai</url>
     </issueManagement>
-
-    <profiles>
-        <profile>
-            <id>pulsar</id>
-            <activation>
-                <property>
-                    <name>active-pulsar</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>scent</id>
-            <activation>
-                <property>
-                    <name>active-scent</name>
-                </property>
-            </activation>
-            <modules>
-                <module>scent</module>
-            </modules>
-        </profile>
-    </profiles>
 
     <build>
         <defaultGoal>install</defaultGoal>

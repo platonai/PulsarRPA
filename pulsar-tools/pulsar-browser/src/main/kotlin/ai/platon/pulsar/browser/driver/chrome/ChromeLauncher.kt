@@ -39,12 +39,13 @@ class LauncherConfig {
         val THREAD_JOIN_WAIT_TIME = Duration.ofSeconds(5)
 
         val CHROME_BINARY_SEARCH_PATHS = arrayOf(
+                "/mnt/data/workspace/chromium/src/out/Release/chrome",
                 "/mnt/data/workspace/chromium/src/out/Default/chrome",
                 "/usr/bin/chromium",
                 "/usr/bin/chromium-browser",
                 "/usr/bin/google-chrome-stable",
                 "/usr/bin/google-chrome",
-                "/opt/google/chrome/",
+                "/opt/google/chrome/chrome",
                 "/Applications/Chromium.app/Contents/MacOS/Chromium",
                 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
                 "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",

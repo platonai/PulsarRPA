@@ -15,6 +15,13 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
+    companion object {
+        const val DEFAULT_METRICS_NAME = "pulsar"
+        init {
+            SharedMetricRegistries.setDefault(DEFAULT_METRICS_NAME)
+        }
+    }
+
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.get(AppPaths.METRICS_DIR, timeIdent, jobIdent)
@@ -29,8 +36,7 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
     init {
         Files.createDirectories(reportDir)
 
-        SharedMetricRegistries.setDefault("pulsar")
-        metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
+        metricRegistry = SharedMetricRegistries.getOrCreate(DEFAULT_METRICS_NAME)
         jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
         csvReporter = CsvReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)

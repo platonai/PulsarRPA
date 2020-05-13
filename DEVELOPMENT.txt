@@ -1,0 +1,3 @@
+This copy of source code is in development mode, you must delete this file for a release.
+
+If this file is missing, release profile is activated by maven.

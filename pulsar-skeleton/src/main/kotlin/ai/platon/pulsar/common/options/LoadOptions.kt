@@ -21,11 +21,11 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = Duration.ofDays(36500)
-    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Simulate browser as incognito mode")
+    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
 
     /** Arrange links */
-    @Parameter(names = ["-ol", "-outlink", "-outLink", "-outlinkSelector", "--outlink-selector"],
+    @Parameter(names = ["-ol", "-outLink", "-outlink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
     var outlinkSelector = ""
