@@ -16,6 +16,7 @@ import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.lang.Thread.currentThread
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -145,6 +146,7 @@ class ProxyContext(
     private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE)
     private val maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     private val minTimeToLive = Duration.ofSeconds(10)
+    private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
 
     /**
@@ -153,8 +155,12 @@ class ProxyContext(
     var proxyEntry: ProxyEntry? = null
         private set
     val isEnabled get() = proxyMonitor.isEnabled
-    val isDisabled get() = !isEnabled
-    val isActive get() = proxyMonitor.isActive && !closed.get()
+    val isActive get() = proxyMonitor.isActive && !closing.get() && !closed.get()
+
+    init {
+        // warn up if it's idle
+        proxyMonitor.warnUp()
+    }
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)?:FetchResult.privacyRetry(task)
@@ -196,13 +202,11 @@ class ProxyContext(
         }
 
         val proxy = proxyEntry
-        // used for test purpose
         if (proxy != null) {
-            // TEST code, trigger the privacy context reset
             val successPages = proxy.numSuccessPages.get()
             if (successPages > maxFetchSuccess && result.status.isSuccess) {
-                log.info("[TEST] Emit a PRIVACY retry after $successPages pages served | {}", proxy)
-                result = FetchResult.privacyRetry(task)
+                log.info("Emit a PRIVACY retry since served $successPages pages | {}", proxy)
+                result = FetchResult.privacyRetry(task, ProxyRetiredException("Served too many pages"))
             }
         }
 
@@ -221,9 +225,9 @@ class ProxyContext(
 
     private fun handleProxyException(task: FetchTask, e: ProxyException): FetchResult {
         return when (e) {
-            is ProxyExpireException -> {
-                log.warn("The proxy is expired, context reset will be triggered | {}", proxyEntry?:"<no proxy>")
-                FetchResult.privacyRetry(task)
+            is ProxyRetiredException -> {
+                log.warn("{}, context reset will be triggered | {}", e.message, proxyEntry?:"<no proxy>")
+                FetchResult.privacyRetry(task, reason = e)
             }
             is NoProxyException -> {
                 numProxyAbsence.incrementAndGet()
@@ -252,9 +256,19 @@ class ProxyContext(
         }
         task.proxyEntry = proxyEntry
 
+        // If the proxy is idle, and here comes a new task, reset the context
+        if (proxyMonitor.isIdle) {
+            if (closing.compareAndSet(false, true)) {
+                throw ProxyRetiredException("The proxy is idle")
+            }
+        }
+
+        // The proxy is about to be unusable, reset the context
         proxyEntry?.also {
             if (it.willExpireAfter(minTimeToLive)) {
-                throw ProxyExpireException("The proxy expires in $minTimeToLive")
+                if (closing.compareAndSet(false, true)) {
+                    throw ProxyRetiredException("The proxy expires in $minTimeToLive")
+                }
             }
         }
     }
@@ -262,7 +276,7 @@ class ProxyContext(
     private fun afterTaskFinished(task: FetchTask, success: Boolean) {
         numRunningTasks.decrementAndGet()
         if (proxyEntry != null && proxyEntry != proxyMonitor.currentProxyEntry) {
-            log.warn("Proxy has been changed unexpected | {} -> {} | {} -> {}",
+            log.warn("Proxy has been changed | {} -> {} | {} -> {}",
                     proxyEntry?.outIp,
                     proxyMonitor.currentProxyEntry?.outIp,
                     proxyEntry,

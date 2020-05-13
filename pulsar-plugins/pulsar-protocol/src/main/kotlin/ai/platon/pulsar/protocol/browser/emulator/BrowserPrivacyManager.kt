@@ -1,11 +1,13 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
@@ -152,17 +154,19 @@ class BrowserPrivacyManager(
         val status = result.response.status
         if (privacyContext.isActive && result.task.nPrivacyRetries == 1) {
             when {
+                status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> privacyContext.markLeaked()
                 status.isRetry(RetryScope.PRIVACY) -> privacyContext.markWarning()
-                        .also { logPrivacyLeakWarning(privacyContext) }
                 status.isSuccess -> privacyContext.markSuccess()
             }
+
+            takeUnless { status.isSuccess }?.also { logPrivacyLeakWarning(privacyContext, status) }
         } else {
             tracePrivacyContextInactive(privacyContext, result)
         }
     }
 
-    private fun logPrivacyLeakWarning(privacyContext: PrivacyContext) {
-        log.info("Privacy leak warning {}/#{}", privacyContext.privacyLeakWarnings, privacyContext.id)
+    private fun logPrivacyLeakWarning(privacyContext: PrivacyContext, status: ProtocolStatus) {
+        log.info("Privacy leak warning {}/#{} | {}", privacyContext.privacyLeakWarnings, privacyContext.id, status)
         if (privacyContext.privacyLeakWarnings.get() == 6) {
             privacyContext.report()
         }

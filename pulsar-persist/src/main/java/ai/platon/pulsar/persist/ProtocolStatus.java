@@ -117,7 +117,13 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
     @Nonnull
     public static ProtocolStatus retry(RetryScope scope, Object reason) {
-        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope, ARG_RETRY_REASON, reason);
+        String reasonString;
+        if (reason instanceof Exception) {
+            reasonString = ((Exception) reason).getClass().getName();
+        } else {
+            reasonString = reason.toString();
+        }
+        return failed(ProtocolStatusCodes.RETRY, ARG_RETRY_SCOPE, scope, ARG_RETRY_REASON, reasonString);
     }
 
     @Nonnull
@@ -197,6 +203,16 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         return getMinorCode() == RETRY && getArgOrDefault(ARG_RETRY_SCOPE, defaultScope.toString()).equals(scope.toString());
     }
 
+    public boolean isRetry(RetryScope scope, Object reason) {
+        String reasonString = "";
+        if (reason instanceof Exception) {
+            reasonString = ((Exception) reason).getClass().getName();
+        } else {
+            reasonString = reason.toString();
+        }
+        return isRetry(scope) && getArgOrDefault(ARG_RETRY_REASON, null).equals(reasonString);
+    }
+
     public boolean isTempMoved() {
         return getMinorCode() == TEMP_MOVED;
     }
@@ -241,6 +257,10 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         getArgs().put(getMinorName(), message);
     }
 
+    public String getArgOrDefault(String name, String defaultValue) {
+        return getArgs().getOrDefault(name, defaultValue).toString();
+    }
+
     public Map<CharSequence, CharSequence> getArgs() {
         return protocolStatus.getArgs();
     }
@@ -252,10 +272,6 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     public String getName() {
         return majorCodes.getOrDefault(getMajorCode(), "unknown") + "/"
                 + minorCodes.getOrDefault(getMinorCode(), "unknown");
-    }
-
-    public String getArgOrDefault(String name, String defaultValue) {
-        return getArgs().getOrDefault(name, defaultValue).toString();
     }
 
     public void upgradeRetry(RetryScope scope) {

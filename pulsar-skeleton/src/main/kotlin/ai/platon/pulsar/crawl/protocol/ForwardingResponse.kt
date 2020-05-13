@@ -34,34 +34,28 @@ open class ForwardingResponse(
         /** The last location */
         location: String = page.url
 ) : Response(page, status, headers, content, location) {
-    /**
-     * The page should keep status unchanged
-     */
     constructor(status: ProtocolStatus, page: WebPage) : this("", status, MultiMetadata(), page)
 
-    /**
-     * The page should keep status unchanged
-     */
-    constructor(retryScope: RetryScope, page: WebPage) : this("", ProtocolStatus.retry(retryScope), MultiMetadata(), page)
+    constructor(retryScope: RetryScope, page: WebPage):
+            this("", ProtocolStatus.retry(retryScope), MultiMetadata(), page)
 
-    /**
-     * The page should keep status unchanged
-     */
+    constructor(retryScope: RetryScope, retryReason: Exception, page: WebPage):
+            this("", ProtocolStatus.retry(retryScope, retryReason), MultiMetadata(), page)
+
     constructor(e: Throwable?, page: WebPage) : this("", ProtocolStatus.failed(e), MultiMetadata(), page)
 
-    /**
-     * The page should keep status unchanged
-     */
-    constructor(content: String, status: ProtocolStatus, headers: MultiMetadata, page: WebPage) 
+    constructor(content: String, status: ProtocolStatus, headers: MultiMetadata, page: WebPage)
             : this(page, status, headers, content.toByteArray())
 
     companion object {
-        fun unfetched(page: WebPage): ForwardingResponse = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
-        fun unchanged(page: WebPage): ForwardingResponse = ForwardingResponse(page.protocolStatus, page)
-        fun canceled(page: WebPage): ForwardingResponse = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
-        fun retry(page: WebPage, retryScope: RetryScope): ForwardingResponse = ForwardingResponse(retryScope, page)
-        fun privacyRetry(page: WebPage): ForwardingResponse = retry(page, RetryScope.PRIVACY)
-        fun crawlRetry(page: WebPage): ForwardingResponse = retry(page, RetryScope.CRAWL)
-        fun failed(page: WebPage, e: Throwable?): ForwardingResponse = ForwardingResponse(e, page)
+        fun unfetched(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
+        fun unchanged(page: WebPage) = ForwardingResponse(page.protocolStatus, page)
+        fun canceled(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
+        fun retry(page: WebPage, retryScope: RetryScope) = ForwardingResponse(retryScope, page)
+        fun retry(page: WebPage, retryScope: RetryScope, retryReason: Exception) = ForwardingResponse(retryScope, retryReason, page)
+        fun privacyRetry(page: WebPage) = retry(page, RetryScope.PRIVACY)
+        fun privacyRetry(page: WebPage, reason: Exception) = retry(page, RetryScope.PRIVACY, reason)
+        fun crawlRetry(page: WebPage) = retry(page, RetryScope.CRAWL)
+        fun failed(page: WebPage, e: Throwable?) = ForwardingResponse(e, page)
     }
 }

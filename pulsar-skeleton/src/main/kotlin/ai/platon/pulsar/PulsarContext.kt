@@ -187,9 +187,6 @@ class PulsarContext private constructor(): AutoCloseable {
         }
 
         val parsedOptions = LoadOptions.parse(parts.second)
-        if (parsedOptions.toString() != parts.second) {
-            log.error("Options parsing error: {}", parts.second)
-        }
         val options2 = LoadOptions.mergeModified(parsedOptions, options)
         return NormUrl(normalizedUrl, initOptions(options2, isItemOption))
     }

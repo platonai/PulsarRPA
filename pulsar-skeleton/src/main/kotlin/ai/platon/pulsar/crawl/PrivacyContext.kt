@@ -54,6 +54,10 @@ abstract class PrivacyContext: AutoCloseable {
 
     fun markWarning() = privacyLeakWarnings.incrementAndGet()
 
+    fun markWarning(n: Int) = privacyLeakWarnings.addAndGet(n)
+
+    fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
+
     fun markWarningDeprecated() = markWarning()
 
     fun markSuccessDeprecated() = markSuccess()

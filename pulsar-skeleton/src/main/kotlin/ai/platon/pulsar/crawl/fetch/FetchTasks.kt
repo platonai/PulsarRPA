@@ -181,6 +181,7 @@ class FetchResult(
         fun canceled(task: FetchTask) = FetchResult(task, ForwardingResponse.canceled(task.page))
         fun retry(task: FetchTask, retryScope: RetryScope) = FetchResult(task, ForwardingResponse.retry(task.page, retryScope))
         fun privacyRetry(task: FetchTask) = retry(task, RetryScope.PRIVACY)
+        fun privacyRetry(task: FetchTask, reason: Exception) = FetchResult(task, ForwardingResponse.privacyRetry(task.page, reason))
         fun crawlRetry(task: FetchTask) = retry(task, RetryScope.CRAWL)
         fun failed(task: FetchTask, e: Throwable?) = FetchResult(task, ForwardingResponse.failed(task.page, e))
     }

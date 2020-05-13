@@ -27,23 +27,24 @@ open class ProxyMonitor(
 ): AutoCloseable {
     private var executor: ScheduledExecutorService? = null
     private var scheduledFuture: ScheduledFuture<*>? = null
+    private val isForceIdle get() = FileCommand.check(AppConstants.CMD_PROXY_FORCE_IDLE, 15)
 
-    var initialDelay = Duration.ofSeconds(5)
-    var watchInterval: Duration = Duration.ofSeconds(1)
+    var initialDelay = Duration.ofSeconds(15)
+    var watchInterval: Duration = Duration.ofSeconds(5)
     var lastActiveTime = Instant.now()
     var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(15))
-    var idleCount = 0
-    var idleTime = Duration.ZERO
-    val closed = AtomicBoolean()
+    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+    open val isIdle get() = (numRunningTasks.get() == 0 && idleTime > idleTimeout) || isForceIdle
 
     val numRunningTasks = AtomicInteger()
-    var statusString: String = "<status unavailable>"
+    var statusString: String = ""
     var verbose = false
 
     open val localPort = -1
     open val currentProxyEntry: ProxyEntry? = null
     open val isEnabled = false
     val isDisabled get() = !isEnabled
+    val closed = AtomicBoolean()
     val isActive get() = isEnabled && !closed.get()
 
     /**
@@ -52,13 +53,19 @@ open class ProxyMonitor(
      */
     @Synchronized
     fun start(initialDelay: Duration, period: Duration, runnable: () -> Unit) {
-        log.takeIf { isDisabled }?.info("Proxy manager is disabled")?.let { return@start }
-        require(scheduledFuture == null) { "Reporter already started" }
+        log.takeIf { isDisabled }?.info("Proxy monitor is disabled")?.let { return@start }
+        require(scheduledFuture == null) { "Proxy monitor is already started" }
         if (executor == null) executor = createDefaultExecutor()
         scheduledFuture = executor?.scheduleAtFixedRate(runnable, initialDelay.seconds, period.seconds, TimeUnit.SECONDS)
     }
 
     fun start() = start(initialDelay, watchInterval) { watch() }
+
+    fun warnUp() {
+        if (isActive) {
+            lastActiveTime = Instant.now()
+        }
+    }
 
     open fun watch() {}
 
@@ -75,7 +82,7 @@ open class ProxyMonitor(
     open fun <R> run(task: () -> R): R = if (isDisabled) task() else run0(task)
 
     /**
-     * Run the task in the proxy manager
+     * Run the task in the proxy monitor
      * */
     @Throws(NoProxyException::class)
     private suspend fun <R> runDeferred0(task: suspend () -> R): R {
@@ -91,7 +98,7 @@ open class ProxyMonitor(
     }
 
     /**
-     * Run the task in the proxy manager
+     * Run the task in the proxy monitor
      * */
     @Throws(NoProxyException::class)
     private fun <R> run0(task: () -> R): R {
@@ -111,7 +118,9 @@ open class ProxyMonitor(
 
     open fun takeOff(excludedProxy: ProxyEntry, ban: Boolean) {}
 
-    override fun toString(): String = statusString
+    override fun toString(): String {
+        return statusString
+    }
 
     override fun close() {
         try {
@@ -125,7 +134,6 @@ open class ProxyMonitor(
     @Throws(NoProxyException::class)
     private fun beforeRun() {
         if (!isActive) return
-        idleTime = Duration.ZERO
         waitUntilOnline()
     }
 
