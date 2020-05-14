@@ -18,32 +18,23 @@
  */
 package ai.platon.pulsar.crawl.protocol
 
-import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.MultiMetadata
-import org.slf4j.LoggerFactory
 
 /**
  * A response interface. Makes all protocols model HTTP
- * TODO: use PageDatum to hold data
  */
 abstract class Response(
         val page: WebPage,
-        /** The protocol's response status, with transform */
-        val status: ProtocolStatus,
-        /** All the headers */
-        val headers: MultiMetadata,
-        /** Returns the full content of the response */
-        val content: ByteArray? = null,
-        /** The page's last internet location */
-        var location: String = page.url
+        val pageDatum: PageDatum
 ) {
     /** The permanent internal address */
     val url get() = page.url
+    val status get() = pageDatum.status
+    val headers get() = pageDatum.headers
     /** The protocol's response code, it must be compatible with standard http response code */
-    val httpCode get() = status.minorCode
-    val length get() = content?.size?.toLong() ?: 0
+    val httpCode get() = pageDatum.status.minorCode
+    val length get() = pageDatum.length
 
     /** The value of a named header.  */
-    fun getHeader(name: String): String? = headers[name]
+    fun getHeader(name: String): String? = pageDatum.headers[name]
 }

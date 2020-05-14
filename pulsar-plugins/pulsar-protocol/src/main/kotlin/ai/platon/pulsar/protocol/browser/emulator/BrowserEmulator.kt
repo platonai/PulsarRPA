@@ -98,35 +98,38 @@ open class BrowserEmulator(
         checkState(task)
         checkState(driver)
 
-        val browseTask = NavigateTask(task, driver, driverControl)
+        val navigateTask = NavigateTask(task, driver, driverControl)
+        val pageDatum = navigateTask.pageDatum
 
         try {
-            val result = navigateAndInteract(task, driver, browseTask.driverConfig)
+            val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
             checkState(task)
             checkState(driver)
-            browseTask.status = result.protocolStatus
-            browseTask.activeDomMessage = result.activeDomMessage
-            browseTask.page.activeDomMultiStatus = browseTask.activeDomMessage?.multiStatus
-            // TODO: handle exceptions of pageSource api
-            browseTask.pageSource = driver.pageSource
+            navigateTask.apply {
+                pageDatum.status = interactResult.protocolStatus
+                pageDatum.activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
+                pageDatum.activeDomUrls = interactResult.activeDomMessage?.urls
+                // TODO: may throw here
+                pageSource = driver.pageSource
+            }
         } catch (e: org.openqa.selenium.ScriptTimeoutException) {
             // ignore script timeout, document might lost data, but it's the page extractor's responsibility
-            browseTask.status = ProtocolStatus.failed(ProtocolStatusCodes.SCRIPT_TIMEOUT)
+            pageDatum.status = ProtocolStatus.failed(ProtocolStatusCodes.SCRIPT_TIMEOUT)
         } catch (e: org.openqa.selenium.UnhandledAlertException) {
             // TODO: review the status, what's the proper way to handle this exception?
             log.warn(Strings.simplifyException(e))
-            browseTask.status = ProtocolStatus.STATUS_SUCCESS
+            pageDatum.status = ProtocolStatus.STATUS_SUCCESS
         } catch (e: org.openqa.selenium.TimeoutException) {
             // TODO: which kind of timeout? resource loading timeout? script execution timeout? or web driver connection timeout?
             log.warn("Unexpected web driver timeout - {}", Strings.simplifyException(e))
-            browseTask.status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
+            pageDatum.status = ProtocolStatus.failed(ProtocolStatusCodes.WEB_DRIVER_TIMEOUT)
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            browseTask.status = ProtocolStatus.retry(RetryScope.CRAWL)
+            pageDatum.status = ProtocolStatus.retry(RetryScope.CRAWL)
         }
 
-        return eventHandler.onAfterNavigate(browseTask)
+        return eventHandler.onAfterNavigate(navigateTask)
     }
 
     @Throws(CancellationException::class,

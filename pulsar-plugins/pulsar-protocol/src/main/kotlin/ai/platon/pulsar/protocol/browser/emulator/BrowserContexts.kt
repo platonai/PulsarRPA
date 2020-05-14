@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.random.Random
 
 class WebDriverContext(
         private val driverManager: WebDriverManager,
@@ -148,11 +149,7 @@ class ProxyContext(
     private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
 
-    /**
-     * The proxy for this context
-     * */
-    var proxyEntry: ProxyEntry? = null
-        private set
+    val realTimeProxyEntry get() = proxyMonitor.currentProxyEntry
     val isEnabled get() = proxyMonitor.isEnabled
     val isActive get() = proxyMonitor.isActive && !closing.get() && !closed.get()
 
@@ -175,6 +172,7 @@ class ProxyContext(
             beforeTaskStart(task)
             proxyMonitor.run { driverContext.run(task, browseFun) }.also {
                 success = it.response.status.isSuccess
+                it.response.pageDatum.proxyEntry = realTimeProxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
             }
         } catch (e: ProxyException) {
@@ -192,6 +190,7 @@ class ProxyContext(
             beforeTaskStart(task)
             proxyMonitor.runDeferred { driverContext.runDeferred(task, browseFun) }.also {
                 success = it.response.status.isSuccess
+                it.response.pageDatum.proxyEntry = realTimeProxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
             }
         } catch (e: ProxyException) {
@@ -214,7 +213,7 @@ class ProxyContext(
     private fun handleProxyException(task: FetchTask, e: ProxyException): FetchResult {
         return when (e) {
             is ProxyRetiredException -> {
-                log.warn("{}, context reset will be triggered | {}", e.message, proxyEntry?:"<no proxy>")
+                log.warn("{}, context reset will be triggered | {}", e.message, task.expectedProxyEntry?:"<no proxy>")
                 FetchResult.privacyRetry(task, reason = e)
             }
             is NoProxyException -> {
@@ -224,7 +223,7 @@ class ProxyContext(
                 FetchResult.crawlRetry(task)
             }
             else -> {
-                log.warn("Task failed with proxy {}, cause: {}", proxyEntry, e.message)
+                log.warn("Task failed with proxy {}, cause: {}", task.expectedProxyEntry, e.message)
                 FetchResult.privacyRetry(task)
             }
         }
@@ -239,10 +238,9 @@ class ProxyContext(
     private fun beforeTaskStart(task: FetchTask) {
         numRunningTasks.incrementAndGet()
         // initialize the local recorded proxy entry
-        if (proxyEntry == null && proxyMonitor.currentProxyEntry != null) {
-            proxyEntry = proxyMonitor.currentProxyEntry
+        if (task.expectedProxyEntry == null && realTimeProxyEntry != null) {
+            task.expectedProxyEntry = realTimeProxyEntry
         }
-        task.proxyEntry = proxyEntry
 
         // If the proxy is idle, and here comes a new task, reset the context
         if (proxyMonitor.isIdle) {
@@ -252,7 +250,7 @@ class ProxyContext(
         }
 
         // The proxy is about to be unusable, reset the context
-        proxyEntry?.also {
+        realTimeProxyEntry?.also {
             if (it.willExpireAfter(minTimeToLive)) {
                 if (closing.compareAndSet(false, true)) {
                     throw ProxyRetiredException("The proxy expires in $minTimeToLive")
@@ -260,7 +258,10 @@ class ProxyContext(
             }
 
             val successPages = it.numSuccessPages.get()
-            if (successPages > maxFetchSuccess) {
+            // Add a random number to disturb the anti-spider
+            val delta = (0.25 * maxFetchSuccess).toInt()
+            val limit = maxFetchSuccess + Random(System.currentTimeMillis()).nextInt(-delta, delta)
+            if (successPages > limit) {
                 // If a proxy served to many pages, the target site may track the finger print of the crawler
                 // and also maxFetchSuccess can be used for test purpose
                 log.info("Served too many pages ($successPages/$maxFetchSuccess) | {}", it)
@@ -273,21 +274,19 @@ class ProxyContext(
 
     private fun afterTaskFinished(task: FetchTask, success: Boolean) {
         numRunningTasks.decrementAndGet()
-        if (proxyEntry != null && proxyEntry != proxyMonitor.currentProxyEntry) {
+        val expectedProxyEntry = task.expectedProxyEntry
+        val lastProxyEntry = proxyMonitor.currentProxyEntry
+        if (expectedProxyEntry != null && expectedProxyEntry != lastProxyEntry) {
             log.warn("Proxy has been changed | {} -> {} | {} -> {}",
-                    proxyEntry?.outIp,
-                    proxyMonitor.currentProxyEntry?.outIp,
-                    proxyEntry,
-                    proxyMonitor.currentProxyEntry
+                    expectedProxyEntry.outIp,
+                    lastProxyEntry?.outIp,
+                    expectedProxyEntry,
+                    lastProxyEntry
             )
             log.info("Proxy monitor status: {}", proxyMonitor.statusString)
         }
 
-        proxyEntry = proxyMonitor.currentProxyEntry
-        task.proxyEntry = proxyEntry
-        task.page.proxy = proxyEntry?.outIp
-
-        proxyEntry?.apply {
+        lastProxyEntry?.apply {
             if (success) {
                 numSuccessPages.incrementAndGet()
                 lastTarget = task.url
@@ -303,7 +302,7 @@ class ProxyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyEntry?.let { proxyMonitor.takeOff(it, ban = true) }
+            realTimeProxyEntry?.let { proxyMonitor.takeOff(it, ban = true) }
         }
     }
 }
@@ -345,7 +344,7 @@ open class BrowserPrivacyContext(
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
                 Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
                 numTasks, numTotalRun,
-                proxyContext.proxyEntry ?: "<no proxy>"
+                proxyContext.realTimeProxyEntry ?: "<no proxy>"
         )
 
         if (smallPageRate > 0.5) {

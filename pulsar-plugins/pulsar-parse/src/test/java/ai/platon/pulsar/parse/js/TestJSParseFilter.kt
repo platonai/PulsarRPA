@@ -16,12 +16,11 @@
  */
 package ai.platon.pulsar.parse.js
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
-import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.protocol.ProtocolException
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.WebPage
@@ -36,7 +35,6 @@ import java.io.DataInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.util.*
 
 /**
  * JUnit test case for [JSParseFilter] which tests 1. That 5 liveLinks are
@@ -75,7 +73,7 @@ class TestJSParseFilter {
         page.location = urlString
         page.setContent(bytes)
 
-        val mutil = MimeUtil(conf)
+        val mutil = MimeTypeResolver(conf)
         val mime = mutil.getMimeType(file)
         page.contentType = mime
 

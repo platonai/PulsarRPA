@@ -35,11 +35,11 @@ import java.io.InputStream;
 /**
  * @author mattmann
  */
-public final class MimeUtil {
+public final class MimeTypeResolver {
 
     private static final String SEPARATOR = ";";
     /* our log stream */
-    private static final Logger LOG = LoggerFactory.getLogger(MimeUtil.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(MimeTypeResolver.class.getName());
     /* our Tika mime type registry */
     private MimeTypes mimeTypes;
     /* the tika detectors */
@@ -47,7 +47,7 @@ public final class MimeUtil {
     /* whether or not magic should be employed or not */
     private boolean mimeMagic;
 
-    public MimeUtil(ImmutableConfig conf) {
+    public MimeTypeResolver(ImmutableConfig conf) {
         tika = new Tika();
         ObjectCache objectCache = ObjectCache.get(conf);
         MimeTypes mt = objectCache.getBean(MimeTypes.class);
@@ -133,7 +133,7 @@ public final class MimeUtil {
         MimeType type = null;
         String cleanedMimeType = null;
 
-        cleanedMimeType = MimeUtil.cleanMimeType(typeName);
+        cleanedMimeType = MimeTypeResolver.cleanMimeType(typeName);
         // first try to get the type from the cleaned type name
         if (cleanedMimeType != null) {
             try {

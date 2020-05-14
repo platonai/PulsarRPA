@@ -8,14 +8,13 @@ import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.SharedMetricRegistries
 import org.openqa.selenium.OutputType
@@ -64,47 +63,52 @@ open class BrowserEmulateEventHandler(
     fun onAfterNavigate(task: NavigateTask): Response {
         numNavigates.incrementAndGet()
 
+        val pageDatum = task.pageDatum
         val length = task.pageSource.length
         pageSourceBytes.update(length)
         totalPageSourceBytes.mark(length.toLong())
 
-        val browserStatus = checkErrorPage(task.page, task.status)
-        task.status = browserStatus.status
+        val browserStatus = checkErrorPage(task.page, pageDatum.status)
+        pageDatum.status = browserStatus.status
         if (browserStatus.code != ProtocolStatusCodes.SUCCESS_OK) {
             // The browser shows it's own error page, which is no value to store
             task.pageSource = ""
-            return ForwardingResponse(task.pageSource, task.status, task.headers, task.page)
+            pageDatum.lastBrowser = task.driver.browserType
+            return createResponse(task, pageDatum)
         }
 
         // Check if the page source is integral
-        val integrity = checkHtmlIntegrity(task.pageSource, task.page, task.status, task.task)
+        val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.status, task.task)
 
         // Check browse timeout event, transform status to be success if the page source is good
-        if (task.status.isTimeout) {
+        if (pageDatum.status.isTimeout) {
             if (integrity.isOK) {
                 // fetch timeout but content is OK
-                task.status = ProtocolStatus.STATUS_SUCCESS
+                pageDatum.status = ProtocolStatus.STATUS_SUCCESS
             }
             handleBrowseTimeout(task)
         }
 
-        task.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
+        pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
             task.pageSource = handlePageSource(task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
-            task.status = handleBrokenPageSource(task.task, integrity)
+            pageDatum.status = handleBrokenPageSource(task.task, integrity)
             logBrokenPage(task.task, task.pageSource, integrity)
         }
 
-        // Update headers, metadata, do the logging stuff
-        task.page.lastBrowser = task.driver.browserType
-        task.page.htmlIntegrity = integrity
+        pageDatum.apply {
+            lastBrowser = task.driver.browserType
+            htmlIntegrity = integrity
+            content = task.pageSource.toByteArray(StandardCharsets.UTF_8)
+        }
 
         // TODO: collect response headers of main resource
 
-        return createResponse(task)
+        // Update headers, metadata, do the logging stuff
+        return createResponse(task, pageDatum)
     }
 
     open fun checkErrorPage(page: WebPage, status: ProtocolStatus): BrowserStatus {
@@ -177,7 +181,7 @@ open class BrowserEmulateEventHandler(
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
             val driverConfig = task.driverConfig
             log.info("Timeout ({}) after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
-                    task.status.minorName,
+                    task.pageDatum.status.minorName,
                     elapsed,
                     Strings.readableBytes(length.toLong()),
                     driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
@@ -186,10 +190,8 @@ open class BrowserEmulateEventHandler(
         }
     }
 
-    open fun createResponse(task: NavigateTask): ForwardingResponse {
-        val response = ForwardingResponse(task.pageSource, task.status, task.headers, task.page)
-        val headers = task.headers
-        val page = task.page
+    open fun createResponse(task: NavigateTask, pageDatum: PageDatum): ForwardingResponse {
+        val headers = pageDatum.headers
 
         // The page content's encoding is already converted to UTF-8 by Web driver
         val utf8 = StandardCharsets.UTF_8.name()
@@ -198,19 +200,18 @@ open class BrowserEmulateEventHandler(
         headers.put(HttpHeaders.Q_TRUSTED_CONTENT_ENCODING, utf8)
         headers.put(HttpHeaders.Q_RESPONSE_TIME, System.currentTimeMillis().toString())
 
-        // TODO: Update all page data in the same place
-        val urls = page.activeDomUrls
+        val urls = pageDatum.activeDomUrls
         if (urls != null) {
-            response.location = urls.location
-            if (page.url != response.location) {
+            pageDatum.location = urls.location
+            if (pageDatum.url != pageDatum.location) {
                 // in-browser redirection
-                messageWriter.debugRedirects(page.url, urls)
+                messageWriter.debugRedirects(pageDatum.url, urls)
             }
         }
 
         exportIfNecessary(task)
 
-        return response
+        return ForwardingResponse(task.page, pageDatum)
     }
 
     fun handlePageSource(pageSource: String): StringBuilder {
@@ -252,7 +253,7 @@ open class BrowserEmulateEventHandler(
     }
 
     private fun exportIfNecessary(task: NavigateTask) {
-        exportIfNecessary(task.pageSource, task.status, task.page)
+        exportIfNecessary(task.pageSource, task.pageDatum.status, task.page)
     }
 
     private fun exportIfNecessary(pageSource: String, status: ProtocolStatus, page: WebPage) {
@@ -293,7 +294,7 @@ open class BrowserEmulateEventHandler(
     }
 
     fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
-        val proxyEntry = task.proxyEntry
+        val proxyEntry = task.expectedProxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
         val readableLength = Strings.readableBytes(pageSource.length.toLong())

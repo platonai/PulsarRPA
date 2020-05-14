@@ -57,7 +57,7 @@ class BrowserPrivacyManager(
 
                 try {
                     require(!task0.isCanceled)
-                    require(task0.proxyEntry == null)
+                    require(task0.expectedProxyEntry == null)
 
                     task0.markReady()
                     task0.nPrivacyRetries = i
@@ -99,7 +99,7 @@ class BrowserPrivacyManager(
                 try {
                     require(!task0.isCanceled)
                     require(task0.state.get() == FetchTask.State.NOT_READY)
-                    require(task0.proxyEntry == null)
+                    require(task0.expectedProxyEntry == null)
 
                     task0.markReady()
                     task0.nPrivacyRetries = i
@@ -159,15 +159,19 @@ class BrowserPrivacyManager(
                 status.isSuccess -> privacyContext.markSuccess()
             }
 
-            takeUnless { status.isSuccess }?.also { logPrivacyLeakWarning(privacyContext, status) }
+            takeIf { status.isRetry(RetryScope.PRIVACY) }?.also { logPrivacyLeakWarning(privacyContext, status) }
         } else {
             tracePrivacyContextInactive(privacyContext, result)
         }
     }
 
     private fun logPrivacyLeakWarning(privacyContext: PrivacyContext, status: ProtocolStatus) {
-        log.info("Privacy leak warning {}/#{} | {}", privacyContext.privacyLeakWarnings, privacyContext.id, status)
-        if (privacyContext.privacyLeakWarnings.get() == 6) {
+        val warnings = privacyContext.privacyLeakWarnings.get()
+        if (warnings > 0) {
+            log.info("Privacy leak warning {}/#{} | {}", warnings, privacyContext.id, status)
+        }
+
+        if (warnings == 6) {
             privacyContext.report()
         }
     }

@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.parse.tika
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
@@ -52,7 +52,7 @@ class TestOOParser {
     fun testIt() {
         var urlString: String
         val conf = ImmutableConfig()
-        val mimeutil = MimeUtil(conf)
+        val mimeutil = MimeTypeResolver(conf)
         try { // read the test string
             val fis = FileInputStream(sampleDir + fileSeparator + sampleText)
             val sb = StringBuffer()

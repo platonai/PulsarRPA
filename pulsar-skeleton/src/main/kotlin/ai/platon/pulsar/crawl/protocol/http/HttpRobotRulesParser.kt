@@ -60,7 +60,7 @@ open class HttpRobotRulesParser(conf: ImmutableConfig) : RobotRulesParser(conf) 
                     }
                 }
 
-                val content = response?.content
+                val content = response?.pageDatum?.content
                 if (response != null && content != null) {
                     if (response.httpCode == 200) // found rules: parse them
                         robotRules = parseRules(url.toString(), content, response.getHeader("Content-Type")?:"", agentNames) else if (response.httpCode == 403 && !allowForbidden) robotRules = FORBID_ALL_RULES // use forbid all

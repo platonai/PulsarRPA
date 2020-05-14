@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.parse.tika
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
@@ -58,7 +58,7 @@ class TestRTFParser {
         val urlString: String
         val parseResult: ParseResult
         val conf = ImmutableConfig()
-        val mimeutil = MimeUtil(conf)
+        val mimeutil = MimeTypeResolver(conf)
         urlString = "file:$sampleDir$fileSeparator$rtfFile"
         val file = File(sampleDir + fileSeparator + rtfFile)
         val bytes = ByteArray(file.length().toInt())

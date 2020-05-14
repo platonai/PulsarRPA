@@ -2,7 +2,7 @@ package ai.platon.pulsar.index;
 
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
-import ai.platon.pulsar.common.MimeUtil;
+import ai.platon.pulsar.common.MimeTypeResolver;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexingFilter;
@@ -33,14 +33,14 @@ import static ai.platon.pulsar.common.HttpHeaders.CONTENT_LENGTH;
 public class MoreIndexingFilter implements IndexingFilter {
 
     private ImmutableConfig conf;
-    private MimeUtil MIME;
+    private MimeTypeResolver MIME;
     private PatternMatcher matcher = new Perl5Matcher();
 
     public MoreIndexingFilter(ImmutableConfig conf) {
-        this(new MimeUtil(conf), conf);
+        this(new MimeTypeResolver(conf), conf);
     }
 
-    public MoreIndexingFilter(MimeUtil MIME, ImmutableConfig conf) {
+    public MoreIndexingFilter(MimeTypeResolver MIME, ImmutableConfig conf) {
         this.MIME = MIME;
         setup(conf);
     }
@@ -63,7 +63,7 @@ public class MoreIndexingFilter implements IndexingFilter {
     @Override
     public void setup(ImmutableConfig conf) {
         this.conf = conf;
-        MIME = new MimeUtil(conf);
+        MIME = new MimeTypeResolver(conf);
     }
 
     @Override
@@ -157,7 +157,7 @@ public class MoreIndexingFilter implements IndexingFilter {
             // }
             mimeType = MIME.getMimeType(url);
         } else {
-            mimeType = MIME.forName(MimeUtil.cleanMimeType(contentType));
+            mimeType = MIME.forName(MimeTypeResolver.cleanMimeType(contentType));
         }
 
         // Checks if we solved the content-type.

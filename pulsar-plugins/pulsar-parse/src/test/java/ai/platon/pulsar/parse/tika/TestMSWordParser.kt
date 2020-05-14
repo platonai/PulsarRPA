@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.parse.tika
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
@@ -73,7 +73,7 @@ class TestMSWordParser {
         page.location = page.url
         page.setContent(bytes)
         // set the content type?
-        val mimeutil = MimeUtil(conf)
+        val mimeutil = MimeTypeResolver(conf)
         val mtype = mimeutil.getMimeType(file)
         page.contentType = mtype
         pageParser!!.parse(page)

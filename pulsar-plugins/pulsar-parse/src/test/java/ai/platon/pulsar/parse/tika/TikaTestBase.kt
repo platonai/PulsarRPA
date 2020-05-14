@@ -1,6 +1,6 @@
 package ai.platon.pulsar.parse.tika
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.WebPage
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,7 +23,7 @@ open class TikaTestBase {
     protected var conf: ImmutableConfig? = null
     @Autowired
     protected var parser: TikaParser? = null
-    protected var mimeutil = MimeUtil(conf)
+    protected var mimeutil = MimeTypeResolver(conf)
     @Throws(IOException::class)
     fun parse(sampleFile: String?): WebPage {
         val path = Paths.get(sampleDir, sampleFile)

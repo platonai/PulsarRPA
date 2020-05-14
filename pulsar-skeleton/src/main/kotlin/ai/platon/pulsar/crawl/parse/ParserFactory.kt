@@ -18,10 +18,9 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.crawl.parse.ParserNotFound
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -67,7 +66,7 @@ class ParserFactory {
      */
     @Throws(ParserNotFound::class)
     fun getParsers(contentType: String, url: String = ""): List<Parser> {
-        val mimeType = MimeUtil.cleanMimeType(contentType)
+        val mimeType = MimeTypeResolver.cleanMimeType(contentType)
         return mineType2Parsers[mimeType]?: mineType2Parsers[DEFAULT_MINE_TYPE]?: listOf()
     }
 

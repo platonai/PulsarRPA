@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.model.ActiveDomMessage
@@ -21,12 +22,12 @@ class NavigateTask(
 
     val url = task.url
     val page = task.page
-
-    val headers = MultiMetadata(HttpHeaders.Q_REQUEST_TIME, startTime.toEpochMilli().toString())
-
-    var status: ProtocolStatus = ProtocolStatus.STATUS_CANCELED
-    var activeDomMessage: ActiveDomMessage? = null
     var pageSource = ""
+    val pageDatum = PageDatum(url)
+
+    init {
+        pageDatum.headers[HttpHeaders.Q_REQUEST_TIME] = startTime.toEpochMilli().toString()
+    }
 }
 
 class InteractResult(

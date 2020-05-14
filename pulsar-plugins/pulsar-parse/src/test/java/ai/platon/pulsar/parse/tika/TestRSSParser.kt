@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.parse.tika
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
@@ -78,7 +78,7 @@ class TestRSSParser {
         var urlString: String
         var parseResult: ParseResult
         val conf = ImmutableConfig()
-        val mimeutil = MimeUtil(conf)
+        val mimeutil = MimeTypeResolver(conf)
         for (sampleFile in sampleFiles) {
             urlString = "file:$sampleDir$fileSeparator$sampleFile"
             val file = File(sampleDir + fileSeparator + sampleFile)

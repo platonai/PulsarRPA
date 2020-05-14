@@ -18,46 +18,46 @@
  */
 package ai.platon.pulsar.crawl.protocol
 
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import org.apache.tika.mime.MimeTypes
-import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class TestPageDatum {
+    private val conf = ImmutableConfig()
 
     @Test
     @Throws(Exception::class)
     fun testGetContentType() {
         var c: PageDatum
+        val mimeUtil = MimeTypeResolver(conf)
         val p = MultiMetadata()
         c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
-                "".toByteArray(charset("UTF8")), "text/html; charset=UTF-8", p, conf)
-        Assert.assertEquals("text/html", c.contentType)
+                "".toByteArray(charset("UTF8")), "text/html; charset=UTF-8", p, mimeUtil)
+        assertEquals("text/html", c.contentType)
         c = PageDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
-                "".toByteArray(charset("UTF8")), "", p, conf)
-        Assert.assertEquals("text/html", c.contentType)
+                "".toByteArray(charset("UTF8")), "", p, mimeUtil)
+        assertEquals("text/html", c.contentType)
         c = PageDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
-                "".toByteArray(charset("UTF8")), null, p, conf)
-        Assert.assertEquals("text/html", c.contentType)
+                "".toByteArray(charset("UTF8")), null, p, mimeUtil)
+        assertEquals("text/html", c.contentType)
         c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
-                "<html></html>".toByteArray(charset("UTF8")), "", p, conf)
-        Assert.assertEquals("text/html", c.contentType)
+                "<html></html>".toByteArray(charset("UTF8")), "", p, mimeUtil)
+        assertEquals("text/html", c.contentType)
         c = PageDatum("http://www.foo.com/foo.html", "http://www.foo.com/",
-                "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, conf)
-        Assert.assertEquals("text/html", c.contentType)
+                "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, mimeUtil)
+        assertEquals("text/html", c.contentType)
         c = PageDatum("http://www.foo.com/foo.png", "http://www.foo.com/",
-                "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, conf)
-        Assert.assertEquals("text/html", c.contentType)
+                "<html></html>".toByteArray(charset("UTF8")), "text/plain", p, mimeUtil)
+        assertEquals("text/html", c.contentType)
         c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
-                "".toByteArray(charset("UTF8")), "", p, conf)
-        Assert.assertEquals(MimeTypes.OCTET_STREAM, c.contentType)
+                "".toByteArray(charset("UTF8")), "", p, mimeUtil)
+        assertEquals(MimeTypes.OCTET_STREAM, c.contentType)
         c = PageDatum("http://www.foo.com/", "http://www.foo.com/",
-                "".toByteArray(charset("UTF8")), null, p, conf)
-        Assert.assertNotNull(c.contentType)
-    }
-
-    companion object {
-        private val conf = ImmutableConfig()
+                "".toByteArray(charset("UTF8")), null, p, mimeUtil)
+        assertNotNull(c.contentType)
     }
 }

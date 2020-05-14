@@ -28,12 +28,8 @@ import ai.platon.pulsar.persist.metadata.MultiMetadata
  */
 open class ForwardingResponse(
         page: WebPage,
-        status: ProtocolStatus,
-        headers: MultiMetadata,
-        content: ByteArray,
-        /** The last location */
-        location: String = page.url
-) : Response(page, status, headers, content, location) {
+        pageDatum: PageDatum
+) : Response(page, pageDatum) {
     constructor(status: ProtocolStatus, page: WebPage) : this("", status, MultiMetadata(), page)
 
     constructor(retryScope: RetryScope, page: WebPage):
@@ -45,7 +41,8 @@ open class ForwardingResponse(
     constructor(e: Throwable?, page: WebPage) : this("", ProtocolStatus.failed(e), MultiMetadata(), page)
 
     constructor(content: String, status: ProtocolStatus, headers: MultiMetadata, page: WebPage)
-            : this(page, status, headers, content.toByteArray())
+            : this(page, PageDatum(page.url, page.location, status, content.toByteArray(), headers = headers)) {
+    }
 
     companion object {
         fun unfetched(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)

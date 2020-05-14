@@ -16,6 +16,7 @@ import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
+import java.lang.reflect.Proxy
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -87,24 +88,21 @@ class FetchTask(
         val batchSize: Int = 1,
         val batchTaskId: Int = 0,
         var batchStat: BatchStat? = null,
-        var proxyEntry: ProxyEntry? = null, // the proxy used
         // The task id
         val id: Int = instanceSequencer.incrementAndGet(),
         var nRetries: Int = 0 // The total number retries in a crawl
 ): Comparable<FetchTask> {
     enum class State { NOT_READY, READY, WORKING, CANCELED, DONE }
     val state = AtomicReference<State>(State.NOT_READY)
-    
+
+    var expectedProxyEntry: ProxyEntry? = null
     // The number retries inside a privacy context
     var nPrivacyRetries: Int = 0
-    // The response
-    var response: Response = ForwardingResponse.unfetched(page)
 
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING
-    val isSuccess get() = response.status.isSuccess
 
     // A task is ready when it about to enter a privacy context
     fun markReady() = state.set(State.READY)
@@ -116,9 +114,8 @@ class FetchTask(
 
     fun reset() {
         batchStat = null
-        proxyEntry = null
+        expectedProxyEntry = null
         state.set(State.NOT_READY)
-        response = ForwardingResponse.unfetched(page)
     }
 
     fun clone(): FetchTask {
@@ -325,7 +322,7 @@ class FetchTaskBatch(
         finishedTasks[task.url] = result
 
         lastSuccessTask = result.task
-        lastSuccessProxy = result.task.proxyEntry
+        lastSuccessProxy = result.response.pageDatum.proxyEntry
         numTasksSuccess++
 
         universalSuccessTasks[task.url] = result
@@ -342,7 +339,7 @@ class FetchTaskBatch(
         finishedTasks[task.url] = result
 
         lastFailedTask = task
-        lastFailedProxy = task.proxyEntry
+        lastFailedProxy = result.response.pageDatum.proxyEntry
         ++numTasksFailed
     }
 

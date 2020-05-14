@@ -21,9 +21,12 @@ package ai.platon.pulsar.crawl.protocol
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 
-class ProtocolOutput(val pageDatum: PageDatum?, val headers: MultiMetadata, val protocolStatus: ProtocolStatus) {
-    constructor(pageDatum: PageDatum?) : this(pageDatum, MultiMetadata(), ProtocolStatus.STATUS_SUCCESS)
-    constructor(pageDatum: PageDatum?, headers: MultiMetadata) : this(pageDatum, headers, ProtocolStatus.STATUS_SUCCESS)
+class ProtocolOutput(
+        val pageDatum: PageDatum?,
+        val headers: MultiMetadata,
+        val protocolStatus: ProtocolStatus
+) {
+    constructor(pageDatum: PageDatum) : this(pageDatum, pageDatum.headers, pageDatum.status)
     constructor(status: ProtocolStatus) : this(null, MultiMetadata(), status)
 
     val length get() = pageDatum?.length ?: 0

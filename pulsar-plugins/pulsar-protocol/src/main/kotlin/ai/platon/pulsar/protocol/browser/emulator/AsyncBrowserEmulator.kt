@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -118,18 +119,16 @@ open class AsyncBrowserEmulator(
             val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
             checkState(task)
             checkState(driver)
-            navigateTask.apply {
+            navigateTask.pageDatum.apply {
                 status = interactResult.protocolStatus
-                activeDomMessage = interactResult.activeDomMessage
-                page.activeDomMultiStatus = activeDomMessage?.multiStatus
-                page.activeDomUrls = activeDomMessage?.urls
-                // TODO: may throw here
-                pageSource = driver.pageSource
+                activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
+                activeDomUrls = interactResult.activeDomMessage?.urls
             }
+            navigateTask.pageSource = driver.pageSource
         } catch (e: org.openqa.selenium.NoSuchElementException) {
             // TODO: when this exception is thrown?
             log.warn(e.message)
-            navigateTask.status = ProtocolStatus.retry(RetryScope.PRIVACY)
+            navigateTask.pageDatum.status = ProtocolStatus.retry(RetryScope.PRIVACY)
         }
 
         return eventHandler.onAfterNavigate(navigateTask)

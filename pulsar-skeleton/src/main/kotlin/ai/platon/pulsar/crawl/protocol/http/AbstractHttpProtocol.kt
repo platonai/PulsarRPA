@@ -20,11 +20,10 @@ package ai.platon.pulsar.crawl.protocol.http
 
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.HttpHeaders
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.Response
@@ -56,7 +55,7 @@ abstract class AbstractHttpProtocol: Protocol {
      */
     private lateinit var conf: ImmutableConfig
 
-    private lateinit var mimeTypes: MimeUtil
+    private lateinit var mimeTypeResolver: MimeTypeResolver
 
     private lateinit var robots: HttpRobotRulesParser
 
@@ -65,7 +64,7 @@ abstract class AbstractHttpProtocol: Protocol {
     override fun setConf(jobConf: ImmutableConfig) {
         conf = jobConf
         fetchMaxRetry = jobConf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
-        mimeTypes = MimeUtil(jobConf)
+        mimeTypeResolver = MimeTypeResolver(jobConf)
         robots = HttpRobotRulesParser(jobConf)
     }
 
@@ -94,8 +93,7 @@ abstract class AbstractHttpProtocol: Protocol {
         val response = getResponseDeferred(page, false)
                 ?:return ProtocolOutput(ProtocolStatus.retry(RetryScope.CRAWL))
         setResponseTime(startTime, page, response)
-        val location = page.location?:page.url
-        return getOutputWithHttpStatusTransformed(page.url, location, response)
+        return getOutputWithHttpStatusTransformed(page.url, response)
     }
 
     private fun getProtocolOutputWithRetry(page: WebPage): ProtocolOutput {
@@ -109,7 +107,8 @@ abstract class AbstractHttpProtocol: Protocol {
             if (i > 0) {
                 log.info("Protocol retry: {}/{} | {}", i, maxTry, page.url)
             }
-            try { // TODO: FETCH_PROTOCOL does not work if the response is forwarded
+            try {
+                // TODO: FETCH_PROTOCOL does not work if the response is forwarded
                 response = getResponse(page, false)
                 retry = response == null || response.status.isRetry(RetryScope.PROTOCOL)
             } catch (e: Throwable) {
@@ -124,29 +123,30 @@ abstract class AbstractHttpProtocol: Protocol {
         }
 
         setResponseTime(startTime, page, response)
-        // page.baseUrl/page.location is the last working address, and page.url is the permanent internal key for the page
-        val location = page.location?:page.url
-        return getOutputWithHttpStatusTransformed(page.url, location, response)
+        return getOutputWithHttpStatusTransformed(page.url, response)
     }
 
     /**
      * TODO: do not translate status code, they are just OK to handle in FetchComponent
      */
     @Throws(MalformedURLException::class)
-    private fun getOutputWithHttpStatusTransformed(url: String, location: String, response: Response): ProtocolOutput {
+    private fun getOutputWithHttpStatusTransformed(url: String, response: Response): ProtocolOutput {
         var u = URL(url)
         val httpCode = response.httpCode
-        val bytes = response.content
+        val pageDatum = response.pageDatum
+        val content = pageDatum.content
         // bytes = bytes == null ? EMPTY_CONTENT : bytes;
         val contentType = response.getHeader(HttpHeaders.CONTENT_TYPE)
-        val pageDatum = PageDatum(url, location, bytes, contentType, response.headers, mimeTypes)
-        val headers = response.headers
+        pageDatum.resolveMimeType(contentType, url, content, mimeTypeResolver)
+
+        val headers = pageDatum.headers
         val status: ProtocolStatus
         // got a good response
         when (httpCode) {
-            200 -> return ProtocolOutput(pageDatum, headers)
-            304 -> return ProtocolOutput(pageDatum, headers, ProtocolStatus.STATUS_NOTMODIFIED)
-            in 300..399 -> { // handle redirect
+            200 -> return ProtocolOutput(pageDatum)
+            304 -> return ProtocolOutput(pageDatum, pageDatum.headers, ProtocolStatus.STATUS_NOTMODIFIED)
+            in 300..399 -> {
+                // handle redirect
                 // some broken servers, such as MS IIS, use lowercase header name...
                 val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
                 u = URL(u, redirect)
@@ -180,6 +180,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 status = response.status
             }
         }
+
         return ProtocolOutput(pageDatum, headers, status)
     }
 
@@ -211,6 +212,7 @@ abstract class AbstractHttpProtocol: Protocol {
         } else {
             Duration.between(startTime, Instant.now())
         }
+        // TODO: update in FetchComponent?
         page.metadata[Name.RESPONSE_TIME] = elapsedTime.toString()
     }
 

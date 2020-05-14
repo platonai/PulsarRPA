@@ -132,8 +132,8 @@ open class FetchComponent(
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
         val url = page.url
-        val content = output.pageDatum
-        if (content == null) {
+        val pageDatum = output.pageDatum
+        if (pageDatum == null) {
             log.warn("No content | {}", page.configuredUrl)
         }
 
@@ -169,7 +169,7 @@ open class FetchComponent(
         val updatedPage = when(crawlStatus) {
             CrawlStatus.STATUS_FETCHED,
             CrawlStatus.STATUS_REDIR_TEMP,
-            CrawlStatus.STATUS_REDIR_PERM -> updatePage(page, content, protocolStatus, crawlStatus)
+            CrawlStatus.STATUS_REDIR_PERM -> updatePage(page, pageDatum, protocolStatus, crawlStatus)
             else -> updatePage(page, null, protocolStatus, crawlStatus)
         }
 
@@ -216,7 +216,6 @@ open class FetchComponent(
             it.fetchMode = options.fetchMode
             it.options = options.toString()
             it.volatileConfig = options.volatileConfig
-            it.fetchMode = options.fetchMode
             it.options = options.toString()
         }
     }
@@ -225,10 +224,17 @@ open class FetchComponent(
                            protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus): WebPage {
         updateStatus(page, protocolStatus, crawlStatus)
 
-        if (pageDatum != null && protocolStatus.isSuccess) {
-            // No need to update content if the fetch is failed, just keep the last content in such cases
-            updateContent(page, pageDatum)
+        pageDatum?.also {
+            page.location = it.location
+            page.activeDomMultiStatus = it.activeDomMultiStatus
+            page.activeDomUrls = it.activeDomUrls
+            page.htmlIntegrity = it.htmlIntegrity
+            page.lastBrowser = it.lastBrowser
+            page.proxy = it.proxyEntry?.outIp
         }
+
+        // No need to update content if the fetch is failed, just keep the last content in such cases
+        pageDatum?.takeIf { protocolStatus.isSuccess }?.also { updateContent(page, it) }
 
         updateFetchTime(page)
         updateMarks(page)
@@ -265,7 +271,6 @@ open class FetchComponent(
         private fun updateContent0(page: WebPage, pageDatum: PageDatum, contentTypeHint: String?) {
             var contentType = contentTypeHint
 
-            page.location = pageDatum.location
             page.setContent(pageDatum.content)
             if (contentType != null) {
                 pageDatum.contentType = contentType

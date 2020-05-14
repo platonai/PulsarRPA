@@ -14,7 +14,6 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.roundToInt
 
 enum class ProxyType {
     HTTP, SOCKS4, SOCKS5

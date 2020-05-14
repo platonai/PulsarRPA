@@ -18,7 +18,7 @@ package ai.platon.pulsar.crawl.protocol.http;
 
 import ai.platon.pulsar.common.DeflateUtils;
 import ai.platon.pulsar.common.GZIPUtils;
-import ai.platon.pulsar.common.MimeUtil;
+import ai.platon.pulsar.common.MimeTypeResolver;
 import ai.platon.pulsar.common.NetUtil;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.protocol.Response;
@@ -99,7 +99,7 @@ public abstract class AbstractNativeHttpProtocol extends AbstractHttpProtocol {
      * The fetch mode
      */
     private FetchMode defaultFetchMode;
-    private MimeUtil mimeTypes;
+    private MimeTypeResolver mimeTypes;
 
     /**
      * Creates a new instance of HttpBase
@@ -124,7 +124,7 @@ public abstract class AbstractNativeHttpProtocol extends AbstractHttpProtocol {
 
         this.acceptLanguage = jobConf.get("http.accept.language", acceptLanguage);
         this.accept = jobConf.get("http.accept", accept);
-        this.mimeTypes = new MimeUtil(jobConf);
+        this.mimeTypes = new MimeTypeResolver(jobConf);
         this.useHttp11 = jobConf.getBoolean("http.useHttp11", false);
 
     }

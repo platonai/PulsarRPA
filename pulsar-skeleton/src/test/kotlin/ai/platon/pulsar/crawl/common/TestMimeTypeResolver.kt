@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.MimeUtil
+import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.MutableConfig
 import com.google.common.io.Files
 import org.junit.Assert
@@ -28,7 +28,7 @@ import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 
-class TestMimeUtil {
+class TestMimeTypeResolver {
     private val sampleDir = File(System.getProperty("test.build.data", "."), "test-mime-util")
     @Throws(IOException::class)
     private fun getMimeType(url: String, file: File, contentType: String, useMagic: Boolean): String {
@@ -38,7 +38,7 @@ class TestMimeUtil {
     private fun getMimeType(url: String, bytes: ByteArray, contentType: String, useMagic: Boolean): String {
         val conf = MutableConfig()
         conf.setBoolean("mime.type.magic", useMagic)
-        val mimeUtil = MimeUtil(conf)
+        val mimeUtil = MimeTypeResolver(conf)
         return mimeUtil.autoResolveContentType(contentType, url, bytes)
     }
 
