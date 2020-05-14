@@ -116,6 +116,9 @@ open class ProxyMonitor(
     @Throws(NoProxyException::class)
     open fun waitUntilOnline(): Boolean = false
 
+    /**
+     * Take off the proxy if it is active proxy, and the monitor will choose the next proxy to connect
+     * */
     open fun takeOff(excludedProxy: ProxyEntry, ban: Boolean) {}
 
     override fun toString(): String {

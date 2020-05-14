@@ -16,7 +16,6 @@ import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.lang.Thread.currentThread
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -189,7 +188,7 @@ class ProxyContext(
     private suspend fun runDeferred0(
             task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         var success = false
-        var result = try {
+        return try {
             beforeTaskStart(task)
             proxyMonitor.runDeferred { driverContext.runDeferred(task, browseFun) }.also {
                 success = it.response.status.isSuccess
@@ -200,17 +199,6 @@ class ProxyContext(
         } finally {
             afterTaskFinished(task, success)
         }
-
-        val proxy = proxyEntry
-        if (proxy != null) {
-            val successPages = proxy.numSuccessPages.get()
-            if (successPages > maxFetchSuccess && result.status.isSuccess) {
-                log.info("Emit a PRIVACY retry since served $successPages pages | {}", proxy)
-                result = FetchResult.privacyRetry(task, ProxyRetiredException("Served too many pages"))
-            }
-        }
-
-        return result
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
@@ -270,6 +258,16 @@ class ProxyContext(
                     throw ProxyRetiredException("The proxy expires in $minTimeToLive")
                 }
             }
+
+            val successPages = it.numSuccessPages.get()
+            if (successPages > maxFetchSuccess) {
+                // If a proxy served to many pages, the target site may track the finger print of the crawler
+                // and also maxFetchSuccess can be used for test purpose
+                log.info("Served too many pages ($successPages/$maxFetchSuccess) | {}", it)
+                if (closing.compareAndSet(false, true)) {
+                    throw ProxyRetiredException("Too many pages")
+                }
+            }
         }
     }
 
@@ -282,6 +280,7 @@ class ProxyContext(
                     proxyEntry,
                     proxyMonitor.currentProxyEntry
             )
+            log.info("Proxy monitor status: {}", proxyMonitor.statusString)
         }
 
         proxyEntry = proxyMonitor.currentProxyEntry
@@ -325,8 +324,7 @@ open class BrowserPrivacyContext(
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)
         beforeRun(task)
-        val result = proxyContext.takeIf { it.isEnabled }
-                ?.run(task, browseFun)
+        val result = proxyContext.takeIf { it.isEnabled }?.run(task, browseFun)
                 ?:driverContext.run(task, browseFun)
         return result.also { afterRun(it) }
     }
@@ -334,8 +332,7 @@ open class BrowserPrivacyContext(
     open suspend fun runDeferred(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)
         beforeRun(task)
-        val result = proxyContext.takeIf { it.isEnabled }
-                ?.runDeferred(task, browseFun)
+        val result = proxyContext.takeIf { it.isEnabled }?.runDeferred(task, browseFun)
                 ?:driverContext.runDeferred(task, browseFun)
         return result.also { afterRun(it) }
     }
