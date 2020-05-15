@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -19,10 +20,8 @@ import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
-import java.util.stream.Collectors
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.streams.toList
 
 class LauncherConfig {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
@@ -72,6 +71,8 @@ class ChromeDevtoolsOptions(
         var userDataDir: String = AppPaths.CHROME_TMP_DIR.toString(),
         @ChromeParameter("incognito")
         var incognito: Boolean = false,
+        @ChromeParameter("force-webrtc-ip-handling-policy")
+        var forceWebrtcIpHandlingPolicy: String = "default_public_interface_only",
         @ChromeParameter("disable-gpu")
         var disableGpu: Boolean = true,
         @ChromeParameter("hide-scrollbars")
@@ -85,9 +86,9 @@ class ChromeDevtoolsOptions(
         @ChromeParameter("disable-client-side-phishing-detection")
         var disableClientSidePhishingDetection: Boolean = true,
         @ChromeParameter("disable-default-apps")
-        var disableDefaultApps: Boolean = true,
+        var disableDefaultApps: Boolean = false,
         @ChromeParameter("disable-extensions")
-        var disableExtensions: Boolean = true,
+        var disableExtensions: Boolean = false,
         @ChromeParameter("disable-hang-monitor")
         var disableHangMonitor: Boolean = true,
         @ChromeParameter("disable-popup-blocking")
@@ -178,7 +179,6 @@ class ChromeLauncher(
 ) : AutoCloseable {
 
     companion object {
-        const val ENV_CHROME_PATH = "CHROME_PATH"
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
     }
 
@@ -207,12 +207,10 @@ class ChromeLauncher(
      * @return Chrome binary path.
      */
     private fun searchChromeBinary(): Path {
-        val envChrome = System.getProperty(ENV_CHROME_PATH)
-        if (envChrome != null) {
-            envChrome.let { Paths.get(it) }
-                    .takeIf { Files.isExecutable(it) }
-                    ?.toAbsolutePath()
-                    ?:throw RuntimeException("CHROME_PATH is not executable | $envChrome")
+        val path = System.getProperty(CapabilityTypes.BROWSER_CHROME_PATH)
+        if (path != null) {
+            return Paths.get(path).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
+                    ?:throw RuntimeException("CHROME_PATH is not executable | $path")
         }
 
         return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }

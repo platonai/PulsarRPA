@@ -14,7 +14,11 @@ object Urls {
     @JvmStatic
     fun getURLOrNull(url: String): URL? {
         if (url.isBlank()) return null
-        return try { URL(url) } catch (ignored: MalformedURLException) { null }
+        return try {
+            URL(url)
+        } catch (ignored: MalformedURLException) {
+            null
+        }
     }
 
     @JvmStatic
@@ -29,7 +33,7 @@ object Urls {
     @JvmStatic
     fun normalize(url: String, ignoreQuery: Boolean = false): String {
         var u = splitUrlArgs(url).first
-        u = getURLOrNull(u)?.toString()?:return ""
+        u = getURLOrNull(u)?.toString() ?: return ""
         u = u.substringBefore("#")
         if (ignoreQuery) {
             u = getUrlWithoutParameters(u)
@@ -43,14 +47,14 @@ object Urls {
     }
 
     @Throws(URISyntaxException::class)
-    fun removeQueryParameter(url: String, parameterName: String): String {
+    fun removeQueryParameters(url: String, vararg parameterNames: String): String {
         val uriBuilder = URIBuilder(url)
         val queryParameters: MutableList<NameValuePair> = uriBuilder.queryParams
-        val queryParameterItr: MutableIterator<NameValuePair> = queryParameters.iterator()
-        while (queryParameterItr.hasNext()) {
-            val queryParameter: NameValuePair = queryParameterItr.next()
-            if (queryParameter.getName().equals(parameterName)) {
-                queryParameterItr.remove()
+        val it = queryParameters.iterator()
+        while (it.hasNext()) {
+            val param = it.next()
+            if (param.name in parameterNames) {
+                it.remove()
             }
         }
         uriBuilder.setParameters(queryParameters)

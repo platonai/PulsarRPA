@@ -133,7 +133,7 @@ class LoadingWebDriverPool(
 
     private fun closeAllDrivers(processExit: Boolean = false) {
         if (!isHeadless) {
-            return
+            // return
         }
 
         freeDrivers.clear()

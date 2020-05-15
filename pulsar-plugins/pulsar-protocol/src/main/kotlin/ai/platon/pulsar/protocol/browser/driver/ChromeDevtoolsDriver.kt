@@ -25,10 +25,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * TODO: more compatible methods with RemoteWebDriver, or disable them explicitly
  * */
 class ChromeDevtoolsDriver(
-        userAgent: String = "",
-        browserControl: WebDriverControl,
-        launchOptions: ChromeDevtoolsOptions,
-        devToolsConfig: DevToolsConfig = DevToolsConfig()
+        private val userAgent: String = "",
+        private val browserControl: WebDriverControl,
+        private val launchOptions: ChromeDevtoolsOptions,
+        private val devToolsConfig: DevToolsConfig = DevToolsConfig()
 ): RemoteWebDriver() {
 
     companion object {
@@ -111,7 +111,7 @@ class ChromeDevtoolsDriver(
 
             // In chrome every tab is a separate process
             tab = chrome.createTab()
-            navigateUrl = tab.url?:""
+            navigateUrl = tab.url ?: ""
 
             devTools = chrome.createDevTools(tab, devToolsConfig)
             devToolsList.add(devTools)
@@ -128,6 +128,11 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     override fun get(url: String) {
+        takeIf { browserControl.jsInvadingEnabled }?.getInvaded(url)?:getNoInvaded(url)
+    }
+
+    @Throws(NoSuchSessionException::class)
+    fun getInvaded(url: String) {
         if (isGone) return
 
         try {
@@ -155,6 +160,20 @@ class ChromeDevtoolsDriver(
             }
 //            fetch.enable()
 
+            navigateUrl = url
+            page.navigate(url)
+        } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
+        }
+    }
+
+    @Throws(NoSuchSessionException::class)
+    fun getNoInvaded(url: String) {
+        if (isGone) return
+
+        try {
+            page.enable()
             navigateUrl = url
             page.navigate(url)
         } catch (e: ChromeDevToolsInvocationException) {

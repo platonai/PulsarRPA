@@ -46,7 +46,8 @@ abstract class BrowserEmulatorBase(
                 "scriptTimeout", driverControl.scriptTimeout,
                 "scrollDownCount", driverControl.scrollDownCount,
                 "scrollInterval", driverControl.scrollInterval,
-                "driverPoolCapacity", driverPool.capacity
+                "driverPoolCapacity", driverPool.capacity,
+                "jsInvadingEnabled", driverControl.jsInvadingEnabled
         )
     }
 

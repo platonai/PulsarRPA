@@ -2,7 +2,6 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -18,7 +17,6 @@ import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import org.apache.commons.lang.IllegalClassException
 import org.openqa.selenium.WebDriverException
 import java.util.concurrent.ThreadLocalRandom
 
@@ -48,7 +46,7 @@ open class AsyncBrowserEmulator(
      * */
     @Throws(IllegalContextStateException::class)
     open suspend fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
-        return takeIf { isActive }?.browseWithDriver(task, driver)?:FetchResult.canceled(task)
+        return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(task)
     }
 
     open fun cancelNow(task: FetchTask) {
@@ -105,7 +103,7 @@ open class AsyncBrowserEmulator(
         } finally {
         }
 
-        return FetchResult(task, response?:ForwardingResponse(exception, task.page), exception)
+        return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }
 
     @Throws(CancellationException::class)
@@ -136,7 +134,6 @@ open class AsyncBrowserEmulator(
 
     @Throws(CancellationException::class,
             IllegalContextStateException::class,
-            IllegalClassException::class,
             WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): InteractResult {
         eventHandler.logBeforeNavigate(task, driverConfig)
@@ -151,7 +148,28 @@ open class AsyncBrowserEmulator(
             driver.navigateTo(task.url)
         }
 
-        return interact(InteractTask(task, driverConfig, driver))
+        val interactTask = InteractTask(task, driverConfig, driver)
+        return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
+    }
+
+    @Throws(CancellationException::class, IllegalContextStateException::class)
+    protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
+        var pageSource = ""
+        var i = 0
+        while (pageSource.length < 20_1000 && i++ < 45) {
+            withContext(Dispatchers.IO) {
+                checkState(interactTask.driver)
+                checkState(interactTask.fetchTask)
+                counterRequests.inc()
+                pageSource = interactTask.driver.pageSource
+            }
+
+            if (pageSource.length < 20_1000) {
+                delay(500)
+            }
+        }
+
+        return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
 
     @Throws(CancellationException::class, IllegalContextStateException::class)
@@ -171,7 +189,7 @@ open class AsyncBrowserEmulator(
         return result
     }
 
-    @Throws(CancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(CancellationException::class, IllegalContextStateException::class, WebDriverException::class)
     private suspend fun runScriptTask(task: InteractTask, result: InteractResult, action: suspend () -> Unit) {
         checkState(task.driver)
         checkState(task.fetchTask)

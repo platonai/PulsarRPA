@@ -20,8 +20,8 @@ open class BrowserControl(
     }
 
     var headless = conf.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
-    //
     var imagesEnabled = conf.getBoolean(CapabilityTypes.BROWSER_IMAGES_ENABLED, false)
+    var jsInvadingEnabled = conf.getBoolean(CapabilityTypes.BROWSER_JS_INVADING_ENABLED, true)
 
     // We will wait for document ready manually using javascript
     var pageLoadStrategy = "none"

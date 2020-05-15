@@ -220,6 +220,7 @@ public interface CapabilityTypes {
     /**
      * Browser control
      */
+    String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_POOL_CAPACITY = "browser.pool.capacity";
     String BROWSER_WEB_DRIVER_CLASS = "browser.driver.class";
     String BROWSER_DRIVER_PRIORITY = "browser.driver.priority";
@@ -227,6 +228,7 @@ public interface CapabilityTypes {
     String BROWSER_INCOGNITO = "browser.incognito";
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
+    String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATE_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING = "browser.devtools.enable.url.blocking";

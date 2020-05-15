@@ -35,7 +35,8 @@ open class BrowserEmulateEventHandler(
     private val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
     private val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
-    val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
+    private val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
+
     private val metrics = SharedMetricRegistries.getDefault()
     private val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
     private val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
@@ -163,12 +164,14 @@ open class BrowserEmulateEventHandler(
         val p3 = pageSource.indexOf("<a", p2)
         if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
 
-        // TODO: optimize using region match
-        val bodyTag = pageSource.substring(p1, p2)
-        // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
-        val r = bodyTag.contains("data-error=\"0\"")
-        if (!r) {
-            return HtmlIntegrity.NO_JS_OK_FLAG
+        if (driverManager.driverControl.jsInvadingEnabled) {
+            // TODO: optimize using region match
+            val bodyTag = pageSource.substring(p1, p2)
+            // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
+            val r = bodyTag.contains("data-error=\"0\"")
+            if (!r) {
+                return HtmlIntegrity.NO_JS_OK_FLAG
+            }
         }
 
         return HtmlIntegrity.OK
