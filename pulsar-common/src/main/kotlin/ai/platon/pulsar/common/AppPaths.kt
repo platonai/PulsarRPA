@@ -1,8 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes.PARAM_DATA_DIR
-import ai.platon.pulsar.common.config.CapabilityTypes.PARAM_TMP_DIR
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import com.google.common.net.InetAddresses
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -35,79 +34,85 @@ object AppPaths {
 
     @RequiredDirectory
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
-    // TODO: check again whether we need a separate home dir
-    // val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @RequiredDirectory
-    val HOME_DIR = TMP_DIR
+    val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_HOME_DIR)
+//    @RequiredDirectory
+//    val HOME_DIR = TMP_DIR
     /**
      * Application data are kept in the data dir
      * */
     @RequiredDirectory
-    val DATA_DIR = SParser(System.getProperty(PARAM_DATA_DIR)).getPath(AppConstants.PULSAR_DEFAULT_DATA_DIR)
+    val DATA_DIR = HOME_DIR.resolve("data")
 
     @RequiredDirectory
-    val CACHE_DIR = get(TMP_DIR, "cache")
+    val CACHE_DIR = TMP_DIR.resolve("cache")
     @RequiredDirectory
-    val WEB_CACHE_DIR = get(CACHE_DIR, "web")
+    val WEB_CACHE_DIR = CACHE_DIR.resolve("web")
     @RequiredDirectory
-    val DOC_EXPORT_DIR = get(WEB_CACHE_DIR, "web", "export")
+    val DOC_EXPORT_DIR = WEB_CACHE_DIR.resolve("web").resolve("export")
     @RequiredDirectory
-    val FILE_CACHE_DIR = get(CACHE_DIR, "files")
+    val FILE_CACHE_DIR = CACHE_DIR.resolve("files")
     @RequiredDirectory
-    val CONF_DIR = get(TMP_DIR, "conf")
+    val TMP_CONF_DIR = TMP_DIR.resolve("conf")
     @RequiredDirectory
-    val REPORT_DIR = get(TMP_DIR, "report")
+    val REPORT_DIR = TMP_DIR.resolve( "report")
     @RequiredDirectory
-    val METRICS_DIR = get(REPORT_DIR, "metrics")
+    val METRICS_DIR = REPORT_DIR.resolve( "metrics")
     @RequiredDirectory
-    val SCRIPT_DIR = get(TMP_DIR, "scripts")
+    val SCRIPT_DIR = TMP_DIR.resolve( "scripts")
     @RequiredDirectory
-    val TEST_DIR = get(TMP_DIR, "test")
-    @RequiredDirectory
-    val BROWSER_TMP_DIR = get(TMP_DIR, "browser")
-    @RequiredFile
-    val BROWSER_TMP_DIR_LOCK = get(TMP_DIR, "browser.lock")
-    @RequiredDirectory
-    val CHROME_TMP_DIR = get(BROWSER_TMP_DIR, "chrome")
+    val TEST_DIR = TMP_DIR.resolve( "test")
 
     @RequiredDirectory
-    val PROXY_BASE_DIR = AppPaths.getTmp("proxy")
+    val BROWSER_DATA_DIR = HOME_DIR.resolve( "browser")
     @RequiredDirectory
-    val ENABLED_PROVIDER_DIR = AppPaths.get(PROXY_BASE_DIR, "providers-enabled")
-    @RequiredDirectory
-    val AVAILABLE_PROVIDER_DIR = AppPaths.get(PROXY_BASE_DIR, "providers-available")
-    @RequiredDirectory
-    val ENABLED_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-enabled")
+    val CHROME_DATA_BACKUP_DIR = BROWSER_DATA_DIR.resolve("google-chrome-backup")
 
     @RequiredDirectory
-    val AVAILABLE_PROXY_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-available")
+    val BROWSER_TMP_DIR = TMP_DIR.resolve( "browser")
+    @RequiredFile
+    val BROWSER_TMP_DIR_LOCK = TMP_DIR.resolve( "browser.lock")
     @RequiredDirectory
-    val PROXY_ARCHIVE_DIR = AppPaths.get(PROXY_BASE_DIR, "proxies-archived")
-    @RequiredFile
-    val PROXY_BANNED_HOSTS_FILE = AppPaths.get(PROXY_BASE_DIR, "proxies-banned-hosts.txt")
-    @RequiredFile
-    val PROXY_BANNED_SEGMENTS_FILE = AppPaths.get(PROXY_BASE_DIR, "proxies-banned-segments.txt")
-    @RequiredFile
-    val PROXY_BAN_STRATEGY = AppPaths.get(PROXY_BASE_DIR, "proxy-ban-strategy.txt")
+    val CHROME_TMP_DIR = BROWSER_TMP_DIR.resolve("google-chrome")
 
     @RequiredDirectory
-    val ARCHIVE_DIR = get(HOME_DIR, "archive")
+    val PROXY_BASE_DIR = HOME_DIR.resolve("proxy")
     @RequiredDirectory
-    val TMP_ARCHIVE_DIR = get(TMP_DIR, "archive")
+    val ENABLED_PROVIDER_DIR = PROXY_BASE_DIR.resolve( "providers-enabled")
+    @RequiredDirectory
+    val AVAILABLE_PROVIDER_DIR = PROXY_BASE_DIR.resolve("providers-available")
+    @RequiredDirectory
+    val ENABLED_PROXY_DIR = PROXY_BASE_DIR.resolve( "proxies-enabled")
+
+    @RequiredDirectory
+    val AVAILABLE_PROXY_DIR = PROXY_BASE_DIR.resolve( "proxies-available")
+    @RequiredDirectory
+    val PROXY_ARCHIVE_DIR = PROXY_BASE_DIR.resolve("proxies-archived")
+    @RequiredFile
+    val PROXY_BANNED_HOSTS_FILE = PROXY_BASE_DIR.resolve("proxies-banned-hosts.txt")
+    @RequiredFile
+    val PROXY_BANNED_SEGMENTS_FILE = PROXY_BASE_DIR.resolve("proxies-banned-segments.txt")
+    @RequiredFile
+    val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve( "proxy-ban-strategy.txt")
+
+    @RequiredDirectory
+    val ARCHIVE_DIR = HOME_DIR.resolve("archive")
+    @RequiredDirectory
+    val TMP_ARCHIVE_DIR = TMP_DIR.resolve("archive")
 
     @RequiredFile
-    val PATH_LOCAL_COMMAND = get(TMP_DIR, "pulsar-commands")
+    val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
     @RequiredFile
-    val PATH_EMERGENT_SEEDS = get(TMP_DIR, "emergent-seeds")
+    val PATH_EMERGENT_SEEDS = TMP_DIR.resolve("emergent-seeds")
 
     @RequiredFile
-    val PATH_LAST_BATCH_ID = get(REPORT_DIR, "last-batch-id")
+    val PATH_LAST_BATCH_ID = REPORT_DIR.resolve("last-batch-id")
     @RequiredFile
-    val PATH_LAST_GENERATED_ROWS = get(REPORT_DIR, "last-generated-rows")
+    val PATH_LAST_GENERATED_ROWS = REPORT_DIR.resolve("last-generated-rows")
     @RequiredFile
-    val PATH_BANNED_URLS = get(REPORT_DIR, "banned-urls")
+    val PATH_BANNED_URLS = REPORT_DIR.resolve("banned-urls")
     @RequiredFile
-    val PATH_UNREACHABLE_HOSTS = get(REPORT_DIR, "unreachable-hosts.txt")
+    val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
 
     // TODO: distinct tmp dir and home dir
     private val tmpDirStr get() = TMP_DIR.toString()
@@ -127,8 +132,6 @@ object AppPaths {
                     it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
                 }
     }
-
-    fun get(baseDirectory: Path, vararg more: String): Path = get(baseDirectory.toString(), *more)
 
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
 

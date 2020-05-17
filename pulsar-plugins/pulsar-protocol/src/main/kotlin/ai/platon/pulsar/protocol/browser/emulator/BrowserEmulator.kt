@@ -274,7 +274,7 @@ open class BrowserEmulator(
             } else if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val errorResult = eventHandler.handleChromeError(message)
+                val errorResult = eventHandler.handleChromeErrorPage(message)
                 status = errorResult.status
                 result.activeDomMessage = errorResult.activeDomMessage
                 result.state = FlowState.BREAK

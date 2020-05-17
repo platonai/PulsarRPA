@@ -8,6 +8,9 @@ import kotlin.concurrent.withLock
 
 /**
  * The preemptive channel concurrency pattern, there are two channels: preemptive channel and normal channel
+ *
+ * TODO: compare with ReadWriteLock
+ *
  * 1. both channel allows multiple threads
  * 2. new workers have to wait until there is no ready freeze nor running freezer
  * 3. a freezer locks the working channel immediately, but have to wait to run util all workers are finished
@@ -36,7 +39,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
-    protected val normalTaskTimeout = Duration.ofMinutes(3)
+    protected val normalTaskTimeout = Duration.ofMinutes(5)
+    protected val preemptiveTaskTimeout = Duration.ofMinutes(5)
     private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numReadyPreemptiveTasks.get() > 0
@@ -120,8 +124,9 @@ abstract class PreemptChannelSupport(val name: String = "") {
                 trace("There are $numNormalTasks tasks waiting for $numReadyPreemptiveTasks preemptive tasks to finish")
             }
 
+            val ttl = Instant.now().plus(preemptiveTaskTimeout).toEpochMilli()
             var nanos = pollingTimeout.toNanos()
-            while (numReadyPreemptiveTasks.get() > 0 && nanos > 0) {
+            while (numReadyPreemptiveTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
                 nanos = noPreemptiveTasks.awaitNanos(nanos)
             }
 

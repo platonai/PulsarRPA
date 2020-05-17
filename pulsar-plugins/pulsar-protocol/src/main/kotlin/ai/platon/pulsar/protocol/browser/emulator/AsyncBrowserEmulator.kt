@@ -241,9 +241,9 @@ open class AsyncBrowserEmulator(
             } else if (message == "timeout") {
                 log.debug("Hit max round $maxRound to wait for document | {}", interactTask.url)
             } else if (message is String && message.contains("chrome-error://")) {
-                val errorResult = eventHandler.handleChromeError(message)
-                status = errorResult.status
-                result.activeDomMessage = errorResult.activeDomMessage
+                val browserError = eventHandler.handleChromeErrorPage(message)
+                status = browserError.status
+                result.activeDomMessage = browserError.activeDomMessage
                 result.state = FlowState.BREAK
             } else {
                 log.trace("DOM is ready {} | {}", message.toString().substringBefore("urls"), interactTask.url)
@@ -255,7 +255,8 @@ open class AsyncBrowserEmulator(
 
     protected open suspend fun jsScrollDown(interactTask: InteractTask, result: InteractResult) {
         val random = ThreadLocalRandom.current().nextInt(3)
-        val scrollDownCount = interactTask.driverConfig.scrollDownCount + random - 1
+        var scrollDownCount = interactTask.driverConfig.scrollDownCount + random - 1
+        scrollDownCount = scrollDownCount.coerceAtLeast(3)
 
         val expression = "__utils__.scrollDownN($scrollDownCount)"
         withContext(Dispatchers.IO) {

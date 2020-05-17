@@ -25,6 +25,8 @@ import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
 import org.apache.tika.mime.MimeTypesFactory;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +130,7 @@ public final class MimeTypeResolver {
      *          The byte data, returned from the text, if any.
      * @return The correctly, automatically guessed {@link MimeType} name.
      */
-    public String autoResolveContentType(String typeName, String url, byte[] data) {
+    public String autoResolveContentType(String typeName, @NotNull String url, @Nullable byte[] data) {
         String retType = null;
         MimeType type = null;
         String cleanedMimeType = null;
@@ -165,7 +167,7 @@ public final class MimeTypeResolver {
         // from the magic guess is different than the one that's already set so far
         // if it is, and it's not the default mime type, then go with the mime type
         // returned by the magic
-        if (this.mimeMagic) {
+        if (this.mimeMagic && data != null) {
             String magicType = null;
             // pass URL (file name) and (cleansed) content type from protocol to Tika
             Metadata tikaMeta = new Metadata();

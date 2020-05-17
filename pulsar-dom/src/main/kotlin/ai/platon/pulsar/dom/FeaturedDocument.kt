@@ -45,7 +45,7 @@ open class FeaturedDocument(val document: Document) {
 
         fun getExportFilename(uri: String): String = AppPaths.fromUri(uri, "", ".htm")
 
-        fun getExportPath(url: String, ident: String): Path = AppPaths.get(AppPaths.WEB_CACHE_DIR, ident, getExportFilename(url))
+        fun getExportPath(url: String, ident: String): Path = AppPaths.WEB_CACHE_DIR.resolve(ident).resolve(getExportFilename(url))
 
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
@@ -184,7 +184,7 @@ open class FeaturedDocument(val document: Document) {
 
     fun export(): Path {
         val filename = AppPaths.fromUri(location, "", ".htm")
-        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, "featured", filename)
+        val path = AppPaths.WEB_CACHE_DIR.resolve("featured").resolve(filename)
         return exportTo(path)
     }
 

@@ -13,10 +13,7 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.channels.FileChannel
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
@@ -70,7 +67,7 @@ class ChromeDevtoolsOptions(
         @ChromeParameter(ARG_USER_DATA_DIR)
         var userDataDir: String = AppPaths.CHROME_TMP_DIR.toString(),
         @ChromeParameter("incognito")
-        var incognito: Boolean = false,
+        var incognito: Boolean = true,
         @ChromeParameter("force-webrtc-ip-handling-policy")
         var forceWebrtcIpHandlingPolicy: String = "default_public_interface_only",
         @ChromeParameter("disable-gpu")
@@ -188,8 +185,26 @@ class ChromeLauncher(
     private val shutdownHookThread = Thread { this.close() }
 
     fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
-        val port = launchChromeProcess(chromeBinaryPath, options)
         userDataDirPath = Paths.get(options.userDataDir)
+        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
+        val backupUserDataDir = AppPaths.CHROME_DATA_BACKUP_DIR
+
+        FileChannel.open(lock, StandardOpenOption.APPEND).use {
+            it.lock()
+
+            if (!Files.exists(userDataDirPath.resolve("Default"))) {
+                log.info("User data dir does not exist | {}", userDataDirPath)
+                FileUtils.copyDirectory(backupUserDataDir.toFile(), userDataDirPath.toFile())
+            }
+
+            Files.deleteIfExists(userDataDirPath.resolve("Default/Cookies"))
+            FileUtils.deleteDirectory(userDataDirPath.resolve("Default/Local Storage/leveldb").toFile())
+            arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
+                Files.copy(backupUserDataDir.resolve(it), userDataDirPath.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+            }
+        }
+
+        val port = launchChromeProcess(chromeBinaryPath, options)
         return Chrome(port)
     }
 
@@ -241,20 +256,6 @@ class ChromeLauncher(
             log.error("Interrupted while waiting for chrome process to shutdown", e)
             process.destroyForcibly()
         } finally {
-            kotlin.runCatching {
-                // wait for 1 second to hope every thing is clean
-                Thread.sleep(1000)
-
-                FileUtils.deleteQuietly(userDataDirPath.toFile())
-                if (Files.exists(userDataDirPath)) {
-                    log.warn("Failed to delete browser data, try again | {}", userDataDirPath)
-                    forceDeleteDirectory(userDataDirPath)
-
-                    if (Files.exists(userDataDirPath)) {
-                        log.error("Can not delete browser data | {}", userDataDirPath)
-                    }
-                }
-            }
         }
     }
 
@@ -354,6 +355,23 @@ class ChromeLauncher(
         try {
             thread.join(config.threadWaitTime.toMillis())
         } catch (ignored: InterruptedException) {}
+    }
+
+    private fun cleanUp() {
+        kotlin.runCatching {
+            // wait for 1 second to hope every thing is clean
+            Thread.sleep(1000)
+
+            FileUtils.deleteQuietly(userDataDirPath.toFile())
+            if (Files.exists(userDataDirPath)) {
+                log.warn("Failed to delete browser data, try again | {}", userDataDirPath)
+                forceDeleteDirectory(userDataDirPath)
+
+                if (Files.exists(userDataDirPath)) {
+                    log.error("Can not delete browser data | {}", userDataDirPath)
+                }
+            }
+        }
     }
 
     /**

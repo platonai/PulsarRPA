@@ -66,7 +66,7 @@ open class StreamingCrawler(
 
                 // update fetch concurrency on command
                 if (numRunningTasks.get() == concurrency) {
-                    val path = AppPaths.get(AppPaths.CONF_DIR, "fetch-concurrency-override")
+                    val path = AppPaths.TMP_CONF_DIR.resolve("fetch-concurrency-override")
                     if (Files.exists(path)) {
                         val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:concurrency
                         if (concurrencyOverride != concurrency) {
@@ -96,12 +96,13 @@ open class StreamingCrawler(
                     return@supervisorScope
                 }
 
+                var page: WebPage? = null
                 var exception: Throwable? = null
                 numRunningTasks.incrementAndGet()
                 val context = Dispatchers.Default + CoroutineName("w")
                 launch(context) {
-                    session.runCatching { loadDeferred(url, options) }
-                            .onFailure { exception = it; log.warn(it.toString()) }
+                    page = session.runCatching { loadDeferred(url, options) }
+                            .onFailure { exception = it; log.warn("Load failed - $it") }
                             .getOrNull()
                             ?.also { pageCollector?.add(it) }
                     numRunningTasks.decrementAndGet()

@@ -58,7 +58,7 @@ fun AppFiles.export(page: WebPage, ident: String = ""): Path {
     if (postfix.length > 5) {
         postfix = "other"
     }
-    val path = AppPaths.get(FILE_CACHE_DIR, ident, postfix, filename)
+    val path = FILE_CACHE_DIR.resolve(ident).resolve(postfix).resolve(filename)
     if (!Files.exists(path)) {
         AppFiles.saveTo(page.content?.array()?: "(empty)".toByteArray(), path)
     }
@@ -66,6 +66,6 @@ fun AppFiles.export(page: WebPage, ident: String = ""): Path {
 }
 
 fun AppFiles.export(doc: Document, ident: String = ""): Path {
-    val path = AppPaths.get(FILE_CACHE_DIR, ident, AppPaths.fromUri(doc.baseUri(), "", ".htm"))
+    val path = FILE_CACHE_DIR.resolve(ident).resolve(AppPaths.fromUri(doc.baseUri(), "", ".htm"))
     return AppFiles.saveTo(doc.outerHtml(), path)
 }

@@ -13,7 +13,7 @@ import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.SharedMetricRegistries
@@ -32,21 +32,23 @@ open class BrowserEmulateEventHandler(
         private val messageWriter: MiscMessageWriter,
         private val immutableConfig: ImmutableConfig
 ) {
-    private val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
-    private val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
-    private val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
-    private val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
+    protected val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
+    protected val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
+    protected val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+    protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
-    private val metrics = SharedMetricRegistries.getDefault()
-    private val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
-    private val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
-    private val bannedPages = metrics.meter(prependReadableClassName(this, "bannedPages"))
-    private val smallPages = metrics.meter(prependReadableClassName(this, "smallPages"))
-    private val smallPageRate = metrics.histogram(prependReadableClassName(this, "smallPageRate"))
-    private val emptyPages = metrics.meter(prependReadableClassName(this, "emptyPages"))
+    protected val numNavigates = AtomicInteger()
+    protected val driverPool = driverManager.driverPool
+    protected val jsInvadingEnabled = driverManager.driverControl.jsInvadingEnabled
 
-    private val numNavigates = AtomicInteger()
-    private val driverPool = driverManager.driverPool
+    protected val metrics = SharedMetricRegistries.getDefault()
+    protected val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
+    protected val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
+    protected val bannedPages = metrics.meter(prependReadableClassName(this, "bannedPages"))
+    protected val smallPages = metrics.meter(prependReadableClassName(this, "smallPages"))
+    protected val smallPageRate get() = 100 * smallPages.count / numNavigates.get()
+    protected val smallPageRateHistogram = metrics.histogram(prependReadableClassName(this, "smallPageRate"))
+    protected val emptyPages = metrics.meter(prependReadableClassName(this, "emptyPages"))
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
         if (log.isTraceEnabled) {
@@ -69,10 +71,10 @@ open class BrowserEmulateEventHandler(
         pageSourceBytes.update(length)
         totalPageSourceBytes.mark(length.toLong())
 
-        val browserStatus = checkErrorPage(task.page, pageDatum.status)
-        pageDatum.status = browserStatus.status
-        if (browserStatus.code != ProtocolStatusCodes.SUCCESS_OK) {
-            // The browser shows it's own error page, which is no value to store
+        pageDatum.pageCategory = sniffPageCategory(task.page)
+        pageDatum.status = checkErrorPage(task.page, pageDatum.status)
+        if (!pageDatum.status.isSuccess) {
+            // The browser shows internal error page, which is no value to store
             task.pageSource = ""
             pageDatum.lastBrowser = task.driver.browserType
             return createResponse(task, pageDatum)
@@ -80,7 +82,6 @@ open class BrowserEmulateEventHandler(
 
         // Check if the page source is integral
         val integrity = checkHtmlIntegrity(task.pageSource, task.page, pageDatum.status, task.task)
-
         // Check browse timeout event, transform status to be success if the page source is good
         if (pageDatum.status.isTimeout) {
             if (integrity.isOK) {
@@ -93,7 +94,7 @@ open class BrowserEmulateEventHandler(
         pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, task.pageSource.length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
-            task.pageSource = handlePageSource(task.pageSource).toString()
+            task.pageSource = normalizePageSource(task.pageSource).toString()
         } else {
             // The page seems to be broken, retry it
             pageDatum.status = handleBrokenPageSource(task.task, integrity)
@@ -106,27 +107,16 @@ open class BrowserEmulateEventHandler(
             content = task.pageSource.toByteArray(StandardCharsets.UTF_8)
         }
 
-        // TODO: collect response headers of main resource
-
         // Update headers, metadata, do the logging stuff
         return createResponse(task, pageDatum)
     }
 
-    open fun checkErrorPage(page: WebPage, status: ProtocolStatus): BrowserStatus {
-        val browserStatus = BrowserStatus(status, ProtocolStatusCodes.SUCCESS_OK)
-        if (status.minorCode == ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT) {
-            // The browser can not connect to remote peer, it must be caused by the bad proxy ip
-            // It might be fixed by resetting the privacy context
-            // log.warn("Connection timed out in browser, resetting the browser context")
-            browserStatus.status = ProtocolStatus.retry(RetryScope.PRIVACY, status)
-            browserStatus.code = status.minorCode
-//            throw PrivacyLeakException()
-        } else if (status.minorCode == ProtocolStatusCodes.BROWSER_ERROR) {
-            browserStatus.status = ProtocolStatus.retry(RetryScope.CRAWL, status)
-            browserStatus.code = status.minorCode
-        }
+    open fun sniffPageCategory(page: WebPage): PageCategory {
+        return PageCategory.UNKNOWN
+    }
 
-        return browserStatus
+    open fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus {
+        return status
     }
 
     /**
@@ -135,27 +125,21 @@ open class BrowserEmulateEventHandler(
      * */
     open fun checkHtmlIntegrity(pageSource: String, page: WebPage, status: ProtocolStatus, task: FetchTask): HtmlIntegrity {
         val length = pageSource.length.toLong()
-        var integrity = HtmlIntegrity.OK
 
-        if (length == 0L) {
-            integrity = HtmlIntegrity.EMPTY_0B
-        } else if (length == 39L) {
-            integrity = HtmlIntegrity.EMPTY_39B
+        return when {
+            length == 0L -> HtmlIntegrity.EMPTY_0B
+            length == 39L -> HtmlIntegrity.EMPTY_39B
+            isBlankBody(pageSource) -> HtmlIntegrity.BLANK_BODY
+            else -> checkHtmlIntegrity(pageSource)
         }
-
-        // might be caused by web driver exception
-        if (integrity.isOK && isBlankBody(pageSource)) {
-            integrity = HtmlIntegrity.EMPTY_BODY
-        }
-
-        if (integrity.isOK) {
-            integrity = checkHtmlIntegrity(pageSource)
-        }
-
-        return integrity
     }
 
-    protected fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
+    open fun normalizePageSource(pageSource: String): StringBuilder {
+        // The browser has already convert source code to UTF-8
+        return replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
+    }
+
+    open fun checkHtmlIntegrity(pageSource: String): HtmlIntegrity {
         val p1 = pageSource.indexOf("<body")
         if (p1 <= 0) return HtmlIntegrity.OTHER
         val p2 = pageSource.indexOf(">", p1)
@@ -164,7 +148,7 @@ open class BrowserEmulateEventHandler(
         val p3 = pageSource.indexOf("<a", p2)
         if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
 
-        if (driverManager.driverControl.jsInvadingEnabled) {
+        if (jsInvadingEnabled) {
             // TODO: optimize using region match
             val bodyTag = pageSource.substring(p1, p2)
             // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
@@ -217,25 +201,24 @@ open class BrowserEmulateEventHandler(
         return ForwardingResponse(task.page, pageDatum)
     }
 
-    fun handlePageSource(pageSource: String): StringBuilder {
-        // The browser has already convert source code to UTF-8
-        return replaceHTMLCharset(pageSource, charsetPattern, "UTF-8")
-    }
-
     /**
      * Chrome redirected to the error page chrome-error://
      * This page should be text analyzed to determine the actual error
      * */
-    fun handleChromeError(message: String): BrowserError {
+    fun handleChromeErrorPage(message: String): BrowserError {
         val activeDomMessage = ActiveDomMessage.fromJson(message)
-        val status = if (activeDomMessage.multiStatus?.status?.ec == BrowserError.CONNECTION_TIMED_OUT) {
-            // chrome can not connect to the peer, it probably be caused by a bad proxy
-            // convert to retry in PRIVACY_CONTEXT later
-            ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERR_CONNECTION_TIMED_OUT)
-        } else {
-            // unhandled exception
-            ProtocolStatus.failed(ProtocolStatusCodes.BROWSER_ERROR)
+        val ec = activeDomMessage.multiStatus?.status?.ec
+        // chrome can not connect to the peer, it probably be caused by a bad proxy
+        // convert to retry in PRIVACY_CONTEXT later
+        val status = when (ec) {
+            BrowserError.CONNECTION_TIMED_OUT -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
+            BrowserError.EMPTY_RESPONSE -> ProtocolStatus.retry(RetryScope.PRIVACY, ec)
+            else -> {
+                // unexpected exception
+                ProtocolStatus.retry(RetryScope.CRAWL, ec)
+            }
         }
+
         return BrowserError(status, activeDomMessage)
     }
 
@@ -249,7 +232,7 @@ open class BrowserEmulateEventHandler(
             htmlIntegrity.isEmpty -> ProtocolStatus.retry(RetryScope.PRIVACY, htmlIntegrity).also { emptyPages.mark() }
             htmlIntegrity.isSmall -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity).also {
                 smallPages.mark()
-                smallPageRate.update(100 * smallPages.count / numNavigates.get())
+                smallPageRateHistogram.update(smallPageRate)
             }
             else -> ProtocolStatus.retry(RetryScope.CRAWL, htmlIntegrity)
         }

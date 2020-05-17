@@ -22,7 +22,7 @@ class BlockUrlsExample: BrowserExampleBase() {
             runtime.evaluate("__utils__.emulate();")
 
             val source = pageSource
-            val path = AppPaths.get(AppPaths.WEB_CACHE_DIR, AppPaths.fromUri(testUrl, "", ".htm"))
+            val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(testUrl, "", ".htm"))
             AppFiles.saveTo(source, path, true)
             log.debug("Page is saved to file://$path")
 

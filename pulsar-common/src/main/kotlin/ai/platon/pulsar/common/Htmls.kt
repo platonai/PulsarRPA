@@ -16,7 +16,7 @@ enum class HtmlIntegrity {
     OK,
     EMPTY_0B,  // no character at all
     EMPTY_39B, // <html><head></head><body></body></html> and blanks, must be caused by bad proxies
-    EMPTY_BODY, // ...<body>\s*</body>...
+    BLANK_BODY, // ...<body>\s*</body>...
     NO_ANCHOR,
     NO_JS_OK_FLAG,
     ROBOT_CHECK,
@@ -30,7 +30,7 @@ enum class HtmlIntegrity {
 
     val isEmpty: Boolean get() = this == EMPTY_0B || this == EMPTY_39B
     val isNotEmpty: Boolean get() = !isEmpty
-    val isEmptyBody: Boolean get() = this == EMPTY_BODY
+    val isEmptyBody: Boolean get() = this == BLANK_BODY
     val isBanned: Boolean get() = this == ROBOT_CHECK
     val isSmall: Boolean get() = this == TOO_SMALL || this == TOO_SMALL_IN_HISTORY || this == TOO_SMALL_IN_BATCH
 

@@ -56,7 +56,7 @@ data class ProxyEntry(
     val servedDomains = ConcurrentHashMultiset.create<String>()
     val status = AtomicReference<Status>(Status.FREE)
     val testSpeed get() = accumResponseMillis.get() / numTests.get().coerceAtLeast(1) / 1000.0
-    val ttl get() = declaredTTL ?: availableTime + PROXY_EXPIRED
+    val ttl get() = declaredTTL ?: (availableTime + PROXY_EXPIRED)
     val ttlDuration get() = Duration.between(Instant.now(), ttl).takeIf { !it.isNegative }
     val isExpired get() = willExpireAt(Instant.now())
     val isRetired get() = status.get() == Status.RETIRED
@@ -123,6 +123,8 @@ data class ProxyEntry(
             numConnectionLosts.incrementAndGet()
             if (isGone) {
                 log.warn("Proxy is gone after {} tests | {}", numTests, this)
+            } else {
+                log.info("Proxy is not available | $this")
             }
         } else {
             numConnectionLosts.set(0)
@@ -179,7 +181,7 @@ data class ProxyEntry(
         private val instanceSequence = AtomicInteger()
         private const val META_DELIMITER = StringUtils.SPACE
         // Check if the proxy server is still available if it's not used for 30 seconds
-        private val PROXY_EXPIRED = Duration.ofSeconds(30)
+        private val PROXY_EXPIRED = Duration.ofSeconds(60)
         // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
         private const val DEFAULT_PROXY_SERVER_PORT = 80

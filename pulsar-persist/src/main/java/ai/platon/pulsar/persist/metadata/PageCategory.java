@@ -65,7 +65,7 @@ public enum PageCategory {
         else if (this == MEDIA)   return "M";
         else if (this == BBS)     return "B";
         else if (this == TIEBA)   return "T";
-        else if (this == BLOG)    return "BG";
+        else if (this == BLOG)    return "G";
         else if (this == UNKNOWN) return "U";
         return n;
     }

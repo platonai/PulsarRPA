@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class TestFilesystem {
     private String readableTime = new SimpleDateFormat("MMdd.HHmmss").format(System.currentTimeMillis());
-    private Path commandFile = Paths.get(AppConstants.PULSAR_DEFAULT_TMP_DIR.toString(), "command", "test." + readableTime + ".sh");
+    private Path commandFile = AppPaths.INSTANCE.get("command", "test." + readableTime + ".sh");
 
     @Test
     public void testCreateFiles() throws IOException {

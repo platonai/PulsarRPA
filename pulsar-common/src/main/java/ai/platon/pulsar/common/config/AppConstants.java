@@ -178,7 +178,7 @@ public interface AppConstants {
     String USER_DIR = SystemUtils.USER_DIR;
 
     Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
-    Path PULSAR_DEFAULT_DATA_DIR = Paths.get(USER_HOME, ".pulsar");
+    Path PULSAR_DEFAULT_HOME_DIR = Paths.get(USER_HOME, ".pulsar");
 
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";

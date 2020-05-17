@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable {
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
-    private val reportDir = AppPaths.get(AppPaths.REPORT_DIR, timeIdent, jobIdent)
+    private val reportDir = AppPaths.REPORT_DIR.resolve(timeIdent).resolve(jobIdent)
     private val writers = ConcurrentHashMap<Path, MessageWriter>()
     private val closed = AtomicBoolean()
 
@@ -25,7 +25,7 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
     }
 
     fun readAllLines(filename: String): List<String> {
-        val path = AppPaths.get(reportDir, filename)
+        val path = reportDir.resolve(filename)
         if (Files.exists(path)) {
             return Files.readAllLines(path)
         }
@@ -33,7 +33,7 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
     }
 
     fun write(message: String, filename: String) {
-        write(message, AppPaths.get(reportDir, filename))
+        write(message, reportDir.resolve(filename))
     }
 
     fun write(message: String, file: Path) {

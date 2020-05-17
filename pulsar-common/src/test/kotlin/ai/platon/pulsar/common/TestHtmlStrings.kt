@@ -16,6 +16,8 @@ class TestHtmlStrings {
     @Test
     fun isBlankBody() {
         assertTrue(isBlankBody("....<body></body>...."))
+        assertTrue(isBlankBody("....<body>\n</body>...."))
+        assertTrue(isBlankBody("....<body>\t</body>...."))
         assertTrue(isBlankBody("....<body a=1 b=2></body>...."))
         assertTrue(isBlankBody("<script>....<body   >    </body>...."))
         assertTrue(isBlankBody("script....<body a='1'>     </body>...."))

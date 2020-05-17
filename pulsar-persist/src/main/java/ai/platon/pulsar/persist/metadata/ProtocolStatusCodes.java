@@ -101,12 +101,13 @@ public interface ProtocolStatusCodes {
      */
     int SCRIPT_TIMEOUT = 1472;
     /**
-     * Selenium web driver is timeout
+     * Document incomplete
      * @deprecated
      */
     int DOCUMENT_INCOMPLETE = 1473;
     /**
      * Selenium web driver is timeout.
+     * @deprecated
      */
     int BROWSER_ERR_CONNECTION_TIMED_OUT = 1480;
     /**

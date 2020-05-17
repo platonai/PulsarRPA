@@ -24,7 +24,7 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
 
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
-    private val reportDir = AppPaths.get(AppPaths.METRICS_DIR, timeIdent, jobIdent)
+    private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
     val metricsEnabled = conf.getBoolean(CapabilityTypes.APPLICATION_METRICS_ENABLED, true)
 
     private val metricRegistry: MetricRegistry

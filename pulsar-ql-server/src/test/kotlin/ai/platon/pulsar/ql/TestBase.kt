@@ -66,7 +66,7 @@ abstract class TestBase {
             history.add(0, "-- Time: $startTime")
             val sqls = history.joinToString("\n") { it }
             val ident = DateTimes.now("MMdd.HH")
-            val path = AppPaths.get(AppConstants.PULSAR_DEFAULT_TMP_DIR, "history", "sql-history-$ident.sql")
+            val path = AppPaths.get("history", "sql-history-$ident.sql")
             Files.createDirectories(path.parent)
             AppFiles.saveTo(sqls, path, deleteIfExists = true)
 
