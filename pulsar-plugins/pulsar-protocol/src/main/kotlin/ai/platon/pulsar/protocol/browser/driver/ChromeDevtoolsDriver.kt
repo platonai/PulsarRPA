@@ -3,9 +3,11 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeLaunchException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
 import ai.platon.pulsar.protocol.browser.conf.blockingUrls
@@ -94,16 +96,13 @@ class ChromeDevtoolsDriver(
     private val closed = AtomicBoolean()
     private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
 
-    val viewport: Viewport
-        get() {
-            val viewport = Viewport()
-            viewport.x = 0.0
-            viewport.y = 0.0
-            viewport.width = BrowserControl.viewPort.getWidth()
-            viewport.height = BrowserControl.viewPort.getHeight()
-            viewport.scale = 1.0
-            return viewport
-        }
+    val viewport = Viewport().apply {
+        x = 0.0
+        y = 0.0
+        width = BrowserControl.viewPort.getWidth()
+        height = BrowserControl.viewPort.getHeight()
+        scale = 1.0
+    }
 
     init {
         try {
@@ -122,7 +121,7 @@ class ChromeDevtoolsDriver(
 
             numInstances.incrementAndGet()
         } catch (t: Throwable) {
-            throw ChromeServiceException("Failed to create chrome devtools driver", t)
+            throw DriverLaunchException("Failed to create chrome devtools driver", t)
         }
     }
 

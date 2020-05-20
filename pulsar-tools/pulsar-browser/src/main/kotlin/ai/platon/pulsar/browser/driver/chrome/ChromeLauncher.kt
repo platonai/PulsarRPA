@@ -24,7 +24,6 @@ class LauncherConfig {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
     var shutdownWaitTime = DEFAULT_SHUTDOWN_WAIT_TIME
     var threadWaitTime = THREAD_JOIN_WAIT_TIME
-    var userDataDirPath = AppPaths.CHROME_TMP_DIR
 
     companion object {
         /** Default startup wait time in seconds.  */
@@ -65,9 +64,9 @@ class ChromeDevtoolsOptions(
         @ChromeParameter("no-first-run")
         var noFirstRun: Boolean = true,
         @ChromeParameter(ARG_USER_DATA_DIR)
-        var userDataDir: String = AppPaths.CHROME_TMP_DIR.toString(),
+        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("incognito")
-        var incognito: Boolean = true,
+        var incognito: Boolean = false,
         @ChromeParameter("force-webrtc-ip-handling-policy")
         var forceWebrtcIpHandlingPolicy: String = "default_public_interface_only",
         @ChromeParameter("disable-gpu")
@@ -181,40 +180,22 @@ class ChromeLauncher(
 
     private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
     private var chromeProcess: Process? = null
-    private var userDataDirPath = config.userDataDirPath
+    private var userDataDir = AppPaths.CHROME_TMP_DIR
     private val shutdownHookThread = Thread { this.close() }
 
     fun launch(chromeBinaryPath: Path, options: ChromeDevtoolsOptions): RemoteChrome {
-        userDataDirPath = Paths.get(options.userDataDir)
-        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-        val backupUserDataDir = AppPaths.CHROME_DATA_BACKUP_DIR
-
-        FileChannel.open(lock, StandardOpenOption.APPEND).use {
-            it.lock()
-
-            if (!Files.exists(userDataDirPath.resolve("Default"))) {
-                log.info("User data dir does not exist | {}", userDataDirPath)
-                FileUtils.copyDirectory(backupUserDataDir.toFile(), userDataDirPath.toFile())
-            }
-
-            Files.deleteIfExists(userDataDirPath.resolve("Default/Cookies"))
-            FileUtils.deleteDirectory(userDataDirPath.resolve("Default/Local Storage/leveldb").toFile())
-            arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
-                Files.copy(backupUserDataDir.resolve(it), userDataDirPath.resolve(it), StandardCopyOption.REPLACE_EXISTING)
-            }
-        }
+        userDataDir = options.userDataDir
+        prepareUserDataDir()
 
         val port = launchChromeProcess(chromeBinaryPath, options)
         return Chrome(port)
     }
 
-    fun launch(options: ChromeDevtoolsOptions): RemoteChrome = launch(searchChromeBinary(), options)
+    fun launch(options: ChromeDevtoolsOptions) = launch(searchChromeBinary(), options)
 
-    fun launch(headless: Boolean): RemoteChrome {
-        return launch(searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
-    }
+    fun launch(headless: Boolean) = launch(searchChromeBinary(), ChromeDevtoolsOptions().also { it.headless = headless })
 
-    fun launch(): RemoteChrome = launch(true)
+    fun launch() = launch(true)
 
     /**
      * Returns the chrome binary path.
@@ -276,8 +257,7 @@ class ChromeLauncher(
      * @return True if the subprocess has not yet terminated.
      * @throws IllegalThreadStateException if the subprocess has not yet terminated.
      */
-    val isAlive: Boolean
-        get() = chromeProcess != null && chromeProcess!!.isAlive
+    val isAlive: Boolean get() = chromeProcess?.isAlive == true
 
     /**
      * Launches a chrome process given a chrome binary and its arguments.
@@ -357,18 +337,39 @@ class ChromeLauncher(
         } catch (ignored: InterruptedException) {}
     }
 
+    private fun prepareUserDataDir() {
+        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
+        val backupUserDataDir = AppPaths.CHROME_DATA_BACKUP_DIR
+        if (Files.exists(backupUserDataDir)) {
+            FileChannel.open(lock, StandardOpenOption.APPEND).use {
+                it.lock()
+
+                if (!Files.exists(userDataDir.resolve("Default"))) {
+                    log.info("User data dir does not exist | {}", userDataDir)
+                    FileUtils.copyDirectory(backupUserDataDir.toFile(), userDataDir.toFile())
+                }
+
+                Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
+                FileUtils.deleteDirectory(userDataDir.resolve("Default/Local Storage/leveldb").toFile())
+                arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
+                    Files.copy(backupUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+        }
+    }
+
     private fun cleanUp() {
         kotlin.runCatching {
             // wait for 1 second to hope every thing is clean
             Thread.sleep(1000)
 
-            FileUtils.deleteQuietly(userDataDirPath.toFile())
-            if (Files.exists(userDataDirPath)) {
-                log.warn("Failed to delete browser data, try again | {}", userDataDirPath)
-                forceDeleteDirectory(userDataDirPath)
+            FileUtils.deleteQuietly(userDataDir.toFile())
+            if (Files.exists(userDataDir)) {
+                log.warn("Failed to delete browser data, try again | {}", userDataDir)
+                forceDeleteDirectory(userDataDir)
 
-                if (Files.exists(userDataDirPath)) {
-                    log.error("Can not delete browser data | {}", userDataDirPath)
+                if (Files.exists(userDataDir)) {
+                    log.error("Can not delete browser data | {}", userDataDir)
                 }
             }
         }

@@ -76,7 +76,6 @@ open class WebDriverControl(
         // see https://peter.sh/experiments/chromium-command-line-switches/
         chromeOptions.merge(generalOptions)
         chromeOptions.setHeadless(headless)
-        chromeOptions.addArguments("--disable-extensions")
         // chromeOptions.addArguments("--incognito") // may cause anti-spider
         chromeOptions.addArguments("--window-size=${formatViewPort()}")
         chromeOptions.addArguments(String.format("--blink-settings=imagesEnabled=%b", imagesEnabled))
@@ -97,7 +96,7 @@ open class WebDriverControl(
         }
 
         chromeOptions.headless = headless
-        // chromeOptions.addArguments("--incognito") // may cause anti-spider
+        chromeOptions.userDataDir = userDataDir
         chromeOptions.addArguments("window-size", formatViewPort())
 
         return chromeOptions

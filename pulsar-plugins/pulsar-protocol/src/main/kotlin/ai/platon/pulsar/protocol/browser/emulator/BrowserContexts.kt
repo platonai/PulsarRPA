@@ -119,7 +119,7 @@ class WebDriverContext(
 }
 
 class ProxyContext(
-        private val proxyMonitor: ProxyMonitor,
+        private val proxyPoolMonitor: ProxyPoolMonitor,
         private val driverContext: WebDriverContext,
         private val conf: ImmutableConfig
 ): AutoCloseable {
@@ -149,13 +149,13 @@ class ProxyContext(
     private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
 
-    val realTimeProxyEntry get() = proxyMonitor.currentProxyEntry
-    val isEnabled get() = proxyMonitor.isEnabled
-    val isActive get() = proxyMonitor.isActive && !closing.get() && !closed.get()
+    val realTimeProxyEntry get() = proxyPoolMonitor.currentProxyEntry
+    val isEnabled get() = proxyPoolMonitor.isEnabled
+    val isActive get() = proxyPoolMonitor.isActive && !closing.get() && !closed.get()
 
     init {
         // warn up if it's idle
-        proxyMonitor.warnUp()
+        proxyPoolMonitor.warnUp()
     }
 
     fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -170,7 +170,7 @@ class ProxyContext(
         var success = false
         return try {
             beforeTaskStart(task)
-            proxyMonitor.run { driverContext.run(task, browseFun) }.also {
+            proxyPoolMonitor.run { driverContext.run(task, browseFun) }.also {
                 success = it.response.status.isSuccess
                 it.response.pageDatum.proxyEntry = realTimeProxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
@@ -188,7 +188,7 @@ class ProxyContext(
         var success = false
         return try {
             beforeTaskStart(task)
-            proxyMonitor.runDeferred { driverContext.runDeferred(task, browseFun) }.also {
+            proxyPoolMonitor.runDeferred { driverContext.runDeferred(task, browseFun) }.also {
                 success = it.response.status.isSuccess
                 it.response.pageDatum.proxyEntry = realTimeProxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
@@ -243,7 +243,7 @@ class ProxyContext(
         }
 
         // If the proxy is idle, and here comes a new task, reset the context
-        if (proxyMonitor.isIdle) {
+        if (proxyPoolMonitor.isIdle) {
             if (closing.compareAndSet(false, true)) {
                 throw ProxyRetiredException("The proxy is idle")
             }
@@ -275,7 +275,7 @@ class ProxyContext(
     private fun afterTaskFinished(task: FetchTask, success: Boolean) {
         numRunningTasks.decrementAndGet()
         val expectedProxyEntry = task.expectedProxyEntry
-        val lastProxyEntry = proxyMonitor.currentProxyEntry
+        val lastProxyEntry = proxyPoolMonitor.currentProxyEntry
         if (expectedProxyEntry != null && expectedProxyEntry != lastProxyEntry) {
             log.warn("Proxy has been changed | {} -> {} | {} -> {}",
                     expectedProxyEntry.outIp,
@@ -283,7 +283,7 @@ class ProxyContext(
                     expectedProxyEntry,
                     lastProxyEntry
             )
-            log.info("Proxy monitor status: {}", proxyMonitor.statusString)
+            log.info("Proxy monitor status: {}", proxyPoolMonitor.statusString)
         }
 
         lastProxyEntry?.apply {
@@ -302,7 +302,7 @@ class ProxyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            realTimeProxyEntry?.let { proxyMonitor.takeOff(it, ban = true) }
+            realTimeProxyEntry?.let { proxyPoolMonitor.takeOff(it, ban = true) }
         }
     }
 }
@@ -312,12 +312,12 @@ class ProxyContext(
  * */
 open class BrowserPrivacyContext(
         val driverManager: WebDriverManager,
-        val proxyMonitor: ProxyMonitor,
+        val proxyPoolMonitor: ProxyPoolMonitor,
         val conf: ImmutableConfig
 ): PrivacyContext() {
 
     private val driverContext = WebDriverContext(driverManager, conf)
-    private val proxyContext = ProxyContext(proxyMonitor, driverContext, conf)
+    private val proxyContext = ProxyContext(proxyPoolMonitor, driverContext, conf)
     private val closeLatch = CountDownLatch(1)
 
     open fun run(task: FetchTask, browseFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {

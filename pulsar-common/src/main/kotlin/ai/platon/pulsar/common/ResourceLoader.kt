@@ -150,7 +150,6 @@ object ResourceLoader {
      * @return a reader attached to the resource.
      */
     fun getResourceAsStream(name: String): InputStream? {
-        Objects.requireNonNull(name)
         return try {
             val url = getResource(name)
             if (url == null) {

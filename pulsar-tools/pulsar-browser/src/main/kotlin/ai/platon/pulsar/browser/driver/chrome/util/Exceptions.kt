@@ -10,6 +10,11 @@ class ChromeProcessTimeoutException : ChromeProcessException {
     constructor(message: String, cause: Throwable): super(message, cause)
 }
 
+class ChromeLaunchException : RuntimeException {
+    constructor(message: String) : super(message)
+    constructor(message: String, cause: Throwable): super(message, cause)
+}
+
 class WebSocketServiceException : Exception {
     constructor(message: String) : super(message)
     constructor(message: String, cause: Throwable): super(message, cause)

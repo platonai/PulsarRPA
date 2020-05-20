@@ -1,11 +1,9 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -18,7 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.openqa.selenium.WebDriverException
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
@@ -32,6 +33,7 @@ open class AsyncBrowserEmulator(
 ): BrowserEmulatorBase(privacyContextManager, eventHandlerFactory, messageWriter, immutableConfig) {
 
     val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
+    var lastNavigateTime = Instant.EPOCH
 
     init {
         params.withLogger(log).info()
@@ -142,9 +144,15 @@ open class AsyncBrowserEmulator(
         // driver.switchTo().frame(1);
 
         withContext(Dispatchers.IO) {
+            val idleTime = Duration.between(lastNavigateTime, Instant.now())
+            if (idleTime.seconds < 5) {
+                delay(2000L + Random.nextInt(0, 1000))
+            }
+
             meterNavigates.mark()
             numDeferredNavigates.mark()
             // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
+            lastNavigateTime = Instant.now()
             driver.navigateTo(task.url)
         }
 
@@ -156,18 +164,18 @@ open class AsyncBrowserEmulator(
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
         var pageSource = ""
         var i = 0
-        while (pageSource.length < 20_1000 && i++ < 45) {
+        do {
             withContext(Dispatchers.IO) {
                 checkState(interactTask.driver)
                 checkState(interactTask.fetchTask)
                 counterRequests.inc()
                 pageSource = interactTask.driver.pageSource
-            }
 
-            if (pageSource.length < 20_1000) {
-                delay(500)
+                if (pageSource.length < 20_000) {
+                    delay(1000)
+                }
             }
-        }
+        } while (i++ < 45 && pageSource.length < 20_000)
 
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }

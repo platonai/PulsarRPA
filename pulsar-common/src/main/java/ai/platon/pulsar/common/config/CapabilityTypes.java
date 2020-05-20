@@ -220,7 +220,6 @@ public interface CapabilityTypes {
     /**
      * Browser control
      */
-    String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_POOL_CAPACITY = "browser.pool.capacity";
     String BROWSER_WEB_DRIVER_CLASS = "browser.driver.class";
     String BROWSER_DRIVER_PRIORITY = "browser.driver.priority";
@@ -232,6 +231,8 @@ public interface CapabilityTypes {
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATE_EVENT_HANDLER = "browser.emulate.event.handler";
     String BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING = "browser.devtools.enable.url.blocking";
+    String BROWSER_CHROME_PATH = "browser.chrome.path";
+    String BROWSER_DATA_DIR = "browser.data.dir";
     /**
      * Proxy
      */
@@ -243,7 +244,7 @@ public interface CapabilityTypes {
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
     String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
-    String PROXY_ENABLE_FORWARD_SERVER = "proxy.enable.forward.server";
+    String PROXY_USE_FORWARD_SERVER = "proxy.enable.forward.server";
     String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";
     String PROXY_SERVER_WORKER_THREADS = "proxy.forward.server.worker.threads";
 

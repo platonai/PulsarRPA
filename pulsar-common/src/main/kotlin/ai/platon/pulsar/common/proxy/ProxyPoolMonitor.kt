@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-open class ProxyMonitor(
+open class ProxyPoolMonitor(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private var executor: ScheduledExecutorService? = null
@@ -40,6 +40,7 @@ open class ProxyMonitor(
     var statusString: String = ""
     var verbose = false
 
+    open val proxyPool: ProxyPool? = ProxyPool(conf)
     open val localPort = -1
     open val currentProxyEntry: ProxyEntry? = null
     open val isEnabled = false
@@ -141,7 +142,7 @@ open class ProxyMonitor(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyMonitor::class.java)
+        private val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
         private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.USER_HOME)
                 .map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
@@ -162,7 +163,7 @@ open class ProxyMonitor(
 
         fun hasEnabledProvider(): Boolean {
             val now = Instant.now()
-            synchronized(ProxyMonitor::class.java) {
+            synchronized(ProxyPoolMonitor::class.java) {
                 if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
                     providerDirLastWatchTime = now
                     numEnabledProviderFiles = try {
@@ -186,8 +187,8 @@ open class ProxyMonitor(
             val useProxy = System.getProperty(CapabilityTypes.PROXY_USE_PROXY)
             if (useProxy != null) {
                 when (useProxy) {
-                    "yes" -> return true
-                    "no" -> return false
+                    "yes", "true" -> return true
+                    "no", "false" -> return false
                 }
             }
 

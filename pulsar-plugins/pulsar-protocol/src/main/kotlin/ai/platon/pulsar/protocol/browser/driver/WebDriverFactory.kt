@@ -3,20 +3,19 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyMonitor
+import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import org.openqa.selenium.Capabilities
-import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
-import java.lang.reflect.InvocationTargetException
 
 class WebDriverFactory(
         val driverControl: WebDriverControl,
-        val proxyMonitor: ProxyMonitor,
+        val proxyPoolMonitor: ProxyPoolMonitor,
         val conf: ImmutableConfig
 ) {
     private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
@@ -27,33 +26,35 @@ class WebDriverFactory(
      * Create a RemoteWebDriver
      * Use reflection so we can make the dependency level to be "provided" rather than "source"
      */
-    @Throws(NoSuchMethodException::class,
-            IllegalAccessException::class,
-            InvocationTargetException::class,
-            InstantiationException::class
-    )
+    @Throws(DriverLaunchException::class)
     fun create(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         val capabilities = driverControl.createGeneralOptions()
 
-        if (proxyMonitor.isEnabled) {
+        if (proxyPoolMonitor.isEnabled) {
             setProxy(capabilities)
         }
 
         // Choose the WebDriver
         val browserType = getBrowserType(conf)
-        val driver: WebDriver = when {
-            browserType == BrowserType.CHROME -> {
-                val options = driverControl.createChromeDevtoolsOptions(capabilities)
-                ChromeDevtoolsDriver(driverControl.randomUserAgent(), driverControl, options)
+        val driver = kotlin.runCatching {
+            when {
+                browserType == BrowserType.CHROME -> {
+                    val options = driverControl.createChromeDevtoolsOptions(capabilities)
+                    ChromeDevtoolsDriver(driverControl.randomUserAgent(), driverControl, options)
+                }
+                browserType == BrowserType.SELENIUM_CHROME -> {
+                    // System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
+                    ChromeDriver(driverControl.createChromeOptions(capabilities))
+                }
+                RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
+                    defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
+                }
+                else -> defaultWebDriverClass.getConstructor().newInstance()
             }
-            browserType == BrowserType.SELENIUM_CHROME -> {
-                // System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
-                ChromeDriver(driverControl.createChromeOptions(capabilities))
-            }
-            RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
-                defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
-            }
-            else -> defaultWebDriverClass.getConstructor().newInstance()
+        }.onFailure {
+            log.error("Failed to create web driver $browserType", it)
+        }.getOrElse {
+            throw DriverLaunchException("Failed to create web driver $browserType")
         }
 
         if (driver is ChromeDriver) {
@@ -75,27 +76,24 @@ class WebDriverFactory(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
+        val useForwardServer = conf.getBoolean(CapabilityTypes.PROXY_USE_FORWARD_SERVER, true)
+
         // TODO: handle no proxy exception
-        if (proxyMonitor.waitUntilOnline()) {
-            val port = proxyMonitor.localPort
+        if (proxyPoolMonitor.waitUntilOnline()) {
+            val port = proxyPoolMonitor.localPort
             if (port > 0) {
                 // TODO: proxy connector can be run at another host
-                proxyEntry = proxyMonitor.currentProxyEntry
-                hostPort = "127.0.0.1:${proxyMonitor.localPort}"
+                proxyEntry = proxyPoolMonitor.currentProxyEntry
+                hostPort = if (useForwardServer) {
+                    "127.0.0.1:${proxyPoolMonitor.localPort}"
+                } else {
+                    log.info("Use external proxy directly | {}", proxyEntry)
+                    proxyEntry?.hostPort
+                }
             } else {
                 log.info("Invalid port for proxy connector, proxy is disabled")
             }
         }
-
-        if (hostPort == null) {
-            return null
-        }
-
-//        if (hostPort == null) {
-//            // internal proxy server is not available, set proxy to the browser directly
-//            proxyEntry = proxyManager.proxyPool.poll()
-//            hostPort = proxyEntry?.hostPort
-//        }
 
         proxy.httpProxy = hostPort
         proxy.sslProxy = hostPort

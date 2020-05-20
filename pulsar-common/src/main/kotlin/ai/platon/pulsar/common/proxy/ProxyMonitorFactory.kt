@@ -8,24 +8,24 @@ import java.util.concurrent.atomic.AtomicReference
 class ProxyMonitorFactory(val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(ProxyMonitorFactory::class.java)
 
-    private val proxyMonitor = AtomicReference<ProxyMonitor>()
-    fun get(): ProxyMonitor = createIfAbsent(conf)
+    private val proxyMonitor = AtomicReference<ProxyPoolMonitor>()
+    fun get(): ProxyPoolMonitor = createIfAbsent(conf)
 
     override fun close() {
         proxyMonitor.getAndSet(null)?.use { it.close() }
     }
 
-    private fun createIfAbsent(conf: ImmutableConfig): ProxyMonitor {
+    private fun createIfAbsent(conf: ImmutableConfig): ProxyPoolMonitor {
         if (proxyMonitor.get() == null) {
             synchronized(ProxyMonitorFactory::class) {
                 if (proxyMonitor.get() == null) {
                     val clazz = try {
-                        conf.getClass(PROXY_MANAGER_CLASS, ProxyMonitor::class.java)
+                        conf.getClass(PROXY_MANAGER_CLASS, ProxyPoolMonitor::class.java)
                     } catch (e: Exception) {
                         log.warn("Proxy manager {} is not found, use default", PROXY_MANAGER_CLASS)
-                        ProxyMonitor::class.java
+                        ProxyPoolMonitor::class.java
                     }
-                    proxyMonitor.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyMonitor)
+                    proxyMonitor.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyPoolMonitor)
                     proxyMonitor.get().start()
                 }
             }
