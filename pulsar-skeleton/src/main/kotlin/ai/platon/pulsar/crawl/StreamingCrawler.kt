@@ -48,6 +48,8 @@ open class StreamingCrawler(
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(5)
 
+    var onLoadComplete: (WebPage) -> Unit = {}
+
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
@@ -105,6 +107,7 @@ open class StreamingCrawler(
                                 .onFailure { exception = it; log.warn("Load failed - $it") }
                                 .getOrNull()
                                 ?.also { pageCollector?.add(it) }
+                        page?.let(onLoadComplete)
                         numRunningTasks.decrementAndGet()
                     }
                 }

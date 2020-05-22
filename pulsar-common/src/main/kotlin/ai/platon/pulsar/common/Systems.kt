@@ -59,6 +59,12 @@ object Systems {
         }
     }
 
+    fun setPropertyIfAbsent(key: String, value: Any) {
+        if (System.getProperty(key) == null) {
+            System.setProperty(key, value.toString())
+        }
+    }
+
     fun getProperty(name: String, defaultValue: String): String = System.getProperty(name, defaultValue)
 
     fun getProperty(name: String, defaultValue: Long, minValue: Long = 1, maxValue: Long = Long.MAX_VALUE): Long {

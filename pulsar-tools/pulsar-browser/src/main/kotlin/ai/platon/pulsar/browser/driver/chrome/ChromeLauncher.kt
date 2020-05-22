@@ -55,12 +55,6 @@ annotation class ChromeParameter(val value: String)
 class ChromeDevtoolsOptions(
         @ChromeParameter("headless")
         var headless: Boolean = true,
-        @ChromeParameter("remote-debugging-port")
-        var remoteDebuggingPort: Int = 0,
-        @ChromeParameter("no-default-browser-check")
-        var noDefaultBrowserCheck: Boolean = true,
-        @ChromeParameter("no-first-run")
-        var noFirstRun: Boolean = true,
         @ChromeParameter(ARG_USER_DATA_DIR)
         var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("incognito")
@@ -71,6 +65,12 @@ class ChromeDevtoolsOptions(
         var disableGpu: Boolean = true,
         @ChromeParameter("hide-scrollbars")
         var hideScrollbars: Boolean = true,
+        @ChromeParameter("remote-debugging-port")
+        var remoteDebuggingPort: Int = 0,
+        @ChromeParameter("no-default-browser-check")
+        var noDefaultBrowserCheck: Boolean = true,
+        @ChromeParameter("no-first-run")
+        var noFirstRun: Boolean = true,
         @ChromeParameter("mute-audio")
         var muteAudio: Boolean = true,
         @ChromeParameter("disable-background-networking")
@@ -157,13 +157,19 @@ class ChromeDevtoolsOptions(
 }
 
 class ProcessLauncher {
+    private val log = LoggerFactory.getLogger(ProcessLauncher::class.java)
+
     @Throws(IOException::class)
     fun launch(program: String, args: List<String>): Process {
-        val arguments = mutableListOf<String>().apply { add(program); addAll(args) }
+        val command = mutableListOf<String>().apply { add(program); addAll(args) }
         val processBuilder = ProcessBuilder()
-                .command(arguments)
+                .command(command)
                 .redirectErrorStream(true)
                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
+
+        log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
+            Strings.doubleQuoteIfContainsWhitespace(it)
+        })
         return processBuilder.start()
     }
 }
@@ -219,12 +225,12 @@ class ChromeLauncher(
         val process = chromeProcess?:return
         chromeProcess = null
         if (process.isAlive) {
-            destroyChrome(process)
+            destroyProcess(process)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
         }
     }
 
-    private fun destroyChrome(process: Process) {
+    private fun destroyProcess(process: Process) {
         process.destroy()
         try {
             if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
@@ -275,13 +281,24 @@ class ChromeLauncher(
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
         val program = if (chromeOptions.xvfb) "xvfb-run" else "$chromeBinary"
-        val arguments = chromeOptions.toList().toMutableList()
-        arguments.takeIf { chromeOptions.xvfb }?.add(0, chromeBinary.toString())
+        val arguments = mutableListOf<String>()
+        if (chromeOptions.xvfb) {
+            // TODO: processes do not exist properly, run xvfb-run using bash instead, e.g. xvfb-run bin/pulsar
+            arguments.add(0, "$chromeBinary")
+            val XVFB_ARGS = listOf(
+                    "-a",
+                    "-e", "/dev/stdout",
+                    "-s", "-screen 0 1920x1080x24"
+            )
+            arguments.addAll(0, XVFB_ARGS)
+            arguments.add("--no-sandbox")
+            arguments.add("--disable-setuid-sandbox")
+        }
+        arguments.addAll(chromeOptions.toList())
 
-        log.info("Launching chrome:\n{} {}", program, arguments.joinToString(" ") { it })
         return try {
-            chromeProcess = processLauncher.launch(program, arguments)
             shutdownHookRegistry.register(shutdownHookThread)
+            chromeProcess = processLauncher.launch(program, arguments)
             waitForDevToolsServer(chromeProcess!!)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
@@ -303,19 +320,19 @@ class ChromeLauncher(
     @Throws(ChromeProcessTimeoutException::class)
     private fun waitForDevToolsServer(process: Process): Int {
         var port = 0
-        val chromeOutput = StringBuilder()
+        val processOutput = StringBuilder()
         val readLineThread = Thread {
             BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
                 // Wait for DevTools listening line and extract port number.
                 var line: String
                 while (reader.readLine().also { line = it } != null) {
-                    if (line.isNotBlank()) log.info(line)
+                    log.takeIf { line.isNotBlank() }?.info("[output] - $line")
                     val matcher = DEVTOOLS_LISTENING_LINE_PATTERN.matcher(line)
                     if (matcher.find()) {
                         port = matcher.group(1).toInt()
                         break
                     }
-                    chromeOutput.appendln(line)
+                    processOutput.appendln(line)
                 }
             }
         }
@@ -323,9 +340,11 @@ class ChromeLauncher(
 
         try {
             readLineThread.join(config.startupWaitTime.toMillis())
+
             if (port == 0) {
                 close(readLineThread)
-                throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start. Chrome output: \n>>>$chromeOutput")
+                log.info("Process output:>>>\n$processOutput\n<<<")
+                throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
             close(readLineThread)

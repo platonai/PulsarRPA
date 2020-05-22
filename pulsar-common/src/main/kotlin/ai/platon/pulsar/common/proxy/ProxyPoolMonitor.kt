@@ -32,7 +32,7 @@ open class ProxyPoolMonitor(
     var initialDelay = Duration.ofSeconds(15)
     var watchInterval: Duration = Duration.ofSeconds(5)
     var lastActiveTime = Instant.now()
-    var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(15))
+    var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(10))
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     open val isIdle get() = (numRunningTasks.get() == 0 && idleTime > idleTimeout) || isForceIdle
 

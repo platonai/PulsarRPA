@@ -243,7 +243,7 @@ public interface CapabilityTypes {
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.no.proxy.exception";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
-    String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
+    String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";
     String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
     String PROXY_ENABLE_LOCAL_FORWARD_SERVER = "proxy.enable.local.forward.server";
     String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";

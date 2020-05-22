@@ -628,6 +628,11 @@ public final class Strings {
         return sb.reverse().toString();
     }
 
+    public static String doubleQuoteIfContainsWhitespace(String s) {
+        if (StringUtils.containsWhitespace(s)) return "\"" + s + "\"";
+        else return s;
+    }
+
     public static String readableBytes(long bytes) {
         return readableBytes(bytes, -1, false);
     }
