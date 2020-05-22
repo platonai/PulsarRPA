@@ -21,6 +21,8 @@ class WebDriverFactory(
     private val log = LoggerFactory.getLogger(WebDriverFactory::class.java)
     private val defaultWebDriverClass = conf.getClass(
             CapabilityTypes.BROWSER_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
+    private val localForwardServerEnabled =
+            conf.getBoolean(CapabilityTypes.PROXY_ENABLE_LOCAL_FORWARD_SERVER, false)
 
     /**
      * Create a RemoteWebDriver
@@ -76,20 +78,12 @@ class WebDriverFactory(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
         val proxy = org.openqa.selenium.Proxy()
-        val useForwardServer = conf.getBoolean(CapabilityTypes.PROXY_USE_FORWARD_SERVER, true)
 
-        // TODO: handle no proxy exception
         if (proxyPoolMonitor.waitUntilOnline()) {
             val port = proxyPoolMonitor.localPort
             if (port > 0) {
-                // TODO: proxy connector can be run at another host
                 proxyEntry = proxyPoolMonitor.currentProxyEntry
-                hostPort = if (useForwardServer) {
-                    "127.0.0.1:${proxyPoolMonitor.localPort}"
-                } else {
-                    log.info("Use external proxy directly | {}", proxyEntry)
-                    proxyEntry?.hostPort
-                }
+                hostPort = "127.0.0.1:${proxyPoolMonitor.localPort}".takeIf { localForwardServerEnabled }?:proxyEntry?.hostPort
             } else {
                 log.info("Invalid port for proxy connector, proxy is disabled")
             }

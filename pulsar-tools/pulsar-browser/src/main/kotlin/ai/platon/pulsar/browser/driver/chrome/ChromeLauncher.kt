@@ -34,17 +34,15 @@ class LauncherConfig {
         val THREAD_JOIN_WAIT_TIME = Duration.ofSeconds(5)
 
         val CHROME_BINARY_SEARCH_PATHS = arrayOf(
-                "/mnt/data/workspace/chromium/src/out/Release/chrome",
-                "/mnt/data/workspace/chromium/src/out/Default/chrome",
-                "/usr/bin/chromium",
-                "/usr/bin/chromium-browser",
                 "/usr/bin/google-chrome-stable",
                 "/usr/bin/google-chrome",
                 "/opt/google/chrome/chrome",
-                "/Applications/Chromium.app/Contents/MacOS/Chromium",
+                "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
                 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
                 "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-                "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+                "/Applications/Chromium.app/Contents/MacOS/Chromium",
+                "/usr/bin/chromium",
+                "/usr/bin/chromium-browser"
         )
     }
 }
@@ -102,6 +100,8 @@ class ChromeDevtoolsOptions(
         @ChromeParameter("ignore-certificate-errors")
         var ignoreCertificateErrors: Boolean = true
 ) {
+    var xvfb = false
+
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 
     fun addArguments(key: String, value: String? = null): ChromeDevtoolsOptions {
@@ -232,6 +232,8 @@ class ChromeLauncher(
                 process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
             }
 
+            cleanUp()
+
             log.info("Chrome processes are exit")
         } catch (e: InterruptedException) {
             log.error("Interrupted while waiting for chrome process to shutdown", e)
@@ -272,12 +274,14 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class)
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
-        shutdownHookRegistry.register(shutdownHookThread)
-        val arguments = chromeOptions.toList()
+        val program = if (chromeOptions.xvfb) "xvfb-run" else "$chromeBinary"
+        val arguments = chromeOptions.toList().toMutableList()
+        arguments.takeIf { chromeOptions.xvfb }?.add(0, chromeBinary.toString())
 
-        log.info("Launching chrome:\n{} {}", chromeBinary, arguments.joinToString(" ") { it })
+        log.info("Launching chrome:\n{} {}", program, arguments.joinToString(" ") { it })
         return try {
-            chromeProcess = processLauncher.launch(chromeBinary.toString(), arguments)
+            chromeProcess = processLauncher.launch(program, arguments)
+            shutdownHookRegistry.register(shutdownHookThread)
             waitForDevToolsServer(chromeProcess!!)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
@@ -345,14 +349,14 @@ class ChromeLauncher(
                 it.lock()
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
-                    log.info("User data dir does not exist | {}", userDataDir)
+                    log.info("User data dir does not exist, copy from backup | {} <- {}", userDataDir, backupUserDataDir)
                     FileUtils.copyDirectory(backupUserDataDir.toFile(), userDataDir.toFile())
-                }
-
-                Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
-                FileUtils.deleteDirectory(userDataDir.resolve("Default/Local Storage/leveldb").toFile())
-                arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
-                    Files.copy(backupUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+                } else {
+                    Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
+                    FileUtils.deleteDirectory(userDataDir.resolve("Default/Local Storage/leveldb").toFile())
+                    arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
+                        Files.copy(backupUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+                    }
                 }
             }
         }
@@ -363,13 +367,14 @@ class ChromeLauncher(
             // wait for 1 second to hope every thing is clean
             Thread.sleep(1000)
 
-            FileUtils.deleteQuietly(userDataDir.toFile())
-            if (Files.exists(userDataDir)) {
-                log.warn("Failed to delete browser data, try again | {}", userDataDir)
-                forceDeleteDirectory(userDataDir)
+            val target = userDataDir.resolve("Cache")
+            FileUtils.deleteQuietly(target.toFile())
+            if (Files.exists(target)) {
+                log.warn("Failed to delete browser cache, try again | {}", target)
+                forceDeleteDirectory(target)
 
-                if (Files.exists(userDataDir)) {
-                    log.error("Can not delete browser data | {}", userDataDir)
+                if (Files.exists(target)) {
+                    log.error("Can not delete browser cache | {}", target)
                 }
             }
         }
@@ -381,7 +386,8 @@ class ChromeLauncher(
     private fun forceDeleteDirectory(dirToDelete: Path) {
         // TODO: delete data only if they contain privacy data, cookies, sessions, local storage, etc
         synchronized(ChromeLauncher::class.java) {
-            val lock = dirToDelete.parent.resolve("${dirToDelete.fileName}.lock")
+            // TODO: should use a better file lock
+            val lock = AppPaths.BROWSER_TMP_DIR_LOCK
 
             val maxTry = 10
             var i = 0

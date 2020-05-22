@@ -3,10 +3,6 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeLaunchException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
-import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
@@ -75,6 +71,8 @@ class ChromeDevtoolsDriver(
     var scriptTimeout = browserControl.scriptTimeout
     var scrollDownCount = browserControl.scrollDownCount
     var scrollInterval = browserControl.scrollInterval
+    // TODO: load blocking rules from config files
+    var enableUrlBlocking = browserControl.enableUrlBlocking
 
     private var tab: ChromeTab
     private var devTools: RemoteDevTools
@@ -89,8 +87,6 @@ class ChromeDevtoolsDriver(
     private val runtime get() = devTools.runtime
     private val emulation get() = devTools.emulation
 
-    // TODO: load blocking rules from config files
-    private val enableUrlBlocking = Systems.getProperty(CapabilityTypes.BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING, false)
     private val enableBlockingReport = false
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
@@ -128,57 +124,6 @@ class ChromeDevtoolsDriver(
     @Throws(NoSuchSessionException::class)
     override fun get(url: String) {
         takeIf { browserControl.jsInvadingEnabled }?.getInvaded(url)?:getNoInvaded(url)
-    }
-
-    @Throws(NoSuchSessionException::class)
-    fun getInvaded(url: String) {
-        if (isGone) return
-
-        try {
-            page.addScriptToEvaluateOnNewDocument(clientLibJs)
-//        page.onDomContentEventFired { event: DomContentEventFired ->
-//            // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
-//            // runtime.evaluate("__utils__.checkPulsarStatus()")
-//        }
-//
-//        page.onLoadEventFired { event: LoadEventFired ->
-//            simulate()
-//        }
-
-            // block urls by url pattern
-//            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
-//            }
-
-            page.enable()
-
-            // NOTE: There are too many network relative traffic, especially when the proxy is disabled
-            // TODO: Find out the reason why there are too many network relative traffic, especially when the proxy is disabled
-            if (enableUrlBlocking) {
-                setupUrlBlocking()
-                network.enable()
-            }
-//            fetch.enable()
-
-            navigateUrl = url
-            page.navigate(url)
-        } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
-        }
-    }
-
-    @Throws(NoSuchSessionException::class)
-    fun getNoInvaded(url: String) {
-        if (isGone) return
-
-        try {
-            page.enable()
-            navigateUrl = url
-            page.navigate(url)
-        } catch (e: ChromeDevToolsInvocationException) {
-            numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
-        }
     }
 
     @Throws(NoSuchSessionException::class)
@@ -323,6 +268,57 @@ class ChromeDevtoolsDriver(
         if (closed.compareAndSet(false, true)) {
             devTools.use { it.close() }
             numInstances.decrementAndGet()
+        }
+    }
+
+    @Throws(NoSuchSessionException::class)
+    private fun getInvaded(url: String) {
+        if (isGone) return
+
+        try {
+            page.addScriptToEvaluateOnNewDocument(clientLibJs)
+//        page.onDomContentEventFired { event: DomContentEventFired ->
+//            // The page's main html content is ready, but css/js are not ready, document.readyState === 'interactive'
+//            // runtime.evaluate("__utils__.checkPulsarStatus()")
+//        }
+//
+//        page.onLoadEventFired { event: LoadEventFired ->
+//            simulate()
+//        }
+
+            // block urls by url pattern
+//            if ("imagesEnabled" in launchOptions.additionalArguments.keys) {
+//            }
+
+            page.enable()
+
+            // NOTE: There are too many network relative traffic, especially when the proxy is disabled
+            // TODO: Find out the reason why there are too many network relative traffic, especially when the proxy is disabled
+            if (enableUrlBlocking) {
+                setupUrlBlocking()
+                network.enable()
+            }
+//            fetch.enable()
+
+            navigateUrl = url
+            page.navigate(url)
+        } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
+        }
+    }
+
+    @Throws(NoSuchSessionException::class)
+    private fun getNoInvaded(url: String) {
+        if (isGone) return
+
+        try {
+            page.enable()
+            navigateUrl = url
+            page.navigate(url)
+        } catch (e: ChromeDevToolsInvocationException) {
+            numSessionLost.incrementAndGet()
+            throw NoSuchSessionException(e.message)
         }
     }
 

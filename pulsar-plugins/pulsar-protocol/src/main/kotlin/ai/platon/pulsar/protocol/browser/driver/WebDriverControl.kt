@@ -97,6 +97,7 @@ open class WebDriverControl(
 
         chromeOptions.headless = headless
         chromeOptions.userDataDir = userDataDir
+        chromeOptions.xvfb = xvfb
         chromeOptions.addArguments("window-size", formatViewPort())
 
         return chromeOptions

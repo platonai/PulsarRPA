@@ -226,11 +226,12 @@ public interface CapabilityTypes {
     String BROWSER_TYPE = "browser.type";
     String BROWSER_INCOGNITO = "browser.incognito";
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
+    String BROWSER_LAUNCH_WITH_XVFB = "browser.launch.with.xvfb";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_EMULATE_EVENT_HANDLER = "browser.emulate.event.handler";
-    String BROWSER_DEVTOOLS_ENABLE_URL_BLOCKING = "browser.devtools.enable.url.blocking";
+    String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_DATA_DIR = "browser.data.dir";
     /**
@@ -244,7 +245,7 @@ public interface CapabilityTypes {
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.internal.idle_timeout";
     String PROXY_ENABLE_DEFAULT_PROVIDERS = "proxy.enable.default.providers";
-    String PROXY_USE_FORWARD_SERVER = "proxy.enable.forward.server";
+    String PROXY_ENABLE_LOCAL_FORWARD_SERVER = "proxy.enable.local.forward.server";
     String PROXY_SERVER_BOSS_THREADS = "proxy.forward.server.boss.threads";
     String PROXY_SERVER_WORKER_THREADS = "proxy.forward.server.worker.threads";
 

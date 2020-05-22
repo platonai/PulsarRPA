@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
@@ -16,17 +15,16 @@ import com.codahale.metrics.SharedMetricRegistries
 import kotlinx.coroutines.*
 import oshi.SystemInfo
 import java.nio.file.Files
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
-import kotlin.random.Random
 
 open class StreamingCrawler(
         private val urls: Sequence<String>,
         private val options: LoadOptions = LoadOptions.create(),
         val pageCollector: MutableList<WebPage>? = null,
         session: PulsarSession = PulsarContext.createSession(),
-        autoClose: Boolean = true,
-        val conf: ImmutableConfig = session.sessionConfig
+        autoClose: Boolean = true
 ): Crawler(session, autoClose) {
     companion object {
         private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
@@ -39,6 +37,7 @@ open class StreamingCrawler(
         }
     }
 
+    private val conf = session.sessionConfig
     private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     private val privacyManager = session.context.getBean(PrivacyManager::class)
     private val isAppActive get() = isAlive
@@ -47,12 +46,12 @@ open class StreamingCrawler(
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
     private val numTasks = AtomicInteger()
+    private val taskTimeout = Duration.ofMinutes(5)
 
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
                 numTasks.incrementAndGet()
-                // log.info("$j.\t$url")
 
                 var k = 0
                 while (isAppActive && privacyManager.activeContext.isLeaked) {
@@ -74,20 +73,22 @@ open class StreamingCrawler(
                 }
 
                 while (isAppActive && numRunningTasks.get() >= concurrency) {
-                    Thread.sleep(200)
+                    delay(1000)
                 }
 
                 val memoryRemaining = availableMemory - requiredMemory
                 while (isAppActive && memoryRemaining < 0) {
-                    if (j % 10 == 0) {
+                    if (j % 20 == 0) {
                         log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
                                 numRunningTasks,
                                 Strings.readableBytes(availableMemory),
                                 Strings.readableBytes(requiredMemory),
                                 Strings.readableBytes(abs(memoryRemaining))
                         )
+                        session.context.clearCache()
+                        System.gc()
                     }
-                    Thread.sleep(1000)
+                    delay(1000)
                 }
 
                 if (!isAppActive) {
@@ -99,11 +100,13 @@ open class StreamingCrawler(
                 numRunningTasks.incrementAndGet()
                 val context = Dispatchers.Default + CoroutineName("w")
                 launch(context) {
-                    page = session.runCatching { loadDeferred(url, options) }
-                            .onFailure { exception = it; log.warn("Load failed - $it") }
-                            .getOrNull()
-                            ?.also { pageCollector?.add(it) }
-                    numRunningTasks.decrementAndGet()
+                    withTimeout(taskTimeout.toMillis()) {
+                        page = session.runCatching { loadDeferred(url, options) }
+                                .onFailure { exception = it; log.warn("Load failed - $it") }
+                                .getOrNull()
+                                ?.also { pageCollector?.add(it) }
+                        numRunningTasks.decrementAndGet()
+                    }
                 }
 
                 if (exception is ProxyVendorUntrustedException) {

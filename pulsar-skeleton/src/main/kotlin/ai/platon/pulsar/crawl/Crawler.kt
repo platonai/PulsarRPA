@@ -16,8 +16,10 @@ open class Crawler(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            session.use { it.close() }
-            // PulsarEnv.shutdown()
+            if (autoClose) {
+                session.use { it.close() }
+                // PulsarEnv.shutdown()
+            }
         }
     }
 }

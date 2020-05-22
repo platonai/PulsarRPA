@@ -251,25 +251,18 @@ open class FetchComponent(
     companion object {
         private val log = LoggerFactory.getLogger(FetchComponent::class.java)
 
-        @JvmStatic
         fun updateStatus(page: WebPage, protocolStatus: ProtocolStatus, crawlStatus: CrawlStatus) {
             page.crawlStatus = crawlStatus
             page.protocolStatus = protocolStatus
             page.increaseFetchCount()
         }
 
-        @JvmStatic
         fun updateMarks(page: WebPage) {
             val marks = page.marks
             marks.putIfNotNull(Mark.FETCH, marks[Mark.GENERATE])
         }
 
-        @JvmStatic
-        fun updateContent(page: WebPage, pageDatum: PageDatum) {
-            updateContent0(page, pageDatum, null)
-        }
-
-        private fun updateContent0(page: WebPage, pageDatum: PageDatum, contentTypeHint: String?) {
+        fun updateContent(page: WebPage, pageDatum: PageDatum, contentTypeHint: String? = null) {
             var contentType = contentTypeHint
 
             page.setContent(pageDatum.content)
@@ -286,8 +279,6 @@ open class FetchComponent(
             }
         }
 
-        @JvmStatic
-        @JvmOverloads
         fun updateFetchTime(page: WebPage, newFetchTime: Instant = Instant.now()) {
             page.prevFetchTime = page.fetchTime
             page.fetchTime = newFetchTime
