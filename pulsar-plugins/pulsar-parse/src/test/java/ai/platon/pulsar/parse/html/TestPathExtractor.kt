@@ -24,6 +24,7 @@ import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupUtils
 import ai.platon.pulsar.crawl.parse.html.ParseContext
+import ai.platon.pulsar.parse.html.filters.PathExtractor
 import ai.platon.pulsar.persist.model.FieldGroupFormatter
 import org.jsoup.Jsoup
 import org.junit.Ignore
@@ -39,7 +40,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @RunWith(SpringJUnit4ClassRunner::class)
-class TestPrimerExtractor : HtmlParserTestBase() {
+class TestPathExtractor : HtmlParserTestBase() {
     @Test
     @Throws(ParseException::class, IOException::class)
     fun testJsoupSelector() {
@@ -74,7 +75,7 @@ class TestPrimerExtractor : HtmlParserTestBase() {
         val baseUrl = "http://news.example.com/selector/1/pages/html_example_3_news.html"
         val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
         page.options = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
-        val filter = PrimerExtractor(MetricsCounters(), conf)
+        val filter = PathExtractor(MetricsCounters(), conf)
         val parseResult = ParseResult()
         val parseContext = ParseContext(page, parseResult)
 
@@ -108,7 +109,7 @@ class TestPrimerExtractor : HtmlParserTestBase() {
 
         val parseResult = ParseResult()
         val parseContext = ParseContext(page, parseResult)
-        val extractor = PrimerExtractor(MetricsCounters(), conf)
+        val extractor = PathExtractor(MetricsCounters(), conf)
         extractor.filter(parseContext)
         assertTrue(parseResult.isParsed)
         assertTrue(parseResult.isSuccess)

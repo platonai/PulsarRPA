@@ -24,7 +24,7 @@ class JsoupParser(
 ) : EntityOptions.Builder() {
     var document = FeaturedDocument.NIL
         private set
-    private val entities = mutableListOf<FieldCollection>()
+    private val entities = mutableListOf<OpenMapFields>()
 
     fun parse(): FeaturedDocument {
         if (page.encoding == null) {
@@ -48,7 +48,7 @@ class JsoupParser(
      */
     @JvmOverloads
     @Throws(IOException::class)
-    fun extractAll(options: EntityOptions = build()): List<FieldCollection> {
+    fun extractAll(options: EntityOptions = build()): List<OpenMapFields> {
         if (!options.hasRules()) {
             // No rules
             return entities
@@ -67,8 +67,8 @@ class JsoupParser(
      * Parse entity
      */
     @JvmOverloads
-    fun extract(options: EntityOptions = build()): FieldCollection {
-        val fields = FieldCollection()
+    fun extract(options: EntityOptions = build()): OpenMapFields {
+        val fields = OpenMapFields()
         if (document.document.isNil) {
             return fields
         }
@@ -82,7 +82,7 @@ class JsoupParser(
     /**
      * Parse sub entity collection
      */
-    fun extract(rules: CollectionOptions): List<FieldCollection> {
+    fun extract(rules: CollectionOptions): List<OpenMapFields> {
         if (document.document.isNil) {
             return listOf()
         }
@@ -92,7 +92,7 @@ class JsoupParser(
         // Parse fields for sub entity collection
         val elements = query(rules.item, root)
         for ((i, ele) in elements.withIndex()) {
-            val fields = FieldCollection()
+            val fields = OpenMapFields()
             fields.name = "sub_" + (i + 1)
             rules.cssRules.forEach { (key: String, value: String) -> extract(key, value, ele, fields) }
             entities.add(fields)
@@ -106,7 +106,7 @@ class JsoupParser(
         /**
          * Apply css selector
          */
-        fun extract(name: String, selector: String, root: Element, fields: FieldCollection) {
+        fun extract(name: String, selector: String, root: Element, fields: OpenMapFields) {
             var s = selector
             var required = true
             if (s.endsWith("?")) {

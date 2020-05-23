@@ -27,7 +27,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -43,12 +42,16 @@ class ParseComponent(
 ) {
     private val report = ConcurrentHashMap<String, Any>()
 
-    @JvmOverloads
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = false): ParseResult {
         return parse(page, "", reparseLinks, noLinkFilter)
     }
 
     fun parse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean): ParseResult {
+        beforeParse(page, query, reparseLinks, noLinkFilter)
+        return pageParser.parse(page).also { afterParse(page) }
+    }
+
+    private fun beforeParse(page: WebPage, query: String?, reparseLinks: Boolean, noLinkFilter: Boolean) {
         if (reparseLinks) {
             page.variables[Name.FORCE_FOLLOW] = AppConstants.YES_STRING
             page.variables[Name.REPARSE_LINKS] = AppConstants.YES_STRING
@@ -61,12 +64,14 @@ class ParseComponent(
             page.query = query
         }
         report.clear()
-        val parseResult = pageParser.parse(page)
+    }
+
+    private fun afterParse(page: WebPage) {
         page.variables.remove(Name.REPARSE_LINKS)
         page.variables.remove(Name.FORCE_FOLLOW)
         page.variables.remove(Name.PARSE_LINK_FILTER_DEBUG_LEVEL)
         page.variables.remove(Name.PARSE_NO_LINK_FILTER)
-        return parseResult
+        page.query = null
     }
 
     fun getReport(): Map<String, Any> {

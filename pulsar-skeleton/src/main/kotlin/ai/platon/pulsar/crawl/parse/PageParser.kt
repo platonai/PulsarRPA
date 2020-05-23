@@ -19,9 +19,9 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.MetricsCounters
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -165,19 +165,15 @@ class PageParser(
     @Throws(ParseException::class)
     private fun applyParsers(page: WebPage): ParseResult {
         var parseResult = ParseResult()
-
         val parsers = parserFactory.getParsers(page.contentType, page.url)
 
         for (parser in parsers) {
-            parseResult = if (executorService != null) {
-                runParser(parser, page)
-            } else {
-                parser.parse(page)
-            }
+            parseResult = takeIf { executorService != null }?.runParser(parser, page)?:parser.parse(page)
             parseResult.parser = parser
 
             // Found a suitable parser and successfully parsed
             if (parseResult.isSuccess) {
+                // TODO: use FlowState
                 break
             }
         }
@@ -185,6 +181,9 @@ class PageParser(
         return parseResult
     }
 
+    /**
+     * TODO: use coroutine instead
+     * */
     private fun runParser(p: Parser, page: WebPage): ParseResult {
         var parseResult = ParseResult()
         val executor = executorService?:return parseResult

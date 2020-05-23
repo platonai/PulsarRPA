@@ -431,6 +431,5 @@ class PrimerParser(conf: ImmutableConfig) {
         override fun toString(): String {
             return "LP[el=$elName,attr=$attrName,len=$childLen]"
         }
-
     }
 }

@@ -36,13 +36,13 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.BoilerpipeFilter">
+    <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.filters.BoilerpipeExtractor">
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="extractorFilter" class="ai.platon.pulsar.parse.html.PrimerExtractor">
+    <bean id="pathExtractor" class="ai.platon.pulsar.parse.html.filters.PathExtractor">
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -51,7 +51,7 @@
             <list>
 <!--                <ref bean="jsParseFilter" />-->
 <!--                <ref bean="boilerpipeFilter" />-->
-                <ref bean="extractorFilter" />
+                <ref bean="pathExtractor" />
             </list>
         </constructor-arg>
         <constructor-arg ref="conf"/>

@@ -424,9 +424,7 @@ class LoadComponent(
 
         if (options.parse) {
             val parseResult = parseComponent.parse(page,
-                    options.query,
-                    options.reparseLinks,
-                    options.noFilter)
+                    options.query, options.reparseLinks, options.noFilter)
             if (log.isTraceEnabled) {
                 log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getReport())
             }

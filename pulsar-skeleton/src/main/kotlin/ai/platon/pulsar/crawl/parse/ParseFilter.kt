@@ -27,9 +27,11 @@ import org.slf4j.LoggerFactory
  * to parses provided by the html or tika plugins. All plugins found which
  * implement this extension point are run sequentially on the parse.
  */
-interface ParseFilter : Parameterized {
+interface ParseFilter : Parameterized, AutoCloseable {
     /**
      * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
      */
     fun filter(parseContext: ParseContext)
+
+    override fun close() {}
 }

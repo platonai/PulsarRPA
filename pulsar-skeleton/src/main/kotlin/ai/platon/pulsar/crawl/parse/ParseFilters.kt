@@ -26,8 +26,10 @@ import org.slf4j.LoggerFactory
 /**
  * Creates and caches [ParseFilter] implementing plugins.
  */
-class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfig) {
+class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig) {
     private val log = LoggerFactory.getLogger(ParseFilters::class.java)
+
+    val parseFilters = initParseFilters.toMutableList()
 
     /**
      * Run all defined filters.
@@ -37,7 +39,7 @@ class ParseFilters(val parseFilters: List<ParseFilter>, val conf: ImmutableConfi
         parseFilters.forEach {
             val shouldContinue = filterSilence(it, parseContext)
             if (!shouldContinue) {
-                return@forEach
+                return
             }
         }
     }

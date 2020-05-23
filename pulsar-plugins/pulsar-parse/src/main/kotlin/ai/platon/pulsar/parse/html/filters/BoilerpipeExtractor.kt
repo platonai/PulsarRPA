@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.parse.html
+package ai.platon.pulsar.parse.html.filters
 
 import ai.platon.pulsar.boilerpipe.document.TextDocument
 import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor
@@ -33,8 +33,8 @@ import org.apache.commons.logging.LogFactory
 /**
  * Parse html document into fields
  */
-class BoilerpipeFilter(val conf: ImmutableConfig) : ParseFilter {
-    private val log = LogFactory.getLog(BoilerpipeFilter::class.java.name)
+class BoilerpipeExtractor(val conf: ImmutableConfig) : ParseFilter {
+    private val log = LogFactory.getLog(BoilerpipeExtractor::class.java.name)
 
     private val primerParser = PrimerParser(conf)
 

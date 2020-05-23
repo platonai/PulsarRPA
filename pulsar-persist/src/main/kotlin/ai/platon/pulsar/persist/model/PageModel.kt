@@ -13,8 +13,7 @@ import org.apache.commons.collections4.CollectionUtils
 class PageModel(
         private val fieldGroups: MutableList<GFieldGroup>
 ) {
-    val isEmpty: Boolean
-        get() = fieldGroups.isEmpty()
+    val isEmpty: Boolean get() = fieldGroups.isEmpty()
 
     val isNotEmpty: Boolean get() = !isEmpty
 
@@ -38,16 +37,16 @@ class PageModel(
         return fieldGroups.add(fieldGroup.unbox())
     }
 
-    fun add(i: Int, fieldGroup: FieldGroup) {
-        fieldGroups.add(i, fieldGroup.unbox())
+    fun add(index: Int, fieldGroup: FieldGroup) {
+        fieldGroups.add(index, fieldGroup.unbox())
     }
 
-    fun emplace(id: Int, group: String, fields: Map<String, String>): FieldGroup {
-        return emplace(id, 0, group, fields)
+    fun emplace(groupId: Int, group: String, fields: Map<String, String>): FieldGroup {
+        return emplace(groupId, 0, group, fields)
     }
 
-    fun emplace(id: Int, parentId: Int, group: String, fields: Map<String, String>): FieldGroup {
-        val fieldGroup = FieldGroup.newFieldGroup(id.toLong(), group, parentId.toLong())
+    fun emplace(groupId: Int, parentId: Int, group: String, fields: Map<String, String>): FieldGroup {
+        val fieldGroup = FieldGroup.newFieldGroup(groupId.toLong(), group, parentId.toLong())
         fieldGroup.fields = fields
         add(fieldGroup)
         return fieldGroup

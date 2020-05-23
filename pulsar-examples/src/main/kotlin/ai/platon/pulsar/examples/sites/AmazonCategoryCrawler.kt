@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.examples.common.Crawler
 
-class AmazonCategories: Crawler() {
+class AmazonCategoryCrawler: Crawler() {
     private val url = "https://www.amazon.com/"
     private val siteDirectory = "https://www.amazon.com/gp/site-directory?ref_=nav_em_T1_0_2_2_35__fullstore"
     private val loadOptions = LoadOptions.parse("-i 1s")
@@ -42,7 +42,7 @@ class AmazonCategories: Crawler() {
 }
 
 fun main() {
-    AmazonCategories().use {
+    AmazonCategoryCrawler().use {
         it.collectFromSiteDirectory()
     }
 }

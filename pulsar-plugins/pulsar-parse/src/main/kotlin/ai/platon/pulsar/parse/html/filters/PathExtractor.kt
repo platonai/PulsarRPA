@@ -1,4 +1,4 @@
-package ai.platon.pulsar.parse.html
+package ai.platon.pulsar.parse.html.filters
 
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory
  *
  * Selector filter, Css selector, XPath selector and Scent selectors are supported
  */
-class PrimerExtractor(
+class PathExtractor(
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
 ) : ParseFilter {
@@ -33,7 +33,7 @@ class PrimerExtractor(
         init { MetricsCounters.register(Counter::class.java) }
     }
 
-    private var log = LoggerFactory.getLogger(PrimerExtractor::class.java)
+    private var log = LoggerFactory.getLogger(PathExtractor::class.java)
 
     /**
      * Extract all fields in the page
@@ -48,11 +48,7 @@ class PrimerExtractor(
 
         parseResult.majorCode = ParseStatus.SUCCESS
 
-        var query = page.query
-        if (query == null) {
-            query = page.options.toString()
-        }
-
+        val query = page.query?:page.options.toString()
         val options = EntityOptions.parse(query)
         if (!options.hasRules()) {
             parseResult.minorCode = ParseStatus.SUCCESS_EXT
@@ -69,18 +65,18 @@ class PrimerExtractor(
         // We only save comments extracted from the current page
         // Comments appears in sub pages can not be read in this WebPage, they may be crawled as separated WebPages
         val pageModel = page.pageModel
-        var fieldCollection = fieldCollections[0]
-        val majorGroup = pageModel.emplace(1, 0, "selector", fieldCollection)
-        var loss = fieldCollection.loss
+        var fields = fieldCollections[0]
+        val majorGroup = pageModel.emplace(1, 0, "selector", fields.map)
+        var loss = fields.loss
 
         page.pageCounters.set(Self.missingFields, loss)
         metricsCounters.inc(Counter.brokenEntity, if (loss > 0) 1 else 0)
 
         var brokenSubEntity = 0
         for (i in 1 until fieldCollections.size) {
-            fieldCollection = fieldCollections[i]
-            pageModel.emplace(10000 + i, majorGroup.id.toInt(), "selector-sub", fieldCollection)
-            loss = fieldCollection.loss
+            fields = fieldCollections[i]
+            pageModel.emplace(10000 + i, majorGroup.id.toInt(), "selector-sub", fields.map)
+            loss = fields.loss
             if (loss > 0) {
                 ++brokenSubEntity
             }
@@ -116,7 +112,5 @@ class PrimerExtractor(
                 return@forEachElement
             }
         }
-
-
     }
 }

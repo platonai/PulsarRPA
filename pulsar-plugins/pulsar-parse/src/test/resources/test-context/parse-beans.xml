@@ -16,7 +16,7 @@
         <constructor-arg value="conf" />
     </bean>
 
-    <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.BoilerpipeFilter">
+    <bean id="boilerpipeFilter" class="ai.platon.pulsar.parse.html.filters.BoilerpipeExtractor">
         <constructor-arg ref="conf"/>
     </bean>
     <bean id="jsParseFilter" class="ai.platon.pulsar.parse.js.JSParseFilter">
