@@ -182,10 +182,16 @@ class ChromeLauncher(
 
     companion object {
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
+        const val XVFB = "xvfb-run"
+        val XVFB_ARGS = listOf(
+                "-a",
+                "-e", "/dev/stdout",
+                "-s", "-screen 0 1920x1080x24"
+        )
     }
 
     private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
-    private var chromeProcess: Process? = null
+    private var process: Process? = null
     private var userDataDir = AppPaths.CHROME_TMP_DIR
     private val shutdownHookThread = Thread { this.close() }
 
@@ -212,39 +218,21 @@ class ChromeLauncher(
         val path = System.getProperty(CapabilityTypes.BROWSER_CHROME_PATH)
         if (path != null) {
             return Paths.get(path).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
-                    ?:throw RuntimeException("CHROME_PATH is not executable | $path")
+                    ?: throw RuntimeException("CHROME_PATH is not executable | $path")
         }
 
         return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }
                 .firstOrNull { Files.isExecutable(it) }
                 ?.toAbsolutePath()
-                ?:throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
+                ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
     }
 
     override fun close() {
-        val process = chromeProcess?:return
-        chromeProcess = null
-        if (process.isAlive) {
-            destroyProcess(process)
+        val p = process ?: return
+        this.process = null
+        if (p.isAlive) {
+            destroyProcess(p)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-        }
-    }
-
-    private fun destroyProcess(process: Process) {
-        process.destroy()
-        try {
-            if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
-                process.destroyForcibly()
-                process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
-            }
-
-            cleanUp()
-
-            log.info("Chrome processes are exit")
-        } catch (e: InterruptedException) {
-            log.error("Interrupted while waiting for chrome process to shutdown", e)
-            process.destroyForcibly()
-        } finally {
         }
     }
 
@@ -255,8 +243,8 @@ class ChromeLauncher(
      * @throws [IllegalThreadStateException] if the subprocess has not yet terminated. [     ] If the process hasn't even started.
      */
     fun exitValue(): Int {
-        checkNotNull(chromeProcess) { "Chrome process has not been started" }
-        return chromeProcess!!.exitValue()
+        checkNotNull(process) { "Chrome process has not been started" }
+        return process!!.exitValue()
     }
 
     /**
@@ -265,7 +253,7 @@ class ChromeLauncher(
      * @return True if the subprocess has not yet terminated.
      * @throws IllegalThreadStateException if the subprocess has not yet terminated.
      */
-    val isAlive: Boolean get() = chromeProcess?.isAlive == true
+    val isAlive: Boolean get() = process?.isAlive == true
 
     /**
      * Launches a chrome process given a chrome binary and its arguments.
@@ -280,26 +268,16 @@ class ChromeLauncher(
     @Throws(ChromeProcessException::class)
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
-        val program = if (chromeOptions.xvfb) "xvfb-run" else "$chromeBinary"
-        val arguments = mutableListOf<String>()
-        if (chromeOptions.xvfb) {
-            // TODO: processes do not exist properly, run xvfb-run using bash instead, e.g. xvfb-run bin/pulsar
-            arguments.add(0, "$chromeBinary")
-            val XVFB_ARGS = listOf(
-                    "-a",
-                    "-e", "/dev/stdout",
-                    "-s", "-screen 0 1920x1080x24"
-            )
-            arguments.addAll(0, XVFB_ARGS)
-            arguments.add("--no-sandbox")
-            arguments.add("--disable-setuid-sandbox")
+        val xvfb = chromeOptions.xvfb
+        val program = if (xvfb) XVFB else "$chromeBinary"
+        val arguments = if (!xvfb) chromeOptions.toList() else {
+            XVFB_ARGS + arrayOf("$chromeBinary", "--no-sandbox", "--disable-setuid-sandbox") + chromeOptions.toList()
         }
-        arguments.addAll(chromeOptions.toList())
 
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
-            chromeProcess = processLauncher.launch(program, arguments)
-            waitForDevToolsServer(chromeProcess!!)
+            process = processLauncher.launch(program, arguments)
+            waitForDevToolsServer(process!!)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.
             shutdownHookRegistry.remove(shutdownHookThread)
@@ -352,6 +330,51 @@ class ChromeLauncher(
             throw RuntimeException("Interrupted while waiting for dev tools server", e)
         }
         return port
+    }
+
+    private fun destroyProcess(process: ProcessHandle) {
+        process.children().forEach { destroyProcess(it) }
+
+        val info = formatProcessInfo(process)
+        process.destroy()
+        if (process.isAlive) {
+            process.destroyForcibly()
+        }
+
+        log.info("Exit | {}", info)
+    }
+
+    private fun destroyProcess(process: Process) {
+        val info = formatProcessInfo(process.toHandle())
+
+        process.children().forEach { destroyProcess(it) }
+
+        process.destroy()
+        try {
+            if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
+                process.destroyForcibly()
+                process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
+            }
+            cleanUp()
+
+            log.info("Exit | {}", info)
+        } catch (e: InterruptedException) {
+            log.error("Interrupted while waiting for chrome process to shutdown", e)
+            process.destroyForcibly()
+        } finally {
+        }
+    }
+
+    private fun formatProcessInfo(process: ProcessHandle): String {
+        val info = process.info()
+        val user = info.user().orElse("")
+        val pid = process.pid()
+        val ppid = process.parent().orElseGet { null }?.pid()?:0
+        val startTime = info.startInstant().orElse(null)
+        val cpuDuration = info.totalCpuDuration()?.orElse(Duration.ZERO)
+        val cmdLine = info.commandLine().orElseGet { "" }
+
+        return String.format("%-8s %-6d %-6d %-25s %-10s %s", user, pid, ppid, startTime, cpuDuration, cmdLine)
     }
 
     private fun close(thread: Thread) {

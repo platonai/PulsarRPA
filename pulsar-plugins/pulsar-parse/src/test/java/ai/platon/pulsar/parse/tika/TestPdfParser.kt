@@ -59,9 +59,9 @@ class TestPdfParser {
             urlString = "file:$sampleDir$fileSeparator$sampleFile"
             val file = File(sampleDir + fileSeparator + sampleFile)
             val bytes = ByteArray(file.length().toInt())
-            val `in` = DataInputStream(FileInputStream(file))
-            `in`.readFully(bytes)
-            `in`.close()
+            val input = DataInputStream(FileInputStream(file))
+            input.readFully(bytes)
+            input.close()
             val page = WebPage.newWebPage(urlString)
             page.location = urlString
             page.setContent(bytes)

@@ -7,6 +7,7 @@ package ai.platon.pulsar.persist;
 
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.HashMap;
@@ -210,7 +211,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         } else {
             reasonString = reason.toString();
         }
-        return isRetry(scope) && getArgOrDefault(ARG_RETRY_REASON, null).equals(reasonString);
+        return isRetry(scope) && getArgOrDefault(ARG_RETRY_REASON, "").equals(reasonString);
     }
 
     public boolean isTempMoved() {
@@ -257,7 +258,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         getArgs().put(getMinorName(), message);
     }
 
-    public String getArgOrDefault(String name, String defaultValue) {
+    public String getArgOrDefault(@NotNull String name, @NotNull String defaultValue) {
         return getArgs().getOrDefault(name, defaultValue).toString();
     }
 

@@ -23,14 +23,12 @@ class AutoDetectedStorageService private constructor(conf: ImmutableConfig): Aut
     val storeClassName: String = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> = detectDataStoreClass(conf)
     val pageStore: DataStore<String, GWebPage> = GoraStorage.createDataStore(conf.unbox(), String::class.java, GWebPage::class.java, pageStoreClass)
-    val isClosed = AtomicBoolean()
+    val closed = AtomicBoolean()
 
     override fun close() {
-        if (isClosed.getAndSet(true)) {
-            return
+        if (!closed.compareAndSet(false, true)) {
+            pageStore.close()
         }
-
-        pageStore.close()
     }
 
     companion object {

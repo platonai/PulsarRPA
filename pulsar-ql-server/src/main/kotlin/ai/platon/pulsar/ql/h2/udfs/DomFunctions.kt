@@ -33,6 +33,8 @@ object DomFunctions {
             "fetch it from the web, and then parse it into a document")
     @JvmStatic
     fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
+        if (!sqlContext.pulsarContext.isActive) return ValueDom.NIL
+
         return sqlContext.getSession(h2session).run {
             parseValueDom(load(configuredUrl))
         }
@@ -41,6 +43,8 @@ object DomFunctions {
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
     fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
+        if (!sqlContext.pulsarContext.isActive) return ValueDom.NIL
+
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
         val options = LoadOptions.parse(urlAndArgs.second).apply { expires = Duration.ZERO }
 

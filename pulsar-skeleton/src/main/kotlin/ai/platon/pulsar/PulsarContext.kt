@@ -39,6 +39,10 @@ class PulsarContext private constructor(): AutoCloseable {
 
         private val activeContext = AtomicReference<PulsarContext>()
 
+        // TODO: review page cache and document cache, may have bugs and may have better solution
+        lateinit var pageCache: ConcurrentLRUCache<String, WebPage>
+        lateinit var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
+
         fun getOrCreate(): PulsarContext {
             synchronized(PulsarContext::class.java) {
                 if (activeContext.get() == null) {
@@ -73,7 +77,7 @@ class PulsarContext private constructor(): AutoCloseable {
     /**
      * Whether this pulsar object is already closed
      * */
-    val isActive = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get() && PulsarEnv.isActive
     /**
      * Registered closeables, will be closed by Pulsar object
      * */
@@ -109,9 +113,6 @@ class PulsarContext private constructor(): AutoCloseable {
 
     val lazyFetchTaskManager: LazyFetchTaskManager
 
-    val pageCache: ConcurrentLRUCache<String, WebPage>
-    val documentCache: ConcurrentLRUCache<String, FeaturedDocument>
-
     init {
         var capacity = unmodifiedConfig.getUint("session.page.cache.size", PulsarSession.SESSION_PAGE_CACHE_CAPACITY)
         pageCache = ConcurrentLRUCache(PulsarSession.SESSION_PAGE_CACHE_TTL.seconds, capacity)
@@ -122,6 +123,7 @@ class PulsarContext private constructor(): AutoCloseable {
         webDb = applicationContext.getBean(WebDb::class.java)
         injectComponent = applicationContext.getBean(InjectComponent::class.java)
         loadComponent = applicationContext.getBean(LoadComponent::class.java)
+        // TODO: better way to share the page cache, a global bean is ok
         fetchComponent = applicationContext.getBean(BatchFetchComponent::class.java)
         parseComponent = applicationContext.getBean(ParseComponent::class.java)
         urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)

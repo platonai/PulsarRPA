@@ -10,16 +10,16 @@ import java.util.*
  */
 class OpenMapFields {
     var name: String = ""
-    val map = HashMap<String, String>()
+    val map = HashMap<String, String?>()
 
     var required = 0
     var loss = 0
 
-    fun put(key: String, value: String): String? = map.put(key, value)
+    fun put(key: String, value: String?): String? = map.put(key, value)
 
-    operator fun set(key: String, value: String): String? = map.put(key, value)
+    operator fun set(key: String, value: String?): String? = map.put(key, value)
 
-    operator fun get(key: String) = map.get(key)
+    operator fun get(key: String): String? = map[key]
 
     fun isEmpty() = map.isEmpty()
 

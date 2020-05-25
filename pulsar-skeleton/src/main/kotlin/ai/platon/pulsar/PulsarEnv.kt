@@ -4,11 +4,6 @@ import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import org.springframework.beans.BeansException
-import org.springframework.context.ApplicationListener
-import org.springframework.context.event.ContextClosedEvent
-import org.springframework.context.event.ContextRefreshedEvent
-import org.springframework.context.event.ContextStartedEvent
-import org.springframework.context.event.ContextStoppedEvent
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.util.concurrent.atomic.AtomicBoolean
 

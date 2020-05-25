@@ -54,7 +54,6 @@ class WebDriverContext(
         } finally {
             runningTasks.remove(task)
             if (runningTasks.isEmpty()) {
-                log.info("No running task now")
                 lock.withLock {
                     notBusy.signalAll()
                 }

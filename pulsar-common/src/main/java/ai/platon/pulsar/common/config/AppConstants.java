@@ -64,7 +64,7 @@ public interface AppConstants {
 
     Instant MIN_ARTICLE_PUBLISH_TIME = Instant.parse("1995-01-01T00:00:00Z");
 
-    Duration DEFAULT_MAX_PARSE_TIME = Duration.ofSeconds(30);
+    Duration DEFAULT_MAX_PARSE_TIME = Duration.ofSeconds(60);
 
     // The shortest url
     String SHORTEST_VALID_URL = "ftp://t.tt";
@@ -94,7 +94,6 @@ public interface AppConstants {
      * Storage
      * */
     String MEM_STORE_CLASS = "org.apache.gora.memory.store.MemStore";
-    String TOY_STORE_CLASS = "ai.platon.pulsar.persist.gora.ToyFileStore";
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
 

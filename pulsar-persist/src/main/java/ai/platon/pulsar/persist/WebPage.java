@@ -383,20 +383,21 @@ public class WebPage {
         return configuredUrl;
     }
 
+    @Nullable
     public String getQuery() {
         return getMetadata().get(Name.QUERY);
     }
 
-    public void setQuery(String query) {
-        Objects.requireNonNull(query);
+    public void setQuery(@Nullable String query) {
         getMetadata().set(Name.QUERY, query);
     }
 
+    @NotNull
     public ZoneId getZoneId() {
         return page.getZoneId() == null ? defaultZoneId : ZoneId.of(page.getZoneId().toString());
     }
 
-    public void setZoneId(ZoneId zoneId) {
+    public void setZoneId(@NotNull ZoneId zoneId) {
         page.setZoneId(zoneId.getId());
     }
 
@@ -439,6 +440,7 @@ public class WebPage {
     /**
      * Fetch mode is used to determine the protocol before fetch
      */
+    @NotNull
     public FetchMode getFetchMode() {
         return FetchMode.fromString(getMetadata().get(Name.FETCH_MODE));
     }
@@ -446,23 +448,25 @@ public class WebPage {
     /**
      * Fetch mode is used to determine the protocol before fetch, so it shall be set before fetch
      */
-    public void setFetchMode(FetchMode mode) {
+    public void setFetchMode(@NotNull FetchMode mode) {
         getMetadata().set(Name.FETCH_MODE, mode.name());
     }
 
+    @NotNull
     public BrowserType getLastBrowser() {
         return BrowserType.fromString(getMetadata().get(Name.BROWSER));
     }
 
-    public void setLastBrowser(BrowserType browser) {
+    public void setLastBrowser(@NotNull BrowserType browser) {
         getMetadata().set(Name.BROWSER, browser.name());
     }
 
+    @NotNull
     public HtmlIntegrity getHtmlIntegrity() {
         return HtmlIntegrity.Companion.fromString(getMetadata().get(Name.HTML_INTEGRITY));
     }
 
-    public void setHtmlIntegrity(HtmlIntegrity integrity) {
+    public void setHtmlIntegrity(@NotNull HtmlIntegrity integrity) {
         getMetadata().set(Name.HTML_INTEGRITY, integrity.name());
     }
 
@@ -485,14 +489,16 @@ public class WebPage {
         return priority;
     }
 
+    @NotNull
     public Instant getCreateTime() {
         return Instant.ofEpochMilli(page.getCreateTime());
     }
 
-    public void setCreateTime(Instant createTime) {
+    public void setCreateTime(@NotNull Instant createTime) {
         page.setCreateTime(createTime.toEpochMilli());
     }
 
+    @NotNull
     public Instant getGenerateTime() {
         String generateTime = getMetadata().get(Name.GENERATE_TIME);
         if (generateTime == null) {
@@ -505,7 +511,7 @@ public class WebPage {
         }
     }
 
-    public void setGenerateTime(Instant generateTime) {
+    public void setGenerateTime(@NotNull Instant generateTime) {
         getMetadata().set(Name.GENERATE_TIME, generateTime.toString());
     }
 
@@ -526,11 +532,12 @@ public class WebPage {
         setFetchCount(count + 1);
     }
 
+    @NotNull
     public CrawlStatus getCrawlStatus() {
         return new CrawlStatus(page.getCrawlStatus().byteValue());
     }
 
-    public void setCrawlStatus(CrawlStatus crawlStatus) {
+    public void setCrawlStatus(@NotNull CrawlStatus crawlStatus) {
         page.setCrawlStatus(crawlStatus.getCode());
     }
 
@@ -575,19 +582,21 @@ public class WebPage {
         page.setBaseUrl(value);
     }
 
+    @NotNull
     public Instant getFetchTime() {
         return Instant.ofEpochMilli(page.getFetchTime());
     }
 
-    public void setFetchTime(Instant time) {
+    public void setFetchTime(@NotNull Instant time) {
         page.setFetchTime(time.toEpochMilli());
     }
 
+    @NotNull
     public Instant getPrevFetchTime() {
         return Instant.ofEpochMilli(page.getPrevFetchTime());
     }
 
-    public void setPrevFetchTime(Instant time) {
+    public void setPrevFetchTime(@NotNull Instant time) {
         page.setPrevFetchTime(time.toEpochMilli());
     }
 
@@ -597,7 +606,8 @@ public class WebPage {
      * If fetchTime is before now, the result is the fetchTime
      * If fetchTime is after now, it means that schedule has modified it for the next fetch, the result is prevFetchTime
      */
-    public Instant getLastFetchTime(Instant now) {
+    @NotNull
+    public Instant getLastFetchTime(@NotNull Instant now) {
         Instant lastFetchTime = getFetchTime();
         if (lastFetchTime.isAfter(now)) {
             // fetch time is in the further, updated by schedule
@@ -606,15 +616,16 @@ public class WebPage {
         return lastFetchTime;
     }
 
+    @NotNull
     public Duration getFetchInterval() {
         return Duration.ofSeconds(page.getFetchInterval());
     }
 
-    public void setFetchInterval(Duration interval) {
+    public void setFetchInterval(@NotNull Duration interval) {
         page.setFetchInterval((int) interval.getSeconds());
     }
 
-    public long getFetchInterval(TimeUnit destUnit) {
+    public long getFetchInterval(@NotNull TimeUnit destUnit) {
         return destUnit.convert(page.getFetchInterval(), TimeUnit.SECONDS);
     }
 
@@ -626,6 +637,7 @@ public class WebPage {
         page.setFetchInterval(Math.round(interval));
     }
 
+    @NotNull
     public ProtocolStatus getProtocolStatus() {
         GProtocolStatus protocolStatus = page.getProtocolStatus();
         if (protocolStatus == null) {
@@ -634,7 +646,7 @@ public class WebPage {
         return ProtocolStatus.box(protocolStatus);
     }
 
-    public void setProtocolStatus(ProtocolStatus protocolStatus) {
+    public void setProtocolStatus(@NotNull ProtocolStatus protocolStatus) {
         page.setProtocolStatus(protocolStatus.unbox());
     }
 
@@ -652,6 +664,7 @@ public class WebPage {
      * LAST_MODIFIED
      * and LOCATION.
      */
+    @NotNull
     public ProtocolHeaders getHeaders() {
         return ProtocolHeaders.box(page.getHeaders());
     }
@@ -661,7 +674,7 @@ public class WebPage {
         return page.getReprUrl() == null ? "" : page.getReprUrl().toString();
     }
 
-    public void setReprUrl(String value) {
+    public void setReprUrl(@NotNull String value) {
         page.setReprUrl(value);
     }
 
@@ -681,27 +694,31 @@ public class WebPage {
         page.setFetchRetries(value);
     }
 
+    @NotNull
     public Duration getLastTimeout() {
         String s = getMetadata().get(Name.RESPONSE_TIME);
         return s == null ? Duration.ZERO : Duration.parse(s);
     }
 
+    @NotNull
     public Instant getModifiedTime() {
         return Instant.ofEpochMilli(page.getModifiedTime());
     }
 
-    public void setModifiedTime(Instant value) {
+    public void setModifiedTime(@NotNull Instant value) {
         page.setModifiedTime(value.toEpochMilli());
     }
 
+    @NotNull
     public Instant getPrevModifiedTime() {
         return Instant.ofEpochMilli(page.getPrevModifiedTime());
     }
 
-    public void setPrevModifiedTime(Instant value) {
+    public void setPrevModifiedTime(@NotNull Instant value) {
         page.setPrevModifiedTime(value.toEpochMilli());
     }
 
+    @NotNull
     public Instant sniffModifiedTime() {
         Instant modifiedTime = getModifiedTime();
         Instant headerModifiedTime = getHeaders().getLastModified();
@@ -729,7 +746,8 @@ public class WebPage {
         return modifiedTime;
     }
 
-    public String getFetchTimeHistory(String defaultValue) {
+    @NotNull
+    public String getFetchTimeHistory(@NotNull String defaultValue) {
         String s = getMetadata().get(Name.FETCH_TIME_HISTORY);
         return s == null ? defaultValue : s;
     }
@@ -738,13 +756,13 @@ public class WebPage {
      * Parsing
      ********************************************************************************/
 
-    public void putFetchTimeHistory(Instant fetchTime) {
+    public void putFetchTimeHistory(@NotNull Instant fetchTime) {
         String fetchTimeHistory = getMetadata().get(Name.FETCH_TIME_HISTORY);
         fetchTimeHistory = DateTimes.constructTimeHistory(fetchTimeHistory, fetchTime, 10);
         getMetadata().set(Name.FETCH_TIME_HISTORY, fetchTimeHistory);
     }
 
-    public Instant getFirstCrawlTime(Instant defaultValue) {
+    public @NotNull Instant getFirstCrawlTime(@NotNull Instant defaultValue) {
         Instant firstCrawlTime = null;
 
         String fetchTimeHistory = getFetchTimeHistory("");
@@ -763,6 +781,7 @@ public class WebPage {
      * namespace : metadata, seed, www
      * reserved
      */
+    @Nullable
     public String getNamespace() {
         return getMetadata().get("namespace");
     }

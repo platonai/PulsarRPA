@@ -19,16 +19,12 @@
 package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.PulsarEnv.Companion.getBean
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
-import org.slf4j.LoggerFactory
-import org.springframework.beans.BeansException
-import java.util.concurrent.atomic.AtomicReference
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
     private val browserEmulator by lazy { getBean(BrowserEmulatedFetcher::class.java) }

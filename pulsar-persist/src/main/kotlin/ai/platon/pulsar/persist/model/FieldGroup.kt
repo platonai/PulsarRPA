@@ -31,8 +31,8 @@ class FieldGroup private constructor(private val fieldGroup: GFieldGroup) {
             fieldGroup.name = name
         }
 
-    var fields: Map<String, String>
-        get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value.toString() }
+    var fields: Map<String, String?>
+        get() = fieldGroup.fields.entries.associate { it.key.toString() to it.value?.toString() }
         set(value) {
             fieldGroup.fields = value.entries.associate { it.key to it.value }
         }

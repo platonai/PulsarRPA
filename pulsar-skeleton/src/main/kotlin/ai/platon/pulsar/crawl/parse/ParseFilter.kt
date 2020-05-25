@@ -20,7 +20,6 @@ package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.crawl.parse.html.ParseContext
-import org.slf4j.LoggerFactory
 
 /**
  * Extension point for DOM-based parsers. Permits one to add additional metadata

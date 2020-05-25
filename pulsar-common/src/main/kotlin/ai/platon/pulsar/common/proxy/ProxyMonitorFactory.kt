@@ -11,6 +11,10 @@ class ProxyMonitorFactory(val conf: ImmutableConfig): AutoCloseable {
     private val proxyMonitor = AtomicReference<ProxyPoolMonitor>()
     fun get(): ProxyPoolMonitor = createIfAbsent(conf)
 
+    init {
+        log.info("................................. ProxyMonitorFactory ...................")
+    }
+
     override fun close() {
         proxyMonitor.getAndSet(null)?.use { it.close() }
     }

@@ -125,6 +125,10 @@ class BrowserPrivacyManager(
      * If the privacy leak occurs, block until the the context is closed completely, and create a new privacy context
      * */
     private fun computeContextIfLeaked(): BrowserPrivacyContext {
+        if (proxyManager.isIdle && proxyManager.currentProxyEntry == null) {
+            activeContext.markLeaked()
+        }
+
         return computeIfLeaked {
             val oldContext = activeContext
 

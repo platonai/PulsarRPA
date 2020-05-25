@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
@@ -20,6 +21,9 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.classification.InterfaceStability.Evolving
 import org.apache.hadoop.classification.InterfaceStability.Unstable
@@ -49,6 +53,8 @@ class LoadComponent(
     companion object {
         private const val VAR_REFRESH = "refresh"
         private val globalFetchingUrls = ConcurrentSkipListSet<String>()
+        // TODO: a better way to manage page cache
+        private val pageCache get() = PulsarContext.pageCache
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -122,7 +128,6 @@ class LoadComponent(
     /**
      * Load a batch of urls with the specified options.
      *
-     *
      * If the option indicates prefer parallel, urls are fetched in a parallel manner whenever applicable.
      * If the batch is too large, only a random part of the urls is fetched immediately, all the rest urls are put into
      * a pending fetch list and will be fetched in background later.
@@ -193,9 +198,14 @@ class LoadComponent(
             }
         } finally {
             globalFetchingUrls.removeAll(pendingUrls)
+        }.filter { it.isNotInternal }
+
+        if (options.parse) {
+            runBlocking { updatedPages.map { async { update(it, options) } }.awaitAll() }
+        } else {
+            updatedPages.forEach { update(it, options) }
         }
 
-        updatedPages.forEach { update(it, options) }
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
@@ -376,7 +386,7 @@ class LoadComponent(
     }
 
     private fun redirect(page: WebPage, options: LoadOptions): WebPage {
-        if (!PulsarEnv.isActive) {
+        if (!isActive) {
             page.protocolStatus = ProtocolStatus.STATUS_CANCELED
             return page
         }
@@ -412,9 +422,15 @@ class LoadComponent(
     }
 
     private fun update(page: WebPage, options: LoadOptions) {
+        if (page.isInternal) {
+            return
+        }
+
         if (page.protocolStatus.isCanceled) {
             return
         }
+
+        pageCache.put(page.url, page)
 
         val protocolStatus = page.protocolStatus
         if (protocolStatus.isFailed) {
@@ -463,7 +479,7 @@ class LoadComponent(
             start: Int, limit: Int, loadOptions2: LoadOptions,
             query: String,
             logLevel: Int): Map<String, Any> {
-        if (!PulsarEnv.isActive) {
+        if (!isActive) {
             return mapOf()
         }
 

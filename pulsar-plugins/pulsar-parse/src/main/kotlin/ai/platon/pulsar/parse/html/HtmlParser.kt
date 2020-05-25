@@ -22,7 +22,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
@@ -55,13 +54,14 @@ class HtmlParser(
         private val parseFilters: ParseFilters,
         private val conf: ImmutableConfig
 ) : Parser {
-    private val LOG = LoggerFactory.getLogger(HtmlParser::class.java)
+    private val log = LoggerFactory.getLogger(HtmlParser::class.java)
+    private val tracer = log.takeIf { it.isDebugEnabled }
     private val defaultCharEncoding = conf.get(CapabilityTypes.PARSE_DEFAULT_ENCODING, "utf-8")
     private val cachingPolicy = conf.get(CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private val primerParser = PrimerParser(conf)
 
     init {
-        LOG.info(params.formatAsLine())
+        log.info(params.formatAsLine())
     }
 
     override fun getParams(): Params {
@@ -86,7 +86,9 @@ class HtmlParser(
 
     @Throws(MalformedURLException::class, Exception::class)
     private fun doParse(page: WebPage): ParseResult {
-        val baseUrl = page.baseUrl
+        tracer?.trace("Parsing page | {} | {}", page.protocolStatus, page.url)
+
+        val baseUrl = page.baseUrl?:page.url
         val baseURL = URL(baseUrl)
         if (page.encoding == null) {
             primerParser.detectEncoding(page)
@@ -95,20 +97,11 @@ class HtmlParser(
         val (document, documentFragment) = parseJsoup(baseUrl, page.contentAsSaxInputSource)
         val metaTags = parseMetaTags(baseURL, documentFragment, page)
         val parseResult = initParseResult(metaTags)
-        if (parseResult.isFailed) {
-            return parseResult
-        }
 
         page.pageTitle = primerParser.getPageTitle(documentFragment)
         page.pageModel.clear()
 
         val parseContext = ParseContext(page, parseResult, metaTags, documentFragment, FeaturedDocument(document))
-
-        if (page.fetchMode == FetchMode.NATIVE_RENDERER) {
-            // the native renderer may have done the parsing work
-        }
-
-        // TODO: a better place to init page model
         parseFilters.filter(parseContext)
 
         return parseContext.parseResult
@@ -134,7 +127,7 @@ class HtmlParser(
         if (metaTags.refresh) {
             parseResult.minorCode = ParseStatus.SUCCESS_REDIRECT
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
-            parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
+            parseResult.args[ParseStatus.REFRESH_TIME] = metaTags.refreshTime.toString()
         }
 
         return parseResult

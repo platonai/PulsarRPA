@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.crawl.parse
 
+import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
@@ -35,11 +36,14 @@ import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.time.Duration
+import java.util.concurrent.*
+import kotlin.system.measureTimeMillis
 
 class PageParser(
         val crawlFilters: CrawlFilters,
@@ -62,8 +66,6 @@ class PageParser(
      */
     private val maxParseTime = conf.getDuration(CapabilityTypes.PARSE_TIMEOUT, AppConstants.DEFAULT_MAX_PARSE_TIME)
     val linkFilter = LinkFilter(crawlFilters, conf)
-    // TODO: merge with GlobalExecutor
-    private var executorService: ExecutorService? = null
 
     /**
      * @param conf The configuration
@@ -78,11 +80,6 @@ class PageParser(
     )
 
     init {
-        if (maxParseTime.seconds > 0) {
-            val threadFactory = ThreadFactoryBuilder().setNameFormat("parser-%d").setDaemon(true).build()
-            executorService = Executors.newCachedThreadPool(threadFactory)
-        }
-
         params.merge(linkFilter.params).withLogger(LOG).info(true)
     }
 
@@ -142,6 +139,10 @@ class PageParser(
     }
 
     private fun doParse(page: WebPage): ParseResult {
+        if (page.isInternal) {
+            return ParseResult().apply { flowStatus = FlowState.BREAK }
+        }
+
         val url = page.url
         if (isTruncated(page)) {
             return ParseResult.failed(ParseStatus.FAILED_TRUNCATED, url)
@@ -164,12 +165,22 @@ class PageParser(
      */
     @Throws(ParseException::class)
     private fun applyParsers(page: WebPage): ParseResult {
+        if (page.isInternal) {
+            return ParseResult().apply { flowStatus = FlowState.BREAK }
+        }
+
         var parseResult = ParseResult()
         val parsers = parserFactory.getParsers(page.contentType, page.url)
 
         for (parser in parsers) {
-            parseResult = takeIf { executorService != null }?.runParser(parser, page)?:parser.parse(page)
+            val millis = measureTimeMillis {
+                parseResult = takeIf { maxParseTime.seconds > 0 }?.runParser(parser, page)?:parser.parse(page)
+            }
             parseResult.parser = parser
+
+            if (millis > 1000) {
+                log.info("It takes {} to parse {} fields | {}", Duration.ofMillis(millis), page.pageModel.size(), page.url)
+            }
 
             // Found a suitable parser and successfully parsed
             if (parseResult.isSuccess) {
@@ -181,21 +192,13 @@ class PageParser(
         return parseResult
     }
 
-    /**
-     * TODO: use coroutine instead
-     * */
     private fun runParser(p: Parser, page: WebPage): ParseResult {
-        var parseResult = ParseResult()
-        val executor = executorService?:return parseResult
-
-        val task = executor.submit<ParseResult> { p.parse(page) }
-        try {
-            parseResult = task.get(maxParseTime.seconds, TimeUnit.SECONDS)
-        } catch (e: Exception) {
-            LOG.warn("Failed to parsing " + page.url, e)
-            task.cancel(true)
+        return runBlocking {
+            val deferred = async { p.parse(page) }
+            withTimeout(maxParseTime.toMillis()) {
+                deferred.await()
+            }
         }
-        return parseResult
     }
 
     private fun processSuccess(page: WebPage, parseResult: ParseResult) {

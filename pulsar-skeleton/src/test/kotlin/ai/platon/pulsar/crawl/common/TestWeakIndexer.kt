@@ -28,7 +28,6 @@ class TestWeakIndexer {
 
     @Before
     fun setup() {
-        conf["storage.data.store.class"] = AppConstants.TOY_STORE_CLASS
     }
 
     @After

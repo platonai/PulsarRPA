@@ -34,9 +34,11 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
 
     init {
         if (dbSession.implementation is org.h2.engine.Session) {
-            registerDefaultUdfs(dbSession.implementation)
-            registerUdaf(dbSession.implementation, GroupCollect::class)
-            registerUdaf(dbSession.implementation, GroupFetch::class)
+            synchronized(QuerySession::class.java) {
+                registerDefaultUdfs(dbSession.implementation)
+                registerUdaf(dbSession.implementation, GroupCollect::class)
+                registerUdaf(dbSession.implementation, GroupFetch::class)
+            }
         }
     }
 
@@ -51,6 +53,7 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     /**
      * Register user defined functions into database
      */
+    @Synchronized
     fun registerDefaultUdfs(session: SessionInterface) {
         val udfClasses = ClassPath.from(CommonFunctions.javaClass.classLoader)
                 .getTopLevelClasses(CommonFunctions.javaClass.`package`.name)
@@ -65,6 +68,7 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
         }
     }
 
+    @Synchronized
     fun registerUdfsInPackage(session: SessionInterface, classLoader: ClassLoader, packageName: String) {
         val udfClasses = ClassPath.from(classLoader)
                 .getTopLevelClasses(packageName)
@@ -78,6 +82,7 @@ open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSessi
     /**
      * Register a java UDF class
      * */
+    @Synchronized
     fun registerUdfs(session: SessionInterface, udfClass: Class<out Any>) {
         return registerUdfs(session, udfClass.kotlin)
     }

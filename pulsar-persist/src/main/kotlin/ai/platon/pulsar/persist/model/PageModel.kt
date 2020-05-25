@@ -41,11 +41,11 @@ class PageModel(
         fieldGroups.add(index, fieldGroup.unbox())
     }
 
-    fun emplace(groupId: Int, group: String, fields: Map<String, String>): FieldGroup {
+    fun emplace(groupId: Int, group: String, fields: Map<String, String?>): FieldGroup {
         return emplace(groupId, 0, group, fields)
     }
 
-    fun emplace(groupId: Int, parentId: Int, group: String, fields: Map<String, String>): FieldGroup {
+    fun emplace(groupId: Int, parentId: Int, group: String, fields: Map<String, String?>): FieldGroup {
         val fieldGroup = FieldGroup.newFieldGroup(groupId.toLong(), group, parentId.toLong())
         fieldGroup.fields = fields
         add(fieldGroup)

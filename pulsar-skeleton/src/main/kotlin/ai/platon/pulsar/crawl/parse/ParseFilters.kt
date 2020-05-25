@@ -29,7 +29,11 @@ import org.slf4j.LoggerFactory
 class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig) {
     private val log = LoggerFactory.getLogger(ParseFilters::class.java)
 
-    val parseFilters = initParseFilters.toMutableList()
+    private val parseFilters = initParseFilters.toMutableList()
+
+    fun addFirst(parseFilter: ParseFilter) = parseFilters.add(0, parseFilter)
+
+    fun addLast(parseFilter: ParseFilter) = parseFilters.add(parseFilter)
 
     /**
      * Run all defined filters.
@@ -37,21 +41,15 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     fun filter(parseContext: ParseContext) {
         // loop on each filter
         parseFilters.forEach {
-            val shouldContinue = filterSilence(it, parseContext)
+            log.trace("Applying parse filter {} {}", it.javaClass.simpleName, parseContext.page.url)
+
+            kotlin.runCatching { it.filter(parseContext) }.onFailure { log.warn(Strings.simplifyException(it)) }
+
+            val shouldContinue = parseContext.parseResult.shouldContinue
             if (!shouldContinue) {
                 return
             }
         }
-    }
-
-    private fun filterSilence(parseFilter: ParseFilter, parseContext: ParseContext): Boolean {
-        try {
-            parseFilter.filter(parseContext)
-        } catch (e: Throwable) {
-            log.warn(Strings.stringifyException(e))
-        }
-
-        return parseContext.parseResult.shouldContinue
     }
 
     override fun toString(): String {

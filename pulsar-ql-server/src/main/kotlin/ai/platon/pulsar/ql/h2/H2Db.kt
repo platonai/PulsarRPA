@@ -13,7 +13,7 @@ import kotlin.math.abs
  * The base class for all tests.
  */
 class H2Db(
-        sessionFactory: String = H2SessionFactory::class.java.name,
+        sessionFactory: String = "ai.platon.pulsar.ql.h2.H2SessionFactory",
         val config: H2DbConfig = H2DbConfig()
 ) {
     init {

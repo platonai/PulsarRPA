@@ -12,7 +12,7 @@ open class Crawler(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(Crawler::class.java)
     val closed = AtomicBoolean()
-    val isAlive = !closed.get() && PulsarEnv.isActive
+    val isAlive get() = !closed.get() && PulsarEnv.isActive
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {

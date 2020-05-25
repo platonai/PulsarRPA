@@ -104,8 +104,10 @@ open class StreamingCrawler(
                 launch(context) {
                     withTimeout(taskTimeout.toMillis()) {
                         page = session.runCatching { loadDeferred(url, options) }
-                                .onFailure { exception = it; log.warn("Load failed - $it") }
-                                .getOrNull()
+                                .onFailure {
+                                    exception = it;
+                                    log.warn("Load failed", it)
+                                }.getOrNull()
                                 ?.also { pageCollector?.add(it) }
                         page?.let(onLoadComplete)
                         numRunningTasks.decrementAndGet()
