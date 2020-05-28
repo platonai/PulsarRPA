@@ -33,12 +33,6 @@ import kotlin.reflect.KClass
 class PulsarContext private constructor(): AutoCloseable {
 
     companion object {
-        init {
-            if (!PulsarEnv.isActive) {
-                PulsarEnv.initialize()
-            }
-        }
-
         private val activeContext = AtomicReference<PulsarContext>()
 
         // TODO: review page cache and document cache, may have bugs and may have better solution
@@ -67,7 +61,7 @@ class PulsarContext private constructor(): AutoCloseable {
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
-    val unmodifiedConfig = applicationContext.getBean(ImmutableConfig::class.java)
+    val unmodifiedConfig get() = applicationContext.getBean(ImmutableConfig::class.java)
     /**
      * The start time
      * */
@@ -130,6 +124,8 @@ class PulsarContext private constructor(): AutoCloseable {
         parseComponent = applicationContext.getBean(ParseComponent::class.java)
         urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)
         lazyFetchTaskManager = applicationContext.getBean(LazyFetchTaskManager::class.java)
+
+        log.info("PulsarContext is created")
     }
 
     fun createSession(): PulsarSession {
@@ -370,8 +366,20 @@ class PulsarContext private constructor(): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            sessions.values.forEach { it.use { it.close() } }
-            closableObjects.forEach { it.use { it.close() } }
+            try {
+                sessions.values.forEach {
+                    log.debug("Closing session $it")
+                    it.use { it.close() }
+                }
+                closableObjects.forEach {
+                    log.debug("Closing closeable $it")
+                    it.use { it.close() }
+                }
+            } catch (t: Throwable) {
+                log.warn("Unexpected exception", t)
+            }
+
+            log.debug("PulsarContext is closed")
         }
     }
 

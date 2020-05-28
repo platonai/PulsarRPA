@@ -46,6 +46,14 @@ open class ForwardingProtocol : AbstractHttpProtocol() {
         return response
     }
 
+    private fun logAfterRemoveResponse(url: String, response: Response?) {
+        if (response == null) {
+            if (log.isTraceEnabled) {
+                log.trace("No page in forward cache, total {} | {}", cache.size, url)
+            }
+        }
+    }
+
     private fun logAfterPutResponse() {
         if (log.isTraceEnabled) {
             log.trace("Putting page to forward cache, total {}", cache.size)
@@ -55,14 +63,6 @@ open class ForwardingProtocol : AbstractHttpProtocol() {
             if (cache.size > 1000) {
                 log.warn("!!!WARNING!!! FORWARDING CACHE IS UNEXPECTED TOO LARGE, CLEAR IT TO PREVENT MEMORY EXHAUSTING")
                 cache.clear()
-            }
-        }
-    }
-
-    private fun logAfterRemoveResponse(url: String, response: Response?) {
-        if (response == null) {
-            if (log.isDebugEnabled) {
-                log.debug("Failed to find page in forward cache, total {} | {}", cache.size, url)
             }
         }
     }

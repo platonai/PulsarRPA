@@ -18,6 +18,10 @@ class ResultSetFormatter(
         private set
     var numNonBlankFields: Int = 0
         private set
+    var numNonNullFields = 0
+        private set
+    var numFields = 0
+        private set
 
     private val rows = ArrayList<List<String>>()
     private val columns = IntRange(1, numColumns).map { meta.getColumnLabel(it) ?: "" }
@@ -83,11 +87,15 @@ class ResultSetFormatter(
                 }
 
                 val th = StringUtils.rightPad(columns[i] + ":", 15 + labelLength)
-                val td = rs.getString(i + 1)?:""
+                val td = rs.getString(i + 1)
                 buffer.append(th).append(td)
 
-                if (td.isNotBlank()) {
-                    ++numNonBlankFields
+                ++numFields
+                if (td != null) {
+                    ++numNonNullFields
+                    if (td.isNotBlank()) {
+                        ++numNonBlankFields
+                    }
                 }
             }
 

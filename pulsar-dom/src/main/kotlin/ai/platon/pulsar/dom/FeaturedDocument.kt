@@ -3,8 +3,7 @@ package ai.platon.pulsar.dom
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_NODE_FEATURE_CALCULATOR
-import ai.platon.pulsar.common.config.AppConstants.NIL_PAGE_URL
+import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
@@ -43,6 +42,10 @@ open class FeaturedDocument(val document: Document) {
             return doc == NIL || doc.location == NIL.location
         }
 
+        fun isInternal(doc: FeaturedDocument): Boolean {
+            return doc.location.startsWith(INTERNAL_URL_PREFIX)
+        }
+
         fun getExportFilename(uri: String): String = AppPaths.fromUri(uri, "", ".htm")
 
         fun getExportPath(url: String, ident: String): Path = AppPaths.WEB_CACHE_DIR.resolve(ident).resolve(getExportFilename(url))
@@ -55,6 +58,8 @@ open class FeaturedDocument(val document: Document) {
     }
 
     val fragments by lazy { DocumentFragments(this) }
+
+    val documentOrNull get() = document.takeIf { isNotInternal() }
 
     constructor(baseUri: String): this(Document(baseUri))
 
@@ -99,17 +104,15 @@ open class FeaturedDocument(val document: Document) {
             document.features = value
         }
 
-    fun unbox(): Document {
-        return document
-    }
+    fun unbox() = document
 
-    fun isNil(): Boolean {
-        return location == NIL.location
-    }
+    fun isNil() = isNil(this)
 
-    fun createElement(tagName: String): Element {
-        return document.createElement(tagName)
-    }
+    fun isInternal() = isInternal(this)
+
+    fun isNotInternal() = !isInternal()
+
+    fun createElement(tagName: String) = document.createElement(tagName)
 
     fun absoluteLinks() {
         document.forEachElement {
@@ -154,17 +157,11 @@ open class FeaturedDocument(val document: Document) {
         return document.selectFirstOrNull(query)?.let { extractor(it) }
     }
 
-    fun getFeature(key: Int): Double {
-        return document.getFeature(key)
-    }
+    fun getFeature(key: Int) = document.getFeature(key)
 
-    fun formatFeatures(vararg featureKeys: Int): String {
-        return document.formatEachFeatures(*featureKeys)
-    }
+    fun formatFeatures(vararg featureKeys: Int) = document.formatEachFeatures(*featureKeys)
 
-    fun formatNamedFeatures(): String {
-        return document.formatVariables()
-    }
+    fun formatNamedFeatures() = document.formatVariables()
 
     fun removeAttrs(vararg attributeKeys: String) {
         NodeTraversor.traverse({ node, _ ->  node.removeAttrs(*attributeKeys) }, document)
@@ -196,11 +193,7 @@ open class FeaturedDocument(val document: Document) {
         return other is FeaturedDocument && location == other.location
     }
 
-    override fun hashCode(): Int {
-        return location.hashCode()
-    }
+    override fun hashCode() = location.hashCode()
 
-    override fun toString(): String {
-        return document.uniqueName
-    }
+    override fun toString() = document.uniqueName
 }

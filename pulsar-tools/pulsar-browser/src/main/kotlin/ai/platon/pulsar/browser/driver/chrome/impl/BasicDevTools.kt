@@ -212,7 +212,7 @@ abstract class BasicDevTools(
     }
 
     override fun waitUntilClosed() {
-        closeLatch.runCatching { await() }
+        closeLatch.runCatching { await() }.onFailure { LOG.warn("Unexpected exception", it) }
     }
 
     override fun close() {

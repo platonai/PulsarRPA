@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 object Systems {
@@ -88,5 +89,11 @@ object Systems {
     fun getProperty(name: String, defaultValue: Boolean): Boolean {
         val value = System.getProperty(name)?.toLowerCase()?:return defaultValue
         return SParser(value).getBoolean(defaultValue)
+    }
+
+    fun loadAllProperties(resourceName: String, replaceIfExist: Boolean = false) {
+        Properties().apply { load(ResourceLoader.getResourceAsStream(resourceName)) }.forEach { name, value ->
+            takeIf { replaceIfExist }?.setProperty(name.toString(), value)?:setPropertyIfAbsent(name.toString(), value)
+        }
     }
 }

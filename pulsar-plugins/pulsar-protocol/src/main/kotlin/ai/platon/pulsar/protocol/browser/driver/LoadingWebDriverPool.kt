@@ -111,7 +111,7 @@ class LoadingWebDriverPool(
         counterRetired.inc()
         freeDrivers.remove(driver.apply { retire() })
         driver.runCatching { quit().also { counterQuit.inc() } }
-                .onFailure { log.warn("Exception occurs when quit $driver {}", Strings.simplifyException(it)) }
+                .onFailure { log.warn("Unexpected exception quit $driver", it) }
     }
 
     @Throws(InterruptedException::class)

@@ -176,9 +176,9 @@ class PageParser(
             }
             parseResult.parser = parser
 
-            if (millis > 1000) {
+            if (log.isDebugEnabled && millis > 10_000) {
                 val m = page.pageModel
-                log.info("It takes {} to parse {}/{}/{} fields | {}", Duration.ofMillis(millis).readable(),
+                log.debug("It takes {} to parse {}/{}/{} fields | {}", Duration.ofMillis(millis).readable(),
                         m.numNonBlankFields, m.numNonNullFields, m.numFields, page.url)
             }
 

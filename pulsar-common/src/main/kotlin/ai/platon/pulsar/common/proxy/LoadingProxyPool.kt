@@ -99,6 +99,7 @@ class LoadingProxyPool(
     private fun poll0(): ProxyEntry? {
         // Retrieves and removes the head of the queue
         val proxy = freeProxies.runCatching { poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS) }
+                .onFailure { log.warn("Unexpected exception", it) }
                 .getOrNull()?:return null
 
         val banState = handleBanState(proxy).takeIf { it.isBanned }?.also {

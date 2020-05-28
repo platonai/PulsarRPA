@@ -13,6 +13,7 @@ import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import kotlinx.coroutines.*
+import org.h2tools.dev.util.ConcurrentLinkedList
 import oshi.SystemInfo
 import java.nio.file.Files
 import java.time.Duration
@@ -22,7 +23,7 @@ import kotlin.math.abs
 open class StreamingCrawler(
         private val urls: Sequence<String>,
         private val options: LoadOptions = LoadOptions.create(),
-        val pageCollector: MutableList<WebPage>? = null,
+        val pageCollector: ConcurrentLinkedList<WebPage>? = null,
         session: PulsarSession = PulsarContext.createSession(),
         autoClose: Boolean = true
 ): Crawler(session, autoClose) {
@@ -104,10 +105,8 @@ open class StreamingCrawler(
                 launch(context) {
                     withTimeout(taskTimeout.toMillis()) {
                         page = session.runCatching { loadDeferred(url, options) }
-                                .onFailure {
-                                    exception = it;
-                                    log.warn("Load failed", it)
-                                }.getOrNull()
+                                .onFailure { exception = it.also { log.warn("Load failed", it) } }
+                                .getOrNull()
                                 ?.also { pageCollector?.add(it) }
                         page?.let(onLoadComplete)
                         numRunningTasks.decrementAndGet()
@@ -122,8 +121,5 @@ open class StreamingCrawler(
         }
 
         log.info("All done. Total $numTasks tasks")
-        if (pageCollector != null) {
-            log.info("Collected ${pageCollector.size} pages")
-        }
     }
 }

@@ -1,10 +1,12 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.PulsarEnv
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
@@ -53,9 +55,9 @@ class SQLContext: AutoCloseable {
 
     val unmodifiedConfig: ImmutableConfig
 
-    val pulsarContext = PulsarContext.getOrCreate()
+    val pulsarContext get() = PulsarContext.getOrCreate()
 
-    private var backgroundSession = pulsarContext.createSession()
+    private val backgroundSession get() = pulsarContext.createSession()
 
     /**
      * The sessions container
@@ -65,7 +67,7 @@ class SQLContext: AutoCloseable {
 
     private val backgroundTaskBatchSize: Int
 
-    private val backgroundThread: Thread
+//    private val backgroundThread: Thread
 
     private var lazyTaskRound = 0
 
@@ -74,6 +76,8 @@ class SQLContext: AutoCloseable {
     private var handlePeriodicalFetchTasks: Boolean
 
     private val closed = AtomicBoolean()
+
+    private val isActive = !closed.get() && PulsarEnv.isActive
 
     init {
         status = Status.INITIALIZING
@@ -88,11 +92,13 @@ class SQLContext: AutoCloseable {
         backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_CONCURRENCY, 20)
 
         // TODO: use ScheduledExecutorService
-        backgroundThread = Thread { runBackgroundTasks() }
-        backgroundThread.isDaemon = true
-        backgroundThread.start()
+//        backgroundThread = Thread { runBackgroundTasks() }
+//        backgroundThread.isDaemon = true
+//        backgroundThread.start()
 
         status = Status.RUNNING
+
+        log.info("SQLContext is created")
     }
 
     fun createSession(dbSession: DbSession): QuerySession {
@@ -131,19 +137,21 @@ class SQLContext: AutoCloseable {
             log.info("Closing SQLContext ...")
 
             backgroundSession.use { it.close() }
-            backgroundThread.interrupt()
-            backgroundThread.join()
+//            backgroundThread.interrupt()
+//            backgroundThread.join()
 
             // database engine will close the sessions
             sessions.clear()
 
             status = Status.CLOSED
+
+            log.info("SQLContext is closed ...")
         }
     }
 
     private fun runBackgroundTasks() {
         // start after 30 seconds
-        TimeUnit.SECONDS.runCatching { sleep(1) }
+        sleepSeconds(1)
 
         while (!closed.get()) {
             if (handlePeriodicalFetchTasks) {
@@ -151,7 +159,7 @@ class SQLContext: AutoCloseable {
                 fetchSeeds()
             }
 
-            TimeUnit.SECONDS.runCatching { sleep(5) }
+            sleepSeconds(5)
         }
     }
 
@@ -220,7 +228,7 @@ class SQLContext: AutoCloseable {
     }
 
     private fun ensureRunning() {
-        if (closed.get()) {
+        if (!isActive) {
             throw IllegalStateException("SQLContext is closed")
         }
     }

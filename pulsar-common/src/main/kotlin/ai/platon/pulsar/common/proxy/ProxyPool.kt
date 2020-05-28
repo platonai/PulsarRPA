@@ -54,7 +54,9 @@ open class ProxyPool(conf: ImmutableConfig): AutoCloseable {
 
     open fun take(): ProxyEntry? {
         lastActiveTime = Instant.now()
-        return freeProxies.runCatching { poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS) }.getOrNull()
+        return freeProxies.runCatching { poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS) }
+                .onFailure { log.warn("Unexpected exception", it) }
+                .getOrNull()
     }
 
     /**

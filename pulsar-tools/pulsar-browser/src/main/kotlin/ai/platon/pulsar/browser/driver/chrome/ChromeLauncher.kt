@@ -233,6 +233,7 @@ class ChromeLauncher(
         if (p.isAlive) {
             destroyProcess(p)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
+                    .onFailure { log.warn("Unexpected exception", it) }
         }
     }
 
@@ -437,7 +438,7 @@ class ChromeLauncher(
                 FileChannel.open(lock, StandardOpenOption.APPEND).use {
                     it.lock()
                     kotlin.runCatching { FileUtils.deleteDirectory(dirToDelete.toFile()) }
-                            .onFailure { log.warn(Strings.simplifyException(it)) }
+                            .onFailure { log.warn("Unexpected exception", it) }
                 }
 
                 Thread.sleep(500)

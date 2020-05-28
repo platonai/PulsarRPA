@@ -69,7 +69,9 @@ class ManagedWebDriver(
     /**
      * The actual url return by the browser
      * */
-    val currentUrl: String get() = "".takeIf { isQuit }?:driver.runCatching { currentUrl }.getOrDefault("")
+    val currentUrl: String get() = "".takeIf { isQuit }?:driver.runCatching { currentUrl }
+            .onFailure { log.warn("Unexpected exception", it) }
+            .getOrDefault("")
 
     /**
      * The real time page source return by the browser
@@ -173,7 +175,7 @@ class ManagedWebDriver(
             synchronized(status) {
                 if (!isQuit) {
                     status.set(DriverStatus.QUIT)
-                    driver.runCatching { quit() }
+                    driver.runCatching { quit() }.onFailure { log.warn("Unexpected exception", it) }
                 }
             }
         }

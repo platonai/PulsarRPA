@@ -59,7 +59,10 @@ class WebDriverManager(
      * */
     fun allocate(priority: Int, n: Int, volatileConfig: VolatileConfig) {
         preempt {
-            repeat(n) { driverPool.runCatching { put(take(priority, volatileConfig)) } }
+            repeat(n) {
+                driverPool.runCatching { put(take(priority, volatileConfig)) }
+                        .onFailure { log.warn("Unexpected exception", it) }
+            }
         }
     }
 

@@ -70,25 +70,26 @@ public interface AppConstants {
     String SHORTEST_VALID_URL = "ftp://t.tt";
     int SHORTEST_VALID_URL_LENGTH = SHORTEST_VALID_URL.length();
     String EXAMPLE_URL = "http://example.com";
-    String EMPTY_PAGE_URL = "http://example.com/empty";
-    String NIL_PAGE_URL = "http://example.com/nil";
 
-    String SEED_HOME_URL = "http://pulsar.platon.ai/seeds";
-    String SEED_PAGE_1_URL = "http://pulsar.platon.ai/seeds/1";
-    String TOP_PAGE_HOME_URL = "http://pulsar.platon.ai/top";
-    String TOP_PAGE_PAGE_1_URL = "http://pulsar.platon.ai/top/1";
-    String BACKGROUND_TASK_PAGE_HOME_URL = "http://pulsar.platon.ai/tmp/tasks";
-    String BACKGROUND_TASK_PAGE_PAGE_1_URL = "http://pulsar.platon.ai/tmp/tasks/1";
+    String INTERNAL_URL_PREFIX = "http://internal.pulsar.platon.ai";
+    String EMPTY_PAGE_URL = INTERNAL_URL_PREFIX + "/empty";
+    String NIL_PAGE_URL = INTERNAL_URL_PREFIX + "/nil";
+    String SEED_HOME_URL = INTERNAL_URL_PREFIX + "/seeds";
+    String SEED_PAGE_1_URL = INTERNAL_URL_PREFIX + "/seeds/1";
+    String TOP_PAGE_HOME_URL = INTERNAL_URL_PREFIX + "/top";
+    String TOP_PAGE_PAGE_1_URL = INTERNAL_URL_PREFIX + "/top/1";
+    String BACKGROUND_TASK_PAGE_HOME_URL = INTERNAL_URL_PREFIX + "/tmp/tasks";
+    String BACKGROUND_TASK_PAGE_PAGE_1_URL = INTERNAL_URL_PREFIX + "/tmp/tasks/1";
 
-    String URL_TRACKER_HOME_URL = "http://pulsar.platon.ai/url/tracker";
-    String URL_TRACKER_PAGE_1_URL = "http://pulsar.platon.ai/url/tracker/1";
+    String URL_TRACKER_HOME_URL = INTERNAL_URL_PREFIX + "/url/tracker";
+    String URL_TRACKER_PAGE_1_URL = INTERNAL_URL_PREFIX + "/url/tracker/1";
 
-    String METRICS_HOME_URL = "http://pulsar.platon.ai/metrics";
-    String METRICS_PAGE_1_URL = "http://pulsar.platon.ai/metrics/1";
+    String METRICS_HOME_URL = INTERNAL_URL_PREFIX + "/metrics";
+    String METRICS_PAGE_1_URL = INTERNAL_URL_PREFIX + "/metrics/1";
 
-    String CRAWL_LOG_HOME_URL = "http://pulsar.platon.ai/metrics";
-    String CRAWL_LOG_INDEX_URL = "http://pulsar.platon.ai/metrics";
-    String CRAWL_LOG_PAGE_1_URL = "http://pulsar.platon.ai/metrics/1";
+    String CRAWL_LOG_HOME_URL = INTERNAL_URL_PREFIX + "/metrics";
+    String CRAWL_LOG_INDEX_URL = INTERNAL_URL_PREFIX + "/metrics";
+    String CRAWL_LOG_PAGE_1_URL = INTERNAL_URL_PREFIX + "/metrics/1";
 
     /**
      * Storage
