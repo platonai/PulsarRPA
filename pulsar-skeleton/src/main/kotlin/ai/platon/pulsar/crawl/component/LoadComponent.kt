@@ -201,7 +201,7 @@ class LoadComponent(
         }.filter { it.isNotInternal }
 
         if (options.parse) {
-            runBlocking { updatedPages.map { async { update(it, options) } }.awaitAll() }
+            updatedPages.parallelStream().forEach { update(it, options) }
         } else {
             updatedPages.forEach { update(it, options) }
         }

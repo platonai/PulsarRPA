@@ -369,12 +369,12 @@ class ChromeLauncher(
         val info = process.info()
         val user = info.user().orElse("")
         val pid = process.pid()
-        val ppid = process.parent().orElseGet { null }?.pid()?:0
+        val ppid = process.parent().orElseGet { null }?.pid()?.toString()?:"?"
         val startTime = info.startInstant().orElse(null)
-        val cpuDuration = info.totalCpuDuration()?.orElse(Duration.ZERO)
+        val cpuDuration = info.totalCpuDuration()?.orElse(null)
         val cmdLine = info.commandLine().orElseGet { "" }
 
-        return String.format("%-8s %-6d %-6d %-25s %-10s %s", user, pid, ppid, startTime, cpuDuration, cmdLine)
+        return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
     }
 
     private fun close(thread: Thread) {

@@ -60,6 +60,8 @@ class CompletedPageFormatter(
     val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
     val proxy get() = page.metadata[Name.PROXY]
     val jsData = page.activeDomMultiStatus
+    val m get() = page.pageModel
+
     val jsSate get() = if (jsData != null) {
         val (ni, na, nnm, nst, w, h) = jsData.lastStat?: ActiveDomStat()
         String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
@@ -67,10 +69,10 @@ class CompletedPageFormatter(
 
     val redirected get() = page.url != page.location
     val category get() = page.pageCategory.symbol()
-    val numFields get() = page.pageModel.first()?.fields?.size?:0
+    val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
-    val fieldFmt get() = if (numFields == 0) "%s" else "%-3s"
+    val fieldFmt get() = if (m.numFields == 0) " %s" else " %-10s"
     val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     val link get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     val url get() = if (redirected) page.location else page.url
@@ -88,7 +90,7 @@ class CompletedPageFormatter(
                 DateTimes.readableDuration(responseTime),
                 jsSate,
                 page.fetchCount,
-                if (numFields == 0) "0" else numFields.toString(),
+                if (m.numFields == 0) "0/0/0" else numFields,
                 proxy?:"",
                 readableLinks
         )

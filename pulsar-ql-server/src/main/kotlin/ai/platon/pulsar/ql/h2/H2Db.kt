@@ -28,7 +28,7 @@ class H2Db(
     /**
      * The base directory to write test databases.
      */
-    val baseDir = AppPaths.TEST_DIR.resolve("h2")
+    val baseDir = AppPaths.DATA_DIR.resolve("h2")
 
     /**
      * Get the file password (only required if file encryption is used).
@@ -151,16 +151,11 @@ class H2Db(
             }
         }
 
-        if (config.networked) {
-            val port = config.port
-
-            if (config.ssl) {
-                url = "ssl://localhost:$port/$name"
-            } else {
-                url = "tcp://localhost:$port/$name"
-            }
+        url = if (config.networked) {
+            val proto = if (config.ssl) "ssl" else "tcp"
+            "$proto://localhost:${config.port}/$name"
         } else {
-            url = name
+            name
         }
 
         url = if (config.mvStore) {
@@ -231,9 +226,7 @@ class H2Db(
      *
      * @param name the database name
      */
-    fun deleteDb(name: String) {
-        deleteDb(buildBaseDir(), name)
-    }
+    fun deleteDb(name: String) = deleteDb(buildBaseDir(), name)
 
     /**
      * Delete all database files for a database.

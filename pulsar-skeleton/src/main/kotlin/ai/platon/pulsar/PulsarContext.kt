@@ -34,7 +34,9 @@ class PulsarContext private constructor(): AutoCloseable {
 
     companion object {
         init {
-            PulsarEnv.initialize()
+            if (!PulsarEnv.isActive) {
+                PulsarEnv.initialize()
+            }
         }
 
         private val activeContext = AtomicReference<PulsarContext>()
@@ -61,7 +63,7 @@ class PulsarContext private constructor(): AutoCloseable {
     /**
      * The spring application context
      * */
-    val applicationContext = PulsarEnv.applicationContext
+    val applicationContext get() = PulsarEnv.applicationContext
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */

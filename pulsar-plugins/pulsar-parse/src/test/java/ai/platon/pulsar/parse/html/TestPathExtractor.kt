@@ -82,7 +82,7 @@ class TestPathExtractor : HtmlParserTestBase() {
         filter.filter(parseContext)
 
         assertTrue(parseResult.isParsed)
-        val fieldGroup = page.pageModel.first()
+        val fieldGroup = page.pageModel.firstOrNull()
         requireNotNull(fieldGroup)
         val fields = fieldGroup.fields
         assertTrue(fields.containsKey("title"))
@@ -115,7 +115,7 @@ class TestPathExtractor : HtmlParserTestBase() {
         assertTrue(parseResult.isSuccess)
         assertTrue(!page.pageModel.isEmpty)
 
-        val fieldGroup = page.pageModel.first()
+        val fieldGroup = page.pageModel.firstOrNull()
         requireNotNull(fieldGroup)
 
         val fields = fieldGroup.fields

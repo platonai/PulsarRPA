@@ -114,8 +114,8 @@ class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMess
         val sb = StringBuilder()
         sb.appendln("-----------------")
         sb.appendln(page.url)
-        val fields = page.pageModel.first()?.fields ?: return
-        page.pageModel.list().forEach {
+        val fields = page.pageModel.firstOrNull()?.fields ?: return
+        page.pageModel.fieldGroups.forEach {
             sb.append("Group ").append(it.name)
             it.fields.entries.joinTo(sb, "\n") {
                 String.format("%30s: %s", it.key, it.value)

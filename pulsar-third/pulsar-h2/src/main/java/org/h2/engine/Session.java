@@ -897,7 +897,7 @@ public class Session extends SessionWithState {
             try {
                 SessionRemote.closeSession(this);
             } catch (Exception e) {
-                trace.debug(e.getMessage());
+                getTrace().debug(e.getMessage());
             }
 
             try {

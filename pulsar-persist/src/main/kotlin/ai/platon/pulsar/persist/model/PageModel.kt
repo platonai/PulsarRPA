@@ -11,35 +11,29 @@ import org.apache.commons.collections4.CollectionUtils
  * The core concept of Document Data Model, DDM
  */
 class PageModel(
-        private val fieldGroups: MutableList<GFieldGroup>
+        val fieldGroups: MutableList<GFieldGroup>
 ) {
+    val numGroups get() = fieldGroups.size
+
+    val numFields get() = fieldGroups.sumBy { it.fields.size }
+
+    val numNonNullFields get() = fieldGroups.sumBy { it.fields.count { it.value != null } }
+
+    val numNonBlankFields get() = fieldGroups.sumBy { it.fields.count { !it.value.isNullOrBlank() } }
+
     val isEmpty: Boolean get() = fieldGroups.isEmpty()
 
     val isNotEmpty: Boolean get() = !isEmpty
 
-    fun unbox(): List<GFieldGroup> {
-        return fieldGroups
-    }
+    fun unbox() = fieldGroups
 
-    fun list(): List<GFieldGroup> {
-        return fieldGroups
-    }
+    fun firstOrNull() = if (isEmpty) null else get(0)
 
-    fun first(): FieldGroup? {
-        return if (isEmpty) null else get(0)
-    }
+    operator fun get(i: Int) = FieldGroup.box(fieldGroups[i])
 
-    operator fun get(i: Int): FieldGroup {
-        return FieldGroup.box(fieldGroups[i])
-    }
+    fun add(fieldGroup: FieldGroup) = fieldGroups.add(fieldGroup.unbox())
 
-    fun add(fieldGroup: FieldGroup): Boolean {
-        return fieldGroups.add(fieldGroup.unbox())
-    }
-
-    fun add(index: Int, fieldGroup: FieldGroup) {
-        fieldGroups.add(index, fieldGroup.unbox())
-    }
+    fun add(index: Int, fieldGroup: FieldGroup) = fieldGroups.add(index, fieldGroup.unbox())
 
     fun emplace(groupId: Int, group: String, fields: Map<String, String?>): FieldGroup {
         return emplace(groupId, 0, group, fields)
@@ -52,13 +46,7 @@ class PageModel(
         return fieldGroup
     }
 
-    fun size(): Int {
-        return fieldGroups.size
-    }
-
-    fun clear() {
-        fieldGroups.clear()
-    }
+    fun clear() = fieldGroups.clear()
 
     fun findById(id: Long): FieldGroup? {
         val gFieldGroup = fieldGroups.firstOrNull { it.id == id }
@@ -71,5 +59,4 @@ class PageModel(
             return PageModel(fieldGroups)
         }
     }
-
 }
