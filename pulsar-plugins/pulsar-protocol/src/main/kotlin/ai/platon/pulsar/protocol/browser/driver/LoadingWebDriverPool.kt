@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.PulsarEnv
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.prependReadableClassName
 import com.codahale.metrics.Gauge
-import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -46,7 +45,7 @@ class LoadingWebDriverPool(
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val instanceRequiredMemory = 200 * 1024 * 1024 // 200 MiB
 
-    private val metricRegistry = SharedMetricRegistries.getDefault()
+    private val metricRegistry = MetricsManagement.defaultMetricRegistry
     val counterRetired = metricRegistry.counter(prependReadableClassName(this, "retired"))
     val counterQuit = metricRegistry.counter(prependReadableClassName(this, "quit"))
 

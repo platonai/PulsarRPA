@@ -51,8 +51,7 @@ open class FeaturedDocument(val document: Document) {
         fun getExportPath(url: String, ident: String): Path = AppPaths.WEB_CACHE_DIR.resolve(ident).resolve(getExportFilename(url))
 
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
-            val defaultClassName = DEFAULT_NODE_FEATURE_CALCULATOR
-            val className = System.getProperty(NODE_FEATURE_CALCULATOR, defaultClassName)
+            val className = System.getProperty(NODE_FEATURE_CALCULATOR, DEFAULT_NODE_FEATURE_CALCULATOR)
             return ResourceLoader.loadUserClass(className)
         }
     }
@@ -63,11 +62,14 @@ open class FeaturedDocument(val document: Document) {
 
     constructor(baseUri: String): this(Document(baseUri))
 
-    constructor(other: FeaturedDocument): this(other.unbox().clone())
+//    constructor(other: FeaturedDocument): this(other.unbox().clone())
+
+    constructor(other: FeaturedDocument): this(other.unbox())
 
     init {
         if (features.isEmpty) {
             val featureCalculator = FEATURE_CALCULATOR_CLASS.newInstance()
+            // println("Calculate document features using $FEATURE_CALCULATOR_CLASS")
             NodeTraversor.traverse(featureCalculator, document)
             require(features.isNotEmpty)
         }

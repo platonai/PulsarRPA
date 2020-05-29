@@ -8,6 +8,24 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.util.concurrent.atomic.AtomicBoolean
 
+object PulsarProperties {
+    val properties = mapOf(
+            PULSAR_CONFIG_PREFERRED_DIR to "pulsar-conf",
+            SYSTEM_PROPERTY_SPECIFIED_RESOURCES to "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml",
+            H2_SESSION_FACTORY_CLASS to AppConstants.H2_SESSION_FACTORY
+    )
+
+    fun setAllProperties(replaceIfExist: Boolean = false) {
+        properties.forEach { (name, value) ->
+            if (replaceIfExist) {
+                Systems.setProperty(name, value)
+            } else {
+                Systems.setPropertyIfAbsent(name, value)
+            }
+        }
+    }
+}
+
 /**
  * Holds all the runtime environment objects for a running Pulsar instance
  * All the threads shares the same PulsarEnv.
@@ -85,13 +103,9 @@ class PulsarEnv {
         }
 
         private fun initEnvironment() {
-            // TODO: load from property files, use spring environment and profile
-            // prerequisite system properties
-            Systems.setPropertyIfAbsent(PULSAR_CONFIG_PREFERRED_DIR, "pulsar-conf")
-            Systems.setPropertyIfAbsent(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml")
-            Systems.setPropertyIfAbsent(H2_SESSION_FACTORY_CLASS, AppConstants.H2_SESSION_FACTORY)
-
+            PulsarProperties.setAllProperties(false)
             registerShutdownHook()
+            applicationContext.registerShutdownHook()
         }
 
         /**
@@ -102,13 +116,9 @@ class PulsarEnv {
          * @see Runtime.addShutdownHook
          */
         fun registerShutdownHook() {
-            if (this.shutdownHook == null) { // No shutdown hook registered yet.
-                this.shutdownHook = object : Thread() {
-                    override fun run() {
-                        synchronized(startupShutdownMonitor) { doClose() }
-                    }
-                }
-                Runtime.getRuntime().addShutdownHook(this.shutdownHook)
+            if (shutdownHook == null) { // No shutdown hook registered yet.
+                shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
+                Runtime.getRuntime().addShutdownHook(shutdownHook)
             }
         }
     }

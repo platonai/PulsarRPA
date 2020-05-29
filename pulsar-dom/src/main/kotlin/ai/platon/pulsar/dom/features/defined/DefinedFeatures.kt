@@ -40,7 +40,7 @@ enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true
 @JvmField val C = F.C.key           // direct element children
 
 @JvmField val DEP = F.DEP.key       // element depth
-@JvmField val SEQ = F.SEQ.key       // element depth
+@JvmField val SEQ = F.SEQ.key       // element sequence
 
 // the number of features
-@JvmField val N = NodeFeature.currentKey
+@JvmField val N = F.values().size

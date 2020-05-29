@@ -7,6 +7,10 @@
 
     <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
 
+    <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close">
+        <constructor-arg ref="conf"/>
+    </bean>
+
     <!--Web Page Database -->
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
@@ -18,10 +22,6 @@
     <!--System metrics -->
     <bean id="messageWriter" class="ai.platon.pulsar.common.message.MiscMessageWriter" destroy-method="close">
         <constructor-arg ref="webDb"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close">
         <constructor-arg ref="conf"/>
     </bean>
 

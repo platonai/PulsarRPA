@@ -20,11 +20,13 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
         init {
             SharedMetricRegistries.setDefault(DEFAULT_METRICS_NAME)
         }
+        val defaultMetricRegistry = SharedMetricRegistries.getDefault()
     }
 
     private val timeIdent = DateTimes.formatNow("MMdd")
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
+
     val metricsEnabled = conf.getBoolean(CapabilityTypes.APPLICATION_METRICS_ENABLED, true)
 
     private val metricRegistry: MetricRegistry

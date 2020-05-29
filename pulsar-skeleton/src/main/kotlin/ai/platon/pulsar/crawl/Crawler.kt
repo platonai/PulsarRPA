@@ -18,7 +18,6 @@ open class Crawler(
         if (closed.compareAndSet(false, true)) {
             if (autoClose) {
                 session.use { it.close() }
-                // PulsarEnv.shutdown()
             }
         }
     }

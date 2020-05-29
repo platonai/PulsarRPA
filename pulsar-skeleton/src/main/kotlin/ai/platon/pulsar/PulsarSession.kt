@@ -235,6 +235,10 @@ open class PulsarSession(
     fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument {
         ensureAlive()
 
+        if (page.isNil) {
+            return FeaturedDocument.NIL
+        }
+
         if (noCache) {
             return context.parse(page)
         }

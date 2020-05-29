@@ -22,14 +22,16 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Creates and caches [ParseFilter] implementing plugins.
  */
-class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig) {
+class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(ParseFilters::class.java)
 
     private val parseFilters = initParseFilters.toMutableList()
+    private val closed = AtomicBoolean()
 
     fun addFirst(parseFilter: ParseFilter) = parseFilters.add(0, parseFilter)
 
@@ -54,5 +56,11 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     override fun toString(): String {
         return parseFilters.joinToString { it.javaClass.simpleName }
+    }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            parseFilters.forEach { it.use { it.close() } }
+        }
     }
 }

@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
@@ -202,7 +203,7 @@ class BrowserEmulatedFetcher(
                 logIdleLongTime(batch)
             }
 
-            TimeUnit.SECONDS.runCatching { sleep(1) }
+            sleepSeconds(1)
 
             state = checkState(batch)
         } while (state == FetchTaskBatch.State.RUNNING)
@@ -285,7 +286,7 @@ class BrowserEmulatedFetcher(
         val timeout = Duration.ofMinutes(2).seconds
         while (batch.workingTasks.isNotEmpty() && tick++ < timeout) {
             checkAndHandleTasksAbort(batch)
-            TimeUnit.SECONDS.runCatching { sleep(1) }
+            sleepSeconds(1)
         }
 
         // Finally, if there are still working tasks, force abort the worker threads

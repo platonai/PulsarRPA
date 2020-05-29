@@ -14,7 +14,6 @@ import org.h2.engine.SessionInterface
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -38,7 +37,7 @@ class SQLContext: AutoCloseable {
         private val activeContext = AtomicReference<SQLContext>()
 
         fun getOrCreate(): SQLContext {
-            synchronized(PulsarContext::class.java) {
+            synchronized(SQLContext::class.java) {
                 if (activeContext.get() == null) {
                     activeContext.set(SQLContext())
                 }
@@ -77,7 +76,7 @@ class SQLContext: AutoCloseable {
 
     private val closed = AtomicBoolean()
 
-    private val isActive = !closed.get() && PulsarEnv.isActive
+    val isActive = !closed.get() && PulsarEnv.isActive
 
     init {
         status = Status.INITIALIZING

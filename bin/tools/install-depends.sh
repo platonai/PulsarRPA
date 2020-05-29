@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+install_utils() {
+  sudo apt-get install snap aptitude ssh vim pkg-config unzip xvfb
+}
+
 install_chrome() {
     echo "Installing latest stable google-chrome"
 
@@ -58,6 +62,8 @@ install_chrome_driver() {
 }
 
 cd /tmp/ || exit
+
+install_utils
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"

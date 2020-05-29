@@ -46,7 +46,7 @@
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters">
+    <bean id="parseFilters" class="ai.platon.pulsar.crawl.parse.ParseFilters" destroy-method="close">
         <constructor-arg>
             <list>
 <!--                <ref bean="jsParseFilter" />-->

@@ -90,8 +90,12 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
         PulsarEnv.shutdown()
     }
 
+    /**
+     * @see org.h2.engine.SessionRemote.shutdownSessionFactory
+     * */
     @Synchronized
     fun shutdownNow() {
+        sqlContext.close()
         PulsarEnv.shutdown()
     }
 }
