@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2.starter
 
-import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.PulsarContext
+
 import org.h2.tools.Server
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -37,7 +38,7 @@ fun main(args: Array<String>) {
     val application = SpringApplication(H2DbConsole::class.java)
 
     val event = ApplicationListener<ApplicationEnvironmentPreparedEvent> {
-        PulsarEnv.initialize()
+        PulsarContext.initialize()
     }
     application.addListeners(event)
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.PreemptChannelSupport
 import ai.platon.pulsar.common.config.ImmutableConfig
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -23,7 +23,7 @@ abstract class PrivacyManager(
     abstract var activeContext: PrivacyContext
     @Deprecated("Should not used in a auto refreshing behaviour", ReplaceWith("activeContext"))
     abstract val autoRefreshContext: PrivacyContext
-    val isActive get() = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get()
 
     inline fun <reified C: PrivacyContext> refreshIfNecessary(crossinline mappingFunction: () -> C): C {
         synchronized(PrivacyContext::class.java) {

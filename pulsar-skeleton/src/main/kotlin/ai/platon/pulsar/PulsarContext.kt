@@ -1,11 +1,10 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
+import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
-import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.component.*
@@ -18,6 +17,8 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
@@ -33,11 +34,100 @@ import kotlin.reflect.KClass
 class PulsarContext private constructor(): AutoCloseable {
 
     companion object {
-        private val activeContext = AtomicReference<PulsarContext>()
+        val log = LoggerFactory.getLogger(PulsarContext::class.java)
+        /**
+         * The spring application context
+         * */
+        lateinit var applicationContext: ConfigurableApplicationContext
+        /**
+         * Whether this pulsar object is already closed
+         * */
+        private val closed = AtomicBoolean()
+        private val initialized = AtomicBoolean()
 
-        // TODO: review page cache and document cache, may have bugs and may have better solution
+        private val activeContext = AtomicReference<PulsarContext>()
+        /** Synchronization monitor for the "refresh" and "destroy".  */
+        private val startupShutdownMonitor = Any()
+        private var shutdownHook: Thread? = null
+
+        // TODO: better cache solution
+        // Very fast and small local caches
         lateinit var pageCache: ConcurrentLRUCache<String, WebPage>
         lateinit var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
+
+        fun initialize() {
+            if (initialized.get()) {
+                return
+            }
+
+            val configLocation = System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
+            initialize(configLocation)
+        }
+
+        fun initialize(configLocation: String) {
+            if (initialized.get()) {
+                return
+            }
+
+            Systems.setProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, configLocation)
+            val context = ClassPathXmlApplicationContext(AppConstants.APP_CONTEXT_CONFIG_LOCATION)
+            initialize(context)
+        }
+
+        fun initialize(context: ConfigurableApplicationContext) {
+            if (initialized.get()) {
+                return
+            }
+
+            applicationContext = context
+
+            initEnvironment()
+
+            initialized.set(true)
+        }
+
+        fun shutdown() {
+            doClose()
+
+            // shutdown application context before progress exit
+            shutdownHook?.also {
+                try {
+                    Runtime.getRuntime().removeShutdownHook(it)
+                } catch (e: IllegalStateException) { // ignore
+                } catch (e: SecurityException) { // applets may not do that - ignore
+                }
+                shutdownHook = null
+            }
+        }
+
+        private fun doClose() {
+            if (closed.compareAndSet(false, true)) {
+                initialized.set(false)
+                // TODO: still can be managed by spring
+                // force close WebDriverPool, ProxyMonitor, etc
+                getOrCreate().use { it.close() }
+            }
+        }
+
+        private fun initEnvironment() {
+            PulsarProperties.setAllProperties(false)
+            registerShutdownHook()
+            applicationContext.registerShutdownHook()
+        }
+
+        /**
+         * Register a shutdown hook with the JVM runtime, closing this context
+         * on JVM shutdown unless it has already been closed at that time.
+         *
+         * Delegates to `doClose()` for the actual closing procedure.
+         * @see Runtime.addShutdownHook
+         */
+        fun registerShutdownHook() {
+            if (shutdownHook == null) { // No shutdown hook registered yet.
+                shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
+                Runtime.getRuntime().addShutdownHook(shutdownHook)
+            }
+        }
 
         fun getOrCreate(): PulsarContext {
             synchronized(PulsarContext::class.java) {
@@ -53,11 +143,6 @@ class PulsarContext private constructor(): AutoCloseable {
         }
     }
 
-    val log = LoggerFactory.getLogger(PulsarContext::class.java)
-    /**
-     * The spring application context
-     * */
-    val applicationContext get() = PulsarEnv.applicationContext
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
@@ -67,17 +152,15 @@ class PulsarContext private constructor(): AutoCloseable {
      * */
     val startTime = System.currentTimeMillis()
     /**
-     * Whether this pulsar object is already closed
-     * */
-    private val closed = AtomicBoolean()
-    /**
-     * Whether this pulsar object is already closed
-     * */
-    val isActive get() = !closed.get() && PulsarEnv.isActive
-    /**
      * Registered closeables, will be closed by Pulsar object
      * */
     private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
+
+    /**
+     * Whether this pulsar object is already closed
+     * */
+    val isActive get() = !closed.get()
+
     /**
      * All open sessions
      * */
@@ -140,7 +223,7 @@ class PulsarContext private constructor(): AutoCloseable {
 
     @Throws(BeansException::class)
     fun <T> getBean(requiredType: Class<T>): T {
-        return PulsarEnv.getBean(requiredType)
+        return applicationContext.getBean(requiredType)
     }
 
     @Throws(BeansException::class)

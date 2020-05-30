@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
 import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -30,7 +30,7 @@ abstract class BrowserEmulatorBase(
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
     val isClosed get() = closed.get()
-    val isActive get() = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get()
     val driverManager = privacyContextManager.driverManager
     val driverControl = driverManager.driverControl
     val driverPool = driverManager.driverPool

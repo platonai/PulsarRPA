@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -76,7 +76,7 @@ class SQLContext: AutoCloseable {
 
     private val closed = AtomicBoolean()
 
-    val isActive = !closed.get() && PulsarEnv.isActive
+    val isActive = !closed.get()
 
     init {
         status = Status.INITIALIZING

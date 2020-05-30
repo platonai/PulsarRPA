@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.common
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
@@ -133,6 +133,6 @@ open class Crawler(
     }
 
     override fun close() {
-        PulsarEnv.shutdown()
+        PulsarContext.shutdown()
     }
 }

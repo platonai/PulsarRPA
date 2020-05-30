@@ -47,7 +47,7 @@ open class PulsarSession(
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get()
 
     /**
      * Close objects when sessions closes
@@ -358,10 +358,6 @@ open class PulsarSession(
     fun exportTo(doc: FeaturedDocument, path: Path): Path {
         ensureAlive()
         return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
-    }
-
-    fun shutdown() {
-        PulsarEnv.shutdown()
     }
 
     override fun equals(other: Any?): Boolean {

@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -52,7 +52,7 @@ open class FetchComponent(
     private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get()
 
     /**
      * Fetch a url

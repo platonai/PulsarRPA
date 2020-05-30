@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -49,7 +49,7 @@ class LoadingWebDriverPool(
     val counterRetired = metricRegistry.counter(prependReadableClassName(this, "retired"))
     val counterQuit = metricRegistry.counter(prependReadableClassName(this, "quit"))
 
-    val isActive get() = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get()
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numFree get() = freeDrivers.size

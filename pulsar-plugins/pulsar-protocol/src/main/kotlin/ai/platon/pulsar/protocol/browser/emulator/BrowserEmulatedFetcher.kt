@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -41,7 +41,7 @@ class BrowserEmulatedFetcher(
     private val driverManager = privacyManager.driverManager
     private val proxyManager = privacyManager.proxyManager
     private val closed = AtomicBoolean()
-    private val isActive get() = !closed.get() && PulsarEnv.isActive
+    private val isActive get() = !closed.get()
 
     fun fetch(url: String): Response {
         return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -68,8 +68,9 @@ class BrowserEmulatedFetcher(
             try {
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
-                log.info("Illegal context state, task is cancelled | {}", task.url)
+                log.info("Illegal context state, task is cancelled. {} | {}", driverManager, task.url)
                 FetchResult.canceled(task)
+                // re-throw?
             }
         }.response
     }
@@ -86,8 +87,12 @@ class BrowserEmulatedFetcher(
      * Fetch page content
      * */
     suspend fun fetchContentDeferred(page: WebPage): Response {
-        require(page.isNotInternal) { "Unexpected internal page | ${page.url}" }
         if (!isActive) {
+            return ForwardingResponse.canceled(page)
+        }
+
+        if (page.isInternal) {
+            log.warn("Unexpected internal page | {}", page.url)
             return ForwardingResponse.canceled(page)
         }
 
@@ -95,7 +100,7 @@ class BrowserEmulatedFetcher(
             try {
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
-                log.info("Illegal context state, task is cancelled | {}", task.url)
+                log.info("Illegal context state, task is cancelled. {} | {}", driverManager, task.url)
                 FetchResult.canceled(task)
             }
         }.response

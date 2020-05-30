@@ -13,7 +13,6 @@ import ai.platon.pulsar.dom.features.FeatureEntry
 import ai.platon.pulsar.dom.features.FeatureFormatter
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
-import ai.platon.pulsar.dom.model.createImage
 import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
 import org.apache.commons.lang3.StringUtils

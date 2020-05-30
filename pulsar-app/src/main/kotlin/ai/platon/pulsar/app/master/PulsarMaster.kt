@@ -1,6 +1,7 @@
 package ai.platon.pulsar.app.master
 
-import ai.platon.pulsar.PulsarEnv
+import ai.platon.pulsar.PulsarContext
+
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import org.slf4j.LoggerFactory
@@ -36,7 +37,7 @@ fun main(args: Array<String>) {
     val application = SpringApplication(PulsarMaster::class.java)
 
     val event = ApplicationListener<ApplicationEnvironmentPreparedEvent> {
-        PulsarEnv.initialize()
+        PulsarContext.initialize()
     }
     application.addListeners(event)
 

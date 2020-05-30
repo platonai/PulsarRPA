@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.PulsarEnv.Companion.getBean
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -27,7 +27,9 @@ import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
-    private val browserEmulator by lazy { getBean(BrowserEmulatedFetcher::class.java) }
+    private val browserEmulator by lazy {
+        PulsarContext.applicationContext.getBean(BrowserEmulatedFetcher::class.java)
+    }
 
     override fun supportParallel(): Boolean = true
 

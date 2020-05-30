@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.protocol.http
 
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class AbstractHttpProtocol: Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && PulsarEnv.isActive
+    val isActive get() = !closed.get()
     /**
      * The max retry time
      */

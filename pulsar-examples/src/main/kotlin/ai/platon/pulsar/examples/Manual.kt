@@ -48,7 +48,7 @@ object Manual {
         scrape()
         scrapeOutPages()
 
-        session.shutdown()
+        PulsarContext.shutdown()
     }
 }
 

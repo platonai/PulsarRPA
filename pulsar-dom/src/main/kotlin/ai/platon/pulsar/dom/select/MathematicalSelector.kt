@@ -1,7 +1,6 @@
 package ai.platon.pulsar.dom.select
 
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory

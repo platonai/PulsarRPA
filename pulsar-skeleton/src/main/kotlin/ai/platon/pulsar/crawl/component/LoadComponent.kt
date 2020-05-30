@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
@@ -63,7 +63,7 @@ class LoadComponent(
     private val fetchTaskTracker get() = fetchComponent.fetchMetrics
 
     private val closed = AtomicBoolean()
-    private val isActive get() = !closed.get() && PulsarEnv.isActive
+    private val isActive get() = !closed.get()
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options

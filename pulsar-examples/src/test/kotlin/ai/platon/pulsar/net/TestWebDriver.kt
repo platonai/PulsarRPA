@@ -1,7 +1,7 @@
 package ai.platon.pulsar.net
 
 import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.PulsarEnv
+
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
@@ -43,7 +43,7 @@ class TestWebDriver {
 
         @AfterClass
         fun teardown() {
-            PulsarEnv.shutdown()
+            PulsarContext.shutdown()
         }
     }
 
