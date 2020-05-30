@@ -36,14 +36,18 @@ internal class InvocationResult(val returnProperty: String? = null) {
         countDownLatch.countDown()
     }
 
-    // TODO: no blocking!!!
     @Throws(InterruptedException::class)
     fun waitForResult(timeout: Long, timeUnit: TimeUnit): Boolean {
-        if (timeout == 0L) {
-            countDownLatch.await()
-            return true
+        try {
+            return if (timeout == 0L) {
+                countDownLatch.await()
+                true
+            } else countDownLatch.await(timeout, timeUnit)
+        } catch (e: InterruptedException) {
+            // ignored
         }
-        return countDownLatch.await(timeout, timeUnit)
+
+        return false
     }
 }
 
@@ -212,9 +216,16 @@ abstract class BasicDevTools(
     }
 
     override fun waitUntilClosed() {
-        closeLatch.runCatching { await() }.onFailure { LOG.warn("Unexpected exception", it) }
+        closeLatch.runCatching { await() }.onFailure {
+            if (it is InterruptedException) {
+                // ignored
+            } else {
+                LOG.warn("Unexpected exception", it)
+            }
+        }
     }
 
+    @Throws(Exception::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {

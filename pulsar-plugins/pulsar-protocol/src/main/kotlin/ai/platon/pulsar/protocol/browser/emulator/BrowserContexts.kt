@@ -13,6 +13,9 @@ import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.lang.Thread.currentThread
 import java.time.Duration
@@ -79,29 +82,45 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             kotlin.runCatching {
-                // Mark all working tasks are canceled, so they return as soon as possible,
-                // the ready tasks are blocked to wait for driverManager.reset() finish
-                runningTasks.forEach { it.cancel() }
-                // Mark all drivers are canceled
-                driverManager.cancelAll()
-                // may wait for cancelling finish?
-                // Close all online drivers and delete the browser data
-                driverManager.reset(timeToWait = Duration.ofMinutes(2))
 
-                // Wait for all tasks return
-                lock.withLock {
-                    var i = 0
-                    while (i++ < 30 && runningTasks.isNotEmpty() && !currentThread().isInterrupted) {
-                        notBusy.await(1, TimeUnit.SECONDS)
+                GlobalScope.launch {
+                    withTimeout(Duration.ofMinutes(2).toMillis()) {
+                        close0()
                     }
-                }
 
-                if (runningTasks.isNotEmpty()) {
-                    log.warn("Still {} running tasks after context close | {}",
-                            runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
+                    // Wait for all tasks return
+                    lock.withLock {
+                        var i = 0
+                        try {
+                            while (i++ < 30 && runningTasks.isNotEmpty()) {
+                                // TODO: might be better and simple solution to cancel all drivers
+                                driverManager.cancelAll()
+                                notBusy.await(1, TimeUnit.SECONDS)
+                            }
+                        } catch (e: InterruptedException) {
+                            // ignored
+                        }
+                    }
+
+                    if (runningTasks.isNotEmpty()) {
+                        log.warn("Still {} running tasks after context close | {}",
+                                runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
+                        Thread.currentThread().interrupt()
+                    }
                 }
             }.onFailure { log.warn("Unexpected exception", it) }
         }
+    }
+
+    private fun close0() {
+        // Mark all working tasks are canceled, so they return as soon as possible,
+        // the ready tasks are blocked to wait for driverManager.reset() finish
+        runningTasks.forEach { it.cancel() }
+        // Mark all drivers are canceled
+        driverManager.cancelAll()
+        // may wait for cancelling finish?
+        // Close all online drivers and delete the browser data
+        driverManager.reset(timeToWait = Duration.ofSeconds(90))
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {

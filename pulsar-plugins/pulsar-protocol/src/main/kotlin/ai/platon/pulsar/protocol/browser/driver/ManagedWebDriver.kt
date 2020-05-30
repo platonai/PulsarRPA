@@ -38,6 +38,7 @@ class ManagedWebDriver(
     }
 
     private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
+    private val wsRequestTimeout = Duration.ofSeconds(15)
 
     /**
      * The driver id
@@ -108,14 +109,12 @@ class ManagedWebDriver(
             return
         }
 
-        log.info("Canceling driver $this")
-        if (isWorking) {
-            val timeout = Duration.ofSeconds(15)
+        if (status.compareAndSet(DriverStatus.WORKING, DriverStatus.CANCELED)) {
+            log.info("Canceling driver $this")
             runBlocking {
-                withTimeout(timeout.toMillis()) { stopLoading() }
+                withTimeout(wsRequestTimeout.toMillis()) { stopLoading() }
             }
         }
-        status.set(DriverStatus.CANCELED)
     }
 
     /**

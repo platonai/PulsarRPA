@@ -164,16 +164,20 @@ class LoadingWebDriverPool(
         lock.withLock {
             var i = 0
             val interval = Duration.ofSeconds(1)
-            val ttl = Instant.now().plusSeconds(timeout.seconds)
-            while (isActive && numWorking.get() > 0 && Instant.now() < ttl && !Thread.currentThread().isInterrupted) {
-                notBusy.await(interval.seconds, TimeUnit.SECONDS)
-                if (i % 20 == 0) {
-                    log.info("Round $i waiting for idle | $this")
+            val ttl = Instant.now().plusSeconds(timeout.seconds).toEpochMilli()
+            try {
+                while (isActive && numWorking.get() > 0 && System.currentTimeMillis() < ttl) {
+                    ++i
+                    notBusy.await(interval.seconds, TimeUnit.SECONDS)
+                    if (i % 20 == 0) {
+                        log.info("Round $i waiting for idle | $this")
+                    }
                 }
-                ++i
+            } catch (e: InterruptedException) {
+                // ignored
             }
 
-            if (Instant.now() >= ttl) {
+            if (System.currentTimeMillis() >= ttl) {
                 Thread.currentThread().interrupt()
             }
         }
