@@ -21,12 +21,28 @@ import org.junit.Test
 import kotlin.test.assertTrue
 
 class TestAppPaths {
+    private val tmpDirStr get() = AppPaths.TMP_DIR.toString()
+    private val homeDirStr get() = AppPaths.HOME_DIR.toString()
 
     @Test
     @Throws(Exception::class)
     fun testGet() {
-        println(AppPaths.get("scripts", "finish_job-1217.20347.sh"))
-        println(AppPaths.getTmp("scripts", "finish_job-1217.20347.sh"))
-        assertTrue(AppPaths.getTmp("scripts", "finish_job-1217.20347.sh").toString().contains(AppConstants.TMP_DIR))
+        val filename = "finish_job-1217.20347.sh"
+
+        var path = AppPaths.getTmp("scripts", filename)
+        var path2 = path
+        assertTrue(path.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
+
+        path = AppPaths.get("scripts", filename)
+        path2 = AppPaths.get("scripts", filename)
+        assertTrue(path2.startsWith(AppPaths.HOME_DIR), "$path -> $path2")
+
+        path = AppPaths.TMP_DIR.resolve("scripts")
+        path2 = AppPaths.getTmp(path.toString(), filename)
+        assertTrue(path2.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
+
+        path = AppPaths.HOME_DIR.resolve("scripts")
+        path2 = AppPaths.get(path.toString(), filename)
+        assertTrue(path2.startsWith(AppPaths.HOME_DIR), "$path -> $path2")
     }
 }

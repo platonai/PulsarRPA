@@ -18,6 +18,7 @@ package ai.platon.pulsar.common.config;
 
 import org.apache.commons.lang3.SystemUtils;
 
+import java.awt.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -179,6 +180,8 @@ public interface AppConstants {
 
     Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
     Path PULSAR_DEFAULT_HOME_DIR = Paths.get(USER_HOME, ".pulsar");
+
+    Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
 
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";

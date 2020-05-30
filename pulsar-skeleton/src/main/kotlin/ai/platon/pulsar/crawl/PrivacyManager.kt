@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-
 import ai.platon.pulsar.common.PreemptChannelSupport
 import ai.platon.pulsar.common.config.ImmutableConfig
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -70,8 +69,8 @@ abstract class PrivacyManager(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            interrupted = true
             globalAutoRefreshContext.get()?.use { it.close() }
-
             activeContext.use { it.close() }
         }
     }

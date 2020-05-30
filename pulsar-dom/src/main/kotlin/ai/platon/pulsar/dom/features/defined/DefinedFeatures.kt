@@ -17,7 +17,8 @@ enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true
     SIB(incKey, "sibling"),
     C(incKey, "child"),
     DEP(incKey, "dep"),
-    SEQ(incKey, "seq");
+    SEQ(incKey, "seq"),
+    DNS(incKey, "txt_dns", isFloat = true);
 
     fun toFeature(): NodeFeature {
         return NodeFeature(key, alias, isPrimary, isFloat)
@@ -41,6 +42,8 @@ enum class F(val key: Int, val alias: String = "", val isPrimary: Boolean = true
 
 @JvmField val DEP = F.DEP.key       // element depth
 @JvmField val SEQ = F.SEQ.key       // element sequence
+
+@JvmField val DNS = F.DNS.key       //
 
 // the number of features
 @JvmField val N = F.values().size

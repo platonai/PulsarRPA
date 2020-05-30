@@ -110,14 +110,9 @@ class ManagedWebDriver(
 
         log.info("Canceling driver $this")
         if (isWorking) {
+            val timeout = Duration.ofSeconds(15)
             runBlocking {
-                val timeout = Duration.ofSeconds(15)
-                val millis = measureTimeMillis {
-                    withTimeout(timeout.toMillis()) { stopLoading() }
-                }
-                // TODO: if it return immediately
-                log.takeIf { millis >= timeout.toMillis() }
-                        ?.info("It takes {} to stop loading", Duration.ofMillis(millis).readable())
+                withTimeout(timeout.toMillis()) { stopLoading() }
             }
         }
         status.set(DriverStatus.CANCELED)

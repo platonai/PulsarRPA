@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
-        val privacyContextManager: BrowserPrivacyManager,
+        val privacyManager: BrowserPrivacyManager,
         val eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
         val messageWriter: MiscMessageWriter,
         val immutableConfig: ImmutableConfig
@@ -31,7 +31,7 @@ abstract class BrowserEmulatorBase(
     val closed = AtomicBoolean(false)
     val isClosed get() = closed.get()
     val isActive get() = !closed.get()
-    val driverManager = privacyContextManager.driverManager
+    val driverManager = privacyManager.driverManager
     val driverControl = driverManager.driverControl
     val driverPool = driverManager.driverPool
     val metrics = SharedMetricRegistries.getDefault()

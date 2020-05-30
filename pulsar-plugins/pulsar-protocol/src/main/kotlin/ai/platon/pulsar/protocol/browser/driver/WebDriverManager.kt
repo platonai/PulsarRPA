@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
+import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import kotlinx.coroutines.withTimeout
@@ -20,17 +21,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class WebDriverManager(
         val driverControl: WebDriverControl,
-        val proxyMonitorFactory: ProxyMonitorFactory,
+        val proxyMonitor: ProxyPoolMonitor,
+        val driverFactory: WebDriverFactory,
+        val driverPool: LoadingWebDriverPool,
         val immutableConfig: ImmutableConfig
 ): Parameterized, PreemptChannelSupport(), AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
-    val proxyManager = proxyMonitorFactory.get()
-    val driverFactory = WebDriverFactory(driverControl, proxyManager, immutableConfig)
-    val driverPool = LoadingWebDriverPool(driverFactory, immutableConfig)
-
     private val taskTimeout = Duration.ofMinutes(5)
-    private val defaultTimeToWaitForCloseAll = Duration.ofMinutes(2)
+    private val defaultTimeToWaitForCloseAll = Duration.ofSeconds(90)
     private val closed = AtomicBoolean()
     val startTime = Instant.now()
     private val metricRegistry = SharedMetricRegistries.getDefault()
@@ -118,15 +117,14 @@ class WebDriverManager(
     /**
      * Cancel all running tasks and close all web drivers
      * */
-    fun reset(timeToWait: Duration = Duration.ofMinutes(2)) {
+    fun reset(timeToWait: Duration = Duration.ofSeconds(90)) {
         numReset.mark()
         closeAll(incognito = true, timeToWait = timeToWait)
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            cancelAll()
-            closeAll(incognito = true, processExit = true)
+            interrupted = true
         }
     }
 
@@ -137,12 +135,10 @@ class WebDriverManager(
             processExit: Boolean = false,
             timeToWait: Duration = defaultTimeToWaitForCloseAll
     ) {
-        cancelAll()
         preempt {
             log.info("Closing all web drivers | {}", formatStatus(verbose = true))
-            if (processExit) {
-                driverPool.use { it.close() }
-            } else {
+            if (!processExit) {
+                interrupted = true
                 driverPool.closeAll(incognito, timeToWait = timeToWait)
             }
         }

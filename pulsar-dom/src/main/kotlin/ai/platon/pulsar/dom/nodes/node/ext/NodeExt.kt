@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.nodes.node.ext
 
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.SParser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
@@ -22,6 +23,9 @@ import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
+import java.nio.file.Path
+import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KProperty
 
 class DoubleFeature(val name: Int) {
@@ -66,6 +70,18 @@ inline fun <reified T> nullableField(): NullableMapField<T> {
     return NullableMapField()
 }
 
+class ExportPaths(val uri: String) {
+    val filename get() = AppPaths.fromUri(uri, "", ".htm")
+    val portal get() = build("portal")
+    val annotatedView get() = build("annotated")
+    val tileView get() = build("tile")
+    val entityView get() = build("entity")
+
+    private fun build(ident: String): Path {
+        return AppPaths.DOC_EXPORT_DIR.resolve(ident).resolve(filename)
+    }
+}
+
 val nilNode = Element("div") as Node
 
 val nilElement = Element("div")
@@ -80,9 +96,25 @@ val Document.pulsarScriptElement get() = getElementById("#${AppConstants.PULSAR_
 
 val Document.pulsarScript get() = ownerDocument.pulsarScriptElement.text()
 
-//var Document.originalExportPath by field {
-//    PulsarPaths.get(PulsarPaths.webCacheDir, "original", getExportFilename(it.baseUri()))
-//}
+var Document.isInitialized by field { AtomicBoolean() }
+
+val Document.threadIds by field { ConcurrentSkipListSet<Long>() }
+
+val Document.viewPort by field { it.calculateViewPort() }
+
+// geometric grid, we have two grids, a bigger one and a smaller one
+
+var Document.primaryGrid by field { Dimension(0, 0) }
+
+var Document.secondaryGrid by field { Dimension(0, 0) }
+
+var Document.grid by field { Dimension(0, 0) }
+
+var Document.unitArea by field { 0 }
+
+var Document.exportPaths by field { ExportPaths(it.baseUri()) }
+
+var Document.annotated by field { false }
 
 // TODO: check if this override Node.isNil or not?
 val Element.isNil get() = this === nilElement
@@ -262,6 +294,9 @@ var Node.numImages by IntFeature(IMG)
 
 /** Number of descend anchors */
 var Node.numAnchors by IntFeature(A)
+
+/** Text node density */
+var Node.textNodeDensity by DoubleFeature(DNS)
 
 // semantics
 val Node.selectorOrName: String
@@ -711,4 +746,12 @@ private fun getQualifiedClassNames(classNames: MutableSet<String>): MutableSet<S
         }
     }
     return classNames
+}
+
+private fun Node.calculateViewPort(): Dimension {
+    val default = AppConstants.DEFAULT_VIEW_PORT
+    val parts = ownerBody.attr("view-port").split("x")
+    return if (parts.size == 2)
+        Dimension(parts[0].toIntOrNull()?:default.width, parts[1].toIntOrNull()?:default.height)
+    else default
 }

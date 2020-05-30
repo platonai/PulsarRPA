@@ -1,8 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
+import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -35,6 +35,8 @@ class BrowserPrivacyManager(
     suspend fun runDeferred(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return takeIf { isActive }?.runDeferred0(task, fetchFun)?:FetchResult.crawlRetry(task)
     }
+
+
 
     private fun run0(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         var result: FetchResult

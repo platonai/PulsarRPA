@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
-import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
+import ai.platon.pulsar.dom.nodes.forEach
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.dom.select.select
@@ -19,12 +19,20 @@ import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
+import java.awt.Dimension
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicInteger
 
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
-        private val FEATURE_CALCULATOR_CLASS: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
+
+        var primaryGridDimension = Dimension(30, 15) // about 1 em
+        var secondaryGridDimension = Dimension(5, 5)
+        var densityUnitArea = 400 * 400
+
+        val globalNumDocuments = AtomicInteger()
+        val FEATURE_CALCULATOR_CLASS: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
 
         val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -46,10 +54,6 @@ open class FeaturedDocument(val document: Document) {
             return doc.location.startsWith(INTERNAL_URL_PREFIX)
         }
 
-        fun getExportFilename(uri: String): String = AppPaths.fromUri(uri, "", ".htm")
-
-        fun getExportPath(url: String, ident: String): Path = AppPaths.WEB_CACHE_DIR.resolve(ident).resolve(getExportFilename(url))
-
         private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
             val className = System.getProperty(NODE_FEATURE_CALCULATOR, DEFAULT_NODE_FEATURE_CALCULATOR)
             return ResourceLoader.loadUserClass(className)
@@ -62,16 +66,42 @@ open class FeaturedDocument(val document: Document) {
 
     constructor(baseUri: String): this(Document(baseUri))
 
-//    constructor(other: FeaturedDocument): this(other.unbox().clone())
-
     constructor(other: FeaturedDocument): this(other.unbox())
 
     init {
-        if (features.isEmpty) {
+        // TODO: Only one thread is allow to access the document
+        document.threadIds.add(Thread.currentThread().id)
+        if(document.threadIds.size != 1) {
+            val threads = document.threadIds.joinToString()
+            System.err.println("Warning: multiple threads ($threads) are process document | $location")
+        }
+
+        if (document.isInitialized.compareAndSet(false, true)) {
             val featureCalculator = FEATURE_CALCULATOR_CLASS.newInstance()
             // println("Calculate document features using $FEATURE_CALCULATOR_CLASS")
             NodeTraversor.traverse(featureCalculator, document)
             require(features.isNotEmpty)
+
+            globalNumDocuments.incrementAndGet()
+
+            document.unitArea = densityUnitArea
+            document.primaryGrid = primaryGridDimension
+            document.secondaryGrid = secondaryGridDimension
+            document.grid = document.primaryGrid
+
+            calculateInducedFeatures()
+        }
+    }
+
+    /**
+     * Calculate features depend on other features
+     * */
+    private fun calculateInducedFeatures() {
+        // Calculate text node density
+        val unitArea = document.unitArea
+        document.forEach {
+            // add a smooth number to make sure the dividend is not zero
+            it.textNodeDensity = 1.0 * it.numTextNodes / it.area.coerceAtLeast(1) * unitArea
         }
     }
 
@@ -198,4 +228,5 @@ open class FeaturedDocument(val document: Document) {
     override fun hashCode() = location.hashCode()
 
     override fun toString() = document.uniqueName
+
 }

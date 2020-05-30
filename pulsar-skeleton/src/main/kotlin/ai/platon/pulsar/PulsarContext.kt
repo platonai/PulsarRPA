@@ -202,7 +202,6 @@ class PulsarContext private constructor(): AutoCloseable {
         webDb = applicationContext.getBean(WebDb::class.java)
         injectComponent = applicationContext.getBean(InjectComponent::class.java)
         loadComponent = applicationContext.getBean(LoadComponent::class.java)
-        // TODO: better way to share the page cache, a global bean is ok
         fetchComponent = applicationContext.getBean(BatchFetchComponent::class.java)
         parseComponent = applicationContext.getBean(ParseComponent::class.java)
         urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)

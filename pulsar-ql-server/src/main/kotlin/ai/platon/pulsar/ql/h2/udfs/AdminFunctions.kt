@@ -52,7 +52,7 @@ object AdminFunctions {
     fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
         checkPrivilege(h2session)
         val page = H2SessionFactory.getSession(h2session.serialId).load(url)
-        val path = AppPaths.get(AppPaths.WEB_CACHE_DIR.toString(), AppPaths.fromUri(page.url, "", ".htm"))
+        val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(url, "", postfix))
         return AppFiles.saveTo(page, path).toString()
     }
 

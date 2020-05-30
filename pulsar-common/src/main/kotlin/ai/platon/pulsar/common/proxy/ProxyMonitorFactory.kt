@@ -26,7 +26,6 @@ class ProxyMonitorFactory(val conf: ImmutableConfig): AutoCloseable {
                         ProxyPoolMonitor::class.java
                     }
                     proxyMonitor.set(clazz.constructors.first { it.parameters.size == 1 }.newInstance(conf) as ProxyPoolMonitor)
-                    proxyMonitor.get().start()
                 }
             }
         }

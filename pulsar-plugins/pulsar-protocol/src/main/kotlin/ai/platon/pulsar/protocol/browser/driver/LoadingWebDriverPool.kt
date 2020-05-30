@@ -12,6 +12,7 @@ import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.TimeUnit
@@ -40,6 +41,7 @@ class LoadingWebDriverPool(
 
     private val isHeadless = immutableConfig.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
+    private var closer: Thread? = null
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
@@ -66,8 +68,10 @@ class LoadingWebDriverPool(
         })
     }
 
+    @Throws(InterruptedException::class)
     fun take(conf: ImmutableConfig): ManagedWebDriver = take(0, conf)
 
+    @Throws(InterruptedException::class)
     fun take(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         return take0(priority, conf).also { numWorking.incrementAndGet() }
     }
@@ -84,7 +88,7 @@ class LoadingWebDriverPool(
 
     fun firstOrNull(predicate: (ManagedWebDriver) -> Boolean) = onlineDrivers.firstOrNull(predicate)
 
-    fun closeAll(incognito: Boolean = true, processExit: Boolean = false, timeToWait: Duration = Duration.ofMinutes(2)) {
+    fun closeAll(incognito: Boolean = true, processExit: Boolean = false, timeToWait: Duration = Duration.ofSeconds(90)) {
         if (!processExit) {
             waitUntilIdleOrTimeout(timeToWait)
         }
@@ -94,7 +98,17 @@ class LoadingWebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            closeAll(incognito = true, processExit = true)
+            if (closer == null) {
+                closer = Thread {
+                    try {
+                        closeAll(incognito = true, processExit = true)
+                    } catch (e: InterruptedException) {
+                        log.warn("Thread interrupted when closing | {}", this)
+                        Thread.currentThread().interrupt()
+                    }
+                }
+                closer?.start()
+            }
         }
     }
 
@@ -145,15 +159,22 @@ class LoadingWebDriverPool(
         }
     }
 
-    private fun waitUntilIdleOrTimeout(timeout: Duration = Duration.ofMinutes(2)) {
+    @Synchronized
+    private fun waitUntilIdleOrTimeout(timeout: Duration = Duration.ofSeconds(90)) {
         lock.withLock {
             var i = 0
-            val time = Duration.ofSeconds(1)
-            while (isActive && numWorking.get() > 0 && i++ < timeout.seconds) {
-                notBusy.await(time.seconds, TimeUnit.SECONDS)
+            val interval = Duration.ofSeconds(1)
+            val ttl = Instant.now().plusSeconds(timeout.seconds)
+            while (isActive && numWorking.get() > 0 && Instant.now() < ttl && !Thread.currentThread().isInterrupted) {
+                notBusy.await(interval.seconds, TimeUnit.SECONDS)
                 if (i % 20 == 0) {
                     log.info("Round $i waiting for idle | $this")
                 }
+                ++i
+            }
+
+            if (Instant.now() >= ttl) {
+                Thread.currentThread().interrupt()
             }
         }
     }

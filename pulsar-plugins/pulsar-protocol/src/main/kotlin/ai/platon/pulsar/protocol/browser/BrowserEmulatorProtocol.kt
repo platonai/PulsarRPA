@@ -39,16 +39,12 @@ class BrowserEmulatorProtocol : ForwardingProtocol() {
 
     override fun getResponse(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
-        return super.getResponse(page, followRedirects)
-                ?:browserEmulator.fetchContent(page)
-                ?:ForwardingResponse.canceled(page)
+        return super.getResponse(page, followRedirects)?:browserEmulator.fetchContent(page)
     }
 
     override suspend fun getResponseDeferred(page: WebPage, followRedirects: Boolean): Response? {
         require(page.isNotInternal) { "Unexpected internal page ${page.url}" }
-        return super.getResponse(page, followRedirects)
-                ?:browserEmulator.fetchContentDeferred(page)
-                ?:ForwardingResponse.canceled(page)
+        return super.getResponse(page, followRedirects)?:browserEmulator.fetchContentDeferred(page)
     }
 
     override fun reset() {

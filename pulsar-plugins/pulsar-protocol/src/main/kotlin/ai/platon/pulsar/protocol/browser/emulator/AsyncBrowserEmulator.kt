@@ -26,11 +26,11 @@ import kotlin.random.Random
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class AsyncBrowserEmulator(
-        privacyContextManager: BrowserPrivacyManager,
+        privacyManager: BrowserPrivacyManager,
         eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(privacyContextManager, eventHandlerFactory, messageWriter, immutableConfig) {
+): BrowserEmulatorBase(privacyManager, eventHandlerFactory, messageWriter, immutableConfig) {
 
     val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
     var lastNavigateTime = Instant.EPOCH

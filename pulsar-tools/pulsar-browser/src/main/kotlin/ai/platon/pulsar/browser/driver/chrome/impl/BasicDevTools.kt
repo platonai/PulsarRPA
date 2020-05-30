@@ -217,10 +217,15 @@ abstract class BasicDevTools(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            lock.withLock {
-                if (invocationResults.isNotEmpty()) {
-                    notBusy.await(5, TimeUnit.SECONDS)
+            try {
+                lock.withLock {
+                    var i = 0
+                    while (i++ < 5 && invocationResults.isNotEmpty()) {
+                        notBusy.await(1, TimeUnit.SECONDS)
+                    }
                 }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
             }
 
             wsClient.use { it.close() }

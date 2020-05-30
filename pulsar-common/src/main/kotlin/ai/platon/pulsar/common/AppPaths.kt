@@ -36,8 +36,6 @@ object AppPaths {
     val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
     @RequiredDirectory
     val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_HOME_DIR)
-//    @RequiredDirectory
-//    val HOME_DIR = TMP_DIR
     /**
      * Application data are kept in the data dir
      * */

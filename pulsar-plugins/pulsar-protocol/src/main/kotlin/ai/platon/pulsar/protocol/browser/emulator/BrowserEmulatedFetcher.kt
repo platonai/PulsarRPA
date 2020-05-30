@@ -325,7 +325,7 @@ class BrowserEmulatedFetcher(
 
     private fun logBeforeBatchStart(batch: FetchTaskBatch) {
         if (log.isInfoEnabled) {
-            val proxy = driverManager.proxyManager.currentProxyEntry
+            val proxy = driverManager.proxyMonitor.currentProxyEntry
             val proxyMessage = if (proxy == null) "" else " with expected proxy " + proxy.display
             log.info("Start task batch {} with {} pages in parallel{}", batch.batchId, batch.batchSize, proxyMessage)
         }

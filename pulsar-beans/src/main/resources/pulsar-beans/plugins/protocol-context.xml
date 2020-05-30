@@ -11,19 +11,32 @@
         <constructor-arg ref="conf" />
     </bean>
 
-    <bean id="browserControl" class="ai.platon.pulsar.protocol.browser.driver.WebDriverControl">
+    <bean id="driverControl" class="ai.platon.pulsar.protocol.browser.driver.WebDriverControl">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
+        <constructor-arg ref="driverControl"/>
+        <constructor-arg ref="proxyMonitor"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="webDriverPool" class="ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool" destroy-method="close">
+        <constructor-arg ref="webDriverFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="webDriverManager" class="ai.platon.pulsar.protocol.browser.driver.WebDriverManager" destroy-method="close">
-        <constructor-arg ref="browserControl"/>
-        <constructor-arg ref="proxyManagerFactory"/>
+        <constructor-arg ref="driverControl"/>
+        <constructor-arg ref="proxyMonitor"/>
+        <constructor-arg ref="webDriverFactory"/>
+        <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="browserPrivacyManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyManager">
+    <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyManager">
+        <constructor-arg ref="proxyMonitorFactory"/>
         <constructor-arg ref="webDriverManager"/>
-        <constructor-arg ref="proxyManagerFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -34,21 +47,21 @@
     </bean>
 
     <bean id="browserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator" destroy-method="close">
-        <constructor-arg ref="browserPrivacyManager"/>
+        <constructor-arg ref="privacyManager"/>
         <constructor-arg ref="browserEmulatorEventHandlerFactory"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="asyncBrowserEmulator" class="ai.platon.pulsar.protocol.browser.emulator.AsyncBrowserEmulator" destroy-method="close">
-        <constructor-arg ref="browserPrivacyManager"/>
+        <constructor-arg ref="privacyManager"/>
         <constructor-arg ref="browserEmulatorEventHandlerFactory"/>
         <constructor-arg ref="messageWriter"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="browserEmulatedFetcher" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher" destroy-method="close">
-        <constructor-arg ref="browserPrivacyManager"/>
+        <constructor-arg ref="privacyManager"/>
         <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="asyncBrowserEmulator"/>
         <constructor-arg ref="conf"/>
