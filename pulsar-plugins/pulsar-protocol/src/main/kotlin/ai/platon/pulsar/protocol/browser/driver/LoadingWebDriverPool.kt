@@ -104,7 +104,6 @@ class LoadingWebDriverPool(
                         closeAll(incognito = true, processExit = true)
                     } catch (e: InterruptedException) {
                         log.warn("Thread interrupted when closing | {}", this)
-                        Thread.currentThread().interrupt()
                     }
                 }
                 closer?.start()
@@ -160,26 +159,18 @@ class LoadingWebDriverPool(
     }
 
     @Synchronized
-    private fun waitUntilIdleOrTimeout(timeout: Duration = Duration.ofSeconds(90)) {
+    private fun waitUntilIdleOrTimeout(timeout: Duration) {
         lock.withLock {
+            val ttl = timeout.seconds
             var i = 0
-            val interval = Duration.ofSeconds(1)
-            val ttl = Instant.now().plusSeconds(timeout.seconds).toEpochMilli()
             try {
-                while (isActive && numWorking.get() > 0 && System.currentTimeMillis() < ttl) {
-                    ++i
-                    notBusy.await(interval.seconds, TimeUnit.SECONDS)
+                while (isActive && numWorking.get() > 0 && ++i < ttl) {
+                    notBusy.await(1, TimeUnit.SECONDS)
                     if (i % 20 == 0) {
                         log.info("Round $i waiting for idle | $this")
                     }
                 }
-            } catch (e: InterruptedException) {
-                // ignored
-            }
-
-            if (System.currentTimeMillis() >= ttl) {
-                Thread.currentThread().interrupt()
-            }
+            } catch (ignored: InterruptedException) {}
         }
     }
 

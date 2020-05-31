@@ -159,7 +159,7 @@ class Chrome(
         } catch (ex: IOException) {
             throw ChromeServiceException("Failed sending HTTP request", ex)
         } finally {
-            inputStream?.use { it.close() }
+            inputStream?.close()
             connection?.disconnect()
         }
     }

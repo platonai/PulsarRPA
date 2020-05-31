@@ -228,18 +228,16 @@ abstract class BasicDevTools(
     @Throws(Exception::class)
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                lock.withLock {
+            lock.withLock {
+                try {
                     var i = 0
                     while (i++ < 5 && invocationResults.isNotEmpty()) {
                         notBusy.await(1, TimeUnit.SECONDS)
                     }
-                }
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
+                } catch (ignored: InterruptedException) {}
             }
 
-            wsClient.use { it.close() }
+            wsClient.close()
             workerGroup.shutdownGracefully()
 
             closeLatch.countDown()

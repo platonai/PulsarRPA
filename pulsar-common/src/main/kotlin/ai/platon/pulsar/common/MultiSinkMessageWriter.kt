@@ -42,7 +42,7 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            writers.values.forEach { it.use { it.close() } }
+            writers.values.forEach { it.close() }
         }
     }
 }

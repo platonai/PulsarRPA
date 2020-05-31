@@ -87,7 +87,7 @@ class PulsarContext private constructor(): AutoCloseable {
         }
 
         fun shutdown() {
-            doClose()
+            activeContext.getAndSet(null)?.close()
 
             // shutdown application context before progress exit
             shutdownHook?.also {
@@ -100,21 +100,6 @@ class PulsarContext private constructor(): AutoCloseable {
             }
         }
 
-        private fun doClose() {
-            if (closed.compareAndSet(false, true)) {
-                initialized.set(false)
-                // TODO: still can be managed by spring
-                // force close WebDriverPool, ProxyMonitor, etc
-                getOrCreate().use { it.close() }
-            }
-        }
-
-        private fun initEnvironment() {
-            PulsarProperties.setAllProperties(false)
-            registerShutdownHook()
-            applicationContext.registerShutdownHook()
-        }
-
         /**
          * Register a shutdown hook with the JVM runtime, closing this context
          * on JVM shutdown unless it has already been closed at that time.
@@ -123,13 +108,17 @@ class PulsarContext private constructor(): AutoCloseable {
          * @see Runtime.addShutdownHook
          */
         fun registerShutdownHook() {
+            ensureAlive()
             if (shutdownHook == null) { // No shutdown hook registered yet.
-                shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
+                shutdownHook = Thread { synchronized(startupShutdownMonitor) {
+                    activeContext.getAndSet(null)?.close() }
+                }
                 Runtime.getRuntime().addShutdownHook(shutdownHook)
             }
         }
 
         fun getOrCreate(): PulsarContext {
+            ensureAlive()
             synchronized(PulsarContext::class.java) {
                 if (activeContext.get() == null) {
                     activeContext.set(PulsarContext())
@@ -139,7 +128,21 @@ class PulsarContext private constructor(): AutoCloseable {
         }
 
         fun createSession(): PulsarSession {
+            ensureAlive()
             return getOrCreate().createSession()
+        }
+
+        private fun initEnvironment() {
+            ensureAlive()
+            PulsarProperties.setAllProperties(false)
+            registerShutdownHook()
+            applicationContext.registerShutdownHook()
+        }
+
+        private fun ensureAlive() {
+            if (closed.get()) {
+                throw IllegalStateException("Pulsar context is closed")
+            }
         }
     }
 
@@ -211,12 +214,14 @@ class PulsarContext private constructor(): AutoCloseable {
     }
 
     fun createSession(): PulsarSession {
+        ensureAlive()
         val session = PulsarSession(this, VolatileConfig(unmodifiedConfig))
         sessions[session.id] = session
         return session
     }
 
     fun closeSession(session: PulsarSession) {
+        ensureAlive()
         sessions.remove(session.id)
     }
 
@@ -235,6 +240,7 @@ class PulsarContext private constructor(): AutoCloseable {
      * Close objects when sessions closes
      * */
     fun registerClosable(closable: AutoCloseable) {
+        ensureAlive()
         closableObjects.add(closable)
     }
 
@@ -451,24 +457,19 @@ class PulsarContext private constructor(): AutoCloseable {
             try {
                 sessions.values.forEach {
                     log.debug("Closing session $it")
-                    it.use { it.close() }
+                    it.runCatching { it.close() }.onFailure { log.warn(it.message) }
                 }
                 closableObjects.forEach {
                     log.debug("Closing closeable $it")
-                    it.use { it.close() }
+                    it.runCatching { it.close() }.onFailure { log.warn(it.message) }
                 }
             } catch (t: Throwable) {
                 log.warn("Unexpected exception", t)
             }
 
             log.debug("PulsarContext is closed")
-        }
-    }
 
-    private fun ensureAlive() {
-        if (closed.get()) {
-//            throw IllegalStateException(
-//                    """Cannot call methods on a stopped PulsarContext.""")
+            runCatching { applicationContext.close() }.onFailure { log.warn(it.message) }
         }
     }
 }

@@ -57,7 +57,7 @@ object Ping {
             return false
         } finally {
             try {
-                reader?.use { it.close() }
+                reader?.close()
             } catch (e: IOException) {
                 e.printStackTrace()
             }
@@ -95,7 +95,7 @@ object Ping {
             return time
         } finally {
             try {
-                reader?.use { it.close() }
+                reader?.close()
             } catch (e: IOException) {
                 e.printStackTrace()
             }

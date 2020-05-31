@@ -200,7 +200,7 @@ abstract class ReactiveDevTools(
                 }
             }
 
-            wsClient.use { it.close() }
+            wsClient.close()
             workerGroup.shutdownGracefully()
 
             closeLatch.countDown()

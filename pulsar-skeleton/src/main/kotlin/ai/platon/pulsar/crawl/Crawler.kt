@@ -17,7 +17,7 @@ open class Crawler(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (autoClose) {
-                session.use { it.close() }
+                session.close()
             }
         }
     }

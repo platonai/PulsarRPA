@@ -17,7 +17,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
-import java.lang.Thread.currentThread
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CountDownLatch
@@ -81,46 +80,50 @@ class WebDriverContext(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            kotlin.runCatching {
-
-                GlobalScope.launch {
-                    withTimeout(Duration.ofMinutes(2).toMillis()) {
-                        close0()
-                    }
-
-                    // Wait for all tasks return
-                    lock.withLock {
-                        var i = 0
-                        try {
-                            while (i++ < 30 && runningTasks.isNotEmpty()) {
-                                // TODO: might be better and simple solution to cancel all drivers
-                                driverManager.cancelAll()
-                                notBusy.await(1, TimeUnit.SECONDS)
-                            }
-                        } catch (e: InterruptedException) {
-                            // ignored
-                        }
-                    }
-
-                    if (runningTasks.isNotEmpty()) {
-                        log.warn("Still {} running tasks after context close | {}",
-                                runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
-                        Thread.currentThread().interrupt()
-                    }
-                }
-            }.onFailure { log.warn("Unexpected exception", it) }
+            // TODO: better closer
+            launchCloser()
         }
     }
 
-    private fun close0() {
-        // Mark all working tasks are canceled, so they return as soon as possible,
-        // the ready tasks are blocked to wait for driverManager.reset() finish
-        runningTasks.forEach { it.cancel() }
-        // Mark all drivers are canceled
-        driverManager.cancelAll()
-        // may wait for cancelling finish?
-        // Close all online drivers and delete the browser data
-        driverManager.reset(timeToWait = Duration.ofSeconds(90))
+    private fun launchCloser() {
+        // Launches a new coroutine without blocking the current thread and returns
+        GlobalScope.launch {
+            // close underlying IO based modules asynchronously
+            launch {
+                closeUnderlyingLayer()
+            }
+
+            // Wait for all tasks return
+            lock.withLock {
+                var i = 0
+                try {
+                    while (i++ < 30 && runningTasks.isNotEmpty()) {
+                        runningTasks.forEach { it.cancel() }
+                        notBusy.await(1, TimeUnit.SECONDS)
+                    }
+                } catch (ignored: InterruptedException) {}
+            }
+
+            if (runningTasks.isNotEmpty()) {
+                log.warn("Still {} running tasks after context close | {}",
+                        runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
+            } else {
+                log.info("WebDriverContext is closed successfully")
+            }
+        }
+    }
+
+    private suspend fun closeUnderlyingLayer() {
+        withTimeout(Duration.ofMinutes(2).toMillis()) {
+            // Mark all working tasks are canceled, so they return as soon as possible,
+            // the ready tasks are blocked to wait for driverManager.reset() finish
+            runningTasks.forEach { it.cancel() }
+            // Mark all drivers are canceled
+            driverManager.cancelAll()
+            // may wait for cancelling finish?
+            // Close all online drivers and delete the browser data
+            driverManager.reset(timeToWait = Duration.ofSeconds(60))
+        }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
@@ -382,8 +385,8 @@ open class BrowserPrivacyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            driverContext.use { it.close() }
-            proxyContext.use { it.close() }
+            driverContext.close()
+            proxyContext.close()
             closeLatch.countDown()
 
             report()

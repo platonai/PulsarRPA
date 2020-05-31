@@ -126,7 +126,7 @@ class SQLContext: AutoCloseable {
     fun closeSession(sessionId: Int) {
         ensureRunning()
         val key = DbSession(sessionId, Any())
-        sessions.remove(key)?.use { it.close() }
+        sessions.remove(key)?.close()
     }
 
     override fun close() {
@@ -135,7 +135,6 @@ class SQLContext: AutoCloseable {
 
             log.info("Closing SQLContext ...")
 
-            backgroundSession.use { it.close() }
 //            backgroundThread.interrupt()
 //            backgroundThread.join()
 

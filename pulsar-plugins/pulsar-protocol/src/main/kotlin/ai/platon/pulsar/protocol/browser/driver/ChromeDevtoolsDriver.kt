@@ -58,8 +58,8 @@ class ChromeDevtoolsDriver(
                         val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
                         nonSynchronized.parallelStream().forEach { it.waitUntilClosed() }
 
-                        chrome.use { it.close() }
-                        launcher.use { it.close() }
+                        chrome.close()
+                        launcher.close()
                     }
                 }
             }
@@ -266,7 +266,7 @@ class ChromeDevtoolsDriver(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            devTools.use { it.close() }
+            devTools.close()
             numInstances.decrementAndGet()
         }
     }

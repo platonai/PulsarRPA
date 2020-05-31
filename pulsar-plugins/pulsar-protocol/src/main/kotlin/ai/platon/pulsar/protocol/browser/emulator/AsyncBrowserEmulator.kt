@@ -15,6 +15,7 @@ import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.openqa.selenium.WebDriverException
 import java.time.Duration
 import java.time.Instant
@@ -33,7 +34,6 @@ open class AsyncBrowserEmulator(
 ): BrowserEmulatorBase(privacyManager, eventHandlerFactory, messageWriter, immutableConfig) {
 
     val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
-    var lastNavigateTime = Instant.EPOCH
 
     init {
         params.withLogger(log).info()
@@ -144,9 +144,11 @@ open class AsyncBrowserEmulator(
         // driver.switchTo().frame(1);
 
         withContext(Dispatchers.IO) {
-            val idleTime = Duration.between(lastNavigateTime, Instant.now())
-            if (idleTime.seconds < 5) {
-                delay(2000L + Random.nextInt(0, 1000))
+            if (enableDelayBeforeNavigation) {
+                val idleTime = Duration.between(lastNavigateTime, Instant.now())
+                if (idleTime.seconds < 5) {
+                    delay(2000L + Random.nextInt(0, 1000))
+                }
             }
 
             meterNavigates.mark()
@@ -184,36 +186,23 @@ open class AsyncBrowserEmulator(
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
 
-        runScriptTask(task, result) { jsCheckDOMState(task, result) }
+        jsCheckDOMState(task, result)
 
         if (result.state.isContinue) {
-            runScriptTask(task, result) { jsScrollDown(task, result) }
+            jsScrollDown(task, result)
         }
 
         if (result.state.isContinue) {
-            runScriptTask(task, result) { jsComputeFeature(task, result) }
+            jsComputeFeature(task, result)
         }
 
         return result
     }
 
-    @Throws(CancellationException::class, IllegalContextStateException::class, WebDriverException::class)
-    private suspend fun runScriptTask(task: InteractTask, result: InteractResult, action: suspend () -> Unit) {
-        checkState(task.driver)
-        checkState(task.fetchTask)
-
-        action()
-
-        result.state = FlowState.CONTINUE
-    }
-
     @Throws(CancellationException::class)
     protected open suspend fun jsCheckDOMState(interactTask: InteractTask, result: InteractResult) {
-        checkState()
-
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.driverConfig.scriptTimeout
-
         val fetchTask = interactTask.fetchTask
 
         // make sure the document is ready
@@ -227,12 +216,7 @@ open class AsyncBrowserEmulator(
             var msg: Any? = null
             var i = 0
             while ((msg == null || msg == false) && i++ < maxRound) {
-                withContext(Dispatchers.IO) {
-                    checkState(interactTask.driver)
-                    checkState(fetchTask)
-                    counterRequests.inc()
-                    msg = interactTask.driver.evaluate(expression)
-                }
+                msg = evaluate(interactTask, expression)
 
                 if (msg == null || msg == false) {
                     delay(500)
@@ -267,28 +251,31 @@ open class AsyncBrowserEmulator(
         scrollDownCount = scrollDownCount.coerceAtLeast(3)
 
         val expression = "__utils__.scrollDownN($scrollDownCount)"
-        withContext(Dispatchers.IO) {
-            checkState(interactTask.driver)
-            checkState(interactTask.fetchTask)
-            // tracer?.trace("About to scrollDownN #{} in {}", emulateTask.fetchTask.id, Thread.currentThread().name)
-            counterRequests.inc()
-            interactTask.driver.evaluate(expression)
-        }
+        evaluate(interactTask, expression)
     }
 
     protected open suspend fun jsComputeFeature(interactTask: InteractTask, result: InteractResult) {
-        val message = withContext(Dispatchers.IO) {
-            checkState(interactTask.driver)
-            checkState(interactTask.fetchTask)
-            // tracer?.trace("About to compute #{} in {}", emulateTask.fetchTask.id, Thread.currentThread().name)
-            counterRequests.inc()
-            interactTask.driver.evaluate("__utils__.compute()")
-        }
+        val expression = "__utils__.compute()"
+        val message = evaluate(interactTask, expression)
+
         if (message is String) {
             result.activeDomMessage = ActiveDomMessage.fromJson(message)
             if (log.isDebugEnabled) {
                 val page = interactTask.fetchTask.page
                 log.debug("{}. {} | {}", page.id, result.activeDomMessage?.multiStatus, interactTask.url)
+            }
+        }
+    }
+
+    private suspend fun evaluate(interactTask: InteractTask, expression: String): Any? {
+        val scriptTimeout = interactTask.driverConfig.scriptTimeout
+
+        return withContext(Dispatchers.IO) {
+            checkState(interactTask.driver)
+            checkState(interactTask.fetchTask)
+            counterRequests.inc()
+            withTimeout(scriptTimeout.toMillis()) {
+                interactTask.driver.evaluate(expression)
             }
         }
     }

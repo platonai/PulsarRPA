@@ -92,8 +92,8 @@ class MessageWriter(
     private fun closeWriter() {
         println("closeWriter | $path")
         printWriter?.flush()
-        printWriter?.use { it.close() }
-        fileWriter?.use { it.close() }
+        printWriter?.close()
+        fileWriter?.close()
 
         printWriter = null
         fileWriter = null

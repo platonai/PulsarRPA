@@ -47,7 +47,7 @@ abstract class PrivacyManager(
                 if (activeContext.isLeaked) {
                     // close the current context
                     // until the old context is closed entirely
-                    activeContext.use { it.close() }
+                    activeContext.close()
                     zombieContexts.add(activeContext)
 
                     activeContext = mappingFunction()
@@ -70,8 +70,8 @@ abstract class PrivacyManager(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             interrupted = true
-            globalAutoRefreshContext.get()?.use { it.close() }
-            activeContext.use { it.close() }
+            globalAutoRefreshContext.get()?.close()
+            activeContext.close()
         }
     }
 }

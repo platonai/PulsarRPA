@@ -12,7 +12,7 @@ class ProxyMonitorFactory(val conf: ImmutableConfig): AutoCloseable {
     fun get(): ProxyPoolMonitor = createIfAbsent(conf)
 
     override fun close() {
-        proxyMonitor.getAndSet(null)?.use { it.close() }
+        proxyMonitor.getAndSet(null)?.close()
     }
 
     private fun createIfAbsent(conf: ImmutableConfig): ProxyPoolMonitor {

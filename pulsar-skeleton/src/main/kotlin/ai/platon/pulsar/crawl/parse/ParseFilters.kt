@@ -60,7 +60,7 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            parseFilters.forEach { it.use { it.close() } }
+            parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
         }
     }
 }

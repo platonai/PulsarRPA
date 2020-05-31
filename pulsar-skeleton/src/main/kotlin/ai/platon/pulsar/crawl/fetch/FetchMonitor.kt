@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.AppConstants.*
@@ -187,8 +188,8 @@ class FetchMonitor(
                 log.info("Closing FetchMonitor #$id")
 
                 // cancel all tasks
-                feedThreads.forEach { it.use { it.close() } }
-                fetchLoops.forEach { it.use { it.close() } }
+                feedThreads.forEach { it.runCatching { it.close() }.onFailure { PulsarContext.log.warn(it.message) } }
+                fetchLoops.forEach { it.runCatching { it.close() }.onFailure { PulsarContext.log.warn(it.message) } }
 
                 Files.deleteIfExists(finishScript)
             } catch (e: Throwable) {

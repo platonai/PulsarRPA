@@ -371,8 +371,7 @@ open class PulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             context.webDb.flush()
-            closableObjects.forEach { o -> o.use { it.close() } }
-            context.closeSession(this)
+            closableObjects.forEach { o -> o.close() }
 
             log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
                     id,

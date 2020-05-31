@@ -65,9 +65,9 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
         if (closed.compareAndSet(false, true)) {
             slf4jReporter.report()
 
-            csvReporter.use { it.close() }
-            slf4jReporter.use { it.close() }
-            jmxReporter.use { it.close() }
+            csvReporter.close()
+            slf4jReporter.close()
+            jmxReporter.close()
         }
     }
 }

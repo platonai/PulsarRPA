@@ -36,5 +36,5 @@ fun main() {
         print("Enter an url> ")
     }
 
-    loop.use { it.close() }
+    loop.close()
 }
