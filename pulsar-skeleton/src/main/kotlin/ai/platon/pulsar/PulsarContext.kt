@@ -7,7 +7,10 @@ import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.crawl.component.*
+import ai.platon.pulsar.crawl.component.FetchComponent
+import ai.platon.pulsar.crawl.component.InjectComponent
+import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
@@ -40,12 +43,15 @@ class PulsarContext private constructor(): AutoCloseable {
          * */
         lateinit var applicationContext: ConfigurableApplicationContext
         /**
+         * TODO: Review if we need an "active context"
+         * */
+        val activeContext = AtomicReference<PulsarContext>()
+        /**
          * Whether this pulsar object is already closed
          * */
         private val closed = AtomicBoolean()
         private val initialized = AtomicBoolean()
 
-        private val activeContext = AtomicReference<PulsarContext>()
         /** Synchronization monitor for the "refresh" and "destroy".  */
         private val startupShutdownMonitor = Any()
         private var shutdownHook: Thread? = null
@@ -147,10 +153,6 @@ class PulsarContext private constructor(): AutoCloseable {
     }
 
     /**
-     * A immutable config is loaded from the config file at process startup, and never changes
-     * */
-    val unmodifiedConfig get() = applicationContext.getBean(ImmutableConfig::class.java)
-    /**
      * The start time
      * */
     val startTime = System.currentTimeMillis()
@@ -168,6 +170,10 @@ class PulsarContext private constructor(): AutoCloseable {
      * All open sessions
      * */
     val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
+    /**
+     * A immutable config is loaded from the config file at process startup, and never changes
+     * */
+    val unmodifiedConfig: ImmutableConfig
     /**
      * Url normalizers
      * */
@@ -196,26 +202,28 @@ class PulsarContext private constructor(): AutoCloseable {
     val lazyFetchTaskManager: LazyFetchTaskManager
 
     init {
+        unmodifiedConfig = getBean()
+
         var capacity = unmodifiedConfig.getUint("session.page.cache.size", PulsarSession.SESSION_PAGE_CACHE_CAPACITY)
         pageCache = ConcurrentLRUCache(PulsarSession.SESSION_PAGE_CACHE_TTL.seconds, capacity)
 
         capacity = unmodifiedConfig.getUint("session.document.cache.size", PulsarSession.SESSION_DOCUMENT_CACHE_CAPACITY)
         documentCache = ConcurrentLRUCache(PulsarSession.SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
 
-        webDb = applicationContext.getBean(WebDb::class.java)
-        injectComponent = applicationContext.getBean(InjectComponent::class.java)
-        loadComponent = applicationContext.getBean(LoadComponent::class.java)
-        fetchComponent = applicationContext.getBean(BatchFetchComponent::class.java)
-        parseComponent = applicationContext.getBean(ParseComponent::class.java)
-        urlNormalizers = applicationContext.getBean(UrlNormalizers::class.java)
-        lazyFetchTaskManager = applicationContext.getBean(LazyFetchTaskManager::class.java)
+        webDb = getBean()
+        injectComponent = getBean()
+        loadComponent = getBean()
+        fetchComponent = getBean()
+        parseComponent = getBean()
+        urlNormalizers = getBean()
+        lazyFetchTaskManager = getBean()
 
         log.info("PulsarContext is created")
     }
 
     fun createSession(): PulsarSession {
         ensureAlive()
-        val session = PulsarSession(this, VolatileConfig(unmodifiedConfig))
+        val session = PulsarSession(this, unmodifiedConfig.toVolatileConfig())
         sessions[session.id] = session
         return session
     }
@@ -472,4 +480,19 @@ class PulsarContext private constructor(): AutoCloseable {
             runCatching { applicationContext.close() }.onFailure { log.warn(it.message) }
         }
     }
+}
+
+fun withPulsarContext(block: () -> Unit) {
+    runCatching { block() }.onFailure { System.err.println(it) }
+    PulsarContext.shutdown()
+}
+
+fun withPulsarContext(contextLocation: String, block: () -> Unit) {
+    PulsarContext.initialize(contextLocation)
+    withPulsarContext(block)
+}
+
+fun withDefaultPulsarContext(block: () -> Unit) {
+    PulsarContext.initialize()
+    withPulsarContext(block)
 }

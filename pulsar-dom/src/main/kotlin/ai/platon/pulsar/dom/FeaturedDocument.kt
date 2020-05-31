@@ -23,6 +23,18 @@ import java.awt.Dimension
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 
+class DocumentFeatureCalculatorFactory {
+
+    val featureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
+
+    val newInstance get() = featureCalculatorClass.newInstance() as NodeVisitor
+
+    private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
+        val className = System.getProperty(NODE_FEATURE_CALCULATOR, DEFAULT_NODE_FEATURE_CALCULATOR)
+        return ResourceLoader.loadUserClass(className)
+    }
+}
+
 open class FeaturedDocument(val document: Document) {
     companion object {
         var SELECTOR_IN_BOX_DEVIATION = 25
@@ -32,7 +44,8 @@ open class FeaturedDocument(val document: Document) {
         var densityUnitArea = 400 * 400
 
         val globalNumDocuments = AtomicInteger()
-        val FEATURE_CALCULATOR_CLASS: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
+
+        val featureCalculatorFactory = DocumentFeatureCalculatorFactory()
 
         val NIL = createShell(NIL_PAGE_URL)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -53,11 +66,6 @@ open class FeaturedDocument(val document: Document) {
         fun isInternal(doc: FeaturedDocument): Boolean {
             return doc.location.startsWith(INTERNAL_URL_PREFIX)
         }
-
-        private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
-            val className = System.getProperty(NODE_FEATURE_CALCULATOR, DEFAULT_NODE_FEATURE_CALCULATOR)
-            return ResourceLoader.loadUserClass(className)
-        }
     }
 
     val fragments by lazy { DocumentFragments(this) }
@@ -77,8 +85,7 @@ open class FeaturedDocument(val document: Document) {
         }
 
         if (document.isInitialized.compareAndSet(false, true)) {
-            val featureCalculator = FEATURE_CALCULATOR_CLASS.newInstance()
-            // println("Calculate document features using $FEATURE_CALCULATOR_CLASS")
+            val featureCalculator = featureCalculatorFactory.newInstance
             NodeTraversor.traverse(featureCalculator, document)
             require(features.isNotEmpty)
 

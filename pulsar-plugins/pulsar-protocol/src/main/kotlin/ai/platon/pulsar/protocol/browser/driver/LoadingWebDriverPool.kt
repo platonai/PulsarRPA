@@ -9,10 +9,11 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.prependReadableClassName
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.TimeUnit
@@ -41,7 +42,6 @@ class LoadingWebDriverPool(
 
     private val isHeadless = immutableConfig.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
-    private var closer: Thread? = null
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
@@ -98,15 +98,12 @@ class LoadingWebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            if (closer == null) {
-                closer = Thread {
-                    try {
-                        closeAll(incognito = true, processExit = true)
-                    } catch (e: InterruptedException) {
-                        log.warn("Thread interrupted when closing | {}", this)
-                    }
+            GlobalScope.launch {
+                try {
+                    closeAll(incognito = true, processExit = true)
+                } catch (e: InterruptedException) {
+                    log.warn("Thread interrupted when closing | {}", this)
                 }
-                closer?.start()
             }
         }
     }
@@ -128,10 +125,12 @@ class LoadingWebDriverPool(
 
     @Throws(InterruptedException::class)
     private fun take0(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
+        ensureAlive()
+
         val concurrencyOverride = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, this.concurrency)
         val capacityOverride = conf.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrencyOverride)
 
-        driverFactory.takeIf { isActive && onlineDrivers.size < capacityOverride && availableMemory > instanceRequiredMemory }
+        driverFactory.takeIf { onlineDrivers.size < capacityOverride && availableMemory > instanceRequiredMemory }
                 ?.create(priority, conf)
                 ?.also {
                     freeDrivers.add(it)
@@ -139,6 +138,7 @@ class LoadingWebDriverPool(
                     logDriverOnline(it)
                 }
 
+        ensureAlive()
         numWaiting.incrementAndGet()
         return freeDrivers.take().also { numWaiting.decrementAndGet() }
     }
@@ -182,6 +182,12 @@ class LoadingWebDriverPool(
                     driver.name,
                     driverControl.imagesEnabled,
                     driverControl.pageLoadStrategy, capacity)
+        }
+    }
+
+    private fun ensureAlive() {
+        if (!isActive) {
+            throw IllegalStateException("We are closed")
         }
     }
 }

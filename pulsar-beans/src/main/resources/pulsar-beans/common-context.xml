@@ -5,7 +5,9 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
+    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig">
+        <property name="environment" ref="environment"/>
+    </bean>
 
     <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close">
         <constructor-arg ref="conf"/>

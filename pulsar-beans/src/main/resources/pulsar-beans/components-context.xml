@@ -31,12 +31,7 @@
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
-    <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.FetchComponent" destroy-method="close">
-        <constructor-arg ref="protocolFactory"/>
-        <constructor-arg ref="fetchMetrics"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-    <bean id="batchFetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
+    <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchMetrics"/>
@@ -65,7 +60,7 @@
     </bean>
     <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
-        <constructor-arg ref="batchFetchComponent"/>
+        <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="updateComponent"/>
         <constructor-arg ref="messageWriter"/>
@@ -103,7 +98,7 @@
     </bean>
 
     <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.FetchMonitor" destroy-method="close">
-        <constructor-arg ref="batchFetchComponent"/>
+        <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="taskMonitor"/>
         <constructor-arg ref="taskSchedulers"/>
         <constructor-arg ref="jitIndexer"/>

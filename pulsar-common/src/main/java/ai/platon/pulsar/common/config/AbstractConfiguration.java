@@ -18,11 +18,11 @@
 package ai.platon.pulsar.common.config;
 
 import ai.platon.pulsar.common.SParser;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 
 import javax.annotation.Nonnull;
 import java.io.InputStream;
@@ -53,7 +53,15 @@ public abstract class AbstractConfiguration {
 
     private final LinkedHashSet<String> fullPathResources = new LinkedHashSet<>();
 
+    /**
+     * we will remove dependency on {@link Configuration} later
+     * */
     private Configuration conf;
+
+    /**
+     * Spring core is the first class dependency now, we will remove dependency on {@link Configuration} later
+     * */
+    private Environment environment;
 
     /**
      * Create a {@link AbstractConfiguration}. This will load the standard
@@ -87,6 +95,10 @@ public abstract class AbstractConfiguration {
 
     public AbstractConfiguration(Configuration conf) {
         this.conf = new Configuration(conf);
+    }
+
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 
     private void loadConfResources(boolean loadDefaults, String preferredDir, Iterable<String> extraResources) {
@@ -230,7 +242,11 @@ public abstract class AbstractConfiguration {
      * or null if no such property exists.
      */
     public String get(String name) {
-        return conf.get(name);
+        String value = conf.get(name);
+        if (environment != null && value == null) {
+            value = environment.getProperty(name);
+        }
+        return value;
     }
 
     /**
@@ -246,7 +262,13 @@ public abstract class AbstractConfiguration {
      * doesn't exist.
      */
     public String get(String name, String defaultValue) {
-        return conf.get(name, defaultValue);
+        String value = conf.get(name);
+        if (environment != null && value == null) {
+            value = environment.getProperty(name);
+        }
+
+        if (value == null) return defaultValue;
+        return value;
     }
 
     /**
