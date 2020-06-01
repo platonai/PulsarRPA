@@ -32,10 +32,6 @@ public interface CapabilityTypes {
     String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
-    String PARAM_HOME_DIR = "pulsar.home.dir";
-    String PARAM_TMP_DIR = "pulsar.tmp.dir";
-    String PARAM_DATA_DIR = "pulsar.data.dir";
-
     String PARAM_OUTPUT_DIR = "pulsar.output.dir";
     String PARAM_REPORT_DIR = "pulsar.report.dir";
     String PARAM_IDENT_STR = "pulsar.id.str";

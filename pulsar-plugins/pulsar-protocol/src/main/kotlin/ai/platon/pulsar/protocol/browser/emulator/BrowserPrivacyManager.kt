@@ -36,8 +36,6 @@ class BrowserPrivacyManager(
         return takeIf { isActive }?.runDeferred0(task, fetchFun)?:FetchResult.crawlRetry(task)
     }
 
-
-
     private fun run0(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         var result: FetchResult
 

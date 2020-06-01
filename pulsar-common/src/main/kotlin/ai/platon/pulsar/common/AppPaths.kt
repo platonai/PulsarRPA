@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes.*
 import com.google.common.net.InetAddresses
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -23,7 +22,7 @@ annotation class RequiredDirectory
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 object AppPaths {
-   
+
     val SYS_TMP_DIR = Paths.get(AppConstants.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppConstants.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppConstants.USER_HOME)
@@ -33,15 +32,16 @@ object AppPaths {
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
 
     @RequiredDirectory
-    val TMP_DIR = SParser(System.getProperty(PARAM_TMP_DIR)).getPath(AppConstants.PULSAR_DEFAULT_TMP_DIR)
+    val HOME_DIR = AppConstants.APP_HOME_DIR
     @RequiredDirectory
-    val HOME_DIR = SParser(System.getProperty(PARAM_HOME_DIR)).getPath(AppConstants.PULSAR_DEFAULT_HOME_DIR)
-    /**
-     * Application data are kept in the data dir
-     * */
+    val BROWSER_DATA_DIR = HOME_DIR.resolve( "browser")
+    @RequiredDirectory
+    val CHROME_DATA_BACKUP_DIR = BROWSER_DATA_DIR.resolve("google-chrome-backup")
     @RequiredDirectory
     val DATA_DIR = HOME_DIR.resolve("data")
 
+    @RequiredDirectory
+    val TMP_DIR = AppConstants.APP_TMP_DIR
     @RequiredDirectory
     val CACHE_DIR = TMP_DIR.resolve("cache")
     @RequiredDirectory
@@ -62,19 +62,17 @@ object AppPaths {
     val TEST_DIR = TMP_DIR.resolve( "test")
 
     @RequiredDirectory
-    val BROWSER_DATA_DIR = HOME_DIR.resolve( "browser")
-    @RequiredDirectory
-    val CHROME_DATA_BACKUP_DIR = BROWSER_DATA_DIR.resolve("google-chrome-backup")
-
-    @RequiredDirectory
     val BROWSER_TMP_DIR = TMP_DIR.resolve( "browser")
     @RequiredFile
     val BROWSER_TMP_DIR_LOCK = TMP_DIR.resolve( "browser.lock")
     @RequiredDirectory
     val CHROME_TMP_DIR = BROWSER_TMP_DIR.resolve("google-chrome")
 
+    /**
+     * Proxy directory
+     * */
     @RequiredDirectory
-    val PROXY_BASE_DIR = HOME_DIR.resolve("proxy")
+    val PROXY_BASE_DIR = TMP_DIR.resolve("proxy")
     @RequiredDirectory
     val ENABLED_PROVIDER_DIR = PROXY_BASE_DIR.resolve( "providers-enabled")
     @RequiredDirectory
@@ -112,7 +110,6 @@ object AppPaths {
     @RequiredFile
     val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
 
-    // TODO: distinct tmp dir and home dir
     private val tmpDirStr get() = TMP_DIR.toString()
     private val homeDirStr get() = HOME_DIR.toString()
 

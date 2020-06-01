@@ -43,7 +43,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val preemptiveTaskTimeout = Duration.ofMinutes(5)
     private var pollingTimeout = Duration.ofMillis(100)
 
-    var interrupted = false
     val isPreempted get() = numReadyPreemptiveTasks.get() > 0
     val isNormal get() = !isPreempted
 
@@ -113,21 +112,21 @@ abstract class PreemptChannelSupport(val name: String = "") {
         val ttl = Instant.now().plus(normalTaskTimeout).toEpochMilli()
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
-            while (!interrupted && numNormalTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
+            while (numNormalTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
                 nanos = noNormalTasks.awaitNanos(nanos)
             }
         }
     }
 
     private fun waitUntilNotPreempted() {
+        val ttl = Instant.now().plus(preemptiveTaskTimeout).toEpochMilli()
         lock.withLock {
             if (numReadyPreemptiveTasks.get() > 0) {
                 trace("There are $numNormalTasks tasks waiting for $numReadyPreemptiveTasks preemptive tasks to finish")
             }
 
-            val ttl = Instant.now().plus(preemptiveTaskTimeout).toEpochMilli()
             var nanos = pollingTimeout.toNanos()
-            while (!interrupted && numReadyPreemptiveTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
+            while (numReadyPreemptiveTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
                 nanos = noPreemptiveTasks.awaitNanos(nanos)
             }
 

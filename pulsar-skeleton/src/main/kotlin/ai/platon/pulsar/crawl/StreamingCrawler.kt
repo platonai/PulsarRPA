@@ -17,6 +17,7 @@ import org.h2tools.dev.util.ConcurrentLinkedList
 import oshi.SystemInfo
 import java.nio.file.Files
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
@@ -41,11 +42,15 @@ open class StreamingCrawler(
     private val conf = session.sessionConfig
     private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     private val privacyManager = session.context.getBean(PrivacyManager::class)
-    private val isAppActive get() = isAlive
+    private var lastActiveTime = Instant.now()
+    private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+    private val isIdle get() = idleTime > Duration.ofMinutes(5)
+    private val isAppActive get() = isAlive && !isIdle
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
+    private val memoryRemaining get() = availableMemory - requiredMemory
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(5)
 
@@ -54,6 +59,7 @@ open class StreamingCrawler(
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
+                lastActiveTime = Instant.now()
                 numTasks.incrementAndGet()
 
                 var k = 0
@@ -76,50 +82,58 @@ open class StreamingCrawler(
                 }
 
                 while (isAppActive && numRunningTasks.get() >= concurrency) {
-                    delay(1000)
+                    Thread.sleep(1000)
                 }
 
-                val memoryRemaining = availableMemory - requiredMemory
                 while (isAppActive && memoryRemaining < 0) {
                     if (j % 20 == 0) {
-                        log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
-                                numRunningTasks,
-                                Strings.readableBytes(availableMemory),
-                                Strings.readableBytes(requiredMemory),
-                                Strings.readableBytes(abs(memoryRemaining))
-                        )
-                        session.context.clearCache()
-                        System.gc()
+                        handleMemoryShortage(j)
                     }
-                    delay(1000)
+                    Thread.sleep(1000)
                 }
 
                 if (!isAppActive) {
                     return@supervisorScope
                 }
 
-                var page: WebPage? = null
+                var page: WebPage?
                 var exception: Throwable? = null
                 numRunningTasks.incrementAndGet()
                 val context = Dispatchers.Default + CoroutineName("w")
                 launch(context) {
                     withTimeout(taskTimeout.toMillis()) {
                         page = session.runCatching { loadDeferred(url, options) }
-                                .onFailure { exception = it.also { log.warn("Load failed", it) } }
+                                .onFailure { exception = it.also { log.warn("Load failed - ", it.message) } }
                                 .getOrNull()
                                 ?.also { pageCollector?.add(it) }
                         page?.let(onLoadComplete)
                         numRunningTasks.decrementAndGet()
+                        lastActiveTime = Instant.now()
                     }
                 }
 
-                if (exception is ProxyVendorUntrustedException) {
-                    log.error(exception?.message?:"Unexpected error")
-                    return@supervisorScope
+                when (exception) {
+                    null -> {}
+                    is ProxyVendorUntrustedException -> {
+                        log.error(exception?.message?:"Unexpected error").let { return@supervisorScope }
+                    }
+                    is TimeoutCancellationException -> {}
+                    else -> log.error("Unexpected exception", exception)
                 }
             }
         }
 
-        log.info("All done. Total $numTasks tasks")
+        log.info("Total $numTasks tasks are loaded")
+    }
+
+    private fun handleMemoryShortage(j: Int) {
+        log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
+                numRunningTasks,
+                Strings.readableBytes(availableMemory),
+                Strings.readableBytes(requiredMemory),
+                Strings.readableBytes(abs(memoryRemaining))
+        )
+        session.context.clearCache()
+        System.gc()
     }
 }

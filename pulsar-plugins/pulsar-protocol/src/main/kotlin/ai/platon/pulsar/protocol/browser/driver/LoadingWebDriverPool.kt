@@ -9,8 +9,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.prependReadableClassName
 import com.codahale.metrics.Gauge
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -39,6 +37,7 @@ class LoadingWebDriverPool(
 
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
+    private val notEmpty = lock.newCondition()
 
     private val isHeadless = immutableConfig.getBoolean(BROWSER_DRIVER_HEADLESS, true)
     private val closed = AtomicBoolean()
@@ -68,10 +67,8 @@ class LoadingWebDriverPool(
         })
     }
 
-    @Throws(InterruptedException::class)
     fun take(conf: ImmutableConfig): ManagedWebDriver = take(0, conf)
 
-    @Throws(InterruptedException::class)
     fun take(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         return take0(priority, conf).also { numWorking.incrementAndGet() }
     }
@@ -88,7 +85,7 @@ class LoadingWebDriverPool(
 
     fun firstOrNull(predicate: (ManagedWebDriver) -> Boolean) = onlineDrivers.firstOrNull(predicate)
 
-    fun closeAll(incognito: Boolean = true, processExit: Boolean = false, timeToWait: Duration = Duration.ofSeconds(90)) {
+    fun closeAll(incognito: Boolean = true, processExit: Boolean = false, timeToWait: Duration = Duration.ofSeconds(60)) {
         if (!processExit) {
             waitUntilIdleOrTimeout(timeToWait)
         }
@@ -98,19 +95,23 @@ class LoadingWebDriverPool(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            GlobalScope.launch {
-                try {
-                    closeAll(incognito = true, processExit = true)
-                } catch (e: InterruptedException) {
-                    log.warn("Thread interrupted when closing | {}", this)
-                }
+            try {
+                closeAll(incognito = true, processExit = true)
+            } catch (e: InterruptedException) {
+                log.warn("Thread interrupted when closing | {}", this)
             }
         }
     }
 
-    override fun toString(): String = "$numFree/$numWorking/$numActive/$numOnline (free/working/active/online)"
+    override fun toString(): String = "$numFree/$numWorking/$numWaiting/$numActive/$numOnline " +
+            "(free/working/waiting/active/online)"
 
-    private fun offer(driver: ManagedWebDriver) = freeDrivers.offer(driver.apply { free() })
+    private fun offer(driver: ManagedWebDriver) {
+        freeDrivers.offer(driver.apply { free() })
+        lock.withLock {
+            notEmpty.signalAll()
+        }
+    }
 
     private fun retire(driver: ManagedWebDriver, external: Boolean = true) {
         if (external && !isActive) {
@@ -123,24 +124,34 @@ class LoadingWebDriverPool(
                 .onFailure { log.warn("Unexpected exception quit $driver", it) }
     }
 
-    @Throws(InterruptedException::class)
     private fun take0(priority: Int, conf: ImmutableConfig): ManagedWebDriver {
         ensureAlive()
 
         val concurrencyOverride = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, this.concurrency)
         val capacityOverride = conf.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrencyOverride)
 
-        driverFactory.takeIf { onlineDrivers.size < capacityOverride && availableMemory > instanceRequiredMemory }
+        driverFactory
+                .takeIf { onlineDrivers.size < capacityOverride && availableMemory > instanceRequiredMemory }
                 ?.create(priority, conf)
+                ?.takeIf { isActive }
                 ?.also {
-                    freeDrivers.add(it)
-                    onlineDrivers.add(it)
+                    lock.withLock {
+                        freeDrivers.add(it)
+                        notEmpty.signalAll()
+                        onlineDrivers.add(it)
+                    }
                     logDriverOnline(it)
                 }
 
-        ensureAlive()
         numWaiting.incrementAndGet()
-        return freeDrivers.take().also { numWaiting.decrementAndGet() }
+        var driver = freeDrivers.poll()
+        while (isActive && driver == null) {
+            notEmpty.await(1, TimeUnit.SECONDS)
+            driver = freeDrivers.poll()
+        }
+        numWaiting.decrementAndGet()
+
+        return driver?:throw IllegalStateException("We are closed")
     }
 
     private fun closeAllDrivers(processExit: Boolean = false) {
@@ -166,9 +177,7 @@ class LoadingWebDriverPool(
             try {
                 while (isActive && numWorking.get() > 0 && ++i < ttl) {
                     notBusy.await(1, TimeUnit.SECONDS)
-                    if (i % 20 == 0) {
-                        log.info("Round $i waiting for idle | $this")
-                    }
+                    log.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
                 }
             } catch (ignored: InterruptedException) {}
         }

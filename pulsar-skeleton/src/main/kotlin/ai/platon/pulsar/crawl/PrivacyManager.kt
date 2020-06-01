@@ -69,7 +69,6 @@ abstract class PrivacyManager(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            interrupted = true
             globalAutoRefreshContext.get()?.close()
             activeContext.close()
         }

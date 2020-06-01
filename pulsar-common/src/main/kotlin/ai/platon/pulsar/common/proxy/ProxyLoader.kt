@@ -9,11 +9,12 @@ import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Load proxies from proxy vendors
  */
-abstract class ProxyLoader(conf: ImmutableConfig) {
+abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
     companion object {
         val TEST_PROXY_FILE = AppPaths.PROXY_BASE_DIR.resolve("test-ip")
     }
@@ -36,6 +37,9 @@ abstract class ProxyLoader(conf: ImmutableConfig) {
      * */
     var testIpRate = 0.3
 
+    private val closed = AtomicBoolean()
+    val isActive get() = !closed.get()
+
     abstract fun updateProxies(reloadInterval: Duration): List<ProxyEntry>
 
     @Synchronized
@@ -50,7 +54,7 @@ abstract class ProxyLoader(conf: ImmutableConfig) {
      * Get a test ip by a probability if exist in file [TEST_PROXY_FILE]
      * */
     fun loadTestProxyIfAbsent(): ProxyEntry? {
-        return TEST_PROXY_FILE.takeIf { testIpRate > 0 && ThreadLocalRandom.current().nextDouble() <= testIpRate }
+        return TEST_PROXY_FILE.takeIf { isActive && testIpRate > 0 && ThreadLocalRandom.current().nextDouble() <= testIpRate }
                 ?.takeIf { Files.exists(it) }
                 ?.let { Files.readString(it).trim() }
                 ?.let { ProxyEntry.parse(it) }
@@ -63,11 +67,17 @@ abstract class ProxyLoader(conf: ImmutableConfig) {
         val modified = Files.getLastModifiedTime(path).toInstant()
         val elapsed = Duration.between(lastModified, modified)
 
-        if (elapsed > expires) {
+        if (isActive && elapsed > expires) {
             log.info("Reload from file, last modified: {}, elapsed: {} | {}", lastModified, elapsed, path)
             return loader(path).also { lastModifiedTimes[path] = modified }
         }
 
         return listOf()
+    }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+
+        }
     }
 }

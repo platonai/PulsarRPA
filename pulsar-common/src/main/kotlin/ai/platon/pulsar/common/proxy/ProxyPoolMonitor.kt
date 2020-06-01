@@ -48,6 +48,16 @@ open class ProxyPoolMonitor(
     val closed = AtomicBoolean()
     val isActive get() = isEnabled && !closed.get()
 
+    init {
+        DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+            FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
+        }
+
+        if (conf.getBoolean(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
+            enableDefaultProviders()
+        }
+    }
+
     /**
      * Starts the reporter polling at the given period with the specific runnable action
      * Visible only for testing
@@ -141,6 +151,62 @@ open class ProxyPoolMonitor(
         waitUntilOnline()
     }
 
+    fun hasEnabledProvider(): Boolean {
+        val now = Instant.now()
+        synchronized(ProxyPoolMonitor::class.java) {
+            if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
+                providerDirLastWatchTime = now
+                numEnabledProviderFiles = try {
+                    Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
+                } catch (e: Throwable) { 0 }
+            }
+        }
+
+        return numEnabledProviderFiles > 0
+    }
+
+    /**
+     * Proxy system can be enabled/disabled at runtime
+     * */
+    fun isProxyEnabled(): Boolean {
+        if (FileCommand.check(AppConstants.CMD_ENABLE_PROXY)) {
+            return true
+        }
+
+        // explicit set system environment property
+        val useProxy = conf.get(CapabilityTypes.PROXY_USE_PROXY)
+        if (useProxy != null) {
+            when (useProxy) {
+                "yes", "true" -> return true
+                "no", "false" -> return false
+            }
+        }
+
+        // if no one set the proxy availability explicitly, but we have providers, use it
+        return hasEnabledProvider()
+    }
+
+    fun enableDefaultProviders() {
+        DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+    }
+
+    fun enableProvider(providerPath: Path) {
+        val filename = providerPath.fileName
+        arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
+                .map { it.resolve(filename) }
+                .filterNot { Files.exists(it) }
+                .forEach { Files.copy(providerPath, it) }
+    }
+
+    fun disableProviders() {
+        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
+    }
+
+    private fun createDefaultExecutor(): ScheduledExecutorService {
+        val factory = ThreadFactoryBuilder().setNameFormat("pm-%d").build()
+        return Executors.newSingleThreadScheduledExecutor(factory)
+    }
+
     companion object {
         private val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
@@ -150,71 +216,5 @@ open class ProxyPoolMonitor(
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
-
-        init {
-            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
-                FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
-            }
-
-            if (Systems.getProperty(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
-                enableDefaultProviders()
-            }
-        }
-
-        fun hasEnabledProvider(): Boolean {
-            val now = Instant.now()
-            synchronized(ProxyPoolMonitor::class.java) {
-                if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
-                    providerDirLastWatchTime = now
-                    numEnabledProviderFiles = try {
-                        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
-                    } catch (e: Throwable) { 0 }
-                }
-            }
-
-            return numEnabledProviderFiles > 0
-        }
-
-        /**
-         * Proxy system can be enabled/disabled at runtime
-         * */
-        fun isProxyEnabled(): Boolean {
-            if (FileCommand.check(AppConstants.CMD_ENABLE_PROXY)) {
-                return true
-            }
-
-            // explicit set system environment property
-            val useProxy = System.getProperty(CapabilityTypes.PROXY_USE_PROXY)
-            if (useProxy != null) {
-                when (useProxy) {
-                    "yes", "true" -> return true
-                    "no", "false" -> return false
-                }
-            }
-
-            // if no one set the proxy availability explicitly, but we have providers, use it
-            return hasEnabledProvider()
-        }
-
-        fun enableDefaultProviders() {
-            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
-        }
-
-        fun enableProvider(providerPath: Path) {
-            val filename = providerPath.fileName
-            arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
-                    .map { it.resolve(filename) }
-                    .filterNot { Files.exists(it) }
-                    .forEach { Files.copy(providerPath, it) }
-        }
-
-        fun disableProviders() {
-            Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
-        }
-
-        private fun createDefaultExecutor(): ScheduledExecutorService {
-            val factory = ThreadFactoryBuilder().setNameFormat("pm-%d").build()
-            return Executors.newSingleThreadScheduledExecutor(factory)
-        }
     }
 }

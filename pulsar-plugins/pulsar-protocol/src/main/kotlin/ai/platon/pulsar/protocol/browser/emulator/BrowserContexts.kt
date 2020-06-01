@@ -13,9 +13,6 @@ import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -80,50 +77,41 @@ class WebDriverContext(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            // TODO: better closer
             launchCloser()
         }
     }
 
     private fun launchCloser() {
-        // Launches a new coroutine without blocking the current thread and returns
-        GlobalScope.launch {
-            // close underlying IO based modules asynchronously
-            launch {
-                closeUnderlyingLayer()
-            }
+        // close underlying IO based modules asynchronously
+        closeUnderlyingLayer()
 
-            // Wait for all tasks return
-            lock.withLock {
-                var i = 0
-                try {
-                    while (i++ < 30 && runningTasks.isNotEmpty()) {
-                        runningTasks.forEach { it.cancel() }
-                        notBusy.await(1, TimeUnit.SECONDS)
-                    }
-                } catch (ignored: InterruptedException) {}
-            }
+        // Wait for all tasks return
+        lock.withLock {
+            var i = 0
+            try {
+                while (i++ < 45 && runningTasks.isNotEmpty()) {
+                    notBusy.await(1, TimeUnit.SECONDS)
+                }
+            } catch (ignored: InterruptedException) {}
+        }
 
-            if (runningTasks.isNotEmpty()) {
-                log.warn("Still {} running tasks after context close | {}",
-                        runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
-            } else {
-                log.info("WebDriverContext is closed successfully")
-            }
+        if (runningTasks.isNotEmpty()) {
+            log.warn("Still {} running tasks after context close | {}",
+                    runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
+        } else {
+            log.info("WebDriverContext is closed successfully")
         }
     }
 
-    private suspend fun closeUnderlyingLayer() {
-        withTimeout(Duration.ofMinutes(2).toMillis()) {
-            // Mark all working tasks are canceled, so they return as soon as possible,
-            // the ready tasks are blocked to wait for driverManager.reset() finish
-            runningTasks.forEach { it.cancel() }
-            // Mark all drivers are canceled
-            driverManager.cancelAll()
-            // may wait for cancelling finish?
-            // Close all online drivers and delete the browser data
-            driverManager.reset(timeToWait = Duration.ofSeconds(60))
-        }
+    private fun closeUnderlyingLayer() {
+        // Mark all working tasks are canceled, so they return as soon as possible,
+        // the ready tasks are blocked to wait for driverManager.reset() finish
+        runningTasks.forEach { it.cancel() }
+        // Mark all drivers are canceled
+        driverManager.cancelAll()
+        // may wait for cancelling finish?
+        // Close all online drivers and delete the browser data
+        driverManager.reset(timeToWait = Duration.ofSeconds(60))
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {

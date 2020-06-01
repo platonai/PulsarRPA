@@ -483,16 +483,12 @@ class PulsarContext private constructor(): AutoCloseable {
 }
 
 fun withPulsarContext(block: () -> Unit) {
+    PulsarContext.initialize()
     runCatching { block() }.onFailure { System.err.println(it) }
     PulsarContext.shutdown()
 }
 
 fun withPulsarContext(contextLocation: String, block: () -> Unit) {
     PulsarContext.initialize(contextLocation)
-    withPulsarContext(block)
-}
-
-fun withDefaultPulsarContext(block: () -> Unit) {
-    PulsarContext.initialize()
     withPulsarContext(block)
 }

@@ -30,7 +30,6 @@ import java.time.Instant;
 @SuppressWarnings("unused")
 public interface AppConstants {
 
-    // String USER = System.getenv("USER");
     String USER = SystemUtils.USER_NAME;
 
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
@@ -56,16 +55,6 @@ public interface AppConstants {
     // see https://en.wikipedia.org/wiki/UTF-8
     Character UNICODE_FIRST_CODE_POINT = '\u0001';
     Character UNICODE_LAST_CODE_POINT = '\uFFFF';
-
-    int DISTANCE_INFINITE = 10000;
-
-    int FETCH_TASK_REMAINDER_NUMBER = 5;
-
-    Instant TCP_IP_STANDARDIZED_TIME = Instant.parse("1982-01-01T00:00:00Z");
-
-    Instant MIN_ARTICLE_PUBLISH_TIME = Instant.parse("1995-01-01T00:00:00Z");
-
-    Duration DEFAULT_MAX_PARSE_TIME = Duration.ofSeconds(60);
 
     // The shortest url
     String SHORTEST_VALID_URL = "ftp://t.tt";
@@ -99,6 +88,11 @@ public interface AppConstants {
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
 
+    /**
+     * Fetch
+     * */
+    int DISTANCE_INFINITE = 10000;
+    int FETCH_TASK_REMAINDER_NUMBER = 5;
     int FETCH_PRIORITY_MIN = -10 * 10_000;
     int FETCH_PRIORITY_ANY = -1;
     int FETCH_PRIORITY_DEFAULT = 10_000;
@@ -122,8 +116,16 @@ public interface AppConstants {
     float SCORE_DETAIL_PAGE = 10000.0f;
     float SCORE_PAGES_FROM_SEED = 10000.0f;
 
+    /**
+     * Parse
+     * */
+    Instant TCP_IP_STANDARDIZED_TIME = Instant.parse("1982-01-01T00:00:00Z");
+    Instant MIN_ARTICLE_PUBLISH_TIME = Instant.parse("1995-01-01T00:00:00Z");
+    Duration DEFAULT_MAX_PARSE_TIME = Duration.ofSeconds(60);
     String SCENT_PSEUDO_CSS_ID_MENU = "#scent-pseudo-id-menu";
     String SCENT_PSEUDO_CSS_ID_TITLE = "#scent-pseudo-id-title";
+
+    String DEFAULT_NODE_FEATURE_CALCULATOR = "ai.platon.pulsar.dom.features.NodeFeatureCalculator";
 
     int MAX_LIVE_LINK_PER_PAGE = 1000;
     int MAX_LINK_PER_PAGE = 4000;
@@ -149,25 +151,11 @@ public interface AppConstants {
      * */
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
 
-    String DEFAULT_NODE_FEATURE_CALCULATOR = "ai.platon.pulsar.dom.features.NodeFeatureCalculator";
-
     String DEFAULT_PULSAR_MASTER_HOST = "0.0.0.0";
     int DEFAULT_PULSAR_MASTER_PORT = 8182;
 
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
     int DEFAULT_INDEX_SERVER_PORT = 8183;
-
-    String DEFAULT_PUPPETEER_HTTP_SERVER = "127.0.0.1:8185";
-    String DEFAULT_PUPPETEER_HTTPS_SERVER = "127.0.0.1:8186";
-
-    String DEFAULT_EMBED_MONGO_SERVER = "127.0.0.1:27017";
-
-    /**
-     * Other notable properties:
-     * overflow
-     * text-overflow
-     * */
-    String CLIENT_JS_PROPERTY_NAMES = "font-size, color, background-color";
 
     /**
      * Directories
@@ -177,17 +165,28 @@ public interface AppConstants {
     String USER_HOME = SystemUtils.USER_HOME;
     // User's current working directory
     String USER_DIR = SystemUtils.USER_DIR;
+    // The identity of this running instance
+    String APP_NAME = System.getProperty("app.name", "pulsar");
+    String IDENT = System.getProperty("app.id.str", USER);
+    String APP_TMP_PROPERTY = System.getProperty("app.tmp.dir");
+    Path APP_TMP_DIR = APP_TMP_PROPERTY != null ? Paths.get(APP_TMP_PROPERTY) : Paths.get(TMP_DIR).resolve(APP_NAME + "-" + IDENT);
+    Path APP_HOME_DIR = Paths.get(USER_HOME).resolve("." + APP_NAME);
 
-    Path PULSAR_DEFAULT_TMP_DIR = Paths.get(TMP_DIR, "pulsar-" + USER);
-    Path PULSAR_DEFAULT_HOME_DIR = Paths.get(USER_HOME, ".pulsar");
-
+    /**
+     * Browser
+     * */
     Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
-
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";
     String PULSAR_ATTR_HIDDEN = "_h";
     String PULSAR_ATTR_OVERFLOW_HIDDEN = "_oh";
     String PULSAR_ATTR_OVERFLOW_VISIBLE = "_visible";
+    /**
+     * Other notable properties:
+     * overflow
+     * text-overflow
+     * */
+    String CLIENT_JS_PROPERTY_NAMES = "font-size, color, background-color";
 
     /**
      * Proxy

@@ -131,13 +131,6 @@ public abstract class AbstractConfiguration {
 
         fullPathResources.forEach(conf::addResource);
 
-        // read system properties
-        System.getProperties().forEach((name, value) -> {
-            if (name instanceof String && value instanceof String) {
-                conf.set(name.toString(), value.toString());
-            }
-        });
-
         LOG.info(toString());
     }
 
@@ -242,10 +235,17 @@ public abstract class AbstractConfiguration {
      * or null if no such property exists.
      */
     public String get(String name) {
-        String value = conf.get(name);
-        if (environment != null && value == null) {
+        String value = null;
+
+        // spring environment has the highest priority
+        if (environment != null) {
             value = environment.getProperty(name);
         }
+
+        if (value == null) {
+            value = conf.get(name);
+        }
+
         return value;
     }
 

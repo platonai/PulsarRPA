@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.AppConstants.PULSAR_DEFAULT_TMP_DIR
+import ai.platon.pulsar.common.config.AppConstants.APP_TMP_DIR
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -117,7 +117,7 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
     }
 
     fun save() {
-        saveTo(PULSAR_DEFAULT_TMP_DIR)
+        saveTo(APP_TMP_DIR)
     }
 
     fun load() {

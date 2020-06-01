@@ -117,14 +117,13 @@ class WebDriverManager(
     /**
      * Cancel all running tasks and close all web drivers
      * */
-    fun reset(timeToWait: Duration = Duration.ofSeconds(90)) {
+    fun reset(timeToWait: Duration) {
         numReset.mark()
         closeAll(incognito = true, timeToWait = timeToWait)
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            interrupted = true
         }
     }
 
@@ -138,7 +137,6 @@ class WebDriverManager(
         preempt {
             log.info("Closing all web drivers | {}", formatStatus(verbose = true))
             if (!processExit) {
-                interrupted = true
                 driverPool.closeAll(incognito, timeToWait = timeToWait)
             }
         }
