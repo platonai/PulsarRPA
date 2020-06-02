@@ -43,20 +43,10 @@ open class ProxyPoolMonitor(
     open val proxyPool: ProxyPool? = ProxyPool(conf)
     open val localPort = -1
     open val currentProxyEntry: ProxyEntry? = null
-    open val isEnabled = false
+    val isEnabled = isProxyEnabled()
     val isDisabled get() = !isEnabled
     val closed = AtomicBoolean()
     val isActive get() = isEnabled && !closed.get()
-
-    init {
-        DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
-            FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
-        }
-
-        if (conf.getBoolean(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
-            enableDefaultProviders()
-        }
-    }
 
     /**
      * Starts the reporter polling at the given period with the specific runnable action
@@ -151,20 +141,6 @@ open class ProxyPoolMonitor(
         waitUntilOnline()
     }
 
-    fun hasEnabledProvider(): Boolean {
-        val now = Instant.now()
-        synchronized(ProxyPoolMonitor::class.java) {
-            if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
-                providerDirLastWatchTime = now
-                numEnabledProviderFiles = try {
-                    Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
-                } catch (e: Throwable) { 0 }
-            }
-        }
-
-        return numEnabledProviderFiles > 0
-    }
-
     /**
      * Proxy system can be enabled/disabled at runtime
      * */
@@ -182,29 +158,26 @@ open class ProxyPoolMonitor(
             }
         }
 
+        if (conf.getBoolean(CapabilityTypes.PROXY_ENABLE_DEFAULT_PROVIDERS, false)) {
+            enableDefaultProviders()
+        }
+
         // if no one set the proxy availability explicitly, but we have providers, use it
         return hasEnabledProvider()
     }
 
-    fun enableDefaultProviders() {
-        DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
-    }
+    fun hasEnabledProvider(): Boolean {
+        val now = Instant.now()
+        synchronized(ProxyPoolMonitor::class.java) {
+            if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
+                providerDirLastWatchTime = now
+                numEnabledProviderFiles = try {
+                    Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
+                } catch (e: Throwable) { 0 }
+            }
+        }
 
-    fun enableProvider(providerPath: Path) {
-        val filename = providerPath.fileName
-        arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
-                .map { it.resolve(filename) }
-                .filterNot { Files.exists(it) }
-                .forEach { Files.copy(providerPath, it) }
-    }
-
-    fun disableProviders() {
-        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
-    }
-
-    private fun createDefaultExecutor(): ScheduledExecutorService {
-        val factory = ThreadFactoryBuilder().setNameFormat("pm-%d").build()
-        return Executors.newSingleThreadScheduledExecutor(factory)
+        return numEnabledProviderFiles > 0
     }
 
     companion object {
@@ -216,5 +189,32 @@ open class ProxyPoolMonitor(
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
+
+        init {
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+                FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
+            }
+        }
+
+        fun enableDefaultProviders() {
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+        }
+
+        fun enableProvider(providerPath: Path) {
+            val filename = providerPath.fileName
+            arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
+                    .map { it.resolve(filename) }
+                    .filterNot { Files.exists(it) }
+                    .forEach { Files.copy(providerPath, it) }
+        }
+
+        fun disableProviders() {
+            Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
+        }
+
+        private fun createDefaultExecutor(): ScheduledExecutorService {
+            val factory = ThreadFactoryBuilder().setNameFormat("pm-%d").build()
+            return Executors.newSingleThreadScheduledExecutor(factory)
+        }
     }
 }

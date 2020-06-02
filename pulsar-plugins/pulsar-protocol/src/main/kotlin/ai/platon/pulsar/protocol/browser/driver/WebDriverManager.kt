@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.prependReadableClassName
-import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries

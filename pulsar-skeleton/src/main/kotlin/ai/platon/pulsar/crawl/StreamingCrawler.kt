@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -42,9 +43,10 @@ open class StreamingCrawler(
     private val conf = session.sessionConfig
     private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     private val privacyManager = session.context.getBean(PrivacyManager::class)
+    private val idleTimeout = Duration.ofMinutes(5)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    private val isIdle get() = idleTime > Duration.ofMinutes(5)
+    private val isIdle get() = idleTime > idleTimeout
     private val isAppActive get() = isAlive && !isIdle
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
@@ -59,71 +61,86 @@ open class StreamingCrawler(
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
-                lastActiveTime = Instant.now()
-                numTasks.incrementAndGet()
-
-                var k = 0
-                while (isAppActive && privacyManager.activeContext.isLeaked) {
-                    if (k++ % 10 == 0) {
-                        log.info("Privacy is leaked, wait for privacy context reset")
-                    }
-                    Thread.sleep(1000)
-                }
-
-                // update fetch concurrency on command
-                if (numRunningTasks.get() == concurrency) {
-                    val path = AppPaths.TMP_CONF_DIR.resolve("fetch-concurrency-override")
-                    if (Files.exists(path)) {
-                        val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:concurrency
-                        if (concurrencyOverride != concurrency) {
-                            session.sessionConfig.setInt(CapabilityTypes.FETCH_CONCURRENCY, concurrencyOverride)
-                        }
-                    }
-                }
-
-                while (isAppActive && numRunningTasks.get() >= concurrency) {
-                    Thread.sleep(1000)
-                }
-
-                while (isAppActive && memoryRemaining < 0) {
-                    if (j % 20 == 0) {
-                        handleMemoryShortage(j)
-                    }
-                    Thread.sleep(1000)
-                }
-
-                if (!isAppActive) {
+                val state = load(j, url, this)
+                if (state != FlowState.CONTINUE) {
                     return@supervisorScope
-                }
-
-                var page: WebPage?
-                var exception: Throwable? = null
-                numRunningTasks.incrementAndGet()
-                val context = Dispatchers.Default + CoroutineName("w")
-                launch(context) {
-                    withTimeout(taskTimeout.toMillis()) {
-                        page = session.runCatching { loadDeferred(url, options) }
-                                .onFailure { exception = it.also { log.warn("Load failed - ", it.message) } }
-                                .getOrNull()
-                                ?.also { pageCollector?.add(it) }
-                        page?.let(onLoadComplete)
-                        numRunningTasks.decrementAndGet()
-                        lastActiveTime = Instant.now()
-                    }
-                }
-
-                when (exception) {
-                    null -> {}
-                    is ProxyVendorUntrustedException -> {
-                        log.error(exception?.message?:"Unexpected error").let { return@supervisorScope }
-                    }
-                    is TimeoutCancellationException -> {}
-                    else -> log.error("Unexpected exception", exception)
                 }
             }
         }
 
         log.info("Total $numTasks tasks are loaded")
+    }
+
+    private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
+        lastActiveTime = Instant.now()
+        numTasks.incrementAndGet()
+
+        var k = 0
+        while (isAppActive && privacyManager.activeContext.isLeaked) {
+            if (k++ % 10 == 0) {
+                log.info("Privacy is leaked, wait for privacy context reset")
+            }
+            delay(1000)
+        }
+
+        // update fetch concurrency on command
+        if (j % 20 == 0) {
+            updateConcurrencyIfNecessary()
+        }
+
+        while (isAppActive && numRunningTasks.get() >= concurrency) {
+            delay(1000)
+        }
+
+        while (isAppActive && memoryRemaining < 0) {
+            if (j % 20 == 0) {
+                handleMemoryShortage(j)
+            }
+            delay(1000)
+        }
+
+        if (!isAppActive) {
+            return FlowState.BREAK
+        }
+
+        var page: WebPage?
+        var flowState = FlowState.CONTINUE
+        numRunningTasks.incrementAndGet()
+        val context = Dispatchers.Default + CoroutineName("w")
+        scope.launch(context) {
+            withTimeout(taskTimeout.toMillis()) {
+                page = session.runCatching { loadDeferred(url, options) }
+                        .onFailure { flowState = handleException(url, it) }
+                        .getOrNull()
+                        ?.also { pageCollector?.add(it) }
+                page?.let(onLoadComplete)
+                numRunningTasks.decrementAndGet()
+                lastActiveTime = Instant.now()
+            }
+        }
+
+        return flowState
+    }
+
+    private suspend fun updateConcurrencyIfNecessary() {
+        val path = AppPaths.TMP_CONF_DIR.resolve("fetch-concurrency-override")
+        if (Files.exists(path)) {
+            withContext(Dispatchers.IO) {
+                val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:concurrency
+                if (concurrencyOverride != concurrency) {
+                    session.sessionConfig.setInt(CapabilityTypes.FETCH_CONCURRENCY, concurrencyOverride)
+                }
+            }
+        }
+    }
+
+    private fun handleException(url: String, e: Throwable): FlowState {
+        when (e) {
+            is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
+            is TimeoutCancellationException -> log.warn("Load timeout, canceled - {} | {}", Strings.simplifyException(e), url)
+            else -> log.error("Unexpected exception", e)
+        }
+        return FlowState.CONTINUE
     }
 
     private fun handleMemoryShortage(j: Int) {

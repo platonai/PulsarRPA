@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
@@ -658,9 +659,22 @@ public class SParser {
             Path path = (value != null) ? Paths.get(value) : defaultValue;
             Files.createDirectories(path.getParent());
             return path;
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
+
         return defaultValue;
+    }
+
+    @Nullable
+    public Path getPathOrNull() {
+        try {
+            if (value != null) {
+                Path path = Paths.get(value);
+                Files.createDirectories(path.getParent());
+                return path;
+            }
+        } catch (Throwable ignored) {}
+
+        return null;
     }
 
     /**

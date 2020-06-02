@@ -20,6 +20,7 @@ package ai.platon.pulsar.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
 import java.io.PrintWriter;
@@ -600,11 +601,11 @@ public final class Strings {
         return stm.toString();
     }
 
-    public static String simplifyException(Throwable e) {
-        Objects.requireNonNull(e);
-
+    public static String simplifyException(@NotNull Throwable e) {
         String message = e.getMessage();
-        if (message == null) message = e.toString();
+        if (message == null) {
+            message = e.toString();
+        }
 
         String[] lines = message.split("\n");
         int n = lines.length;

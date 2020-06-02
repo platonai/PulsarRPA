@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -21,7 +20,6 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.roundToLong
@@ -39,7 +37,7 @@ class BrowserEmulatedFetcher(
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
     private val driverManager = privacyManager.driverManager
-    private val proxyManager = privacyManager.proxyManager
+    private val proxyMonitor = privacyManager.proxyPoolMonitor
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
 
@@ -184,6 +182,7 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetch0(batch: FetchTaskBatch) {
+        // TODO: avoid GlobalScope
         GlobalScope.launch {
             batch.createTasks().associateWithTo(batch.workingTasks) { async { parallelFetch1(it, batch) } }
         }
@@ -394,14 +393,14 @@ class BrowserEmulatedFetcher(
                     Strings.readableBytes(stat.bytesPerSecond.roundToLong()),
                     proxyDisplay?:"(no proxy)"
             ))
-            log.info("Proxy: $proxyManager")
+            log.info("Proxy: $proxyMonitor")
             log.info("Drivers: $driverManager")
         }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyManager.takeIf { it.isEnabled }?.let { log.info(it.toString()) }
+            proxyMonitor.takeIf { it.isEnabled }?.let { log.info(it.toString()) }
             log.info("Web drivers: $driverManager")
         }
     }

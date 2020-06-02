@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyMonitorFactory
+import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyManager
@@ -14,8 +14,8 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import org.slf4j.LoggerFactory
 
 class BrowserPrivacyManager(
-        proxyMonitorFactory: ProxyMonitorFactory,
         val driverManager: WebDriverManager,
+        val proxyPoolMonitor: ProxyPoolMonitor,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
     private val log = LoggerFactory.getLogger(PrivacyManager::class.java)
@@ -23,10 +23,9 @@ class BrowserPrivacyManager(
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
     val maxRetry = 2
-    val proxyManager = proxyMonitorFactory.get()
     override val autoRefreshContext
-        get() = refreshIfNecessary { BrowserPrivacyContext(driverManager, proxyManager, immutableConfig) }
-    override var activeContext: PrivacyContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
+        get() = refreshIfNecessary { BrowserPrivacyContext(driverManager, proxyPoolMonitor, immutableConfig) }
+    override var activeContext: PrivacyContext = BrowserPrivacyContext(driverManager, proxyPoolMonitor, immutableConfig)
 
     fun run(task: FetchTask, fetchFun: (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return takeIf { isActive }?.run0(task, fetchFun)?:FetchResult.crawlRetry(task)
@@ -125,7 +124,7 @@ class BrowserPrivacyManager(
      * If the privacy leak occurs, block until the the context is closed completely, and create a new privacy context
      * */
     private fun computeContextIfLeaked(): BrowserPrivacyContext {
-        if (proxyManager.isIdle && proxyManager.currentProxyEntry == null) {
+        if (proxyPoolMonitor.isIdle && proxyPoolMonitor.currentProxyEntry == null) {
             activeContext.markLeaked()
         }
 
@@ -139,7 +138,7 @@ class BrowserPrivacyManager(
             require(numRunningPreemptiveTasks.get() > 0) { "Should have at least one running preemptive task" }
             reportZombieContexts()
 
-            val newContext = BrowserPrivacyContext(driverManager, proxyManager, immutableConfig)
+            val newContext = BrowserPrivacyContext(driverManager, proxyPoolMonitor, immutableConfig)
             log.info("Privacy context is changed #{} -> #{} <<<<<<<Bye", oldContext.id, newContext.id)
 
             newContext

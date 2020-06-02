@@ -232,7 +232,7 @@ public interface CapabilityTypes {
      * Proxy
      */
     String PROXY_USE_PROXY = "use_proxy"; // keep consist with wget
-    String PROXY_MANAGER_CLASS = "proxy.manager.class";
+    String PROXY_POOL_MONITOR_CLASS = "proxy.pool.monitor.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
     String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.no.proxy.exception";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";

@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -184,8 +185,12 @@ class TestAnything {
 
     @Test
     fun testUrlDecoder() {
-        val s = "%E4%B8%89%E9%87%8C%E7%95%882-03%E5%8F%B7%E5%9C%B0%E6%AE%B5%E8%A7%84%E5%88%92%E5%8F%8A%E7%BC%96%E5%88%B6"
-        println(URLDecoder.decode(s, StandardCharsets.UTF_8.toString()))
+//        val s = "%E4%B8%89%E9%87%8C%E7%95%882-03%E5%8F%B7%E5%9C%B0%E6%AE%B5%E8%A7%84%E5%88%92%E5%8F%8A%E7%BC%96%E5%88%B6"
+//        println(URLDecoder.decode(s, StandardCharsets.UTF_8.toString()))
+
+        repeat(100) {
+            Random.nextInt(0, 100000).toString(Character.MAX_RADIX).also { println(it) }
+        }
     }
 
     @Test

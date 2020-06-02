@@ -2,17 +2,18 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.*
-import ai.platon.pulsar.common.config.AppConstants.*
+import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.Configurable
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.fetch.indexer.IndexThread
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -256,9 +257,7 @@ class FetchMonitor(
             /*
              * Check if any fetch tasks are hung
              * */
-            GlobalScope.launch {
-                tuneFetchQueues(now, idleTime)
-            }
+            tuneFetchQueues(now, idleTime)
 
             /*
              * Dump the remainder fetch items if feeder thread is no available and fetch item is few

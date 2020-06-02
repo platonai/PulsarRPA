@@ -17,7 +17,7 @@
 
     <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
         <constructor-arg ref="driverControl"/>
-        <constructor-arg ref="proxyMonitor"/>
+        <constructor-arg ref="proxyPoolMonitor"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -28,14 +28,14 @@
 
     <bean id="webDriverManager" class="ai.platon.pulsar.protocol.browser.driver.WebDriverManager" destroy-method="close">
         <constructor-arg ref="driverControl"/>
-        <constructor-arg ref="proxyMonitor"/>
+        <constructor-arg ref="proxyPoolMonitor"/>
         <constructor-arg ref="webDriverFactory"/>
         <constructor-arg ref="webDriverPool"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.BrowserPrivacyManager">
-        <constructor-arg ref="proxyMonitorFactory"/>
+        <constructor-arg ref="proxyPoolMonitor"/>
         <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="conf"/>
     </bean>

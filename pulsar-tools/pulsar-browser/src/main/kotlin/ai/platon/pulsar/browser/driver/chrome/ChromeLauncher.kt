@@ -407,10 +407,10 @@ class ChromeLauncher(
 
     private fun cleanUp() {
         kotlin.runCatching {
-            // wait for 1 second to hope every thing is clean
+            // wait for 1 second hope every thing is clean
             Thread.sleep(1000)
 
-            val target = userDataDir.resolve("Cache")
+            val target = userDataDir.resolve("Default/Cache")
             FileUtils.deleteQuietly(target.toFile())
             if (Files.exists(target)) {
                 log.warn("Failed to delete browser cache, try again | {}", target)

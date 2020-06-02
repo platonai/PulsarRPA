@@ -508,6 +508,10 @@ public abstract class AbstractConfiguration {
         return p(name).getPath(elsePath);
     }
 
+    public Path getPathOrNull(String name) {
+        return p(name).getPathOrNull();
+    }
+
     public Map<String, String> getKvs(String name) {
         return p(name).getKvs();
     }
