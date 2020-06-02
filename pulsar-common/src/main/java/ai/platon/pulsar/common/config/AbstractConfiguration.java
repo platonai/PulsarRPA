@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 
-import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
@@ -130,6 +129,13 @@ public abstract class AbstractConfiguration {
         }
 
         fullPathResources.forEach(conf::addResource);
+
+//        if (environment instanceof ConfigurableEnvironment) {
+//            HashMap props = new HashMap<>();
+//            conf.iterator().forEachRemaining(e -> props.put(e.getKey(), e.getValue()));
+//            MapPropertySource source = new MapPropertySource("hadoop-compatible", props);
+//            ((ConfigurableEnvironment) environment).getPropertySources().addLast(source);
+//        }
 
         LOG.info(toString());
     }
@@ -564,12 +570,7 @@ public abstract class AbstractConfiguration {
         return p(name).getClass(defaultValue, xface);
     }
 
-    public boolean isProductionEnv() {
-        String env = get("ENV", "production");
-        return env.contains("production");
-    }
-
-    @Nonnull
+    @NotNull
     private SParser p(String name) {
         return new SParser(get(name));
     }
