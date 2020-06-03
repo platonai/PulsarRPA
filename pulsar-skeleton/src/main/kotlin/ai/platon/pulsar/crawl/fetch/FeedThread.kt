@@ -75,7 +75,7 @@ class FeedThread(
                 var feedInRound = 0
                 while (feedInRound < batchSize && currentIter.hasNext() && hasMore) {
                     val entry = currentIter.next()
-                    val page = entry.page
+                    val page = entry.page ?: continue
                     tasksMonitor.produce(context.jobId, page)
 
                     ++totalFeed

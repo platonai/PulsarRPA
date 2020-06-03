@@ -10,6 +10,7 @@
     </bean>
 
     <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close">
+        <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
 

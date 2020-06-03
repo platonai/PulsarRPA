@@ -74,7 +74,7 @@ class PoolQueue: AbstractQueue<TaskPool>() {
     }
 
     override fun iterator(): MutableIterator<TaskPool> {
-        throw IllegalAccessException("Iteration is not supported")
+        return priorityActiveQueues.iterator()
     }
 
     @Synchronized

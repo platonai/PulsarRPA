@@ -329,7 +329,7 @@
             parser setup for subsequent urls. If it is set to true, however, you must
             make sure (roughly):
             (1) ftp.timeout is less than ftp.server.timeout
-            (2) ftp.timeout is larger than (fetch.threads.fetch * fetch.queue.delay)
+            (2) ftp.timeout is larger than (fetch.concurrency * fetch.queue.delay)
             Otherwise there will be too many "delete client because idled too long"
             messages in thread logs.
         </description>
@@ -588,7 +588,7 @@
     </property>
 
     <property>
-        <name>fetch.threads.fetch</name>
+        <name>fetch.concurrency</name>
         <value>5</value>
         <description>The number of FetcherThreads the fetcher should use.
             This is also determines the maximum number of requests that are
@@ -1081,7 +1081,7 @@
 
     <property>
         <name>fetch.fetch.mode</name>
-        <value>SELENIUM</value>
+        <value>BROWSER</value>
         <description>There are 4 fetch modes : native, proxy, selenium and crowdsourcing.
             The native mode is the fastest one but without ajax support; the
             proxy mode uses a 3rd party fetcher as a proxy; and the crowdsourcing mode

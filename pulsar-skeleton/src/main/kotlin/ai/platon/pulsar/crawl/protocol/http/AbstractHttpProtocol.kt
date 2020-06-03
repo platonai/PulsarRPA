@@ -24,6 +24,7 @@ import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Protocol
 import ai.platon.pulsar.crawl.protocol.ProtocolOutput
 import ai.platon.pulsar.crawl.protocol.Response
@@ -108,9 +109,9 @@ abstract class AbstractHttpProtocol: Protocol {
                 log.info("Protocol retry: {}/{} | {}", i, maxTry, page.url)
             }
             try {
-                // TODO: FETCH_PROTOCOL does not work if the response is forwarded
+                // TODO: FETCH_PROTOCOL does not work if the response is a ForwardingResponse
                 response = getResponse(page, false)
-                retry = response == null || response.status.isRetry(RetryScope.PROTOCOL)
+                retry = response == null || shouldRetry(response)
             } catch (e: Throwable) {
                 response = null
                 lastThrowable = e
@@ -124,6 +125,10 @@ abstract class AbstractHttpProtocol: Protocol {
 
         setResponseTime(startTime, page, response)
         return getOutputWithHttpStatusTransformed(page.url, response)
+    }
+
+    private fun shouldRetry(response: Response): Boolean {
+        return response !is ForwardingResponse && response.status.isRetry(RetryScope.PROTOCOL)
     }
 
     /**

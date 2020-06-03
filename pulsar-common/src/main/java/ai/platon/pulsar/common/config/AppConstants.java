@@ -23,6 +23,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 /**
  * A collection of constants.
@@ -31,6 +36,16 @@ import java.time.Instant;
 public interface AppConstants {
 
     String USER = SystemUtils.USER_NAME;
+
+    /**
+     * Date time
+     * */
+    Instant impreciseNow = Instant.now();
+    Instant impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS);
+    Instant imprecise2DaysAhead = impreciseNow.plus(2, ChronoUnit.DAYS);
+    LocalDateTime middleNight = LocalDateTime.now().truncatedTo(DAYS);
+    Instant middleNightInstant = Instant.now().truncatedTo(DAYS);
+    ZoneId defaultZoneId = ZoneId.systemDefault();
 
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
     String SCENT_CONTEXT_CONFIG_LOCATION = "classpath:/scent-beans/app-context.xml";

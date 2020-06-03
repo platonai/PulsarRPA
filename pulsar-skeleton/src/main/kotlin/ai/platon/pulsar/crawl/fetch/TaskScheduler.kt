@@ -22,7 +22,6 @@ import java.text.DecimalFormat
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -45,20 +44,20 @@ class TaskScheduler(
     )
 
     private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
-    val id: Int = instanceSequence.getAndIncrement()
+    val id: Int = instanceSequence.incrementAndGet()
     private val metricsCounters = MetricsCounters()
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
      */
     private var bandwidth = 1024 * 1024 * conf.getInt(FETCH_NET_BANDWIDTH_M, BANDWIDTH_INFINITE_M)
-    private var skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true)
-    private var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, true)
+    var skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true)
+    var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, true)
 
     // Indexer
-    private var indexJIT: Boolean = false
+    var indexJIT: Boolean = false
     // Parser setting
-    private var parse: Boolean = false
+    var parse: Boolean = false
 
     // Timer
     private val startTime = Instant.now()!! // Start time of fetcher run
@@ -185,7 +184,7 @@ class TaskScheduler(
 
             handleResult(fetchTask, CrawlStatus.STATUS_FETCHED)
 
-            if (protocolStatus.isRetry(RetryScope.PROTOCOL)) {
+            if (protocolStatus.isRetry(RetryScope.JOB)) {
                 tasksMonitor.produce(fetchTask)
             }
         } catch (e: Throwable) {

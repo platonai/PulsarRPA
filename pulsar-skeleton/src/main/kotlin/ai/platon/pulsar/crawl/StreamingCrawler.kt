@@ -43,7 +43,7 @@ open class StreamingCrawler(
     private val conf = session.sessionConfig
     private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     private val privacyManager = session.context.getBean(PrivacyManager::class)
-    private val idleTimeout = Duration.ofMinutes(5)
+    private val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
@@ -114,9 +114,9 @@ open class StreamingCrawler(
                         .getOrNull()
                         ?.also { pageCollector?.add(it) }
                 page?.let(onLoadComplete)
-                numRunningTasks.decrementAndGet()
-                lastActiveTime = Instant.now()
             }
+            numRunningTasks.decrementAndGet()
+            lastActiveTime = Instant.now()
         }
 
         return flowState

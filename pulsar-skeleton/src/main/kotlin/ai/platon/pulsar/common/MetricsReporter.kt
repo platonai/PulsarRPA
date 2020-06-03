@@ -19,19 +19,21 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.lang3.StringUtils
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MetricsReporter(
-        private val jobName: String,
         private val counter: MetricsCounters,
         private val conf: ImmutableConfig
 ): Thread() {
     private val running = AtomicBoolean(false)
     private val silent = AtomicBoolean(false)
-    private val log = LoggerFactory.getLogger(MetricsReporter::class.java)
-    private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(10))
+    private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
+    private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(30))
+
+    var jobName = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNKNOWN")
 
     init {
         val name = "Reporter-" + counter.id
@@ -42,6 +44,10 @@ class MetricsReporter(
 
     fun silent() {
         silent.set(true)
+    }
+
+    fun outputTo(log: Logger) {
+        this.log = log
     }
 
     fun startReporter() {

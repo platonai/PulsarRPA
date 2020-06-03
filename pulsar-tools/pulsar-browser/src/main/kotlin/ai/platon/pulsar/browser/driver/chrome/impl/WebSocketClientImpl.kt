@@ -5,8 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.prependReadableClassName
-import ai.platon.pulsar.common.readableClassName
-import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -31,15 +29,13 @@ class WebSocketClientImpl : WebSocketClient {
     override fun connect(uri: URI) {
         val endpoint = object : Endpoint() {
             override fun onOpen(session: Session, config: EndpointConfig) {
-                log.info("Connected to ws server {}", uri)
+                // log.info("Connected to ws server {}", uri)
             }
 
             override fun onClose(session: Session, closeReason: CloseReason) {
-                // log.info("Closing ws server {}")
+                // log.info("Closing ws server {}", uri)
             }
         }
-
-        // log.debug("Connecting to ws server | {}", uri)
 
         session = try {
             WEB_SOCKET_CONTAINER.connectToServer(endpoint, uri)

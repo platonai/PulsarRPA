@@ -38,6 +38,7 @@ class WebDriverFactory(
 
         // Choose the WebDriver
         val browserType = getBrowserType(conf)
+
         val driver = kotlin.runCatching {
             when {
                 browserType == BrowserType.CHROME -> {
@@ -45,7 +46,6 @@ class WebDriverFactory(
                     ChromeDevtoolsDriver(driverControl.randomUserAgent(), driverControl, options)
                 }
                 browserType == BrowserType.SELENIUM_CHROME -> {
-                    // System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
                     ChromeDriver(driverControl.createChromeOptions(capabilities))
                 }
                 RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {

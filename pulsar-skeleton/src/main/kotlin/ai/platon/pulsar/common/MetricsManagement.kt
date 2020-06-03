@@ -3,7 +3,6 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
-import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.Slf4jReporter
 import com.codahale.metrics.jmx.JmxReporter
@@ -14,7 +13,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
+class MetricsManagement(
+        val metricsCounters: MetricsCounters,
+        conf: ImmutableConfig
+): AutoCloseable {
     companion object {
         const val DEFAULT_METRICS_NAME = "pulsar"
         init {
@@ -27,16 +29,18 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
 
-    private val metricRegistry: MetricRegistry
+    private val metricRegistry = SharedMetricRegistries.getOrCreate(DEFAULT_METRICS_NAME)
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: Slf4jReporter
+
+    val metricsReporter = MetricsReporter(metricsCounters, conf)
+
     private val closed = AtomicBoolean()
 
     init {
         Files.createDirectories(reportDir)
 
-        metricRegistry = SharedMetricRegistries.getOrCreate(DEFAULT_METRICS_NAME)
         jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
         csvReporter = CsvReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)
@@ -51,12 +55,14 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build()
+        metricsReporter.outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
     }
 
     fun start() {
         jmxReporter.start()
         csvReporter.start(2, TimeUnit.MINUTES)
         slf4jReporter.start(5, TimeUnit.MINUTES)
+        metricsReporter.startReporter()
     }
 
     override fun close() {
@@ -66,6 +72,8 @@ class MetricsManagement(conf: ImmutableConfig): AutoCloseable {
             csvReporter.close()
             slf4jReporter.close()
             jmxReporter.close()
+
+            metricsReporter.stopReporter()
         }
     }
 }

@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
@@ -134,7 +135,7 @@ class ChromeDevtoolsDriver(
             page.stopLoading()
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
-            throw NoSuchSessionException(e.message)
+            log.warn("Failed to call stop loading, session is already closed, {}", Strings.simplifyException(e))
         }
     }
 

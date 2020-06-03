@@ -155,6 +155,9 @@ open class AsyncBrowserEmulator(
             numDeferredNavigates.mark()
             // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
             lastNavigateTime = Instant.now()
+
+            log.trace("Navigating | ", task.url)
+
             driver.navigateTo(task.url)
         }
 

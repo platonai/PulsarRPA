@@ -112,6 +112,7 @@ class Chrome(
         // Connect to a tab via web socket
         val debuggerUrl: String = tab.webSocketDebuggerUrl
                 ?:throw WebSocketServiceException("Invalid web socket debugger url")
+
         val wsClient = wss.createWebSocketService(debuggerUrl)
 
         // Create concrete dev tools instance from interface

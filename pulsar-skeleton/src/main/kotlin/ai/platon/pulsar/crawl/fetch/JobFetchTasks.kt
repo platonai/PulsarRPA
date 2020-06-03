@@ -9,8 +9,8 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 interface IFetchEntry {
-    var reservedUrl: String
-    var page: WebPage
+    var reservedUrl: String?
+    var page: WebPage?
 }
 
 /**
@@ -30,13 +30,9 @@ class JobFetchTask(
     val poolId get() = PoolId(priority, protocol, host)
     var pendingStart = Instant.EPOCH!!
 
-    override fun toString(): String {
-        return "<itemId=" + key.itemId + ", priority=" + key.priority + ", url=" + key.url + ">"
-    }
+    override fun toString() = "{itemId: " + key.itemId + ", priority: " + key.priority + ", url: " + key.url + "}"
 
-    override fun compareTo(other: JobFetchTask): Int {
-        return key.compareTo(other.key)
-    }
+    override fun compareTo(other: JobFetchTask) = key.compareTo(other.key)
 
     data class Key(
             var jobID: Int,
@@ -46,9 +42,7 @@ class JobFetchTask(
             var url: String,
             var itemId: Int = instanceSequence.incrementAndGet()
     ) : Comparable<Key> {
-        override fun compareTo(other: Key): Int {
-            return itemId - other.itemId
-        }
+        override fun compareTo(other: Key) = itemId - other.itemId
     }
 
     companion object {

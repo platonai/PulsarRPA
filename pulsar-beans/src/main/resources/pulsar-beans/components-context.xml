@@ -99,6 +99,7 @@
 
     <bean id="fetchMonitor" class="ai.platon.pulsar.crawl.fetch.FetchMonitor" destroy-method="close">
         <constructor-arg ref="fetchComponent"/>
+        <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="taskMonitor"/>
         <constructor-arg ref="taskSchedulers"/>
         <constructor-arg ref="jitIndexer"/>

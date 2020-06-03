@@ -58,7 +58,7 @@ class MetricsCounters {
             groupId = counterGroupSequence.incrementAndGet()
             registeredClasses.add(Pair.of(counterClass, groupId))
             for (e in counterClass.enumConstants) {
-                val counterIndex = groupId * MAX_COUNTERS_IN_GROUP + e!!.ordinal
+                val counterIndex = groupId * MAX_COUNTERS_IN_GROUP + e.ordinal
                 val counterName = groupId.toString() + DELIMITER + e.name
                 counterNames[counterIndex] = counterName
                 globalCounters[counterIndex] = AtomicInteger(0)

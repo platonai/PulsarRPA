@@ -59,8 +59,6 @@ class ChromeDevtoolsOptions(
         var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("incognito")
         var incognito: Boolean = false,
-        @ChromeParameter("force-webrtc-ip-handling-policy")
-        var forceWebrtcIpHandlingPolicy: String = "default_public_interface_only",
         @ChromeParameter("disable-gpu")
         var disableGpu: Boolean = true,
         @ChromeParameter("hide-scrollbars")

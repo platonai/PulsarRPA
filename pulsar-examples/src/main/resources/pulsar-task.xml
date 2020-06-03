@@ -25,7 +25,7 @@
 
     <!-- fetch -->
     <property>
-        <name>fetch.threads.fetch</name>
+        <name>fetch.concurrency</name>
         <value>5</value>
     </property>
 

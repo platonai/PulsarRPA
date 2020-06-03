@@ -6,6 +6,10 @@ public enum RetryScope {
      * */
     CRAWL,
     /**
+     * Retry at job schedule level
+     * */
+    JOB,
+    /**
      * Retry at fetch protocol, ignored in browser emulation mode
      * */
     PROTOCOL,

@@ -17,6 +17,6 @@ interface WebSocketContainerFactory {
 }
 
 class DefaultWebSocketContainerFactory : WebSocketContainerFactory {
-    // override val webSocketContainer get() = ClientManager.createClient(GrizzlyClientContainer::class.java.name)
-    override val wsContainer get() = ClientManager.createClient()
+    override val wsContainer get() = ClientManager.createClient(GrizzlyClientContainer::class.java.name)
+    // override val wsContainer get() = ClientManager.createClient()
 }

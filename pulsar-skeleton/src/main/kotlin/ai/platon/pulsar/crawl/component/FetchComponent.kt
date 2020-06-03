@@ -226,12 +226,13 @@ open class FetchComponent(
 
         pageDatum?.also {
             page.location = it.location
-            page.pageCategory = it.pageCategory
             page.proxy = it.proxyEntry?.outIp
-            it.lastBrowser?.also { page.lastBrowser = it }
             page.activeDomMultiStatus = it.activeDomMultiStatus
             page.activeDomUrls = it.activeDomUrls
-            it.htmlIntegrity?.also { page.htmlIntegrity = it }
+
+            it.pageCategory?.let { page.pageCategory = it }
+            it.htmlIntegrity?.let { page.htmlIntegrity = it }
+            it.lastBrowser?.let { page.lastBrowser = it }
         }
 
         // No need to update content if the fetch is failed, just keep the last content in such cases

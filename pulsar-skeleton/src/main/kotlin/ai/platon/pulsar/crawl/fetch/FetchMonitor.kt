@@ -11,9 +11,12 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.component.FetchComponent
+import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.fetch.indexer.IndexThread
 import ai.platon.pulsar.crawl.fetch.indexer.JITIndexer
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -35,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class FetchMonitor(
         private val fetchComponent: FetchComponent,
+        private val parseComponent: ParseComponent,
         private val taskMonitor: TaskMonitor,
         private val taskSchedulers: TaskSchedulers,
         private val jitIndexer: JITIndexer,
@@ -118,7 +122,7 @@ class FetchMonitor(
         this.options = FetchOptions(jobConf)
 
         this.jobName = jobConf.get(PARAM_JOB_NAME, "UNKNOWN")
-        this.finishScript = AppPaths.get("scripts", "finish_$jobName.sh")
+        this.finishScript = AppPaths.TMP_DIR.resolve("scripts").resolve("finish_$jobName.sh")
 
         generateFinishCommand()
 
@@ -168,18 +172,22 @@ class FetchMonitor(
     }
 
     fun registerFeedThread(feedThread: FeedThread) {
+        log.info("FeedThread {} is registered", feedThread)
         feedThreads.add(feedThread)
     }
 
     fun unregisterFeedThread(feedThread: FeedThread) {
+        log.info("FeedThread {} is unregistered", feedThread)
         feedThreads.remove(feedThread)
     }
 
     fun registerFetchLoop(fetchLoop: FetchLoop) {
+        log.info("Fetch loop {} is register", fetchLoop)
         fetchLoops.add(fetchLoop)
     }
 
     fun unregisterFetchLoop(fetchLoop: FetchLoop) {
+        log.info("Fetch loop {} is unregistered", fetchLoop)
         fetchLoops.remove(fetchLoop)
     }
 
@@ -220,7 +228,10 @@ class FetchMonitor(
     }
 
     private fun startFetchLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        FetchLoop(this, fetchComponent, taskScheduler, context, conf).start()
+        val monitor = this
+        GlobalScope.launch {
+            FetchLoop(monitor, fetchComponent, parseComponent, taskScheduler, context, conf).start()
+        }
     }
 
     /**
