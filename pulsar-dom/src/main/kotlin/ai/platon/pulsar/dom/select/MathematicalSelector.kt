@@ -5,6 +5,7 @@ import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class MathematicalSelectorParseException(msg: String, vararg params: Any) : IllegalStateException(String.format(msg, *params))
 
@@ -79,6 +80,7 @@ class MathematicalSelectorParseException(msg: String, vararg params: Any) : Ille
 object MathematicalSelector {
 
     private val log = LoggerFactory.getLogger(MathematicalSelector::class.java)
+    private val cache = ConcurrentHashMap<String, Evaluator>()
 
     /**
      * Find elements matching selector.
@@ -88,11 +90,12 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, root: Element): Elements {
+        // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
         val q = cssQuery.trim().removeSurrounding("\"").takeIf { it.isNotBlank() }?:return Elements()
 
         try {
-            // JCommand do not remove surrounding quotes, like jcommander.parse("-outlink \"ul li a[href~=item]\"")
-            return select(MathematicalQueryParser.parse(q), root)
+            val evaluator = cache.computeIfAbsent(q) { MathematicalQueryParser.parse(q) }
+            return select(evaluator, root)
         } catch (e: MathematicalSelectorParseException) {
             log.warn(e.message)
         }
@@ -127,12 +130,13 @@ object MathematicalSelector {
      * @return matching elements, empty if none
      */
     fun select(cssQuery: String, roots: Iterable<Element>): Elements {
-        if (cssQuery.isBlank()) {
+        val cssQuery0 = cssQuery.trim()
+        if (cssQuery0.isBlank()) {
             return Elements()
         }
 
         try {
-            val evaluator = MathematicalQueryParser.parse(cssQuery.trim())
+            val evaluator = cache.computeIfAbsent(cssQuery0) { MathematicalQueryParser.parse(cssQuery0) }
             val elements = ArrayList<Element>()
             val seenElements = IdentityHashMap<Element, Boolean>()
             // dedupe elements by identity, not equality
@@ -162,10 +166,12 @@ object MathematicalSelector {
      * @return the matching element, or **null** if none.
      */
     fun selectFirst(cssQuery: String, root: Element): Element? {
-        if (cssQuery.isBlank()) return null
+        val cssQuery0 = cssQuery.trim()
+        if (cssQuery0.isBlank()) return null
 
         try {
-            return MathematicalCollector.findFirst(MathematicalQueryParser.parse(cssQuery.trim()), root)
+            val evaluator = cache.computeIfAbsent(cssQuery0) { MathematicalQueryParser.parse(cssQuery0) }
+            return MathematicalCollector.findFirst(evaluator, root)
         } catch (e: MathematicalSelectorParseException) {
             log.warn(e.message)
         }

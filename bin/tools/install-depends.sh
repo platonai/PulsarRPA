@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 install_utils() {
-  sudo apt-get install snap aptitude ssh vim pkg-config unzip xvfb
+  sudo apt-get install unzip xvfb
 }
 
 install_chrome() {

@@ -21,6 +21,7 @@ package ai.platon.pulsar.parse.metatags
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.ParseFilter
+import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.persist.Metadata
 import org.apache.commons.logging.LogFactory
@@ -36,14 +37,14 @@ class MetaTagsParser(val conf: ImmutableConfig) : ParseFilter {
     private val metatagset: Set<String> = conf.getStrings(CapabilityTypes.METATAG_NAMES, "*")
             .mapTo(HashSet()) { it.toLowerCase() }
 
-    override fun filter(parseContext: ParseContext) {
+    override fun filter(parseContext: ParseContext): ParseResult {
         val page = parseContext.page
-        val metaTags = parseContext.metaTags?:return
+        val metaTags = parseContext.metaTags?:return parseContext.parseResult
         val generalMetaTags = metaTags.generalTags
         for (tagName in generalMetaTags.names()) { // multiple values of a metadata field are separated by '\t' in persist.
             val sb = StringBuilder()
             for (value in generalMetaTags.getValues(tagName)) {
-                if (sb.length > 0) {
+                if (sb.isNotEmpty()) {
                     sb.append("\t")
                 }
                 sb.append(value)
@@ -57,6 +58,7 @@ class MetaTagsParser(val conf: ImmutableConfig) : ParseFilter {
             val value = httpequiv.getProperty(name)
             addIndexedMetatags(page.metadata, name, value)
         }
+        return parseContext.parseResult
     }
 
     /**

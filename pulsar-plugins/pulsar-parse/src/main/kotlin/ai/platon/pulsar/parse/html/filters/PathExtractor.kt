@@ -38,7 +38,7 @@ class PathExtractor(
     /**
      * Extract all fields in the page
      */
-    override fun filter(parseContext: ParseContext) {
+    override fun filter(parseContext: ParseContext): ParseResult {
         val page = parseContext.page
         val parseResult = parseContext.parseResult
         val parser = JsoupParser(page, conf)
@@ -52,12 +52,12 @@ class PathExtractor(
         val options = EntityOptions.parse(query)
         if (!options.hasRules()) {
             parseResult.minorCode = ParseStatus.SUCCESS_EXT
-            return
+            return parseResult
         }
 
         val fieldCollections = parser.extractAll(options)
         if (fieldCollections.isEmpty()) {
-            return
+            return parseResult
         }
 
         // All last extracted fields are cleared, so we just keep the last extracted fields
@@ -84,6 +84,8 @@ class PathExtractor(
 
         page.pageCounters.set(Self.brokenSubEntity, brokenSubEntity)
         metricsCounters.inc(Counter.brokenSubEntity, brokenSubEntity)
+
+        return parseResult
     }
 
     private fun collectPageFeatures(page: WebPage, document: FeaturedDocument, parseResult: ParseResult) {

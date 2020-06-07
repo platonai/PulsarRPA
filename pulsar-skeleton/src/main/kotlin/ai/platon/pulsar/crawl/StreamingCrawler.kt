@@ -137,7 +137,7 @@ open class StreamingCrawler(
     private fun handleException(url: String, e: Throwable): FlowState {
         when (e) {
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
-            is TimeoutCancellationException -> log.warn("Load timeout, canceled - {} | {}", Strings.simplifyException(e), url)
+            is TimeoutCancellationException -> log.warn("TimeoutCancellationException: {} | {}", Strings.simplifyException(e), url)
             else -> log.error("Unexpected exception", e)
         }
         return FlowState.CONTINUE

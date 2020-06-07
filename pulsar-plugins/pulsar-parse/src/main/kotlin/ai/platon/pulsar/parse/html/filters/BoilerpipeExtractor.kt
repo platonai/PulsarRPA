@@ -24,6 +24,7 @@ import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.ParseFilter
+import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.persist.WebPage
@@ -38,11 +39,12 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : ParseFilter {
 
     private val primerParser = PrimerParser(conf)
 
-    override fun filter(parseContext: ParseContext) {
+    override fun filter(parseContext: ParseContext): ParseResult {
         val page = parseContext.page
         val parseResult = parseContext.parseResult
         extract(page, page.getEncodingOrDefault("UTF-8"))
         parseResult.setSuccessOK()
+        return parseResult
     }
 
     /**

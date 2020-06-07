@@ -11,7 +11,7 @@ import org.w3c.dom.DocumentFragment
  */
 class ParseContext(
         val page: WebPage,
-        val parseResult: ParseResult,
+        val parseResult: ParseResult = ParseResult(),
         val metaTags: HTMLMetaTags? = null,
         // deprecated, may not support in further version. Use jsoup instead
         val documentFragment: DocumentFragment? = null,

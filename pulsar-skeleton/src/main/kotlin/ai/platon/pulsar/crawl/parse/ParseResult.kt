@@ -26,7 +26,11 @@ import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.collections.HashSet
 
-class ParseResult : ParseStatus {
+class ParseResult(
+        majorCode: Short = NOTPARSED,
+        minorCode: Int = SUCCESS_OK,
+        message: String? = null
+) : ParseStatus(majorCode, minorCode, message) {
     val hypeLinks = mutableSetOf<HypeLink>()
     var domStatistics: DomStatistics? = null
     var parser: Parser? = null
@@ -34,10 +38,6 @@ class ParseResult : ParseStatus {
 
     val shouldContinue get() = flowStatus == FlowState.CONTINUE
     val shouldBreak get() = flowStatus == FlowState.BREAK
-
-    constructor() : super(NOTPARSED, SUCCESS_OK)
-    constructor(majorCode: Short, minorCode: Int) : super(majorCode, minorCode)
-    constructor(majorCode: Short, minorCode: Int, message: String?) : super(majorCode, minorCode, message)
 
     companion object {
         val labeledHypeLinks = ConcurrentSkipListSet<LabeledHyperLink>()

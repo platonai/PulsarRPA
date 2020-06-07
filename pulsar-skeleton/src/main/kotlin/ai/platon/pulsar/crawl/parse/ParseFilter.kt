@@ -30,7 +30,7 @@ interface ParseFilter : Parameterized, AutoCloseable {
     /**
      * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
      */
-    fun filter(parseContext: ParseContext)
+    fun filter(parseContext: ParseContext): ParseResult
 
     override fun close() {}
 }

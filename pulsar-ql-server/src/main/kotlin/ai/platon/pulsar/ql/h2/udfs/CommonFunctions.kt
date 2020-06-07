@@ -420,6 +420,18 @@ object CommonFunctions {
         return ValueArray.get(values)
     }
 
+    @UDFunction
+    @JvmStatic
+    fun isEmpty(array: ValueArray): Boolean {
+        return array.list.isEmpty()
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun isNotEmpty(array: ValueArray): Boolean {
+        return array.list.isNotEmpty()
+    }
+
     /**
      * Set volatileConfig to the given value
      * @param h2session H2 session

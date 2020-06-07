@@ -49,12 +49,13 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
      *
      * @param parseContext Context of parse.
      */
-    override fun filter(parseContext: ParseContext) {
+    override fun filter(parseContext: ParseContext): ParseResult {
         val documentFragment = parseContext.documentFragment
         val metaTags = parseContext.metaTags
         if (documentFragment != null && metaTags != null) {
             walk(documentFragment, metaTags, parseContext.page.url, parseContext.parseResult.hypeLinks)
         }
+        return parseContext.parseResult
     }
 
     private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hypeLinks: MutableSet<HypeLink>) {

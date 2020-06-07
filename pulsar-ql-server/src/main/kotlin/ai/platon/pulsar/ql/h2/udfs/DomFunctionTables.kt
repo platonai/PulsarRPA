@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
@@ -258,7 +259,7 @@ object DomFunctionTables {
             docs.map { it.first(targetCss) }
         }
 
-        return toResultSet("DOM", elements.filterNotNull().map { domValue(it) })
+        return toResultSet("DOM", elements.asIterable().filterNotNull().map { domValue(it) })
     }
 
     /**
