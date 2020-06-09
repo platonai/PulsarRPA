@@ -34,6 +34,10 @@ public class PulsarParams extends Params {
      */
     public static final String ARG_RESUME = "-resume";
     /**
+     * Parse page after it's fetched
+     */
+    public static final String ARG_PARSE = "-parse";
+    /**
      * Force processing even if there are locks or inconsistencies.
      */
     public static final String ARG_FORCE = "-force";

@@ -33,7 +33,7 @@ class MetricsReporter(
     private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
     private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(30))
 
-    var jobName = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNKNOWN")
+    val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNKNOWN")
 
     init {
         val name = "Reporter-" + counter.id
@@ -72,7 +72,9 @@ class MetricsReporter(
         log.info(outerBorder)
         log.info(innerBorder)
         log.info("== Reporter started [ " + DateTimes.now() + " ] [ " + jobName + " ] ==")
-        log.debug("All registered counters : " + counter.registeredCounters)
+        counter.registeredCounters.map { readableClassName(it) }
+                .joinToString(", ", "All registered counters : ") { it }
+                .also { log.info(it) }
         do {
             try {
                 sleep(reportInterval.toMillis())
@@ -85,6 +87,7 @@ class MetricsReporter(
 
             report()
         } while (running.get())
+
         log.info("== Reporter stopped [ " + DateTimes.now() + " ] ==")
     } // run
 

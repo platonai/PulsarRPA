@@ -49,7 +49,7 @@ public interface AppConstants {
 
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
     String SCENT_CONTEXT_CONFIG_LOCATION = "classpath:/scent-beans/app-context.xml";
-    String JOB_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/job-context.xml";
+    String MAPR_CONTEXT_CONFIG_LOCATION = "classpath:/mapr/mapr-beans/mapr-context.xml";
 
     /**
      * The number of processors available to the Java virtual machine

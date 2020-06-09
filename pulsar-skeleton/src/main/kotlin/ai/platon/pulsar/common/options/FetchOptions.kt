@@ -9,7 +9,6 @@ import com.beust.jcommander.Parameters
 
 @Parameters(commandNames = ["FetchJob"], commandDescription = "The most important switches for fetch jobs.")
 class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(argv) {
-    // TODO: crawlId is not used since AutoStorageService is started after Option parsing
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The id to prefix the schemas to operate on")
     var crawlId = conf.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
     @Parameter(names = [PulsarParams.ARG_BATCH_ID], description = "If not specified, use last generated batch id.")
@@ -31,6 +30,9 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
 
     @Parameter(names = [PulsarParams.ARG_RESUME], description = "Resume interrupted job")
     var resume = false
+    @Parameter(names = [PulsarParams.ARG_PARSE], description = "Resume interrupted job")
+    var parse = false
+
     @Parameter(names = [PulsarParams.ARG_LIMIT], description = "Task limit")
     var limit = Int.MAX_VALUE
 
@@ -60,6 +62,7 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
                 PulsarParams.ARG_THREADS, numFetchThreads,
                 PulsarParams.ARG_POOL_THREADS, numPoolThreads,
                 PulsarParams.ARG_RESUME, resume,
+                PulsarParams.ARG_PARSE, parse,
                 PulsarParams.ARG_LIMIT, limit,
                 PulsarParams.ARG_INDEX, index,
                 PulsarParams.ARG_INDEXER_URL, indexerUrl,

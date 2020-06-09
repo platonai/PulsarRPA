@@ -55,7 +55,7 @@ class MetricsManagement(
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build()
-        metricsReporter.outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
+        metricsReporter.outputTo(LoggerFactory.getLogger(MetricsReporter::class.java))
     }
 
     fun start() {

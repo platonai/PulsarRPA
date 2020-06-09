@@ -43,7 +43,7 @@ class TaskScheduler(
             var pendingFetchItems: Int
     )
 
-    private val log = LoggerFactory.getLogger(FetchMonitor::class.java)
+    private val log = LoggerFactory.getLogger(TaskScheduler::class.java)
     val id: Int = instanceSequence.incrementAndGet()
     private val metricsCounters = MetricsCounters()
 
@@ -91,7 +91,7 @@ class TaskScheduler(
     override fun setup(jobConf: ImmutableConfig) {
         indexJIT = jobConf.getBoolean(INDEXER_JIT, false)
         // Parser setting
-        parse = indexJIT || conf.getBoolean(PARSE_PARSE, true)
+        parse = indexJIT || conf.getBoolean(PARSE_PARSE, false)
 
         log.info(params.format())
     }

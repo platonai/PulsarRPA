@@ -50,12 +50,15 @@ class SeedBuilder(
     }
 
     fun makeSeed(page: WebPage): Boolean {
-        Objects.requireNonNull(page)
         return makeSeed(page.url, page.options.toString(), page)
     }
 
     private fun makeSeed(url: String, args: String, page: WebPage): Boolean {
-        if (page.isSeed || page.isInternal) {
+//        if (page.isSeed) {
+//            return false
+//        }
+
+        if (page.isInternal) {
             return false
         }
         val options = parse(args, conf)

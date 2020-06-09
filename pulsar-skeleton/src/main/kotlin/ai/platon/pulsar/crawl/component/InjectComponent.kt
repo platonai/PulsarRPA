@@ -35,6 +35,7 @@ class InjectComponent(
 
     fun inject(url: String, args: String): WebPage {
         var page = webDb.getOrNil(url, false)
+
         if (page.isNil) {
             page = seedBuilder.create(url, args)
             if (page.isSeed) {
@@ -43,6 +44,8 @@ class InjectComponent(
             }
             return page
         }
+
+        // already exist in db, update the status and mark it as a seed
         page.options = args
         return if (inject(page)) page else WebPage.NIL
     }
@@ -54,6 +57,7 @@ class InjectComponent(
             seedIndexer.index(page.url)
             return true
         }
+
         return false
     }
 

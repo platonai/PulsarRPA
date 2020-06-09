@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.common
 
-import com.beust.jcommander.internal.Sets
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.tuple.Pair
 import org.slf4j.LoggerFactory
@@ -92,7 +91,7 @@ class MetricsCounters {
 
     val id = counterSequence.incrementAndGet()
 
-    val registeredCounters: String get() = registeredClasses.joinToString { it.key.toString() }
+    val registeredCounters get() = registeredClasses.mapNotNull { it.key }
 
     fun reset() {
         IntRange(0, MAX_COUNTERS).forEach { _ ->
@@ -153,7 +152,7 @@ class MetricsCounters {
         val sb = StringBuilder()
         IntStream.range(0, MAX_COUNTERS).forEach { i: Int ->
             var name = counterNames[i]
-            if (!name.isEmpty() && (names.isEmpty() || names.contains(name))) {
+            if (name.isNotEmpty() && (names.isEmpty() || names.contains(name))) {
                 val value = nativeCounters[i].get()
                 if (value != 0) {
                     if (!verbose) {
@@ -169,7 +168,7 @@ class MetricsCounters {
     }
 
     fun getStatus(verbose: Boolean): String {
-        return getStatus(Sets.newHashSet(), verbose)
+        return getStatus(hashSetOf(), verbose)
     }
 
 //    /**

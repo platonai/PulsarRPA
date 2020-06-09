@@ -36,11 +36,12 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import com.google.common.util.concurrent.ThreadFactoryBuilder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.system.measureTimeMillis
 
 class PageParser(

@@ -41,6 +41,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Parser checker, useful for testing parser. It also accurately reports
@@ -149,8 +150,10 @@ class GenerateComponent(
      * TODO : We may move some filters to hbase query filters directly
      * TODO : Move to CrawlFilter
      */
+    val c = AtomicInteger()
     fun shouldFetch(url: String, reversedUrl: String, page: WebPage): Boolean {
         val u: String = url
+
         if (reGenerateSeeds && page.isSeed) {
             return true
         }
