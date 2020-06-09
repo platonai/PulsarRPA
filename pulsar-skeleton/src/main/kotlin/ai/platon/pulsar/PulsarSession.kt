@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
@@ -267,6 +268,12 @@ open class PulsarSession(
         ensureAlive()
         val normUrl = normalize(url, options)
         return parse(load(normUrl))
+    }
+
+    fun scrape(url: String, args: String, vararg cssQueries: String): Map<String, String?> {
+        val page = load(url, args)
+        val document = parse(page)
+        return cssQueries.associate { it to document.selectFirstOrNull(it)?.text() }
     }
 
     fun cache(page: WebPage): WebPage = page.also { PulsarContext.pageCache.put(it.url, it) }
