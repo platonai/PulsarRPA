@@ -1,9 +1,9 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import org.apache.commons.collections4.queue.CircularFifoQueue
 import org.slf4j.LoggerFactory
@@ -75,14 +75,13 @@ class TaskPool(val id: PoolId,
     val averageTime: Double get() = totalFetchMillis.toDouble() / 1000.0 / totalFinishedTasks.toDouble()
     val averageRecentTimeCost: Double get() = recentFetchMillis.toDouble() / 1000.0 / recentFinishedTasks.toDouble()
     /**
-     * Throughput rate in seconds
+     * Average finished tasks per second
      */
-    val averageThoRate: Double get() = totalFinishedTasks / (totalFetchMillis / 1000.0)
-    val averageRecentThoRate: Double get() = recentFinishedTasks / (recentFetchMillis / 1000.0)
+    val averageTps: Double get() = totalFinishedTasks / (totalFetchMillis / 1000.0)
+    val averageRecentTps: Double get() = recentFinishedTasks / (recentFetchMillis / 1000.0)
 
     val timeReport: String
-        get() = String.format("%1$40s -> aveTimeCost : %2$.2fs/p, avaThoRate : %3$.2fp/s",
-                id, averageTime, averageThoRate)
+        get() = String.format("%1$40s -> averageTime : %2$.2fs/p, avaThoRate : %3$.2fp/s", id, averageTime, averageTps)
 
     enum class Status {
         ACTIVITY, INACTIVITY, RETIRED
@@ -102,7 +101,7 @@ class TaskPool(val id: PoolId,
                 "now", DateTimes.now(),
                 "nextFetchTime", DateTimes.format(nextFetchTime),
                 "aveTimeCost(s)", df.format(averageTime),
-                "aveThoRate(s)", df.format(averageThoRate),
+                "aveThoRate(s)", df.format(averageTps),
                 "readyTasks", readyCount,
                 "pendingTasks", pendingCount,
                 "finsihedTasks", finishedCount,

@@ -51,17 +51,19 @@ class FetchLoop(
             fetchMonitor.registerFetchLoop(loop)
 
             while (isAlive) {
+                while (isAlive && numRunning.get() > concurrency) {
+                    delay(1000)
+                }
+
                 numRunning.incrementAndGet()
                 launch(Dispatchers.Default + CoroutineName("w")) {
                     try {
                         schedule()?.let { fetch(it) }
+                    } catch (e: Throwable) {
+                        log.warn("Unexpected exception", e)
                     } finally {
                         numRunning.decrementAndGet()
                     }
-                }
-
-                while (isAlive && numRunning.get() >= concurrency) {
-                    delay(1000)
                 }
             }
 
@@ -77,7 +79,7 @@ class FetchLoop(
                 if (taskScheduler.parse) {
                     val parseResult = parseComponent.parse(page, null, false, true)
                     if (log.isTraceEnabled) {
-                        log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getReport())
+                        log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
                     }
                 }
 

@@ -112,7 +112,7 @@ class FetchMonitor(
     private lateinit var finishScript: Path
 
     private val closed = AtomicBoolean()
-    val isClosed get() = closed.get()
+    val isActive get() = !closed.get()
 
     override fun setup(jobConf: ImmutableConfig) {
         jitIndexer.setup(jobConf)
@@ -286,11 +286,11 @@ class FetchMonitor(
                 throughputCheckTime += throughputCheckInterval
             }
 
-            /*
+            /**
              * Process is closing
              * */
-            if (isClosed) {
-                log.info("Process is closing, exit the job ...")
+            if (!isActive) {
+                log.info("App is closing, exit the job ...")
                 break
             }
 
@@ -322,7 +322,7 @@ class FetchMonitor(
                 log.warn("Lost index server, exit the job")
                 break
             }
-        } while (!isClosed)
+        } while (isActive)
 
         close()
     }

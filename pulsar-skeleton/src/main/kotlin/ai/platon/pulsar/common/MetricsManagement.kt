@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
+import com.codahale.metrics.Metric
 import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.Slf4jReporter
 import com.codahale.metrics.jmx.JmxReporter
@@ -19,10 +20,22 @@ class MetricsManagement(
 ): AutoCloseable {
     companion object {
         const val DEFAULT_METRICS_NAME = "pulsar"
+
         init {
             SharedMetricRegistries.setDefault(DEFAULT_METRICS_NAME)
         }
+
         val defaultMetricRegistry = SharedMetricRegistries.getDefault()
+
+        fun counter(obj: Any, name: String) = defaultMetricRegistry.counter(prependReadableClassName(obj, name))
+
+        fun meter(obj: Any, name: String) = defaultMetricRegistry.meter(prependReadableClassName(obj, name))
+
+        fun histogram(obj: Any, name: String) = defaultMetricRegistry.histogram(prependReadableClassName(obj, name))
+
+        fun <T: Metric> register(obj: Any, name: String, metric: T) {
+            defaultMetricRegistry.register(prependReadableClassName(obj, name), metric)
+        }
     }
 
     private val timeIdent = DateTimes.formatNow("MMdd")

@@ -62,9 +62,11 @@ object AppPaths {
     val TEST_DIR = TMP_DIR.resolve( "test")
 
     @RequiredDirectory
-    val BROWSER_TMP_DIR = TMP_DIR.resolve( "browser")
+    val CONTEXT_TMP_DIR = TMP_DIR.resolve( "context")
+    @RequiredDirectory
+    val BROWSER_TMP_DIR = CONTEXT_TMP_DIR.resolve( "browser")
     @RequiredFile
-    val BROWSER_TMP_DIR_LOCK = TMP_DIR.resolve( "browser.lock")
+    val BROWSER_TMP_DIR_LOCK = CONTEXT_TMP_DIR.resolve( "browser.lock")
     @RequiredDirectory
     val CHROME_TMP_DIR = BROWSER_TMP_DIR.resolve("google-chrome")
 
@@ -72,7 +74,7 @@ object AppPaths {
      * Proxy directory
      * */
     @RequiredDirectory
-    val PROXY_BASE_DIR = TMP_DIR.resolve("proxy")
+    val PROXY_BASE_DIR = HOME_DIR.resolve("proxy")
     @RequiredDirectory
     val ENABLED_PROVIDER_DIR = PROXY_BASE_DIR.resolve( "providers-enabled")
     @RequiredDirectory

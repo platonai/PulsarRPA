@@ -22,8 +22,8 @@ open class BrowserControl(
 
         fun generateUserDataDir(): Path {
             val numInstances = Files.list(AppPaths.BROWSER_TMP_DIR).filter { Files.isDirectory(it) }.count().inc()
-            val rand = Random.nextInt(0, 100000).toString(Character.MAX_RADIX)
-            return AppPaths.BROWSER_TMP_DIR.resolve("$numInstances.$rand")
+            val rand = Random.nextInt(0, 1000000).toString(Character.MAX_RADIX)
+            return AppPaths.BROWSER_TMP_DIR.resolve("br.$numInstances$rand")
         }
     }
 

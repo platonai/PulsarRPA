@@ -1,6 +1,5 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-
 import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
 import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -11,6 +10,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -34,7 +34,6 @@ abstract class BrowserEmulatorBase(
     val isActive get() = !closed.get()
     val driverManager = privacyManager.driverManager
     val driverControl = driverManager.driverControl
-    val driverPool = driverManager.driverPool
     val metrics = SharedMetricRegistries.getDefault()
     val meterNavigates = metrics.meter(prependReadableClassName(this,"navigates"))
     val counterRequests = metrics.counter(prependReadableClassName(this,"requests"))
@@ -50,7 +49,6 @@ abstract class BrowserEmulatorBase(
                 "scriptTimeout", driverControl.scriptTimeout,
                 "scrollDownCount", driverControl.scrollDownCount,
                 "scrollInterval", driverControl.scrollInterval,
-                "driverPoolCapacity", driverPool.capacity,
                 "jsInvadingEnabled", driverControl.jsInvadingEnabled,
                 "proxyManager", immutableConfig.get(CapabilityTypes.PROXY_POOL_MONITOR_CLASS),
                 "eventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATE_EVENT_HANDLER)

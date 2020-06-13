@@ -391,6 +391,19 @@
             </dependency>
 
             <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <scope>runtime</scope>
+                <version>${mysql.driver.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>protobuf-java</artifactId>
+                        <groupId>com.google.protobuf</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
                 <groupId>org.apache.gora</groupId>
                 <artifactId>gora-core</artifactId>
                 <version>${gora.version}</version>
@@ -964,6 +977,8 @@
         -->
         <de.flapdoodle.embed.process>2.0.5</de.flapdoodle.embed.process>
         <mongo.embed.version>2.0.0</mongo.embed.version>
+
+        <mysql.driver.version>8.0.18</mysql.driver.version>
 
         <!-- Search Engine -->
         <solr.version>6.1.0</solr.version>

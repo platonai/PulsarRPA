@@ -75,14 +75,6 @@ open class StreamingCrawler(
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
 
-        var k = 0
-        while (isAppActive && privacyManager.activeContext.isLeaked) {
-            if (k++ % 10 == 0) {
-                log.info("Privacy is leaked, wait for privacy context reset")
-            }
-            delay(1000)
-        }
-
         // update fetch concurrency on command
         if (j % 20 == 0) {
             updateConcurrencyIfNecessary()

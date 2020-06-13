@@ -14,7 +14,6 @@ import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.data.PoolQueue
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.FetchMode
 import com.google.common.collect.TreeMultimap
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap
 import org.apache.commons.lang3.StringUtils
@@ -338,14 +337,14 @@ class TaskMonitor(
 
         val df = DecimalFormat("0.##")
 
-        if (pool.averageThoRate >= minPageThoRate) {
+        if (pool.averageTps >= minPageThoRate) {
             Params.of(
                     "EfficientQueue", pool.id,
                     "ReadyTasks", pool.readyCount,
                     "PendingTasks", pool.pendingCount,
                     "FinishedTasks", pool.finishedCount,
                     "SlowTasks", pool.slowTaskCount,
-                    "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s"
+                    "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageTps) + "p/s"
             ).withLogger(log).info(true)
 
             return 0
@@ -365,7 +364,7 @@ class TaskMonitor(
                 "PendingTasks", pool.pendingCount,
                 "FinishedTasks", pool.finishedCount,
                 "SlowTasks", pool.slowTaskCount,
-                "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageThoRate) + "p/s",
+                "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageTps) + "p/s",
                 "Deleted", deleted).withLogger(log).info(true)
 
         return deleted

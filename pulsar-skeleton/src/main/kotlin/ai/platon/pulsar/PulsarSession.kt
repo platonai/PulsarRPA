@@ -5,9 +5,9 @@ import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
-import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
@@ -33,6 +33,10 @@ open class PulsarSession(
          * */
         val sessionConfig: VolatileConfig,
         /**
+         * The privacy context id for this pulsar session
+         * */
+        val privacyContextId: PrivacyContextId = PrivacyContextId.generate(),
+        /**
          * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
         val id: Int = 9000000 + idGen.incrementAndGet()
@@ -49,6 +53,10 @@ open class PulsarSession(
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && context.isActive
+
+    init {
+        sessionConfig.putBean(privacyContextId)
+    }
 
     /**
      * Close objects when sessions closes

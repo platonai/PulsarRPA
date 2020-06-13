@@ -16,7 +16,6 @@ import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import kotlinx.coroutines.Deferred
 import org.slf4j.LoggerFactory
-import java.lang.reflect.Proxy
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
@@ -95,7 +94,7 @@ class FetchTask(
     enum class State { NOT_READY, READY, WORKING, CANCELED, DONE }
     val state = AtomicReference<State>(State.NOT_READY)
 
-    var expectedProxyEntry: ProxyEntry? = null
+    var proxyEntry: ProxyEntry? = null
     // The number retries inside a privacy context
     var nPrivacyRetries: Int = 0
 
@@ -114,7 +113,7 @@ class FetchTask(
 
     fun reset() {
         batchStat = null
-        expectedProxyEntry = null
+        proxyEntry = null
         state.set(State.NOT_READY)
     }
 
@@ -205,6 +204,7 @@ class FetchTaskBatch(
 
     private val log = LoggerFactory.getLogger(FetchTaskBatch::class.java)!!
 
+    var proxyEntry: ProxyEntry? = null
     val priority = conf.getUint(CapabilityTypes.BROWSER_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
     val threadTimeout = conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(5)

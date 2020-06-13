@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.features.defined.SIB
@@ -51,7 +50,6 @@ object DomFunctionTables {
         return toResultSet("DOM", doms)
     }
 
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load a page and select the specified element by cssQuery")
     @JvmStatic
     @JvmOverloads
@@ -69,7 +67,6 @@ object DomFunctionTables {
         return toResultSet("DOM", elements.map { ValueDom.get(it) })
     }
 
-    @InterfaceStability.Stable
     @JvmStatic
     @JvmOverloads
     @UDFunction(description = "Select all elements by cssQuery")
@@ -83,7 +80,6 @@ object DomFunctionTables {
         return toResultSet("DOM", doms)
     }
 
-    @InterfaceStability.Stable
     @JvmStatic
     @JvmOverloads
     @UDFunction(hasShortcut = true, description = "Load a page and extract all links inside all the selected elements")
@@ -99,7 +95,6 @@ object DomFunctionTables {
         return toResultSet("LINK", links)
     }
 
-    @InterfaceStability.Stable
     @JvmOverloads
     @JvmStatic
     @UDFunction(description = "Get all links inside the all selected elements")
@@ -113,7 +108,6 @@ object DomFunctionTables {
         return toResultSet("LINK", Queries.getLinks(dom.element, cssQuery, offset, limit))
     }
 
-    @InterfaceStability.Stable
     @JvmStatic
     @JvmOverloads
     @UDFunction(hasShortcut = true, description = "Load a page and find all anchors specified by cssQuery")
@@ -141,7 +135,6 @@ object DomFunctionTables {
      * 3) a List
      * @return The [ResultSet]
      */
-    @InterfaceStability.Stable
     @JvmOverloads
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url")
@@ -154,7 +147,6 @@ object DomFunctionTables {
         return loadOutPagesAsRsInternal(conn, portalUrl, restrictCss, offset, limit, normalize = normalize)
     }
 
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, ignore url queries in the target url")
     @JvmOverloads
     @JvmStatic
@@ -178,7 +170,6 @@ object DomFunctionTables {
      * 3) a List
      * @return The [ResultSet]
      */
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, and select the specified element")
     @JvmOverloads
     @JvmStatic
@@ -218,7 +209,6 @@ object DomFunctionTables {
      * 3) a List
      * @return The [ResultSet]
      */
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load out pages from a portal url, and select the specified element")
     @JvmOverloads
     @JvmStatic
@@ -268,7 +258,6 @@ object DomFunctionTables {
      * @param portalUrl The configured url
      * @return The [ResultSet] with element features for all match elements
      */
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load a page and show the features of it's elements")
     @JvmStatic
     @JvmOverloads
@@ -291,7 +280,6 @@ object DomFunctionTables {
      * @param limit       limit of element set
      * @return The [ResultSet] with element features for all match elements
      */
-    @InterfaceStability.Stable
     @UDFunction(description = "Get the features of the given element")
     @JvmOverloads
     @JvmStatic
@@ -326,7 +314,6 @@ object DomFunctionTables {
      * @param portalUrl The configured url
      * @return The [ResultSet] with element features for all match elements
      */
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Load and get the elements with most siblings")
     @JvmOverloads
     @JvmStatic
@@ -349,7 +336,6 @@ object DomFunctionTables {
      * @param limit       limit of element set
      * @return The [ResultSet] with element features for all match elements
      */
-    @InterfaceStability.Stable
     @UDFunction(hasShortcut = true, description = "Get the elements with most siblings of the given element")
     @JvmOverloads
     @JvmStatic

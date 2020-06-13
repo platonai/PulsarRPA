@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.proxy
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.readable
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,7 +20,10 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
         val TEST_PROXY_FILE = AppPaths.PROXY_BASE_DIR.resolve("test-ip")
     }
 
-    val log = LoggerFactory.getLogger(ProxyLoader::class.java)
+    protected val log = LoggerFactory.getLogger(ProxyLoader::class.java)
+    protected val startTime = Instant.now()
+    protected val closed = AtomicBoolean()
+
     var minimumProxyTTL = Duration.ofMinutes(5)
     var testProxyBeforeUse = false
     var testUrl = "https://www.amazon.com/"
@@ -37,7 +41,6 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
      * */
     var testIpRate = 0.3
 
-    private val closed = AtomicBoolean()
     val isActive get() = !closed.get()
 
     abstract fun updateProxies(reloadInterval: Duration): List<ProxyEntry>
@@ -45,7 +48,6 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
     @Synchronized
     fun updateBanStrategy() {
         val path = AppPaths.PROXY_BAN_STRATEGY
-
         loadIfModified(path, fileWatchInterval) { Files.readAllLines(it) }
                 .firstOrNull()?.let { banStrategy = it }?.also { log.info("Proxy ban strategy: $it") }
     }
@@ -61,14 +63,13 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
                 ?.also { it.isTestIp = true }
     }
 
-    protected fun <O> loadIfModified(
-            path: Path, expires: Duration, loader: (Path) -> List<O>): List<O> {
+    protected fun <O> loadIfModified(path: Path, expires: Duration, loader: (Path) -> List<O>): List<O> {
         val lastModified = lastModifiedTimes.getOrDefault(path, Instant.EPOCH)
         val modified = Files.getLastModifiedTime(path).toInstant()
         val elapsed = Duration.between(lastModified, modified)
 
-        if (isActive && elapsed > expires) {
-            log.info("Reload from file, last modified: {}, elapsed: {} | {}", lastModified, elapsed, path)
+        if (elapsed > expires) {
+            log.info("Reload from file, last modified: {}, elapsed: {} | {}", lastModified, elapsed.readable(), path)
             return loader(path).also { lastModifiedTimes[path] = modified }
         }
 
@@ -77,7 +78,6 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-
         }
     }
 }

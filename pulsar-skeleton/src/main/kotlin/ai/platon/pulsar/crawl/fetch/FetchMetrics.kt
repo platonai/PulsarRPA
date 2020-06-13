@@ -1,13 +1,16 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
+import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_MAX_URL_LENGTH
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.SharedMetricRegistries
@@ -60,17 +63,17 @@ class FetchMetrics(
     /**
      * The total bytes of page content of all success web pages
      * */
-    private val tasks = metricRegistry.meter(prependReadableClassName(this,"tasks"))
-    private val successTasks = metricRegistry.meter(prependReadableClassName(this,"successTasks"))
-    private val finishedTasks = metricRegistry.meter(prependReadableClassName(this,"finishedTasks"))
-    private val meterContentBytes = metricRegistry.meter(prependReadableClassName(this,"mContentBytes"))
-    private val histogramContentBytes = metricRegistry.histogram(prependReadableClassName(this,"hContentBytes"))
+    private val tasks = MetricsManagement.meter(this,"tasks")
+    private val successTasks = MetricsManagement.meter(this,"successTasks")
+    private val finishedTasks = MetricsManagement.meter(this,"finishedTasks")
+    private val meterContentBytes = MetricsManagement.meter(this,"mContentBytes")
+    private val histogramContentBytes = MetricsManagement.histogram(this,"hContentBytes")
 
-    private val pageImages = metricRegistry.histogram(prependReadableClassName(this, "pageImages"))
-    private val pageAnchors = metricRegistry.histogram(prependReadableClassName(this, "pageAnchors"))
-    private val pageNumbers = metricRegistry.histogram(prependReadableClassName(this, "pageNumbers"))
-    private val pageSmallTexts = metricRegistry.histogram(prependReadableClassName(this, "pageSmallTexts"))
-    private val pageHeights = metricRegistry.histogram(prependReadableClassName(this, "pageHeights"))
+    private val pageImages = MetricsManagement.histogram(this, "pageImages")
+    private val pageAnchors = MetricsManagement.histogram(this, "pageAnchors")
+    private val pageNumbers = MetricsManagement.histogram(this, "pageNumbers")
+    private val pageSmallTexts = MetricsManagement.histogram(this, "pageSmallTexts")
+    private val pageHeights = MetricsManagement.histogram(this, "pageHeights")
 
     private val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     /**

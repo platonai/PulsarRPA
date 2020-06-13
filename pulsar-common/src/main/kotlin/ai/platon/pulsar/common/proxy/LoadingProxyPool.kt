@@ -39,7 +39,7 @@ class LoadingProxyPool(
             proxy = poll0()
         }
 
-        return proxy.takeIf { isActive }
+        return proxy
     }
 
     /**

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -65,6 +66,12 @@ data class ProxyEntry(
     val isBanned get() = isRetired && !isExpired
     val isFailed get() = numConnectionLosts.get() >= 3 // large value means ignoring failures
     val isGone get() = isRetired || isFailed
+
+    val numRunningTasks = AtomicInteger()
+    var lastActiveTime = Instant.now()
+    var idleTimeout = Duration.ofMinutes(10)
+    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+    val isIdle get() = (numRunningTasks.get() == 0 && idleTime > idleTimeout)
 
     enum class BanState {
         OK, SEGMENT, HOST, OTHER;

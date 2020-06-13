@@ -92,12 +92,12 @@ open class WebDriverControl(
         val proxy = generalOptions.getCapability(CapabilityType.PROXY)
         if (proxy is org.openqa.selenium.Proxy) {
             chromeOptions.removeArguments(CapabilityType.PROXY)
-            chromeOptions.addArguments("proxy-server", proxy.httpProxy)
+            chromeOptions.proxyServer = proxy.httpProxy
         }
 
-        chromeOptions.headless = headless
         chromeOptions.userDataDir = userDataDir
         chromeOptions.xvfb = xvfb
+        chromeOptions.headless = headless
         chromeOptions.addArguments("window-size", formatViewPort())
 
         return chromeOptions

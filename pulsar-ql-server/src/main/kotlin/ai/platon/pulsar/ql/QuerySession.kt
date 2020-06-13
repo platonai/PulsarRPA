@@ -2,6 +2,7 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -17,20 +18,22 @@ import java.sql.Connection
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-open class QuerySession(val pulsarContext: PulsarContext, val dbSession: DbSession, config: SessionConfig)
-    : PulsarSession(pulsarContext, config, dbSession.id) {
+open class QuerySession(
+        val pulsarContext: PulsarContext,
+        val dbSession: DbSession,
+        config: SessionConfig,
+        privacyContextId: PrivacyContextId = PrivacyContextId.DEFAULT
+): PulsarSession(pulsarContext, config, privacyContextId, dbSession.id) {
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 
     val registeredAllUdfClasses = mutableListOf<Class<out Any>>()
-    val registeredAdminUdfClasses
-        get() = registeredAllUdfClasses.filter {
-            it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
-        }
-    val registeredUdfClasses
-        get() = registeredAllUdfClasses.filterNot {
-            it in registeredAdminUdfClasses
-        }
+    val registeredAdminUdfClasses get() = registeredAllUdfClasses.filter {
+        it.annotations.any { it is UDFGroup && it.namespace == "ADMIN" }
+    }
+    val registeredUdfClasses get() = registeredAllUdfClasses.filterNot {
+        it in registeredAdminUdfClasses
+    }
 
     init {
         if (dbSession.implementation is org.h2.engine.Session) {

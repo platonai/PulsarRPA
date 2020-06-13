@@ -10,11 +10,13 @@ import org.apache.commons.lang3.StringUtils
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
+import org.slf4j.helpers.MessageFormatter
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.text.MessageFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer

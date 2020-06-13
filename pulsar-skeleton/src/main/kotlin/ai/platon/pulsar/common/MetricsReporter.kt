@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * TODO: use ScheduledExecutorService, @see [com.codahale.metrics.ScheduledReporter]
+ * */
 class MetricsReporter(
         private val counter: MetricsCounters,
         private val conf: ImmutableConfig
@@ -32,14 +35,13 @@ class MetricsReporter(
     private val silent = AtomicBoolean(false)
     private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
     private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(30))
+    val isActive get() = running.get()
 
     val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNKNOWN")
 
     init {
-        val name = "Reporter-" + counter.id
-        setName(name)
+        name = "Reporter-" + counter.id
         isDaemon = true
-        startReporter()
     }
 
     fun silent() {
@@ -71,25 +73,18 @@ class MetricsReporter(
         val innerBorder = StringUtils.repeat('.', 100)
         log.info(outerBorder)
         log.info(innerBorder)
-        log.info("== Reporter started [ " + DateTimes.now() + " ] [ " + jobName + " ] ==")
+        log.info("== Reporter is started [ " + DateTimes.now() + " ] [ " + jobName + " ] ==")
         counter.registeredCounters.map { readableClassName(it) }
                 .joinToString(", ", "All registered counters : ") { it }
                 .also { log.info(it) }
+
         do {
-            try {
-                sleep(reportInterval.toMillis())
-            } catch (ignored: InterruptedException) {
-                currentThread().interrupt()
-            }
-
-            // sync to hadoop counters
-//            counter.accumulateGlobalCounters(context)
-
+            sleepSeconds(reportInterval.seconds)
             report()
-        } while (running.get())
+        } while (isActive)
 
-        log.info("== Reporter stopped [ " + DateTimes.now() + " ] ==")
-    } // run
+        log.info("== Reporter is stopped [ " + DateTimes.now() + " ] ==")
+    }
 
     private fun report() {
         // Can only access variables in this thread

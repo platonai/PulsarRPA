@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
@@ -13,10 +14,9 @@ import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyContext
+import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -37,7 +37,7 @@ class BrowserEmulatedFetcher(
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
     private val driverManager = privacyManager.driverManager
-    private val proxyMonitor = privacyManager.proxyPoolMonitor
+    private val proxyPoolMonitor = privacyManager.proxyPoolMonitor
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
 
@@ -52,26 +52,7 @@ class BrowserEmulatedFetcher(
     /**
      * Fetch page content
      * */
-    fun fetchContent(page: WebPage): Response {
-        if (!isActive) {
-            return ForwardingResponse.canceled(page)
-        }
-
-        if (page.isInternal) {
-            log.warn("Unexpected internal page | {}", page.url)
-            return ForwardingResponse.canceled(page)
-        }
-
-        return privacyManager.run(createFetchTask(page)) { task, driver ->
-            try {
-                browserEmulator.fetch(task, driver)
-            } catch (e: IllegalContextStateException) {
-                log.info("Illegal context state, task is cancelled. {} | {}", driverManager, task.url)
-                FetchResult.canceled(task)
-                // re-throw?
-            }
-        }.response
-    }
+    fun fetchContent(page: WebPage) = runBlocking { fetchContentDeferred(page) }
 
     suspend fun fetchDeferred(url: String): Response {
         return fetchContentDeferred(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -94,11 +75,16 @@ class BrowserEmulatedFetcher(
             return ForwardingResponse.canceled(page)
         }
 
-        return privacyManager.runDeferred(createFetchTask(page)) { task, driver ->
+        if (page.volatileConfig == null) {
+            log.warn("Page config is not set | {}", page.url)
+        }
+
+        val privacyContextId = page.volatileConfig?.getBean(PrivacyContextId::class.java)?: PrivacyContextId.DEFAULT
+        return privacyManager.run(privacyContextId, createFetchTask(page)) { task, driver ->
             try {
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
-                log.info("Illegal context state, task is cancelled. {} | {}", driverManager, task.url)
+                log.info("Illegal context state, task is cancelled. {} | {}", driverManager.formatStatus(driver.dataDir), task.url)
                 FetchResult.canceled(task)
             }
         }.response
@@ -153,9 +139,12 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages0(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        FetchTaskBatch(batchId, pages, volatileConfig, privacyManager.autoRefreshContext).use { batch ->
+        val privacyContextId = volatileConfig.getBean(PrivacyContextId::class.java)?: PrivacyContextId.DEFAULT
+        val privacyContext = privacyManager.computeIfNotActive(privacyContextId)
+
+        FetchTaskBatch(batchId, pages, volatileConfig, privacyContext).use { batch ->
             // allocate drivers before batch fetch context timing
-            allocateDriversIfNecessary(batch, batch.conf)
+            // allocateDriversIfNecessary(batch, batch.conf)
 
             logBeforeBatchStart(batch)
 
@@ -165,13 +154,13 @@ class BrowserEmulatedFetcher(
             var i = 1
             do {
                 var b = batch
-                if (privacyManager.autoRefreshContext.isLeaked) {
-                    privacyManager.reset()
-                    b = b.createNextNode(privacyManager.autoRefreshContext)
+                val privacyContext0 = b.privacyContext
+                if (privacyContext0.isLeaked) {
+                    b = b.createNextNode(privacyManager.computeIfNotActive(privacyContext0.id))
                 }
 
                 parallelFetch0(b)
-            } while (i++ <= privacyManager.maxRetry && privacyManager.autoRefreshContext.isLeaked)
+            } while (i++ <= privacyManager.maxRetry && privacyContext0.isLeaked)
 
             batch.afterFetchAll(batch.pages)
 
@@ -221,23 +210,25 @@ class BrowserEmulatedFetcher(
         return when {
             !isActive -> FetchTaskBatch.State.CLOSED
             Thread.currentThread().isInterrupted -> FetchTaskBatch.State.INTERRUPTED
-            privacyManager.autoRefreshContext.isLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
+            batch.privacyContext.isLeaked -> FetchTaskBatch.State.PRIVACY_LEAK
             else -> batch.checkState()
         }
     }
 
-    private fun allocateDriversIfNecessary(batch: FetchTaskBatch, volatileConfig: VolatileConfig) {
-        // allocate drivers before batch fetch context timing, the allocation might take long time
-        val requiredDrivers = batch.batchSize - driverManager.driverPool.numFree
-        if (requiredDrivers > 0) {
-            log.info("Allocating $requiredDrivers drivers")
-            driverManager.allocate(requiredDrivers, volatileConfig)
-        }
-    }
+//    private fun allocateDriversIfNecessary(batch: FetchTaskBatch, volatileConfig: VolatileConfig) {
+//        // allocate drivers before batch fetch context timing, the allocation might take long time
+//        val requiredDrivers = batch.batchSize - driverManager.driverPool.numFree
+//        if (requiredDrivers > 0) {
+//            log.info("Allocating $requiredDrivers drivers")
+//            driverManager.allocate(requiredDrivers, volatileConfig)
+//        }
+//    }
 
     private suspend fun parallelFetch1(task: FetchTask, batch: FetchTaskBatch): FetchResult {
-        return privacyManager.autoRefreshContext.runDeferred(task) { _, driver ->
+        val privacyContext = batch.privacyContext as BrowserPrivacyContext
+        return privacyContext.run(task) { _, driver ->
             try {
+                batch.proxyEntry = driver.proxyEntry
                 batch.beforeFetch(task.page)
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
@@ -324,8 +315,8 @@ class BrowserEmulatedFetcher(
 
     private fun logBeforeBatchStart(batch: FetchTaskBatch) {
         if (log.isInfoEnabled) {
-            val proxy = driverManager.proxyMonitor.currentProxyEntry
-            val proxyMessage = if (proxy == null) "" else " with expected proxy " + proxy.display
+            val proxyEntry = batch.proxyEntry
+            val proxyMessage = if (proxyEntry == null) "" else " with expected proxy " + proxyEntry.display
             log.info("Start task batch {} with {} pages in parallel{}", batch.batchId, batch.batchSize, proxyMessage)
         }
     }
@@ -393,15 +384,11 @@ class BrowserEmulatedFetcher(
                     Strings.readableBytes(stat.bytesPerSecond.roundToLong()),
                     proxyDisplay?:"(no proxy)"
             ))
-            log.info("Proxy: $proxyMonitor")
-            log.info("Drivers: $driverManager")
         }
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyMonitor.takeIf { it.isEnabled }?.let { log.info(it.toString()) }
-            log.info("Web drivers: $driverManager")
         }
     }
 

@@ -16,6 +16,7 @@ public class H2Config {
             return;
         }
 
+
         // From java doc:
         // "On the client side, this setting is required to be disabled"
         SysProperties.serializeJavaObject = false;

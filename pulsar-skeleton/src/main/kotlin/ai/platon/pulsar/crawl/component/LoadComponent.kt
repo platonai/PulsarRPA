@@ -21,9 +21,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.classification.InterfaceStability.Evolving
 import org.apache.hadoop.classification.InterfaceStability.Unstable
@@ -442,7 +439,7 @@ class LoadComponent(
             val parseResult = parseComponent.parse(page,
                     options.query, options.reparseLinks, options.noFilter)
             if (log.isTraceEnabled) {
-                log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getReport())
+                log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
             }
         }
 

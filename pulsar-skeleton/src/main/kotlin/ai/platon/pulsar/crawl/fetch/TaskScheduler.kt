@@ -215,23 +215,23 @@ class TaskScheduler(
         } catch (ignored: InterruptedException) {}
 
         val reportIntervalSec = reportInterval.seconds.toDouble()
-        val pagesThroughputRate = (totalPages.get() - pagesLastSec) / reportIntervalSec
-        val bytesThroughputRate = (totalBytes.get() - bytesLastSec) / reportIntervalSec
+        val pagesPerSecond = (totalPages.get() - pagesLastSec) / reportIntervalSec
+        val bytesPerSecond = (totalBytes.get() - bytesLastSec) / reportIntervalSec
 
         val readyFetchTasks = tasksMonitor.numReadyTasks.get()
         val pendingFetchTasks = tasksMonitor.numPendingTasks.get()
 
         metricsCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
         metricsCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
-        metricsCounters.setValue(Counter.rPagesTho, pagesThroughputRate.roundToInt())
-        metricsCounters.setValue(Counter.rMbTho, (bytesThroughputRate / 1000).roundToInt())
+        metricsCounters.setValue(Counter.rPgps, pagesPerSecond.roundToInt())
+        metricsCounters.setValue(Counter.rMbps, (bytesPerSecond / 1000).roundToInt())
 
         if (indexJIT) {
             metricsCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
             metricsCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
         }
 
-        return Status(pagesThroughputRate, bytesThroughputRate, readyFetchTasks, pendingFetchTasks)
+        return Status(pagesPerSecond, bytesPerSecond, readyFetchTasks, pendingFetchTasks)
     }
 
     fun format(status: Status): String {
@@ -405,7 +405,7 @@ class TaskScheduler(
         enum class Counter {
             rMbytes, unknowHosts,
             rReadyTasks, rPendingTasks, rFinishedTasks,
-            rPagesTho, rMbTho, rRedirect,
+            rPgps, rMbps, rRedirect,
             rSeeds,
             rParseFailed, rNoParse,
             rIndexed, rNotIndexed

@@ -7,6 +7,8 @@ import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.crawl.PrivacyContextId
+import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
@@ -33,6 +35,8 @@ import kotlin.reflect.KClass
  * Main entry point for Pulsar functionality.
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
+ *
+ * TODO: multiple pulsar context in single process
  */
 class PulsarContext private constructor(): AutoCloseable {
 
@@ -151,29 +155,14 @@ class PulsarContext private constructor(): AutoCloseable {
             }
         }
     }
-
-    /**
-     * The start time
-     * */
-    val startTime = System.currentTimeMillis()
-    /**
-     * Registered closeables, will be closed by Pulsar object
-     * */
-    private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
-
-    /**
-     * Whether this pulsar object is already closed
-     * */
-    val isActive get() = !closed.get()
-
-    /**
-     * All open sessions
-     * */
-    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
     val unmodifiedConfig: ImmutableConfig
+    /**
+     * The privacy manager
+     * */
+    val privacyManager: PrivacyManager
     /**
      * Url normalizers
      * */
@@ -201,8 +190,28 @@ class PulsarContext private constructor(): AutoCloseable {
 
     val lazyFetchTaskManager: LazyFetchTaskManager
 
+    /**
+     * The start time
+     * */
+    val startTime = System.currentTimeMillis()
+    /**
+     * Registered closeables, will be closed by Pulsar object
+     * */
+    private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
+
+    /**
+     * Whether this pulsar object is already closed
+     * */
+    val isActive get() = !closed.get()
+
+    /**
+     * All open sessions
+     * */
+    val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
+
     init {
         unmodifiedConfig = getBean()
+        privacyManager = getBean()
 
         var capacity = unmodifiedConfig.getUint("session.page.cache.size", PulsarSession.SESSION_PAGE_CACHE_CAPACITY)
         pageCache = ConcurrentLRUCache(PulsarSession.SESSION_PAGE_CACHE_TTL.seconds, capacity)
@@ -221,11 +230,10 @@ class PulsarContext private constructor(): AutoCloseable {
         log.info("PulsarContext is created")
     }
 
-    fun createSession(): PulsarSession {
+    fun createSession(privacyContextId: PrivacyContextId = PrivacyContextId.DEFAULT): PulsarSession {
         ensureAlive()
-        val session = PulsarSession(this, unmodifiedConfig.toVolatileConfig())
-        sessions[session.id] = session
-        return session
+        val session = PulsarSession(this, unmodifiedConfig.toVolatileConfig(), privacyContextId)
+        return session.also { sessions[it.id] = it }
     }
 
     fun closeSession(session: PulsarSession) {
@@ -464,7 +472,7 @@ class PulsarContext private constructor(): AutoCloseable {
         if (closed.compareAndSet(false, true)) {
             try {
                 sessions.values.forEach {
-                    log.debug("Closing session $it")
+                    log.trace("Closing session $it")
                     it.runCatching { it.close() }.onFailure { log.warn(it.message) }
                 }
                 closableObjects.forEach {

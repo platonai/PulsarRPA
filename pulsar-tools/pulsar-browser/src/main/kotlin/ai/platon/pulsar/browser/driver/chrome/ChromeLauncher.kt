@@ -53,10 +53,12 @@ class LauncherConfig {
 annotation class ChromeParameter(val value: String)
 
 class ChromeDevtoolsOptions(
-        @ChromeParameter("headless")
-        var headless: Boolean = true,
         @ChromeParameter(ARG_USER_DATA_DIR)
         var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
+        @ChromeParameter("proxy-server")
+        var proxyServer: String? = null,
+        @ChromeParameter("headless")
+        var headless: Boolean = false,
         @ChromeParameter("incognito")
         var incognito: Boolean = false,
         @ChromeParameter("disable-gpu")
@@ -112,9 +114,7 @@ class ChromeDevtoolsOptions(
         return this
     }
 
-    fun merge(args: Map<String, Any?>) {
-        args.forEach { (key, value) -> addArguments(key, value?.toString()) }
-    }
+    fun merge(args: Map<String, Any?>) = args.forEach { (key, value) -> addArguments(key, value?.toString()) }
 
     fun toMap(): Map<String, Any?> {
         val args = ChromeDevtoolsOptions::class.java.declaredFields
@@ -127,9 +127,7 @@ class ChromeDevtoolsOptions(
         return args
     }
 
-    fun toList(): List<String> {
-        return toList(toMap())
-    }
+    fun toList() = toList(toMap())
 
     private fun toList(args: Map<String, Any?>): List<String> {
         val result = ArrayList<String>()
@@ -145,9 +143,7 @@ class ChromeDevtoolsOptions(
         return result
     }
 
-    override fun toString(): String {
-        return toList().joinToString(" ") { it }
-    }
+    override fun toString() = toList().joinToString(" ") { it }
 
     companion object {
         const val ARG_USER_DATA_DIR = "user-data-dir"
@@ -168,6 +164,7 @@ class ProcessLauncher {
         log.info("Launching process:\n{}", processBuilder.command().joinToString(" ") {
             Strings.doubleQuoteIfContainsWhitespace(it)
         })
+
         return processBuilder.start()
     }
 }
@@ -257,6 +254,8 @@ class ChromeLauncher(
     /**
      * Launches a chrome process given a chrome binary and its arguments.
      *
+     * Launching chrome processes is CPU consuming, so we do this in a synchronized manner
+     *
      * @param chromeBinary Chrome binary path.
      * @param chromeOptions Chrome arguments.
      * @return Port on which devtools is listening.
@@ -265,6 +264,7 @@ class ChromeLauncher(
      * @throws ChromeProcessTimeoutException If timeout expired while waiting for chrome to start.
      */
     @Throws(ChromeProcessException::class)
+    @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
         val xvfb = chromeOptions.xvfb
@@ -276,6 +276,10 @@ class ChromeLauncher(
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
             process = processLauncher.launch(program, arguments)
+
+            process?.also {
+                Files.writeString(chromeOptions.userDataDir.resolve("pid"), it.pid().toString(), StandardOpenOption.CREATE_NEW)
+            }
             waitForDevToolsServer(process!!)
         } catch (e: IOException) {
             // Unsubscribe from registry on exceptions.

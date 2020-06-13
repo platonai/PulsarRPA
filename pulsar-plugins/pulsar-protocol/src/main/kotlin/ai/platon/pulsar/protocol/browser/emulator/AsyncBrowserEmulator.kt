@@ -12,6 +12,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

@@ -40,7 +40,7 @@ class ParseComponent(
         val pageParser: PageParser,
         val conf: ImmutableConfig
 ) {
-    private val report = ConcurrentHashMap<String, Any>()
+    private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = false): ParseResult {
         return parse(page, "", reparseLinks, noLinkFilter)
@@ -60,10 +60,8 @@ class ParseComponent(
         if (noLinkFilter) {
             page.variables[Name.PARSE_NO_LINK_FILTER] = AppConstants.YES_STRING
         }
-        if (query != null) {
-            page.query = query
-        }
-        report.clear()
+        page.query = query
+        traceInfo?.clear()
     }
 
     private fun afterParse(page: WebPage) {
@@ -74,10 +72,17 @@ class ParseComponent(
         page.query = null
     }
 
-    fun getReport(): Map<String, Any> {
-        report.clear()
-        report["linkFilterReport"] = pageParser.linkFilter.filterReport.joinToString("\n") { it }
-        return report
+    fun getTraceInfo(): Map<String, Any> {
+        if (traceInfo == null) {
+            traceInfo = ConcurrentHashMap()
+        }
+
+        traceInfo?.also {
+            it.clear()
+            it["linkFilterReport"] = pageParser.linkFilter.filterReport.joinToString("\n") { it }
+        }
+
+        return traceInfo?: hashMapOf()
     }
 
     companion object {

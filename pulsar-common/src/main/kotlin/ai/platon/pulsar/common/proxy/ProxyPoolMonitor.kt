@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.FileCommand
-import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.concurrent.stopExecution
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -15,14 +14,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 open class ProxyPoolMonitor(
+        val proxyPool: ProxyPool,
         private val conf: ImmutableConfig
 ): AutoCloseable {
     private var executor: ScheduledExecutorService? = null
@@ -40,9 +37,10 @@ open class ProxyPoolMonitor(
     var statusString: String = ""
     var verbose = false
 
-    open val proxyPool: ProxyPool? = ProxyPool(conf)
+    val activeProxyEntries = ConcurrentSkipListMap<Path, ProxyEntry>()
+    val workingProxyEntries = ConcurrentSkipListSet<ProxyEntry>()
     open val localPort = -1
-    open val currentProxyEntry: ProxyEntry? = null
+    open val currentInterceptProxyEntry: ProxyEntry? = null
     val isEnabled = isProxyEnabled()
     val isDisabled get() = !isEnabled
     val closed = AtomicBoolean()
@@ -74,42 +72,29 @@ open class ProxyPoolMonitor(
      * Run the task, it it's disabled, call the innovation directly
      * */
     @Throws(NoProxyException::class)
-    open suspend fun <R> runDeferred(task: suspend () -> R): R = if (isDisabled) task() else runDeferred0(task)
-
-    /**
-     * Run the task, it it's disabled, call the innovation directly
-     * */
-    @Throws(NoProxyException::class)
-    open fun <R> run(task: () -> R): R = if (isDisabled) task() else run0(task)
-
-    /**
-     * Run the task in the proxy monitor
-     * */
-    @Throws(NoProxyException::class)
-    private suspend fun <R> runDeferred0(task: suspend () -> R): R {
-        beforeRun()
-
-        return try {
-            numRunningTasks.incrementAndGet()
-            task()
-        } finally {
-            lastActiveTime = Instant.now()
-            numRunningTasks.decrementAndGet()
-        }
+    open suspend fun <R> run(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
+        return if (isDisabled) task() else run0(proxyEntry, task)
     }
 
     /**
      * Run the task in the proxy monitor
      * */
     @Throws(NoProxyException::class)
-    private fun <R> run0(task: () -> R): R {
-        beforeRun()
-
+    private suspend fun <R> run0(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
         return try {
+            lastActiveTime = Instant.now()
+            proxyEntry?.also {
+                it.lastActiveTime = lastActiveTime
+                workingProxyEntries.add(it)
+            }
             numRunningTasks.incrementAndGet()
             task()
         } finally {
             lastActiveTime = Instant.now()
+            proxyEntry?.also {
+                it.lastActiveTime = lastActiveTime
+                workingProxyEntries.remove(it)
+            }
             numRunningTasks.decrementAndGet()
         }
     }
@@ -133,12 +118,6 @@ open class ProxyPoolMonitor(
         } catch (e: Exception) {
             log.warn("Unexpected exception when close proxy monitor", e)
         }
-    }
-
-    @Throws(NoProxyException::class)
-    private fun beforeRun() {
-        if (!isActive) return
-        waitUntilOnline()
     }
 
     /**

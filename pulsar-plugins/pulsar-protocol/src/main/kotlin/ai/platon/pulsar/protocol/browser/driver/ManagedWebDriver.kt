@@ -1,8 +1,9 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.metadata.BrowserType
+import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.apache.commons.lang3.StringUtils
@@ -11,12 +12,12 @@ import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import java.util.logging.Level
-import kotlin.system.measureTimeMillis
 
 enum class DriverStatus {
     UNKNOWN, FREE, WORKING, CANCELED, RETIRED, CRASHED, QUIT;
@@ -30,8 +31,10 @@ enum class DriverStatus {
 }
 
 class ManagedWebDriver(
+        val dataDir: Path,
         val driver: WebDriver,
-        val priority: Int = 1000
+        val priority: Int = 1000,
+        val proxyEntry: ProxyEntry? = null
 ): Comparable<ManagedWebDriver> {
     companion object {
         val instanceSequencer = AtomicInteger()
@@ -154,10 +157,7 @@ class ManagedWebDriver(
             timeouts.pageLoadTimeout(driverConfig.pageLoadTimeout.seconds, TimeUnit.SECONDS)
             timeouts.setScriptTimeout(driverConfig.scriptTimeout.seconds, TimeUnit.SECONDS)
         } else if (driver is ChromeDevtoolsDriver) {
-            driver.pageLoadTimeout = driverConfig.pageLoadTimeout
-            driver.scriptTimeout = driverConfig.scriptTimeout
-            driver.scrollDownCount = driverConfig.scrollDownCount
-            driver.scrollInterval = driverConfig.scrollInterval
+            // not implemented
         }
     }
 

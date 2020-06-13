@@ -38,7 +38,6 @@ open class BrowserEmulateEventHandler(
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
-    protected val driverPool = driverManager.driverPool
     protected val jsInvadingEnabled = driverManager.driverControl.jsInvadingEnabled
 
     protected val metrics = SharedMetricRegistries.getDefault()
@@ -52,11 +51,10 @@ open class BrowserEmulateEventHandler(
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
         if (log.isTraceEnabled) {
-            log.trace("Navigate {}/{}/{} in [t{}]{}, drivers: {}/{}/{}(w/f/o) | {} | timeouts: {}/{}/{}",
+            log.trace("Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
                     task.batchTaskId, task.batchSize, task.id,
                     Thread.currentThread().id,
                     if (task.nRetries <= 1) "" else "(${task.nRetries})",
-                    driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
                     task.page.configuredUrl,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval
             )
@@ -167,11 +165,10 @@ open class BrowserEmulateEventHandler(
             val length = task.pageSource.length
             val link = AppPaths.uniqueSymbolicLinkForUri(task.page.url)
             val driverConfig = task.driverConfig
-            log.info("Timeout ({}) after {} with {} drivers: {}/{}/{} timeouts: {}/{}/{} | file://{}",
+            log.info("Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                     task.pageDatum.status.minorName,
                     elapsed,
                     Strings.readableBytes(length.toLong()),
-                    driverPool.numWorking, driverPool.numFree, driverPool.numOnline,
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
         }
@@ -280,7 +277,7 @@ open class BrowserEmulateEventHandler(
     }
 
     fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
-        val proxyEntry = task.expectedProxyEntry
+        val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
         val readableLength = Strings.readableBytes(pageSource.length.toLong())

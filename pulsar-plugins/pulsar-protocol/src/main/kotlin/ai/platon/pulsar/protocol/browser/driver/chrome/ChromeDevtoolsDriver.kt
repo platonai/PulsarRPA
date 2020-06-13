@@ -1,4 +1,4 @@
-package ai.platon.pulsar.protocol.browser.driver
+package ai.platon.pulsar.protocol.browser.driver.chrome
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
@@ -9,6 +9,9 @@ import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
 import ai.platon.pulsar.protocol.browser.conf.blockingUrls
 import ai.platon.pulsar.protocol.browser.conf.mustPassUrlPatterns
+import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
+import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
 import org.openqa.selenium.NoSuchSessionException
@@ -16,7 +19,6 @@ import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.openqa.selenium.remote.SessionId
 import org.slf4j.LoggerFactory
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -24,59 +26,28 @@ import java.util.concurrent.atomic.AtomicInteger
  * TODO: more compatible methods with RemoteWebDriver, or disable them explicitly
  * */
 class ChromeDevtoolsDriver(
-        private val userAgent: String = "",
-        private val browserControl: WebDriverControl,
         private val launchOptions: ChromeDevtoolsOptions,
-        private val devToolsConfig: DevToolsConfig = DevToolsConfig()
+        private val browserControl: WebDriverControl,
+        private val browserInstanceManager: BrowserInstanceManager
 ): RemoteWebDriver() {
+    private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
 
-    companion object {
-        private val log = LoggerFactory.getLogger(ChromeDevtoolsDriver::class.java)!!
+    val dataDir get() = launchOptions.userDataDir
+    val proxyServer get() = launchOptions.proxyServer
 
-        private var chromeProcessLaunched = false
-        private val numInstances = AtomicInteger()
-        private lateinit var launcher: ChromeLauncher
-        private lateinit var chrome: RemoteChrome
-        private val devToolsList = ConcurrentLinkedQueue<RemoteDevTools>()
-
-        private fun launchChromeIfNecessary(launchOptions: ChromeDevtoolsOptions) {
-            synchronized(ChromeLauncher::class.java) {
-                if (!chromeProcessLaunched) {
-                    launcher = ChromeLauncher(shutdownHookRegistry = ChromeDevtoolsDriverShutdownHookRegistry())
-                    chrome = launcher.launch(launchOptions)
-                    chromeProcessLaunched = true
-                }
-            }
-        }
-
-        private fun closeChromeIfNecessary() {
-            if (chromeProcessLaunched) {
-                synchronized(ChromeLauncher::class.java) {
-                    if (chromeProcessLaunched && numInstances.get() == 0) {
-                        chromeProcessLaunched = false
-
-                        // require devToolsList.isEmpty()
-                        val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
-                        nonSynchronized.parallelStream().forEach { it.waitUntilClosed() }
-
-                        chrome.close()
-                        launcher.close()
-                    }
-                }
-            }
-        }
-    }
-
-    private val clientLibJs = browserControl.parseLibJs(false)
-    var pageLoadTimeout = browserControl.pageLoadTimeout
-    var scriptTimeout = browserControl.scriptTimeout
-    var scrollDownCount = browserControl.scrollDownCount
-    var scrollInterval = browserControl.scrollInterval
+    val userAgent get() = browserControl.randomUserAgent()
+    val pageLoadTimeout get() = browserControl.pageLoadTimeout
+    val scriptTimeout get() = browserControl.scriptTimeout
+    val scrollDownCount get() = browserControl.scrollDownCount
+    val scrollInterval get() = browserControl.scrollInterval
     // TODO: load blocking rules from config files
-    var enableUrlBlocking = browserControl.enableUrlBlocking
+    val enableUrlBlocking get() = browserControl.enableUrlBlocking
+    val clientLibJs = browserControl.parseLibJs(false)
+    var devToolsConfig = DevToolsConfig()
 
-    private var tab: ChromeTab
-    private var devTools: RemoteDevTools
+    val browserInstance: BrowserInstance
+    val tab: ChromeTab
+    val devTools: RemoteDevTools
 
     private var lastSessionId: SessionId? = null
     private val browser get() = devTools.browser
@@ -103,20 +74,18 @@ class ChromeDevtoolsDriver(
 
     init {
         try {
-            launchChromeIfNecessary(launchOptions)
+            browserInstance = browserInstanceManager.launchIfAbsent(launchOptions)
 
             // In chrome every tab is a separate process
-            tab = chrome.createTab()
+            tab = browserInstance.createTab()
             navigateUrl = tab.url ?: ""
 
-            devTools = chrome.createDevTools(tab, devToolsConfig)
-            devToolsList.add(devTools)
+            devTools = browserInstance.createDevTools(tab, devToolsConfig)
+            browserInstance.devToolsList.add(devTools)
 
             if (userAgent.isNotEmpty()) {
                 emulation.setUserAgentOverride(userAgent)
             }
-
-            numInstances.incrementAndGet()
         } catch (t: Throwable) {
             throw DriverLaunchException("Failed to create chrome devtools driver", t)
         }
@@ -184,7 +153,7 @@ class ChromeDevtoolsDriver(
     @Throws(NoSuchSessionException::class)
     override fun getWindowHandles(): Set<String> {
         if (isGone) return setOf()
-        return chrome.getTabs().mapTo(HashSet()) { it.id }
+        return browserInstance.chrome.getTabs().mapTo(HashSet()) { it.id }
     }
 
     @Throws(NoSuchSessionException::class)
@@ -250,16 +219,14 @@ class ChromeDevtoolsDriver(
         }
     }
 
-    override fun toString(): String {
-        return "Chrome Devtools Driver ($lastSessionId)"
-    }
+    override fun toString() = "Chrome Devtools Driver ($lastSessionId)"
 
     /**
-     * Quit browser
+     * Quit the browser instance
      * */
     override fun quit() {
         close()
-        closeChromeIfNecessary()
+        browserInstanceManager.closeIfAbsent(launchOptions.userDataDir)
     }
 
     /**
@@ -268,7 +235,7 @@ class ChromeDevtoolsDriver(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             devTools.close()
-            numInstances.decrementAndGet()
+            browserInstance.closeTab()
         }
     }
 
@@ -353,7 +320,7 @@ class ChromeDevtoolsDriver(
         return mainFrame.id == frameId
     }
 
-    class ChromeDevtoolsDriverShutdownHookRegistry : ChromeLauncher.ShutdownHookRegistry {
+    class ShutdownHookRegistry : ChromeLauncher.ShutdownHookRegistry {
 
         override fun register(thread: Thread) {
         }

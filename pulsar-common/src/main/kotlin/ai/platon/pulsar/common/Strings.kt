@@ -1,10 +1,12 @@
 package ai.platon.pulsar.common
 
+import kotlin.reflect.KClass
+
 fun readableClassName(obj: Any): String {
-    val names = if (obj is Class<*>) {
-        obj.name.split(".")
-    } else {
-        obj::class.java.name.split(".")
+    val names = when (obj) {
+        is Class<*> -> obj.name.split(".")
+        is KClass<*> -> obj.java.name.split(".")
+        else -> obj::class.java.name.split(".")
     }
 
     val size = names.size

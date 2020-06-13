@@ -14,6 +14,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import org.apache.commons.lang.IllegalClassException
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.FluentWait
