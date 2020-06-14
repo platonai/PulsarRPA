@@ -235,7 +235,7 @@ public interface CapabilityTypes {
     String PROXY_POOL_MONITOR_CLASS = "proxy.pool.monitor.class";
     String PROXY_LOADER_CLASS = "proxy.loader.class";
     String PROXY_MAX_FETCH_SUCCESS = "proxy.max.fetch.success";
-    String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.no.proxy.exception";
+    String PROXY_MAX_ALLOWED_PROXY_ABSENCE = "proxy.max.allowed.proxy.absence";
     String PROXY_POOL_CAPACITY = "proxy.pool.size";
     String PROXY_POOL_POLLING_TIMEOUT = "proxy.pool.polling.interval";
     String PROXY_IDLE_TIMEOUT = "proxy.idle.timeout";

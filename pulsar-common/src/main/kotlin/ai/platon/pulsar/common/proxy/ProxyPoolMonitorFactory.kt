@@ -25,7 +25,7 @@ class ProxyPoolMonitorFactory(
                     val clazz = try {
                         conf.getClass(PROXY_POOL_MONITOR_CLASS, ProxyPoolMonitor::class.java)
                     } catch (e: Exception) {
-                        log.warn("Proxy pool monitor {} is not found in config, use default", PROXY_POOL_MONITOR_CLASS)
+                        log.warn("Proxy pool monitor {} is not configured, use default ({})", PROXY_POOL_MONITOR_CLASS, ProxyPoolMonitor)
                         ProxyPoolMonitor::class.java
                     }
                     proxyPoolMonitorRef.set(clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf) as ProxyPoolMonitor)

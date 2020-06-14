@@ -7,8 +7,10 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
@@ -28,6 +30,8 @@ class WebDriverContext(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
+        val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
+
         private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
         private val lock = ReentrantLock()
         private val notBusy = lock.newCondition()
@@ -39,7 +43,6 @@ class WebDriverContext(
 
     private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val fetchMaxRetry = conf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
-    private val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
     private val browserDataDir = dataDir.resolve("browser")
@@ -51,6 +54,9 @@ class WebDriverContext(
                 task.proxyEntry = it.proxyEntry
                 browseFun(task, it)
             }
+        } catch (e: PoolRetiredException) {
+            log.warn("Retry task {}/{} in privacy scope because pool is retired | {}", task.id, task.batchId, e.message)
+            FetchResult.privacyRetry(task)
         } finally {
             runningTasks.remove(task)
             if (runningTasks.isEmpty()) {
@@ -62,7 +68,7 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                doClose()
+                runBlocking { doClose() }
             } catch (t: Throwable) {
                 log.error("Unexpected exception", t)
             }
@@ -87,29 +93,31 @@ class WebDriverContext(
             log.warn("Still {} running tasks after context close | {}",
                     runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
         } else {
-            log.info("WebDriverContext is closed successfully")
+            log.info("Web driver context is closed successfully")
         }
     }
 
     private fun closeUnderlyingLayer() {
         if (Files.exists(browserDataDir)) {
-            Files.writeString(browserDataDir.resolve("CLOSE_INSTANCE"), "", StandardOpenOption.CREATE_NEW)
-        } else {
-            log.error("Browser data dir {} does not exist", browserDataDir)
+            Files.writeString(browserDataDir.resolve("INSTANCE_CLOSING"), "", StandardOpenOption.CREATE_NEW)
         }
 
         // Mark all working tasks are canceled, so they return as soon as possible,
         // the ready tasks are blocked to wait for driverManager.reset() finish
         runningTasks.forEach { it.cancel() }
-        // Mark all drivers are canceled
-        driverManager.cancelAll(browserDataDir)
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
-        driverManager.reset(browserDataDir, DRIVER_CLOSE_TIME_OUT)
+        driverManager.closeDriverPool(browserDataDir, DRIVER_CLOSE_TIME_OUT)
+
+        log.info("Underlying layer is closed successfully")
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
         if (!isActive) {
+            return FetchResult.privacyRetry(task)
+        }
+
+        if (driverManager.isRetiredPool(browserDataDir)) {
             return FetchResult.privacyRetry(task)
         }
 
@@ -145,7 +153,7 @@ class ProxyContext(
     /**
      * If the number of success exceeds [maxFetchSuccess], emit a PrivacyRetry result
      * */
-    private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE)
+    private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE / 10)
     private val maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
     private val minTimeToLive = Duration.ofSeconds(10)
     private val closing = AtomicBoolean()
@@ -220,6 +228,7 @@ class ProxyContext(
         // If the proxy is idle, and here comes a new task, reset the context
         // The proxy is about to be unusable, reset the context
         proxyEntry?.also {
+            task.proxyEntry = proxyEntry
             if (it.willExpireAfter(minTimeToLive)) {
                 if (closing.compareAndSet(false, true)) {
                     throw ProxyRetiredException("The proxy expires in $minTimeToLive")
@@ -235,7 +244,7 @@ class ProxyContext(
                 // and also maxFetchSuccess can be used for test purpose
                 log.info("Served too many pages ($successPages/$maxFetchSuccess) | {}", it)
                 if (closing.compareAndSet(false, true)) {
-                    throw ProxyRetiredException("Too many pages")
+                    throw ProxyRetiredException("Served too many pages")
                 }
             }
         }

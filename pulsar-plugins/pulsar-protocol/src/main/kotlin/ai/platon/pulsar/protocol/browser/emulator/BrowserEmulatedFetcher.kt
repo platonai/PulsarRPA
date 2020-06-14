@@ -151,16 +151,18 @@ class BrowserEmulatedFetcher(
             batch.universalStat.startTime = Instant.now()
             batch.beforeFetchAll(batch.pages)
 
-            var i = 1
-            do {
-                var b = batch
-                val privacyContext0 = b.privacyContext
-                if (privacyContext0.isLeaked) {
-                    b = b.createNextNode(privacyManager.computeIfNotActive(privacyContext0.id))
-                }
+            runBlocking {
+                var i = 1
+                do {
+                    var b = batch
+                    val privacyContext0 = b.privacyContext
+                    if (privacyContext0.isLeaked) {
+                        b = b.createNextNode(privacyManager.computeIfNotActive(privacyContext0.id))
+                    }
 
-                parallelFetch0(b)
-            } while (i++ <= privacyManager.maxRetry && privacyContext0.isLeaked)
+                    parallelFetch0(b)
+                } while (i++ <= privacyManager.maxRetry && privacyContext0.isLeaked)
+            }
 
             batch.afterFetchAll(batch.pages)
 
@@ -170,9 +172,8 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun parallelFetch0(batch: FetchTaskBatch) {
-        // TODO: avoid GlobalScope
-        GlobalScope.launch {
+    private suspend fun parallelFetch0(batch: FetchTaskBatch) {
+        supervisorScope {
             batch.createTasks().associateWithTo(batch.workingTasks) { async { parallelFetch1(it, batch) } }
         }
 
@@ -215,15 +216,6 @@ class BrowserEmulatedFetcher(
         }
     }
 
-//    private fun allocateDriversIfNecessary(batch: FetchTaskBatch, volatileConfig: VolatileConfig) {
-//        // allocate drivers before batch fetch context timing, the allocation might take long time
-//        val requiredDrivers = batch.batchSize - driverManager.driverPool.numFree
-//        if (requiredDrivers > 0) {
-//            log.info("Allocating $requiredDrivers drivers")
-//            driverManager.allocate(requiredDrivers, volatileConfig)
-//        }
-//    }
-
     private suspend fun parallelFetch1(task: FetchTask, batch: FetchTaskBatch): FetchResult {
         val privacyContext = batch.privacyContext as BrowserPrivacyContext
         return privacyContext.run(task) { _, driver ->
@@ -232,7 +224,10 @@ class BrowserEmulatedFetcher(
                 batch.beforeFetch(task.page)
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalContextStateException) {
-                log.info("Illegal context state, the task is cancelled | {}", task.url)
+                log.info("Illegal context state, cancel task {}/{} | {}", task.id, task.batchId, task.url)
+                FetchResult(task, ForwardingResponse.canceled(task.page))
+            } catch (e: TimeoutCancellationException) {
+                log.info("Coroutine is timeout and cancelled, cancel task {}/{} | {}", task.id, task.batchId, task.url)
                 FetchResult(task, ForwardingResponse.canceled(task.page))
             } catch (e: Throwable) {
                 log.warn("Unexpected throwable", e)
@@ -292,7 +287,7 @@ class BrowserEmulatedFetcher(
         }
 
         if (batch.workingTasks.isNotEmpty()) {
-            log.warn("There are still {} working tasks unexpectedly", batch.numWorkingTasks)
+            log.warn("There are still {} working tasks unexpectely", batch.numWorkingTasks)
             batch.workingTasks.clear()
         }
     }

@@ -17,6 +17,7 @@ import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicInteger
 
 class WebDriverFactory(
         val driverControl: WebDriverControl,
@@ -30,6 +31,7 @@ class WebDriverFactory(
             CapabilityTypes.BROWSER_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
     private val localForwardServerEnabled =
             immutableConfig.getBoolean(CapabilityTypes.PROXY_ENABLE_LOCAL_FORWARD_SERVER, false)
+    private val numDrivers = AtomicInteger()
 
     /**
      * Create a RemoteWebDriver
@@ -38,6 +40,8 @@ class WebDriverFactory(
     @Throws(DriverLaunchException::class)
     @Synchronized
     fun create(dataDir: Path, priority: Int, conf: VolatileConfig): ManagedWebDriver {
+        log.info("Creating web driver #{} | {}", numDrivers.incrementAndGet(), dataDir)
+
         val capabilities = driverControl.createGeneralOptions()
 
         var proxyEntry: ProxyEntry? = null

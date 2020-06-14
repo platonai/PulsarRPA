@@ -63,6 +63,7 @@ class ChromeDevtoolsDriver(
     private val numSessionLost = AtomicInteger()
     private val closed = AtomicBoolean()
     private val isGone get() = closed.get() || !devTools.isOpen || numSessionLost.get() > 1
+    private val isActive get() = !isGone
 
     val viewport = Viewport().apply {
         x = 0.0
@@ -81,7 +82,6 @@ class ChromeDevtoolsDriver(
             navigateUrl = tab.url ?: ""
 
             devTools = browserInstance.createDevTools(tab, devToolsConfig)
-            browserInstance.devToolsList.add(devTools)
 
             if (userAgent.isNotEmpty()) {
                 emulation.setUserAgentOverride(userAgent)
@@ -98,7 +98,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     fun stopLoading() {
-        if (isGone) return
+        if (!isActive) return
 
         try {
             page.stopLoading()
@@ -110,7 +110,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     fun evaluate(expression: String): Any? {
-        if (isGone) return null
+        if (!isActive) return null
 
         try {
             val evaluate = runtime.evaluate(expression)
@@ -131,7 +131,7 @@ class ChromeDevtoolsDriver(
     @Throws(NoSuchSessionException::class)
     override fun getSessionId(): SessionId? {
         try {
-            lastSessionId = if (isGone) null else SessionId(mainFrame.id)
+            lastSessionId = if (!isActive) null else SessionId(mainFrame.id)
             return lastSessionId
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
@@ -142,7 +142,7 @@ class ChromeDevtoolsDriver(
     @Throws(NoSuchSessionException::class)
     override fun getCurrentUrl(): String {
         try {
-            navigateUrl = if (isGone) navigateUrl else mainFrame.url
+            navigateUrl = if (!isActive) navigateUrl else mainFrame.url
             return navigateUrl
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
@@ -152,7 +152,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     override fun getWindowHandles(): Set<String> {
-        if (isGone) return setOf()
+        if (!isActive) return setOf()
         return browserInstance.chrome.getTabs().mapTo(HashSet()) { it.id }
     }
 
@@ -169,7 +169,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     fun getCookieNames(): List<String> {
-        if (isGone) return listOf()
+        if (!isActive) return listOf()
 
         try {
             return devTools.network.allCookies.map { it.name }
@@ -181,7 +181,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     fun deleteAllCookies() {
-        if (isGone) return
+        if (!isActive) return
 
         try {
             devTools.network.clearBrowserCookies()
@@ -194,7 +194,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     fun deleteCookieNamed(name: String) {
-        if (isGone) return
+        if (!isActive) return
 
         try {
             devTools.network.deleteCookies(name)
@@ -226,7 +226,7 @@ class ChromeDevtoolsDriver(
      * */
     override fun quit() {
         close()
-        browserInstanceManager.closeIfAbsent(launchOptions.userDataDir)
+        browserInstanceManager.closeIfPresent(launchOptions.userDataDir)
     }
 
     /**
@@ -241,7 +241,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     private fun getInvaded(url: String) {
-        if (isGone) return
+        if (!isActive) return
 
         try {
             page.addScriptToEvaluateOnNewDocument(clientLibJs)
@@ -278,7 +278,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     private fun getNoInvaded(url: String) {
-        if (isGone) return
+        if (!isActive) return
 
         try {
             page.enable()
@@ -315,7 +315,7 @@ class ChromeDevtoolsDriver(
 
     @Throws(NoSuchSessionException::class)
     private fun isMainFrame(frameId: String): Boolean {
-        if (isGone) return false
+        if (!isActive) return false
 
         return mainFrame.id == frameId
     }

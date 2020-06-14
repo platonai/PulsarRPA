@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -35,15 +34,15 @@ abstract class PreemptChannelSupport(val name: String = "") {
     private val lock = ReentrantLock()
     private val noPreemptiveTasks = lock.newCondition()
     private val noNormalTasks = lock.newCondition()
-    protected val numReadyPreemptiveTasks = AtomicInteger()
+    protected val numPreemptiveTasks = AtomicInteger()
     protected val numRunningPreemptiveTasks = AtomicInteger()
-    protected val numNormalTasks = AtomicInteger()
+    protected val numPendingNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
     protected val normalTaskTimeout = Duration.ofMinutes(5)
     protected val preemptiveTaskTimeout = Duration.ofMinutes(5)
     private var pollingTimeout = Duration.ofMillis(100)
 
-    val isPreempted get() = numReadyPreemptiveTasks.get() > 0
+    val isPreempted get() = numPreemptiveTasks.get() > 0
     val isNormal get() = !isPreempted
 
     /**
@@ -52,9 +51,9 @@ abstract class PreemptChannelSupport(val name: String = "") {
      * */
     fun <T> preempt(preemptiveTask: () -> T): T {
         // All workers must NOT pass now
-        numReadyPreemptiveTasks.incrementAndGet()
+        numPreemptiveTasks.incrementAndGet()
 
-        trace("Preempted with $numReadyPreemptiveTasks preemptive tasks ")
+        trace("Preempted with $numPreemptiveTasks preemptive tasks ")
 
         // Wait until all the normal tasks are finished
         waitUntilNoNormalTasks()
@@ -66,7 +65,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
         } finally {
             numRunningPreemptiveTasks.decrementAndGet()
             lock.withLock {
-                if (numReadyPreemptiveTasks.decrementAndGet() == 0) {
+                if (numPreemptiveTasks.decrementAndGet() == 0) {
                     // all tasks are allowed to pass
                     noPreemptiveTasks.signalAll()
                 }
@@ -75,16 +74,18 @@ abstract class PreemptChannelSupport(val name: String = "") {
     }
 
     fun <T> whenNormal(task: () -> T): T {
-        // wait all the preemptive tasks  are finished
-        waitUntilNotPreempted()
+        numPendingNormalTasks.incrementAndGet()
 
         try {
+            // wait all the preemptive tasks  are finished
+            waitUntilNotPreempted()
+            // task channel is open now
+            numPendingNormalTasks.decrementAndGet()
             numRunningNormalTasks.incrementAndGet()
             return task()
         } finally {
             lock.withLock {
-                numRunningNormalTasks.decrementAndGet()
-                if (numNormalTasks.decrementAndGet() == 0) {
+                if (numRunningNormalTasks.decrementAndGet() == 0) {
                     // all preemptive tasks  are allowed to pass
                     noNormalTasks.signalAll()
                 }
@@ -93,14 +94,18 @@ abstract class PreemptChannelSupport(val name: String = "") {
     }
 
     suspend fun <T> whenNormalDeferred(task: suspend () -> T): T {
-        // wait until the freezer channel is closed, meanwhile, the task channel is open
-        waitUntilNotPreempted()
+        numPendingNormalTasks.incrementAndGet()
 
         try {
+            // wait until the freezer channel is closed, meanwhile, the task channel is open
+            waitUntilNotPreempted()
+            // task channel is open now
+            numPendingNormalTasks.decrementAndGet()
+            numRunningNormalTasks.incrementAndGet()
             return task()
         } finally {
             lock.withLock {
-                if (numNormalTasks.decrementAndGet() == 0) {
+                if (numRunningNormalTasks.decrementAndGet() == 0) {
                     // all preemptive tasks  are allowed to pass
                     noNormalTasks.signalAll()
                 }
@@ -108,43 +113,39 @@ abstract class PreemptChannelSupport(val name: String = "") {
         }
     }
 
+    fun formatPreemptChannelStatus(): String {
+        return "preemptive tasks : $numPreemptiveTasks, " +
+                " running preemptive tasks: $numRunningPreemptiveTasks," +
+                " pending normal tasks: $numPendingNormalTasks" +
+                " running normal tasks: $numRunningNormalTasks"
+    }
+
     private fun waitUntilNoNormalTasks() {
-        val ttl = Instant.now().plus(normalTaskTimeout).toEpochMilli()
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
-            while (numNormalTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
+            while (numRunningNormalTasks.get() > 0 && nanos > 0) {
                 nanos = noNormalTasks.awaitNanos(nanos)
             }
         }
     }
 
     private fun waitUntilNotPreempted() {
-        val ttl = Instant.now().plus(preemptiveTaskTimeout).toEpochMilli()
         lock.withLock {
-            if (numReadyPreemptiveTasks.get() > 0) {
-                trace("There are $numNormalTasks tasks waiting for $numReadyPreemptiveTasks preemptive tasks to finish")
+            if (numPreemptiveTasks.get() > 0) {
+                trace("There are $numRunningNormalTasks tasks waiting for $numPreemptiveTasks preemptive tasks to finish")
             }
 
             var nanos = pollingTimeout.toNanos()
-            while (numReadyPreemptiveTasks.get() > 0 && nanos > 0 && System.currentTimeMillis() < ttl) {
+            while (numPreemptiveTasks.get() > 0 && nanos > 0) {
                 nanos = noPreemptiveTasks.awaitNanos(nanos)
             }
-
-            // task channel is open now
-            numNormalTasks.incrementAndGet()
         }
     }
 
     private fun trace(message: String) {
         if (name == "PrivacyManager") {
             val tid = Thread.currentThread().id
-            println("[$name] [$tid] $message | " + formatStatus())
+            println("[$name] [$tid] $message | " + formatPreemptChannelStatus())
         }
-    }
-
-    private fun formatStatus(): String {
-        return "preemptive tasks : $numReadyPreemptiveTasks, " +
-                " running preemptive tasks: $numRunningPreemptiveTasks," +
-                " normal tasks: $numNormalTasks"
     }
 }

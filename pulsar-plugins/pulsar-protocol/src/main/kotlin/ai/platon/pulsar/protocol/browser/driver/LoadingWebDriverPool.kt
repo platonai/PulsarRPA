@@ -83,18 +83,10 @@ class LoadingWebDriverPool(
 
     fun firstOrNull(predicate: (ManagedWebDriver) -> Boolean) = onlineDrivers.firstOrNull(predicate)
 
-    fun closeAll(incognito: Boolean = true, processExit: Boolean = false, timeToWait: Duration = CLOSE_ALL_TIMEOUT) {
-        if (!processExit) {
-            waitUntilIdleOrTimeout(timeToWait)
-        }
-
-        closeAllDrivers(processExit)
-    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                closeAll(incognito = true, processExit = true)
+                doClose(CLOSE_ALL_TIMEOUT)
             } catch (e: InterruptedException) {
                 log.warn("Thread interrupted when closing | {}", this)
             }
@@ -131,8 +123,10 @@ class LoadingWebDriverPool(
         }
     }
 
+    @Synchronized
+    @Throws(IllegalStateException::class)
     private fun take0(priority: Int, conf: VolatileConfig): ManagedWebDriver {
-        ensureAlive()
+        checkState()
 
         driverFactory.takeIf { onlineDrivers.size < capacity && availableMemory > instanceRequiredMemory }
                 ?.create(dataDir, priority, conf)
@@ -153,21 +147,32 @@ class LoadingWebDriverPool(
         }
         numWaiting.decrementAndGet()
 
-        return driver?:throw IllegalStateException("App is closed")
+        return driver?:throw IllegalStateException("LoadingWebDriverPool is closed")
     }
 
-    private fun closeAllDrivers(processExit: Boolean = false) {
+    private fun doClose(timeToWait: Duration) {
+        freeDrivers.clear()
+
+        val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
+        nonSynchronized.parallelStream().forEach { it.cancel() }
+
+        waitUntilIdleOrTimeout(timeToWait)
+
+        closeAllDrivers(nonSynchronized)
+    }
+
+    private fun closeAllDrivers(drivers: List<ManagedWebDriver>) {
         if (!isHeadless) {
             // return
         }
 
-        freeDrivers.clear()
+        val i = AtomicInteger()
+        val total = drivers.size
+        val timeout = Duration.ofSeconds(20)
 
-        // create a non-synchronized list for quitting all drivers in parallel
-        val nonSynchronized = onlineDrivers.toList().also { onlineDrivers.clear() }
-        nonSynchronized.parallelStream().forEach {
-            it.quit().also { counterQuit.inc() }
-            log.info("Quit driver {}", it)
+        drivers.parallelStream().forEach { driver ->
+            driver.quit().also { counterQuit.inc() }
+            log.info("Quit driver {}/{} {}", i.incrementAndGet(), total, driver)
         }
     }
 
@@ -196,9 +201,9 @@ class LoadingWebDriverPool(
         }
     }
 
-    private fun ensureAlive() {
+    private fun checkState() {
         if (!isActive) {
-            throw IllegalStateException("We are closed")
+            throw IllegalStateException("Loading web driver pool is closed")
         }
     }
 }

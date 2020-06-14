@@ -6,7 +6,6 @@ package ai.platon.pulsar.crawl.index;
 
 import ai.platon.pulsar.common.config.Configurable;
 import ai.platon.pulsar.common.config.Parameterized;
-import ai.platon.pulsar.common.config.ReloadableParameterized;
 import ai.platon.pulsar.crawl.common.JobInitialized;
 import ai.platon.pulsar.persist.WebPage;
 import org.slf4j.Logger;

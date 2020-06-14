@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
@@ -12,6 +13,9 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import com.codahale.metrics.Gauge
+import kotlinx.coroutines.withTimeout
+import java.time.Duration
 
 class BrowserPrivacyManager(
         val driverManager: WebDriverManager,
@@ -19,9 +23,19 @@ class BrowserPrivacyManager(
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
     private val tracer = log.takeIf { it.isTraceEnabled }
+    val taskTimeout = Duration.ofMinutes(5)
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
     val maxRetry = 2
+
+    init {
+        mapOf(
+                "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
+                "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
+                "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
+                "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
+        ).forEach { MetricsManagement.register(this, it.key, it.value) }
+    }
 
     suspend fun run(
             id: PrivacyContextId, task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult
@@ -40,11 +54,15 @@ class BrowserPrivacyManager(
             // if the current context is not leaked, return the current context, or block and create a new one
             val context = computeIfNotActive(id)
 
-            tracer?.trace("{}. Ready to fetch task the {}th times in context #{} | {}",
-                    task0.id, i, context.sequence, task0.url)
+            if (i > 1) {
+                log.info("{}. Fetching task {} the {}th times in context #{} | {}",
+                        task0.page.id, task0.id, i, context.sequence, task0.url)
+            }
 
             whenNormalDeferred {
-                require(numRunningPreemptiveTasks.get() == 0)
+                if (numRunningPreemptiveTasks.get() != 0) {
+                    log.error("Wrong preempt channel status: {}", formatPreemptChannelStatus())
+                }
 
                 try {
                     require(!task0.isCanceled)
@@ -53,7 +71,9 @@ class BrowserPrivacyManager(
 
                     task0.markReady()
                     task0.nPrivacyRetries = i
-                    result = context.run(task0) { _, driver -> task0.startWork(); fetchFun(task0, driver) }
+                    withTimeout(taskTimeout.toMillis()) {
+                        result = context.run(task0) { _, driver -> task0.startWork(); fetchFun(task0, driver) }
+                    }
                 } finally {
                     task0.done()
                     updatePrivacyContext(context, result)
@@ -68,16 +88,13 @@ class BrowserPrivacyManager(
         return result
     }
 
-    override fun computeIfAbsent(id: PrivacyContextId): BrowserPrivacyContext {
-        return activeContexts.computeIfAbsent(id) { create() } as BrowserPrivacyContext
-    }
-
     /**
      * Get the current privacy context if it's not leaked, or create a new pure privacy context
      *
      * If the current privacy is not leaked, return the current privacy context
      * If the privacy leak occurs, block until the the context is closed completely, and create a new privacy context
      * */
+    @Synchronized
     override fun computeIfNotActive(id: PrivacyContextId): BrowserPrivacyContext {
         val context = computeIfAbsent(id)
         if (context.isActive) {
@@ -85,15 +102,19 @@ class BrowserPrivacyManager(
         }
 
         val context0 = computeIfLeaked(context) {
-            require(numReadyPreemptiveTasks.get() > 0) { "Should have at least one active preemptive task" }
+            require(numPreemptiveTasks.get() > 0) { "Should have at least one active preemptive task" }
             require(numRunningPreemptiveTasks.get() > 0) { "Should have at least one running preemptive task" }
-            reportZombieContexts()
-            create()
-        }.also { activeContexts[it.id] = it }
+            create().also { activeContexts[id] = it }
+        }
 
         log.info("Privacy context is created #{}", context0.sequence)
+        reportZombieContexts()
 
         return context0
+    }
+
+    override fun computeIfAbsent(id: PrivacyContextId): BrowserPrivacyContext {
+        return activeContexts.computeIfAbsent(id) { create() } as BrowserPrivacyContext
     }
 
     override fun create(): BrowserPrivacyContext {

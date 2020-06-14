@@ -204,24 +204,6 @@ class ChromeLauncher(
 
     fun launch() = launch(true)
 
-    /**
-     * Returns the chrome binary path.
-     *
-     * @return Chrome binary path.
-     */
-    private fun searchChromeBinary(): Path {
-        val path = System.getProperty(CapabilityTypes.BROWSER_CHROME_PATH)
-        if (path != null) {
-            return Paths.get(path).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
-                    ?: throw RuntimeException("CHROME_PATH is not executable | $path")
-        }
-
-        return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }
-                .firstOrNull { Files.isExecutable(it) }
-                ?.toAbsolutePath()
-                ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
-    }
-
     override fun close() {
         val p = process ?: return
         this.process = null
@@ -229,6 +211,11 @@ class ChromeLauncher(
             destroyProcess(p)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
                     .onFailure { log.warn("Unexpected exception", it) }
+        }
+
+        if (Files.exists(userDataDir)) {
+            Files.deleteIfExists(userDataDir.resolve("INSTANCE_CLOSING"))
+            Files.writeString(userDataDir.resolve("INSTANCE_CLOSED"), "", StandardOpenOption.CREATE_NEW)
         }
     }
 
@@ -250,6 +237,24 @@ class ChromeLauncher(
      * @throws IllegalThreadStateException if the subprocess has not yet terminated.
      */
     val isAlive: Boolean get() = process?.isAlive == true
+
+    /**
+     * Returns the chrome binary path.
+     *
+     * @return Chrome binary path.
+     */
+    private fun searchChromeBinary(): Path {
+        val path = System.getProperty(CapabilityTypes.BROWSER_CHROME_PATH)
+        if (path != null) {
+            return Paths.get(path).takeIf { Files.isExecutable(it) }?.toAbsolutePath()
+                    ?: throw RuntimeException("CHROME_PATH is not executable | $path")
+        }
+
+        return CHROME_BINARY_SEARCH_PATHS.map { Paths.get(it) }
+                .firstOrNull { Files.isExecutable(it) }
+                ?.toAbsolutePath()
+                ?: throw RuntimeException("Could not find chrome binary in search path. Try setting CHROME_PATH environment value")
+    }
 
     /**
      * Launches a chrome process given a chrome binary and its arguments.
@@ -278,7 +283,7 @@ class ChromeLauncher(
             process = processLauncher.launch(program, arguments)
 
             process?.also {
-                Files.writeString(chromeOptions.userDataDir.resolve("pid"), it.pid().toString(), StandardOpenOption.CREATE_NEW)
+                Files.writeString(chromeOptions.userDataDir.resolve("PID"), it.pid().toString(), StandardOpenOption.CREATE_NEW)
             }
             waitForDevToolsServer(process!!)
         } catch (e: IOException) {

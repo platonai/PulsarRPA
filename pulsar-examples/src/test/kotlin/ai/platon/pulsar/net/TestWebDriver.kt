@@ -65,7 +65,7 @@ class TestWebDriver {
     fun testWebDriverPool() {
         val workingDrivers = mutableListOf<ManagedWebDriver>()
         repeat(10) {
-            val driver = driverPool.take(conf)
+            val driver = driverPool.take(conf.toVolatileConfig())
             workingDrivers.add(driver)
         }
 
@@ -107,7 +107,7 @@ class TestWebDriver {
                 }
 
                 if (workingDrivers.size < 20) {
-                    val driver = driverPool.take(conf)
+                    val driver = driverPool.take(conf.toVolatileConfig())
                     assertNotNull(driver)
                     workingDrivers.add(driver)
                 }

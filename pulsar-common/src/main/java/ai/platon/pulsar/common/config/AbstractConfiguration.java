@@ -124,7 +124,7 @@ public abstract class AbstractConfiguration {
             if (realResource != null) {
                 fullPathResources.add(realResource);
             } else {
-                LOG.warn("Failed to find resource " + name);
+                LOG.info("Resource not find: " + name);
             }
         }
 

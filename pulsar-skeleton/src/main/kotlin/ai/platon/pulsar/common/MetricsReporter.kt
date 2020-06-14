@@ -31,13 +31,14 @@ class MetricsReporter(
         private val counter: MetricsCounters,
         private val conf: ImmutableConfig
 ): Thread() {
+    private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
     private val running = AtomicBoolean(false)
     private val silent = AtomicBoolean(false)
-    private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
     private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(30))
-    val isActive get() = running.get()
+    private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
+    private var lastStatus = ""
 
-    val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNKNOWN")
+    val isActive get() = running.get()
 
     init {
         name = "Reporter-" + counter.id
@@ -87,11 +88,11 @@ class MetricsReporter(
     }
 
     private fun report() {
-        // Can only access variables in this thread
         if (!silent.get()) {
             val status = counter.getStatus(false)
-            if (status.isNotEmpty()) {
+            if (status.isNotEmpty() && status != lastStatus) {
                 log.info(status)
+                lastStatus = status
             }
         }
     }

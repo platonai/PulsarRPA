@@ -33,7 +33,6 @@ class FetchMetrics(
     private val log = LoggerFactory.getLogger(FetchMetrics::class.java)!!
     private val groupMode = conf.getEnum(CapabilityTypes.PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     private val systemInfo = SystemInfo()
-    private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
     /**
      * The limitation of url length
      */
@@ -110,7 +109,7 @@ class FetchMetrics(
         return Params.of(
                 "unreachableHosts", unreachableHosts.size,
                 "maxUrlLength", maxUrlLength,
-                "unreachableHostsPath", PATH_UNREACHABLE_HOSTS,
+                "unreachableHostsPath", "<file://$PATH_UNREACHABLE_HOSTS >",
                 "timeoutUrls", timeoutUrls.size,
                 "failedUrls", failedUrls.size,
                 "deadUrls", deadUrls.size

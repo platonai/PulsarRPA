@@ -81,7 +81,7 @@ open class AsyncBrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: CancellationException) {
             exception = e
-            log.info("{}. Task is canceled, emit privacy retry | {}", task.id, task.url)
+            log.info("{}. Retry canceled task {}/{} in privacy scope later | {}", task.page.id, task.id, task.batchId, task.url)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))

@@ -9,14 +9,16 @@ class BrowserInstanceManager: AutoCloseable {
     private val closed = AtomicBoolean()
     private val browserInstances = ConcurrentHashMap<Path, BrowserInstance>()
 
+    @Synchronized
     fun launchIfAbsent(launchOptions: ChromeDevtoolsOptions): BrowserInstance {
         return browserInstances.computeIfAbsent(launchOptions.userDataDir) {
             BrowserInstance(launchOptions).apply { launch() }
         }
     }
 
-    fun closeIfAbsent(dataDir: Path) {
-        browserInstances[dataDir]?.close()
+    @Synchronized
+    fun closeIfPresent(dataDir: Path) {
+        browserInstances.remove(dataDir)?.close()
     }
 
     fun healthCheck() {

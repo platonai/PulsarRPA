@@ -237,6 +237,8 @@ abstract class BasicDevTools(
                 } catch (ignored: InterruptedException) {}
             }
 
+            LOG.trace("Closing ws client ... {}", wsClient)
+
             wsClient.close()
             workerGroup.shutdownGracefully()
 

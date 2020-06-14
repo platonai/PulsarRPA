@@ -49,7 +49,7 @@ class LazyFetchTaskManager(
         failedUrls.clear()
         deadUrls.clear()
 
-        params.withLogger(log).info(true)
+        // params.withLogger(log).info(true)
     }
 
     fun getSeeds(mode: FetchMode, limit: Int): Set<String> {

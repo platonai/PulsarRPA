@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
-import java.lang.Exception
+import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
@@ -15,17 +15,13 @@ import java.util.concurrent.atomic.AtomicInteger
 class BrowserInstance(
         val launchOptions: ChromeDevtoolsOptions
 ): AutoCloseable {
-
-    data class Key(
-            val dataDir: Path,
-            val proxyServer: String
-    )
-
     /**
      * Every browser instance have an unique data dir, proxy is required to be unique too if it is enabled
      * */
     val dataDir get() = launchOptions.userDataDir
     val proxyServer get() = launchOptions.proxyServer
+
+    private val log = LoggerFactory.getLogger(BrowserInstance::class.java)
 
     val numTabs = AtomicInteger()
     lateinit var launcher: ChromeLauncher
@@ -35,6 +31,7 @@ class BrowserInstance(
     private val launched = AtomicBoolean()
     private val closed = AtomicBoolean()
 
+    @Synchronized
     @Throws(Exception::class)
     fun launch() {
         synchronized(ChromeLauncher::class.java) {
@@ -45,22 +42,38 @@ class BrowserInstance(
         }
     }
 
+    @Synchronized
     @Throws(Exception::class)
     fun createTab() = chrome.createTab().also { numTabs.incrementAndGet() }
 
+    @Synchronized
     fun closeTab() {
         numTabs.decrementAndGet()
     }
 
+    @Synchronized
     @Throws(Exception::class)
-    fun createDevTools(tab: ChromeTab, config: DevToolsConfig) = chrome.createDevTools(tab, config)
+    fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
+        val devTools= chrome.createDevTools(tab, config)
+        devToolsList.add(devTools)
+        return devTools
+    }
 
     override fun close() {
         if (launched.get() && closed.compareAndSet(false, true)) {
-            val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
-            nonSynchronized.parallelStream().forEach { it.waitUntilClosed() }
+            log.info("Closing {} devtools", devToolsList.size)
 
+            val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
+            nonSynchronized.parallelStream().forEach {
+                it.close()
+                // should we?
+                it.waitUntilClosed()
+            }
+
+            log.info("Closing chrome ...")
             chrome.close()
+
+            log.info("Closing launcher ...")
             launcher.close()
         }
     }
