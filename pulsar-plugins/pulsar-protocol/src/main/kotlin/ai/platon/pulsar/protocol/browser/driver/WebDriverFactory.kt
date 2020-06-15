@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
@@ -16,7 +17,6 @@ import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.DesiredCapabilities
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 
 class WebDriverFactory(
@@ -39,14 +39,14 @@ class WebDriverFactory(
      */
     @Throws(DriverLaunchException::class)
     @Synchronized
-    fun create(dataDir: Path, priority: Int, conf: VolatileConfig): ManagedWebDriver {
-        log.info("Creating web driver #{} | {}", numDrivers.incrementAndGet(), dataDir)
+    fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): ManagedWebDriver {
+        log.info("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
         val capabilities = driverControl.createGeneralOptions()
 
         var proxyEntry: ProxyEntry? = null
         if (proxyPoolMonitor.isEnabled) {
-            proxyEntry = proxyPoolMonitor.activeProxyEntries.computeIfAbsent(dataDir) {
+            proxyEntry = proxyPoolMonitor.activeProxyEntries.computeIfAbsent(browserInstanceId.dataDir) {
                 proxyPool.take() ?: throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
             }
             proxyEntry.startWork()
@@ -58,9 +58,9 @@ class WebDriverFactory(
         val driver = kotlin.runCatching {
             when {
                 browserType == BrowserType.CHROME -> {
-                    driverControl.createChromeDevtoolsOptions(capabilities).apply { userDataDir = dataDir }.let {
-                        ChromeDevtoolsDriver(it, driverControl, browserInstanceManager)
-                    }
+                    driverControl.createChromeDevtoolsOptions(capabilities)
+                            .apply { userDataDir = browserInstanceId.dataDir }
+                            .let { ChromeDevtoolsDriver(it, driverControl, browserInstanceManager) }
                 }
                 browserType == BrowserType.SELENIUM_CHROME -> {
                     ChromeDriver(driverControl.createChromeOptions(capabilities))
@@ -88,7 +88,7 @@ class WebDriverFactory(
 //             devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
         }
 
-        return ManagedWebDriver(dataDir, driver, priority, proxyEntry)
+        return ManagedWebDriver(browserInstanceId, driver, priority, proxyEntry)
     }
 
     private fun setProxy(capabilities: DesiredCapabilities, proxyEntry: ProxyEntry) {

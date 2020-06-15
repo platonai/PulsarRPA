@@ -1,12 +1,11 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
-import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentSkipListSet
@@ -21,7 +20,7 @@ import kotlin.concurrent.withLock
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class LoadingWebDriverPool(
-        private val dataDir: Path = BrowserControl.generateUserDataDir(),
+        private val browserInstanceId: BrowserInstanceId,
         private val priority: Int = 0,
         private val driverFactory: WebDriverFactory,
         immutableConfig: ImmutableConfig
@@ -129,7 +128,7 @@ class LoadingWebDriverPool(
         checkState()
 
         driverFactory.takeIf { onlineDrivers.size < capacity && availableMemory > instanceRequiredMemory }
-                ?.create(dataDir, priority, conf)
+                ?.create(browserInstanceId, priority, conf)
                 ?.also {
                     lock.withLock {
                         freeDrivers.add(it)

@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,7 @@ enum class DriverStatus {
 }
 
 class ManagedWebDriver(
-        val dataDir: Path,
+        val browserInstanceId: BrowserInstanceId,
         val driver: WebDriver,
         val priority: Int = 1000,
         val proxyEntry: ProxyEntry? = null

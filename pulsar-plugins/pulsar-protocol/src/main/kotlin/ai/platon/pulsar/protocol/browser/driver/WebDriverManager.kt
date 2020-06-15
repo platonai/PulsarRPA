@@ -6,11 +6,11 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 class WebDriverTask<R> (
-        val dataDir: Path,
+        val browserId: BrowserInstanceId,
         val priority: Int,
         val volatileConfig: VolatileConfig,
         val action: suspend (driver: ManagedWebDriver) -> R
@@ -44,8 +44,8 @@ class WebDriverManager(
     val startTime = Instant.now()
     val numReset = MetricsManagement.meter(this, "numReset")
     val elapsedTime get() = Duration.between(startTime, Instant.now())
-    val driverPools = ConcurrentSkipListMap<Path, LoadingWebDriverPool>()
-    val retiredPools = ConcurrentSkipListSet<Path>()
+    val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
+    val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
 
     init {
         mapOf(
@@ -59,23 +59,23 @@ class WebDriverManager(
      * proactor: here is a job, tell me if you finished it
      * */
     @Throws(IllegalStateException::class)
-    suspend fun <R> run(dataDir: Path, priority: Int, volatileConfig: VolatileConfig,
+    suspend fun <R> run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
                         action: suspend (driver: ManagedWebDriver) -> R
-    ) = run(WebDriverTask(dataDir, priority, volatileConfig, action))
+    ) = run(WebDriverTask(browserId, priority, volatileConfig, action))
 
     @Throws(IllegalStateException::class)
     suspend fun <R> run(task: WebDriverTask<R>): R {
-        val dataDir = task.dataDir
+        val browserId = task.browserId
         return whenNormalDeferred {
             checkState()
 
-            if (isRetiredPool(dataDir)) {
-                throw PoolRetiredException("$dataDir")
+            if (isRetiredPool(browserId)) {
+                throw PoolRetiredException("${browserId}")
             }
 
-            val driverPool = driverPools.computeIfAbsent(dataDir) { path ->
+            val driverPool = driverPools.computeIfAbsent(browserId) { path ->
                 require("browser" in path.toString())
-                LoadingWebDriverPool(path, task.priority, driverFactory, immutableConfig).also {
+                LoadingWebDriverPool(browserId, task.priority, driverFactory, immutableConfig).also {
                     it.allocate(task.volatileConfig)
                 }
             }
@@ -91,7 +91,7 @@ class WebDriverManager(
         }
     }
 
-    fun isRetiredPool(dataDir: Path) = retiredPools.contains(dataDir)
+    fun isRetiredPool(browserId: BrowserInstanceId) = retiredPools.contains(browserId)
 
     /**
      * Cancel the fetch task specified by [url] remotely
@@ -110,9 +110,9 @@ class WebDriverManager(
      * Cancel the fetch task specified by [url] remotely
      * NOTE: A cancel request should run immediately not waiting for any browser task return
      * */
-    fun cancel(dataDir: Path, url: String): ManagedWebDriver? {
+    fun cancel(browserId: BrowserInstanceId, url: String): ManagedWebDriver? {
         checkState()
-        val driverPool = driverPools[dataDir] ?: return null
+        val driverPool = driverPools[browserId] ?: return null
         return driverPool.firstOrNull { it.url == url }?.also { it.cancel() }
     }
 
@@ -129,24 +129,24 @@ class WebDriverManager(
     /**
      * Cancel all the fetch tasks, stop loading all pages
      * */
-    fun cancelAll(dataDir: Path) {
+    fun cancelAll(browserId: BrowserInstanceId) {
         checkState()
-        val driverPool = driverPools[dataDir] ?: return
+        val driverPool = driverPools[browserId] ?: return
         driverPool.onlineDrivers.toList().parallelStream().forEach { it.cancel() }
     }
 
     /**
      * Cancel all running tasks and close all web drivers
      * */
-    fun closeDriverPool(dataDir: Path, timeToWait: Duration) {
+    fun closeDriverPool(browserId: BrowserInstanceId, timeToWait: Duration) {
         checkState()
         numReset.mark()
         // Mark all drivers are canceled
-        doCloseDriverPool(dataDir)
+        doCloseDriverPool(browserId)
     }
 
-    fun formatStatus(dataDir: Path, verbose: Boolean = false): String {
-        return driverPools[dataDir]?.formatStatus(verbose)?:""
+    fun formatStatus(browserId: BrowserInstanceId, verbose: Boolean = false): String {
+        return driverPools[browserId]?.formatStatus(verbose)?:""
     }
 
     override fun close() {
@@ -158,12 +158,12 @@ class WebDriverManager(
 
     override fun toString(): String = formatStatus(false)
 
-    private fun doCloseDriverPool(dataDir: Path) {
+    private fun doCloseDriverPool(browserId: BrowserInstanceId) {
         checkState()
         preempt {
-            retiredPools.add(dataDir)
-            driverPools.remove(dataDir)?.also { driverPool ->
-                log.info("Closing driver pool | {} | {}", driverPool.formatStatus(verbose = true), dataDir)
+            retiredPools.add(browserId)
+            driverPools.remove(browserId)?.also { driverPool ->
+                log.info("Closing driver pool | {} | {}", driverPool.formatStatus(verbose = true), browserId)
                 driverPool.close()
             }
         }

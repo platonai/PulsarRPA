@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -21,7 +22,7 @@ open class InterceptiveBrowserPrivacyContext(
         val conf: ImmutableConfig
 ): PrivacyContext(PrivacyContextId(generateBaseDir())) {
 
-    private val driverContext = WebDriverContext(id.dataDir, driverManager, conf)
+    private val driverContext = WebDriverContext(BrowserInstanceId.resolve(id.dataDir), driverManager, conf)
     private val proxyContext = ProxyContext(proxyPoolMonitor, driverContext, conf)
     private val closeLatch = CountDownLatch(1)
 

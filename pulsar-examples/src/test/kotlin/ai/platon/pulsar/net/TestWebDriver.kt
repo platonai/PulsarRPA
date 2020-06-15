@@ -1,11 +1,10 @@
 package ai.platon.pulsar.net
 
 import ai.platon.pulsar.PulsarContext
-
 import ai.platon.pulsar.common.config.CapabilityTypes.PROXY_USE_PROXY
+import ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
-import ai.platon.pulsar.protocol.browser.driver.LoadingWebDriverPool
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.Test
@@ -83,13 +82,7 @@ class TestWebDriver {
         assertEquals(5, driverPool.numFree)
         assertEquals(5, driverPool.counterRetired.count)
 
-        driverPool.closeAll()
-
-        assertEquals(0, driverPool.numWorking.get())
-        assertEquals(0, driverPool.numFree)
-        assertEquals(10, driverPool.counterQuit.count)
-
-        driverPool.closeAll()
+        driverPool.close()
 
         assertEquals(0, driverPool.numWorking.get())
         assertEquals(0, driverPool.numFree)
@@ -134,8 +127,8 @@ class TestWebDriver {
         val closer = Thread {
             while (!quitMultiThreadTesting) {
                 log.info("Close all")
-                driverPool.closeAll()
-                driverPool.closeAll()
+                driverPool.close()
+                driverPool.close()
                 Thread.sleep(1000)
             }
         }

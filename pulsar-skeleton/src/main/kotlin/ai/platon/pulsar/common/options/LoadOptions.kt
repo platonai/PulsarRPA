@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
@@ -157,7 +158,14 @@ open class LoadOptions: CommonOptions {
         set(value) { field = initConfig(value) }
         get() = initConfig(field)
 
+    /**
+     * If shortenKey is set, also ignore url query when fetch pages
+     * */
     val ignoreQuery get() = shortenKey
+    /**
+     * The privacy context id to fetch the pages
+     * */
+    var privacyContextId = PrivacyContextId.DEFAULT
 
     open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
@@ -189,7 +197,7 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
-    open fun createItemOption(): LoadOptions {
+    open fun createItemOption(conf: VolatileConfig? = null): LoadOptions {
         val itemOptions = clone()
 
         itemOptions.expires = itemExpires
@@ -207,7 +215,8 @@ open class LoadOptions: CommonOptions {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
 
-        itemOptions.volatileConfig = volatileConfig
+        itemOptions.volatileConfig = conf?:volatileConfig
+        itemOptions.privacyContextId = itemOptions.volatileConfig?.getBean(PrivacyContextId::class)?: privacyContextId
 
         return itemOptions
     }

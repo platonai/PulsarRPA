@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -18,16 +19,16 @@ class BrowserInstance(
     /**
      * Every browser instance have an unique data dir, proxy is required to be unique too if it is enabled
      * */
-    val dataDir get() = launchOptions.userDataDir
-    val proxyServer get() = launchOptions.proxyServer
+    val id = BrowserInstanceId(launchOptions.userDataDir)
 
-    private val log = LoggerFactory.getLogger(BrowserInstance::class.java)
+    val proxyServer get() = launchOptions.proxyServer
 
     val numTabs = AtomicInteger()
     lateinit var launcher: ChromeLauncher
     lateinit var chrome: RemoteChrome
     val devToolsList = ConcurrentLinkedQueue<RemoteDevTools>()
 
+    private val log = LoggerFactory.getLogger(BrowserInstance::class.java)
     private val launched = AtomicBoolean()
     private val closed = AtomicBoolean()
 
@@ -61,7 +62,7 @@ class BrowserInstance(
 
     override fun close() {
         if (launched.get() && closed.compareAndSet(false, true)) {
-            log.info("Closing {} devtools", devToolsList.size)
+            log.info("Closing {} devtools ... ", devToolsList.size)
 
             val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
             nonSynchronized.parallelStream().forEach {
@@ -70,11 +71,10 @@ class BrowserInstance(
                 it.waitUntilClosed()
             }
 
-            log.info("Closing chrome ...")
             chrome.close()
-
-            log.info("Closing launcher ...")
             launcher.close()
+
+            log.info("Launcher is closed | {}", id)
         }
     }
 }

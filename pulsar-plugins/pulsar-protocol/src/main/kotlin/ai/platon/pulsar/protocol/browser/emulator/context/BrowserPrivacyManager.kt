@@ -56,12 +56,13 @@ class BrowserPrivacyManager(
 
             if (i > 1) {
                 log.info("{}. Fetching task {} the {}th times in context #{} | {}",
-                        task0.page.id, task0.id, i, context.sequence, task0.url)
+                        task0.page.id, task0.id, i, context.display, task0.url)
             }
 
             whenNormalDeferred {
                 if (numRunningPreemptiveTasks.get() != 0) {
-                    log.error("Wrong preempt channel status: {}", formatPreemptChannelStatus())
+                    log.error("Wrong preempt channel status, it indicates bugs in PreemptChannelSupport | {}",
+                            formatPreemptChannelStatus())
                 }
 
                 try {
@@ -107,7 +108,7 @@ class BrowserPrivacyManager(
             create().also { activeContexts[id] = it }
         }
 
-        log.info("Privacy context is created #{}", context0.sequence)
+        log.info("Privacy context is created #{}", context0.display)
         reportZombieContexts()
 
         return context0

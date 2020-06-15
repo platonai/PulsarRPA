@@ -4,16 +4,15 @@ import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
-import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -25,7 +24,7 @@ import kotlin.concurrent.withLock
 import kotlin.random.Random
 
 class WebDriverContext(
-        val dataDir: Path,
+        val browserId: BrowserInstanceId,
         private val driverManager: WebDriverManager,
         private val conf: ImmutableConfig
 ): AutoCloseable {
@@ -45,12 +44,11 @@ class WebDriverContext(
     private val fetchMaxRetry = conf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
-    private val browserDataDir = dataDir.resolve("browser")
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
-            driverManager.run(browserDataDir, task.priority, task.volatileConfig) {
+            driverManager.run(browserId, task.priority, task.volatileConfig) {
                 task.proxyEntry = it.proxyEntry
                 browseFun(task, it)
             }
@@ -68,7 +66,7 @@ class WebDriverContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                runBlocking { doClose() }
+                doClose()
             } catch (t: Throwable) {
                 log.error("Unexpected exception", t)
             }
@@ -93,13 +91,13 @@ class WebDriverContext(
             log.warn("Still {} running tasks after context close | {}",
                     runningTasks.size, runningTasks.joinToString { "${it.id}(${it.state})" })
         } else {
-            log.info("Web driver context is closed successfully")
+            log.info("Web driver context is closed successfully | {}", browserId)
         }
     }
 
     private fun closeUnderlyingLayer() {
-        if (Files.exists(browserDataDir)) {
-            Files.writeString(browserDataDir.resolve("INSTANCE_CLOSING"), "", StandardOpenOption.CREATE_NEW)
+        if (Files.exists(browserId.dataDir)) {
+            Files.writeString(browserId.dataDir.resolve("INSTANCE_CLOSING"), "", StandardOpenOption.CREATE_NEW)
         }
 
         // Mark all working tasks are canceled, so they return as soon as possible,
@@ -107,7 +105,7 @@ class WebDriverContext(
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
-        driverManager.closeDriverPool(browserDataDir, DRIVER_CLOSE_TIME_OUT)
+        driverManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
 
         log.info("Underlying layer is closed successfully")
     }
@@ -117,7 +115,7 @@ class WebDriverContext(
             return FetchResult.privacyRetry(task)
         }
 
-        if (driverManager.isRetiredPool(browserDataDir)) {
+        if (driverManager.isRetiredPool(browserId)) {
             return FetchResult.privacyRetry(task)
         }
 
@@ -173,7 +171,7 @@ class ProxyContext(
         var success = false
         return try {
             beforeTaskStart(task)
-            proxyPoolMonitor.run(proxyEntry) { driverContext.run(task, browseFun) }.also {
+            proxyPoolMonitor.runWith(proxyEntry) { driverContext.run(task, browseFun) }.also {
                 success = it.response.status.isSuccess
                 proxyEntry = task.proxyEntry
 
@@ -268,7 +266,7 @@ class ProxyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyPoolMonitor.activeProxyEntries.remove(driverContext.dataDir)
+            proxyPoolMonitor.activeProxyEntries.remove(driverContext.browserId.dataDir)
         }
     }
 }

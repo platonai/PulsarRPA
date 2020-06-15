@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.FetchResult
@@ -20,7 +21,7 @@ open class BrowserPrivacyContext(
         val conf: ImmutableConfig
 ): PrivacyContext(PrivacyContextId(generateBaseDir())) {
 
-    private val driverContext = WebDriverContext(id.dataDir, driverManager, conf)
+    private val driverContext = WebDriverContext(BrowserInstanceId.resolve(id.dataDir), driverManager, conf)
     private val proxyContext = ProxyContext(proxyPoolMonitor, driverContext, conf)
 
     open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -36,7 +37,6 @@ open class BrowserPrivacyContext(
         if (closed.compareAndSet(false, true)) {
             driverContext.close()
             proxyContext.close()
-
             report()
         }
     }
@@ -44,7 +44,7 @@ open class BrowserPrivacyContext(
     override fun report() {
         log.info("Privacy context #{} has lived for {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
-                sequence, elapsedTime.readable(),
+                display, elapsedTime.readable(),
                 numSuccesses, String.format("%.2f", throughput),
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
                 Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),

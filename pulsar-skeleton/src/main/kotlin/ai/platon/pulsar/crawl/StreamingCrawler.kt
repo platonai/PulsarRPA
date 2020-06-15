@@ -42,7 +42,6 @@ open class StreamingCrawler(
 
     private val conf = session.sessionConfig
     private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
-    private val privacyManager = session.context.getBean(PrivacyManager::class)
     private val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -68,7 +67,19 @@ open class StreamingCrawler(
             }
         }
 
-        log.info("Total $numTasks tasks are loaded")
+        log.info("Total {} tasks are loaded", numTasks)
+    }
+
+    open suspend fun run(scope: CoroutineScope) {
+        urls.forEachIndexed { j, url ->
+            val state = load(j, url, scope)
+            if (state != FlowState.CONTINUE) {
+                return
+            }
+        }
+
+        log.info("Total {} tasks are loaded in session {} with privacy context {}",
+                numTasks, session, session.privacyContextId)
     }
 
     private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
@@ -142,7 +153,7 @@ open class StreamingCrawler(
                 Strings.readableBytes(requiredMemory),
                 Strings.readableBytes(abs(memoryRemaining))
         )
-        session.context.clearCache()
+        session.context.clearCaches()
         System.gc()
     }
 }

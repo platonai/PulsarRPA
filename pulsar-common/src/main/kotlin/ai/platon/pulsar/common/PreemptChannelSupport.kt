@@ -33,7 +33,7 @@ import kotlin.concurrent.withLock
 abstract class PreemptChannelSupport(val name: String = "") {
     private val lock = ReentrantLock()
     private val noPreemptiveTasks = lock.newCondition()
-    private val noNormalTasks = lock.newCondition()
+    private val noRunningNormalTasks = lock.newCondition()
     protected val numPreemptiveTasks = AtomicInteger()
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numPendingNormalTasks = AtomicInteger()
@@ -50,65 +50,50 @@ abstract class PreemptChannelSupport(val name: String = "") {
      * without obtaining a lock, all task attempt must wait
      * */
     fun <T> preempt(preemptiveTask: () -> T): T {
+        return beforePreempt().runCatching { preemptiveTask() }.getOrThrow().also { afterPreempt() }
+    }
+
+    private fun beforePreempt() {
         // All workers must NOT pass now
         numPreemptiveTasks.incrementAndGet()
 
         trace("Preempted with $numPreemptiveTasks preemptive tasks ")
 
         // Wait until all the normal tasks are finished
-        waitUntilNoNormalTasks()
+        waitUntilNoRunningNormalTasks()
 
-        try {
-            numRunningPreemptiveTasks.incrementAndGet()
-            trace("Performing preemptive action ...")
-            return preemptiveTask()
-        } finally {
-            numRunningPreemptiveTasks.decrementAndGet()
-            lock.withLock {
-                if (numPreemptiveTasks.decrementAndGet() == 0) {
-                    // all tasks are allowed to pass
-                    noPreemptiveTasks.signalAll()
-                }
+        trace("Performing preemptive action ...")
+    }
+
+    private fun afterPreempt() {
+        numRunningPreemptiveTasks.decrementAndGet()
+        lock.withLock {
+            if (numPreemptiveTasks.decrementAndGet() == 0) {
+                // all tasks are allowed to pass
+                noPreemptiveTasks.signalAll()
             }
         }
     }
 
     fun <T> whenNormal(task: () -> T): T {
-        numPendingNormalTasks.incrementAndGet()
-
-        try {
-            // wait all the preemptive tasks  are finished
-            waitUntilNotPreempted()
-            // task channel is open now
-            numPendingNormalTasks.decrementAndGet()
-            numRunningNormalTasks.incrementAndGet()
-            return task()
-        } finally {
-            lock.withLock {
-                if (numRunningNormalTasks.decrementAndGet() == 0) {
-                    // all preemptive tasks  are allowed to pass
-                    noNormalTasks.signalAll()
-                }
-            }
-        }
+        return beforeTask().runCatching { task() }.getOrThrow().also { afterTask() }
     }
 
     suspend fun <T> whenNormalDeferred(task: suspend () -> T): T {
-        numPendingNormalTasks.incrementAndGet()
+        return beforeTask().runCatching { task() }.getOrThrow().also { afterTask() }
+    }
 
-        try {
-            // wait until the freezer channel is closed, meanwhile, the task channel is open
-            waitUntilNotPreempted()
-            // task channel is open now
-            numPendingNormalTasks.decrementAndGet()
-            numRunningNormalTasks.incrementAndGet()
-            return task()
-        } finally {
-            lock.withLock {
-                if (numRunningNormalTasks.decrementAndGet() == 0) {
-                    // all preemptive tasks  are allowed to pass
-                    noNormalTasks.signalAll()
-                }
+    private fun beforeTask() {
+        numPendingNormalTasks.incrementAndGet()
+        // wait all the preemptive tasks  are finished
+        waitUntilNoPreemptiveTask()
+    }
+
+    private fun afterTask() {
+        lock.withLock {
+            if (numRunningNormalTasks.decrementAndGet() == 0) {
+                // all preemptive tasks  are allowed to pass
+                noRunningNormalTasks.signalAll()
             }
         }
     }
@@ -120,16 +105,19 @@ abstract class PreemptChannelSupport(val name: String = "") {
                 " running normal tasks: $numRunningNormalTasks"
     }
 
-    private fun waitUntilNoNormalTasks() {
+    private fun waitUntilNoRunningNormalTasks() {
         lock.withLock {
             var nanos = pollingTimeout.toNanos()
             while (numRunningNormalTasks.get() > 0 && nanos > 0) {
-                nanos = noNormalTasks.awaitNanos(nanos)
+                nanos = noRunningNormalTasks.awaitNanos(nanos)
             }
+
+            // must be guarded by lock
+            numRunningPreemptiveTasks.incrementAndGet()
         }
     }
 
-    private fun waitUntilNotPreempted() {
+    private fun waitUntilNoPreemptiveTask() {
         lock.withLock {
             if (numPreemptiveTasks.get() > 0) {
                 trace("There are $numRunningNormalTasks tasks waiting for $numPreemptiveTasks preemptive tasks to finish")
@@ -139,6 +127,11 @@ abstract class PreemptChannelSupport(val name: String = "") {
             while (numPreemptiveTasks.get() > 0 && nanos > 0) {
                 nanos = noPreemptiveTasks.awaitNanos(nanos)
             }
+
+            // must be guarded by lock
+            // task channel is open now
+            numPendingNormalTasks.decrementAndGet()
+            numRunningNormalTasks.incrementAndGet()
         }
     }
 

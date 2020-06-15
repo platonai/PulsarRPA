@@ -137,9 +137,9 @@ class PulsarContext private constructor(): AutoCloseable {
             }
         }
 
-        fun createSession(): PulsarSession {
+        fun createSession(privacyContextId: PrivacyContextId = PrivacyContextId.DEFAULT): PulsarSession {
             ensureAlive()
-            return getOrCreate().createSession()
+            return getOrCreate().createSession(privacyContextId)
         }
 
         private fun initEnvironment() {
@@ -270,7 +270,7 @@ class PulsarContext private constructor(): AutoCloseable {
         return if (isItemOption) options.createItemOption() else options
     }
 
-    fun clearCache() {
+    fun clearCaches() {
         pageCache.clear()
         documentCache.clear()
     }

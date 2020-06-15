@@ -49,6 +49,7 @@ open class PulsarSession(
     val sessionBeanFactory = BeanFactory(sessionConfig)
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
+    val display = "$id(${privacyContextId.ident})"
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
@@ -346,9 +347,7 @@ open class PulsarSession(
 
     fun putSessionBean(obj: Any) = ensureAlive { sessionBeanFactory.putBean(obj) }
 
-    inline fun <reified T> getSessionBean(): T? {
-        return sessionBeanFactory.getBean()
-    }
+    inline fun <reified T> getSessionBean(): T? = sessionBeanFactory.getBean()
 
     fun delete(url: String) = ensureAlive { context.delete(url) }
 
@@ -375,9 +374,7 @@ open class PulsarSession(
         return AppFiles.saveTo(doc.prettyHtml.toByteArray(), path, true)
     }
 
-    override fun equals(other: Any?): Boolean {
-        return other === this || (other is PulsarSession && other.id == id)
-    }
+    override fun equals(other: Any?) = other === this || (other is PulsarSession && other.id == id)
 
     override fun hashCode(): Int = id
 
@@ -389,9 +386,8 @@ open class PulsarSession(
             closableObjects.forEach { o -> o.close() }
 
             log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
-                    id,
-                    Strings.readableBytes(Systems.memoryUsed),
-                    Strings.readableBytes(Systems.memoryFree))
+                    display,
+                    Strings.readableBytes(Systems.memoryUsed), Strings.readableBytes(Systems.memoryFree))
         }
     }
 

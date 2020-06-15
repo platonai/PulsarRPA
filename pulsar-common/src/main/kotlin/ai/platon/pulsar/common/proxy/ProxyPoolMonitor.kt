@@ -72,15 +72,15 @@ open class ProxyPoolMonitor(
      * Run the task, it it's disabled, call the innovation directly
      * */
     @Throws(NoProxyException::class)
-    open suspend fun <R> run(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
-        return if (isDisabled) task() else run0(proxyEntry, task)
+    open suspend fun <R> runWith(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
+        return if (isDisabled) task() else runWith0(proxyEntry, task)
     }
 
     /**
      * Run the task in the proxy monitor
      * */
     @Throws(NoProxyException::class)
-    private suspend fun <R> run0(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
+    private suspend fun <R> runWith0(proxyEntry: ProxyEntry?, task: suspend () -> R): R {
         return try {
             lastActiveTime = Instant.now()
             proxyEntry?.also {
