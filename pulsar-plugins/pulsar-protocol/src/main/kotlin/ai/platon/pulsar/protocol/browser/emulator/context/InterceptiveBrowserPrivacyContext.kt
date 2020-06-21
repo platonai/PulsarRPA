@@ -2,6 +2,8 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.BrowserInstanceId
@@ -11,7 +13,6 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
-import java.util.concurrent.CountDownLatch
 
 /**
  * The privacy context, the context is closed if privacy is leaked
@@ -22,9 +23,24 @@ open class InterceptiveBrowserPrivacyContext(
         val conf: ImmutableConfig
 ): PrivacyContext(PrivacyContextId(generateBaseDir())) {
 
-    private val driverContext = WebDriverContext(BrowserInstanceId.resolve(id.dataDir), driverManager, conf)
-    private val proxyContext = ProxyContext(proxyPoolMonitor, driverContext, conf)
-    private val closeLatch = CountDownLatch(1)
+    private val browserInstanceId: BrowserInstanceId
+    private var proxyEntry: ProxyEntry? = null
+    private val driverContext: WebDriverContext
+    private val proxyContext: ProxyContext
+
+    init {
+        if (proxyPoolMonitor.isEnabled) {
+            val proxyPool = proxyPoolMonitor.proxyPool
+            proxyEntry = proxyPoolMonitor.activeProxyEntries.computeIfAbsent(id.dataDir) {
+                proxyPool.take() ?: throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
+            }
+            proxyEntry?.startWork()
+        }
+
+        browserInstanceId = BrowserInstanceId.resolve(id.dataDir).apply { proxyServer = proxyEntry?.hostPort }
+        driverContext = WebDriverContext(browserInstanceId, driverManager, conf)
+        proxyContext = ProxyContext(proxyEntry, proxyPoolMonitor, driverContext, conf)
+    }
 
     open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)
@@ -63,8 +79,6 @@ open class InterceptiveBrowserPrivacyContext(
         if (closed.compareAndSet(false, true)) {
             driverContext.close()
             proxyContext.close()
-            closeLatch.countDown()
-
             report()
         }
     }

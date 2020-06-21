@@ -1,7 +1,5 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
@@ -9,8 +7,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.options.FetchOptions
 import ai.platon.pulsar.crawl.common.JobInitialized
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.crawl.fetch.data.PoolQueue
 import ai.platon.pulsar.persist.WebPage
@@ -74,11 +74,10 @@ class TaskMonitor(
     /**
      * Once timeout, the pending items should be put to the ready pool again.
      */
-    private var poolPendingTimeout = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(3))
+    val poolPendingTimeout = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(5))
 
     private val closed = AtomicBoolean()
 
-    val numTaskPools get() = taskPools.size
     /**
      * Task counters
      */
@@ -173,7 +172,7 @@ class TaskMonitor(
         val status = pool.status
         if (status !== lastStatus) {
             Params.of(
-                    "FetchQueue", pool.id,
+                    "fetchQueue", pool.id,
                     "status", lastStatus.toString() + " -> " + pool.status,
                     "ready", pool.readyCount,
                     "pending", pool.pendingCount,
@@ -471,7 +470,7 @@ class TaskMonitor(
                     report.append(line)
                 }
 
-        log.info("Served threads : \n$report")
+        log.info("Served threads: \n$report")
     }
 
     private fun reportCost(costRecorder: Map<Double, String>) {
@@ -491,7 +490,7 @@ class TaskMonitor(
     }
 
     private fun reportCost() {
-        var report = "Top slow hosts : \n" + taskPools.timeReport
+        var report = "Top slow hosts: \n" + taskPools.timeReport
         report += "\n"
         log.info(report)
     }

@@ -26,7 +26,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     }
 
     fun index(url: CharSequence) {
-        indexAll(1, Lists.newArrayList(url))
+        indexAll(1, mutableListOf(url))
     }
 
     fun indexAll(urls: Iterable<CharSequence>) {
@@ -78,7 +78,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     }
 
     fun remove(pageNo: Int, url: CharSequence) {
-        updateAll(pageNo, Lists.newArrayList(url), true)
+        updateAll(pageNo, arrayListOf(url), true)
     }
 
     fun removeAll(pageNo: Int, urls: Iterable<CharSequence>) {
@@ -98,6 +98,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         if (!urls.iterator().hasNext()) {
             return
         }
+
         val indexPage = getIndex(pageNo)
         val vividLinks = indexPage.vividLinks
         if (remove) {
@@ -108,13 +109,11 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
 
         val message = "Total " + vividLinks.size + " indexed links"
         indexPage.setTextCascaded(message)
-        if (LOG.isDebugEnabled) {
-            LOG.debug(message + ", indexed in " + indexPage.url)
-        }
+        LOG.takeIf { it.isTraceEnabled }?.trace(message + ", indexed in " + indexPage.url)
 
         // webDb.put(indexPage.getUrl(), indexPage, true);
         webDb.put(indexPage)
-        webDb.flush()
+        // webDb.flush()
     }
 
     @get:Synchronized
@@ -126,7 +125,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
                 LOG.debug("Creating weak index home: $homeUrl")
             }
             webDb.put(home)
-            webDb.flush()
+            // webDb.flush()
             return home
         }
 
@@ -144,7 +143,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
             webDb.put(home)
             indexPage = WebPage.newInternalPage(url, pageTitle)
             webDb.put(indexPage)
-            webDb.flush()
+            // webDb.flush()
             // log.debug("Created weak index: " + url);
         }
         return indexPage

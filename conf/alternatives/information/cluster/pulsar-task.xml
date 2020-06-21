@@ -95,7 +95,7 @@
   </property>
   <property>
     <name>parse.max.anchor.length</name>
-    <value>40</value>
+    <value>200</value>
   </property>
 
   <!-- Indexing -->

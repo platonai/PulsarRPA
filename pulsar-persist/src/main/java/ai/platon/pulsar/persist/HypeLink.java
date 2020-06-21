@@ -36,12 +36,10 @@ public class HypeLink implements Comparable<HypeLink> {
         this(url, null);
     }
 
-    // TODO: anchor can be nullable
     public HypeLink(@NotNull String url, @Nullable String anchor) {
         this(url, anchor, 0);
     }
 
-    // TODO: anchor can be nullable
     public HypeLink(@NotNull String url, @Nullable String anchor, int order) {
         Objects.requireNonNull(url);
 

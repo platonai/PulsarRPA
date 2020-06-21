@@ -1,10 +1,8 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
@@ -27,6 +25,7 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -43,7 +42,7 @@ class FetchMonitor(
         private val taskSchedulers: TaskSchedulers,
         private val jitIndexer: JITIndexer,
         private val conf: ImmutableConfig
-) : Parameterized, Configurable, JobInitialized, AutoCloseable {
+) : Parameterized, JobInitialized, AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger(0)
     }
@@ -52,14 +51,20 @@ class FetchMonitor(
     private val id = instanceSequencer.incrementAndGet()
 
     private val startTime = Instant.now()
+    private val fetchMetrics = fetchComponent.fetchMetrics
+
+    private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
 
     /**
      * Timing
      */
-    private var fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofHours(1))
-    private var poolTuneInterval = conf.getDuration(FETCH_QUEUE_RETUNE_INTERVAL, Duration.ofMinutes(8))
-    private var poolPendingTimeout = conf.getDuration(FETCH_PENDING_TIMEOUT, poolTuneInterval.multipliedBy(2))
+    private val poolTuneInterval = conf.getDuration(FETCH_QUEUE_RETUNE_INTERVAL, Duration.ofMinutes(5))
+    private var poolPendingTimeout = taskMonitor.poolPendingTimeout
     private var poolTuneTime = startTime
+
+    private var fetchJobTimeout = conf.getDuration(FETCH_JOB_TIMEOUT, Duration.ofHours(1))
+    private var jobIdleTimeout = poolTuneInterval.multipliedBy(3)
+    private val isFetchJobTimeout get() = Duration.between(startTime, Instant.now()) > fetchJobTimeout
 
     /**
      * Monitoring
@@ -69,7 +74,7 @@ class FetchMonitor(
     /**
      * Throughput control
      */
-    private var minPageThroughputRate = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_PAGES, -1)
+    private var minSuccessPagesPerSecond = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_PAGES, -1)
     private var maxLowThroughputCount = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_SEQENCE, 10)
     private var maxTotalLowThroughputCount = maxLowThroughputCount * 10
     /*
@@ -84,7 +89,7 @@ class FetchMonitor(
     /**
      * Task scheduler
      * */
-    private val taskScheduler = taskSchedulers.first // TODO: multiple task schedulers are not supported
+    private val taskScheduler = taskSchedulers.first
 
     /**
      * Feeder threads
@@ -94,9 +99,9 @@ class FetchMonitor(
 
     private val isFeederAlive: Boolean get() = !feedThreads.isEmpty()
 
-    val missionComplete: Boolean get() = !isFeederAlive &&
-            taskMonitor.numReadyTasks.get() == 0 && taskMonitor.numPendingTasks.get() == 0
+    val missionComplete: Boolean get() = !isFeederAlive && taskMonitor.numTasks == 0
 
+    private val initialized = AtomicBoolean()
     /**
      * Initialize in setup using job conf
      * */
@@ -115,18 +120,20 @@ class FetchMonitor(
     val isActive get() = !closed.get()
 
     override fun setup(jobConf: ImmutableConfig) {
-        jitIndexer.setup(jobConf)
-        taskMonitor.setup(jobConf)
-        taskScheduler.setup(jobConf)
+        if (initialized.compareAndSet(false, true)) {
+            jitIndexer.setup(jobConf)
+            taskMonitor.setup(jobConf)
+            taskScheduler.setup(jobConf)
 
-        this.options = FetchOptions(jobConf)
+            this.options = FetchOptions(jobConf)
 
-        this.jobName = jobConf.get(PARAM_JOB_NAME, "UNKNOWN")
-        this.finishScript = AppPaths.TMP_DIR.resolve("scripts").resolve("finish_$jobName.sh")
+            this.jobName = jobConf.get(PARAM_JOB_NAME, "UNNAMED JOB")
+            this.finishScript = AppPaths.TMP_DIR.resolve("scripts").resolve("finish_$jobName.sh")
 
-        generateFinishCommand()
+            generateFinishCommand()
+        }
 
-        log.info(params.format())
+        params.withLogger(log).info()
     }
 
     override fun getParams(): Params {
@@ -139,24 +146,21 @@ class FetchMonitor(
                 "taskSchedulers", taskSchedulers.name,
                 "taskScheduler", taskScheduler.name,
 
-                "fetchThreads", options.numFetchThreads,
-                "poolThreads", options.numPoolThreads,
+                "numPrivacyContexts", numPrivacyContexts,
+                "numFetchThreads(deprecated)", options.numFetchThreads,
+                "numPoolThreads", options.numPoolThreads,
                 "fetchJobTimeout", fetchJobTimeout,
-                "poolPendingTimeout", poolPendingTimeout,
-                "poolRetuneInterval", poolTuneInterval,
-                "poolRetuneTime", DateTimes.format(poolTuneTime),
+                "jobIdleTimeout", jobIdleTimeout,
+                "poolTuneInterval", poolTuneInterval,
+                "poolTuneTime", DateTimes.format(poolTuneTime),
                 "checkInterval", checkInterval,
 
-                "minPageThoRate", minPageThroughputRate,
-                "maxLowThoCount", maxLowThroughputCount,
-                "thoCheckTime", DateTimes.format(throughputCheckTime),
+                "minSuccessPagesPerSecond", minSuccessPagesPerSecond,
+                "maxLowThroughputCount", maxLowThroughputCount,
+                "throughputCheckTime", DateTimes.format(throughputCheckTime),
 
-                "finishScript", finishScript
+                "finishScript", "file://$finishScript"
         )
-    }
-
-    override fun getConf(): ImmutableConfig {
-        return conf
     }
 
     fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
@@ -194,15 +198,15 @@ class FetchMonitor(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             try {
-                log.info("Closing FetchMonitor #$id")
+                log.info("Closing fetch monitor #$id")
 
                 // cancel all tasks
-                feedThreads.forEach { it.runCatching { it.close() }.onFailure { PulsarContext.log.warn(it.message) } }
-                fetchLoops.forEach { it.runCatching { it.close() }.onFailure { PulsarContext.log.warn(it.message) } }
+                feedThreads.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
+                fetchLoops.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
 
                 Files.deleteIfExists(finishScript)
             } catch (e: Throwable) {
-                log.error("Caught an unexpected exception when closing FetchMonitor - {}", Strings.stringifyException(e))
+                log.error("Unexpected exception", e)
             }
         }
     }
@@ -219,7 +223,7 @@ class FetchMonitor(
     }
 
     /**
-     * Start pool feeder thread. The thread fetches webpages from the reduce result
+     * Start pool feeder thread. The thread fetches web pages from the reduce result
      * and add it into the fetch pool
      * Non-Blocking
      */
@@ -229,8 +233,10 @@ class FetchMonitor(
 
     private fun startFetchLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         val monitor = this
-        GlobalScope.launch {
-            FetchLoop(monitor, fetchComponent, parseComponent, taskScheduler, context, conf).start()
+        repeat(numPrivacyContexts) {
+            GlobalScope.launch {
+                FetchLoop(monitor, fetchComponent, parseComponent, taskScheduler, context, conf).start()
+            }
         }
     }
 
@@ -251,19 +257,20 @@ class FetchMonitor(
         }
 
         do {
-            val status = taskScheduler.lap(checkInterval)
+            try {
+                TimeUnit.MILLISECONDS.sleep(checkInterval.toMillis())
+            } catch (ignored: InterruptedException) {}
 
-            val statusString = taskScheduler.format(status)
-
-            /* Status string shows in yarn admin ui */
-            context.status = statusString
-
-            /* And also log it */
-            log.info(statusString)
+            taskScheduler.updateCounters()
 
             val now = Instant.now()
             val jobTime = Duration.between(startTime, now)
             val idleTime = Duration.between(taskScheduler.lastTaskFinishTime, now)
+
+            if (idleTime > jobIdleTimeout) {
+                log.info("Idle timeout for {}, exit the job", jobIdleTimeout.readable())
+                break
+            }
 
             /*
              * Check if any fetch tasks are hung
@@ -274,14 +281,15 @@ class FetchMonitor(
              * Dump the remainder fetch items if feeder thread is no available and fetch item is few
              * */
             if (taskMonitor.numTasks <= FETCH_TASK_REMAINDER_NUMBER) {
-                log.info("Totally remains only " + taskMonitor.numTasks + " tasks")
+                log.info("Totally remains only {} tasks", taskMonitor.numTasks)
                 handleFewFetchItems()
             }
 
             /*
              * Check throughput(fetch speed)
              * */
-            if (now.isAfter(throughputCheckTime) && status.pagesThroughputRate < minPageThroughputRate) {
+            if (now > throughputCheckTime && fetchMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
+                lowThroughputCount++
                 checkFetchThroughput()
                 throughputCheckTime += throughputCheckInterval
             }
@@ -300,7 +308,6 @@ class FetchMonitor(
             if (FileCommand.check("finish-job $jobName")) {
                 handleFinishJobCommand()
                 log.info("Found finish-job command, exit the job ...")
-                close()
                 break
             }
 
@@ -312,9 +319,9 @@ class FetchMonitor(
                 break
             }
 
-            if (jobTime.seconds > fetchJobTimeout.seconds) {
+            if (isFetchJobTimeout) {
                 handleJobTimeout()
-                log.info("Hit fetch job timeout " + jobTime.seconds + "s, exit the job ...")
+                log.info("Hit fetch job timeout {}, exit the job ...", jobTime.readable())
                 break
             }
 
@@ -352,9 +359,9 @@ class FetchMonitor(
 
         // Do not check in every report loop
         val nextCheckTime = poolTuneTime + checkInterval.multipliedBy(2)
-        if (now.isAfter(nextCheckTime)) {
+        if (now > nextCheckTime) {
             val nextTuneTime = poolTuneTime + poolTuneInterval
-            if (now.isAfter(nextTuneTime) || idleTime > poolPendingTimeout) {
+            if (now > nextTuneTime || idleTime > poolPendingTimeout) {
                 taskMonitor.tune(false)
                 poolTuneTime = now
             }
@@ -374,7 +381,7 @@ class FetchMonitor(
                     "Unaccepted throughput", "clearing slowest pool, ",
                     "lowThroughputCount", lowThroughputCount,
                     "maxLowThroughputCount", maxLowThroughputCount,
-                    "minPageThroughputRate(p/s)", minPageThroughputRate,
+                    "minPageThroughputRate(p/s)", minSuccessPagesPerSecond,
                     "removedSlowTasks", removedSlowTasks
             ))
 
@@ -389,7 +396,7 @@ class FetchMonitor(
                     "Unaccepted throughput", "all pools are cleared",
                     "lowThroughputCount", lowThroughputCount,
                     "maxLowThroughputCount", maxLowThroughputCount,
-                    "minPageThroughputRate(p/s)", minPageThroughputRate,
+                    "minPageThroughputRate(p/s)", minSuccessPagesPerSecond,
                     "removedSlowTasks", removedSlowTasks
             ))
 

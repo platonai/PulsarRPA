@@ -40,6 +40,7 @@ class ParseComponent(
         val pageParser: PageParser,
         val conf: ImmutableConfig
 ) {
+    private val log = LoggerFactory.getLogger(ParseComponent::class.java)
     private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = false): ParseResult {
@@ -82,10 +83,6 @@ class ParseComponent(
             it["linkFilterReport"] = pageParser.linkFilter.filterReport.joinToString("\n") { it }
         }
 
-        return traceInfo?: hashMapOf()
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(ParseComponent::class.java)
+        return traceInfo?: mapOf()
     }
 }

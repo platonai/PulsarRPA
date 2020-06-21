@@ -2,7 +2,10 @@ package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.PulsarParams
-import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import com.beust.jcommander.Parameters
@@ -10,27 +13,31 @@ import com.beust.jcommander.Parameters
 @Parameters(commandNames = ["FetchJob"], commandDescription = "The most important switches for fetch jobs.")
 class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(argv) {
     @Parameter(names = [PulsarParams.ARG_CRAWL_ID], description = "The id to prefix the schemas to operate on")
-    var crawlId = conf.get(CapabilityTypes.STORAGE_CRAWL_ID, "")
+    var crawlId = conf.get(STORAGE_CRAWL_ID, "")
     @Parameter(names = [PulsarParams.ARG_BATCH_ID], description = "If not specified, use last generated batch id.")
-    var batchId = conf.get(CapabilityTypes.BATCH_ID, defaultBatchId)
+    var batchId = conf.get(BATCH_ID, defaultBatchId)
     @Parameter(names = [PulsarParams.ARG_ROUND], description = "The crawl round")
     var round = 1
     @Parameter(names = [PulsarParams.ARG_FETCH_MODE], description = "Fetch mode")
-    var fetchMode = conf.getEnum(CapabilityTypes.FETCH_MODE, FetchMode.BROWSER)
+    var fetchMode = conf.getEnum(FETCH_MODE, FetchMode.BROWSER)
     @Parameter(names = [PulsarParams.ARG_STRICT_DF], description = "If true, crawl the web using strict depth-first strategy")
     var strictDf = false
+
+    /**
+     * Note: in browser mode, reducer tasks/fetch threads/pool threads are not used
+     * use browser instances/active browser tabs instead
+     * */
     @Parameter(names = [PulsarParams.ARG_REDUCER_TASKS], description = "Number of reducers")
-    var numReduceTasks = conf.getInt(CapabilityTypes.MAPREDUCE_JOB_REDUCES, 1)
-
-    @Parameter(names = [PulsarParams.ARG_THREADS], description = "Number of fetch threads in each reducer, auto detect if non-positive")
-    var numFetchThreads = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
-
+    var numReduceTasks = if (conf.isDistributedFs) conf.getInt(MAPREDUCE_JOB_REDUCES, 2) else 1
+    @Parameter(names = [PulsarParams.ARG_THREADS],
+            description = "Number of fetch threads in each reducer, auto detect if non-positive")
+    var numFetchThreads = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     @Parameter(names = [PulsarParams.ARG_POOL_THREADS], description = "Number of fetcher threads per queue")
-    var numPoolThreads = conf.getInt(CapabilityTypes.FETCH_THREADS_PER_POOL, 10)
+    var numPoolThreads = conf.getInt(FETCH_THREADS_PER_POOL, 10)
 
     @Parameter(names = [PulsarParams.ARG_RESUME], description = "Resume interrupted job")
     var resume = false
-    @Parameter(names = [PulsarParams.ARG_PARSE], description = "Resume interrupted job")
+    @Parameter(names = [PulsarParams.ARG_PARSE], description = "Parse the web page when it's fetched")
     var parse = false
 
     @Parameter(names = [PulsarParams.ARG_LIMIT], description = "Task limit")

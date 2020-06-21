@@ -58,6 +58,14 @@ public class PulsarParams extends Params {
      */
     public static final String ARG_ROUND = "-round";
     /**
+     * Number of privacy contexts.
+     */
+    public static final String ARG_PRIVACY_CONTEXTS = "-privacyContexts";
+    /**
+     * Number of max open tabs in each browser instance.
+     */
+    public static final String ARG_BROWSER_MAX_TABS = "-maxTabs";
+    /**
      * Number of fetcher tasks.
      */
     public static final String ARG_REDUCER_TASKS = "-reducerTasks";

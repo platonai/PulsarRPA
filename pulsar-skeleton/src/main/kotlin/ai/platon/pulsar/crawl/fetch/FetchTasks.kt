@@ -205,7 +205,7 @@ class FetchTaskBatch(
     private val log = LoggerFactory.getLogger(FetchTaskBatch::class.java)!!
 
     var proxyEntry: ProxyEntry? = null
-    val priority = conf.getUint(CapabilityTypes.BROWSER_DRIVER_PRIORITY, 0)
+    val priority = conf.getUint(CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY, 0)
     // The function must return in a reasonable time
     val threadTimeout = conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT).plusSeconds(5)
     val idleTimeout = threadTimeout.plusSeconds(5)

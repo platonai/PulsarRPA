@@ -2,6 +2,8 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.proxy.NoProxyException
+import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.BrowserInstanceId
@@ -18,11 +20,28 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 open class BrowserPrivacyContext(
         val proxyPoolMonitor: ProxyPoolMonitor,
         val driverManager: WebDriverManager,
-        val conf: ImmutableConfig
-): PrivacyContext(PrivacyContextId(generateBaseDir())) {
+        val conf: ImmutableConfig,
+        id: PrivacyContextId = PrivacyContextId(generateBaseDir())
+): PrivacyContext(id) {
 
-    private val driverContext = WebDriverContext(BrowserInstanceId.resolve(id.dataDir), driverManager, conf)
-    private val proxyContext = ProxyContext(proxyPoolMonitor, driverContext, conf)
+    private val browserInstanceId: BrowserInstanceId
+    private var proxyEntry: ProxyEntry? = null
+    private val driverContext: WebDriverContext
+    private val proxyContext: ProxyContext
+
+    init {
+        if (proxyPoolMonitor.isEnabled) {
+            val proxyPool = proxyPoolMonitor.proxyPool
+            proxyEntry = proxyPoolMonitor.activeProxyEntries.computeIfAbsent(id.dataDir) {
+                proxyPool.take() ?: throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
+            }
+            proxyEntry?.startWork()
+        }
+
+        browserInstanceId = BrowserInstanceId.resolve(id.dataDir).apply { proxyServer = proxyEntry?.hostPort }
+        driverContext = WebDriverContext(browserInstanceId, driverManager, conf)
+        proxyContext = ProxyContext(proxyEntry, proxyPoolMonitor, driverContext, conf)
+    }
 
     open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         if (!isActive) return FetchResult.privacyRetry(task)

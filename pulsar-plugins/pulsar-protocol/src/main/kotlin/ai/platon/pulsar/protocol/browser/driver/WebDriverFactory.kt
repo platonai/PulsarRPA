@@ -3,7 +3,6 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
@@ -19,6 +18,9 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * TODO: remove selenium dependency
+ * */
 class WebDriverFactory(
         val driverControl: WebDriverControl,
         val proxyPool: ProxyPool,
@@ -31,7 +33,7 @@ class WebDriverFactory(
             CapabilityTypes.BROWSER_WEB_DRIVER_CLASS, ChromeDriver::class.java, RemoteWebDriver::class.java)
     private val localForwardServerEnabled =
             immutableConfig.getBoolean(CapabilityTypes.PROXY_ENABLE_LOCAL_FORWARD_SERVER, false)
-    private val numDrivers = AtomicInteger()
+    val numDrivers = AtomicInteger()
 
     /**
      * Create a RemoteWebDriver
@@ -43,15 +45,7 @@ class WebDriverFactory(
         log.info("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
         val capabilities = driverControl.createGeneralOptions()
-
-        var proxyEntry: ProxyEntry? = null
-        if (proxyPoolMonitor.isEnabled) {
-            proxyEntry = proxyPoolMonitor.activeProxyEntries.computeIfAbsent(browserInstanceId.dataDir) {
-                proxyPool.take() ?: throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
-            }
-            proxyEntry.startWork()
-            setProxy(capabilities, proxyEntry)
-        }
+        browserInstanceId.proxyServer?.let { setProxy(capabilities, it) }
 
         // Choose the WebDriver
         val browserType = getBrowserType(conf)
@@ -88,15 +82,14 @@ class WebDriverFactory(
 //             devTools.send(emulateNetworkConditions(false,100,200000,100000, Optional.of(ConnectionType.cellular4g)));
         }
 
-        return ManagedWebDriver(browserInstanceId, driver, priority, proxyEntry)
+        return ManagedWebDriver(browserInstanceId, driver, priority)
     }
 
-    private fun setProxy(capabilities: DesiredCapabilities, proxyEntry: ProxyEntry) {
-        val hostPort = proxyEntry.hostPort
+    private fun setProxy(capabilities: DesiredCapabilities, proxyServer: String) {
         val proxy = org.openqa.selenium.Proxy().apply {
-            httpProxy = hostPort
-            sslProxy = hostPort
-            ftpProxy = hostPort
+            httpProxy = proxyServer
+            sslProxy = proxyServer
+            ftpProxy = proxyServer
         }
         capabilities.setCapability(CapabilityType.PROXY, proxy)
     }

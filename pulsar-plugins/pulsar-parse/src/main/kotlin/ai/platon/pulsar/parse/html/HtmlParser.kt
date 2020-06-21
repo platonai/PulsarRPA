@@ -18,6 +18,7 @@
  */
 package ai.platon.pulsar.parse.html
 
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -32,7 +33,6 @@ import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
@@ -86,7 +86,11 @@ class HtmlParser(
 
     @Throws(MalformedURLException::class, Exception::class)
     private fun doParse(page: WebPage): ParseResult {
-        tracer?.trace("Parsing page | {} | {}", page.protocolStatus, page.url)
+        tracer?.trace("Parsing page | {} | {} | {} | {}",
+                Strings.readableBytes(page.contentBytes.toLong()),
+                page.protocolStatus,
+                page.htmlIntegrity,
+                page.url)
 
         val baseUrl = page.baseUrl?:page.url
         val baseURL = URL(baseUrl)
@@ -97,9 +101,6 @@ class HtmlParser(
         val (document, documentFragment) = parseJsoup(baseUrl, page.contentAsSaxInputSource)
         val metaTags = parseMetaTags(baseURL, documentFragment, page)
         val parseResult = initParseResult(metaTags)
-
-        page.pageTitle = primerParser.getPageTitle(documentFragment)
-        page.pageModel.clear()
 
         val parseContext = ParseContext(page, parseResult, metaTags, documentFragment, FeaturedDocument(document))
         parseFilters.filter(parseContext)

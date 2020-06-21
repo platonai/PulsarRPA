@@ -150,30 +150,29 @@ class GenerateComponent(
      * TODO : We may move some filters to hbase query filters directly
      * TODO : Move to CrawlFilter
      */
-    val c = AtomicInteger()
-    fun shouldFetch(url: String, reversedUrl: String, page: WebPage): Boolean {
+    fun shouldFetch(url: String, reversedUrl: String, page: WebPage): Pair<Boolean, String> {
         val u: String = url
 
         if (reGenerateSeeds && page.isSeed) {
-            return true
+            return true to "+reGenerateSeeds"
         }
 
         if (!checkFetchSchedule(page)) {
-            return false
+            return false to "-FetchSchedule"
         }
 
         if (!checkHost(u)) {
-            return false
+            return false to "-Host"
         }
 
         if (bannedUrls.contains(u)) {
             metricsCounters.inc(Counter.mBanned)
-            return false
+            return false to "-Banned"
         }
 
         if (unreachableHosts.contains(URLUtil.getHost(page.url, groupMode))) {
             metricsCounters.inc(Counter.mHostGone)
-            return false
+            return false to "-unreachableHost"
         }
 
         if (page.hasMark(Mark.GENERATE)) {
@@ -192,14 +191,14 @@ class GenerateComponent(
                 when {
                     days == 1L -> {
                         // may be used by other jobs, or not fetched correctly
-                        return false
+                        return false to "-1days"
                     }
                     days <= 3 -> {
                         // force re-generate
                     }
                     else -> {
                         // ignore pages too old
-                        return false
+                        return false to "-TooOld"
                     }
                 }
             } else {
@@ -211,14 +210,14 @@ class GenerateComponent(
         // Filter on distance
         if (page.distance > maxDistance + distanceBias) {
             metricsCounters.inc(Counter.mTooDeep)
-            return false
+            return false to "-Distance"
         }
 
         // TODO : Url range filtering should be applied to (HBase) native query filter
         // key before start key
         if (!CrawlFilter.keyGreaterEqual(reversedUrl, keyRange[0])) {
             metricsCounters.inc(Counter.mBeforeStart)
-            return false
+            return false to "-BeforeStart"
         }
 
         // key after end key, finish the mapper
@@ -226,13 +225,13 @@ class GenerateComponent(
             //      stop("Complete mapper, reason : hit end key " + reversedUrl
 //          + ", upper bound : " + keyRange[1]
 //          + ", diff : " + reversedUrl.compareTo(keyRange[1]));
-            return false
+            return false to "-AfterEnd"
         }
 
         // key not fall in key ranges
         if (!crawlFilters.testKeyRangeSatisfied(reversedUrl)) {
             metricsCounters.inc(Counter.mNotInRange)
-            return false
+            return false to "-KeyOutOfRange"
         }
 
         var u2: String? = u
@@ -243,15 +242,15 @@ class GenerateComponent(
 
         if (u2 == null) {
             metricsCounters.inc(Counter.mNotNormal)
-            return false
+            return false to "-notNormal"
         }
 
         if (filter && urlFilters.filter(u2) == null) {
             metricsCounters.inc(Counter.mUrlFiltered)
-            return false
+            return false to "-UrlFiltered"
         }
 
-        return true
+        return true to "+Pass"
     }
 
     /**

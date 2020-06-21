@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.common.config;
 
+import ai.platon.pulsar.common.Systems;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.awt.*;
@@ -55,6 +56,8 @@ public interface AppConstants {
      * The number of processors available to the Java virtual machine
      */
     int NCPU = Runtime.getRuntime().availableProcessors();
+
+    int MAX_MEMORY_MB = (int)(Systems.INSTANCE.getMemoryMax() / 1_000_000);
 
     int FETCH_THREADS = NCPU;
 

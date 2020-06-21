@@ -18,6 +18,7 @@ import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import org.apache.commons.lang.IllegalClassException
 import org.openqa.selenium.*
 import org.openqa.selenium.support.ui.FluentWait
+import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Duration
 import kotlin.random.Random
@@ -32,6 +33,7 @@ open class BrowserEmulator(
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
 ) : BrowserEmulatorBase(privacyContextManager, eventHandlerFactory, messageWriter, immutableConfig) {
+    private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
     /**
      * Fetch a page using a browser which can render the DOM and execute scripts

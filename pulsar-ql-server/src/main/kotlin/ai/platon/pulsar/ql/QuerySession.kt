@@ -2,7 +2,6 @@ package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -21,9 +20,8 @@ import kotlin.reflect.KClass
 open class QuerySession(
         val pulsarContext: PulsarContext,
         val dbSession: DbSession,
-        config: SessionConfig,
-        privacyContextId: PrivacyContextId = PrivacyContextId.DEFAULT
-): PulsarSession(pulsarContext, config, privacyContextId, dbSession.id) {
+        config: SessionConfig
+): PulsarSession(pulsarContext, config, dbSession.id) {
     private var totalUdfs = AtomicInteger()
     private var totalUdas = AtomicInteger()
 

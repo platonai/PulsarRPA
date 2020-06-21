@@ -69,7 +69,7 @@ class FeedThread(
                 currentIter = context.values.iterator()
             }
 
-            while (!isClosed && Instant.now().isBefore(jobDeadline) && hasMore) {
+            while (!isClosed && Instant.now() < jobDeadline && hasMore) {
                 ++round
 
                 var feedInRound = 0
@@ -109,8 +109,8 @@ class FeedThread(
             fetchMonitor.unregisterFeedThread(this)
         }
 
-        LOG.info("Feeder finished. Feed " + round + " rounds, Last feed batch size : "
-                + batchSize + ", feed total " + totalFeed + " records. ")
+        LOG.info("Feeder finished. Feed {} rounds, last feed batch size : {}, feed total {} records",
+                round, String.format("%.2f", batchSize), totalFeed)
     }
 
     override fun close() {
@@ -125,7 +125,7 @@ class FeedThread(
     private fun report(round: Int, batchSize: Float, feedInRound: Int) {
         Params.of(
                 "Feed round", round,
-                "batchSize", batchSize,
+                "batchSize", String.format("%.2f", batchSize),
                 "feedInRound", feedInRound,
                 "totalFeed", totalFeed,
                 "readyTasks", tasksMonitor.numReadyTasks,
@@ -139,9 +139,6 @@ class FeedThread(
         var size = batchSize
         // TODO : Why readyTasks is always be very small when fetching news pages?
         val readyTasks = tasksMonitor.numReadyTasks.get()
-        val pagesThroughput = taskScheduler.averagePageThroughput
-        val recentPages = pagesThroughput * checkInterval.seconds
-        // TODO : Every batch size should be greater than pages fetched during last wait interval
 
         if (size <= 1) {
             size = 1f
@@ -171,9 +168,7 @@ class FeedThread(
         }
     }
 
-    override fun compareTo(other: FeedThread): Int {
-        return id - other.id
-    }
+    override fun compareTo(other: FeedThread) = id - other.id
 
     companion object {
         private val instanceSequence = AtomicInteger()

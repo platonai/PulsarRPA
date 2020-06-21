@@ -33,6 +33,7 @@ import ai.platon.pulsar.crawl.signature.TextMD5Signature
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -83,7 +84,6 @@ class PageParser(
     }
 
     override fun setup(jobConf: ImmutableConfig) {
-
     }
 
     override fun getParams(): Params {
@@ -184,8 +184,7 @@ class PageParser(
             }
 
             // Found a suitable parser and successfully parsed
-            if (parseResult.isSuccess) {
-                // TODO: use FlowState
+            if (parseResult.shouldBreak) {
                 break
             }
         }
@@ -202,6 +201,9 @@ class PageParser(
         }
     }
 
+    /**
+     * TODO: signature is not useful for product pages
+     * */
     private fun processSuccess(page: WebPage, parseResult: ParseResult) {
         val prevSig = page.signature
         if (prevSig != null) {
@@ -209,10 +211,9 @@ class PageParser(
         }
         page.setSignature(signature.calculate(page))
 
-        processLinks(page, parseResult.hypeLinks)
-
-        // collect page features to better detect page types
-        parseResult.domStatistics?.let { messageWriter.reportDOMStatistics(page, it) }
+        if (parseResult.hypeLinks.isNotEmpty()) {
+            processLinks(page, parseResult.hypeLinks)
+        }
     }
 
     private fun processRedirect(page: WebPage, parseStatus: ParseStatus) {
@@ -240,7 +241,7 @@ class PageParser(
             // val hypeLinks = filterLinks(page, unfilteredLinks)
             // TODO: too many filters, hard to debug, move all filters to a single filter, or just do it in ParserFilter
             val hypeLinks = unfilteredLinks
-            // log.debug("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
+            log.takeIf { it.isTraceEnabled }?.trace("Find {}/{} live links", hypeLinks.size, unfilteredLinks.size)
             page.setLiveLinks(hypeLinks)
             page.addHyperLinks(hypeLinks)
         }
@@ -274,6 +275,19 @@ class PageParser(
          * it could be determined, `false`.
          */
         fun isTruncated(page: WebPage): Boolean {
+            if (page.fetchMode == FetchMode.BROWSER) {
+                val hi = page.htmlIntegrity
+                return when {
+                    hi.isOK -> false
+                    hi.isOther -> page.contentBytes < 20_000
+                    else -> true
+                }
+            }
+
+            if (page.fetchMode != FetchMode.NATIVE) {
+                return false
+            }
+
             val url = page.url
             val inHeaderSize = page.headers.contentLength
             if (inHeaderSize < 0) {

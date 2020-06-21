@@ -898,6 +898,9 @@ public class WebPage implements Comparable<WebPage> {
         }
     }
 
+    /**
+     * TODO: check consistency with HttpHeaders.CONTENT_LENGTH
+     * */
     public int getContentBytes() {
         return getMetadata().getInt(Name.CONTENT_BYTES, 0);
     }

@@ -20,12 +20,13 @@ abstract class ProxyLoader(conf: ImmutableConfig): AutoCloseable {
         val TEST_PROXY_FILE = AppPaths.PROXY_BASE_DIR.resolve("test-ip")
     }
 
-    protected val log = LoggerFactory.getLogger(ProxyLoader::class.java)
+    private val log = LoggerFactory.getLogger(ProxyLoader::class.java)
     protected val startTime = Instant.now()
     protected val closed = AtomicBoolean()
 
     var minimumProxyTTL = Duration.ofMinutes(5)
     var testProxyBeforeUse = false
+    // TODO: configurable
     var testUrl = "https://www.amazon.com/"
     val fileWatchInterval = Duration.ofSeconds(30)
     val lastModifiedTimes = mutableMapOf<Path, Instant>()

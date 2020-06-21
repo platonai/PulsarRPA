@@ -212,11 +212,15 @@ public interface CapabilityTypes {
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
+     * Privacy context control
+     */
+    String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
+    /**
      * Browser control
      */
-    String BROWSER_POOL_CAPACITY = "browser.pool.capacity";
-    String BROWSER_WEB_DRIVER_CLASS = "browser.driver.class";
-    String BROWSER_DRIVER_PRIORITY = "browser.driver.priority";
+    String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
+    String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
+    String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
     String BROWSER_TYPE = "browser.type";
     String BROWSER_INCOGNITO = "browser.incognito";
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";

@@ -23,8 +23,8 @@ abstract class BrowserEmulatorBase(
         val messageWriter: MiscMessageWriter,
         val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
-    val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
-    val tracer = log.takeIf { it.isTraceEnabled }
+    private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
+    private val tracer = log.takeIf { it.isTraceEnabled }
     val eventHandler = eventHandlerFactory.eventHandler
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
@@ -50,7 +50,7 @@ abstract class BrowserEmulatorBase(
                 "scrollDownCount", driverControl.scrollDownCount,
                 "scrollInterval", driverControl.scrollInterval,
                 "jsInvadingEnabled", driverControl.jsInvadingEnabled,
-                "proxyManager", immutableConfig.get(CapabilityTypes.PROXY_POOL_MONITOR_CLASS),
+                "poolMonitor", immutableConfig.get(CapabilityTypes.PROXY_POOL_MONITOR_CLASS),
                 "eventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATE_EVENT_HANDLER)
         )
     }

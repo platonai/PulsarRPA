@@ -78,8 +78,7 @@ open class StreamingCrawler(
             }
         }
 
-        log.info("Total {} tasks are loaded in session {} with privacy context {}",
-                numTasks, session, session.privacyContextId)
+        log.info("Total {} tasks are loaded in session {}", numTasks, session)
     }
 
     private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
@@ -111,13 +110,13 @@ open class StreamingCrawler(
         numRunningTasks.incrementAndGet()
         val context = Dispatchers.Default + CoroutineName("w")
         scope.launch(context) {
-            withTimeout(taskTimeout.toMillis()) {
-                page = session.runCatching { loadDeferred(url, options) }
+            page = withTimeoutOrNull(taskTimeout.toMillis()) {
+                session.runCatching { loadDeferred(url, options) }
                         .onFailure { flowState = handleException(url, it) }
                         .getOrNull()
                         ?.also { pageCollector?.add(it) }
-                page?.let(onLoadComplete)
             }
+            page?.let(onLoadComplete)
             numRunningTasks.decrementAndGet()
             lastActiveTime = Instant.now()
         }

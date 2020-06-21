@@ -19,7 +19,7 @@ class BrowserInstance(
     /**
      * Every browser instance have an unique data dir, proxy is required to be unique too if it is enabled
      * */
-    val id = BrowserInstanceId(launchOptions.userDataDir)
+    val id = BrowserInstanceId(launchOptions.userDataDir, launchOptions.proxyServer)
 
     val proxyServer get() = launchOptions.proxyServer
 

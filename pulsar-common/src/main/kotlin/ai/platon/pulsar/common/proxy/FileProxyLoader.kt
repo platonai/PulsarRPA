@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
 import java.time.Duration
@@ -11,6 +12,7 @@ import kotlin.streams.toList
  * Load proxies from proxy vendors
  */
 open class FileProxyLoader(conf: ImmutableConfig): ProxyLoader(conf) {
+    private val log = LoggerFactory.getLogger(FileProxyLoader::class.java)
 
     @Synchronized
     override fun updateProxies(reloadInterval: Duration): List<ProxyEntry> {

@@ -18,12 +18,9 @@ import ai.platon.pulsar.persist.metadata.Mark
 import ai.platon.pulsar.persist.metadata.Name
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.text.DecimalFormat
-import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.roundToInt
@@ -34,7 +31,7 @@ class TaskScheduler(
         val jitIndexer: JITIndexer,
         val fetchMetrics: FetchMetrics,
         val messageWriter: MiscMessageWriter,
-        val conf: ImmutableConfig
+        val immutableConfig: ImmutableConfig
 ) : Parameterized, JobInitialized, AutoCloseable {
     data class Status(
             var pagesThroughputRate: Double,
@@ -49,10 +46,11 @@ class TaskScheduler(
 
     /**
      * Our own Hardware bandwidth in mbytes, if exceed the limit, slows down the task scheduling.
+     * TODO: auto detect bandwidth
      */
-    private var bandwidth = 1024 * 1024 * conf.getInt(FETCH_NET_BANDWIDTH_M, BANDWIDTH_INFINITE_M)
-    var skipTruncated = conf.getBoolean(PARSE_SKIP_TRUNCATED, true)
-    var storingContent = conf.getBoolean(FETCH_STORE_CONTENT, true)
+    private var bandwidth = 1024 * 1024 * immutableConfig.getInt(FETCH_NET_BANDWIDTH_M, BANDWIDTH_INFINITE_M)
+    var skipTruncated = immutableConfig.getBoolean(PARSE_SKIP_TRUNCATED, true)
+    var storingContent = immutableConfig.getBoolean(FETCH_STORE_CONTENT, true)
 
     // Indexer
     var indexJIT: Boolean = false
@@ -71,13 +69,6 @@ class TaskScheduler(
     private val totalPages = AtomicInteger(0)  // total fetched pages
     private val fetchErrors = AtomicInteger(0) // total fetch fetchErrors
 
-    var averagePageThroughput = 0.01
-        private set
-    var averageBytesThroughput = 0.01
-        private set
-    var averagePageSize = 0.0
-        private set
-
     /**
      * The reprUrl is the representative url of a redirect, we save a reprUrl for each thread
      * We use a concurrent skip list map to gain the best concurrency
@@ -91,7 +82,7 @@ class TaskScheduler(
     override fun setup(jobConf: ImmutableConfig) {
         indexJIT = jobConf.getBoolean(INDEXER_JIT, false)
         // Parser setting
-        parse = indexJIT || conf.getBoolean(PARSE_PARSE, false)
+        parse = indexJIT || jobConf.getBoolean(PARSE_PARSE, false)
 
         log.info(params.format())
     }
@@ -131,7 +122,8 @@ class TaskScheduler(
             return listOf()
         }
 
-        if (tasksMonitor.numPendingTasks.get() * averagePageSize * 8.0 > 30 * this.bandwidth) {
+        val fifteenMinutePageSizeRate = fetchMetrics.meterContentBytes.fifteenMinuteRate
+        if (tasksMonitor.numPendingTasks.get() * fifteenMinutePageSizeRate * 8.0 > 30 * this.bandwidth) {
             log.warn("Bandwidth exhausted, slows down the scheduling")
             return listOf()
         }
@@ -203,39 +195,19 @@ class TaskScheduler(
      *
      * TODO: use metrics system instead
      *
-     * @param reportInterval Report interval
      * @return Status
      */
-    fun lap(reportInterval: Duration): Status {
-        val pagesLastSec = totalPages.get().toFloat()
-        val bytesLastSec = totalBytes.get()
-
-        try {
-            TimeUnit.MILLISECONDS.sleep(reportInterval.toMillis())
-        } catch (ignored: InterruptedException) {}
-
-        val reportIntervalSec = reportInterval.seconds.toDouble()
-        val pagesPerSecond = (totalPages.get() - pagesLastSec) / reportIntervalSec
-        val bytesPerSecond = (totalBytes.get() - bytesLastSec) / reportIntervalSec
-
+    fun updateCounters() {
         val readyFetchTasks = tasksMonitor.numReadyTasks.get()
         val pendingFetchTasks = tasksMonitor.numPendingTasks.get()
 
         metricsCounters.setValue(Counter.rReadyTasks, readyFetchTasks)
         metricsCounters.setValue(Counter.rPendingTasks, pendingFetchTasks)
-        metricsCounters.setValue(Counter.rPgps, pagesPerSecond.roundToInt())
-        metricsCounters.setValue(Counter.rMbps, (bytesPerSecond / 1000).roundToInt())
 
         if (indexJIT) {
             metricsCounters.setValue(Counter.rIndexed, jitIndexer.indexedPageCount)
             metricsCounters.setValue(Counter.rNotIndexed, jitIndexer.ignoredPageCount)
         }
-
-        return Status(pagesPerSecond, bytesPerSecond, readyFetchTasks, pendingFetchTasks)
-    }
-
-    fun format(status: Status): String {
-        return format(status.pagesThroughputRate, status.bytesThoRate, status.readyFetchItems, status.pendingFetchItems)
     }
 
     override fun close() {
@@ -249,35 +221,6 @@ class TaskScheduler(
 
         log.info("[End Report]")
         log.info(border)
-    }
-
-    private fun format(pagesThroughput: Double, bytesThroughput: Double, readyFetchTasks: Int, pendingFetchTasks: Int): String {
-        val df = DecimalFormat("0.0")
-
-        averagePageSize = 1.0 * bytesThroughput / pagesThroughput
-
-        val status = StringBuilder()
-        val elapsed = Duration.between(startTime, Instant.now()).seconds
-
-        status.append(totalPages).append(" pages, ").append(fetchErrors).append(" errors, ")
-
-        // average speed
-        averagePageThroughput = 1.0 * totalPages.get() / elapsed
-        status.append(df.format(averagePageThroughput)).append(" ")
-        // instantaneous speed
-        status.append(df.format(pagesThroughput)).append(" pages/s, ")
-
-        // average speed
-        averageBytesThroughput = 1.0 * totalBytes.get() / elapsed
-        status.append(df.format(averageBytesThroughput * 8.0 / 1024)).append(" ")
-        // instantaneous speed
-        status.append(df.format(bytesThroughput * 8.0 / 1024)).append(" Kb/s, ")
-
-        status.append(readyFetchTasks).append(" ready ")
-        status.append(pendingFetchTasks).append(" pending ")
-        status.append("URLs in ").append(tasksMonitor.numTaskPools).append(" queues")
-
-        return status.toString()
     }
 
     private fun handleResult(fetchTask: JobFetchTask, crawlStatus: CrawlStatus) {
@@ -379,7 +322,7 @@ class TaskScheduler(
 
         CounterUtils.increaseRDepth(page.distance, metricsCounters)
 
-        metricsCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f).roundToInt())
+        metricsCounters.inc(Counter.rMbytes, (page.contentBytes / 1024.0f / 1024).roundToInt())
     }
 
     private fun logFetchFailure(message: String) {

@@ -816,7 +816,7 @@
 
     <property>
         <name>parser.timeout</name>
-        <value>30s</value>
+        <value>60s</value>
         <description>Timeout for the parsing of a document, otherwise treats it as an exception and
             moves on the the following documents. This parameter is applied to any Parser implementation.
             Set to -1 to deactivate, bearing in mind that this could cause

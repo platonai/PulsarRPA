@@ -130,13 +130,6 @@ public abstract class AbstractConfiguration {
 
         fullPathResources.forEach(conf::addResource);
 
-//        if (environment instanceof ConfigurableEnvironment) {
-//            HashMap props = new HashMap<>();
-//            conf.iterator().forEachRemaining(e -> props.put(e.getKey(), e.getValue()));
-//            MapPropertySource source = new MapPropertySource("hadoop-compatible", props);
-//            ((ConfigurableEnvironment) environment).getPropertySources().addLast(source);
-//        }
-
         LOG.info(toString());
     }
 

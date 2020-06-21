@@ -85,15 +85,10 @@ class PulsarContext private constructor(): AutoCloseable {
         }
 
         fun initialize(context: ConfigurableApplicationContext) {
-            if (initialized.get()) {
-                return
+            if (initialized.compareAndSet(false, true)) {
+                applicationContext = context
+                initEnvironment()
             }
-
-            applicationContext = context
-
-            initEnvironment()
-
-            initialized.set(true)
         }
 
         fun shutdown() {
@@ -137,9 +132,9 @@ class PulsarContext private constructor(): AutoCloseable {
             }
         }
 
-        fun createSession(privacyContextId: PrivacyContextId = PrivacyContextId.DEFAULT): PulsarSession {
+        fun createSession(): PulsarSession {
             ensureAlive()
-            return getOrCreate().createSession(privacyContextId)
+            return getOrCreate().createSession()
         }
 
         private fun initEnvironment() {
@@ -230,9 +225,9 @@ class PulsarContext private constructor(): AutoCloseable {
         log.info("PulsarContext is created")
     }
 
-    fun createSession(privacyContextId: PrivacyContextId = PrivacyContextId.DEFAULT): PulsarSession {
+    fun createSession(): PulsarSession {
         ensureAlive()
-        val session = PulsarSession(this, unmodifiedConfig.toVolatileConfig(), privacyContextId)
+        val session = PulsarSession(this, unmodifiedConfig.toVolatileConfig())
         return session.also { sessions[it.id] = it }
     }
 

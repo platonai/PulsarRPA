@@ -53,7 +53,7 @@ class LauncherConfig {
 annotation class ChromeParameter(val value: String)
 
 class ChromeDevtoolsOptions(
-        @ChromeParameter(ARG_USER_DATA_DIR)
+        @ChromeParameter("user-data-dir")
         var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
         @ChromeParameter("proxy-server")
         var proxyServer: String? = null,
@@ -120,7 +120,7 @@ class ChromeDevtoolsOptions(
         val args = ChromeDevtoolsOptions::class.java.declaredFields
                 .filter { it.annotations.any { it is ChromeParameter } }
                 .onEach { it.isAccessible = true }
-                .associateTo(mutableMapOf()) { it.getAnnotation(ChromeParameter::class.java).value to it.get(this) }
+                .associateTo(LinkedHashMap()) { it.getAnnotation(ChromeParameter::class.java).value to it.get(this) }
 
         args.putAll(additionalArguments)
 
@@ -144,10 +144,6 @@ class ChromeDevtoolsOptions(
     }
 
     override fun toString() = toList().joinToString(" ") { it }
-
-    companion object {
-        const val ARG_USER_DATA_DIR = "user-data-dir"
-    }
 }
 
 class ProcessLauncher {
@@ -213,9 +209,11 @@ class ChromeLauncher(
                     .onFailure { log.warn("Unexpected exception", it) }
         }
 
-        if (Files.exists(userDataDir)) {
-            Files.deleteIfExists(userDataDir.resolve("INSTANCE_CLOSING"))
-            Files.writeString(userDataDir.resolve("INSTANCE_CLOSED"), "", StandardOpenOption.CREATE_NEW)
+        try {
+            cleanUp()
+        } catch (e: IOException) {
+            log.warn("Failed to clear user data dir | {} | {}", userDataDir, e.message)
+        } finally {
         }
     }
 
@@ -283,7 +281,7 @@ class ChromeLauncher(
             process = processLauncher.launch(program, arguments)
 
             process?.also {
-                Files.writeString(chromeOptions.userDataDir.resolve("PID"), it.pid().toString(), StandardOpenOption.CREATE_NEW)
+                Files.writeString(userDataDir.resolve("chrome.launcher.pid"), it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
         } catch (e: IOException) {
@@ -363,7 +361,6 @@ class ChromeLauncher(
                 process.destroyForcibly()
                 process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
             }
-            cleanUp()
 
             log.info("Exit | {}", info)
         } catch (e: InterruptedException) {
@@ -393,39 +390,35 @@ class ChromeLauncher(
 
     private fun prepareUserDataDir() {
         val lock = AppPaths.BROWSER_TMP_DIR_LOCK
-        val backupUserDataDir = AppPaths.CHROME_DATA_BACKUP_DIR
-        if (Files.exists(backupUserDataDir)) {
+        val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        if (Files.exists(prototypeUserDataDir)) {
             FileChannel.open(lock, StandardOpenOption.APPEND).use {
                 it.lock()
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
-                    log.info("User data dir does not exist, copy from backup | {} <- {}", userDataDir, backupUserDataDir)
-                    FileUtils.copyDirectory(backupUserDataDir.toFile(), userDataDir.toFile())
+                    log.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
+                    FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
                     FileUtils.deleteDirectory(userDataDir.resolve("Default/Local Storage/leveldb").toFile())
                     arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
-                        Files.copy(backupUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+                        Files.copy(prototypeUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
                     }
                 }
             }
         }
     }
 
+    @Throws(IOException::class)
     private fun cleanUp() {
-        kotlin.runCatching {
-            // wait for 1 second hope every thing is clean
-            Thread.sleep(1000)
+        val target = userDataDir.resolve("Default/Cache")
+        FileUtils.deleteQuietly(target.toFile())
+        if (Files.exists(target)) {
+            log.warn("Failed to delete browser cache, try again | {}", target)
+            forceDeleteDirectory(target)
 
-            val target = userDataDir.resolve("Default/Cache")
-            FileUtils.deleteQuietly(target.toFile())
             if (Files.exists(target)) {
-                log.warn("Failed to delete browser cache, try again | {}", target)
-                forceDeleteDirectory(target)
-
-                if (Files.exists(target)) {
-                    log.error("Can not delete browser cache | {}", target)
-                }
+                log.error("Can not delete browser cache | {}", target)
             }
         }
     }

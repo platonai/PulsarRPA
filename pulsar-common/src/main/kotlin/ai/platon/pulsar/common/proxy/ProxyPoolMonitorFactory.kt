@@ -22,16 +22,20 @@ class ProxyPoolMonitorFactory(
         if (proxyPoolMonitorRef.get() == null) {
             synchronized(ProxyPoolMonitorFactory::class) {
                 if (proxyPoolMonitorRef.get() == null) {
+                    val defaultClazz = ProxyPoolMonitor::class.java
                     val clazz = try {
-                        conf.getClass(PROXY_POOL_MONITOR_CLASS, ProxyPoolMonitor::class.java)
+                        conf.getClass(PROXY_POOL_MONITOR_CLASS, defaultClazz)
                     } catch (e: Exception) {
-                        log.warn("Proxy pool monitor {} is not configured, use default ({})", PROXY_POOL_MONITOR_CLASS, ProxyPoolMonitor)
-                        ProxyPoolMonitor::class.java
+                        log.warn("Configured proxy pool monitor {}({}) is not found, use default ({})",
+                                PROXY_POOL_MONITOR_CLASS, conf.get(PROXY_POOL_MONITOR_CLASS), defaultClazz.name)
+                        defaultClazz
                     }
-                    proxyPoolMonitorRef.set(clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf) as ProxyPoolMonitor)
+                    val ref = clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf)
+                    proxyPoolMonitorRef.set(ref as? ProxyPoolMonitor)
                 }
             }
         }
+
         return proxyPoolMonitorRef.get()
     }
 }

@@ -16,7 +16,6 @@ class BrowserInstanceManager: AutoCloseable {
         }
     }
 
-    @Synchronized
     fun closeIfPresent(dataDir: Path) {
         browserInstances.remove(dataDir)?.close()
     }

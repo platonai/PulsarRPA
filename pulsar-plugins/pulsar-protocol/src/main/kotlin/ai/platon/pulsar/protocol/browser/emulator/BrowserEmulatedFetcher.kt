@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_PRIORITY
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.readable
@@ -79,12 +79,11 @@ class BrowserEmulatedFetcher(
             log.warn("Page config is not set | {}", page.url)
         }
 
-        val privacyContextId = page.volatileConfig?.getBean(PrivacyContextId::class.java)?: PrivacyContextId.DEFAULT
-        return privacyManager.run(privacyContextId, createFetchTask(page)) { task, driver ->
+        return privacyManager.run(createFetchTask(page)) { task, driver ->
             try {
                 asyncBrowserEmulator.fetch(task, driver)
-            } catch (e: IllegalContextStateException) {
-                log.info("Illegal context state, task is cancelled. {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
+            } catch (e: IllegalStateException) {
+                log.info("Illegal state, task is cancelled. {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
                 FetchResult.canceled(task)
             }
         }.response
@@ -134,7 +133,7 @@ class BrowserEmulatedFetcher(
 
     private fun createFetchTask(page: WebPage): FetchTask {
         val volatileConfig = page.volatileConfig ?: immutableConfig.toVolatileConfig()
-        val priority = volatileConfig.getUint(BROWSER_DRIVER_PRIORITY, 0)
+        val priority = volatileConfig.getUint(BROWSER_WEB_DRIVER_PRIORITY, 0)
         return FetchTask(0, priority, page, volatileConfig)
     }
 
@@ -161,7 +160,7 @@ class BrowserEmulatedFetcher(
                     }
 
                     parallelFetch0(b)
-                } while (i++ <= privacyManager.maxRetry && privacyContext0.isLeaked)
+                } while (i++ <= privacyManager.maxPrivacyRetries && privacyContext0.isLeaked)
             }
 
             batch.afterFetchAll(batch.pages)

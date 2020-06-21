@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
 import com.google.common.collect.ConcurrentHashMultiset
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -20,6 +19,9 @@ enum class ProxyType {
     HTTP, SOCKS4, SOCKS5
 }
 
+/**
+ * TODO: should not be a data class
+ * */
 data class ProxyEntry(
         var host: String,
         var port: Int = 0,

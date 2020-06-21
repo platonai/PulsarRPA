@@ -22,7 +22,9 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.reflect.KClass
 
 /**
  * Creates and caches [ParseFilter] implementing plugins.
@@ -30,8 +32,19 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(ParseFilters::class.java)
 
-    private val parseFilters = initParseFilters.toMutableList()
+    private val parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
     private val closed = AtomicBoolean()
+
+    fun clear() = parseFilters.clear()
+
+    fun remove(clazz: KClass<*>) {
+        val it = parseFilters.iterator()
+        while (it.hasNext() && it.next()::class == clazz) {
+            it.remove()
+        }
+    }
+
+    fun hasFilter(parseFilter: ParseFilter) = parseFilters.contains(parseFilter)
 
     fun addFirst(parseFilter: ParseFilter) = parseFilters.add(0, parseFilter)
 
@@ -43,8 +56,6 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     fun filter(parseContext: ParseContext) {
         // loop on each filter
         parseFilters.forEach {
-            log.trace("Applying parse filter {} {}", it.javaClass.simpleName, parseContext.page.url)
-
             kotlin.runCatching { it.filter(parseContext) }.onFailure { log.warn(Strings.simplifyException(it)) }
 
             val shouldContinue = parseContext.parseResult.shouldContinue

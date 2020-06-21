@@ -18,6 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.openqa.selenium.WebDriverException
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
@@ -33,6 +34,7 @@ open class AsyncBrowserEmulator(
         messageWriter: MiscMessageWriter,
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(privacyManager, eventHandlerFactory, messageWriter, immutableConfig) {
+    private val log = LoggerFactory.getLogger(AsyncBrowserEmulator::class.java)!!
 
     val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
 
@@ -157,7 +159,7 @@ open class AsyncBrowserEmulator(
             // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
             lastNavigateTime = Instant.now()
 
-            log.trace("Navigating | ", task.url)
+            log.trace("Navigating | {}", task.url)
 
             driver.navigateTo(task.url)
         }

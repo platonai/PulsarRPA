@@ -62,28 +62,28 @@ class FetchMetrics(
     /**
      * The total bytes of page content of all success web pages
      * */
-    private val tasks = MetricsManagement.meter(this,"tasks")
-    private val successTasks = MetricsManagement.meter(this,"successTasks")
-    private val finishedTasks = MetricsManagement.meter(this,"finishedTasks")
-    private val meterContentBytes = MetricsManagement.meter(this,"mContentBytes")
-    private val histogramContentBytes = MetricsManagement.histogram(this,"hContentBytes")
+    val tasks = MetricsManagement.meter(this,"tasks")
+    val successTasks = MetricsManagement.meter(this,"successTasks")
+    val finishedTasks = MetricsManagement.meter(this,"finishedTasks")
+    val meterContentBytes = MetricsManagement.meter(this,"mContentBytes")
+    val histogramContentBytes = MetricsManagement.histogram(this,"hContentBytes")
 
-    private val pageImages = MetricsManagement.histogram(this, "pageImages")
-    private val pageAnchors = MetricsManagement.histogram(this, "pageAnchors")
-    private val pageNumbers = MetricsManagement.histogram(this, "pageNumbers")
-    private val pageSmallTexts = MetricsManagement.histogram(this, "pageSmallTexts")
-    private val pageHeights = MetricsManagement.histogram(this, "pageHeights")
+    val pageImages = MetricsManagement.histogram(this, "pageImages")
+    val pageAnchors = MetricsManagement.histogram(this, "pageAnchors")
+    val pageNumbers = MetricsManagement.histogram(this, "pageNumbers")
+    val pageSmallTexts = MetricsManagement.histogram(this, "pageSmallTexts")
+    val pageHeights = MetricsManagement.histogram(this, "pageHeights")
 
-    private val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+    val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     /**
      * The total all bytes received by the hardware at the application startup
      * */
-    private val initSystemNetworkBytesRecv by lazy { realTimeSystemNetworkBytesRecv }
+    val initSystemNetworkBytesRecv by lazy { realTimeSystemNetworkBytesRecv }
     /**
      * The total all bytes received by the hardware last read from system
      * */
     @Volatile
-    private var systemNetworkBytesRecv = 0L
+    var systemNetworkBytesRecv = 0L
 
     /**
      * The total bytes received by the hardware from the application startup
@@ -91,9 +91,12 @@ class FetchMetrics(
     val networkBytesRecv
         get() = (systemNetworkBytesRecv - initSystemNetworkBytesRecv).coerceAtLeast(0L)
     val networkBytesRecvPerSecond
-        get() = networkBytesRecv / elapsedTime.seconds
+        get() = networkBytesRecv / elapsedTime.seconds.coerceAtLeast(1)
     val networkBytesRecvPerPage
         get() = networkBytesRecv / successTasks.count.coerceAtLeast(1)
+
+    val successTasksPerSecond
+        get() = successTasks.count / elapsedTime.seconds.coerceAtLeast(1)
 
     private val closed = AtomicBoolean()
 

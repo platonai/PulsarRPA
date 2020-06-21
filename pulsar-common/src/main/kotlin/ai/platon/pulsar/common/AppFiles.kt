@@ -116,7 +116,7 @@ object AppFiles {
         val path = AppPaths.PATH_LAST_BATCH_ID
 
         if (batchId.isNotEmpty()) {
-            Files.write(path, (batchId + "\n").toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            Files.writeString(path, batchId, StandardOpenOption.CREATE)
         }
 
         return path
@@ -125,8 +125,7 @@ object AppFiles {
     fun readBatchIdOrDefault(defaultValue: String): String {
         try {
             return Files.readAllLines(AppPaths.PATH_LAST_BATCH_ID)[0]
-        } catch (ignored: Throwable) {
-        }
+        } catch (ignored: Throwable) {}
 
         return defaultValue
     }

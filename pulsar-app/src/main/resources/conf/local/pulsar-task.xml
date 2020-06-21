@@ -31,7 +31,7 @@
   <!-- crawl -->
   <property>
     <name>crawl.max.distance</name>
-    <value>1</value>
+    <value>2</value>
   </property>
 
   <!-- fetch -->
@@ -70,7 +70,7 @@
 
   <property>
     <name>mapreduce.job.reduces</name>
-    <value>1</value>
+    <value>2</value>
   </property>
 
 </configuration>

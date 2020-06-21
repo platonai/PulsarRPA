@@ -33,10 +33,6 @@ open class PulsarSession(
          * */
         val sessionConfig: VolatileConfig,
         /**
-         * The privacy context id for this pulsar session
-         * */
-        val privacyContextId: PrivacyContextId = PrivacyContextId.generate(),
-        /**
          * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
         val id: Int = 9000000 + idGen.incrementAndGet()
@@ -49,15 +45,11 @@ open class PulsarSession(
     val sessionBeanFactory = BeanFactory(sessionConfig)
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
-    val display = "$id(${privacyContextId.ident})"
+    val display = "$id"
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && context.isActive
-
-    init {
-        sessionConfig.putBean(privacyContextId)
-    }
 
     /**
      * Close objects when sessions closes

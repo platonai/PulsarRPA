@@ -20,8 +20,8 @@ data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
     val ident = dataDir.last().toString()
     val isDefault get() = this == DEFAULT
 
-    // override fun hashCode() = /** AUTO GENERATED */
-    // override fun equals(other: Any?) = /** AUTO GENERATED */
+    // override fun hashCode() = /** AUTO GENERATED **/
+    // override fun equals(other: Any?) = /** AUTO GENERATED **/
 
     override fun compareTo(other: PrivacyContextId) = dataDir.compareTo(other.dataDir)
     override fun toString() = "$dataDir"
@@ -34,9 +34,13 @@ data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
     }
 }
 
-data class BrowserInstanceId(val dataDir: Path): Comparable<BrowserInstanceId> {
-    // override fun hashCode() = /** AUTO GENERATED */
-    // override fun equals(other: Any?) = /** AUTO GENERATED */
+data class BrowserInstanceId(
+        val dataDir: Path,
+        var proxyServer: String? = null
+): Comparable<BrowserInstanceId> {
+
+    override fun hashCode() = dataDir.hashCode()
+    override fun equals(other: Any?) = other is BrowserInstanceId && dataDir == other.dataDir
     override fun compareTo(other: BrowserInstanceId) = dataDir.compareTo(other.dataDir)
     override fun toString() = "$dataDir"
 

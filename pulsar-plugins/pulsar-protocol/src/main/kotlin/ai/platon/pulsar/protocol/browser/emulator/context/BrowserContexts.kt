@@ -12,8 +12,6 @@ import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
@@ -49,7 +47,6 @@ class WebDriverContext(
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             driverManager.run(browserId, task.priority, task.volatileConfig) {
-                task.proxyEntry = it.proxyEntry
                 browseFun(task, it)
             }
         } catch (e: PoolRetiredException) {
@@ -81,7 +78,7 @@ class WebDriverContext(
         lock.withLock {
             var i = 0
             try {
-                while (i++ < 30 && runningTasks.isNotEmpty()) {
+                while (i++ < 20 && runningTasks.isNotEmpty()) {
                     notBusy.await(1, TimeUnit.SECONDS)
                 }
             } catch (ignored: InterruptedException) {}
@@ -96,10 +93,6 @@ class WebDriverContext(
     }
 
     private fun closeUnderlyingLayer() {
-        if (Files.exists(browserId.dataDir)) {
-            Files.writeString(browserId.dataDir.resolve("INSTANCE_CLOSING"), "", StandardOpenOption.CREATE_NEW)
-        }
-
         // Mark all working tasks are canceled, so they return as soon as possible,
         // the ready tasks are blocked to wait for driverManager.reset() finish
         runningTasks.forEach { it.cancel() }
@@ -130,6 +123,7 @@ class WebDriverContext(
 }
 
 class ProxyContext(
+        var proxyEntry: ProxyEntry? = null,
         private val proxyPoolMonitor: ProxyPoolMonitor,
         private val driverContext: WebDriverContext,
         private val conf: ImmutableConfig
@@ -157,7 +151,6 @@ class ProxyContext(
     private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
 
-    var proxyEntry: ProxyEntry? = null
     val isEnabled get() = proxyPoolMonitor.isEnabled
     val isActive get() = proxyPoolMonitor.isActive && !closing.get() && !closed.get()
 
@@ -173,8 +166,6 @@ class ProxyContext(
             beforeTaskStart(task)
             proxyPoolMonitor.runWith(proxyEntry) { driverContext.run(task, browseFun) }.also {
                 success = it.response.status.isSuccess
-                proxyEntry = task.proxyEntry
-
                 it.response.pageDatum.proxyEntry = proxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
             }
@@ -222,7 +213,6 @@ class ProxyContext(
 
     private fun beforeTaskStart(task: FetchTask) {
         numRunningTasks.incrementAndGet()
-
         // If the proxy is idle, and here comes a new task, reset the context
         // The proxy is about to be unusable, reset the context
         proxyEntry?.also {

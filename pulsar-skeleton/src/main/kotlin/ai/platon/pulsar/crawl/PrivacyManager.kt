@@ -18,11 +18,11 @@ abstract class PrivacyManager(
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
 
-    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { create() }
+    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
 
     abstract fun computeIfNotActive(id: PrivacyContextId): PrivacyContext
 
-    abstract fun create(): PrivacyContext
+    abstract fun newContext(id: PrivacyContextId): PrivacyContext
 
     inline fun <reified C: PrivacyContext> computeIfLeaked(context: C, crossinline mappingFunction: () -> C): C {
         synchronized(PrivacyContext::class.java) {

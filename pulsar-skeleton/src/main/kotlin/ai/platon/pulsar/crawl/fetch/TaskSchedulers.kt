@@ -13,8 +13,8 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
     private val fetchSchedulers = Maps.newTreeMap<Int, TaskScheduler>()
     private val fetchSchedulerIds = Lists.newLinkedList<Int>()
 
-    val first: TaskScheduler
-        @Synchronized get() = fetchSchedulers.values.iterator().next()
+    @get:Synchronized
+    val first: TaskScheduler get() = fetchSchedulers.values.iterator().next()
 
     constructor(taskSchedulers: List<TaskScheduler>, conf: ImmutableConfig) : this(conf) {
         taskSchedulers.forEach { t -> put(t.id, t) }
@@ -26,7 +26,7 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
         fetchSchedulerIds.add(id)
 
         LOG.info("Add task scheduler #$id")
-        LOG.info("status : " + __toString())
+        LOG.info("status: " + __toString())
     }
 
     @Synchronized
@@ -51,7 +51,7 @@ class TaskSchedulers(conf: ImmutableConfig) : AutoCloseable {
         fetchSchedulers.remove(id)
 
         LOG.info("Remove FetchScheduler #$id from pool #$name")
-        LOG.info("status : " + __toString())
+        LOG.info("status: " + __toString())
     }
 
     @Synchronized

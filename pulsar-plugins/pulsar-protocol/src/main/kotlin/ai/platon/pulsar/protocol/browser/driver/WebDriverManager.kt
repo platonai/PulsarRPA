@@ -70,16 +70,10 @@ class WebDriverManager(
             checkState()
 
             if (isRetiredPool(browserId)) {
-                throw PoolRetiredException("${browserId}")
+                throw PoolRetiredException("$browserId")
             }
 
-            val driverPool = driverPools.computeIfAbsent(browserId) { path ->
-                require("browser" in path.toString())
-                LoadingWebDriverPool(browserId, task.priority, driverFactory, immutableConfig).also {
-                    it.allocate(task.volatileConfig)
-                }
-            }
-
+            val driverPool = computeDriverPoolIfAbsent(browserId, task)
             val driver = driverPool.take(task.priority, task.volatileConfig).apply { startWork() }
             try {
                 supervisorScope {
@@ -87,6 +81,16 @@ class WebDriverManager(
                 }
             } finally {
                 driverPool.put(driver)
+            }
+        }
+    }
+
+    @Synchronized
+    private fun <R> computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask<R>): LoadingWebDriverPool {
+        return driverPools.computeIfAbsent(browserId) { path ->
+            require("browser" in path.toString())
+            LoadingWebDriverPool(browserId, task.priority, driverFactory, immutableConfig).also {
+                it.allocate(task.volatileConfig)
             }
         }
     }

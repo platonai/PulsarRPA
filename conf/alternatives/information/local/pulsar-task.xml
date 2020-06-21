@@ -64,7 +64,7 @@
   </property>
   <property>
     <name>parse.max.anchor.length</name>
-    <value>40</value>
+    <value>200</value>
   </property>
 
   <property>
@@ -79,7 +79,7 @@
 
   <property>
     <name>mapreduce.job.reduces</name>
-    <value>1</value>
+    <value>2</value>
   </property>
 
 </configuration>

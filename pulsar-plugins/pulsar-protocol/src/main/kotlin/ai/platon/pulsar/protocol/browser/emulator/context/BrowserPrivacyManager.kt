@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
@@ -16,6 +17,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.withTimeout
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 
 class BrowserPrivacyManager(
         val driverManager: WebDriverManager,
@@ -23,10 +25,13 @@ class BrowserPrivacyManager(
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
     private val tracer = log.takeIf { it.isTraceEnabled }
+    val numPrivacyContexts = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
     val taskTimeout = Duration.ofMinutes(5)
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
-    val maxRetry = 2
+    val maxPrivacyRetries = 2
+
+    private val nextContextIndex = AtomicInteger()
 
     init {
         mapOf(
@@ -35,6 +40,10 @@ class BrowserPrivacyManager(
                 "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
                 "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
+    }
+
+    suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        return run(computeNextContextIfAbsent().id, task, fetchFun)
     }
 
     suspend fun run(
@@ -80,7 +89,7 @@ class BrowserPrivacyManager(
                     updatePrivacyContext(context, result)
                 }
             }
-        } while (!result.isSuccess && !task0.isCanceled && context.isLeaked && i++ <= maxRetry)
+        } while (!result.isSuccess && !task0.isCanceled && context.isLeaked && i++ <= maxPrivacyRetries)
 
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL).also { logCrawlRetry(task) }
@@ -105,7 +114,7 @@ class BrowserPrivacyManager(
         val context0 = computeIfLeaked(context) {
             require(numPreemptiveTasks.get() > 0) { "Should have at least one active preemptive task" }
             require(numRunningPreemptiveTasks.get() > 0) { "Should have at least one running preemptive task" }
-            create().also { activeContexts[id] = it }
+            newContext(PrivacyContextId.generate()).also { activeContexts[id] = it }
         }
 
         log.info("Privacy context is created #{}", context0.display)
@@ -114,12 +123,38 @@ class BrowserPrivacyManager(
         return context0
     }
 
+    @Synchronized
     override fun computeIfAbsent(id: PrivacyContextId): BrowserPrivacyContext {
-        return activeContexts.computeIfAbsent(id) { create() } as BrowserPrivacyContext
+        return activeContexts.computeIfAbsent(id) { newContext(it) } as BrowserPrivacyContext
     }
 
-    override fun create(): BrowserPrivacyContext {
-        return BrowserPrivacyContext(proxyPoolMonitor, driverManager, immutableConfig)
+    @Synchronized
+    override fun newContext(id: PrivacyContextId): BrowserPrivacyContext {
+        return BrowserPrivacyContext(proxyPoolMonitor, driverManager, immutableConfig, id)
+    }
+
+    @Synchronized
+    fun computeNextContextIfAbsent(): BrowserPrivacyContext {
+        val size = activeContexts.size
+        if (size < numPrivacyContexts) {
+            return computeIfAbsent(PrivacyContextId.generate())
+        }
+
+        val index = nextContextIndex.getAndIncrement()
+        if (index >= size - 1) {
+            nextContextIndex.set(0)
+        }
+
+        var context: PrivacyContext? = null
+        var i = 0
+        val iterator = activeContexts.values.iterator()
+        while (i++ <= nextContextIndex.get() && iterator.hasNext()) {
+            context = iterator.next()
+        }
+
+        log.takeIf { it.isTraceEnabled }?.trace("Use the {}/{}th context {}", i, size, context?.id)
+
+        return (context as? BrowserPrivacyContext)?:computeIfAbsent(PrivacyContextId.generate())
     }
 
     /**

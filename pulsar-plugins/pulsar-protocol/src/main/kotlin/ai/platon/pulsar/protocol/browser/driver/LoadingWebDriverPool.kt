@@ -1,8 +1,12 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.MetricsManagement
-import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
@@ -28,11 +32,12 @@ class LoadingWebDriverPool(
 
     companion object {
         val CLOSE_ALL_TIMEOUT = Duration.ofSeconds(60)
+        val instanceSequencer = AtomicInteger()
     }
 
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
-    val concurrency = immutableConfig.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
-    val capacity = immutableConfig.getInt(CapabilityTypes.BROWSER_POOL_CAPACITY, concurrency)
+    val id = instanceSequencer.incrementAndGet()
+    val capacity = immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
     val onlineDrivers = ConcurrentSkipListSet<ManagedWebDriver>()
     val freeDrivers = ArrayBlockingQueue<ManagedWebDriver>(500)
 
@@ -45,12 +50,13 @@ class LoadingWebDriverPool(
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
-    private val instanceRequiredMemory = 200 * 1024 * 1024 // 200 MiB
+    private val instanceRequiredMemory = 500 * 1024 * 1024 // 500 MiB
 
     val counterRetired = MetricsManagement.counter(this, "retired")
     val counterQuit = MetricsManagement.counter(this, "quit")
 
     val isActive get() = !closed.get()
+    val numCreate = AtomicInteger()
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numFree get() = freeDrivers.size
@@ -58,10 +64,10 @@ class LoadingWebDriverPool(
     val numOnline get() = onlineDrivers.size
 
     /**
-     * Allocate [concurrency] drivers
+     * Allocate [capacity] drivers
      * */
     fun allocate(volatileConfig: VolatileConfig) {
-        repeat(concurrency) {
+        repeat(capacity) {
             runCatching { put(take(priority, volatileConfig)) }.onFailure { log.warn("Unexpected exception", it) }
         }
     }
@@ -127,16 +133,18 @@ class LoadingWebDriverPool(
     private fun take0(priority: Int, conf: VolatileConfig): ManagedWebDriver {
         checkState()
 
-        driverFactory.takeIf { onlineDrivers.size < capacity && availableMemory > instanceRequiredMemory }
-                ?.create(browserInstanceId, priority, conf)
-                ?.also {
-                    lock.withLock {
-                        freeDrivers.add(it)
-                        notEmpty.signalAll()
-                        onlineDrivers.add(it)
-                    }
-                    logDriverOnline(it)
+        if (availableMemory > instanceRequiredMemory) {
+            if (numCreate.getAndIncrement() < capacity) {
+                // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
+                val driver = driverFactory.create(browserInstanceId, priority, conf)
+                lock.withLock {
+                    freeDrivers.add(driver)
+                    notEmpty.signalAll()
+                    onlineDrivers.add(driver)
                 }
+                logDriverOnline(driver)
+            }
+        }
 
         numWaiting.incrementAndGet()
         var driver = freeDrivers.poll()
@@ -146,7 +154,7 @@ class LoadingWebDriverPool(
         }
         numWaiting.decrementAndGet()
 
-        return driver?:throw IllegalStateException("LoadingWebDriverPool is closed")
+        return driver?:throw IllegalStateException("Driver pool is exhausted")
     }
 
     private fun doClose(timeToWait: Duration) {

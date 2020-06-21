@@ -1,13 +1,13 @@
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.crawl.common.URLUtil
-import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
+import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.persist.HypeLink
 import ai.platon.pulsar.persist.WebPage
@@ -30,7 +30,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
     private var noFilter = false
     private var debugLevel = 0
     private val links: MutableSet<String> = TreeSet()
-    private val mutableFilterReport: MutableList<String> = LinkedList()
+    private val mutableFilterReport: MutableList<String> = mutableListOf()
 
     val filterReport: List<String> get() = mutableFilterReport
 

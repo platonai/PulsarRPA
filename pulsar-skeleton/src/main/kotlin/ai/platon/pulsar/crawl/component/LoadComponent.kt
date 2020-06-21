@@ -436,11 +436,8 @@ class LoadComponent(
         }
 
         if (options.parse) {
-            val parseResult = parseComponent.parse(page,
-                    options.query, options.reparseLinks, options.noFilter)
-            if (log.isTraceEnabled) {
-                log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
-            }
+            val parseResult = parseComponent.parse(page, options.query, options.reparseLinks, options.noFilter)
+            log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
         }
 
         updateComponent.updateFetchSchedule(page)

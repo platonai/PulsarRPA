@@ -171,32 +171,12 @@ class MetricsCounters {
         return getStatus(hashSetOf(), verbose)
     }
 
-//    /**
-//     * Sync to hadoop counter
-//     *
-//     * TODO: remove dependency on hadoop
-//     */
-//    fun accumulateGlobalCounters(context: TaskInputOutputContext<*, *, *, *>?) {
-//        if (context == null) {
-//            return
-//        }
-//        IntRange(0, MAX_COUNTERS).forEach { i ->
-//            val name = counterNames[i]
-//            val value = globalCounters[i].getAndSet(0)
-//            if (name.isNotEmpty() && value != 0) {
-//                // log.debug("global : " + name + " : " + value);
-//                context.getCounter(CapabilityTypes.STAT_PULSAR_STATUS, name).increment(value.toLong())
-//            }
-//        }
-//    }
-
     private fun inc(index: Int) {
         if (!validate(index)) {
             return
         }
         globalCounters[index].incrementAndGet()
         nativeCounters[index].incrementAndGet()
-        // log.info("#" + index + " : " + nativeCounters.get(index).get());
     }
 
     private fun inc(index: Int, value: Int) {
