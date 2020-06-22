@@ -48,7 +48,8 @@ class BrowserInstance(
     fun createTab() = chrome.createTab().also { numTabs.incrementAndGet() }
 
     @Synchronized
-    fun closeTab() {
+    fun closeTab(tab: ChromeTab) {
+        // TODO: anything to do?
         numTabs.decrementAndGet()
     }
 

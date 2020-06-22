@@ -1,10 +1,12 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
-import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
+import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
 import ai.platon.pulsar.common.prependReadableClassName
-import com.codahale.metrics.MetricRegistry
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -237,10 +239,16 @@ abstract class BasicDevTools(
                 } catch (ignored: InterruptedException) {}
             }
 
-            LOG.trace("Closing ws client ... {}", wsClient)
+            LOG.info("Closing ws client ... | {}", wsClient)
 
-            wsClient.close()
-            workerGroup.shutdownGracefully()
+            try {
+                wsClient.close()
+                workerGroup.shutdownGracefully()
+            } catch (e: Throwable) {
+                LOG.warn("Unexpected throwable", e)
+            }
+
+            LOG.info("WS client is closed | {}", wsClient)
 
             closeLatch.countDown()
         }

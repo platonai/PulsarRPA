@@ -102,7 +102,16 @@ class TaskScheduler(
     /**
      * Schedule a queue with the given priority and given poolId
      */
-    fun schedule(poolId: PoolId? = null): JobFetchTask? = schedule(poolId, 1).firstOrNull()
+    fun schedule(): JobFetchTask? {
+        val fetchTask = tasksMonitor.consume()
+        if (fetchTask == null) {
+            tasksMonitor.maintain()
+        } else {
+            lastTaskStartTime = Instant.now()
+        }
+
+        return fetchTask
+    }
 
     /**
      * Schedule the queues with top priority

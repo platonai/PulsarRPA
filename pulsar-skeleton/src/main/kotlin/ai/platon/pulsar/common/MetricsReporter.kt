@@ -31,17 +31,12 @@ class MetricsReporter(
         private val counter: MetricsCounters,
         private val conf: ImmutableConfig
 ): Thread() {
-    companion object {
-        // Every process have at most 1 reporter since there is at most 1 MetricsCounters
-        private val running = AtomicBoolean()
-    }
-
     private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
     private val silent = AtomicBoolean(false)
     private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(30))
     private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
     private var lastStatus = ""
-
+    private val running = AtomicBoolean()
     val isActive get() = running.get()
 
     init {
@@ -64,7 +59,7 @@ class MetricsReporter(
     }
 
     fun stopReporter() {
-        if (running.compareAndSet(false, true)) {
+        if (running.compareAndSet(true, false)) {
             silent.set(false)
             try {
                 join()
@@ -89,7 +84,8 @@ class MetricsReporter(
             report()
         } while (isActive)
 
-        log.info("== Reporter is stopped [ " + DateTimes.now() + " ] ==")
+        val status = counter.getStatus(true)
+        log.info("Reporter is stopped {}", status)
     }
 
     private fun report() {

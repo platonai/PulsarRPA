@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_HEADLESS
@@ -8,6 +9,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.BrowserInstanceId
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaust
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.time.Duration
@@ -56,7 +58,6 @@ class LoadingWebDriverPool(
     val counterQuit = MetricsManagement.counter(this, "quit")
 
     val isActive get() = !closed.get()
-    val numCreate = AtomicInteger()
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
     val numFree get() = freeDrivers.size
@@ -79,6 +80,10 @@ class LoadingWebDriverPool(
     fun put(driver: ManagedWebDriver) {
         if (numWorking.decrementAndGet() == 0) {
             lock.withLock { notBusy.signalAll() }
+        }
+
+        if (availableMemory < instanceRequiredMemory && driver.pageViews.get() > 40) {
+            driver.retire()
         }
 
         if (driver.isRetired) retire(driver) else offer(driver)
@@ -111,11 +116,13 @@ class LoadingWebDriverPool(
 
     override fun toString(): String = formatStatus(false)
 
+    @Synchronized
     private fun offer(driver: ManagedWebDriver) {
         freeDrivers.offer(driver.apply { free() })
         lock.withLock { notEmpty.signalAll() }
     }
 
+    @Synchronized
     private fun retire(driver: ManagedWebDriver, external: Boolean = true) {
         if (external && !isActive) {
             return
@@ -126,6 +133,7 @@ class LoadingWebDriverPool(
         driver.runCatching { quit().also { counterQuit.inc() } }.onFailure {
             log.warn("Unexpected exception quit $driver", it)
         }
+        onlineDrivers.remove(driver)
     }
 
     @Synchronized
@@ -134,7 +142,7 @@ class LoadingWebDriverPool(
         checkState()
 
         if (availableMemory > instanceRequiredMemory) {
-            if (numCreate.getAndIncrement() < capacity) {
+            if (onlineDrivers.size < capacity) {
                 // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
                 val driver = driverFactory.create(browserInstanceId, priority, conf)
                 lock.withLock {
@@ -148,13 +156,18 @@ class LoadingWebDriverPool(
 
         numWaiting.incrementAndGet()
         var driver = freeDrivers.poll()
+        var i = 0
         while (isActive && driver == null) {
+            if (i++ > 45) {
+                log.warn("Timeout to wait for a free driver")
+                break
+            }
             lock.withLock { notEmpty.await(1, TimeUnit.SECONDS) }
             driver = freeDrivers.poll()
         }
         numWaiting.decrementAndGet()
 
-        return driver?:throw IllegalStateException("Driver pool is exhausted")
+        return driver?:throw WebDriverPoolExhaust("Driver pool is exhaust")
     }
 
     private fun doClose(timeToWait: Duration) {
@@ -175,7 +188,6 @@ class LoadingWebDriverPool(
 
         val i = AtomicInteger()
         val total = drivers.size
-        val timeout = Duration.ofSeconds(20)
 
         drivers.parallelStream().forEach { driver ->
             driver.quit().also { counterQuit.inc() }

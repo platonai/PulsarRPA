@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
+import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -64,7 +65,7 @@ abstract class BrowserEmulatorBase(
     @Throws(IllegalContextStateException::class)
     protected fun checkState() {
         if (!isActive) {
-            throw IllegalContextStateException("Emulator is inactive")
+            throw IllegalContextStateException("Emulator is closed")
         }
     }
 
@@ -72,14 +73,14 @@ abstract class BrowserEmulatorBase(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(CancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
     protected fun checkState(driver: ManagedWebDriver) {
         checkState()
 
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw CancellationException("Task with driver #${driver.id} is canceled | ${driver.url}")
+            throw NavigateTaskCancellationException("Task with driver #${driver.id} is canceled | ${driver.url}")
         }
     }
 
@@ -87,14 +88,14 @@ abstract class BrowserEmulatorBase(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(CancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
     protected fun checkState(task: FetchTask) {
         checkState()
 
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should be redo
-            throw CancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
+            throw NavigateTaskCancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
         }
     }
 }

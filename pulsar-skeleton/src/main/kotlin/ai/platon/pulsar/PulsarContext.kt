@@ -1,6 +1,7 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
+import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.*
@@ -146,10 +147,11 @@ class PulsarContext private constructor(): AutoCloseable {
 
         private fun ensureAlive() {
             if (closed.get()) {
-                throw IllegalStateException("Pulsar context is closed")
+                throw IllegalContextStateException("Pulsar context is closed")
             }
         }
     }
+
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */

@@ -87,6 +87,10 @@ class WebSocketClientImpl : WebSocketClient {
         }
     }
 
+    override fun toString(): String {
+        return session.requestURI.toString()
+    }
+
     companion object {
         private const val WEB_SOCKET_CONTAINER_FACTORY_PROPERTY = "ai.platon.pulsar.browser.driver.chrome.webSocketContainerFactory"
         private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY = DefaultWebSocketContainerFactory::class.java.getName()

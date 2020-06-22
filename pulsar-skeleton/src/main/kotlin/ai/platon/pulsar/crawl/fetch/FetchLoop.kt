@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
+import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.ReducerContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants.NCPU
@@ -9,7 +10,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.ParseComponent
-import ai.platon.pulsar.crawl.fetch.data.PoolId
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import kotlinx.coroutines.*
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.io.IOException
 import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -39,30 +38,25 @@ class FetchLoop(
         val instanceSequencer = AtomicInteger()
         val pendingTasks = ArrayBlockingQueue<JobFetchTask>(1000)
         val numRunningTasks = AtomicInteger()
+        val illegalState = AtomicBoolean()
     }
 
     val id = instanceSequencer.incrementAndGet()
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)
     private val loopConfig = immutableConfig.toVolatileConfig()
-    @Volatile
-    private var lastWorkingPoolId: PoolId? = null
     private val closed = AtomicBoolean(false)
 
     private val numPrivacyContexts = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val concurrency = numPrivacyContexts * immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, NCPU)
+    private val fetchConcurrency = numPrivacyContexts * immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, NCPU)
 
-    private val isAppActive get() = !fetchMonitor.missionComplete && !closed.get()
+    private val isAppActive get() = !fetchMonitor.isMissionComplete && !closed.get() && !illegalState.get()
 
-    private val idleTimeout = Duration.ofMinutes(10)
-    private var lastActiveTime = Instant.now()
-    private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    private val isIdle get() = idleTime > idleTimeout
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val instanceRequiredMemory = 500L * 1024 * 1024 // 500 MiB
     private val memoryRemaining get() = availableMemory - instanceRequiredMemory
-    private val taskTimeout = Duration.ofMinutes(5)
+    private val fetchTaskTimeout = Duration.ofMinutes(5)
 
     suspend fun start() {
         val loop = this
@@ -74,7 +68,10 @@ class FetchLoop(
             while (isAppActive) {
                 ++j
 
-                while (isAppActive && numRunningTasks.get() > concurrency) {
+                // to prevent CPU overload
+                delay(1000)
+
+                while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
                     delay(1000)
                 }
 
@@ -89,9 +86,11 @@ class FetchLoop(
                 launch(Dispatchers.Default + CoroutineName("w")) {
                     try {
                         schedule()?.let { fetch(it) }
-                    } catch (e: IllegalStateException) {
+                    } catch (e: IllegalContextStateException) {
+                        illegalState.set(true)
                         log.warn("Illegal state | {}", e.message)
-                        return@launch
+                    } catch (e: TimeoutCancellationException) {
+                        log.warn("Coroutine timeout canceled | {}", e.message)
                     } catch (e: Throwable) {
                         log.warn("Unexpected exception", e)
                     } finally {
@@ -119,10 +118,6 @@ class FetchLoop(
     override fun toString() = "#$id"
 
     private fun schedule(): JobFetchTask? {
-        if (!isAppActive) {
-            return null
-        }
-
         // find tasks from pending queue
         // TODO: pendingTasks is not used
         var fetchTask = pendingTasks.poll()
@@ -130,18 +125,15 @@ class FetchLoop(
             return fetchTask
         }
 
-        fetchTask = taskScheduler.schedule(lastWorkingPoolId)
-        log.takeIf { it.isTraceEnabled }?.trace("scheduled task from pool {} | {}", fetchTask?.poolId, fetchTask)
-
-        // If fetchTask != null, we fetch items from the same queue the next time
-        // If fetchTask == null, the current queue is empty, fetch item from top queue the next time
-        lastWorkingPoolId = fetchTask?.poolId
+        fetchTask = taskScheduler.schedule()
+        log.takeIf { it.isTraceEnabled }?.trace("Scheduled task from pool {} | {}", fetchTask?.poolId, fetchTask)
 
         return fetchTask
     }
 
     private suspend fun fetch(task: JobFetchTask) {
         if (!isAppActive) {
+            taskScheduler.finish(task.poolId, task.itemId)
             return
         }
 
@@ -149,16 +141,9 @@ class FetchLoop(
             task.page.volatileConfig = loopConfig
 
             val page = try {
-                withTimeoutOrNull(taskTimeout.toMillis()) {
-                    fetchComponent.fetchContentDeferred(task.page)
-                }
+                fetchComponent.fetchContentDeferred(task.page)
             } finally {
                 taskScheduler.finish(task.poolId, task.itemId)
-            }
-
-            if (page == null) {
-                log.warn("Fetch task is cancelled for timeout ({}) | {}", taskTimeout, task.urlString)
-                return
             }
 
             if (page.isInternal) {
@@ -166,7 +151,8 @@ class FetchLoop(
                 return
             }
 
-            if (taskScheduler.parse) {
+            val isCanceled = page.protocolStatus.isCanceled
+            if (!isCanceled && taskScheduler.parse) {
                 val parseResult = parseComponent.parse(page, null, false, true)
                 if (log.isTraceEnabled) {
                     log.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
@@ -175,7 +161,9 @@ class FetchLoop(
 
             withContext(Dispatchers.IO) {
                 log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page).toString())
-                write(page.key, page)
+                if (!isCanceled) {
+                    write(page.key, page)
+                }
             }
         } catch (e: Throwable) {
             log.error("Unexpected throwable", e)

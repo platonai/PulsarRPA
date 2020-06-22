@@ -266,7 +266,7 @@ class ChromeLauncher(
      * @throws ChromeProcessException If an I/O error occurs during chrome process start.
      * @throws ChromeProcessTimeoutException If timeout expired while waiting for chrome to start.
      */
-    @Throws(ChromeProcessException::class)
+    @Throws(ChromeProcessException::class, IllegalStateException::class, ChromeProcessTimeoutException::class)
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }

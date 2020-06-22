@@ -235,7 +235,7 @@ class ChromeDevtoolsDriver(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             devTools.close()
-            browserInstance.closeTab()
+            browserInstance.closeTab(tab)
         }
     }
 

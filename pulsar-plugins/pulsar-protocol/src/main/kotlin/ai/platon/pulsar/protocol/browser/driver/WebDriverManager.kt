@@ -50,7 +50,9 @@ class WebDriverManager(
     init {
         mapOf(
                 "waitingDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numWaiting.get() } },
-                "workingDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numWorking.get() } }
+                "freeDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numFree } },
+                "workingDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numWorking.get() } },
+                "onlineDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numOnline } }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
     }
 
@@ -74,13 +76,12 @@ class WebDriverManager(
             }
 
             val driverPool = computeDriverPoolIfAbsent(browserId, task)
-            val driver = driverPool.take(task.priority, task.volatileConfig).apply { startWork() }
+            var driver: ManagedWebDriver? = null
             try {
-                supervisorScope {
-                    withTimeout(taskTimeout.toMillis()) { task.action(driver) }
-                }
+                driver = driverPool.take(task.priority, task.volatileConfig).apply { startWork() }
+                task.action(driver)
             } finally {
-                driverPool.put(driver)
+                driver?.let { driverPool.put(it) }
             }
         }
     }

@@ -7,9 +7,11 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaust
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -49,6 +51,9 @@ class WebDriverContext(
             driverManager.run(browserId, task.priority, task.volatileConfig) {
                 browseFun(task, it)
             }
+        } catch (e: WebDriverPoolExhaust) {
+            log.info("Web driver pool exhausted, retry task in crawl scope {}/{} | {}", task.id, task.batchId, task.url)
+            FetchResult(task, ForwardingResponse.crawlRetry(task.page))
         } catch (e: PoolRetiredException) {
             log.warn("Retry task {}/{} in privacy scope because pool is retired | {}", task.id, task.batchId, e.message)
             FetchResult.privacyRetry(task)
@@ -95,6 +100,7 @@ class WebDriverContext(
     private fun closeUnderlyingLayer() {
         // Mark all working tasks are canceled, so they return as soon as possible,
         // the ready tasks are blocked to wait for driverManager.reset() finish
+        // TODO: why the caneled tasks do not return in time?
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data

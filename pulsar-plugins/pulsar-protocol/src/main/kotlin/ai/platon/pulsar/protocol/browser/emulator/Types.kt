@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.HttpHeaders
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.persist.ProtocolStatus
-import ai.platon.pulsar.persist.metadata.MultiMetadata
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import org.openqa.selenium.support.ui.Sleeper
@@ -64,7 +63,7 @@ class BrowserError(
 }
 
 class CancellableSleeper(val task: FetchTask): Sleeper {
-    @Throws(CancellationException::class)
+    @Throws(NavigateTaskCancellationException::class)
     override fun sleep(duration: Duration) {
         try {
             Thread.sleep(duration.toMillis())
@@ -73,7 +72,7 @@ class CancellableSleeper(val task: FetchTask): Sleeper {
         }
 
         if (task.isCanceled) {
-            throw CancellationException("Task #${task.batchTaskId}}/${task.batchId} is canceled from sleeper")
+            throw NavigateTaskCancellationException("Task #${task.batchTaskId}}/${task.batchId} is canceled from sleeper")
         }
     }
 }

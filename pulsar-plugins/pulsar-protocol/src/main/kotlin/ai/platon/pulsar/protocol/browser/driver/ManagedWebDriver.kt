@@ -100,6 +100,8 @@ class ManagedWebDriver(
         else -> BrowserType.CHROME
     }
 
+    val pageViews = AtomicInteger()
+
     init {
         setLogLevel()
     }
@@ -114,9 +116,7 @@ class ManagedWebDriver(
 
         if (status.compareAndSet(DriverStatus.WORKING, DriverStatus.CANCELED)) {
             log.info("Canceling driver $this")
-            runBlocking {
-                withTimeout(wsRequestTimeout.toMillis()) { stopLoading() }
-            }
+            stopLoading()
         }
     }
 
@@ -125,7 +125,13 @@ class ManagedWebDriver(
      * The browser might redirect, so it might not be the same to [currentUrl]
      * */
     @Throws(NoSuchSessionException::class)
-    fun navigateTo(url: String) = driver.takeIf { isWorking }?.get(url.also { this.url = it })
+    fun navigateTo(url: String) {
+        if (isWorking) {
+            driver.get(url)
+            this.url = url
+            pageViews.incrementAndGet()
+        }
+    }
 
     @Throws(NoSuchSessionException::class)
     fun evaluate(expression: String): Any? {

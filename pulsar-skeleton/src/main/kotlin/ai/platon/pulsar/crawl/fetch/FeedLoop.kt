@@ -7,6 +7,9 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.apache.hadoop.io.IntWritable
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -19,14 +22,14 @@ import java.util.concurrent.atomic.AtomicInteger
  * This class feeds the fetchMonitor with input items, and re-fills them as
  * items are consumed by FetcherThread-s.
  */
-class FeedThread(
+class FeedLoop(
         private val fetchMonitor: FetchMonitor,
         private val taskScheduler: TaskScheduler,
         private val tasksMonitor: TaskMonitor,
         private val context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>,
         private val conf: ImmutableConfig
-) : Thread(), Comparable<FeedThread>, Parameterized, AutoCloseable {
-    private val LOG = LoggerFactory.getLogger(FeedThread::class.java)
+) : Comparable<FeedLoop>, Parameterized, AutoCloseable {
+    private val LOG = LoggerFactory.getLogger(FeedLoop::class.java)
 
     private val id = instanceSequence.incrementAndGet()
     private val checkInterval = Duration.ofSeconds(2)
@@ -46,8 +49,6 @@ class FeedThread(
     val isActive get() = !closed.get()
 
     init {
-        this.isDaemon = true
-        this.name = "feeder-$id"
         LOG.info(params.format())
     }
 
@@ -60,8 +61,14 @@ class FeedThread(
         )
     }
 
-    override fun run() {
-        // fetchMonitor.registerFeedThread(this)
+    suspend fun start() {
+        withContext(Dispatchers.IO) {
+            doStart()
+        }
+    }
+
+    private fun doStart() {
+        fetchMonitor.registerFeedThread(this)
 
         var batchSize = initBatchSize.toFloat()
         var round = 0
@@ -97,7 +104,7 @@ class FeedThread(
                 }
 
                 try {
-                    sleep(checkInterval.toMillis())
+                    Thread.sleep(checkInterval.toMillis())
                 } catch (ignored: Exception) {}
 
                 batchSize = adjustFeedBatchSize(batchSize)
@@ -109,7 +116,7 @@ class FeedThread(
         } catch (e: Throwable) {
             LOG.error("Feeder error reading input, record $totalFeed", e)
         } finally {
-            // fetchMonitor.unregisterFeedThread(this)
+            fetchMonitor.unregisterFeedThread(this)
         }
 
         LOG.info("Feeder finished. Feed {} rounds, last feed batch size : {}, feed total {} records",
@@ -118,10 +125,7 @@ class FeedThread(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                currentThread().interrupt()
-                join()
-            } catch (ignored: InterruptedException) {}
+
         }
     }
 
@@ -171,7 +175,7 @@ class FeedThread(
         }
     }
 
-    override fun compareTo(other: FeedThread) = id - other.id
+    override fun compareTo(other: FeedLoop) = id - other.id
 
     companion object {
         private val instanceSequence = AtomicInteger()

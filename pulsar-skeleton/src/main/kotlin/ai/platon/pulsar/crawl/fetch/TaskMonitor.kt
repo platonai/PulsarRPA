@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -27,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Tasks Monitor
- * TODO: review locks(synchronization)
  */
 class TaskMonitor(
         private val fetchMetrics: FetchMetrics,
@@ -55,7 +53,7 @@ class TaskMonitor(
     /**
      * The minimal page throughout rate
      */
-    private var minPageThoRate = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_PAGES, -1)
+    private var minPagesPerSecond = conf.getInt(FETCH_THROUGHPUT_PAGES_PER_SECOND, -1)
     /**
      * Delay before crawl
      */
@@ -65,17 +63,14 @@ class TaskMonitor(
     /**
      * The maximal number of threads allowed to access a task pool
      */
-    private var numPoolThreads: Int = 5
-    /**
-     * Fetch threads
-     */
-    private var initFetchThreadCount: Int = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+    private var numPoolThreads = 5
 
     /**
      * Once timeout, the pending items should be put to the ready pool again.
      */
     val poolPendingTimeout = conf.getDuration(FETCH_PENDING_TIMEOUT, Duration.ofMinutes(5))
 
+    private val isMaintaining = AtomicBoolean()
     private val closed = AtomicBoolean()
 
     /**
@@ -87,7 +82,7 @@ class TaskMonitor(
     val numTasks get() = numReadyTasks.get() + numPendingTasks.get()
 
     override fun setup(jobConf: ImmutableConfig) {
-        // TODO: just parse from command line
+        // TODO: just parse from string: this.options = FetchOptions.parse(System.getProperty("fetch.options"))
         this.options = FetchOptions(jobConf)
         numPoolThreads = options.numPoolThreads
         log.info(params.format())
@@ -97,7 +92,6 @@ class TaskMonitor(
         return Params.of(
                 "className", this.javaClass.simpleName,
                 "numPoolThreads", numPoolThreads,
-                "initFetchThreadCount", initFetchThreadCount,
                 "groupMode", groupMode,
                 "crawlDelay", crawlDelay,
                 "minCrawlDelay", minCrawlDelay,
@@ -135,9 +129,7 @@ class TaskMonitor(
 
         val pool = taskPools.find(poolId) ?: return null
 
-        return if (isConsumable(pool)) {
-            consumeUnchecked(pool)
-        } else null
+        return takeIf { isConsumable(pool) }?.consumeUnchecked(pool)
     }
 
     @Synchronized
@@ -151,7 +143,10 @@ class TaskMonitor(
     }
 
     fun maintain() {
-        taskPools.forEach { maintain(it) }
+        if (isMaintaining.compareAndSet(false, true)) {
+            taskPools.forEach { maintain(it) }
+        }
+        isMaintaining.set(false)
     }
 
     private fun isConsumable(pool: TaskPool): Boolean {
@@ -174,9 +169,9 @@ class TaskMonitor(
             Params.of(
                     "fetchQueue", pool.id,
                     "status", lastStatus.toString() + " -> " + pool.status,
-                    "ready", pool.readyCount,
-                    "pending", pool.pendingCount,
-                    "finished", pool.finishedCount
+                    "ready", pool.numReadyTasks,
+                    "pending", pool.numPendingTasks,
+                    "finished", pool.numTotalFinishedTasks
             ).withLogger(log).info(true)
         }
 
@@ -336,13 +331,13 @@ class TaskMonitor(
 
         val df = DecimalFormat("0.##")
 
-        if (pool.averageTps >= minPageThoRate) {
+        if (pool.averageTps >= minPagesPerSecond) {
             Params.of(
                     "EfficientQueue", pool.id,
-                    "ReadyTasks", pool.readyCount,
-                    "PendingTasks", pool.pendingCount,
-                    "FinishedTasks", pool.finishedCount,
-                    "SlowTasks", pool.slowTaskCount,
+                    "ReadyTasks", pool.numReadyTasks,
+                    "PendingTasks", pool.numPendingTasks,
+                    "FinishedTasks", pool.numTotalFinishedTasks,
+                    "SlowTasks", pool.numSlowTasks,
                     "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageTps) + "p/s"
             ).withLogger(log).info(true)
 
@@ -359,10 +354,10 @@ class TaskMonitor(
 
         Params.of(
                 "SlowestQueue", pool.id,
-                "ReadyTasks", pool.readyCount,
-                "PendingTasks", pool.pendingCount,
-                "FinishedTasks", pool.finishedCount,
-                "SlowTasks", pool.slowTaskCount,
+                "ReadyTasks", pool.numReadyTasks,
+                "PendingTasks", pool.numPendingTasks,
+                "FinishedTasks", pool.numTotalFinishedTasks,
+                "SlowTasks", pool.numSlowTasks,
                 "Throughput, ", df.format(pool.averageTime) + "s/p" + ", " + df.format(pool.averageTps) + "p/s",
                 "Deleted", deleted).withLogger(log).info(true)
 
@@ -390,7 +385,7 @@ class TaskMonitor(
         for (pool in taskPools) {
             costRecorder[pool.averageRecentTimeCost] = pool.id.host
 
-            if (pool.readyCount == 0) {
+            if (pool.numReadyTasks == 0) {
                 continue
             }
 
@@ -423,8 +418,8 @@ class TaskMonitor(
         var readyCount = 0
         var pendingCount = 0
         taskPools.forEach {
-            readyCount += it.readyCount
-            pendingCount += it.pendingCount
+            readyCount += it.numReadyTasks
+            pendingCount += it.numPendingTasks
         }
         numReadyTasks.set(readyCount)
         numPendingTasks.set(pendingCount)

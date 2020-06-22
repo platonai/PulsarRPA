@@ -179,7 +179,7 @@ public interface CapabilityTypes {
     String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
     String FETCH_FEEDER_INIT_BATCH_SIZE = "fetch.feeder.init.batch.size";
     String FETCH_THREADS_PER_POOL = "fetch.threads.per.pool";
-    String FETCH_THROUGHPUT_THRESHOLD_PAGES = "fetch.throughput.threshold.pages";
+    String FETCH_THROUGHPUT_PAGES_PER_SECOND = "fetch.throughput.threshold.pages";
     String FETCH_THROUGHPUT_THRESHOLD_SEQENCE = "fetch.throughput.threshold.sequence";
     String FETCH_THROUGHPUT_CHECK_INTERVAL = "fetch.throughput.check.interval";
     String FETCH_CHECK_INTERVAL = "fetch.check.interval";

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
+import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig

@@ -94,7 +94,8 @@ class Chrome(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-
+            remoteDevTools.values.forEach { it.close() }
+            remoteDevTools.clear()
         }
     }
 

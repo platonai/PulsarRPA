@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.persist.ProtocolStatus
 
-class CancellationException: IllegalStateException {
+class NavigateTaskCancellationException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {
@@ -36,17 +36,6 @@ class IncompleteContentException: Exception {
 
     constructor(message: String, status: ProtocolStatus, content: String) : super(message) {
         this.content = content
-    }
-
-    constructor(message: String, cause: Throwable) : super(message, cause) {}
-
-    constructor(cause: Throwable) : super(cause) {}
-}
-
-class IllegalContextStateException: IllegalStateException {
-    constructor() : super() {}
-
-    constructor(message: String) : super(message) {
     }
 
     constructor(message: String, cause: Throwable) : super(message, cause) {}

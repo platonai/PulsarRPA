@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.FETCH_TASK_REMAINDER_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -54,6 +55,7 @@ class FetchMonitor(
     private val fetchMetrics = fetchComponent.fetchMetrics
 
     private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    private val fetchConcurrency = numPrivacyContexts * conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
 
     /**
      * Timing
@@ -69,12 +71,12 @@ class FetchMonitor(
     /**
      * Monitoring
      */
-    private var checkInterval: Duration = conf.getDuration(FETCH_CHECK_INTERVAL, Duration.ofSeconds(20))
+    private var checkInterval: Duration = conf.getDuration(FETCH_CHECK_INTERVAL, Duration.ofSeconds(10))
 
     /**
      * Throughput control
      */
-    private var minSuccessPagesPerSecond = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_PAGES, -1)
+    private var minSuccessPagesPerSecond = conf.getInt(FETCH_THROUGHPUT_PAGES_PER_SECOND, -1)
     private var maxLowThroughputCount = conf.getInt(FETCH_THROUGHPUT_THRESHOLD_SEQENCE, 10)
     private var maxTotalLowThroughputCount = maxLowThroughputCount * 10
     /*
@@ -94,12 +96,12 @@ class FetchMonitor(
     /**
      * Feeder threads
      */
-    private val feedThreads = ConcurrentSkipListSet<FeedThread>()
+    private val feedLoops = ConcurrentSkipListSet<FeedLoop>()
     private val fetchLoops = ConcurrentSkipListSet<FetchLoop>()
 
-    private val isFeederAlive: Boolean get() = !feedThreads.isEmpty()
+    private val isFeederAlive: Boolean get() = !feedLoops.isEmpty()
 
-    val missionComplete: Boolean get() = !isFeederAlive && taskMonitor.numTasks == 0
+    val isMissionComplete: Boolean get() = !isFeederAlive && taskMonitor.numTasks == 0
 
     private val initialized = AtomicBoolean()
     /**
@@ -147,7 +149,8 @@ class FetchMonitor(
                 "taskScheduler", taskScheduler.name,
 
                 "numPrivacyContexts", numPrivacyContexts,
-                "numFetchThreads(deprecated)", options.numFetchThreads,
+                "fetchConcurrency", fetchConcurrency,
+
                 "numPoolThreads", options.numPoolThreads,
                 "fetchJobTimeout", fetchJobTimeout,
                 "jobIdleTimeout", jobIdleTimeout,
@@ -159,15 +162,19 @@ class FetchMonitor(
                 "maxLowThroughputCount", maxLowThroughputCount,
                 "throughputCheckTime", DateTimes.format(throughputCheckTime),
 
-                "finishScript", "file://$finishScript"
+                "finishScript", "file:$finishScript"
         )
     }
 
     fun start(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        startFeedThread(context)
+        startFeedLoop(context)
 
         if (jitIndexer.isEnabled) {
             startIndexThreads()
+        }
+
+        while (feedLoops.isEmpty()) {
+            Thread.sleep(1000)
         }
 
         startFetchLoop(context)
@@ -175,14 +182,14 @@ class FetchMonitor(
         startWatcherLoop(context)
     }
 
-    fun registerFeedThread(feedThread: FeedThread) {
-        log.info("FeedThread {} is registered", feedThread)
-        feedThreads.add(feedThread)
+    fun registerFeedThread(feedLoop: FeedLoop) {
+        log.info("FeedThread {} is registered", feedLoop)
+        feedLoops.add(feedLoop)
     }
 
-    fun unregisterFeedThread(feedThread: FeedThread) {
-        log.info("FeedThread {} is unregistered", feedThread)
-        feedThreads.remove(feedThread)
+    fun unregisterFeedThread(feedLoop: FeedLoop) {
+        log.info("FeedThread {} is unregistered", feedLoop)
+        feedLoops.remove(feedLoop)
     }
 
     fun registerFetchLoop(fetchLoop: FetchLoop) {
@@ -201,7 +208,7 @@ class FetchMonitor(
                 log.info("Closing fetch monitor #$id")
 
                 // cancel all tasks
-                feedThreads.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
+                feedLoops.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
                 fetchLoops.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
 
                 Files.deleteIfExists(finishScript)
@@ -227,16 +234,17 @@ class FetchMonitor(
      * and add it into the fetch pool
      * Non-Blocking
      */
-    private fun startFeedThread(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
-        FeedThread(this, taskScheduler, taskScheduler.tasksMonitor, context, conf).start()
+    private fun startFeedLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
+        val monitor = this
+        GlobalScope.launch {
+            FeedLoop(monitor, taskScheduler, taskScheduler.tasksMonitor, context, conf).start()
+        }
     }
 
     private fun startFetchLoop(context: ReducerContext<IntWritable, out IFetchEntry, String, GWebPage>) {
         val monitor = this
-        repeat(numPrivacyContexts) {
-            GlobalScope.launch {
-                FetchLoop(monitor, fetchComponent, parseComponent, taskScheduler, context, conf).start()
-            }
+        GlobalScope.launch {
+            FetchLoop(monitor, fetchComponent, parseComponent, taskScheduler, context, conf).start()
         }
     }
 
@@ -314,7 +322,7 @@ class FetchMonitor(
             /*
              * All fetch tasks are finished
              * */
-            if (missionComplete) {
+            if (isMissionComplete) {
                 log.info("All done, exit the job ...")
                 break
             }

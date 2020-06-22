@@ -81,7 +81,7 @@ open class AsyncBrowserEmulator(
 
         try {
             response = browseWithMinorExceptionsHandled(task, driver)
-        } catch (e: CancellationException) {
+        } catch (e: NavigateTaskCancellationException) {
             exception = e
             log.info("{}. Retry canceled task {}/{} in privacy scope later | {}", task.page.id, task.id, task.batchId, task.url)
             response = ForwardingResponse.privacyRetry(task.page)
@@ -111,7 +111,7 @@ open class AsyncBrowserEmulator(
         return FetchResult(task, response ?: ForwardingResponse(exception, task.page), exception)
     }
 
-    @Throws(CancellationException::class)
+    @Throws(NavigateTaskCancellationException::class)
     private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: ManagedWebDriver): Response {
         checkState(task)
         checkState(driver)
@@ -137,7 +137,7 @@ open class AsyncBrowserEmulator(
         return eventHandler.onAfterNavigate(navigateTask)
     }
 
-    @Throws(CancellationException::class,
+    @Throws(NavigateTaskCancellationException::class,
             IllegalContextStateException::class,
             WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): InteractResult {
@@ -168,7 +168,7 @@ open class AsyncBrowserEmulator(
         return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
     }
 
-    @Throws(CancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
         var pageSource = ""
         var i = 0
@@ -188,7 +188,7 @@ open class AsyncBrowserEmulator(
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
 
-    @Throws(CancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
 
@@ -205,7 +205,7 @@ open class AsyncBrowserEmulator(
         return result
     }
 
-    @Throws(CancellationException::class)
+    @Throws(NavigateTaskCancellationException::class)
     protected open suspend fun jsCheckDOMState(interactTask: InteractTask, result: InteractResult) {
         var status = ProtocolStatus.STATUS_SUCCESS
         val scriptTimeout = interactTask.driverConfig.scriptTimeout

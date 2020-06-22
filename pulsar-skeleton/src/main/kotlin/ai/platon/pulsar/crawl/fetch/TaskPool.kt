@@ -64,10 +64,10 @@ class TaskPool(val id: PoolId,
     val isInactive: Boolean get() = this.status == Status.INACTIVITY
     val isRetired: Boolean get() = this.status == Status.RETIRED
 
-    val readyCount: Int get() = readyTasks.size
-    val pendingCount: Int get() = pendingTasks.size
-    val finishedCount: Int get() = totalFinishedTasks
-    val slowTaskCount: Int get() = synchronized(slowTasksRecorder) { slowTasksRecorder.size }
+    val numReadyTasks: Int get() = readyTasks.size
+    val numPendingTasks: Int get() = pendingTasks.size
+    val numTotalFinishedTasks: Int get() = totalFinishedTasks
+    val numSlowTasks: Int get() = synchronized(slowTasksRecorder) { slowTasksRecorder.size }
 
     /**
      * Average cost in seconds
@@ -102,9 +102,9 @@ class TaskPool(val id: PoolId,
                 "nextFetchTime", DateTimes.format(nextFetchTime),
                 "aveTimeCost(s)", df.format(averageTime),
                 "aveThoRate(s)", df.format(averageTps),
-                "readyTasks", readyCount,
-                "pendingTasks", pendingCount,
-                "finsihedTasks", finishedCount,
+                "readyTasks", numReadyTasks,
+                "pendingTasks", numPendingTasks,
+                "finsihedTasks", numTotalFinishedTasks,
                 "unreachableTasks", unreachableTasks
         )
     }
@@ -137,8 +137,12 @@ class TaskPool(val id: PoolId,
             return null
         }
 
+        val size0 = readyTasks.size
         val fetchTask = readyTasks.poll()
         if (fetchTask != null) {
+            if(size0 == readyTasks.size) {
+                log.warn("Ready tasks does not reduce it's size")
+            }
             hangUp(fetchTask, now)
         }
 

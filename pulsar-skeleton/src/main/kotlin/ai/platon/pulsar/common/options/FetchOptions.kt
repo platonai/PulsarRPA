@@ -29,9 +29,6 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
      * */
     @Parameter(names = [PulsarParams.ARG_REDUCER_TASKS], description = "Number of reducers")
     var numReduceTasks = if (conf.isDistributedFs) conf.getInt(MAPREDUCE_JOB_REDUCES, 2) else 1
-    @Parameter(names = [PulsarParams.ARG_THREADS],
-            description = "Number of fetch threads in each reducer, auto detect if non-positive")
-    var numFetchThreads = conf.getInt(FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
     @Parameter(names = [PulsarParams.ARG_POOL_THREADS], description = "Number of fetcher threads per queue")
     var numPoolThreads = conf.getInt(FETCH_THREADS_PER_POOL, 10)
 
@@ -66,7 +63,6 @@ class FetchOptions(argv: Array<String>, conf: ImmutableConfig): CommonOptions(ar
                 PulsarParams.ARG_FETCH_MODE, fetchMode,
                 PulsarParams.ARG_STRICT_DF, strictDf,
                 PulsarParams.ARG_REDUCER_TASKS, numReduceTasks,
-                PulsarParams.ARG_THREADS, numFetchThreads,
                 PulsarParams.ARG_POOL_THREADS, numPoolThreads,
                 PulsarParams.ARG_RESUME, resume,
                 PulsarParams.ARG_PARSE, parse,
