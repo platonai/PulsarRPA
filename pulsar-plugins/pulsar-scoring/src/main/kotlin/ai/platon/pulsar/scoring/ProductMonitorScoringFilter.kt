@@ -22,8 +22,8 @@ import ai.platon.pulsar.common.config.AppConstants.FETCH_PRIORITY_DEFAULT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.filter.CrawlFilter
-import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.Name
+import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilter
 import ai.platon.pulsar.persist.WebPage
 

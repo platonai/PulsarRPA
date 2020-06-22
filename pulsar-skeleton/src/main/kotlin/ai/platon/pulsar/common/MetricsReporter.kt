@@ -75,6 +75,7 @@ class MetricsReporter(
         log.info(outerBorder)
         log.info(innerBorder)
         log.info("== Reporter is started [ " + DateTimes.now() + " ] [ " + jobName + " ] ==")
+
         counter.registeredCounters.map { readableClassName(it) }
                 .joinToString(", ", "All registered counters : ") { it }
                 .also { log.info(it) }
@@ -85,7 +86,7 @@ class MetricsReporter(
         } while (isActive)
 
         val status = counter.getStatus(true)
-        log.info("Reporter is stopped {}", status)
+        log.info("Reporter is stopped - {}", status)
     }
 
     private fun report() {

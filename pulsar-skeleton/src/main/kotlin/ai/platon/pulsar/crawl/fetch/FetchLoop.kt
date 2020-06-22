@@ -1,8 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
-import ai.platon.pulsar.common.IllegalContextStateException
-import ai.platon.pulsar.common.ReducerContext
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants.NCPU
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
@@ -40,6 +38,8 @@ class FetchLoop(
         val numRunningTasks = AtomicInteger()
         val illegalState = AtomicBoolean()
     }
+
+    private val metricsCounters = MetricsCounters()
 
     val id = instanceSequencer.incrementAndGet()
     private val log = LoggerFactory.getLogger(FetchLoop::class.java)
@@ -163,6 +163,7 @@ class FetchLoop(
                 log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page).toString())
                 if (!isCanceled) {
                     write(page.key, page)
+                    metricsCounters.inc(CommonCounter.rPersist)
                 }
             }
         } catch (e: Throwable) {
