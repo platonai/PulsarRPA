@@ -1,5 +1,6 @@
 package ai.platon.pulsar.dom.select
 
+import ai.platon.pulsar.dom.nodes.node.ext.namedRect
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.jsoup.select.Evaluator
@@ -104,20 +105,13 @@ object MathematicalSelector {
     }
 
     fun select(cssQuery: String, root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE): Elements {
-        if (offset < 1 || limit <= 0) {
-            return Elements()
-        }
-
-        // TODO: do the filter inside Collector.collect
+        checkArguments(cssQuery, offset, limit)
         return select(cssQuery, root).asSequence().drop(offset - 1).take(limit).toCollection(Elements())
     }
 
     fun <O> select(cssQuery: String,
                    root: Element, offset: Int = 1, limit: Int = Int.MAX_VALUE, transformer: (Element) -> O): List<O> {
-        if (offset < 1 || limit <= 0) {
-            return listOf()
-        }
-
+        checkArguments(cssQuery, offset, limit)
         // TODO: do the filter inside Collector.collect
         return select(cssQuery, root).asSequence().drop(offset - 1).take(limit).map { transformer(it) }.toList()
     }
@@ -188,5 +182,19 @@ object MathematicalSelector {
      */
     private fun select(evaluator: Evaluator, root: Element): Elements {
         return MathematicalCollector.collect(evaluator, root)
+    }
+
+    private fun checkArguments(cssQuery: String, offset: Int = 1, limit: Int) {
+        if (cssQuery.isBlank()) {
+            throw IllegalArgumentException("cssQuery should not be empty")
+        }
+
+        if (offset < 1) {
+            throw IllegalArgumentException("Offset should be > 1")
+        }
+
+        if (limit < 0) {
+            throw IllegalArgumentException("Limit should be >= 0")
+        }
     }
 }

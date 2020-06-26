@@ -2,21 +2,23 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.PreemptChannelSupport
 import ai.platon.pulsar.common.config.ImmutableConfig
+import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class PrivacyManager(
         val immutableConfig: ImmutableConfig
 ): PreemptChannelSupport("PrivacyManager"), AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
-
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get()
-
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
+    val closers = ConcurrentLinkedQueue<Deferred<Unit>>()
 
     open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
 
@@ -40,7 +42,11 @@ abstract class PrivacyManager(
                     // until the old context is closed entirely
                     activeContexts.remove(context.id)
                     zombieContexts.add(context)
-                    context.close()
+
+                    // close context async
+                    GlobalScope.launch {
+                        async { context.close() }.also { closers.add(it) }
+                    }
                 }
 
                 mappingFunction()

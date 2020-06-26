@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.PreemptChannelSupport
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -8,8 +9,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import com.codahale.metrics.Gauge
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withTimeout
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -38,7 +37,6 @@ class WebDriverManager(
 ): Parameterized, PreemptChannelSupport("WebDriverManager"), AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
-    private val taskTimeout = Duration.ofMinutes(5)
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get()
     val startTime = Instant.now()
@@ -78,7 +76,9 @@ class WebDriverManager(
             val driverPool = computeDriverPoolIfAbsent(browserId, task)
             var driver: ManagedWebDriver? = null
             try {
+                checkState()
                 driver = driverPool.take(task.priority, task.volatileConfig).apply { startWork() }
+                checkState()
                 task.action(driver)
             } finally {
                 driver?.let { driverPool.put(it) }
@@ -175,7 +175,7 @@ class WebDriverManager(
     }
 
     private fun checkState() {
-        if (!isActive) throw IllegalStateException("Web driver manager is closed")
+        if (!isActive) throw IllegalContextStateException("Web driver manager is closed")
     }
 
     private fun formatStatus(verbose: Boolean = false): String {

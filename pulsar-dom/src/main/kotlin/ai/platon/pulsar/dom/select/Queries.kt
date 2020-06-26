@@ -242,7 +242,7 @@ fun appendSelectorIfMissing(cssQuery: String, appendix: String): String {
     return q
 }
 
-fun Element.getAnchors(restrictCss: String, offset: Int = 0, limit: Int = Int.MAX_VALUE): Collection<Anchor> {
+fun Element.getAnchors(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<Anchor> {
     val cssQuery = appendSelectorIfMissing(restrictCss, "a")
     return select(cssQuery, offset, limit).mapNotNull {
         it.takeIf { Urls.isValidUrl(it.absUrl("href")) }
@@ -250,7 +250,7 @@ fun Element.getAnchors(restrictCss: String, offset: Int = 0, limit: Int = Int.MA
     }
 }
 
-fun Element.getImages(restrictCss: String, offset: Int = 0, limit: Int = Int.MAX_VALUE): Collection<String> {
+fun Element.getImages(restrictCss: String, offset: Int = 1, limit: Int = Int.MAX_VALUE): Collection<String> {
     val cssQuery = appendSelectorIfMissing(restrictCss, "img")
     return select(cssQuery, offset, limit) {
         it.absUrl("src").takeIf { Urls.isValidUrl(it) }

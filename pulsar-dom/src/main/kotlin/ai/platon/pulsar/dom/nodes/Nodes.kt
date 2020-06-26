@@ -70,6 +70,10 @@ data class Anchor(
     override fun compareTo(other: Anchor): Int {
         return url.compareTo(other.url)
     }
+
+    override fun toString(): String {
+        return "<a href='$url' vi='$left $top $width $height'>$text</a>"
+    }
 }
 
 data class DOMRect(var left: Double = 0.0, var top: Double = 0.0, var width: Double = 0.0, var height: Double = 0.0) {

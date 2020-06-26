@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import kotlin.concurrent.withLock
@@ -77,8 +78,11 @@ abstract class BasicDevTools(
         private val OBJECT_MAPPER = ObjectMapper()
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+        private val instanceSequencer = AtomicInteger()
     }
 
+    private val id = instanceSequencer.incrementAndGet()
     private val workerGroup = devToolsConfig.workerGroup
     private val invocationResults: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
     private val eventHandlers: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
@@ -239,7 +243,7 @@ abstract class BasicDevTools(
                 } catch (ignored: InterruptedException) {}
             }
 
-            LOG.info("Closing ws client ... | {}", wsClient)
+            LOG.trace("Closing ws client ... | {}", wsClient)
 
             try {
                 wsClient.close()
@@ -248,7 +252,7 @@ abstract class BasicDevTools(
                 LOG.warn("Unexpected throwable", e)
             }
 
-            LOG.info("WS client is closed | {}", wsClient)
+            LOG.info("Web socket client #{} is closed | {}", id, wsClient)
 
             closeLatch.countDown()
         }

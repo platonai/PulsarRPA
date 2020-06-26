@@ -82,6 +82,7 @@ class LoadingWebDriverPool(
             lock.withLock { notBusy.signalAll() }
         }
 
+        // close open tabs to reduce memory usage
         if (availableMemory < instanceRequiredMemory && driver.pageViews.get() > 40) {
             driver.retire()
         }
@@ -136,23 +137,11 @@ class LoadingWebDriverPool(
         onlineDrivers.remove(driver)
     }
 
-    @Synchronized
     @Throws(IllegalStateException::class)
     private fun take0(priority: Int, conf: VolatileConfig): ManagedWebDriver {
         checkState()
 
-        if (availableMemory > instanceRequiredMemory) {
-            if (onlineDrivers.size < capacity) {
-                // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
-                val driver = driverFactory.create(browserInstanceId, priority, conf)
-                lock.withLock {
-                    freeDrivers.add(driver)
-                    notEmpty.signalAll()
-                    onlineDrivers.add(driver)
-                }
-                logDriverOnline(driver)
-            }
-        }
+        createDriverIfNecessary(priority, conf)
 
         numWaiting.incrementAndGet()
         var driver = freeDrivers.poll()
@@ -168,6 +157,27 @@ class LoadingWebDriverPool(
         numWaiting.decrementAndGet()
 
         return driver?:throw WebDriverPoolExhaust("Driver pool is exhaust")
+    }
+
+    private fun createDriverIfNecessary(priority: Int, conf: VolatileConfig) {
+        if (shouldCreateDriver()) {
+            synchronized(driverFactory) {
+                if (shouldCreateDriver()) {
+                    // log.info("Creating the {}/{}th web driver for context {}", numCreate, capacity, browserInstanceId)
+                    val driver = driverFactory.create(browserInstanceId, priority, conf)
+                    lock.withLock {
+                        freeDrivers.add(driver)
+                        notEmpty.signalAll()
+                        onlineDrivers.add(driver)
+                    }
+                    logDriverOnline(driver)
+                }
+            }
+        }
+    }
+
+    private fun shouldCreateDriver(): Boolean {
+        return availableMemory > instanceRequiredMemory && onlineDrivers.size < capacity
     }
 
     private fun doClose(timeToWait: Duration) {

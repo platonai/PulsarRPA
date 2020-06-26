@@ -5,7 +5,7 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <import resource="../common-context.xml"/>
+    <import resource="../proxy-context.xml"/>
 
     <bean id="protocolFactory" class="ai.platon.pulsar.crawl.protocol.ProtocolFactory" destroy-method="close">
         <constructor-arg ref="conf" />

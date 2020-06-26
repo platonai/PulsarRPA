@@ -107,23 +107,4 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyPoolMonitorFactory" class="ai.platon.pulsar.common.proxy.ProxyPoolMonitorFactory" destroy-method="close">
-        <constructor-arg ref="proxyPool"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="proxyLoaderFactory" class="ai.platon.pulsar.common.proxy.ProxyLoaderFactory" destroy-method="close">
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="proxyLoader" factory-bean="proxyLoaderFactory" factory-method="get" destroy-method="close"/>
-
-    <bean id="proxyPool" class="ai.platon.pulsar.common.proxy.LoadingProxyPool">
-        <constructor-arg ref="proxyLoader"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="proxyPoolMonitor" init-method="start" destroy-method="close"
-          factory-bean="proxyPoolMonitorFactory" factory-method="get" depends-on="fetchComponent"/>
-
 </beans>
