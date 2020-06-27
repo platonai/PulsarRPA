@@ -86,7 +86,8 @@ class HtmlParser(
 
     @Throws(MalformedURLException::class, Exception::class)
     private fun doParse(page: WebPage): ParseResult {
-        tracer?.trace("Parsing page | {} | {} | {} | {}",
+        tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
+                page.id,
                 Strings.readableBytes(page.contentBytes.toLong()),
                 page.protocolStatus,
                 page.htmlIntegrity,

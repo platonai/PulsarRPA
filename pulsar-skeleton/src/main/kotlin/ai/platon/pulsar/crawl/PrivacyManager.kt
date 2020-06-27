@@ -43,10 +43,12 @@ abstract class PrivacyManager(
                     activeContexts.remove(context.id)
                     zombieContexts.add(context)
 
+                    context.close()
+
                     // close context async
-                    GlobalScope.launch {
-                        async { context.close() }.also { closers.add(it) }
-                    }
+//                    GlobalScope.launch {
+//                        async { context.close() }.also { closers.add(it) }
+//                    }
                 }
 
                 mappingFunction()

@@ -7,6 +7,8 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
@@ -41,7 +43,8 @@ open class StreamingCrawler(
     }
 
     private val conf = session.sessionConfig
-    private var concurrency = conf.getInt(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+    private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    private val fetchConcurrency = numPrivacyContexts * conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
     private val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -60,7 +63,7 @@ open class StreamingCrawler(
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
-                val state = load(j, url, this)
+                val state = fetch(j, url, this)
                 if (state != FlowState.CONTINUE) {
                     return@supervisorScope
                 }
@@ -72,7 +75,7 @@ open class StreamingCrawler(
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
-            val state = load(j, url, scope)
+            val state = fetch(j, url, scope)
             if (state != FlowState.CONTINUE) {
                 return
             }
@@ -81,7 +84,7 @@ open class StreamingCrawler(
         log.info("Total {} tasks are loaded in session {}", numTasks, session)
     }
 
-    private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
+    private suspend fun fetch(j: Int, url: String, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
 
@@ -90,7 +93,7 @@ open class StreamingCrawler(
             updateConcurrencyIfNecessary()
         }
 
-        while (isAppActive && numRunningTasks.get() >= concurrency) {
+        while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
             delay(1000)
         }
 
@@ -128,8 +131,8 @@ open class StreamingCrawler(
         val path = AppPaths.TMP_CONF_DIR.resolve("fetch-concurrency-override")
         if (Files.exists(path)) {
             withContext(Dispatchers.IO) {
-                val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:concurrency
-                if (concurrencyOverride != concurrency) {
+                val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:fetchConcurrency
+                if (concurrencyOverride != fetchConcurrency) {
                     session.sessionConfig.setInt(CapabilityTypes.FETCH_CONCURRENCY, concurrencyOverride)
                 }
             }

@@ -252,7 +252,7 @@ abstract class BasicDevTools(
                 LOG.warn("Unexpected throwable", e)
             }
 
-            LOG.info("Web socket client #{} is closed | {}", id, wsClient)
+            // LOG.info("Web socket client #{} is closed | {}", id, wsClient)
 
             closeLatch.countDown()
         }

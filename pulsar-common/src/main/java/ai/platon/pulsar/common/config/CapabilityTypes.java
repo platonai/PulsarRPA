@@ -219,6 +219,7 @@ public interface CapabilityTypes {
      * Browser control
      */
     String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
+    String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
     String BROWSER_TYPE = "browser.type";

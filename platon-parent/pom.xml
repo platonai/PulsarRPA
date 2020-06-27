@@ -26,7 +26,7 @@
     <packaging>pom</packaging>
 
     <description/>
-    <url>http://platonic.fun</url>
+    <url>http://platon.ai</url>
     <inceptionYear>2014</inceptionYear>
 
     <licenses>
@@ -37,8 +37,8 @@
     </licenses>
 
     <organization>
-        <name>The Plato Data Engine</name>
-        <url>http://platonic.fun/</url>
+        <name>The Platon Data Engine</name>
+        <url>http://platon.ai</url>
     </organization>
 
     <developers>
@@ -53,6 +53,23 @@
         <system>GitHub</system>
         <url>http://www.github.com/platonai</url>
     </issueManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
+        <url>https://github.com/platonai/pulsar.git</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <defaultGoal>install</defaultGoal>

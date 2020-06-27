@@ -27,6 +27,7 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.URL
+import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
@@ -276,7 +277,10 @@ class LoadComponent(
             return WebPage.NIL
         }
 
-        var page = webDb.getOrNil(url, options.ignoreQuery)
+        var page = if (options.expires.seconds > 1) {
+            webDb.getOrNil(url, options.ignoreQuery)
+        } else WebPage.NIL
+
         val reason = getFetchReason(page, options)
         if (page.isNil) {
             page = fetchComponent.createFetchEntry(url, options)

@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.driver
 import ai.platon.pulsar.common.IllegalContextStateException
 import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.PreemptChannelSupport
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -38,6 +39,7 @@ class WebDriverManager(
     private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
 
     private val closed = AtomicBoolean()
+    private val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val isActive get() = !closed.get()
     val startTime = Instant.now()
     val numReset = MetricsManagement.meter(this, "numReset")
@@ -91,7 +93,7 @@ class WebDriverManager(
         return driverPools.computeIfAbsent(browserId) { path ->
             require("browser" in path.toString())
             LoadingWebDriverPool(browserId, task.priority, driverFactory, immutableConfig).also {
-                it.allocate(task.volatileConfig)
+                it.takeIf { eagerAllocateTabs }?.allocate(task.volatileConfig)
             }
         }
     }

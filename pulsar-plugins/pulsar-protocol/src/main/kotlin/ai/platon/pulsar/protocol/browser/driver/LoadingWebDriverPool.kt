@@ -73,8 +73,10 @@ class LoadingWebDriverPool(
         }
     }
 
+    @Throws(WebDriverPoolExhaust::class)
     fun take(conf: VolatileConfig): ManagedWebDriver = take(0, conf)
 
+    @Throws(WebDriverPoolExhaust::class)
     fun take(priority: Int, conf: VolatileConfig) = take0(priority, conf).also { numWorking.incrementAndGet() }
 
     fun put(driver: ManagedWebDriver) {
@@ -137,7 +139,7 @@ class LoadingWebDriverPool(
         onlineDrivers.remove(driver)
     }
 
-    @Throws(IllegalStateException::class)
+    @Throws(WebDriverPoolExhaust::class)
     private fun take0(priority: Int, conf: VolatileConfig): ManagedWebDriver {
         checkState()
 
@@ -148,7 +150,7 @@ class LoadingWebDriverPool(
         var i = 0
         while (isActive && driver == null) {
             if (i++ > 45) {
-                log.warn("Timeout to wait for a free driver")
+                log.info("Timeout to wait for a free driver | {}", formatStatus())
                 break
             }
             lock.withLock { notEmpty.await(1, TimeUnit.SECONDS) }
@@ -156,7 +158,7 @@ class LoadingWebDriverPool(
         }
         numWaiting.decrementAndGet()
 
-        return driver?:throw WebDriverPoolExhaust("Driver pool is exhaust")
+        return driver?:throw WebDriverPoolExhaust("Driver pool is exhausted")
     }
 
     private fun createDriverIfNecessary(priority: Int, conf: VolatileConfig) {
@@ -232,7 +234,7 @@ class LoadingWebDriverPool(
 
     private fun checkState() {
         if (!isActive) {
-            throw IllegalStateException("Loading web driver pool is closed")
+            throw IllegalContextStateException("Loading web driver pool is closed")
         }
     }
 }

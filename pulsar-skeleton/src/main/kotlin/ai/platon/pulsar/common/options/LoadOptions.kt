@@ -162,10 +162,6 @@ open class LoadOptions: CommonOptions {
      * If shortenKey is set, also ignore url query when fetch pages
      * */
     val ignoreQuery get() = shortenKey
-    /**
-     * The privacy context id to fetch the pages
-     * */
-    var privacyContextId = PrivacyContextId.DEFAULT
 
     open val modifiedParams: Params get() {
         val rowFormat = "%40s: %s"
@@ -216,7 +212,6 @@ open class LoadOptions: CommonOptions {
         }
 
         itemOptions.volatileConfig = conf?:volatileConfig
-        itemOptions.privacyContextId = itemOptions.volatileConfig?.getBean(PrivacyContextId::class)?: privacyContextId
 
         return itemOptions
     }

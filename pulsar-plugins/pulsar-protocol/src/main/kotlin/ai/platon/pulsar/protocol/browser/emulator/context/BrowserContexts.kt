@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.proxy.*
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
@@ -31,34 +30,37 @@ class WebDriverContext(
     companion object {
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
 
-        private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
+        private val numGlobalRunningTasks = AtomicInteger()
         private val lock = ReentrantLock()
         private val notBusy = lock.newCondition()
 
         init {
-            MetricsManagement.register(this,"runningTasks", Gauge<Int> { runningTasks.size })
+            MetricsManagement.register(this,"globalRunningTasks", Gauge<Int> { numGlobalRunningTasks.get() })
         }
     }
 
     private val log = LoggerFactory.getLogger(WebDriverContext::class.java)!!
     private val fetchMaxRetry = conf.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+    private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
+            numGlobalRunningTasks.incrementAndGet()
             driverManager.run(browserId, task.priority, task.volatileConfig) {
                 browseFun(task, it)
             }
         } catch (e: WebDriverPoolExhaust) {
-            log.info("Web driver pool exhausted, retry task in crawl scope {}/{} | {}", task.id, task.batchId, task.url)
-            FetchResult(task, ForwardingResponse.crawlRetry(task.page))
+            log.warn("Retry task {} in crawl scope because pool is exhausted | {}", task.id, e.message)
+            FetchResult.crawlRetry(task)
         } catch (e: PoolRetiredException) {
-            log.warn("Retry task {}/{} in privacy scope because pool is retired | {}", task.id, task.batchId, e.message)
-            FetchResult.privacyRetry(task)
+            log.warn("Retry task {} in crawl scope because pool is retired | {}", task.id, e.message)
+            FetchResult.crawlRetry(task)
         } finally {
             runningTasks.remove(task)
+            numGlobalRunningTasks.decrementAndGet()
             if (runningTasks.isEmpty()) {
                 lock.withLock { notBusy.signalAll().also { log.info("No running task now") } }
             }
