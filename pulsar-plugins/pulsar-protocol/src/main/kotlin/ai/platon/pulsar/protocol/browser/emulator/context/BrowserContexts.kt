@@ -62,7 +62,7 @@ class WebDriverContext(
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
             if (runningTasks.isEmpty()) {
-                lock.withLock { notBusy.signalAll().also { log.info("No running task now") } }
+                lock.withLock { notBusy.signalAll().also { log.info("No running task now | {}", browserId) } }
             }
         }
     }

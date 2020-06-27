@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.Metric
 import com.codahale.metrics.SharedMetricRegistries
-import com.codahale.metrics.Slf4jReporter
 import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
@@ -45,7 +44,7 @@ class MetricsManagement(
     private val metricRegistry = SharedMetricRegistries.getOrCreate(DEFAULT_METRICS_NAME)
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
-    private val slf4jReporter: Slf4jReporter
+    private val slf4jReporter: CodahaleSlf4jReporter
 
     val metricsReporter = MetricsReporter(metricsCounters, conf)
 
@@ -62,7 +61,7 @@ class MetricsManagement(
 
         val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
         val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
-        slf4jReporter = Slf4jReporter.forRegistry(metricRegistry)
+        slf4jReporter = CodahaleSlf4jReporter.forRegistry(metricRegistry)
                 .scheduleOn(executor).shutdownExecutorOnStop(true)
                 .outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
                 .convertRatesTo(TimeUnit.SECONDS)
