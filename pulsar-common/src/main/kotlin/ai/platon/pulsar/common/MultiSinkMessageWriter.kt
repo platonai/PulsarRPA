@@ -24,8 +24,12 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
         Files.createDirectories(reportDir)
     }
 
+    fun getPath(filename: String): Path {
+        return reportDir.resolve(filename)
+    }
+
     fun readAllLines(filename: String): List<String> {
-        val path = reportDir.resolve(filename)
+        val path = getPath(filename)
         if (Files.exists(path)) {
             return Files.readAllLines(path)
         }
@@ -33,7 +37,7 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
     }
 
     fun write(message: String, filename: String) {
-        write(message, reportDir.resolve(filename))
+        write(message, getPath(filename))
     }
 
     fun write(message: String, file: Path) {

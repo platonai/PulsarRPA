@@ -36,6 +36,7 @@
     <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager" destroy-method="close">
         <constructor-arg ref="proxyPoolMonitor"/>
         <constructor-arg ref="webDriverManager"/>
+        <constructor-arg ref="emulatorMonitor"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -63,6 +64,12 @@
         <constructor-arg ref="privacyManager"/>
         <constructor-arg ref="browserEmulator"/>
         <constructor-arg ref="asyncBrowserEmulator"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="emulatorMonitor" class="ai.platon.pulsar.protocol.browser.emulator.EmulatorMonitor"
+          init-method="start" destroy-method="close" depends-on="webDriverManager">
+        <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="conf"/>
     </bean>
 

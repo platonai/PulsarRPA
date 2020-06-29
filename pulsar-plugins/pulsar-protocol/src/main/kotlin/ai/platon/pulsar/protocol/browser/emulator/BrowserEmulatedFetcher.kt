@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.common.IllegalContextStateException
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -83,9 +83,9 @@ class BrowserEmulatedFetcher(
         return privacyManager.run(createFetchTask(page)) { task, driver ->
             try {
                 asyncBrowserEmulator.fetch(task, driver)
-            } catch (e: IllegalStateException) {
-                log.info("Illegal state, task is cancelled | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
-                FetchResult.canceled(task)
+            } catch (e: IllegalApplicationContextStateException) {
+                log.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
+                throw e
             }
         }.response
     }
@@ -223,7 +223,7 @@ class BrowserEmulatedFetcher(
                 batch.proxyEntry = driver.proxyEntry
                 batch.beforeFetch(task.page)
                 asyncBrowserEmulator.fetch(task, driver)
-            } catch (e: IllegalContextStateException) {
+            } catch (e: IllegalApplicationContextStateException) {
                 log.info("Illegal context state, cancel task {}/{} | {}", task.id, task.batchId, task.url)
                 FetchResult(task, ForwardingResponse.canceled(task.page))
             } catch (e: TimeoutCancellationException) {

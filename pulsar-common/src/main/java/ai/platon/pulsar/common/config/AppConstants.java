@@ -193,6 +193,8 @@ public interface AppConstants {
     /**
      * Browser
      * */
+    int BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY = 500 * 1024 * 1024; // 500 MiB
+
     Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";

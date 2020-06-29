@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.IllegalContextStateException
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -41,10 +41,10 @@ open class BrowserEmulator(
      *
      * @param task The task to fetch
      * @return The result of this fetch
-     * @throws IllegalContextStateException Throw if the browser is closed or the program is closed
+     * @throws IllegalApplicationContextStateException Throw if the browser is closed or the program is closed
      * @throws NavigateTaskCancellationException Throw if the task is cancelled
      * */
-    @Throws(IllegalContextStateException::class, NavigateTaskCancellationException::class)
+    @Throws(IllegalApplicationContextStateException::class, NavigateTaskCancellationException::class)
     open fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         if (!isActive) {
             return FetchResult.canceled(task)
@@ -59,7 +59,7 @@ open class BrowserEmulator(
         driverManager.cancel(task.url)
     }
 
-    @Throws(IllegalContextStateException::class)
+    @Throws(IllegalApplicationContextStateException::class)
     protected open fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         checkState()
 
@@ -137,7 +137,7 @@ open class BrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class,
-            IllegalContextStateException::class,
+            IllegalApplicationContextStateException::class,
             IllegalClassException::class,
             WebDriverException::class)
     private fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): InteractResult {
@@ -157,7 +157,7 @@ open class BrowserEmulator(
         return interact(InteractTask(task, driverConfig, driver))
     }
 
-    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class, IllegalClassException::class, WebDriverException::class)
     protected open fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
 
@@ -174,7 +174,7 @@ open class BrowserEmulator(
         return result
     }
 
-    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class, IllegalClassException::class, WebDriverException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class, IllegalClassException::class, WebDriverException::class)
     private fun runScriptTask(task: InteractTask, result: InteractResult, action: () -> Unit) {
         var status: ProtocolStatus? = null
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common
 
-class IllegalContextStateException: IllegalStateException {
+class IllegalApplicationContextStateException: IllegalStateException {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {

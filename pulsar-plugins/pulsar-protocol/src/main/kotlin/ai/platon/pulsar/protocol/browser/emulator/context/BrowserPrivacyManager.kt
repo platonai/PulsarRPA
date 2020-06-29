@@ -14,6 +14,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import ai.platon.pulsar.protocol.browser.emulator.EmulatorMonitor
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.withTimeout
 import java.time.Duration
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class BrowserPrivacyManager(
         val driverManager: WebDriverManager,
         val proxyPoolMonitor: ProxyPoolMonitor,
+        var emulatorMonitor: EmulatorMonitor,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
     private val tracer = log.takeIf { it.isTraceEnabled }

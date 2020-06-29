@@ -10,7 +10,8 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
-import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaust
+import ai.platon.pulsar.protocol.browser.driver.WebDriverManager.Companion.DRIVER_CLOSE_TIME_OUT
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhausted
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -28,8 +29,6 @@ class WebDriverContext(
         private val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
-        val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
-
         private val numGlobalRunningTasks = AtomicInteger()
         private val lock = ReentrantLock()
         private val notBusy = lock.newCondition()
@@ -51,8 +50,8 @@ class WebDriverContext(
             numGlobalRunningTasks.incrementAndGet()
             driverManager.run(browserId, task.priority, task.volatileConfig) {
                 browseFun(task, it)
-            }
-        } catch (e: WebDriverPoolExhaust) {
+            }?:FetchResult.crawlRetry(task)
+        } catch (e: WebDriverPoolExhausted) {
             log.warn("Retry task {} in crawl scope because pool is exhausted | {}", task.id, e.message)
             FetchResult.crawlRetry(task)
         } catch (e: PoolRetiredException) {
@@ -62,7 +61,11 @@ class WebDriverContext(
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
             if (runningTasks.isEmpty()) {
-                lock.withLock { notBusy.signalAll().also { log.info("No running task now | {}", browserId) } }
+                lock.withLock { notBusy.signalAll().also { log.info("No running task in driver context now | {}", browserId) } }
+            }
+
+            if (numGlobalRunningTasks.get() == 0) {
+                log.info("No running task now")
             }
         }
     }
@@ -155,7 +158,7 @@ class ProxyContext(
      * */
     private val maxFetchSuccess = conf.getInt(CapabilityTypes.PROXY_MAX_FETCH_SUCCESS, Int.MAX_VALUE / 10)
     private val maxAllowedProxyAbsence = conf.getInt(CapabilityTypes.PROXY_MAX_ALLOWED_PROXY_ABSENCE, 10)
-    private val minTimeToLive = Duration.ofSeconds(10)
+    private val minTimeToLive = Duration.ofSeconds(30)
     private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
 
@@ -163,7 +166,7 @@ class ProxyContext(
     val isActive get() = proxyPoolMonitor.isActive && !closing.get() && !closed.get()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return checkAbnormalResult(task) ?:run0(task, browseFun)?:FetchResult.privacyRetry(task)
+        return checkAbnormalResult(task) ?:run0(task, browseFun)
     }
 
     @Throws(ProxyVendorUntrustedException::class)

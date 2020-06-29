@@ -12,7 +12,7 @@ open class Crawler(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(Crawler::class.java)
     val closed = AtomicBoolean()
-    val isAlive get() = !closed.get()
+    val isActive get() = !closed.get()
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {

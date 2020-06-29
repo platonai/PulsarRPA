@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
-import ai.platon.pulsar.common.IllegalContextStateException
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -62,10 +62,10 @@ abstract class BrowserEmulatorBase(
         }
     }
 
-    @Throws(IllegalContextStateException::class)
+    @Throws(IllegalApplicationContextStateException::class)
     protected fun checkState() {
         if (!isActive) {
-            throw IllegalContextStateException("Emulator is closed")
+            throw IllegalApplicationContextStateException("Emulator is closed")
         }
     }
 
@@ -73,7 +73,7 @@ abstract class BrowserEmulatorBase(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected fun checkState(driver: ManagedWebDriver) {
         checkState()
 
@@ -88,7 +88,7 @@ abstract class BrowserEmulatorBase(
      * Check task state
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
-    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected fun checkState(task: FetchTask) {
         checkState()
 

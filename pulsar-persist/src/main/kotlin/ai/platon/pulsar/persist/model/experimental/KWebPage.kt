@@ -706,24 +706,11 @@ class KWebPage : Comparable<KWebPage> {
         setPageText(text)
     }
 
-    /**
-     * {WebPage#setParseStatus} must be called later if the status is empty
-     */
-    fun getParseStatus(): ParseStatus {
-        val parseStatus = page.parseStatus
-        return ParseStatus.box(parseStatus ?: GParseStatus.newBuilder().build())
-    }
-
-    fun setParseStatus(parseStatus: ParseStatus) {
-        page.parseStatus = parseStatus.unbox()
-    }
-
-    /**
-     * Embedded hyperlinks which direct outside of the current domain.
-     */
-    fun getLiveLinks(): Map<CharSequence, GHypeLink> {
-        return page.liveLinks
-    }
+    var parseStatus: ParseStatus
+        get() = ParseStatus.box(page.parseStatus ?: GParseStatus.newBuilder().build())
+        set(value) {
+            page.parseStatus = value.unbox()
+        }
 
     fun getSimpleLiveLinks(): Collection<String> {
         return CollectionUtils.collect(page.liveLinks.keys) { obj: CharSequence -> obj.toString() }
@@ -738,44 +725,37 @@ class KWebPage : Comparable<KWebPage> {
         liveLinks.forEach(Consumer { l: HypeLink -> links[l.url] = l.unbox() })
     }
 
-    /**
-     * @param links the value to set.
-     */
-    fun setLiveLinks(links: Map<CharSequence?, GHypeLink?>?) {
-        page.liveLinks = links
-    }
-
     fun addLiveLink(hypeLink: HypeLink) {
         page.liveLinks[hypeLink.url] = hypeLink.unbox()
-    }
-
-    fun getVividLinks(): Map<CharSequence, CharSequence> {
-        return page.vividLinks
     }
 
     fun getSimpleVividLinks(): Collection<String> {
         return CollectionUtils.collect(page.vividLinks.keys) { obj: CharSequence -> obj.toString() }
     }
 
-    fun setVividLinks(links: Map<CharSequence?, CharSequence?>?) {
-        page.vividLinks = links
-    }
+    var liveLinks: Map<CharSequence, GHypeLink>
+        get() = page.liveLinks
+        set(value) {
+            page.liveLinks = value
+        }
 
-    fun getDeadLinks(): List<CharSequence> {
-        return page.deadLinks
-    }
+    var vividLinks: Map<CharSequence, CharSequence>
+        get() = page.vividLinks
+        set(value) {
+            page.vividLinks = value
+        }
 
-    fun setDeadLinks(deadLinks: List<CharSequence?>?) {
-        page.deadLinks = deadLinks
-    }
+    var deadLinks: List<CharSequence>
+        get() = page.deadLinks
+        set(value) {
+            page.deadLinks = value
+        }
 
-    fun getLinks(): List<CharSequence> {
-        return page.links
-    }
-
-    fun setLinks(links: List<CharSequence?>?) {
-        page.links = links
-    }
+    var links: List<CharSequence>
+        get() = page.links
+        set(value) {
+            page.links = value
+        }
 
     /**
      * Record all links appeared in a page
@@ -799,7 +779,7 @@ class KWebPage : Comparable<KWebPage> {
                 links.add(url)
             }
         }
-        setLinks(links)
+        this.links = links
         setImpreciseLinkCount(links.size)
     }
 
@@ -816,7 +796,7 @@ class KWebPage : Comparable<KWebPage> {
                 links.add(url)
             }
         }
-        setLinks(links)
+        this.links = links
         setImpreciseLinkCount(links.size)
     }
 
@@ -928,7 +908,7 @@ class KWebPage : Comparable<KWebPage> {
     /********************************************************************************
      * Page Model
      */
-    val pageModel: PageModel get() = PageModel.box(page.pageModel)
+    val pageModel get() = PageModel.box(page.pageModel)
 
     /********************************************************************************
      * Scoring
@@ -962,10 +942,7 @@ class KWebPage : Comparable<KWebPage> {
     /********************************************************************************
      * Index
      */
-    fun getIndexTimeHistory(defaultValue: String): String {
-        val s = metadata[Name.INDEX_TIME_HISTORY]
-        return s ?: defaultValue
-    }
+    fun getIndexTimeHistory(defaultValue: String) = metadata[Name.INDEX_TIME_HISTORY] ?: defaultValue
 
     fun putIndexTimeHistory(indexTime: Instant?) {
         var indexTimeHistory = metadata[Name.INDEX_TIME_HISTORY]
@@ -986,34 +963,23 @@ class KWebPage : Comparable<KWebPage> {
         return firstIndexTime ?: defaultValue
     }
 
-    override fun hashCode(): Int {
-        return url.hashCode()
-    }
+    override fun hashCode() = url.hashCode()
 
-    override fun compareTo(other: KWebPage): Int {
-        return url.compareTo(other.url)
-    }
+    override fun compareTo(other: KWebPage) = url.compareTo(other.url)
 
-    override fun equals(other: Any?): Boolean {
-        return other is KWebPage && other.url == url
-    }
+    override fun equals(other: Any?) = other is KWebPage && other.url == url
 
-    override fun toString(): String {
-        return url
-        // return WebPageFormatter(this).format()
-    }
+    override fun toString() = url
 
     companion object {
         val LOG = LoggerFactory.getLogger(KWebPage::class.java)
         var sequencer = AtomicInteger()
         var NIL = newInternalPage(AppConstants.NIL_PAGE_URL, 0, "nil", "nil")
-        fun newWebPage(originalUrl: String): KWebPage {
-            return newWebPage(originalUrl, false)
-        }
 
-        fun newWebPage(originalUrl: String, volatileConfig: VolatileConfig): KWebPage {
-            return newWebPageInternal(originalUrl, volatileConfig)
-        }
+        fun newWebPage(originalUrl: String) = newWebPage(originalUrl, false)
+
+        fun newWebPage(originalUrl: String, volatileConfig: VolatileConfig) =
+                newWebPageInternal(originalUrl, volatileConfig)
 
         fun newWebPage(originalUrl: String, shortenKey: Boolean): KWebPage {
             val url = if (shortenKey) normalize(originalUrl, shortenKey) else originalUrl
@@ -1063,36 +1029,26 @@ class KWebPage : Comparable<KWebPage> {
         /**
          * Initialize a WebPage with the underlying GWebPage instance.
          */
-        fun box(url: String, reversedUrl: String, page: GWebPage): KWebPage {
-            return KWebPage(url, reversedUrl, page)
-        }
+        fun box(url: String, reversedUrl: String, page: GWebPage) = KWebPage(url, reversedUrl, page)
 
         /**
          * Initialize a WebPage with the underlying GWebPage instance.
          */
-        fun box(url: String, page: GWebPage): KWebPage {
-            return KWebPage(url, page, false)
-        }
+        fun box(url: String, page: GWebPage) = KWebPage(url, page, false)
 
         /**
          * Initialize a WebPage with the underlying GWebPage instance.
          */
-        fun box(url: String, page: GWebPage, urlReversed: Boolean): KWebPage {
-            return KWebPage(url, page, urlReversed)
-        }
+        fun box(url: String, page: GWebPage, urlReversed: Boolean) = KWebPage(url, page, urlReversed)
 
         /********************************************************************************
          * Other
          */
-        fun wrapKey(mark: Mark): Utf8 {
-            return u8(mark.value())!!
-        }
+        fun wrapKey(mark: Mark) = u8(mark.value())
 
         /**
          * What's the difference between String and Utf8?
          */
-        fun u8(value: String?): Utf8? {
-            return value?.let { Utf8(it) }
-        }
+        fun u8(value: String?) = value?.let { Utf8(it) }
     }
 }

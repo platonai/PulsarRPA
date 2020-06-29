@@ -1,14 +1,13 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
-import ai.platon.pulsar.common.IllegalContextStateException
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -147,7 +146,7 @@ class PulsarContext private constructor(): AutoCloseable {
 
         private fun ensureAlive() {
             if (closed.get()) {
-                throw IllegalContextStateException("Pulsar context is closed")
+                throw IllegalApplicationContextStateException("Pulsar context is closed")
             }
         }
     }

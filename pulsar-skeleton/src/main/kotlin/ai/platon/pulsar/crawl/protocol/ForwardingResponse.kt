@@ -48,11 +48,16 @@ open class ForwardingResponse(
         fun unfetched(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_NOTFETCHED, page)
         fun unchanged(page: WebPage) = ForwardingResponse(page.protocolStatus, page)
         fun canceled(page: WebPage) = ForwardingResponse(ProtocolStatus.STATUS_CANCELED, page)
+
         fun retry(page: WebPage, retryScope: RetryScope) = ForwardingResponse(retryScope, page)
         fun retry(page: WebPage, retryScope: RetryScope, retryReason: Exception) = ForwardingResponse(retryScope, retryReason, page)
+
         fun privacyRetry(page: WebPage) = retry(page, RetryScope.PRIVACY)
         fun privacyRetry(page: WebPage, reason: Exception) = retry(page, RetryScope.PRIVACY, reason)
+
         fun crawlRetry(page: WebPage) = retry(page, RetryScope.CRAWL)
+        fun crawlRetry(page: WebPage, reason: Exception) = retry(page, RetryScope.CRAWL, reason)
+
         fun failed(page: WebPage, e: Throwable?) = ForwardingResponse(e, page)
     }
 }

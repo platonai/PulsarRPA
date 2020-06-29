@@ -2,32 +2,26 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.FileCommand
-import ai.platon.pulsar.common.concurrent.stopExecution
+import ai.platon.pulsar.common.concurrent.AbstractMonitor
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.commons.io.FileUtils
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.*
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicInteger
 
 open class ProxyPoolMonitor(
         val proxyPool: ProxyPool,
         private val conf: ImmutableConfig
-): AutoCloseable {
-    private var executor: ScheduledExecutorService? = null
-    private var scheduledFuture: ScheduledFuture<*>? = null
+): AbstractMonitor() {
     private val isForceIdle get() = FileCommand.check(AppConstants.CMD_PROXY_FORCE_IDLE, 15)
 
-    var initialDelay = Duration.ofSeconds(15)
-    var watchInterval: Duration = Duration.ofSeconds(5)
     var lastActiveTime = Instant.now()
     var idleTimeout = conf.getDuration(CapabilityTypes.PROXY_IDLE_TIMEOUT, Duration.ofMinutes(10))
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -43,22 +37,6 @@ open class ProxyPoolMonitor(
     open val currentInterceptProxyEntry: ProxyEntry? = null
     val isEnabled = isProxyEnabled()
     val isDisabled get() = !isEnabled
-    val closed = AtomicBoolean()
-    val isActive get() = isEnabled && !closed.get()
-
-    /**
-     * Starts the reporter polling at the given period with the specific runnable action
-     * Visible only for testing
-     */
-    @Synchronized
-    fun start(initialDelay: Duration, period: Duration, runnable: () -> Unit) {
-        log.takeIf { isDisabled }?.info("Proxy monitor is disabled")?.let { return@start }
-        require(scheduledFuture == null) { "Proxy monitor is already started" }
-        if (executor == null) executor = createDefaultExecutor()
-        scheduledFuture = executor?.scheduleAtFixedRate(runnable, initialDelay.seconds, period.seconds, TimeUnit.SECONDS)
-    }
-
-    fun start() = start(initialDelay, watchInterval) { watch() }
 
     fun warnUp() {
         if (isActive) {
@@ -66,7 +44,7 @@ open class ProxyPoolMonitor(
         }
     }
 
-    open fun watch() {}
+    override fun watch() {}
 
     /**
      * Run the task, it it's disabled, call the innovation directly
@@ -111,15 +89,6 @@ open class ProxyPoolMonitor(
         return statusString
     }
 
-    override fun close() {
-        try {
-            executor?.also { stopExecution(it, scheduledFuture, true) }
-            executor = null
-        } catch (e: Exception) {
-            log.warn("Unexpected exception when close proxy monitor", e)
-        }
-    }
-
     /**
      * Proxy system can be enabled/disabled at runtime
      * */
@@ -160,7 +129,6 @@ open class ProxyPoolMonitor(
     }
 
     companion object {
-        private val log = LoggerFactory.getLogger(ProxyPoolMonitor::class.java)
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
         private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.USER_HOME)
                 .map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
@@ -189,11 +157,6 @@ open class ProxyPoolMonitor(
 
         fun disableProviders() {
             Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
-        }
-
-        private fun createDefaultExecutor(): ScheduledExecutorService {
-            val factory = ThreadFactoryBuilder().setNameFormat("pm-%d").build()
-            return Executors.newSingleThreadScheduledExecutor(factory)
         }
     }
 }

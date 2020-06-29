@@ -50,7 +50,16 @@ abstract class PreemptChannelSupport(val name: String = "") {
      * without obtaining a lock, all task attempt must wait
      * */
     fun <T> preempt(preemptiveTask: () -> T): T {
-        return beforePreempt().runCatching { preemptiveTask() }.getOrThrow().also { afterPreempt() }
+        return beforePreempt().runCatching { preemptiveTask() }
+                .onFailure { afterPreempt() }.onSuccess { afterPreempt() }.getOrThrow()
+    }
+
+    fun <T> whenNormal(task: () -> T): T {
+        return beforeTask().runCatching { task() }.onFailure { afterTask() }.onSuccess { afterTask() }.getOrThrow()
+    }
+
+    suspend fun <T> whenNormalDeferred(task: suspend () -> T): T {
+        return beforeTask().runCatching { task() }.onFailure { afterTask() }.onSuccess { afterTask() }.getOrThrow()
     }
 
     private fun beforePreempt() {
@@ -73,14 +82,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
                 noPreemptiveTasks.signalAll()
             }
         }
-    }
-
-    fun <T> whenNormal(task: () -> T): T {
-        return beforeTask().runCatching { task() }.getOrThrow().also { afterTask() }
-    }
-
-    suspend fun <T> whenNormalDeferred(task: suspend () -> T): T {
-        return beforeTask().runCatching { task() }.getOrThrow().also { afterTask() }
     }
 
     private fun beforeTask() {

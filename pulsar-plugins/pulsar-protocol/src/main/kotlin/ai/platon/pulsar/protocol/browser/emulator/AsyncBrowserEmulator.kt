@@ -47,9 +47,9 @@ open class AsyncBrowserEmulator(
      *
      * @param task The task to fetch
      * @return The result of this fetch
-     * @throws IllegalContextStateException Throw if the browser is closed or the program is closed
+     * @throws IllegalApplicationContextStateException Throw if the browser is closed or the program is closed
      * */
-    @Throws(IllegalContextStateException::class)
+    @Throws(IllegalApplicationContextStateException::class)
     open suspend fun fetch(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         return takeIf { isActive }?.browseWithDriver(task, driver) ?: FetchResult.canceled(task)
     }
@@ -68,7 +68,7 @@ open class AsyncBrowserEmulator(
         }
     }
 
-    @Throws(IllegalContextStateException::class)
+    @Throws(IllegalApplicationContextStateException::class)
     protected open suspend fun browseWithDriver(task: FetchTask, driver: ManagedWebDriver): FetchResult {
         checkState()
 
@@ -138,7 +138,7 @@ open class AsyncBrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class,
-            IllegalContextStateException::class,
+            IllegalApplicationContextStateException::class,
             WebDriverException::class)
     private suspend fun navigateAndInteract(task: FetchTask, driver: ManagedWebDriver, driverConfig: BrowserControl): InteractResult {
         eventHandler.logBeforeNavigate(task, driverConfig)
@@ -168,7 +168,7 @@ open class AsyncBrowserEmulator(
         return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
     }
 
-    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected open suspend fun interactNoJsInvaded(interactTask: InteractTask): InteractResult {
         var pageSource = ""
         var i = 0
@@ -188,7 +188,7 @@ open class AsyncBrowserEmulator(
         return InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
     }
 
-    @Throws(NavigateTaskCancellationException::class, IllegalContextStateException::class)
+    @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
     protected open suspend fun interact(task: InteractTask): InteractResult {
         val result = InteractResult(ProtocolStatus.STATUS_SUCCESS, null)
 

@@ -222,6 +222,7 @@ public interface CapabilityTypes {
     String BROWSER_EAGER_ALLOCATE_TABS = "browser.eager.allocate.tabs";
     String BROWSER_WEB_DRIVER_CLASS = "browser.web.driver.class";
     String BROWSER_WEB_DRIVER_PRIORITY = "browser.web.driver.priority";
+    String BROWSER_DRIVER_POOL_IDLE_TIMEOUT = "browser.driver.pool.idle.timeout";
     String BROWSER_TYPE = "browser.type";
     String BROWSER_INCOGNITO = "browser.incognito";
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";

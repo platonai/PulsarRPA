@@ -44,9 +44,7 @@ open class BrowserPrivacyContext(
     }
 
     open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        if (!isActive) return FetchResult.privacyRetry(task)
-        beforeRun(task)
-        return proxyContext.run(task, browseFun).also { afterRun(it) }
+        return checkAbnormalResult(task) ?: run0(task, browseFun)
     }
 
     /**
@@ -81,6 +79,19 @@ open class BrowserPrivacyContext(
             log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
         }
+    }
+
+    private fun checkAbnormalResult(task: FetchTask): FetchResult? {
+        if (!isActive) {
+            return FetchResult.privacyRetry(task)
+        }
+
+        return null
+    }
+
+    private suspend fun run0(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        beforeRun(task)
+        return proxyContext.run(task, browseFun).also { afterRun(it) }
     }
 
     private fun beforeRun(task: FetchTask) {

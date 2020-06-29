@@ -2,11 +2,10 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
@@ -18,9 +17,9 @@ import com.codahale.metrics.SharedMetricRegistries
 import kotlinx.coroutines.*
 import org.h2tools.dev.util.ConcurrentLinkedList
 import oshi.SystemInfo
-import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
@@ -34,6 +33,7 @@ open class StreamingCrawler(
     companion object {
         private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
         private val numRunningTasks = AtomicInteger()
+        private val illegalState = AtomicBoolean()
 
         init {
             metricRegistry.register(prependReadableClassName(this,"runningTasks"), object: Gauge<Int> {
@@ -43,39 +43,41 @@ open class StreamingCrawler(
     }
 
     private val conf = session.sessionConfig
-    private val numPrivacyContexts = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val fetchConcurrency = numPrivacyContexts * conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
+    private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+    private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
+    private val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
     private val idleTimeout = Duration.ofMinutes(10)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
-    private val isAppActive get() = isAlive && !isIdle
+    private val isAppActive get() = isActive && !isIdle && !illegalState.get()
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
     private val memoryRemaining get() = availableMemory - requiredMemory
     private val numTasks = AtomicInteger()
-    private val taskTimeout = Duration.ofMinutes(5)
+    private val taskTimeout = Duration.ofMinutes(6)
+    private var flowState = FlowState.CONTINUE
 
     var onLoadComplete: (WebPage) -> Unit = {}
 
     open suspend fun run() {
         supervisorScope {
             urls.forEachIndexed { j, url ->
-                val state = fetch(j, url, this)
+                val state = load(j, url, this)
                 if (state != FlowState.CONTINUE) {
                     return@supervisorScope
                 }
             }
         }
 
-        log.info("Total {} tasks are loaded", numTasks)
+        log.info("Total {} tasks are loaded in session {}", numTasks, session)
     }
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
-            val state = fetch(j, url, scope)
+            val state = load(j, url, scope)
             if (state != FlowState.CONTINUE) {
                 return
             }
@@ -84,14 +86,9 @@ open class StreamingCrawler(
         log.info("Total {} tasks are loaded in session {}", numTasks, session)
     }
 
-    private suspend fun fetch(j: Int, url: String, scope: CoroutineScope): FlowState {
+    private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
-
-        // update fetch concurrency on command
-        if (j % 20 == 0) {
-            updateConcurrencyIfNecessary()
-        }
 
         while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
             delay(1000)
@@ -109,16 +106,10 @@ open class StreamingCrawler(
         }
 
         var page: WebPage?
-        var flowState = FlowState.CONTINUE
         numRunningTasks.incrementAndGet()
         val context = Dispatchers.Default + CoroutineName("w")
         scope.launch(context) {
-            page = withTimeoutOrNull(taskTimeout.toMillis()) {
-                session.runCatching { loadDeferred(url, options) }
-                        .onFailure { flowState = handleException(url, it) }
-                        .getOrNull()
-                        ?.also { pageCollector?.add(it) }
-            }
+            page = withTimeoutOrNull(taskTimeout.toMillis()) { load(url) }
             page?.let(onLoadComplete)
             numRunningTasks.decrementAndGet()
             lastActiveTime = Instant.now()
@@ -127,22 +118,22 @@ open class StreamingCrawler(
         return flowState
     }
 
-    private suspend fun updateConcurrencyIfNecessary() {
-        val path = AppPaths.TMP_CONF_DIR.resolve("fetch-concurrency-override")
-        if (Files.exists(path)) {
-            withContext(Dispatchers.IO) {
-                val concurrencyOverride = Files.readAllLines(path).firstOrNull()?.toIntOrNull()?:fetchConcurrency
-                if (concurrencyOverride != fetchConcurrency) {
-                    session.sessionConfig.setInt(CapabilityTypes.FETCH_CONCURRENCY, concurrencyOverride)
-                }
-            }
-        }
+    private suspend fun load(url: String): WebPage? {
+        return session.runCatching { loadDeferred(url, options) }
+                .onFailure { flowState = handleException(url, it) }
+                .getOrNull()
+                ?.also { pageCollector?.add(it) }
     }
 
     private fun handleException(url: String, e: Throwable): FlowState {
         when (e) {
+            is IllegalApplicationContextStateException -> {
+                log.info("Illegal context, quit streaming crawler")
+                illegalState.set(true)
+                return FlowState.BREAK
+            }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
-            is TimeoutCancellationException -> log.warn("TimeoutCancellationException: {} | {}", Strings.simplifyException(e), url)
+            is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
             else -> log.error("Unexpected exception", e)
         }
         return FlowState.CONTINUE

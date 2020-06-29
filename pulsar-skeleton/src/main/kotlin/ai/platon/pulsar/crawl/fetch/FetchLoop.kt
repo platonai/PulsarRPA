@@ -86,9 +86,9 @@ class FetchLoop(
                 launch(Dispatchers.Default + CoroutineName("w")) {
                     try {
                         schedule()?.let { fetch(it) }
-                    } catch (e: IllegalContextStateException) {
+                    } catch (e: IllegalApplicationContextStateException) {
                         illegalState.set(true)
-                        log.warn("Illegal state | {}", e.message)
+                        log.warn("Illegal context state | {}", e.message)
                     } catch (e: TimeoutCancellationException) {
                         log.warn("Coroutine timeout canceled | {}", e.message)
                     } catch (e: Throwable) {

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.IllegalContextStateException
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.PreemptChannelSupport
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -36,13 +37,20 @@ class WebDriverManager(
         val driverFactory: WebDriverFactory,
         val immutableConfig: ImmutableConfig
 ): Parameterized, PreemptChannelSupport("WebDriverManager"), AutoCloseable {
-    private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
+    companion object {
+        val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
+    }
 
+    private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
     private val closed = AtomicBoolean()
     private val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
+    private val taskTimeout = Duration.ofMinutes(4)
+    private val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
+
     val isActive get() = !closed.get()
     val startTime = Instant.now()
     val numReset = MetricsManagement.meter(this, "numReset")
+    val numTimeout = MetricsManagement.meter(this, "numTimeout")
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
     val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
@@ -57,18 +65,23 @@ class WebDriverManager(
     }
 
     /**
+     * TODO: consider proactor model instead
+     *
      * reactor: tell me if you can do this job
      * proactor: here is a job, tell me if you finished it
+     *
+     * @return The result of action, or null if timeout
      * */
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalApplicationContextStateException::class)
     suspend fun <R> run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
-                        action: suspend (driver: ManagedWebDriver) -> R
+                        action: suspend (driver: ManagedWebDriver) -> R?
     ) = run(WebDriverTask(browserId, priority, volatileConfig, action))
 
-    @Throws(IllegalStateException::class)
-    suspend fun <R> run(task: WebDriverTask<R>): R {
+    @Throws(IllegalApplicationContextStateException::class)
+    suspend fun <R> run(task: WebDriverTask<R>): R? {
         val browserId = task.browserId
-        return whenNormalDeferred {
+        var result: R? = null
+        whenNormalDeferred {
             checkState()
 
             if (isRetiredPool(browserId)) {
@@ -79,13 +92,22 @@ class WebDriverManager(
             var driver: ManagedWebDriver? = null
             try {
                 checkState()
-                driver = driverPool.take(task.priority, task.volatileConfig).apply { startWork() }
-                checkState()
-                task.action(driver)
+                driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
+                result = withTimeoutOrNull(taskTimeout.toMillis()) {
+                    checkState()
+                    task.action(driver)
+                }
+
+                if (result == null) {
+                    numTimeout.mark()
+                    log.warn("Task timeout with driver {} | {} | {}", driver, formatStatus(), browserId)
+                }
             } finally {
                 driver?.let { driverPool.put(it) }
             }
         }
+
+        return result
     }
 
     @Synchronized
@@ -177,7 +199,7 @@ class WebDriverManager(
     }
 
     private fun checkState() {
-        if (!isActive) throw IllegalContextStateException("Web driver manager is closed")
+        if (!isActive) throw IllegalApplicationContextStateException("Web driver manager is closed")
     }
 
     private fun formatStatus(verbose: Boolean = false): String {

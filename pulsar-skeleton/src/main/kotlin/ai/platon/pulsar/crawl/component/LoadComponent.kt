@@ -5,7 +5,10 @@ import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
+import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -32,6 +35,7 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Collectors
 
 /**
@@ -46,22 +50,22 @@ class LoadComponent(
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent,
         val updateComponent: UpdateComponent,
-        val messageWriter: MiscMessageWriter
+        val messageWriter: MiscMessageWriter,
+        val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
         private val globalFetchingUrls = ConcurrentSkipListSet<String>()
-        // TODO: a better way to manage page cache
-        private val pageCache get() = PulsarContext.pageCache
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val fetchTaskTracker get() = fetchComponent.fetchMetrics
-
+    private val storingContent get() = immutableConfig.getBoolean(CapabilityTypes.FETCH_STORE_CONTENT, true)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
+    private val numWrite = AtomicInteger()
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -431,8 +435,6 @@ class LoadComponent(
             return
         }
 
-        pageCache.put(page.url, page)
-
         val protocolStatus = page.protocolStatus
         if (protocolStatus.isFailed) {
             updateComponent.updateFetchSchedule(page)
@@ -447,10 +449,25 @@ class LoadComponent(
         updateComponent.updateFetchSchedule(page)
 
         if (options.persist) {
+            // Remove content if storingContent is false. Content is added to page earlier
+            // so PageParser is able to parse it, now, we can clear it
+            if (alwaysFalse() && page.content != null && !storingContent) {
+                if (!page.isSeed) {
+                    page.setContent(ByteArray(0))
+                } else if (page.fetchCount > 2) {
+                    page.setContent(ByteArray(0))
+                }
+            }
+
             webDb.put(page)
+            numWrite.incrementAndGet()
+
             if (!options.lazyFlush) {
                 flush()
+            } else if (numWrite.get() % 20 == 0) {
+                flush()
             }
+
             if (log.isTraceEnabled) {
                 log.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes.toLong()), page.url)
             }
