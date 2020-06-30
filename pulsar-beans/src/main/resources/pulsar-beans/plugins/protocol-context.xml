@@ -21,22 +21,21 @@
     <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
         <constructor-arg ref="driverControl"/>
         <constructor-arg ref="proxyPool"/>
-        <constructor-arg ref="proxyPoolMonitor"/>
+        <constructor-arg ref="proxyPoolManager"/>
         <constructor-arg ref="browserInstancePool"/>
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDriverManager" class="ai.platon.pulsar.protocol.browser.driver.WebDriverManager" destroy-method="close">
+    <bean id="webDriverManager" class="ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager" destroy-method="close">
         <constructor-arg ref="driverControl"/>
-        <constructor-arg ref="proxyPoolMonitor"/>
+        <constructor-arg ref="proxyPoolManager"/>
         <constructor-arg ref="webDriverFactory"/>
         <constructor-arg ref="conf"/>
     </bean>
 
     <bean id="privacyManager" class="ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager" destroy-method="close">
-        <constructor-arg ref="proxyPoolMonitor"/>
+        <constructor-arg ref="proxyPoolManager"/>
         <constructor-arg ref="webDriverManager"/>
-        <constructor-arg ref="emulatorMonitor"/>
         <constructor-arg ref="conf"/>
     </bean>
 

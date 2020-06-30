@@ -9,8 +9,8 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
-import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
-import ai.platon.pulsar.protocol.browser.driver.WebDriverManager.Companion.DRIVER_CLOSE_TIME_OUT
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhausted
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
@@ -25,16 +25,20 @@ import kotlin.random.Random
 
 class WebDriverContext(
         val browserId: BrowserInstanceId,
-        private val driverManager: WebDriverManager,
+        private val driverPoolManager: WebDriverPoolManager,
         private val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
+        private val numGlobalTasks = AtomicInteger()
+        private val numGlobalFinishedTasks = AtomicInteger()
         private val lock = ReentrantLock()
         private val notBusy = lock.newCondition()
 
         init {
             MetricsManagement.register(this,"globalRunningTasks", Gauge<Int> { numGlobalRunningTasks.get() })
+            MetricsManagement.register(this,"globalTasks", Gauge<Int> { numGlobalTasks.get() })
+            MetricsManagement.register(this,"globalFinishedTasks", Gauge<Int> { numGlobalFinishedTasks.get() })
         }
     }
 
@@ -43,31 +47,40 @@ class WebDriverContext(
     private val runningTasks = ConcurrentLinkedDeque<FetchTask>()
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
+    private val isShutdown = AtomicBoolean()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+        numGlobalTasks.incrementAndGet()
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             numGlobalRunningTasks.incrementAndGet()
-            driverManager.run(browserId, task.priority, task.volatileConfig) {
+            driverPoolManager.run(browserId, task.priority, task.volatileConfig) {
                 browseFun(task, it)
             }?:FetchResult.crawlRetry(task)
         } catch (e: WebDriverPoolExhausted) {
-            log.warn("Retry task {} in crawl scope because pool is exhausted | {}", task.id, e.message)
+            log.warn("Retry task {} in crawl scope | cause by: {}", task.id, e.message)
             FetchResult.crawlRetry(task)
         } catch (e: PoolRetiredException) {
-            log.warn("Retry task {} in crawl scope because pool is retired | {}", task.id, e.message)
+            log.warn("Retry task {} in crawl scope | caused by: {}", task.id, e.message)
             FetchResult.crawlRetry(task)
         } finally {
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
+            numGlobalFinishedTasks.incrementAndGet()
+
             if (runningTasks.isEmpty()) {
                 lock.withLock { notBusy.signalAll().also { log.info("No running task in driver context now | {}", browserId) } }
             }
 
             if (numGlobalRunningTasks.get() == 0) {
-                log.info("No running task now")
+                log.info("No running task now | $numGlobalFinishedTasks/$numGlobalTasks (finished/all)")
             }
         }
+    }
+
+    fun shutdown() {
+        isShutdown.set(true)
+        close()
     }
 
     override fun close() {
@@ -84,14 +97,8 @@ class WebDriverContext(
         // close underlying IO based modules asynchronously
         closeUnderlyingLayer()
 
-        // Wait for all tasks return
-        lock.withLock {
-            var i = 0
-            try {
-                while (i++ < 20 && runningTasks.isNotEmpty()) {
-                    notBusy.await(1, TimeUnit.SECONDS)
-                }
-            } catch (ignored: InterruptedException) {}
+        if (!isShutdown.get()) {
+            waitUntilNoRunningTasks()
         }
 
         if (runningTasks.isNotEmpty()) {
@@ -109,9 +116,19 @@ class WebDriverContext(
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
-        driverManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
+        driverPoolManager.closeDriverPool(browserId, DRIVER_CLOSE_TIME_OUT)
+    }
 
-        log.info("Underlying layer is closed successfully")
+    private fun waitUntilNoRunningTasks() {
+        // Wait for all tasks return
+        lock.withLock {
+            var i = 0
+            try {
+                while (i++ < 20 && runningTasks.isNotEmpty()) {
+                    notBusy.await(1, TimeUnit.SECONDS)
+                }
+            } catch (ignored: InterruptedException) {}
+        }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
@@ -119,7 +136,7 @@ class WebDriverContext(
             return FetchResult.privacyRetry(task)
         }
 
-        if (driverManager.isRetiredPool(browserId)) {
+        if (driverPoolManager.isRetiredPool(browserId)) {
             return FetchResult.privacyRetry(task)
         }
 
@@ -135,7 +152,7 @@ class WebDriverContext(
 
 class ProxyContext(
         var proxyEntry: ProxyEntry? = null,
-        private val proxyPoolMonitor: ProxyPoolMonitor,
+        private val proxyPoolManager: ProxyPoolManager,
         private val driverContext: WebDriverContext,
         private val conf: ImmutableConfig
 ): AutoCloseable {
@@ -162,8 +179,8 @@ class ProxyContext(
     private val closing = AtomicBoolean()
     private val closed = AtomicBoolean()
 
-    val isEnabled get() = proxyPoolMonitor.isEnabled
-    val isActive get() = proxyPoolMonitor.isActive && !closing.get() && !closed.get()
+    val isEnabled get() = proxyPoolManager.isEnabled
+    val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
@@ -175,7 +192,7 @@ class ProxyContext(
         var success = false
         return try {
             beforeTaskStart(task)
-            proxyPoolMonitor.runWith(proxyEntry) { driverContext.run(task, browseFun) }.also {
+            proxyPoolManager.runWith(proxyEntry) { driverContext.run(task, browseFun) }.also {
                 success = it.response.status.isSuccess
                 it.response.pageDatum.proxyEntry = proxyEntry
                 numProxyAbsence.takeIf { it.get() > 0 }?.decrementAndGet()
@@ -267,7 +284,7 @@ class ProxyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            proxyPoolMonitor.activeProxyEntries.remove(driverContext.browserId.dataDir)
+            proxyPoolManager.activeProxyEntries.remove(driverContext.browserId.dataDir)
         }
     }
 }

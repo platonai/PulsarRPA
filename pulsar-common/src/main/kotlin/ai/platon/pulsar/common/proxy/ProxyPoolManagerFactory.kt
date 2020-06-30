@@ -5,24 +5,24 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicReference
 
-class ProxyPoolMonitorFactory(
+class ProxyPoolManagerFactory(
         val proxyPool: ProxyPool,
         val conf: ImmutableConfig
 ): AutoCloseable {
-    private val log = LoggerFactory.getLogger(ProxyPoolMonitorFactory::class.java)
+    private val log = LoggerFactory.getLogger(ProxyPoolManagerFactory::class.java)
 
-    private val proxyPoolMonitorRef = AtomicReference<ProxyPoolMonitor>()
-    fun get(): ProxyPoolMonitor = createIfAbsent(conf)
+    private val proxyPoolMonitorRef = AtomicReference<ProxyPoolManager>()
+    fun get(): ProxyPoolManager = createIfAbsent(conf)
 
     override fun close() {
         proxyPoolMonitorRef.getAndSet(null)?.close()
     }
 
-    private fun createIfAbsent(conf: ImmutableConfig): ProxyPoolMonitor {
+    private fun createIfAbsent(conf: ImmutableConfig): ProxyPoolManager {
         if (proxyPoolMonitorRef.get() == null) {
-            synchronized(ProxyPoolMonitorFactory::class) {
+            synchronized(ProxyPoolManagerFactory::class) {
                 if (proxyPoolMonitorRef.get() == null) {
-                    val defaultClazz = ProxyPoolMonitor::class.java
+                    val defaultClazz = ProxyPoolManager::class.java
                     val clazz = try {
                         conf.getClass(PROXY_POOL_MONITOR_CLASS, defaultClazz)
                     } catch (e: Exception) {
@@ -31,7 +31,7 @@ class ProxyPoolMonitorFactory(
                         defaultClazz
                     }
                     val ref = clazz.constructors.first { it.parameters.size == 2 }.newInstance(proxyPool, conf)
-                    proxyPoolMonitorRef.set(ref as? ProxyPoolMonitor)
+                    proxyPoolMonitorRef.set(ref as? ProxyPoolManager)
                 }
             }
         }

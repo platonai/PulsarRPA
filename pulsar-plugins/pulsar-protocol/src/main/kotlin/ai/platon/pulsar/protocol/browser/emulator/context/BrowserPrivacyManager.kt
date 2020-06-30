@@ -1,9 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.MetricsManagement
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
+import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyContextId
@@ -13,85 +11,55 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
-import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
-import ai.platon.pulsar.protocol.browser.emulator.EmulatorMonitor
-import com.codahale.metrics.Gauge
-import kotlinx.coroutines.withTimeout
-import java.time.Duration
-import java.util.concurrent.atomic.AtomicInteger
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 
 class BrowserPrivacyManager(
-        val driverManager: WebDriverManager,
-        val proxyPoolMonitor: ProxyPoolMonitor,
-        var emulatorMonitor: EmulatorMonitor,
+        val driverPoolManager: WebDriverPoolManager,
+        val proxyPoolManager: ProxyPoolManager,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
     private val tracer = log.takeIf { it.isTraceEnabled }
-    val numPrivacyContexts = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
-    val taskTimeout = Duration.ofMinutes(5)
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
-    val maxPrivacyRetries = 2
-
-    private val nextContextIndex = AtomicInteger()
-
-    init {
-        mapOf(
-                "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
-                "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
-                "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
-                "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
-        ).forEach { MetricsManagement.register(this, it.key, it.value) }
-    }
 
     suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
-        return run(computeNextContextIfAbsent().id, task, fetchFun)
+        return run(computeNextContext(), task, fetchFun)
     }
 
-    suspend fun run(
-            id: PrivacyContextId, task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult
-    ) = takeIf { isActive }?.run0(id, task, fetchFun) ?: FetchResult.crawlRetry(task)
+    override fun newContext(id: PrivacyContextId): BrowserPrivacyContext {
+        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, immutableConfig, id)
+        log.info("Privacy context is created #{}", context.display)
+        return context
+    }
+
+    private suspend fun run(
+            privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult
+    ) = takeIf { isActive }?.run0(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task)
 
     private suspend fun run0(
-            id: PrivacyContextId, task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult
+            privacyContext: PrivacyContext, task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult
     ): FetchResult {
-        var result: FetchResult
+        if (privacyContext !is BrowserPrivacyContext) {
+            throw ClassCastException("The privacy context should be a BrowserPrivacyContext")
+        }
 
-        var i = 1
-        do {
-            val task0 = if (i == 1) task else task.clone()
-            result = FetchResult.crawlRetry(task0)
+        var result = FetchResult.crawlRetry(task)
 
-            // if the current context is not leaked, return the current context, or block and create a new one
-            val context = computeIfNotActive(id)
+        try {
+            require(!task.isCanceled)
+            require(task.state.get() == FetchTask.State.NOT_READY)
+            require(task.proxyEntry == null)
 
-            if (i > 1) {
-                log.info("{}. Fetching task {} the {}th times in context #{} | {}",
-                        task0.page.id, task0.id, i, context.display, task0.url)
+            task.markReady()
+            result = privacyContext.run(task) { _, driver ->
+                task.startWork()
+                fetchFun(task, driver)
             }
-
-            whenNormalDeferred {
-                if (numRunningPreemptiveTasks.get() != 0) {
-                    log.error("Wrong preempt channel status, it indicates bugs in PreemptChannelSupport | {}",
-                            formatPreemptChannelStatus())
-                }
-
-                try {
-                    require(!task0.isCanceled)
-                    require(task0.state.get() == FetchTask.State.NOT_READY)
-                    require(task0.proxyEntry == null)
-
-                    task0.markReady()
-                    task0.nPrivacyRetries = i
-                    withTimeout(taskTimeout.toMillis()) {
-                        result = context.run(task0) { _, driver -> task0.startWork(); fetchFun(task0, driver) }
-                    }
-                } finally {
-                    task0.done()
-                    updatePrivacyContext(context, result)
-                }
-            }
-        } while (!result.isSuccess && !task0.isCanceled && context.isLeaked && i++ <= maxPrivacyRetries)
+        } finally {
+            task.done()
+            task.page.variables["privacyContext"] = formatPrivacyContext(privacyContext)
+            updatePrivacyContext(privacyContext, result)
+        }
 
         if (result.isPrivacyRetry) {
             result.status.upgradeRetry(RetryScope.CRAWL).also { logCrawlRetry(task) }
@@ -100,63 +68,9 @@ class BrowserPrivacyManager(
         return result
     }
 
-    /**
-     * Get the current privacy context if it's not leaked, or create a new pure privacy context
-     *
-     * If the current privacy is not leaked, return the current privacy context
-     * If the privacy leak occurs, block until the the context is closed completely, and create a new privacy context
-     * */
-    @Synchronized
-    override fun computeIfNotActive(id: PrivacyContextId): BrowserPrivacyContext {
-        val context = computeIfAbsent(id)
-        if (context.isActive) {
-            return context
-        }
-
-        val context0 = computeIfLeaked(context) {
-            require(numPreemptiveTasks.get() > 0) { "Should have at least one active preemptive task" }
-            require(numRunningPreemptiveTasks.get() > 0) { "Should have at least one running preemptive task" }
-            newContext(PrivacyContextId.generate()).also { activeContexts[id] = it }
-        }
-
-        log.info("Privacy context is created #{}", context0.display)
-        reportZombieContexts()
-
-        return context0
-    }
-
-    @Synchronized
-    override fun computeIfAbsent(id: PrivacyContextId): BrowserPrivacyContext {
-        return activeContexts.computeIfAbsent(id) { newContext(it) } as BrowserPrivacyContext
-    }
-
-    @Synchronized
-    override fun newContext(id: PrivacyContextId): BrowserPrivacyContext {
-        return BrowserPrivacyContext(proxyPoolMonitor, driverManager, immutableConfig, id)
-    }
-
-    @Synchronized
-    fun computeNextContextIfAbsent(): BrowserPrivacyContext {
-        val size = activeContexts.size
-        if (size < numPrivacyContexts) {
-            return computeIfAbsent(PrivacyContextId.generate())
-        }
-
-        val index = nextContextIndex.getAndIncrement()
-        if (index >= size - 1) {
-            nextContextIndex.set(0)
-        }
-
-        var context: PrivacyContext? = null
-        var i = 0
-        val iterator = activeContexts.values.iterator()
-        while (i++ <= nextContextIndex.get() && iterator.hasNext()) {
-            context = iterator.next()
-        }
-
-        log.takeIf { it.isTraceEnabled }?.trace("Use the {}/{}th context {}", i, size, context?.id)
-
-        return (context as? BrowserPrivacyContext)?:computeIfAbsent(PrivacyContextId.generate())
+    private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
+        val ident = privacyContext.id.ident.substringAfter("ctx.")
+        return String.format("%s(%.2f)", ident, privacyContext.throughput)
     }
 
     /**
@@ -169,10 +83,11 @@ class BrowserPrivacyManager(
         }
 
         val status = result.response.status
-        if (privacyContext.isActive && result.task.nPrivacyRetries == 1) {
+        if (privacyContext.isActive) {
             when {
                 status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> privacyContext.markLeaked()
-                status.isRetry(RetryScope.PRIVACY) -> privacyContext.markWarning()
+                status.isRetry(RetryScope.PRIVACY) -> privacyContext.markWarning(2)
+                status.isRetry(RetryScope.CRAWL) -> privacyContext.markWarning()
                 status.isSuccess -> privacyContext.markSuccess()
             }
 
@@ -203,23 +118,6 @@ class BrowserPrivacyManager(
         if (task.nPrivacyRetries > 1) {
             log.takeIf { task.nPrivacyRetries > 1 }?.warn("{}. Task is still privacy leaked after {}/{} tries | {}",
                     task.id, task.nPrivacyRetries, task.nRetries, task.url)
-        }
-    }
-
-    private fun reportZombieContexts() {
-        if (zombieContexts.isNotEmpty()) {
-            val prefix = "The latest context throughput: "
-            val postfix = " (success/sec)"
-            zombieContexts.take(15)
-                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.throughput) }
-                    .let { log.info(it) }
-        }
-
-        if (numBadContexts > maxAllowedBadContexts) {
-            log.warn("Warning!!! There latest $numBadContexts contexts are bad, the proxy vendor is untrusted")
-
-            // We may want to exit the process
-            // throw FatalPrivacyContextException("Too many bad contexts, the proxy vendor might untrusted")
         }
     }
 }

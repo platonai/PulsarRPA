@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
+import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class WebDriverFactory(
         val driverControl: WebDriverControl,
         val proxyPool: ProxyPool,
-        val proxyPoolMonitor: ProxyPoolMonitor,
+        val proxyPoolManager: ProxyPoolManager,
         val browserInstanceManager: BrowserInstanceManager,
         val immutableConfig: ImmutableConfig
 ) {
@@ -42,7 +42,7 @@ class WebDriverFactory(
     @Throws(DriverLaunchException::class)
     @Synchronized
     fun create(browserInstanceId: BrowserInstanceId, priority: Int, conf: VolatileConfig): ManagedWebDriver {
-        log.info("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
+        log.debug("Creating web driver #{} | {}", numDrivers.incrementAndGet(), browserInstanceId)
 
         val capabilities = driverControl.createGeneralOptions()
         browserInstanceId.proxyServer?.let { setProxy(capabilities, it) }
@@ -101,12 +101,12 @@ class WebDriverFactory(
         var proxyEntry: ProxyEntry? = null
         var hostPort: String? = null
 
-        if (proxyPoolMonitor.waitUntilOnline()) {
-            val port = proxyPoolMonitor.localPort
-            val currentProxyEntry = proxyPoolMonitor.currentInterceptProxyEntry
+        if (proxyPoolManager.waitUntilOnline()) {
+            val port = proxyPoolManager.localPort
+            val currentProxyEntry = proxyPoolManager.currentInterceptProxyEntry
             if (port > 0 && currentProxyEntry != null) {
                 proxyEntry = currentProxyEntry
-                hostPort = "127.0.0.1:${proxyPoolMonitor.localPort}".takeIf { localForwardServerEnabled }?:currentProxyEntry.hostPort
+                hostPort = "127.0.0.1:${proxyPoolManager.localPort}".takeIf { localForwardServerEnabled }?:currentProxyEntry.hostPort
             } else {
                 log.info("Invalid port for proxy connector, proxy is disabled")
             }

@@ -15,7 +15,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.codahale.metrics.SharedMetricRegistries
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -28,7 +28,7 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 open class BrowserEmulateEventHandler(
-        private val driverManager: WebDriverManager,
+        private val driverPoolManager: WebDriverPoolManager,
         private val messageWriter: MiscMessageWriter,
         private val immutableConfig: ImmutableConfig
 ) {
@@ -38,7 +38,7 @@ open class BrowserEmulateEventHandler(
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
-    protected val jsInvadingEnabled = driverManager.driverControl.jsInvadingEnabled
+    protected val jsInvadingEnabled = driverPoolManager.driverControl.jsInvadingEnabled
 
     protected val metrics = SharedMetricRegistries.getDefault()
     protected val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))

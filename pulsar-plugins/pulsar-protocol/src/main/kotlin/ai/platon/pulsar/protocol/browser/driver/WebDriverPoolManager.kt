@@ -7,7 +7,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TAB
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.proxy.ProxyPoolMonitor
+import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.withTimeoutOrNull
@@ -31,9 +32,9 @@ class PoolRetiredException(message: String): IllegalStateException(message)
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class WebDriverManager(
+class WebDriverPoolManager(
         val driverControl: WebDriverControl,
-        val proxyMonitor: ProxyPoolMonitor,
+        val proxyManager: ProxyPoolManager,
         val driverFactory: WebDriverFactory,
         val immutableConfig: ImmutableConfig
 ): Parameterized, PreemptChannelSupport("WebDriverManager"), AutoCloseable {
@@ -41,10 +42,10 @@ class WebDriverManager(
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
     }
 
-    private val log = LoggerFactory.getLogger(WebDriverManager::class.java)
+    private val log = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
     private val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
-    private val taskTimeout = Duration.ofMinutes(4)
+    private val taskTimeout = Duration.ofMinutes(5)
     private val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
 
     val isActive get() = !closed.get()
@@ -55,17 +56,23 @@ class WebDriverManager(
     val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
     val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
 
+    val numWaiting get() = driverPools.values.sumBy { it.numWaiting.get() }
+    val numFreeDrivers get() = driverPools.values.sumBy { it.numFree }
+    val numWorkingDrivers get() = driverPools.values.sumBy { it.numWorking.get() }
+    val numAvailableDrivers get() = driverPools.values.sumBy { it.numAvailable }
+    val numOnline get() = driverPools.values.sumBy { it.onlineDrivers.size }
+
     init {
         mapOf(
-                "waitingDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numWaiting.get() } },
-                "freeDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numFree } },
-                "workingDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numWorking.get() } },
-                "onlineDrivers" to Gauge<Int> { driverPools.values.sumBy { it.numOnline } }
+                "waitingDrivers" to Gauge<Int> { numWaiting },
+                "freeDrivers" to Gauge<Int> { numFreeDrivers },
+                "workingDrivers" to Gauge<Int> { numWorkingDrivers },
+                "onlineDrivers" to Gauge<Int> { numOnline }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
     }
 
     /**
-     * TODO: consider proactor model instead
+     * TODO: consider pro-actor model instead
      *
      * reactor: tell me if you can do this job
      * proactor: here is a job, tell me if you finished it
@@ -100,7 +107,7 @@ class WebDriverManager(
 
                 if (result == null) {
                     numTimeout.mark()
-                    log.warn("Task timeout with driver {} | {} | {}", driver, formatStatus(), browserId)
+                    log.warn("Task timeout after {} with driver {} | {}", taskTimeout.readable(), driver, browserId)
                 }
             } finally {
                 driver?.let { driverPool.put(it) }

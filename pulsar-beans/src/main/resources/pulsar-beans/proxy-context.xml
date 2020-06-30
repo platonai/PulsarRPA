@@ -7,7 +7,7 @@
 
     <import resource="common-context.xml"/>
 
-    <bean id="proxyPoolMonitorFactory" class="ai.platon.pulsar.common.proxy.ProxyPoolMonitorFactory" destroy-method="close">
+    <bean id="proxyPoolManagerFactory" class="ai.platon.pulsar.common.proxy.ProxyPoolManagerFactory" destroy-method="close">
         <constructor-arg ref="proxyPool"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -23,7 +23,6 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="proxyPoolMonitor" init-method="start" destroy-method="close"
-          factory-bean="proxyPoolMonitorFactory" factory-method="get" depends-on="fetchComponent"/>
+    <bean id="proxyPoolManager" destroy-method="close" factory-bean="proxyPoolManagerFactory" factory-method="get"/>
 
 </beans>

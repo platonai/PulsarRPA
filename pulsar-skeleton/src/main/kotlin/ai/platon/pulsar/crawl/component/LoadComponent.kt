@@ -62,7 +62,6 @@ class LoadComponent(
     private val tracer = log.takeIf { it.isTraceEnabled }
 
     private val fetchTaskTracker get() = fetchComponent.fetchMetrics
-    private val storingContent get() = immutableConfig.getBoolean(CapabilityTypes.FETCH_STORE_CONTENT, true)
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
     private val numWrite = AtomicInteger()
@@ -451,7 +450,7 @@ class LoadComponent(
         if (options.persist) {
             // Remove content if storingContent is false. Content is added to page earlier
             // so PageParser is able to parse it, now, we can clear it
-            if (alwaysFalse() && page.content != null && !storingContent) {
+            if (!options.storeContent && page.content != null) {
                 if (!page.isSeed) {
                     page.setContent(ByteArray(0))
                 } else if (page.fetchCount > 2) {
@@ -462,9 +461,9 @@ class LoadComponent(
             webDb.put(page)
             numWrite.incrementAndGet()
 
-            if (!options.lazyFlush) {
+            if (options.lazyFlush && numWrite.get() % 20 == 0) {
                 flush()
-            } else if (numWrite.get() % 20 == 0) {
+            } else {
                 flush()
             }
 

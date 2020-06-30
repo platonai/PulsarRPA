@@ -7,13 +7,13 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.protocol.browser.driver.WebDriverManager
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.nio.file.Files
 
 open class EmulatorMonitor(
-        val driverManager: WebDriverManager,
+        val driverPoolManager: WebDriverPoolManager,
         val conf: ImmutableConfig
 ): AbstractMonitor() {
     private val log = LoggerFactory.getLogger(EmulatorMonitor::class.java)

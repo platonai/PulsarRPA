@@ -99,12 +99,12 @@ open class AsyncBrowserEmulator(
 
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)
+            response = ForwardingResponse.crawlRetry(task.page)
         } catch (e: org.apache.http.conn.HttpHostConnectException) {
             log.takeIf { isActive }?.warn("Web driver is disconnected", e)
             driver.retire()
             exception = e
-            response = ForwardingResponse.retry(task.page, RetryScope.PROTOCOL)
+            response = ForwardingResponse.crawlRetry(task.page)
         } finally {
         }
 
@@ -231,7 +231,7 @@ open class AsyncBrowserEmulator(
             message = msg
         } finally {
             if (message == null) {
-                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && !isActive) {
+                if (!fetchTask.isCanceled && !interactTask.driver.isQuit && isActive) {
                     log.warn("Unexpected script result (null) | {}", interactTask.url)
                     status = ProtocolStatus.retry(RetryScope.PRIVACY)
                     result.state = FlowState.BREAK

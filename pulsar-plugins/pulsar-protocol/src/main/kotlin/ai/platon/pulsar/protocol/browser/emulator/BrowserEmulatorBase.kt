@@ -33,7 +33,7 @@ abstract class BrowserEmulatorBase(
     val closed = AtomicBoolean(false)
     val isClosed get() = closed.get()
     val isActive get() = !closed.get()
-    val driverManager = privacyManager.driverManager
+    val driverManager = privacyManager.driverPoolManager
     val driverControl = driverManager.driverControl
     val metrics = SharedMetricRegistries.getDefault()
     val meterNavigates = metrics.meter(prependReadableClassName(this,"navigates"))

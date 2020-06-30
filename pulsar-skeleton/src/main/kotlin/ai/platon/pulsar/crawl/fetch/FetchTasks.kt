@@ -96,6 +96,7 @@ class FetchTask(
 
     var proxyEntry: ProxyEntry? = null
     // The number retries inside a privacy context
+    @Deprecated("No longer in use")
     var nPrivacyRetries: Int = 0
 
     val url get() = page.url

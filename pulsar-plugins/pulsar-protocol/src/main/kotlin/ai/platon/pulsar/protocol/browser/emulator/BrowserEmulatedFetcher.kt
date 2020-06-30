@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
@@ -37,10 +36,11 @@ class BrowserEmulatedFetcher(
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverManager = privacyManager.driverManager
-    private val proxyPoolMonitor = privacyManager.proxyPoolMonitor
+    private val driverManager = privacyManager.driverPoolManager
+    private val proxyPoolMonitor = privacyManager.proxyPoolManager
     private val closed = AtomicBoolean()
-    private val isActive get() = !closed.get()
+    private val illegalState = AtomicBoolean()
+    private val isActive get() = !illegalState.get() && !closed.get()
 
     fun fetch(url: String): Response {
         return fetchContent(WebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
@@ -84,7 +84,9 @@ class BrowserEmulatedFetcher(
             try {
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
-                log.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
+                if (illegalState.compareAndSet(false, true)) {
+                    log.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
+                }
                 throw e
             }
         }.response
@@ -139,8 +141,7 @@ class BrowserEmulatedFetcher(
     }
 
     private fun parallelFetchAllPages0(batchId: Int, pages: Iterable<WebPage>, volatileConfig: VolatileConfig): List<Response> {
-        val privacyContextId = volatileConfig.getBean(PrivacyContextId::class.java)?: PrivacyContextId.DEFAULT
-        val privacyContext = privacyManager.computeIfNotActive(privacyContextId)
+        val privacyContext = privacyManager.computeNextContext()
 
         FetchTaskBatch(batchId, pages, volatileConfig, privacyContext).use { batch ->
             // allocate drivers before batch fetch context timing
@@ -157,11 +158,11 @@ class BrowserEmulatedFetcher(
                     var b = batch
                     val privacyContext0 = b.privacyContext
                     if (privacyContext0.isLeaked) {
-                        b = b.createNextNode(privacyManager.computeIfNotActive(privacyContext0.id))
+                        b = b.createNextNode(privacyManager.computeNextContext())
                     }
 
                     parallelFetch0(b)
-                } while (i++ <= privacyManager.maxPrivacyRetries && privacyContext0.isLeaked)
+                } while (i++ <= 2 && privacyContext0.isLeaked)
             }
 
             batch.afterFetchAll(batch.pages)
@@ -224,7 +225,9 @@ class BrowserEmulatedFetcher(
                 batch.beforeFetch(task.page)
                 asyncBrowserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
-                log.info("Illegal context state, cancel task {}/{} | {}", task.id, task.batchId, task.url)
+                if (illegalState.compareAndSet(false, true)) {
+                    log.info("Illegal context state, cancel task {}/{} | {}", task.id, task.batchId, task.url)
+                }
                 FetchResult(task, ForwardingResponse.canceled(task.page))
             } catch (e: TimeoutCancellationException) {
                 log.info("Coroutine is timeout and cancelled, cancel task {}/{} | {}", task.id, task.batchId, task.url)

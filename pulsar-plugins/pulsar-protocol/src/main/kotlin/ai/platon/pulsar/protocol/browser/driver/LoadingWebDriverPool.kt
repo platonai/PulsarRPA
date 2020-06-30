@@ -64,6 +64,7 @@ class LoadingWebDriverPool(
     val numWorking = AtomicInteger()
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
+    val numAvailable get() = capacity - numWorking.get()
     val numOnline get() = onlineDrivers.size
 
     var lastActiveTime = Instant.now()
@@ -113,8 +114,10 @@ class LoadingWebDriverPool(
         }
 
         // close open tabs to reduce memory usage
-        if (availableMemory < BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY && driver.pageViews.get() > 10) {
-            driver.retire()
+        if (availableMemory < BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY) {
+            if (numOnline > 0.5 * capacity) {
+                driver.retire()
+            }
         }
 
         if (numOnline > capacity) {
@@ -193,7 +196,7 @@ class LoadingWebDriverPool(
         val driver = freeDrivers.poll(timeout, unit)
         numWaiting.decrementAndGet()
 
-        return driver?:throw WebDriverPoolExhausted("Driver pool is exhausted")
+        return driver?:throw WebDriverPoolExhausted("Driver pool is exhausted (" + formatStatus() + ")")
     }
 
     private fun createDriverIfNecessary(priority: Int, conf: VolatileConfig) {
@@ -235,10 +238,9 @@ class LoadingWebDriverPool(
 
         val i = AtomicInteger()
         val total = drivers.size
-
         drivers.parallelStream().forEach { driver ->
             driver.quit().also { counterQuit.inc() }
-            log.info("Quit driver {}/{} {}", i.incrementAndGet(), total, driver)
+            log.debug("Quit driver {}/{} | {}", i.incrementAndGet(), total, driver)
         }
     }
 

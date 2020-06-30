@@ -1,68 +1,48 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.PreemptChannelSupport
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import kotlinx.coroutines.*
+import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class PrivacyManager(
         val immutableConfig: ImmutableConfig
-): PreemptChannelSupport("PrivacyManager"), AutoCloseable {
+): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get()
+    val numPrivacyContexts = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
+    /**
+     * TODO: use a priority queue and every time we need a context, take the top one
+     * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
-    val closers = ConcurrentLinkedQueue<Deferred<Unit>>()
+    private val iterator = Iterables.cycle(activeContexts.values).iterator()
+
+    @Synchronized
+    open fun computeNextContext(): PrivacyContext {
+        if (activeContexts.size < numPrivacyContexts) {
+            return computeIfAbsent(PrivacyContextId.generate())
+        }
+
+        val context = iterator.next()
+        if (context.isActive) {
+            return context
+        }
+
+        activeContexts.remove(context.id)
+        zombieContexts.add(context)
+        context.close()
+
+        return newContext(PrivacyContextId.generate()).also { activeContexts[it.id] = it }
+    }
 
     open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
 
-    abstract fun computeIfNotActive(id: PrivacyContextId): PrivacyContext
-
     abstract fun newContext(id: PrivacyContextId): PrivacyContext
-
-    inline fun <reified C: PrivacyContext> computeIfLeaked(context: C, crossinline mappingFunction: () -> C): C {
-        synchronized(PrivacyContext::class.java) {
-            if (!context.isLeaked) {
-                return context
-            }
-
-            // Refresh the context if privacy leaked
-            return preempt {
-                // normal tasks must wait until all preemptive tasks are finished, but no new task enters the
-                // critical section
-
-                if (context.isLeaked) {
-                    // close the current context
-                    // until the old context is closed entirely
-                    activeContexts.remove(context.id)
-                    zombieContexts.add(context)
-
-                    context.close()
-
-                    // close context async
-//                    GlobalScope.launch {
-//                        async { context.close() }.also { closers.add(it) }
-//                    }
-                }
-
-                mappingFunction()
-            }
-        }
-    }
-
-    fun healthyCheck() {
-        zombieContexts.forEach {
-            kotlin.runCatching { it.close() }.onFailure {
-                log.error("Failed to close privacy context", it)
-            }
-        }
-    }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
@@ -74,6 +54,16 @@ abstract class PrivacyManager(
                     log.error("Failed to close privacy context", it)
                 }
             }
+        }
+    }
+
+    private fun reportZombieContexts() {
+        if (zombieContexts.isNotEmpty()) {
+            val prefix = "The latest context throughput: "
+            val postfix = " (success/sec)"
+            zombieContexts.take(15)
+                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.throughput) }
+                    .let { log.info(it) }
         }
     }
 }

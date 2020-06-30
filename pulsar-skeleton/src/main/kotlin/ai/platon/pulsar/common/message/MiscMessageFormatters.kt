@@ -79,7 +79,7 @@ class CompletedPageFormatter(
     val readableUrl get() = if (redirected) "[R] $url" else url
     val readableLinks get() = if (verbose) "file://$link | $readableUrl" else readableUrl
 
-    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d nf:$fieldFmt$failure$proxyFmt | %s"
+    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d nf:$fieldFmt$failure$proxyFmt | %s | %s"
 
     override fun toString(): String {
         return String.format(fmt,
@@ -92,6 +92,7 @@ class CompletedPageFormatter(
                 page.fetchCount,
                 if (m.numFields == 0) "0/0/0" else numFields,
                 proxy?:"",
+                page.variables["privacyContext"]?:"",
                 readableLinks
         )
     }

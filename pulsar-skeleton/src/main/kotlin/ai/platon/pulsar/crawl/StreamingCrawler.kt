@@ -128,8 +128,9 @@ open class StreamingCrawler(
     private fun handleException(url: String, e: Throwable): FlowState {
         when (e) {
             is IllegalApplicationContextStateException -> {
-                log.info("Illegal context, quit streaming crawler")
-                illegalState.set(true)
+                if (illegalState.compareAndSet(false, true)) {
+                    log.info("Illegal context, quit streaming crawler")
+                }
                 return FlowState.BREAK
             }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }

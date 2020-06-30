@@ -80,7 +80,7 @@ abstract class PrivacyContext(
     val display get() = "$sequence(${id.ident})"
 
     var minimumThroughput = 0.3
-    var maximumWarnings = 10
+    var maximumWarnings = 12
     val privacyLeakWarnings = AtomicInteger()
 
     val startTime = Instant.now()

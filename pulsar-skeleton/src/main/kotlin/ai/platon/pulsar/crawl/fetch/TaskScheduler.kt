@@ -50,7 +50,7 @@ class TaskScheduler(
      */
     private var bandwidth = 1024 * 1024 * immutableConfig.getInt(FETCH_NET_BANDWIDTH_M, BANDWIDTH_INFINITE_M)
     var skipTruncated = immutableConfig.getBoolean(PARSE_SKIP_TRUNCATED, true)
-    var storingContent = immutableConfig.getBoolean(FETCH_STORE_CONTENT, true)
+    var storeContent = immutableConfig.getBoolean(FETCH_STORE_CONTENT, true)
 
     // Indexer
     var indexJIT: Boolean = false
@@ -94,7 +94,7 @@ class TaskScheduler(
                 "bandwidth", Strings.readableBytes(bandwidth.toLong()),
                 "skipTruncated", skipTruncated,
                 "parse", parse,
-                "storingContent", storingContent,
+                "storeContent", storeContent,
                 "indexJIT", indexJIT
         )
     }
@@ -260,9 +260,9 @@ class TaskScheduler(
             }
         }
 
-        // Remove content if storingContent is false. Content is added to page earlier
+        // Remove content if storeContent is false. Content is added to page earlier
         // so PageParser is able to parse it, now, we can clear it
-        if (page.content != null && !storingContent) {
+        if (page.content != null && !storeContent) {
             if (!page.isSeed) {
                 page.setContent(ByteArray(0))
             } else if (page.fetchCount > 2) {

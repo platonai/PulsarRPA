@@ -115,7 +115,7 @@ class ManagedWebDriver(
         }
 
         if (status.compareAndSet(DriverStatus.WORKING, DriverStatus.CANCELED)) {
-            log.info("Canceling driver $this")
+            log.debug("Canceling driver $this")
             stopLoading()
         }
     }
