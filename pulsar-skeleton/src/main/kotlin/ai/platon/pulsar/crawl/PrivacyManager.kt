@@ -22,10 +22,13 @@ abstract class PrivacyManager(
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
-    @Synchronized
     open fun computeNextContext(): PrivacyContext {
         if (activeContexts.size < numPrivacyContexts) {
-            return computeIfAbsent(PrivacyContextId.generate())
+            synchronized(this) {
+                if (activeContexts.size < numPrivacyContexts) {
+                    return computeIfAbsent(PrivacyContextId.generate())
+                }
+            }
         }
 
         val context = iterator.next()

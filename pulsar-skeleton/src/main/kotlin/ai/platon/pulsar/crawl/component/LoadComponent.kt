@@ -1,13 +1,9 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.PulsarContext
-
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.Urls.splitUrlArgs
-import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
@@ -30,7 +26,6 @@ import org.apache.hadoop.classification.InterfaceStability.Unstable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.URL
-import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
@@ -451,19 +446,18 @@ class LoadComponent(
             // Remove content if storingContent is false. Content is added to page earlier
             // so PageParser is able to parse it, now, we can clear it
             if (!options.storeContent && page.content != null) {
-                if (!page.isSeed) {
-                    page.setContent(ByteArray(0))
-                } else if (page.fetchCount > 2) {
-                    page.setContent(ByteArray(0))
+                if (!page.isSeed || page.fetchCount > 2) {
+                    // set cached content so other thread still can use it
+                    page.cachedContent = page.content
+                    page.content = null
+                    require(page.cachedContent != null)
                 }
             }
 
             webDb.put(page)
             numWrite.incrementAndGet()
 
-            if (options.lazyFlush && numWrite.get() % 20 == 0) {
-                flush()
-            } else {
+            if (!options.lazyFlush || numWrite.get() % 20 == 0) {
                 flush()
             }
 

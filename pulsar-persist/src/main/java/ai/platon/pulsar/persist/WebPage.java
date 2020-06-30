@@ -107,6 +107,8 @@ public class WebPage implements Comparable<WebPage> {
      */
     private Variables variables = new Variables();
 
+    private ByteBuffer cachedContent = null;
+
     private WebPage(String url, GWebPage page, boolean urlReversed) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(page);
@@ -830,6 +832,23 @@ public class WebPage implements Comparable<WebPage> {
      */
     @Nullable
     public ByteBuffer getContent() {
+        if (cachedContent != null) {
+            return cachedContent;
+        }
+        return page.getContent();
+    }
+
+    @Nullable
+    public ByteBuffer getCachedContent() {
+        return cachedContent;
+    }
+
+    public void setCachedContent(ByteBuffer cachedContent) {
+        this.cachedContent = cachedContent;
+    }
+
+    @Nullable
+    public ByteBuffer getUncachedContent() {
         return page.getContent();
     }
 
