@@ -1,6 +1,5 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.ConcurrentLRUCache
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.Urls
@@ -8,6 +7,7 @@ import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.crawl.GlobalCacheManager
 import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
@@ -59,11 +59,6 @@ class PulsarContext private constructor(): AutoCloseable {
         /** Synchronization monitor for the "refresh" and "destroy".  */
         private val startupShutdownMonitor = Any()
         private var shutdownHook: Thread? = null
-
-        // TODO: better cache solution
-        // Very fast and small local caches
-        lateinit var pageCache: ConcurrentLRUCache<String, WebPage>
-        lateinit var documentCache: ConcurrentLRUCache<String, FeaturedDocument>
 
         fun initialize() {
             if (initialized.get()) {
@@ -186,6 +181,8 @@ class PulsarContext private constructor(): AutoCloseable {
 
     val lazyFetchTaskManager: LazyFetchTaskManager
 
+    val globalCacheManager: GlobalCacheManager
+
     /**
      * The start time
      * */
@@ -208,12 +205,7 @@ class PulsarContext private constructor(): AutoCloseable {
     init {
         unmodifiedConfig = getBean()
         privacyManager = getBean()
-
-        var capacity = unmodifiedConfig.getUint("session.page.cache.size", PulsarSession.SESSION_PAGE_CACHE_CAPACITY)
-        pageCache = ConcurrentLRUCache(PulsarSession.SESSION_PAGE_CACHE_TTL.seconds, capacity)
-
-        capacity = unmodifiedConfig.getUint("session.document.cache.size", PulsarSession.SESSION_DOCUMENT_CACHE_CAPACITY)
-        documentCache = ConcurrentLRUCache(PulsarSession.SESSION_DOCUMENT_CACHE_TTL.seconds, capacity)
+        globalCacheManager = getBean()
 
         webDb = getBean()
         injectComponent = getBean()
@@ -267,8 +259,8 @@ class PulsarContext private constructor(): AutoCloseable {
     }
 
     fun clearCaches() {
-        pageCache.clear()
-        documentCache.clear()
+        globalCacheManager.pageCache.clear()
+        globalCacheManager.documentCache.clear()
     }
 
     fun normalize(url: String, isItemOption: Boolean = false): NormUrl {

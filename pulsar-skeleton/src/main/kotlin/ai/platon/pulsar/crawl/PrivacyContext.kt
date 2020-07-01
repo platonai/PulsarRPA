@@ -18,6 +18,7 @@ class FatalPrivacyContextException(message: String): PrivacyContextException(mes
 
 data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
     val ident = dataDir.last().toString()
+    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
     val isDefault get() = this == DEFAULT
 
     // override fun hashCode() = /** AUTO GENERATED **/
@@ -61,27 +62,30 @@ abstract class PrivacyContext(
 ): AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
-        private val identSequence = AtomicInteger()
+        private val idSequence = AtomicInteger()
+        val IDENT_PREFIX = "cx."
         val BASE_DIR = AppPaths.CONTEXT_TMP_DIR
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
 
-        @Synchronized
         fun generateBaseDir(): Path {
-            identSequence.incrementAndGet()
-            // Note: the number of privacy context instance is not imprecise
-            val numInstances = Files.list(BASE_DIR).filter { Files.isDirectory(it) }.count().inc()
+            idSequence.incrementAndGet()
+            var impreciseNumInstances = 0L
+            synchronized(BASE_DIR) {
+                impreciseNumInstances = 1 + Files.list(BASE_DIR).filter { Files.isDirectory(it) }.count()
+            }
             val rand = RandomStringUtils.randomAlphanumeric(5)
-            return BASE_DIR.resolve("ctx.$identSequence$rand$numInstances")
+            return BASE_DIR.resolve("$IDENT_PREFIX$idSequence$rand$impreciseNumInstances")
         }
     }
 
     val log = LoggerFactory.getLogger(PrivacyContext::class.java)
     val sequence = instanceSequencer.incrementAndGet()
-    val display get() = "$sequence(${id.ident})"
+    val display get() = id.display
 
     var minimumThroughput = 0.3
-    var maximumWarnings = 12
+    var maximumWarnings = 8
     val privacyLeakWarnings = AtomicInteger()
+    val privacyLeakMinorWarnings = AtomicInteger()
 
     val startTime = Instant.now()
     val numTasks = AtomicInteger()
@@ -113,6 +117,14 @@ abstract class PrivacyContext(
     fun markWarning() = privacyLeakWarnings.incrementAndGet()
 
     fun markWarning(n: Int) = privacyLeakWarnings.addAndGet(n)
+
+    fun markMinorWarning() {
+        privacyLeakMinorWarnings.incrementAndGet()
+        if (privacyLeakMinorWarnings.get() > 5) {
+            privacyLeakMinorWarnings.set(0)
+            markWarning()
+        }
+    }
 
     fun markLeaked() = privacyLeakWarnings.addAndGet(maximumWarnings)
 

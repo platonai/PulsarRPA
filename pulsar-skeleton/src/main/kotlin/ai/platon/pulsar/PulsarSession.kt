@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectNotNull
@@ -13,7 +12,6 @@ import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -45,6 +43,8 @@ open class PulsarSession(
     val sessionBeanFactory = BeanFactory(sessionConfig)
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
+    private val pageCache = context.globalCacheManager.pageCache
+    private val documentCache = context.globalCacheManager.documentCache
     val display = "$id"
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
@@ -104,8 +104,7 @@ open class PulsarSession(
         initOptions(url.options)
 
         return if (enableCache) {
-            val cache = PulsarContext.pageCache
-            cache.get(url.url) ?: context.load(url).also { cache.put(it.url, it) }
+            pageCache.get(url.url) ?: context.load(url).also { pageCache.put(it.url, it) }
         } else {
             context.load(url)
         }
@@ -148,8 +147,7 @@ open class PulsarSession(
         initOptions(url.options)
 
         return if (enableCache) {
-            val cache = PulsarContext.pageCache
-            cache.get(url.url) ?: context.loadDeferred(url).also { cache.put(it.url, it) }
+            pageCache.get(url.url) ?: context.loadDeferred(url).also { pageCache.put(it.url, it) }
         } else context.loadDeferred(url)
     }
 
@@ -250,14 +248,14 @@ open class PulsarSession(
             return context.parse(page)
         }
 
-        var document = PulsarContext.documentCache.get(url)
+        var document = documentCache.get(url)
         if (document == null) {
             // TODO: review if the synchronization is correct and necessary
-            synchronized(PulsarContext.documentCache) {
-                document = PulsarContext.documentCache.get(url)
+            synchronized(documentCache) {
+                document = documentCache.get(url)
                 if (document == null) {
                     document = context.parse(page)
-                    PulsarContext.documentCache.put(url, document)
+                    documentCache.put(url, document)
                 }
             }
         }
@@ -277,27 +275,27 @@ open class PulsarSession(
         return cssQueries.associate { it to document.selectFirstOrNull(it)?.text() }
     }
 
-    fun cache(page: WebPage): WebPage = page.also { PulsarContext.pageCache.put(it.url, it) }
+    fun cache(page: WebPage): WebPage = page.also { pageCache.put(it.url, it) }
 
-    fun removePageCache(url: String): WebPage? = PulsarContext.pageCache.remove(url)
+    fun removePageCache(url: String): WebPage? = pageCache.remove(url)
 
     fun removePageCache(urls: Iterable<String>) = urls.forEach { removePageCache(it) }
 
-    fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { PulsarContext.documentCache.put(it.location, it) }
+    fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { documentCache.put(it.location, it) }
 
-    fun removeDocumentCache(url: String): FeaturedDocument? = PulsarContext.documentCache.remove(url)
+    fun removeDocumentCache(url: String): FeaturedDocument? = documentCache.remove(url)
 
     fun removeDocumentCache(urls: Iterable<String>) = urls.forEach { removeDocumentCache(it) }
 
     private fun getCachedOrGet(url: String): WebPage? {
         ensureAlive()
-        var page: WebPage? = PulsarContext.pageCache.get(url)
+        var page: WebPage? = pageCache.get(url)
         if (page != null) {
             return page
         }
 
         page = context.get(url)
-        PulsarContext.pageCache.put(url, page)
+        pageCache.put(url, page)
 
         return page
     }
@@ -311,7 +309,7 @@ open class PulsarSession(
         val pendingUrls = ArrayList<NormUrl>()
 
         for (url in urls) {
-            val page = PulsarContext.pageCache.get(url.url)
+            val page = pageCache.get(url.url)
             if (page != null) {
                 pages.add(page)
             } else {
@@ -411,11 +409,6 @@ open class PulsarSession(
     private fun <T> ensureAlive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
 
     companion object {
-        val SESSION_PAGE_CACHE_TTL = Duration.ofMinutes(5)!!
-        const val SESSION_PAGE_CACHE_CAPACITY = 100
-
-        val SESSION_DOCUMENT_CACHE_TTL = Duration.ofMinutes(10)!!
-        const val SESSION_DOCUMENT_CACHE_CAPACITY = 100
         private val idGen = AtomicInteger()
     }
 }

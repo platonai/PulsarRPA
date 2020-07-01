@@ -443,27 +443,31 @@ class LoadComponent(
         updateComponent.updateFetchSchedule(page)
 
         if (options.persist) {
-            // Remove content if storingContent is false. Content is added to page earlier
-            // so PageParser is able to parse it, now, we can clear it
-            if (!options.storeContent && page.content != null) {
-                if (!page.isSeed || page.fetchCount > 2) {
-                    // set cached content so other thread still can use it
-                    page.cachedContent = page.content
-                    page.content = null
-                    require(page.cachedContent != null)
-                }
-            }
+            persist(page, options)
+        }
+    }
 
-            webDb.put(page)
-            numWrite.incrementAndGet()
-
-            if (!options.lazyFlush || numWrite.get() % 20 == 0) {
-                flush()
+    private fun persist(page: WebPage, options: LoadOptions) {
+        // Remove content if storingContent is false. Content is added to page earlier
+        // so PageParser is able to parse it, now, we can clear it
+        if (!options.storeContent && page.content != null) {
+            if (!page.isSeed || page.fetchCount > 2) {
+                // set cached content so other thread still can use it
+                page.cachedContent = page.content
+                page.content = null
+                require(page.cachedContent != null)
             }
+        }
 
-            if (log.isTraceEnabled) {
-                log.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes.toLong()), page.url)
-            }
+        webDb.put(page)
+        numWrite.incrementAndGet()
+
+        if (!options.lazyFlush || numWrite.get() % 20 == 0) {
+            flush()
+        }
+
+        if (log.isTraceEnabled) {
+            log.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes.toLong()), page.url)
         }
     }
 

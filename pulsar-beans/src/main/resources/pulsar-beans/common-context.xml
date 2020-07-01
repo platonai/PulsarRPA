@@ -44,4 +44,8 @@
         <constructor-arg value="20"/>
     </bean>
 
+    <bean id="globalCacheManager" class="ai.platon.pulsar.crawl.GlobalCacheManager">
+        <constructor-arg ref="conf"/>
+    </bean>
+
 </beans>

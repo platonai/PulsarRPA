@@ -284,11 +284,12 @@ open class BrowserEmulateEventHandler(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("Page is {}({}) with {} in {}({}) | file://{} | {}",
+            log.warn("%3d. Page is {}({}) with {} in {}({}) | file://{}",
+                    task.page.id,
                     integrity.name, readableLength,
                     proxyEntry.display, domain, count, link, task.url)
         } else {
-            log.warn("Page is {}({}) | file://{} | {}", integrity.name, readableLength, link, task.url)
+            log.warn("%3d. Page is {}({}) | file://{}", task.page.id, integrity.name, readableLength, link)
         }
     }
 }

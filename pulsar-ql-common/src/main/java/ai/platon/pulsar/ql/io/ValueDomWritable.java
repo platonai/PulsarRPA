@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +43,7 @@ public class ValueDomWritable implements Writable {
             });
 
     // client side
-    private static Map<String, FeaturedDocument> documentCache = Collections.synchronizedMap(new HashMap<>());
+    private static Map<String, FeaturedDocument> documentCache = new ConcurrentHashMap<>();
 
     private ValueDom dom;
 

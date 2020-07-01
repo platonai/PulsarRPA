@@ -408,6 +408,10 @@ public final class Strings {
     }
 
     public static String stripNonPrintableChar(String text) {
+        if (text == null) {
+            return null;
+        }
+
         StringBuilder builder = new StringBuilder();
 
         int len = text.length();

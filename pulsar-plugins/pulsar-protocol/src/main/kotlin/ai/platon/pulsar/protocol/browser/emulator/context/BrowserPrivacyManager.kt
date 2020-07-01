@@ -69,8 +69,7 @@ class BrowserPrivacyManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        val ident = privacyContext.id.ident.substringAfter("ctx.")
-        return String.format("%s(%.2f)", ident, privacyContext.throughput)
+        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.throughput)
     }
 
     /**
@@ -86,8 +85,8 @@ class BrowserPrivacyManager(
         if (privacyContext.isActive) {
             when {
                 status.isRetry(RetryScope.PRIVACY, ProxyRetiredException("")) -> privacyContext.markLeaked()
-                status.isRetry(RetryScope.PRIVACY) -> privacyContext.markWarning(2)
-                status.isRetry(RetryScope.CRAWL) -> privacyContext.markWarning()
+                status.isRetry(RetryScope.PRIVACY) -> privacyContext.markWarning()
+                status.isRetry(RetryScope.CRAWL) -> privacyContext.markMinorWarning()
                 status.isSuccess -> privacyContext.markSuccess()
             }
 
@@ -100,7 +99,7 @@ class BrowserPrivacyManager(
     private fun logPrivacyLeakWarning(privacyContext: PrivacyContext, status: ProtocolStatus) {
         val warnings = privacyContext.privacyLeakWarnings.get()
         if (warnings > 0) {
-            log.info("Privacy leak warning {}/#{} | {}", warnings, privacyContext.sequence, status)
+            log.info("Privacy leak warning {}/#{} | {} | {}", warnings, privacyContext.sequence, privacyContext.display, status)
         }
 
         if (warnings == 6) {
