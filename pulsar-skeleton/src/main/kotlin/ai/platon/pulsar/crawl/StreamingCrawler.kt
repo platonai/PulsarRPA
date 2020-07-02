@@ -2,22 +2,25 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import kotlinx.coroutines.*
+import org.apache.commons.lang3.RandomStringUtils
 import org.h2tools.dev.util.ConcurrentLinkedList
 import oshi.SystemInfo
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,6 +31,7 @@ open class StreamingCrawler(
         private val urls: Sequence<String>,
         private val options: LoadOptions = LoadOptions.create(),
         val pageCollector: ConcurrentLinkedList<WebPage>? = null,
+        val jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5),
         session: PulsarSession = PulsarContext.createSession(),
         autoClose: Boolean = true
 ): Crawler(session, autoClose) {
@@ -61,8 +65,13 @@ open class StreamingCrawler(
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(6)
     private var flowState = FlowState.CONTINUE
+    private var finishScript: Path? = null
 
     var onLoadComplete: (WebPage) -> Unit = {}
+
+    init {
+        generateFinishCommand()
+    }
 
     open suspend fun run() {
         supervisorScope {
@@ -95,6 +104,12 @@ open class StreamingCrawler(
     private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
+
+        // TODO: we need a monitor
+        if (FileCommand.check("finish-job")) {
+            log.info("Found finish-job command, exit the job ...")
+            return FlowState.BREAK
+        }
 
         while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
             delay(1000)
@@ -158,5 +173,17 @@ open class StreamingCrawler(
         )
         session.context.clearCaches()
         System.gc()
+    }
+
+    private fun generateFinishCommand() {
+        val script = finishScript?:return
+
+        val cmd = "#bin\necho finish-job $jobName >> " + AppPaths.PATH_LOCAL_COMMAND
+        try {
+            Files.write(script, cmd.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+            Files.setPosixFilePermissions(script, PosixFilePermissions.fromString("rwxrw-r--"))
+        } catch (e: IOException) {
+            log.error(e.toString())
+        }
     }
 }
