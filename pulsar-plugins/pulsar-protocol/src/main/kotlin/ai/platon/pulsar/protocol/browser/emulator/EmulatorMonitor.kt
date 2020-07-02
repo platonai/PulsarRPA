@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.concurrent.AbstractMonitor
+import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
@@ -15,7 +15,7 @@ import java.nio.file.Files
 open class EmulatorMonitor(
         val driverPoolManager: WebDriverPoolManager,
         val conf: ImmutableConfig
-): AbstractMonitor() {
+): ScheduledMonitor() {
     private val log = LoggerFactory.getLogger(EmulatorMonitor::class.java)
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently

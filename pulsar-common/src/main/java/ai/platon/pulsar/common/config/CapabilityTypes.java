@@ -174,6 +174,7 @@ public interface CapabilityTypes {
     String FETCH_PENDING_TIMEOUT = "fetch.pending.timeout";
     String FETCH_SERVER_REQUIRED = "fetch.fetch.server.required";
     // TODO: name "queue" has changed to be "pool"
+    String FETCH_MAX_HOST_FAILURES = "fetch.max.host.failures";
     String FETCH_QUEUE_MODE = "fetch.queue.mode";
     String FETCH_QUEUE_USE_HOST_SETTINGS = "fetch.queue.use.host.settings";
     String FETCH_QUEUE_RETUNE_INTERVAL = "fetch.pending.queue.check.time";
@@ -212,9 +213,12 @@ public interface CapabilityTypes {
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
-     * Privacy context control
+     * Privacy control
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
+    String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
+    String PRIVACY_MAX_WARNINGS = "privacy.max.warnings";
+    String PRIVACY_CONTEXT_MIN_THROUGHPUT = "privacy.context.min.throughput";
     /**
      * Browser control
      */

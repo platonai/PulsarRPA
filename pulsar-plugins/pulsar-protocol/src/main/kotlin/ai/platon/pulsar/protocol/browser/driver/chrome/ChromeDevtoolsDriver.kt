@@ -3,7 +3,10 @@ package ai.platon.pulsar.protocol.browser.driver.chrome
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
+import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
 import ai.platon.pulsar.protocol.browser.conf.blockingResourceTypes
 import ai.platon.pulsar.protocol.browser.conf.blockingUrlPatterns
@@ -14,6 +17,10 @@ import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
@@ -208,18 +215,32 @@ class ChromeDevtoolsDriver(
 //        // devTools.cacheStorage.deleteCache()
 //    }
 
-    @Throws(NoSuchSessionException::class)
+    @Throws(ScreenshotException::class, NoSuchSessionException::class)
     override fun <X : Any> getScreenshotAs(outputType: OutputType<X>): X {
         try {
-            val result = page.captureScreenshot(CaptureScreenshotFormat.PNG, 100, viewport, true)
-            return outputType.convertFromBase64Png(result)
+            val startTime = System.currentTimeMillis()
+            var result: X? = null
+            runBlocking {
+                withContext(Dispatchers.IO) {
+                    result = withTimeoutOrNull(30 * 1000) {
+                        val screenshot = page.captureScreenshot(CaptureScreenshotFormat.PNG, 50, viewport, true)
+                        log.debug("It takes {} to take screenshot | {}", DateTimes.elapsedTime(startTime).readable(), navigateUrl)
+                        outputType.convertFromBase64Png(screenshot)
+                    }
+                    log.takeIf { result == null }?.warn("Timeout to take screenshot | {}", navigateUrl)
+                }
+            }
+            return result?:throw ScreenshotException("Failed to take screenshot | $navigateUrl")
+        } catch (e: ScreenshotException) {
+            throw e
         } catch (e: ChromeDevToolsInvocationException) {
             numSessionLost.incrementAndGet()
+            // TODO: it seems not a proper Exception to throw
             throw NoSuchSessionException(e.message)
         }
     }
 
-    override fun toString() = "Chrome Devtools Driver ($lastSessionId)"
+    override fun toString() = "Devtools driver ($lastSessionId)"
 
     /**
      * Quit the browser instance

@@ -23,6 +23,9 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.IntStream
 
+/**
+ * TODO: a better name?
+ * */
 class MetricsCounters {
     companion object {
         var LOG = LoggerFactory.getLogger(MetricsCounters::class.java)

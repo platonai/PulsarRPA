@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
@@ -43,6 +44,7 @@ open class StreamingCrawler(
     }
 
     private val conf = session.sessionConfig
+    private val fetchMetrics = session.context.getBean<FetchMetrics>()
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
     private val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
@@ -77,6 +79,10 @@ open class StreamingCrawler(
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
+            if (!fetchMetrics.isReachable(url)) {
+                return@forEachIndexed
+            }
+
             val state = load(j, url, scope)
             if (state != FlowState.CONTINUE) {
                 return
@@ -109,10 +115,13 @@ open class StreamingCrawler(
         numRunningTasks.incrementAndGet()
         val context = Dispatchers.Default + CoroutineName("w")
         scope.launch(context) {
-            page = withTimeoutOrNull(taskTimeout.toMillis()) { load(url) }
-            page?.let(onLoadComplete)
+            page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load(url) } }
+                    .onFailure { log.warn("Unexpected exception", it) }
+                    .getOrNull()
+
             numRunningTasks.decrementAndGet()
             lastActiveTime = Instant.now()
+            page?.let(onLoadComplete)
         }
 
         return flowState

@@ -10,7 +10,7 @@ object Systems {
     private var lastGC: Long = 0
 
     /**
-     * Get the used memory in KB.
+     * Get the used memory in bytes.
      * This method possibly calls System.gc().
      *
      * @return the used memory

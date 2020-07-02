@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.lang3.StringUtils
@@ -23,26 +24,19 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * TODO: use ScheduledExecutorService, @see [com.codahale.metrics.ScheduledReporter]
- * */
-class MetricsReporter(
+class CounterReporter(
         private val counter: MetricsCounters,
+        initialDelay: Duration = Duration.ofMinutes(3),
+        watchInterval: Duration = Duration.ofSeconds(30),
         private val conf: ImmutableConfig
-): Thread() {
-    private var log = LoggerFactory.getLogger(MetricsReporter::class.java)
+): ScheduledMonitor(initialDelay, watchInterval) {
+    private var log = LoggerFactory.getLogger(CounterReporter::class.java)
     private val silent = AtomicBoolean(false)
-    private val reportInterval = conf.getDuration(CapabilityTypes.REPORTER_REPORT_INTERVAL, Duration.ofSeconds(30))
     private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
     private var lastStatus = ""
-    private val running = AtomicBoolean()
-    val isActive get() = running.get()
-
-    init {
-        name = "Reporter-" + counter.id
-        isDaemon = true
-    }
+    private val tick = AtomicInteger()
 
     fun silent() {
         silent.set(true)
@@ -52,24 +46,20 @@ class MetricsReporter(
         this.log = log
     }
 
-    fun startReporter() {
-        if (running.compareAndSet(false, true)) {
-            start()
+    override fun watch() {
+        if (tick.getAndIncrement() == 0) {
+            init()
+        }
+
+        if (silent.get()) return
+        val status = counter.getStatus(true)
+        if (status.isNotEmpty() && status != lastStatus) {
+            log.info(status)
+            lastStatus = status
         }
     }
 
-    fun stopReporter() {
-        if (running.compareAndSet(true, false)) {
-            silent.set(false)
-            try {
-                join()
-            } catch (e: InterruptedException) {
-                log.error(e.toString())
-            }
-        }
-    }
-
-    override fun run() {
+    private fun init() {
         val outerBorder = StringUtils.repeat('-', 100)
         val innerBorder = StringUtils.repeat('.', 100)
         log.info(outerBorder)
@@ -79,23 +69,5 @@ class MetricsReporter(
         counter.registeredCounters.map { readableClassName(it) }
                 .joinToString(", ", "All registered counters : ") { it }
                 .also { log.info(it) }
-
-        do {
-            sleepSeconds(reportInterval.seconds)
-            report()
-        } while (isActive)
-
-        val status = counter.getStatus(true)
-        log.info("Reporter is stopped - {}", status)
-    }
-
-    private fun report() {
-        if (!silent.get()) {
-            val status = counter.getStatus(true)
-            if (status.isNotEmpty() && status != lastStatus) {
-                log.info(status)
-                lastStatus = status
-            }
-        }
     }
 }

@@ -1,9 +1,12 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.FlowState
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -83,7 +86,7 @@ open class AsyncBrowserEmulator(
             response = browseWithMinorExceptionsHandled(task, driver)
         } catch (e: NavigateTaskCancellationException) {
             exception = e
-            log.info("{}. Retry canceled task {}/{} in privacy scope later | {}", task.page.id, task.id, task.batchId, task.url)
+            log.info("{}. Retry canceled task {}/{} in privacy scope later", task.page.id, task.id, task.batchId)
             response = ForwardingResponse.privacyRetry(task.page)
         } catch (e: org.openqa.selenium.NoSuchSessionException) {
             log.takeIf { isActive }?.warn("Web driver session of #{} is closed | {}", driver.id, Strings.simplifyException(e))

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
+import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -194,6 +195,9 @@ open class BrowserEmulateEventHandler(
         }
 
         exportIfNecessary(task)
+        if (log.isTraceEnabled) {
+            takeScreenshot(pageDatum.length, task.page, task.driver.driver as RemoteWebDriver)
+        }
 
         return ForwardingResponse(task.page, pageDatum)
     }
@@ -257,10 +261,6 @@ open class BrowserEmulateEventHandler(
             } catch (e: IOException) {
                 log.warn(e.toString())
             }
-
-            if (log.isTraceEnabled) {
-                // takeScreenshot(pageSource.length.toLong(), page, driver.driver as RemoteWebDriver)
-            }
         }
     }
 
@@ -268,10 +268,12 @@ open class BrowserEmulateEventHandler(
         try {
             if (contentLength > 100) {
                 val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                AppFiles.export(page, bytes, ".png")
+                val path = AppFiles.export(page, bytes, "screenshot", ".png")
+                log.info("{}. Screenshot is exported ({}) | {}", page.id, Strings.readableBytes(bytes.size.toLong()), path)
             }
+        } catch (e: ScreenshotException) {
+            log.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
         } catch (e: Exception) {
-            log.warn("Screenshot failed {} | {}", Strings.readableBytes(contentLength), page.url)
             log.warn(Strings.stringifyException(e))
         }
     }
@@ -284,12 +286,12 @@ open class BrowserEmulateEventHandler(
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
-            log.warn("%3d. Page is {}({}) with {} in {}({}) | file://{}",
+            log.warn("{}. Page is {}({}) with {} in {}({}) | file://{}",
                     task.page.id,
                     integrity.name, readableLength,
                     proxyEntry.display, domain, count, link, task.url)
         } else {
-            log.warn("%3d. Page is {}({}) | file://{}", task.page.id, integrity.name, readableLength, link)
+            log.warn("{}. Page is {}({}) | file://{}", task.page.id, integrity.name, readableLength, link)
         }
     }
 }

@@ -44,6 +44,10 @@ abstract class MultiSinkMessageWriter(val conf: ImmutableConfig) : AutoCloseable
         writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
     }
 
+    fun closeWriter(filename: String) {
+        writers[getPath(filename)]?.close()
+    }
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             writers.values.forEach { it.close() }

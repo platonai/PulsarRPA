@@ -9,6 +9,7 @@ import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
+import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -41,12 +42,16 @@ class MetricsManagement(
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
 
+    private val initialDelay = conf.getDuration("metrics.report.initial.delay", Duration.ofMinutes(3))
+    private val csvReportInterval = conf.getDuration("metrics.csv.report.interval", Duration.ofMinutes(5))
+    private val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
+    private val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
+
     private val metricRegistry = SharedMetricRegistries.getOrCreate(DEFAULT_METRICS_NAME)
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter
-
-    val metricsReporter = MetricsReporter(metricsCounters, conf)
+    private val counterReporter = CounterReporter(metricsCounters, conf = conf)
 
     private val closed = AtomicBoolean()
 
@@ -67,14 +72,14 @@ class MetricsManagement(
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build()
-        metricsReporter.outputTo(LoggerFactory.getLogger(MetricsReporter::class.java))
+        counterReporter.outputTo(LoggerFactory.getLogger(CounterReporter::class.java))
     }
 
     fun start() {
         jmxReporter.start()
-        csvReporter.start(2, TimeUnit.MINUTES)
-        slf4jReporter.start(5, TimeUnit.MINUTES)
-        metricsReporter.startReporter()
+        csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
+        slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
+        counterReporter.start(initialDelay, counterReportInterval)
     }
 
     override fun close() {
@@ -85,7 +90,7 @@ class MetricsManagement(
             slf4jReporter.close()
             jmxReporter.close()
 
-            metricsReporter.stopReporter()
+            counterReporter.close()
         }
     }
 }

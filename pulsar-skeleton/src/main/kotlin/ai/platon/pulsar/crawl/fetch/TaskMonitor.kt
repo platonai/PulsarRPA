@@ -156,9 +156,9 @@ class TaskMonitor(
     /** Maintain pool life time, return true if the life time status is changed, false otherwise  */
     private fun maintain(pool: TaskPool): TaskPool {
         val lastStatus = pool.status
-        if (fetchMetrics.isGone(pool.host)) {
+        if (fetchMetrics.isUnreachable(pool.host)) {
             retire(pool)
-            log.info("Retire pool with unreachable host " + pool.id)
+            log.info("Retire pool with unreachable host | {}", pool.id)
         } else if (feederCompleted.get() && !pool.hasTasks()) {
             // All tasks are finished, including pending tasks, we can remove the pool from the pool list safely
             taskPools.disable(pool)
@@ -214,14 +214,10 @@ class TaskMonitor(
     }
 
     private fun doProduce(task: JobFetchTask) {
-        if (fetchMetrics.isGone(task.host)) {
-            return
-        }
-
         val url = task.urlString
-        val host = URLUtil.getHostName(url)
-        if (host == null || fetchMetrics.isGone(host) || fetchMetrics.isGone(url)) {
-            log.warn("Ignore unreachable url (indicate task.getHost() failed) | {}", url)
+        val host = URLUtil.getHostName(url)?:return
+        if (fetchMetrics.isUnreachable(host)) {
+            log.warn("Ignore unreachable url | {}", url)
             return
         }
 
@@ -282,13 +278,6 @@ class TaskMonitor(
         reportServedThreads()
     }
 
-    fun trackHostGone(url: String) {
-        val isGone = fetchMetrics.trackHostGone(url)
-        if (isGone) {
-            tune(true)
-        }
-    }
-
     /**
      * Reload pending fetch items so that the items can be re-fetched
      *
@@ -300,8 +289,8 @@ class TaskMonitor(
      */
     @Synchronized
     internal fun tune(force: Boolean) {
-        taskPools.filter { fetchMetrics.isGone(it.host) }.onEach { retire(it) }.takeIf { it.isNotEmpty() }?.let { pool ->
-            pool.joinToString (", ", "Unavailable pools : ") { it.id.toString() }.let { log.info(it) }
+        taskPools.filter { fetchMetrics.isUnreachable(it.host) }.onEach { retire(it) }.takeIf { it.isNotEmpty() }?.let { pool ->
+            pool.joinToString (", ", "Unavailable pools: ") { it.id.toString() }.let { log.info(it) }
         }
         calculateTaskCounter()
     }

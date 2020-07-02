@@ -67,7 +67,11 @@ class WebDriverPoolManager(
                 "waitingDrivers" to Gauge<Int> { numWaiting },
                 "freeDrivers" to Gauge<Int> { numFreeDrivers },
                 "workingDrivers" to Gauge<Int> { numWorkingDrivers },
-                "onlineDrivers" to Gauge<Int> { numOnline }
+                "onlineDrivers" to Gauge<Int> { numOnline },
+                "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
+                "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
+                "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
+                "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
     }
 

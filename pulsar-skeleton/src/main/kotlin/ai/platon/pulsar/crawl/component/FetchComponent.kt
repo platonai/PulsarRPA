@@ -152,11 +152,11 @@ open class FetchComponent(
             ProtocolStatus.ROBOTS_DENIED,
             ProtocolStatus.UNKNOWN_HOST,
             ProtocolStatus.GONE,
-            ProtocolStatus.NOTFOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics.trackHostGone(url) }
+            ProtocolStatus.NOTFOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics.trackHostUnreachable(url) }
 
             ProtocolStatus.EXCEPTION,
             ProtocolStatus.RETRY,
-            ProtocolStatus.BLOCKED -> CrawlStatus.STATUS_RETRY
+            ProtocolStatus.BLOCKED -> CrawlStatus.STATUS_RETRY.also { fetchMetrics.trackHostUnreachable(url) }
 
             ProtocolStatus.REQUEST_TIMEOUT,
             ProtocolStatus.THREAD_TIMEOUT,
@@ -176,7 +176,7 @@ open class FetchComponent(
         if (crawlStatus.isFetched) {
             fetchMetrics.trackSuccess(page)
         } else if (crawlStatus.isFailed) {
-            fetchMetrics.trackFailed(url)
+            fetchMetrics.trackFailedUrl(url)
         }
 
         return updatedPage

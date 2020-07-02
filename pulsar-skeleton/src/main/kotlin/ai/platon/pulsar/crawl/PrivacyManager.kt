@@ -31,7 +31,7 @@ abstract class PrivacyManager(
             }
         }
 
-        val context = iterator.next()
+        val context = synchronized(iterator) { iterator.next() }
         if (context.isActive) {
             return context
         }

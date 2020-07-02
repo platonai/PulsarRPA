@@ -20,8 +20,8 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 open class InterceptiveBrowserPrivacyContext(
         val driverPoolManager: WebDriverPoolManager,
         val proxyPoolManager: ProxyPoolManager,
-        val conf: ImmutableConfig
-): PrivacyContext(PrivacyContextId(generateBaseDir())) {
+        conf: ImmutableConfig
+): PrivacyContext(PrivacyContextId(generateBaseDir()), conf) {
 
     private val browserInstanceId: BrowserInstanceId
     private var proxyEntry: ProxyEntry? = null

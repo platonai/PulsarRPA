@@ -13,6 +13,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhausted
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque

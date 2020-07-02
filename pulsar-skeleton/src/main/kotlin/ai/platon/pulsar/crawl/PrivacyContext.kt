@@ -1,6 +1,8 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
 import org.apache.commons.lang.RandomStringUtils
 import org.slf4j.LoggerFactory
@@ -58,7 +60,8 @@ abstract class PrivacyContext(
     /**
      * The data directory for this context, very context has it's own data directory
      * */
-    val id: PrivacyContextId
+    val id: PrivacyContextId,
+    val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
@@ -82,8 +85,9 @@ abstract class PrivacyContext(
     val sequence = instanceSequencer.incrementAndGet()
     val display get() = id.display
 
-    var minimumThroughput = 0.3
-    var maximumWarnings = 8
+    val minimumThroughput = conf.getFloat(PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
+    val maximumWarnings = conf.getInt(PRIVACY_MAX_WARNINGS, 8)
+    val minorWarningFactor = conf.getInt(PRIVACY_MINOR_WARNING_FACTOR, 5)
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
@@ -120,7 +124,7 @@ abstract class PrivacyContext(
 
     fun markMinorWarning() {
         privacyLeakMinorWarnings.incrementAndGet()
-        if (privacyLeakMinorWarnings.get() > 5) {
+        if (privacyLeakMinorWarnings.get() > minorWarningFactor) {
             privacyLeakMinorWarnings.set(0)
             markWarning()
         }

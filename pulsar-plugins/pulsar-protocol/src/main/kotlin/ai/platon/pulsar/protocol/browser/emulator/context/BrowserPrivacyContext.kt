@@ -20,14 +20,14 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 open class BrowserPrivacyContext(
         val proxyPoolManager: ProxyPoolManager,
         val driverPoolManager: WebDriverPoolManager,
-        val conf: ImmutableConfig,
+        conf: ImmutableConfig,
         id: PrivacyContextId = PrivacyContextId(generateBaseDir())
-): PrivacyContext(id) {
+): PrivacyContext(id, conf) {
 
     private val browserInstanceId: BrowserInstanceId
     private var proxyEntry: ProxyEntry? = null
     private val driverContext: WebDriverContext
-    private val proxyContext: ProxyContext
+    private var proxyContext: ProxyContext? = null
     val numFreeDrivers get() = driverPoolManager.numFreeDrivers
     val numWorkingDrivers get() = driverPoolManager.numWorkingDrivers
     val numAvailableDrivers get() = driverPoolManager.numAvailableDrivers
@@ -43,7 +43,10 @@ open class BrowserPrivacyContext(
 
         browserInstanceId = BrowserInstanceId.resolve(id.dataDir).apply { proxyServer = proxyEntry?.hostPort }
         driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
-        proxyContext = ProxyContext(proxyEntry, proxyPoolManager, driverContext, conf)
+
+        if (proxyPoolManager.isEnabled) {
+            proxyContext = ProxyContext(proxyEntry, proxyPoolManager, driverContext, conf)
+        }
     }
 
     open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
@@ -56,7 +59,7 @@ open class BrowserPrivacyContext(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             driverContext.shutdown()
-            proxyContext.close()
+            proxyContext?.close()
             report()
         }
     }
@@ -69,7 +72,7 @@ open class BrowserPrivacyContext(
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
                 Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
                 numTasks, numTotalRun,
-                proxyContext.proxyEntry
+                proxyContext?.proxyEntry
         )
 
         if (smallPageRate > 0.5) {
@@ -94,7 +97,9 @@ open class BrowserPrivacyContext(
 
     private suspend fun run0(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
-        return proxyContext.run(task, browseFun).also { afterRun(it) }
+        val result = proxyContext?.run(task, browseFun)?:driverContext.run(task, browseFun)
+        afterRun(result)
+        return result
     }
 
     private fun beforeRun(task: FetchTask) {

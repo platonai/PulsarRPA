@@ -23,12 +23,9 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.stream.Stream
 import kotlin.streams.toList
 
 /**
@@ -185,6 +182,8 @@ object ResourceLoader {
     fun getResourceAsReader(fileResource: String, vararg resourcePrefixes: String): Reader? {
         return getResourceAsStream(fileResource, *resourcePrefixes)?.let { InputStreamReader(it) }
     }
+
+    fun exists(name: String) = getResource(name) != null
 
     /**
      * Get the [URL] for the named resource.

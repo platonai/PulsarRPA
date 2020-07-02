@@ -411,7 +411,7 @@ class ChromeLauncher(
 
     @Throws(IOException::class)
     private fun cleanUp() {
-        val target = userDataDir.resolve("Default/Cache")
+        val target = userDataDir.resolve("Default")
         FileUtils.deleteQuietly(target.toFile())
         if (Files.exists(target)) {
             log.warn("Failed to delete browser cache, try again | {}", target)

@@ -74,7 +74,7 @@ class BatchFetchComponent(
             if (protocol != null) {
                 pages.addAll(parallelFetchAll0(gUrls, protocol, options))
             } else {
-                fetchMetrics.trackFailed(gUrls)
+                fetchMetrics.trackFailedUrls(gUrls)
             }
         }
         return pages
