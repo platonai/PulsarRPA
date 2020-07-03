@@ -3,7 +3,7 @@ package ai.platon.pulsar.protocol.browser.emulator
 import ai.platon.pulsar.browser.driver.BrowserControl
 import ai.platon.pulsar.browser.driver.chrome.util.ScreenshotException
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.files.ext.export
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -34,8 +34,9 @@ open class BrowserEmulateEventHandler(
         private val immutableConfig: ImmutableConfig
 ) {
     protected val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
-    protected val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
-    protected val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
+    protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
+    protected val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
+    protected val takesScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
@@ -195,9 +196,7 @@ open class BrowserEmulateEventHandler(
         }
 
         exportIfNecessary(task)
-        if (log.isTraceEnabled) {
-            takeScreenshot(pageDatum.length, task.page, task.driver.driver as RemoteWebDriver)
-        }
+        takeScreenshotIfNecessary(task)
 
         return ForwardingResponse(task.page, pageDatum)
     }
@@ -264,13 +263,18 @@ open class BrowserEmulateEventHandler(
         }
     }
 
-    fun takeScreenshot(contentLength: Long, page: WebPage, driver: RemoteWebDriver) {
+    private fun takeScreenshotIfNecessary(task: NavigateTask) {
+        if (takesScreenshot && task.pageDatum.status.isSuccess) {
+            takeScreenshot(task.pageDatum.length, task.page, task.driver.driver as RemoteWebDriver)
+        }
+    }
+
+    private fun takeScreenshot(contentLength: Long, page: WebPage, driver: RemoteWebDriver) {
         try {
-            if (contentLength > 100) {
-                val bytes = driver.getScreenshotAs(OutputType.BYTES)
-                val path = AppFiles.export(page, bytes, "screenshot", ".png")
-                log.info("{}. Screenshot is exported ({}) | {}", page.id, Strings.readableBytes(bytes.size.toLong()), path)
-            }
+            val bytes = driver.getScreenshotAs(OutputType.BYTES)
+            val readableLength = Strings.readableBytes(bytes.size.toLong())
+            val path = AppFiles.export(page, bytes, "screenshot", ".png")
+            log.info("{}. Screenshot is exported ({}) | {}", page.id, readableLength, path)
         } catch (e: ScreenshotException) {
             log.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)
         } catch (e: Exception) {

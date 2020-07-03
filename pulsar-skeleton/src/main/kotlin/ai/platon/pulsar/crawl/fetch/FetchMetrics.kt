@@ -237,6 +237,11 @@ class FetchMetrics(
             return false
         }
 
+        // special hosts
+        if (host.contains("amazon.com")) {
+            return false
+        }
+
         if (unreachableHosts.contains(host)) {
             return false
         }
@@ -304,7 +309,7 @@ class FetchMetrics(
         val count = Runtimes.countSystemProcess("chrome")
         chromeInstances.mark(count.toLong())
 
-        val memory = Systems.memoryUsed
+        val memory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
         usedMemoryMB.mark(memory / 1024 / 1024)
         usedMemoryGB.mark(memory / 1024 / 1024 / 1024)
     }

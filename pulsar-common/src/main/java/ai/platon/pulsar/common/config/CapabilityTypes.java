@@ -238,6 +238,7 @@ public interface CapabilityTypes {
     String BROWSER_ENABLE_URL_BLOCKING = "browser.enable.url.blocking";
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_DATA_DIR = "browser.data.dir";
+    String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
     /**
      * Proxy
      */

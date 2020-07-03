@@ -60,7 +60,7 @@ open class WebDriverControl(
         val generalOptions = DesiredCapabilities()
 
         generalOptions.setCapability(SUPPORTS_JAVASCRIPT, true)
-        generalOptions.setCapability(TAKES_SCREENSHOT, false)
+        // generalOptions.setCapability(TAKES_SCREENSHOT, false)
         generalOptions.setCapability("downloadImages", imagesEnabled)
         // generalOptions.setCapability("browserLanguage", "zh_CN")
         generalOptions.setCapability("throwExceptionOnScriptError", false)

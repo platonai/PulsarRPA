@@ -51,7 +51,6 @@ abstract class BrowserEmulatorBase(
                 "scrollDownCount", driverControl.scrollDownCount,
                 "scrollInterval", driverControl.scrollInterval,
                 "jsInvadingEnabled", driverControl.jsInvadingEnabled,
-                "proxyPoolManager", immutableConfig.get(CapabilityTypes.PROXY_POOL_MONITOR_CLASS),
                 "emulatorEventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATE_EVENT_HANDLER)
         )
     }

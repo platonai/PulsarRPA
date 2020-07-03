@@ -52,7 +52,7 @@ open class StreamingCrawler(
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
     private val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
-    private val idleTimeout = Duration.ofMinutes(10)
+    private val idleTimeout = Duration.ofMinutes(15)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
@@ -88,9 +88,9 @@ open class StreamingCrawler(
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
-            if (!fetchMetrics.isReachable(url)) {
-                return@forEachIndexed
-            }
+//            if (!fetchMetrics.isReachable(url)) {
+//                return@forEachIndexed
+//            }
 
             val state = load(j, url, scope)
             if (state != FlowState.CONTINUE) {
@@ -105,12 +105,6 @@ open class StreamingCrawler(
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
 
-        // TODO: we need a monitor
-        if (FileCommand.check("finish-job")) {
-            log.info("Found finish-job command, exit the job ...")
-            return FlowState.BREAK
-        }
-
         while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
             delay(1000)
         }
@@ -122,7 +116,14 @@ open class StreamingCrawler(
             delay(1000)
         }
 
+        // TODO: we need a monitor
+        if (FileCommand.check("finish-job")) {
+            log.info("Found finish-job command, exit the job ...")
+            return FlowState.BREAK
+        }
+
         if (!isAppActive) {
+            log.takeIf { isIdle }?.info("No task for {}, exit the job", idleTime.readable())
             return FlowState.BREAK
         }
 

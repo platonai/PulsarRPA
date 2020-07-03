@@ -223,7 +223,8 @@ class ChromeDevtoolsDriver(
             runBlocking {
                 withContext(Dispatchers.IO) {
                     result = withTimeoutOrNull(30 * 1000) {
-                        val screenshot = page.captureScreenshot(CaptureScreenshotFormat.PNG, 50, viewport, true)
+                        // val screenshot = page.captureScreenshot(CaptureScreenshotFormat.PNG, 50, viewport, true)
+                        val screenshot = page.captureScreenshot()
                         log.debug("It takes {} to take screenshot | {}", DateTimes.elapsedTime(startTime).readable(), navigateUrl)
                         outputType.convertFromBase64Png(screenshot)
                     }
