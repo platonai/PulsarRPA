@@ -4,7 +4,6 @@ import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
-import java.nio.file.Path
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -14,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserInstance(
+        val launcherConfig: LauncherConfig,
         val launchOptions: ChromeDevtoolsOptions
 ): AutoCloseable {
     /**
@@ -37,7 +37,8 @@ class BrowserInstance(
     fun launch() {
         synchronized(ChromeLauncher::class.java) {
             if (launched.compareAndSet(false, true)) {
-                launcher = ChromeLauncher(shutdownHookRegistry = ChromeDevtoolsDriver.ShutdownHookRegistry())
+                val shutdownHookRegistry = ChromeDevtoolsDriver.ShutdownHookRegistry()
+                launcher = ChromeLauncher(config = launcherConfig, shutdownHookRegistry = shutdownHookRegistry)
                 chrome = launcher.launch(launchOptions)
             }
         }

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
+import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -10,18 +11,14 @@ class BrowserInstanceManager: AutoCloseable {
     private val browserInstances = ConcurrentHashMap<Path, BrowserInstance>()
 
     @Synchronized
-    fun launchIfAbsent(launchOptions: ChromeDevtoolsOptions): BrowserInstance {
+    fun launchIfAbsent(launcherConfig: LauncherConfig, launchOptions: ChromeDevtoolsOptions): BrowserInstance {
         return browserInstances.computeIfAbsent(launchOptions.userDataDir) {
-            BrowserInstance(launchOptions).apply { launch() }
+            BrowserInstance(launcherConfig, launchOptions).apply { launch() }
         }
     }
 
     fun closeIfPresent(dataDir: Path) {
         browserInstances.remove(dataDir)?.close()
-    }
-
-    fun healthCheck() {
-        // check each instance to see if there are zombies
     }
 
     override fun close() {

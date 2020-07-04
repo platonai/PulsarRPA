@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -51,17 +52,10 @@ class WebDriverFactory(
         val browserType = getBrowserType(conf)
         val driver = kotlin.runCatching {
             when {
-                browserType == BrowserType.CHROME -> {
-                    driverControl.createChromeDevtoolsOptions(capabilities)
-                            .apply { userDataDir = browserInstanceId.dataDir }
-                            .let { ChromeDevtoolsDriver(it, driverControl, browserInstanceManager) }
-                }
-                browserType == BrowserType.SELENIUM_CHROME -> {
-                    ChromeDriver(driverControl.createChromeOptions(capabilities))
-                }
-                RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) -> {
+                browserType == BrowserType.CHROME -> createChromeDevtoolsDriver(browserInstanceId, capabilities)
+                browserType == BrowserType.SELENIUM_CHROME -> ChromeDriver(driverControl.createChromeOptions(capabilities))
+                RemoteWebDriver::class.java.isAssignableFrom(defaultWebDriverClass) ->
                     defaultWebDriverClass.getConstructor(Capabilities::class.java).newInstance(capabilities)
-                }
                 else -> defaultWebDriverClass.getConstructor().newInstance()
             }
         }.onFailure {
@@ -83,6 +77,18 @@ class WebDriverFactory(
         }
 
         return ManagedWebDriver(browserInstanceId, driver, priority)
+    }
+
+    private fun createChromeDevtoolsDriver(
+            browserInstanceId: BrowserInstanceId, capabilities: DesiredCapabilities): ChromeDevtoolsDriver {
+        val launcherConfig = LauncherConfig().apply {
+            supervisorProcess = driverControl.supervisorProcess
+            supervisorProcessArgs.addAll(driverControl.supervisorProcessArgs)
+        }
+        val launchOptions = driverControl.createChromeDevtoolsOptions(capabilities).apply {
+            userDataDir = browserInstanceId.dataDir
+        }
+        return ChromeDevtoolsDriver(launcherConfig, launchOptions, driverControl, browserInstanceManager)
     }
 
     private fun setProxy(capabilities: DesiredCapabilities, proxyServer: String) {

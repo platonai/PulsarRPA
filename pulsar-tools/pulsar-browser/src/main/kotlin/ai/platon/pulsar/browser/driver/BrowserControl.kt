@@ -3,7 +3,7 @@ package ai.platon.pulsar.browser.driver
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.google.gson.GsonBuilder
 import java.nio.file.Files
@@ -27,24 +27,25 @@ open class BrowserControl(
         }
     }
 
-    var xvfb = conf.getBoolean(CapabilityTypes.BROWSER_LAUNCH_WITH_XVFB, false)
-    var headless = conf.getBoolean(CapabilityTypes.BROWSER_DRIVER_HEADLESS, true)
-    var imagesEnabled = conf.getBoolean(CapabilityTypes.BROWSER_IMAGES_ENABLED, false)
-    var jsInvadingEnabled = conf.getBoolean(CapabilityTypes.BROWSER_JS_INVADING_ENABLED, true)
-    var userDataDir = conf.getPathOrNull(CapabilityTypes.BROWSER_DATA_DIR)?:generateUserDataDir()
-    var enableUrlBlocking = conf.getBoolean(CapabilityTypes.BROWSER_ENABLE_URL_BLOCKING, false)
+    var supervisorProcess = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
+    var supervisorProcessArgs = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+    var headless = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
+    var imagesEnabled = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
+    var jsInvadingEnabled = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    var userDataDir = conf.getPathOrNull(BROWSER_DATA_DIR)?:generateUserDataDir()
+    var enableUrlBlocking = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
 
     // We will wait for document ready manually using javascript
     var pageLoadStrategy = "none"
 
     // The javascript to execute by Web browsers
     var propertyNames = conf.getTrimmedStrings(
-            CapabilityTypes.FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
+            FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
-    var pageLoadTimeout = conf.getDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
-    var scriptTimeout = conf.getDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
-    var scrollDownCount = conf.getInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, 5)
-    var scrollInterval = conf.getDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
+    var pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
+    var scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
+    var scrollDownCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5)
+    var scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
 
     var clientJsVersion = "0.2.3"
     val scripts = mutableMapOf<String, String>()

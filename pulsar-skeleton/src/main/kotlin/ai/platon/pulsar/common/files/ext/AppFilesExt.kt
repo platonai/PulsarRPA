@@ -18,7 +18,7 @@ fun AppFiles.export(status: ProtocolStatus, content: String, page: WebPage): Pat
     return AppFiles.export(StringBuilder(), status, content, page)
 }
 
-fun AppFiles.export(sb: StringBuilder, status: ProtocolStatus, content: String, page: WebPage): Path {
+fun AppFiles.export(sb: StringBuilder, status: ProtocolStatus, content: String, page: WebPage, suffix: String = ".htm"): Path {
     val document = Documents.parse(content, page.baseUrl)
     document.absoluteLinks()
     val prettyHtml = document.prettyHtml
@@ -33,7 +33,7 @@ fun AppFiles.export(sb: StringBuilder, status: ProtocolStatus, content: String, 
     }
 
     val ident = sb.toString()
-    val path = export(page, prettyHtml.toByteArray(), ident)
+    val path = export(page, prettyHtml.toByteArray(), ident, suffix)
 
     page.metadata.set(Name.ORIGINAL_EXPORT_PATH, path.toString())
 
@@ -43,25 +43,22 @@ fun AppFiles.export(sb: StringBuilder, status: ProtocolStatus, content: String, 
 fun AppFiles.export(page: WebPage, content: ByteArray, ident: String = "", suffix: String = ".htm"): Path {
     val browser = page.lastBrowser.name.toLowerCase()
 
-    val u = Urls.getURLOrNull(page.url)?: return AppPaths.TMP_DIR
-    val domain = if (Strings.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
-    val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
-    val path = AppPaths.WEB_CACHE_DIR.resolve("original").resolve(browser).resolve(domain).resolve(filename)
+//    val u = Urls.getURLOrNull(page.url)?: return AppPaths.TMP_DIR
+//    val domain = if (Strings.isIpPortLike(u.host)) u.host else InternetDomainName.from(u.host).topPrivateDomain().toString()
+//    val filename = ident + "-" + DigestUtils.md5Hex(page.url) + suffix
+
+    val filename = AppPaths.fromUri(page.url, suffix = suffix)
+    val path = AppPaths.WEB_CACHE_DIR.resolve("original").resolve(browser).resolve("$ident-$filename")
     saveTo(content, path, true)
 
     return path
 }
 
-fun AppFiles.export(page: WebPage, ident: String = ""): Path {
-    val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location)
-    var postfix = filename.substringAfter(".").toLowerCase()
-    if (postfix.length > 5) {
-        postfix = "other"
-    }
-    val path = FILE_CACHE_DIR.resolve(ident).resolve(postfix).resolve(filename)
-    if (!Files.exists(path)) {
-        AppFiles.saveTo(page.content?.array()?: "(empty)".toByteArray(), path)
-    }
+fun AppFiles.export(page: WebPage, ident: String = "", suffix: String = ""): Path {
+    val filename = page.headers.decodedDispositionFilename ?: AppPaths.fromUri(page.location, "", suffix)
+    val path = FILE_CACHE_DIR.resolve(ident).resolve(filename)
+    Files.deleteIfExists(path)
+    AppFiles.saveTo(page.content?.array()?: "(empty)".toByteArray(), path)
     return path
 }
 

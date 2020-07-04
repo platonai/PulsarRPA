@@ -24,6 +24,8 @@ class LauncherConfig {
     var startupWaitTime = DEFAULT_STARTUP_WAIT_TIME
     var shutdownWaitTime = DEFAULT_SHUTDOWN_WAIT_TIME
     var threadWaitTime = THREAD_JOIN_WAIT_TIME
+    var supervisorProcess: String? = null
+    val supervisorProcessArgs = mutableListOf<String>()
 
     companion object {
         /** Default startup wait time in seconds.  */
@@ -98,10 +100,12 @@ class ChromeDevtoolsOptions(
         @ChromeParameter("safebrowsing-disable-auto-update")
         var safebrowsingDisableAutoUpdate: Boolean = true,
         @ChromeParameter("ignore-certificate-errors")
-        var ignoreCertificateErrors: Boolean = true
+        var ignoreCertificateErrors: Boolean = true,
+        @ChromeParameter("no-sandbox")
+        var noSandbox: Boolean = true,
+        @ChromeParameter("disable-setuid-sandbox")
+        var disableSetuidSandbox: Boolean = true
 ) {
-    var xvfb = false
-
     val additionalArguments: MutableMap<String, Any?> = mutableMapOf()
 
     fun addArguments(key: String, value: String? = null): ChromeDevtoolsOptions {
@@ -173,12 +177,6 @@ class ChromeLauncher(
 
     companion object {
         private val DEVTOOLS_LISTENING_LINE_PATTERN = Pattern.compile("^DevTools listening on ws:\\/\\/.+:(\\d+)\\/")
-        const val XVFB = "xvfb-run"
-        val XVFB_ARGS = listOf(
-                "-a",
-                "-e", "/dev/stdout",
-                "-s", "-screen 0 1920x1080x24"
-        )
     }
 
     private val log = LoggerFactory.getLogger(ChromeLauncher::class.java)
@@ -270,10 +268,9 @@ class ChromeLauncher(
     @Synchronized
     private fun launchChromeProcess(chromeBinary: Path, chromeOptions: ChromeDevtoolsOptions): Int {
         check(!isAlive) { "Chrome process has already been started" }
-        val xvfb = chromeOptions.xvfb
-        val program = if (xvfb) XVFB else "$chromeBinary"
-        val arguments = if (!xvfb) chromeOptions.toList() else {
-            XVFB_ARGS + arrayOf("$chromeBinary", "--no-sandbox", "--disable-setuid-sandbox") + chromeOptions.toList()
+        val program = config.supervisorProcess?:"$chromeBinary"
+        val arguments = if (config.supervisorProcess == null) chromeOptions.toList() else {
+            config.supervisorProcessArgs + arrayOf("$chromeBinary") + chromeOptions.toList()
         }
 
         return try {

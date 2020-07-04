@@ -30,9 +30,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * TODO: more compatible methods with RemoteWebDriver, or disable them explicitly
+ * TODO: remove dependency on selenium
  * */
 class ChromeDevtoolsDriver(
+        private val launcherConfig: LauncherConfig,
         private val launchOptions: ChromeDevtoolsOptions,
         private val browserControl: WebDriverControl,
         private val browserInstanceManager: BrowserInstanceManager
@@ -82,7 +83,7 @@ class ChromeDevtoolsDriver(
 
     init {
         try {
-            browserInstance = browserInstanceManager.launchIfAbsent(launchOptions)
+            browserInstance = browserInstanceManager.launchIfAbsent(launcherConfig, launchOptions)
 
             // In chrome every tab is a separate process
             tab = browserInstance.createTab()

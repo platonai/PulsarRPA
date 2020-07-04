@@ -76,6 +76,9 @@ class ExportPaths(val uri: String) {
     val annotatedView get() = build("annotated")
     val tileView get() = build("tile")
     val entityView get() = build("entity")
+    val namedPath = mutableMapOf<String, Path>()
+
+    fun byType(type: String) = namedPath.computeIfAbsent(type) { build(type) }
 
     private fun build(ident: String): Path {
         return AppPaths.DOC_EXPORT_DIR.resolve(ident).resolve(filename)

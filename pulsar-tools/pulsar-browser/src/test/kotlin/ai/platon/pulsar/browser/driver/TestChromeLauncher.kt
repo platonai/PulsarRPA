@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.ChromeDevtoolsOptions
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
+import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import ai.platon.pulsar.common.AppPaths
 import com.google.gson.Gson
 import org.junit.Test
@@ -12,10 +13,9 @@ class TestChromeLauncher {
     @Test
     fun testLauncher() {
         val launchOptions = ChromeDevtoolsOptions()
-        launchOptions.xvfb = true
         launchOptions.headless = false
         launchOptions.userDataDir = AppPaths.CHROME_TMP_DIR.resolve(LocalDateTime.now().second.toString())
-        val launcher = ChromeLauncher()
+        val launcher = ChromeLauncher(config = LauncherConfig())
         val chrome = launcher.launch(launchOptions)
         val tab = chrome.createTab("https://www.baidu.com")
         val versionString = Gson().toJson(chrome.version)

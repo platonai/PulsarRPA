@@ -214,7 +214,12 @@ open class FeaturedDocument(val document: Document) {
 
     fun stripStyles() {
         val removal = mutableSetOf<Node>()
-        NodeTraversor.traverse({ node, _ ->  if (node.nodeName() == "style") removal.add(node) }, document)
+        NodeTraversor.traverse({ node, _ ->
+            if (node.nodeName() == "style" || node.attr("type") == "text/css"
+                    || node.attr("ref") == "stylesheet") {
+                removal.add(node)
+            }
+        }, document)
         removal.forEach { it.remove() }
     }
 

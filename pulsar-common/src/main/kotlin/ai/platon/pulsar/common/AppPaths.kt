@@ -50,7 +50,7 @@ object AppPaths {
     @RequiredDirectory
     val WEB_CACHE_DIR = CACHE_DIR.resolve("web")
     @RequiredDirectory
-    val DOC_EXPORT_DIR = WEB_CACHE_DIR.resolve("web").resolve("export")
+    val DOC_EXPORT_DIR = WEB_CACHE_DIR.resolve("export")
     @RequiredDirectory
     val FILE_CACHE_DIR = CACHE_DIR.resolve("files")
     @RequiredDirectory
@@ -143,14 +143,14 @@ object AppPaths {
         return DigestUtils.md5Hex(uri).let { "$prefix$it$suffix" }
     }
 
+    fun fileId(uri: String) = DigestUtils.md5Hex(uri)
+
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = Urls.getURLOrNull(uri) ?: return UUID.randomUUID().toString()
-        var path = when {
-            InetAddresses.isInetAddress(u.host) -> u.host
-            else -> InternetDomainName.from(u.host).topPrivateDomain()
-        }
-        path = path.toString().replace('.', '-') + "-" + DigestUtils.md5Hex(uri)
-        return "$prefix$path$suffix"
+        var host = u.host.takeIf { Strings.isIpPortLike(it) }?:InternetDomainName.from(u.host).topPrivateDomain().toString()
+        host = host.replace('.', '-')
+        val fileId = fileId(uri)
+        return "$prefix$host-$fileId$suffix"
     }
 
     fun uniqueSymbolicLinkForUri(uri: String, suffix: String = ".htm"): Path {

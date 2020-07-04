@@ -230,7 +230,6 @@ public interface CapabilityTypes {
     String BROWSER_TYPE = "browser.type";
     String BROWSER_INCOGNITO = "browser.incognito";
     String BROWSER_DRIVER_HEADLESS = "browser.driver.headless";
-    String BROWSER_LAUNCH_WITH_XVFB = "browser.launch.with.xvfb";
     String BROWSER_IMAGES_ENABLED = "browser.images.enabled";
     String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
@@ -239,6 +238,8 @@ public interface CapabilityTypes {
     String BROWSER_CHROME_PATH = "browser.chrome.path";
     String BROWSER_DATA_DIR = "browser.data.dir";
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
+    String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
+    String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
     /**
      * Proxy
      */

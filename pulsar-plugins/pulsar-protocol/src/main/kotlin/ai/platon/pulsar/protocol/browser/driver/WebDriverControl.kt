@@ -7,7 +7,6 @@ import org.openqa.selenium.UnexpectedAlertBehaviour
 import org.openqa.selenium.chrome.ChromeOptions
 import org.openqa.selenium.remote.CapabilityType
 import org.openqa.selenium.remote.CapabilityType.SUPPORTS_JAVASCRIPT
-import org.openqa.selenium.remote.CapabilityType.TAKES_SCREENSHOT
 import org.openqa.selenium.remote.DesiredCapabilities
 
 /**
@@ -96,7 +95,6 @@ open class WebDriverControl(
         }
 
         chromeOptions.userDataDir = userDataDir
-        chromeOptions.xvfb = xvfb
         chromeOptions.headless = headless
         chromeOptions.addArguments("window-size", formatViewPort())
 

@@ -36,7 +36,7 @@ open class BrowserEmulateEventHandler(
     protected val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
-    protected val takesScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
+    protected val takeScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
@@ -264,7 +264,7 @@ open class BrowserEmulateEventHandler(
     }
 
     private fun takeScreenshotIfNecessary(task: NavigateTask) {
-        if (takesScreenshot && task.pageDatum.status.isSuccess) {
+        if (takeScreenshot && task.pageDatum.status.isSuccess) {
             takeScreenshot(task.pageDatum.length, task.page, task.driver.driver as RemoteWebDriver)
         }
     }
