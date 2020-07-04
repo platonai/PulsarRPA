@@ -26,7 +26,7 @@ class WebDriverTask<R> (
         val action: suspend (driver: ManagedWebDriver) -> R
 )
 
-class PoolRetiredException(message: String): IllegalStateException(message)
+class WebDriverPoolRetiredException(message: String): IllegalStateException(message)
 
 /**
  * Created by vincent on 18-1-1.
@@ -96,7 +96,7 @@ class WebDriverPoolManager(
             checkState()
 
             if (isRetiredPool(browserId)) {
-                throw PoolRetiredException("$browserId")
+                throw WebDriverPoolRetiredException("$browserId")
             }
 
             val driverPool = computeDriverPoolIfAbsent(browserId, task)

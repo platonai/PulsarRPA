@@ -8,12 +8,11 @@ import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
-import ai.platon.pulsar.protocol.browser.driver.PoolRetiredException
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolRetiredException
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhausted
 import com.codahale.metrics.Gauge
-import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedDeque
@@ -59,10 +58,10 @@ class WebDriverContext(
                 browseFun(task, it)
             }?:FetchResult.crawlRetry(task)
         } catch (e: WebDriverPoolExhausted) {
-            log.warn("Retry task {} in crawl scope | cause by: {}", task.id, e.message)
+            log.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
-        } catch (e: PoolRetiredException) {
-            log.warn("Retry task {} in crawl scope | caused by: {}", task.id, e.message)
+        } catch (e: WebDriverPoolRetiredException) {
+            log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } finally {
             runningTasks.remove(task)

@@ -11,9 +11,11 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.PageDatum
 import ai.platon.pulsar.crawl.protocol.Response
+import ai.platon.pulsar.dom.nodes.node.ext.ExportPaths
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
@@ -273,7 +275,10 @@ open class BrowserEmulateEventHandler(
         try {
             val bytes = driver.getScreenshotAs(OutputType.BYTES)
             val readableLength = Strings.readableBytes(bytes.size.toLong())
-            val path = AppFiles.export(page, bytes, "screenshot", ".png")
+            val filename = AppPaths.fromUri(page.url, "", ".png")
+            val path = ExportPaths.get("screenshot", filename)
+            AppFiles.saveTo(bytes, path, true)
+            page.metadata[Name.SCREENSHOT_EXPORT_PATH] = path.toString()
             log.info("{}. Screenshot is exported ({}) | {}", page.id, readableLength, path)
         } catch (e: ScreenshotException) {
             log.warn("{}. Screenshot failed {} | {}", page.id, Strings.readableBytes(contentLength), e.message)

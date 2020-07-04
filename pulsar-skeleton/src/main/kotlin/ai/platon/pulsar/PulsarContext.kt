@@ -23,6 +23,7 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.context.ConfigurableApplicationContext
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue

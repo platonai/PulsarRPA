@@ -9,6 +9,7 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent
+import org.springframework.boot.context.event.ApplicationPreparedEvent
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
@@ -35,11 +36,7 @@ class PulsarMaster {
 
 fun main(args: Array<String>) {
     val application = SpringApplication(PulsarMaster::class.java)
-
-    val event = ApplicationListener<ApplicationEnvironmentPreparedEvent> {
-        PulsarContext.initialize()
-    }
+    val event = ApplicationListener<ApplicationPreparedEvent> { PulsarContext.initialize(it.applicationContext) }
     application.addListeners(event)
-
     application.run(*args)
 }

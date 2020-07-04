@@ -59,9 +59,10 @@ public enum Name {
     HARVEST_STATUS("H_S"),
 
     /**
-     * storage
+     * export
      */
     ORIGINAL_EXPORT_PATH("S_OEP"),
+    SCREENSHOT_EXPORT_PATH("S_SSEP"),
 
     /**
      * index
