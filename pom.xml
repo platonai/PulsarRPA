@@ -14,52 +14,42 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ai.platon</groupId>
-        <artifactId>platon-parent</artifactId>
-        <version>2</version>
-        <relativePath>platon-parent/pom.xml</relativePath>
+        <groupId>ai.platon.pulsar</groupId>
+        <artifactId>platon</artifactId>
+        <version>3</version>
     </parent>
 
-    <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
     <version>1.5.3</version>
 
     <name>Pulsar</name>
 
+    <scm>
+        <connection>scm:git:https://github.com/platonai/platon.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/platon.git</developerConnection>
+        <url>https://github.com/platonai/platon.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Vincent Zhang</name>
+            <email>ivincent.zhang@gmail.com</email>
+            <organization>platon.ai</organization>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+
     <modules>
-        <module>platon-parent</module>
         <module>pulsar-common</module>
         <module>pulsar-persist</module>
         <module>pulsar-skeleton</module>
+        <module>pulsar-dom</module>
+        <module>pulsar-plugins</module>
         <module>pulsar-beans</module>
     </modules>
 
     <profiles>
-
-        <profile>
-            <id>dom</id>
-            <activation>
-                <property>
-                    <name>active-dom</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-dom</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>plugins</id>
-            <activation>
-                <property>
-                    <name>active-plugins</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-plugins</module>
-            </modules>
-        </profile>
 
         <profile>
             <id>sql</id>
@@ -157,13 +147,28 @@
                 <module>pulsar-rest</module>
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql-server</module>
-                <module>pulsar-app</module>
-                <module>pulsar-examples</module>
-                <module>pulsar-distribution</module>
             </modules>
         </profile>
 
     </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencyManagement>
         <dependencies>

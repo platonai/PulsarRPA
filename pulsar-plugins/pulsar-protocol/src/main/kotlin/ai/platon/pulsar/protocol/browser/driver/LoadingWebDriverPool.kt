@@ -109,6 +109,14 @@ class LoadingWebDriverPool(
     }
 
     fun put(driver: ManagedWebDriver) {
+        if (!isActive) {
+            log.warn("Driver pool is already closed, quit driver immediately | {}", driver)
+            driver.runCatching { quit().also { counterQuit.inc() } }.onFailure {
+                log.warn("Unexpected exception quit $driver", it)
+            }
+            return
+        }
+
         if (numWorking.decrementAndGet() == 0) {
             lock.withLock { notBusy.signalAll() }
         }
@@ -196,6 +204,7 @@ class LoadingWebDriverPool(
         val driver = freeDrivers.poll(timeout, unit)
         numWaiting.decrementAndGet()
 
+        checkState()
         return driver?:throw WebDriverPoolExhausted("Driver pool is exhausted (" + formatStatus() + ")")
     }
 
@@ -217,7 +226,7 @@ class LoadingWebDriverPool(
     }
 
     private fun shouldCreateDriver(): Boolean {
-        return availableMemory > BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY && onlineDrivers.size < capacity
+        return isActive && availableMemory > BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY && onlineDrivers.size < capacity
     }
 
     private fun doClose(timeToWait: Duration) {

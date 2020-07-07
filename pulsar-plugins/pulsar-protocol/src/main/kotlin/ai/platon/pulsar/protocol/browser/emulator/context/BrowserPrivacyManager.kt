@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
+import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
@@ -12,6 +13,21 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import java.time.Duration
+
+class BrowserPrivacyContextMonitor(
+        initialDelay: Long = 300,
+        watchInterval: Long = 30,
+        val privacyManager: BrowserPrivacyManager
+): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval)) {
+    override fun watch() {
+        privacyManager.activeContexts.values.forEach { context ->
+            if (context is BrowserPrivacyContext && context.proxyPoolManager.isIdle) {
+                privacyManager.close(context)
+            }
+        }
+    }
+}
 
 class BrowserPrivacyManager(
         val driverPoolManager: WebDriverPoolManager,
@@ -99,10 +115,11 @@ class BrowserPrivacyManager(
     private fun logPrivacyLeakWarning(privacyContext: PrivacyContext, status: ProtocolStatus) {
         val warnings = privacyContext.privacyLeakWarnings.get()
         if (warnings > 0) {
-            log.info("Privacy leak warning {}/#{} | {} | {}", warnings, privacyContext.sequence, privacyContext.display, status)
+            log.info("Privacy leak warning {}/{} | {}#{} | {}",
+                    warnings, privacyContext.maximumWarnings, privacyContext.sequence, privacyContext.display, status)
         }
 
-        if (warnings == 6) {
+        if (privacyContext.privacyLeakWarnings.get() == 6) {
             privacyContext.report()
         }
     }

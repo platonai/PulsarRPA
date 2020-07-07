@@ -40,9 +40,6 @@ abstract class BrowserEmulatorBase(
     val counterRequests = metrics.counter(prependReadableClassName(this,"requests"))
     val counterCancels = metrics.counter(prependReadableClassName(this,"cancels"))
 
-    var enableDelayBeforeNavigation = false
-    var lastNavigateTime = Instant.EPOCH
-
     override fun getParams(): Params {
         return Params.of(
                 "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),

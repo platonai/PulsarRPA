@@ -92,10 +92,6 @@ open class ProxyPoolManager(
      * Proxy system can be enabled/disabled at runtime
      * */
     fun isProxyEnabled(): Boolean {
-        if (FileCommand.check(AppConstants.CMD_ENABLE_PROXY)) {
-            return true
-        }
-
         // explicit set system environment property
         val useProxy = conf.get(CapabilityTypes.PROXY_USE_PROXY)
         if (useProxy != null) {

@@ -335,22 +335,10 @@ class ChromeLauncher(
         return port
     }
 
-    private fun destroyProcess(process: ProcessHandle) {
-        process.children().forEach { destroyProcess(it) }
-
-        val info = formatProcessInfo(process)
-        process.destroy()
-        if (process.isAlive) {
-            process.destroyForcibly()
-        }
-
-        log.info("Exit | {}", info)
-    }
-
     private fun destroyProcess(process: Process) {
         val info = formatProcessInfo(process.toHandle())
 
-        process.children().forEach { destroyProcess(it) }
+        process.children().forEach { destroyChildProcess(it) }
 
         process.destroy()
         try {
@@ -365,6 +353,18 @@ class ChromeLauncher(
             process.destroyForcibly()
         } finally {
         }
+    }
+
+    private fun destroyChildProcess(process: ProcessHandle) {
+        process.children().forEach { destroyChildProcess(it) }
+
+        val info = formatProcessInfo(process)
+        process.destroy()
+        if (process.isAlive) {
+            process.destroyForcibly()
+        }
+
+        log.debug("Exit | {}", info)
     }
 
     private fun formatProcessInfo(process: ProcessHandle): String {

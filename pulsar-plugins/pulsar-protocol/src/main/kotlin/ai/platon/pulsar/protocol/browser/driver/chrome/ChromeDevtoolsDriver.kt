@@ -15,8 +15,8 @@ import ai.platon.pulsar.protocol.browser.conf.mustPassUrlPatterns
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstance
 import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
-import com.github.kklisura.cdt.protocol.types.page.CaptureScreenshotFormat
 import com.github.kklisura.cdt.protocol.types.page.Viewport
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -29,9 +29,8 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * TODO: remove dependency on selenium
- * */
+internal data class DeviceMetrics(val width: Int, val height: Int, val deviceScaleFactor: Double, val mobile: Boolean)
+
 class ChromeDevtoolsDriver(
         private val launcherConfig: LauncherConfig,
         private val launchOptions: ChromeDevtoolsOptions,
@@ -224,8 +223,16 @@ class ChromeDevtoolsDriver(
             runBlocking {
                 withContext(Dispatchers.IO) {
                     result = withTimeoutOrNull(30 * 1000) {
-                        // val screenshot = page.captureScreenshot(CaptureScreenshotFormat.PNG, 50, viewport, true)
-                        val screenshot = page.captureScreenshot()
+                        val deviceMetricsOverride = evaluate("__utils__.getFullPageMetrics()")?.toString()
+                        val screenshot = if (deviceMetricsOverride != null) {
+                            val m = GsonBuilder().create().fromJson(deviceMetricsOverride, DeviceMetrics::class.java)
+                            emulation.setDeviceMetricsOverride(m.width, m.height, m.deviceScaleFactor, m.mobile)
+                            page.captureScreenshot().also { emulation.clearDeviceMetricsOverride() }
+                        } else {
+                            // val screenshot = page.captureScreenshot(CaptureScreenshotFormat.PNG, 50, viewport, true)
+                            page.captureScreenshot()
+                        }
+
                         log.debug("It takes {} to take screenshot | {}", DateTimes.elapsedTime(startTime).readable(), navigateUrl)
                         outputType.convertFromBase64Png(screenshot)
                     }

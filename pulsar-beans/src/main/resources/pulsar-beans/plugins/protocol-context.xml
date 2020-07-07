@@ -39,6 +39,13 @@
         <constructor-arg ref="conf"/>
     </bean>
 
+    <bean id="privacyContextMonitor" class="ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyContextMonitor"
+          init-method="start" destroy-method="close">
+        <constructor-arg name="initialDelay" value="300" />
+        <constructor-arg name="watchInterval" value="30" />
+        <constructor-arg ref="privacyManager"/>
+    </bean>
+
     <bean id="browserEmulatorEventHandlerFactory" class="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatorEventHandlerFactory">
         <constructor-arg ref="webDriverManager"/>
         <constructor-arg ref="messageWriter"/>

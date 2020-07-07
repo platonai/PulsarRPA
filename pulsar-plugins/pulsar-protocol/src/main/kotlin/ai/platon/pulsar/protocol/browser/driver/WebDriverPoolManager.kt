@@ -37,7 +37,7 @@ class WebDriverPoolManager(
         val proxyManager: ProxyPoolManager,
         val driverFactory: WebDriverFactory,
         val immutableConfig: ImmutableConfig
-): Parameterized, PreemptChannelSupport("WebDriverManager"), AutoCloseable {
+): Parameterized, AutoCloseable {
     companion object {
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
     }
@@ -67,11 +67,7 @@ class WebDriverPoolManager(
                 "waitingDrivers" to Gauge<Int> { numWaiting },
                 "freeDrivers" to Gauge<Int> { numFreeDrivers },
                 "workingDrivers" to Gauge<Int> { numWorkingDrivers },
-                "onlineDrivers" to Gauge<Int> { numOnline },
-                "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
-                "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
-                "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
-                "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
+                "onlineDrivers" to Gauge<Int> { numOnline }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
     }
 
@@ -91,31 +87,35 @@ class WebDriverPoolManager(
     @Throws(IllegalApplicationContextStateException::class)
     suspend fun <R> run(task: WebDriverTask<R>): R? {
         val browserId = task.browserId
-        var result: R? = null
-        whenNormalDeferred {
+        val result: R?
+
+        checkState()
+
+        if (isRetiredPool(browserId)) {
+            throw WebDriverPoolRetiredException("$browserId")
+        }
+
+        val driverPool = computeDriverPoolIfAbsent(browserId, task)
+        if (!driverPool.isActive) {
+            log.warn("Driver pool is closed already | {}", driverPool)
+            return null
+        }
+
+        var driver: ManagedWebDriver? = null
+        try {
             checkState()
-
-            if (isRetiredPool(browserId)) {
-                throw WebDriverPoolRetiredException("$browserId")
-            }
-
-            val driverPool = computeDriverPoolIfAbsent(browserId, task)
-            var driver: ManagedWebDriver? = null
-            try {
+            driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
+            result = withTimeoutOrNull(taskTimeout.toMillis()) {
                 checkState()
-                driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
-                result = withTimeoutOrNull(taskTimeout.toMillis()) {
-                    checkState()
-                    task.action(driver)
-                }
-
-                if (result == null) {
-                    numTimeout.mark()
-                    log.warn("Task timeout after {} with driver {} | {}", taskTimeout.readable(), driver, browserId)
-                }
-            } finally {
-                driver?.let { driverPool.put(it) }
+                task.action(driver)
             }
+
+            if (result == null) {
+                numTimeout.mark()
+                log.warn("Task timeout after {} with driver {} | {}", taskTimeout.readable(), driver, browserId)
+            }
+        } finally {
+            driver?.let { driverPool.put(it) }
         }
 
         return result
@@ -140,8 +140,10 @@ class WebDriverPoolManager(
     fun cancel(url: String): ManagedWebDriver? {
         checkState()
         var driver: ManagedWebDriver? = null
-        driverPools.values.forEach { it ->
-            driver = it.firstOrNull { it.url == url }?.also { it.cancel() }
+        driverPools.values.forEach { driverPool ->
+            driver = driverPool.firstOrNull { it.url == url }?.also {
+                it.cancel()
+            }
         }
         return driver
     }
@@ -200,12 +202,10 @@ class WebDriverPoolManager(
 
     private fun doCloseDriverPool(browserId: BrowserInstanceId) {
         checkState()
-        preempt {
-            retiredPools.add(browserId)
-            driverPools.remove(browserId)?.also { driverPool ->
-                log.info("Closing driver pool | {} | {}", driverPool.formatStatus(verbose = true), browserId)
-                driverPool.close()
-            }
+        retiredPools.add(browserId)
+        driverPools.remove(browserId)?.also { driverPool ->
+            log.info("Closing driver pool | {} | {}", driverPool.formatStatus(verbose = true), browserId)
+            driverPool.close()
         }
     }
 

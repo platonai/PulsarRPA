@@ -37,7 +37,6 @@ class BrowserEmulatedFetcher(
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
     private val driverManager = privacyManager.driverPoolManager
-    private val proxyPoolMonitor = privacyManager.proxyPoolManager
     private val closed = AtomicBoolean()
     private val illegalState = AtomicBoolean()
     private val isActive get() = !illegalState.get() && !closed.get()

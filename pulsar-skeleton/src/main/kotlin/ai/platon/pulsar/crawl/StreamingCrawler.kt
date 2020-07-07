@@ -55,7 +55,7 @@ open class StreamingCrawler(
     private val idleTimeout = Duration.ofMinutes(15)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    private val isIdle get() = idleTime > idleTimeout
+    private val isIdle get() = isActive && idleTime > idleTimeout
     private val isAppActive get() = isActive && !isIdle && !illegalState.get()
     private val systemInfo = SystemInfo()
     // OSHI cached the value, so it's fast and safe to be called frequently
@@ -92,7 +92,7 @@ open class StreamingCrawler(
 //                return@forEachIndexed
 //            }
 
-            val state = load(j, url, scope)
+            val state = load(1 + j, url, scope)
             if (state != FlowState.CONTINUE) {
                 return
             }
@@ -106,6 +106,11 @@ open class StreamingCrawler(
         numTasks.incrementAndGet()
 
         while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
+            if (j % 120 == 0) {
+                val elapsedTime = Duration.between(lastActiveTime, Instant.now())
+                log.info("It takes long time to run {} tasks | {} -> {}",
+                        numRunningTasks, lastActiveTime, elapsedTime.readable())
+            }
             delay(1000)
         }
 
@@ -116,7 +121,6 @@ open class StreamingCrawler(
             delay(1000)
         }
 
-        // TODO: we need a monitor
         if (FileCommand.check("finish-job")) {
             log.info("Found finish-job command, exit the job ...")
             return FlowState.BREAK

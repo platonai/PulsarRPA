@@ -16,10 +16,7 @@ import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -150,17 +147,8 @@ open class AsyncBrowserEmulator(
         // driver.switchTo().frame(1);
 
         withContext(Dispatchers.IO) {
-            if (enableDelayBeforeNavigation) {
-                val idleTime = Duration.between(lastNavigateTime, Instant.now())
-                if (idleTime.seconds < 5) {
-                    delay(2000L + Random.nextInt(0, 1000))
-                }
-            }
-
             meterNavigates.mark()
             numDeferredNavigates.mark()
-            // tracer?.trace("About to navigate to #{} in {}", task.id, Thread.currentThread().name)
-            lastNavigateTime = Instant.now()
 
             log.trace("Navigating | {}", task.url)
 
@@ -278,14 +266,11 @@ open class AsyncBrowserEmulator(
 
     private suspend fun evaluate(interactTask: InteractTask, expression: String): Any? {
         val scriptTimeout = interactTask.driverConfig.scriptTimeout
-
-        return withContext(Dispatchers.IO) {
+        counterRequests.inc()
+        return withTimeoutOrNull(scriptTimeout.toMillis()) {
             checkState(interactTask.driver)
             checkState(interactTask.fetchTask)
-            counterRequests.inc()
-            withTimeout(scriptTimeout.toMillis()) {
-                interactTask.driver.evaluate(expression)
-            }
+            interactTask.driver.evaluate(expression)
         }
     }
 }

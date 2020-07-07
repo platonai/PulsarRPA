@@ -152,7 +152,6 @@ public interface AppConstants {
      * Local file commands
      * */
     String CMD_FORCE_GENERATE_SEEDS = "force-generate-seeds";
-    String CMD_ENABLE_PROXY = "use_proxy"; // keep consistent with linux system variable
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
     String CMD_PROXY_FORCE_IDLE = "IPS-force-idle";

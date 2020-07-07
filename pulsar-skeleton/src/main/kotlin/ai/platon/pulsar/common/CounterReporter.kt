@@ -19,7 +19,6 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -60,12 +59,7 @@ class CounterReporter(
     }
 
     private fun init() {
-        val outerBorder = StringUtils.repeat('-', 100)
-        val innerBorder = StringUtils.repeat('.', 100)
-        log.info(outerBorder)
-        log.info(innerBorder)
-        log.info("== Reporter is started [ " + DateTimes.now() + " ] [ " + jobName + " ] ==")
-
+        log.info("Counter reporter is started [ " + DateTimes.now() + " ] [ " + jobName + " ]")
         counter.registeredCounters.map { readableClassName(it) }
                 .joinToString(", ", "All registered counters : ") { it }
                 .also { log.info(it) }

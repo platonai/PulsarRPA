@@ -36,9 +36,7 @@ abstract class PrivacyManager(
             return context
         }
 
-        activeContexts.remove(context.id)
-        zombieContexts.add(context)
-        context.close()
+        close(context)
 
         return newContext(PrivacyContextId.generate()).also { activeContexts[it.id] = it }
     }
@@ -46,6 +44,12 @@ abstract class PrivacyManager(
     open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
 
     abstract fun newContext(id: PrivacyContextId): PrivacyContext
+
+    fun close(privacyContext: PrivacyContext) {
+        activeContexts.remove(privacyContext.id)
+        zombieContexts.add(privacyContext)
+        privacyContext.close()
+    }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
