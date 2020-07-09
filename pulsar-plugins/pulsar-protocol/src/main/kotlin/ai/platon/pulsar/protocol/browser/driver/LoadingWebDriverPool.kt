@@ -109,14 +109,6 @@ class LoadingWebDriverPool(
     }
 
     fun put(driver: ManagedWebDriver) {
-        if (!isActive) {
-            log.warn("Driver pool is already closed, quit driver immediately | {}", driver)
-            driver.runCatching { quit().also { counterQuit.inc() } }.onFailure {
-                log.warn("Unexpected exception quit $driver", it)
-            }
-            return
-        }
-
         if (numWorking.decrementAndGet() == 0) {
             lock.withLock { notBusy.signalAll() }
         }

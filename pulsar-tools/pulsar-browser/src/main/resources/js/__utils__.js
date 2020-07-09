@@ -760,10 +760,16 @@ __utils__.compute = function() {
 
     __utils__.generateMetadata();
 
+    __utils__.addProjectSpecifiedData();
+
     // if any script error occurs, the flag can NOT be seen
     document.body.setAttribute(DATA_ERROR, '0');
 
     return JSON.stringify(document.pulsarData)
+};
+
+__utils__.addProjectSpecifiedData = function() {
+
 };
 
 /**

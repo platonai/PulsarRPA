@@ -17,12 +17,12 @@ abstract class PrivacyContextMonitor(
 
 abstract class PrivacyManager(
         val privacyContextMonitor: PrivacyContextMonitor,
-        val immutableConfig: ImmutableConfig
+        val immutableConfig: ImmutableConfig,
+        val numPrivacyContexts: Int = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
 ): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get()
-    val numPrivacyContexts = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
      * TODO: use a priority queue and every time we need a context, take the top one

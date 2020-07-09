@@ -15,6 +15,7 @@ import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedExceptio
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -244,7 +245,9 @@ class ProxyContext(
         // If the proxy is idle, and here comes a new task, reset the context
         // The proxy is about to be unusable, reset the context
         proxyEntry?.also {
-            task.proxyEntry = proxyEntry
+            task.proxyEntry = it
+            it.lastActiveTime = Instant.now()
+
             if (it.willExpireAfter(minTimeToLive)) {
                 if (closing.compareAndSet(false, true)) {
                     throw ProxyRetiredException("The proxy is expired ($minTimeToLive)")
@@ -269,6 +272,8 @@ class ProxyContext(
     private fun afterTaskFinished(task: FetchTask, success: Boolean) {
         numRunningTasks.decrementAndGet()
         proxyEntry?.apply {
+            lastActiveTime = Instant.now()
+
             if (success) {
                 numSuccessPages.incrementAndGet()
                 lastTarget = task.url

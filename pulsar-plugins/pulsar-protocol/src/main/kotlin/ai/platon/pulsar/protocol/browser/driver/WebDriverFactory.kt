@@ -19,9 +19,6 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
-/**
- * TODO: remove selenium dependency
- * */
 class WebDriverFactory(
         val driverControl: WebDriverControl,
         val proxyPool: ProxyPool,

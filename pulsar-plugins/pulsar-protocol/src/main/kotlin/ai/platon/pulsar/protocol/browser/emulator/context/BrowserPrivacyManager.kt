@@ -24,10 +24,13 @@ class BrowserPrivacyContextMonitor(
     lateinit var privacyManager: BrowserPrivacyManager
 
     override fun watch() {
-        privacyManager.activeContexts.values.forEach { context ->
-            if (context is BrowserPrivacyContext && context.proxyPoolManager.isIdle) {
-                log.info("Proxy pool is idle, context reset will be triggered")
-                context.markLeaked()
+        // check proxy availability
+        if (privacyManager.proxyPoolManager.isEnabled) {
+            privacyManager.activeContexts.values.forEach { context ->
+                if (context is BrowserPrivacyContext && context.proxyEntry?.isIdle == true) {
+                    log.info("Proxy pool is idle, context reset will be triggered")
+                    context.markLeaked()
+                }
             }
         }
     }

@@ -66,6 +66,7 @@ class PulsarContext private constructor(): AutoCloseable {
                 return
             }
 
+            // TODO: do not depend on ClassPathXmlApplicationContext so we can use PulsarContext as a library
             val configLocation = System.getProperty(CapabilityTypes.APPLICATION_CONTEXT_CONFIG_LOCATION, AppConstants.APP_CONTEXT_CONFIG_LOCATION)
             initialize(configLocation)
         }
@@ -111,8 +112,10 @@ class PulsarContext private constructor(): AutoCloseable {
         fun registerShutdownHook() {
             ensureAlive()
             if (shutdownHook == null) { // No shutdown hook registered yet.
-                shutdownHook = Thread { synchronized(startupShutdownMonitor) {
-                    activeContext.getAndSet(null)?.close() }
+                shutdownHook = Thread {
+                    synchronized(startupShutdownMonitor) {
+                        activeContext.getAndSet(null)?.close()
+                    }
                 }
                 Runtime.getRuntime().addShutdownHook(shutdownHook)
             }
@@ -131,6 +134,11 @@ class PulsarContext private constructor(): AutoCloseable {
         fun createSession(): PulsarSession {
             ensureAlive()
             return getOrCreate().createSession()
+        }
+
+        @JvmStatic
+        fun createJvmSession(): PulsarSession {
+            return createSession()
         }
 
         private fun initEnvironment() {

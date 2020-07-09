@@ -13,9 +13,8 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import com.codahale.metrics.SharedMetricRegistries
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
