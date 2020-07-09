@@ -2,6 +2,7 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 
 object PulsarProperties {

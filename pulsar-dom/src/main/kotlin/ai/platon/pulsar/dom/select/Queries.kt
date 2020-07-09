@@ -217,6 +217,14 @@ fun <O> Node.selectFirstOrNull(cssQuery: String, transformer: (Element) -> O): O
     return selectFirstOrNull(cssQuery)?.let(transformer)
 }
 
+fun Node.firstText(cssQuery: String, defaultValue: String = ""): String {
+    return selectFirstOrNull(cssQuery)?.text()?:defaultValue
+}
+
+fun Node.firstTextOrNull(cssQuery: String): String? {
+    return selectFirstOrNull(cssQuery)?.text()
+}
+
 /**
  * TODO: experimental
  * TODO: may not as efficient as Node.collectIfTo since very call of e.nextElementSibling() generate a new element list

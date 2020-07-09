@@ -336,13 +336,15 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun parent(dom: ValueDom): ValueDom {
+        if (dom.isNil) return ValueDom.NIL
         return ValueDom.get(dom.element.parent())
     }
 
     @UDFunction
     @JvmStatic
     fun parentName(dom: ValueDom): String {
-        return dom.element.parent().uniqueName
+        if (dom.isNil) return "nil"
+        return parent(dom).element.uniqueName
     }
 
     @UDFunction
@@ -361,6 +363,12 @@ object DomFunctions {
     @JvmStatic
     fun outerHtml(dom: ValueDom): String {
         return dom.element.outerHtml()
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun slim_html(dom: ValueDom): String {
+        return dom.element.slimHtml
     }
 
     @UDFunction

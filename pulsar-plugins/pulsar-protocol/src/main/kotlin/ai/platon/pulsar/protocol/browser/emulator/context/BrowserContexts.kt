@@ -10,8 +10,8 @@ import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
-import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolRetiredException
-import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhausted
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
+import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import com.codahale.metrics.Gauge
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -57,10 +57,10 @@ class WebDriverContext(
             driverPoolManager.run(browserId, task.priority, task.volatileConfig) {
                 browseFun(task, it)
             }?:FetchResult.crawlRetry(task)
-        } catch (e: WebDriverPoolExhausted) {
+        } catch (e: WebDriverPoolExhaustedException) {
             log.warn("{}. Retry task {} in crawl scope | cause by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
-        } catch (e: WebDriverPoolRetiredException) {
+        } catch (e: WebDriverPoolException) {
             log.warn("{}. Retry task {} in crawl scope | caused by: {}", task.page.id, task.id, e.message)
             FetchResult.crawlRetry(task)
         } finally {
@@ -247,7 +247,7 @@ class ProxyContext(
             task.proxyEntry = proxyEntry
             if (it.willExpireAfter(minTimeToLive)) {
                 if (closing.compareAndSet(false, true)) {
-                    throw ProxyRetiredException("The proxy expires in $minTimeToLive")
+                    throw ProxyRetiredException("The proxy is expired ($minTimeToLive)")
                 }
             }
 

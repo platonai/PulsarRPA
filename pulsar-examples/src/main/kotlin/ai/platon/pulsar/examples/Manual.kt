@@ -1,7 +1,10 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.dom.select.firstText
+import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
+import ai.platon.pulsar.withPulsarContext
 
 object Manual {
     val session = PulsarContext.createSession()
@@ -15,31 +18,34 @@ object Manual {
         val page = session.load(url, "-expires 1d")
         val document = session.parse(page)
         val products = document.select("li[data-sku]").map {
-            it.selectFirstOrNull(".p-name em")?.text() to it.selectFirstOrNull(".p-price")?.text()
+            it.firstText(".sku-name") to it.firstTextOrNull(".p-price")
         }
         products.forEach { (name, price) -> println("$price $name") }
     }
 
     fun scrapeChained() {
-        session.load(url, "-expires 1d").let { session.parse(it) }.select("li[data-sku]").map {
-            it.selectFirstOrNull(".p-name em")?.text() to it.selectFirstOrNull(".p-price")?.text()
-        }.forEach { (name, price) -> println("$price $name") }
+        session.load(url, "-expires 1d")
+                .let { session.parse(it) }
+                .select("li[data-sku]")
+                .map { it.firstText(".sku-name") to it.firstTextOrNull(".p-price") }
+                .forEach { (name, price) -> println("$price $name") }
     }
 
     fun scrapeOutPages() {
         val pages = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
         val documents = pages.map { session.parse(it) }
         val products = documents.mapNotNull { it.selectFirstOrNull(".product-intro") }.map {
-            it.selectFirstOrNull(".sku-name")?.text() to it.selectFirstOrNull(".p-price")?.text()
+            it.firstText(".sku-name") to it.firstTextOrNull(".p-price")
         }
         products.forEach { (name, price) -> println("$price $name") }
     }
 
     fun scrapeOutPagesChained() {
-        session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]").map { session.parse(it) }
-                .mapNotNull { it.selectFirstOrNull(".product-intro") }.map {
-                    it.selectFirstOrNull(".sku-name")?.text() to it.selectFirstOrNull(".p-price")?.text()
-                }.forEach { (name, price) -> println("$price $name") }
+        session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+                .map { session.parse(it) }
+                .mapNotNull { it.selectFirstOrNull(".product-intro") }
+                .map { it.firstText(".sku-name") to it.firstTextOrNull(".p-price") }
+                .forEach { (name, price) -> println("$price $name") }
     }
 
     fun run() {
@@ -47,9 +53,9 @@ object Manual {
         loadOutPages()
         scrape()
         scrapeOutPages()
-
-        PulsarContext.shutdown()
     }
 }
 
-fun main() = Manual.run()
+fun main() = withPulsarContext {
+    Manual.run()
+}

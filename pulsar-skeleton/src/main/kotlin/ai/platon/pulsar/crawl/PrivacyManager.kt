@@ -1,14 +1,22 @@
 package ai.platon.pulsar.crawl
 
+import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
+abstract class PrivacyContextMonitor(
+        initialDelay: Long = 300,
+        watchInterval: Long = 30
+): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
+
 abstract class PrivacyManager(
+        val privacyContextMonitor: PrivacyContextMonitor,
         val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
@@ -24,14 +32,14 @@ abstract class PrivacyManager(
 
     open fun computeNextContext(): PrivacyContext {
         if (activeContexts.size < numPrivacyContexts) {
-            synchronized(this) {
+            synchronized(activeContexts) {
                 if (activeContexts.size < numPrivacyContexts) {
                     return computeIfAbsent(PrivacyContextId.generate())
                 }
             }
         }
 
-        val context = synchronized(iterator) { iterator.next() }
+        val context = synchronized(activeContexts) { iterator.next() }
         if (context.isActive) {
             return context
         }
@@ -45,12 +53,6 @@ abstract class PrivacyManager(
 
     abstract fun newContext(id: PrivacyContextId): PrivacyContext
 
-    fun close(privacyContext: PrivacyContext) {
-        activeContexts.remove(privacyContext.id)
-        zombieContexts.add(privacyContext)
-        privacyContext.close()
-    }
-
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             activeContexts.values.forEach { zombieContexts.add(it) }
@@ -61,6 +63,14 @@ abstract class PrivacyManager(
                     log.error("Failed to close privacy context", it)
                 }
             }
+        }
+    }
+
+    private fun close(privacyContext: PrivacyContext) {
+        synchronized(activeContexts) {
+            activeContexts.remove(privacyContext.id)
+            zombieContexts.add(privacyContext)
+            privacyContext.close()
         }
     }
 

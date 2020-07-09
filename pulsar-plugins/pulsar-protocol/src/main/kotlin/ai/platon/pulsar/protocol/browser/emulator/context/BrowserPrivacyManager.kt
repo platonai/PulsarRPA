@@ -1,11 +1,11 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.proxy.ProxyRetiredException
 import ai.platon.pulsar.crawl.PrivacyContext
 import ai.platon.pulsar.crawl.PrivacyContextId
+import ai.platon.pulsar.crawl.PrivacyContextMonitor
 import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -13,17 +13,21 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import java.time.Duration
+import org.slf4j.LoggerFactory
 
 class BrowserPrivacyContextMonitor(
         initialDelay: Long = 300,
-        watchInterval: Long = 30,
-        val privacyManager: BrowserPrivacyManager
-): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval)) {
+        watchInterval: Long = 30
+): PrivacyContextMonitor(initialDelay, watchInterval) {
+    protected val log = LoggerFactory.getLogger(BrowserPrivacyContextMonitor::class.java)
+
+    lateinit var privacyManager: BrowserPrivacyManager
+
     override fun watch() {
         privacyManager.activeContexts.values.forEach { context ->
             if (context is BrowserPrivacyContext && context.proxyPoolManager.isIdle) {
-                privacyManager.close(context)
+                log.info("Proxy pool is idle, context reset will be triggered")
+                context.markLeaked()
             }
         }
     }
@@ -32,11 +36,16 @@ class BrowserPrivacyContextMonitor(
 class BrowserPrivacyManager(
         val driverPoolManager: WebDriverPoolManager,
         val proxyPoolManager: ProxyPoolManager,
+        privacyContextMonitor: BrowserPrivacyContextMonitor,
         immutableConfig: ImmutableConfig
-): PrivacyManager(immutableConfig) {
+): PrivacyManager(privacyContextMonitor, immutableConfig) {
     private val tracer = log.takeIf { it.isTraceEnabled }
     val maxAllowedBadContexts = 10
     val numBadContexts get() = zombieContexts.indexOfFirst { it.isGood }
+
+    init {
+        privacyContextMonitor.privacyManager = this
+    }
 
     suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
         return run(computeNextContext(), task, fetchFun)

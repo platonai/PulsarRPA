@@ -21,7 +21,6 @@ open class EmulatorMonitor(
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val instanceRequiredMemory = 500 * 1024 * 1024 // 500 MiB
-    private val numPrivacyContexts get() = conf.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
 
     override fun watch() {

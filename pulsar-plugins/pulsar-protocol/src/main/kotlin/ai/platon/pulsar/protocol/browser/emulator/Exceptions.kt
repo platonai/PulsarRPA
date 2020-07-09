@@ -43,7 +43,7 @@ class IncompleteContentException: Exception {
     constructor(cause: Throwable) : super(cause) {}
 }
 
-class WebDriverPoolExhausted: Exception {
+open class WebDriverPoolException: Exception {
     constructor() : super() {}
 
     constructor(message: String) : super(message) {
@@ -53,3 +53,9 @@ class WebDriverPoolExhausted: Exception {
 
     constructor(cause: Throwable) : super(cause) {}
 }
+
+class WebDriverPoolExhaustedException(message: String) : WebDriverPoolException(message)
+
+class WebDriverPoolRetiredException(message: String) : WebDriverPoolException(message)
+
+class WebDriverPoolClosedException(message: String) : WebDriverPoolException(message)

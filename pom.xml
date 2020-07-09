@@ -14,22 +14,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>ai.platon.pulsar</groupId>
+        <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
         <version>3</version>
     </parent>
 
+    <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>1.5.3</version>
+    <version>1.5.3-SNAPSHOT</version>
 
     <name>Pulsar</name>
-
-    <scm>
-        <connection>scm:git:https://github.com/platonai/platon.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/platon.git</developerConnection>
-        <url>https://github.com/platonai/platon.git</url>
-    </scm>
 
     <developers>
         <developer>
@@ -39,6 +34,12 @@
             <timezone>+8</timezone>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
+        <url>https://github.com/platonai/pulsar.git</url>
+    </scm>
 
     <modules>
         <module>pulsar-common</module>

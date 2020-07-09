@@ -122,12 +122,12 @@ open class StreamingCrawler(
         }
 
         if (FileCommand.check("finish-job")) {
-            log.info("Found finish-job command, exit the job ...")
+            log.info("Found finish-job command, quit streaming crawler ...")
             return FlowState.BREAK
         }
 
         if (!isAppActive) {
-            log.takeIf { isIdle }?.info("No task for {}, exit the job", idleTime.readable())
+            log.takeIf { isIdle }?.info("Streaming crawling is idle for {}, quit streaming crawler ...", idleTime.readable())
             return FlowState.BREAK
         }
 
@@ -158,7 +158,7 @@ open class StreamingCrawler(
         when (e) {
             is IllegalApplicationContextStateException -> {
                 if (illegalState.compareAndSet(false, true)) {
-                    log.info("Illegal context, quit streaming crawler")
+                    log.warn("Illegal context, quit streaming crawler ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }

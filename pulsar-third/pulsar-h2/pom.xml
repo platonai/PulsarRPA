@@ -10,7 +10,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
-        <version>1.5.3</version>
+        <version>1.5.3-SNAPSHOT</version>
     </parent>
 
     <name>Pulsar H2 Database</name>
@@ -27,10 +27,10 @@
         </license>
     </licenses>
 
-    <scm>
-        <connection>scm:git:https://github.com/h2database/h2database</connection>
-        <url>https://github.com/h2database/h2database</url>
-    </scm>
+<!--    <scm>-->
+<!--        <connection>scm:git:https://github.com/h2database/h2database</connection>-->
+<!--        <url>https://github.com/h2database/h2database</url>-->
+<!--    </scm>-->
 
     <developers>
         <developer>

@@ -50,8 +50,9 @@ abstract class ScheduledMonitor(
      */
     @Synchronized
     open fun start(initialDelay: Long, period: Long, unit: TimeUnit, runnable: Runnable) {
-        require(scheduledFuture == null) { "Monitor already started" }
+        require(scheduledFuture == null) { "Scheduled monitor is already started | ${this.javaClass.simpleName}" }
         scheduledFuture = executor.scheduleAtFixedRate(runnable, initialDelay, period, unit)
+        log.info("Scheduled monitor is started | {}", this.javaClass.simpleName)
     }
 
     /**
