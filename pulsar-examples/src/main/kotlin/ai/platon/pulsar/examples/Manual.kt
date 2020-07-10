@@ -3,7 +3,6 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.dom.select.firstText
 import ai.platon.pulsar.dom.select.firstTextOrNull
-import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.withPulsarContext
 
 object Manual {
@@ -56,6 +55,4 @@ object Manual {
     }
 }
 
-fun main() = withPulsarContext {
-    Manual.run()
-}
+fun main() = withPulsarContext { Manual.run() }

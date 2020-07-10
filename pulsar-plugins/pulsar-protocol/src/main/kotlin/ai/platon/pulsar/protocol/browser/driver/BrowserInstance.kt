@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.chrome.*
-import ai.platon.pulsar.crawl.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.driver.chrome.ChromeDevtoolsDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentLinkedQueue

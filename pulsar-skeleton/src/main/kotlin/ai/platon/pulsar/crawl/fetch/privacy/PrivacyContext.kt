@@ -1,4 +1,4 @@
-package ai.platon.pulsar.crawl
+package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
@@ -57,11 +57,11 @@ data class BrowserInstanceId(
 }
 
 abstract class PrivacyContext(
-    /**
+        /**
      * The data directory for this context, very context has it's own data directory
      * */
     val id: PrivacyContextId,
-    val conf: ImmutableConfig
+        val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()

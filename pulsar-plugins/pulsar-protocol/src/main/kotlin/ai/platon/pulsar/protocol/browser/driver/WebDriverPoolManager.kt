@@ -9,7 +9,8 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.withTimeoutOrNull
@@ -24,7 +25,7 @@ class WebDriverTask<R> (
         val browserId: BrowserInstanceId,
         val priority: Int,
         val volatileConfig: VolatileConfig,
-        val action: suspend (driver: ManagedWebDriver) -> R
+        val action: suspend (driver: AbstractWebDriver) -> R
 )
 
 /**
@@ -84,7 +85,7 @@ class WebDriverPoolManager(
      * */
     @Throws(IllegalApplicationContextStateException::class)
     suspend fun <R> run(browserId: BrowserInstanceId, priority: Int, volatileConfig: VolatileConfig,
-                        action: suspend (driver: ManagedWebDriver) -> R?
+                        action: suspend (driver: AbstractWebDriver) -> R?
     ) = run(WebDriverTask(browserId, priority, volatileConfig, action))
 
     @Throws(IllegalApplicationContextStateException::class)
@@ -103,7 +104,7 @@ class WebDriverPoolManager(
                 throw WebDriverPoolException("Driver pool is closed already | $driverPool | $browserId")
             }
 
-            var driver: ManagedWebDriver? = null
+            var driver: AbstractWebDriver? = null
             try {
                 checkState()
                 driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
@@ -140,9 +141,9 @@ class WebDriverPoolManager(
      * Cancel the fetch task specified by [url] remotely
      * NOTE: A cancel request should run immediately not waiting for any browser task return
      * */
-    fun cancel(url: String): ManagedWebDriver? {
+    fun cancel(url: String): AbstractWebDriver? {
         checkState()
-        var driver: ManagedWebDriver? = null
+        var driver: AbstractWebDriver? = null
         driverPools.values.forEach { driverPool ->
             driver = driverPool.firstOrNull { it.url == url }?.also {
                 it.cancel()
@@ -155,7 +156,7 @@ class WebDriverPoolManager(
      * Cancel the fetch task specified by [url] remotely
      * NOTE: A cancel request should run immediately not waiting for any browser task return
      * */
-    fun cancel(browserId: BrowserInstanceId, url: String): ManagedWebDriver? {
+    fun cancel(browserId: BrowserInstanceId, url: String): AbstractWebDriver? {
         checkState()
         val driverPool = driverPools[browserId] ?: return null
         return driverPool.firstOrNull { it.url == url }?.also { it.cancel() }

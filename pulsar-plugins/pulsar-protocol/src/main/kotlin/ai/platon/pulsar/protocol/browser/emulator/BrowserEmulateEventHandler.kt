@@ -18,6 +18,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
+import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import com.codahale.metrics.SharedMetricRegistries
 import org.openqa.selenium.OutputType
@@ -267,7 +268,10 @@ open class BrowserEmulateEventHandler(
 
     private fun takeScreenshotIfNecessary(task: NavigateTask) {
         if (takeScreenshot && task.pageDatum.status.isSuccess) {
-            takeScreenshot(task.pageDatum.length, task.page, task.driver.driver as RemoteWebDriver)
+            val driver = task.driver
+            if (driver is ManagedWebDriver) {
+                takeScreenshot(task.pageDatum.length, task.page, driver.driver as RemoteWebDriver)
+            }
         }
     }
 

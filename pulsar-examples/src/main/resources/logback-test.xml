@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration scan="true" scanPeriod="120 seconds" debug="false">
+<configuration scan="true" scanPeriod="60 seconds" debug="true">
     <property name="logging.dir" value="logs" />
     <property name="logging.file" value="pulsar-test.log" />
-
-    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
     <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->

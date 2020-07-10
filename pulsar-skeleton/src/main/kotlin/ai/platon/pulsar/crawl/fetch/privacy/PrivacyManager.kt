@@ -1,8 +1,11 @@
-package ai.platon.pulsar.crawl
+package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.fetch.FetchResult
+import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -10,13 +13,16 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
+abstract class ExecutableFetchTask(val task: FetchTask) {
+    abstract suspend operator fun invoke(driver: AbstractWebDriver): FetchResult
+}
+
 abstract class PrivacyContextMonitor(
         initialDelay: Long = 300,
         watchInterval: Long = 30
 ): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
 
 abstract class PrivacyManager(
-        val privacyContextMonitor: PrivacyContextMonitor,
         val immutableConfig: ImmutableConfig,
         val numPrivacyContexts: Int = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
 ): AutoCloseable {
@@ -29,6 +35,8 @@ abstract class PrivacyManager(
      * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
+
+    abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult
 
     open fun computeNextContext(): PrivacyContext {
         if (activeContexts.size < numPrivacyContexts) {
@@ -53,6 +61,17 @@ abstract class PrivacyManager(
 
     abstract fun newContext(id: PrivacyContextId): PrivacyContext
 
+    open fun close(privacyContext: PrivacyContext) {
+        synchronized(activeContexts) {
+            val id = privacyContext.id
+            if (activeContexts.containsKey(id)) {
+                activeContexts.remove(id)
+                zombieContexts.add(privacyContext)
+                privacyContext.close()
+            }
+        }
+    }
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             activeContexts.values.forEach { zombieContexts.add(it) }
@@ -63,14 +82,6 @@ abstract class PrivacyManager(
                     log.error("Failed to close privacy context", it)
                 }
             }
-        }
-    }
-
-    private fun close(privacyContext: PrivacyContext) {
-        synchronized(activeContexts) {
-            activeContexts.remove(privacyContext.id)
-            zombieContexts.add(privacyContext)
-            privacyContext.close()
         }
     }
 

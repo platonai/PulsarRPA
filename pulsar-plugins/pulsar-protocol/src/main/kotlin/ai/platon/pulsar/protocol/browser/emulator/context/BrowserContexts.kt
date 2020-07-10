@@ -4,10 +4,10 @@ import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
-import ai.platon.pulsar.crawl.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager.Companion.DRIVER_CLOSE_TIME_OUT
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
@@ -50,7 +50,7 @@ class WebDriverContext(
     private val isActive get() = !closed.get()
     private val isShutdown = AtomicBoolean()
 
-    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         numGlobalTasks.incrementAndGet()
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
@@ -183,13 +183,13 @@ class ProxyContext(
     val isEnabled get() = proxyPoolManager.isEnabled
     val isActive get() = proxyPoolManager.isActive && !closing.get() && !closed.get()
 
-    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+    suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?:run0(task, browseFun)
     }
 
     @Throws(ProxyVendorUntrustedException::class)
     private suspend fun run0(
-            task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+            task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         var success = false
         return try {
             beforeTaskStart(task)
@@ -272,9 +272,8 @@ class ProxyContext(
     private fun afterTaskFinished(task: FetchTask, success: Boolean) {
         numRunningTasks.decrementAndGet()
         proxyEntry?.apply {
-            lastActiveTime = Instant.now()
-
             if (success) {
+                refresh()
                 numSuccessPages.incrementAndGet()
                 lastTarget = task.url
                 servedDomains.add(task.domain)

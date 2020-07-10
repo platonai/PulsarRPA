@@ -6,12 +6,12 @@ import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.BrowserInstanceId
-import ai.platon.pulsar.crawl.PrivacyContext
-import ai.platon.pulsar.crawl.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 
 /**
@@ -49,7 +49,7 @@ open class BrowserPrivacyContext(
         }
     }
 
-    open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+    open suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         return checkAbnormalResult(task) ?: run0(task, browseFun)
     }
 
@@ -58,16 +58,17 @@ open class BrowserPrivacyContext(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            report()
             driverContext.shutdown()
             proxyContext?.close()
-            report()
         }
     }
 
     override fun report() {
-        log.info("Privacy context #{} has lived for {}" +
+        val isIdle = proxyContext?.proxyEntry?.isIdle == true
+        log.info("Privacy context #{}{}{} has lived for {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
-                display, elapsedTime.readable(),
+                display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 numSuccesses, String.format("%.2f", throughput),
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
                 Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
@@ -95,7 +96,7 @@ open class BrowserPrivacyContext(
         return null
     }
 
-    private suspend fun run0(task: FetchTask, browseFun: suspend (FetchTask, ManagedWebDriver) -> FetchResult): FetchResult {
+    private suspend fun run0(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         beforeRun(task)
         val result = proxyContext?.run(task, browseFun)?:driverContext.run(task, browseFun)
         afterRun(result)

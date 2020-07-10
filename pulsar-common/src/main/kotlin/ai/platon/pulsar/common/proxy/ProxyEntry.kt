@@ -50,7 +50,7 @@ data class ProxyEntry(
     val numConnectionLosts = AtomicInteger()
     // accumulated test time
     val accumResponseMillis = AtomicLong()
-    // failed connection count
+    // last time the proxy is proven be available (note: )
     var availableTime: Instant = Instant.now()
     // number of failed pages
     val numFailedPages = AtomicInteger()
@@ -70,6 +70,9 @@ data class ProxyEntry(
     val isGone get() = isRetired || isFailed
 
     val numRunningTasks = AtomicInteger()
+    /**
+     * Last time to use this proxy
+     * */
     var lastActiveTime = Instant.now()
     var idleTimeout = Duration.ofMinutes(10)
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -92,7 +95,10 @@ data class ProxyEntry(
 
     fun retire() { status.set(Status.RETIRED) }
 
-    fun refresh() { availableTime = Instant.now() }
+    fun refresh() {
+        availableTime = Instant.now()
+        lastActiveTime = availableTime
+    }
 
     fun test(): Boolean {
         val target = if (lastTarget != null) {

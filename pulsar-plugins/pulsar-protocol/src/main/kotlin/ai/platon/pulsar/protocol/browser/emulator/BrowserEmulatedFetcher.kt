@@ -10,12 +10,13 @@ import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
+import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyContext
-import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -29,14 +30,13 @@ import kotlin.math.roundToLong
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 class BrowserEmulatedFetcher(
-        private val privacyManager: BrowserPrivacyManager,
+        private val privacyManager: PrivacyManager,
+        private val driverManager: WebDriverPoolManager,
         private val browserEmulator: BrowserEmulator,
-        private val asyncBrowserEmulator: AsyncBrowserEmulator,
         private val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatedFetcher::class.java)!!
 
-    private val driverManager = privacyManager.driverPoolManager
     private val closed = AtomicBoolean()
     private val illegalState = AtomicBoolean()
     private val isActive get() = !illegalState.get() && !closed.get()
@@ -81,7 +81,7 @@ class BrowserEmulatedFetcher(
 
         return privacyManager.run(createFetchTask(page)) { task, driver ->
             try {
-                asyncBrowserEmulator.fetch(task, driver)
+                browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
                     log.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
@@ -220,9 +220,9 @@ class BrowserEmulatedFetcher(
         val privacyContext = batch.privacyContext as BrowserPrivacyContext
         return privacyContext.run(task) { _, driver ->
             try {
-                batch.proxyEntry = driver.proxyEntry
+                batch.proxyEntry = task.proxyEntry
                 batch.beforeFetch(task.page)
-                asyncBrowserEmulator.fetch(task, driver)
+                browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
                     log.info("Illegal context state, cancel task {}/{} | {}", task.id, task.batchId, task.url)
@@ -267,7 +267,7 @@ class BrowserEmulatedFetcher(
         }
     }
 
-    private fun abortBatchTasks(batch: FetchTaskBatch, state: FetchTaskBatch.State) {
+    private suspend fun abortBatchTasks(batch: FetchTaskBatch, state: FetchTaskBatch.State) {
         logAfterBatchAbort(batch, state)
 
         // If there are still pending tasks, cancel them

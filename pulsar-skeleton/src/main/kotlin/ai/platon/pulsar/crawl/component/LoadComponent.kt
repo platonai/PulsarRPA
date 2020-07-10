@@ -56,7 +56,7 @@ class LoadComponent(
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
 
-    private val fetchTaskTracker get() = fetchComponent.fetchMetrics
+    private val fetchMetrics get() = fetchComponent.fetchMetrics
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
     private val numWrite = AtomicInteger()
@@ -328,8 +328,8 @@ class LoadComponent(
 
         when {
             globalFetchingUrls.contains(url) -> return null
-            fetchTaskTracker.isFailed(url) -> return null
-            fetchTaskTracker.isTimeout(url) -> {
+            fetchMetrics.isFailed(url) -> return null
+            fetchMetrics.isTimeout(url) -> {
             }
             // Might use UrlFilter/UrlNormalizer
         }

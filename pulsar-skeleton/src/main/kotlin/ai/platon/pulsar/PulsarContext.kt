@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.GlobalCacheManager
-import ai.platon.pulsar.crawl.PrivacyManager
 import ai.platon.pulsar.crawl.component.FetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
@@ -23,7 +22,6 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -114,7 +112,7 @@ class PulsarContext private constructor(): AutoCloseable {
             if (shutdownHook == null) { // No shutdown hook registered yet.
                 shutdownHook = Thread {
                     synchronized(startupShutdownMonitor) {
-                        activeContext.getAndSet(null)?.close()
+                        shutdown()
                     }
                 }
                 Runtime.getRuntime().addShutdownHook(shutdownHook)
@@ -123,6 +121,7 @@ class PulsarContext private constructor(): AutoCloseable {
 
         fun getOrCreate(): PulsarContext {
             ensureAlive()
+            ensureInitialized()
             synchronized(PulsarContext::class.java) {
                 if (activeContext.get() == null) {
                     activeContext.set(PulsarContext())
@@ -133,6 +132,7 @@ class PulsarContext private constructor(): AutoCloseable {
 
         fun createSession(): PulsarSession {
             ensureAlive()
+            ensureInitialized()
             return getOrCreate().createSession()
         }
 
@@ -148,6 +148,10 @@ class PulsarContext private constructor(): AutoCloseable {
             applicationContext.registerShutdownHook()
         }
 
+        private fun ensureInitialized() {
+            initialize()
+        }
+
         private fun ensureAlive() {
             if (closed.get()) {
                 throw IllegalApplicationContextStateException("Pulsar context is closed")
@@ -159,10 +163,6 @@ class PulsarContext private constructor(): AutoCloseable {
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
     val unmodifiedConfig: ImmutableConfig
-    /**
-     * The privacy manager
-     * */
-    val privacyManager: PrivacyManager
     /**
      * Url normalizers
      * */
@@ -213,7 +213,6 @@ class PulsarContext private constructor(): AutoCloseable {
 
     init {
         unmodifiedConfig = getBean()
-        privacyManager = getBean()
         globalCacheManager = getBean()
 
         webDb = getBean()

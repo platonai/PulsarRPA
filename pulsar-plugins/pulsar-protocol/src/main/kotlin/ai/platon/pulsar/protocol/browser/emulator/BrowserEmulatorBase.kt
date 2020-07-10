@@ -10,15 +10,17 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
-import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
-        val privacyManager: BrowserPrivacyManager,
+        val privacyManager: PrivacyManager,
+        val driverControl: WebDriverControl,
         val eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
         val messageWriter: MiscMessageWriter,
         val immutableConfig: ImmutableConfig
@@ -30,10 +32,7 @@ abstract class BrowserEmulatorBase(
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
-    val isClosed get() = closed.get()
     val isActive get() = !closed.get()
-    val driverManager = privacyManager.driverPoolManager
-    val driverControl = driverManager.driverControl
     val metrics = SharedMetricRegistries.getDefault()
     val meterNavigates = metrics.meter(prependReadableClassName(this,"navigates"))
     val counterRequests = metrics.counter(prependReadableClassName(this,"requests"))
@@ -69,7 +68,7 @@ abstract class BrowserEmulatorBase(
      * every direct or indirect IO operation is a checkpoint for the context reset event
      * */
     @Throws(NavigateTaskCancellationException::class, IllegalApplicationContextStateException::class)
-    protected fun checkState(driver: ManagedWebDriver) {
+    protected fun checkState(driver: AbstractWebDriver) {
         checkState()
 
         if (driver.isCanceled) {
