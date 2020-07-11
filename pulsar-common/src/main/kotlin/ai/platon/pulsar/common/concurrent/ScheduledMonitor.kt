@@ -78,12 +78,8 @@ abstract class ScheduledMonitor(
     abstract fun watch()
 
     override fun close() {
-        try {
-            if (autoClose) {
-                stopExecution(executor, scheduledFuture, true)
-            }
-        } catch (e: Exception) {
-            log.warn("Unexpected exception", e)
+        if (autoClose) {
+            stopExecution(executor, scheduledFuture, true)
         }
     }
 

@@ -185,7 +185,6 @@ class WebDriverPoolManager(
      * Cancel all running tasks and close all web drivers
      * */
     fun closeDriverPool(browserId: BrowserInstanceId, timeToWait: Duration) {
-        checkState()
         numReset.mark()
         // Mark all drivers are canceled
         doCloseDriverPool(browserId)
@@ -205,7 +204,6 @@ class WebDriverPoolManager(
     override fun toString(): String = formatStatus(false)
 
     private fun doCloseDriverPool(browserId: BrowserInstanceId) {
-        checkState()
         preempt {
             retiredPools.add(browserId)
             driverPools.remove(browserId)?.also { driverPool ->

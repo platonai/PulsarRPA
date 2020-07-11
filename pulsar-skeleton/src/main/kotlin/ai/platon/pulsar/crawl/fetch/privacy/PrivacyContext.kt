@@ -92,9 +92,15 @@ abstract class PrivacyContext(
     val privacyLeakMinorWarnings = AtomicInteger()
 
     val startTime = Instant.now()
+    var lastActiveTime = startTime
+    val elapsedTime get() = Duration.between(startTime, Instant.now())
+    val idleTimeout = Duration.ofMinutes(15)
+    val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
+
     val numTasks = AtomicInteger()
+    val numRunningTasks = AtomicInteger()
     val numSuccesses = AtomicInteger()
-    val numTotalRun = AtomicInteger()
+    val numFinished = AtomicInteger()
     val numSmallPages = AtomicInteger()
     val smallPageRate get() = 1.0 * numSmallPages.get() / numTasks.get().coerceAtLeast(1)
     val closed = AtomicBoolean()
@@ -110,7 +116,6 @@ abstract class PrivacyContext(
     val systemNetworkBytesRecv get() = realTimeSystemNetworkBytesRecv - initSystemNetworkBytesRecv
     val networkSpeed get() = systemNetworkBytesRecv / elapsedTime.seconds.coerceAtLeast(1)
 
-    val elapsedTime get() = Duration.between(startTime, Instant.now())
     val throughput get() = 1.0 * numSuccesses.get() / elapsedTime.seconds.coerceAtLeast(1)
     val isGood get() = throughput >= minimumThroughput
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings

@@ -278,7 +278,8 @@ class ChromeLauncher(
             process = processLauncher.launch(program, arguments)
 
             process?.also {
-                Files.writeString(userDataDir.resolve("chrome.launcher.pid"), it.pid().toString(), StandardOpenOption.CREATE)
+                val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
+                Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
         } catch (e: IOException) {
@@ -408,7 +409,7 @@ class ChromeLauncher(
 
     @Throws(IOException::class)
     private fun cleanUp() {
-        val target = userDataDir.resolve("Default")
+        val target = userDataDir
         FileUtils.deleteQuietly(target.toFile())
         if (Files.exists(target)) {
             log.warn("Failed to delete browser cache, try again | {}", target)

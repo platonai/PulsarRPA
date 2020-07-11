@@ -2,6 +2,7 @@ package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -13,10 +14,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class ExecutableFetchTask(val task: FetchTask) {
-    abstract suspend operator fun invoke(driver: AbstractWebDriver): FetchResult
-}
-
 abstract class PrivacyContextMonitor(
         initialDelay: Long = 300,
         watchInterval: Long = 30
@@ -24,7 +21,7 @@ abstract class PrivacyContextMonitor(
 
 abstract class PrivacyManager(
         val immutableConfig: ImmutableConfig,
-        val numPrivacyContexts: Int = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+        val numPrivacyContexts: Int = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
 ): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
@@ -62,14 +59,16 @@ abstract class PrivacyManager(
     abstract fun newContext(id: PrivacyContextId): PrivacyContext
 
     open fun close(privacyContext: PrivacyContext) {
+        val id = privacyContext.id
+
         synchronized(activeContexts) {
-            val id = privacyContext.id
             if (activeContexts.containsKey(id)) {
                 activeContexts.remove(id)
                 zombieContexts.add(privacyContext)
-                privacyContext.close()
             }
         }
+
+        privacyContext.close()
     }
 
     override fun close() {

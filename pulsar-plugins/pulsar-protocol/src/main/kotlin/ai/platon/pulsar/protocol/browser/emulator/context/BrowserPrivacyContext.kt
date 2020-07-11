@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import java.time.Instant
 
 /**
  * The privacy context, the context is closed if privacy is leaked
@@ -72,7 +73,7 @@ open class BrowserPrivacyContext(
                 numSuccesses, String.format("%.2f", throughput),
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
                 Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
-                numTasks, numTotalRun,
+                numTasks, numFinished,
                 proxyContext?.proxyEntry
         )
 
@@ -104,11 +105,15 @@ open class BrowserPrivacyContext(
     }
 
     private fun beforeRun(task: FetchTask) {
+        lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
+        numRunningTasks.incrementAndGet()
     }
 
     private fun afterRun(result: FetchResult) {
-        numTotalRun.incrementAndGet()
+        lastActiveTime = Instant.now()
+        numRunningTasks.decrementAndGet()
+        numFinished.incrementAndGet()
         if (result.status.isSuccess) {
             numSuccesses.incrementAndGet()
         }

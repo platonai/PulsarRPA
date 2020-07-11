@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
-import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
@@ -48,7 +47,6 @@ open class StreamingCrawler(
     }
 
     private val conf = session.sessionConfig
-    private val fetchMetrics = session.context.getBean<FetchMetrics>()
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
     private val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
