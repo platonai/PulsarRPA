@@ -1,5 +1,6 @@
 package ai.platon.pulsar
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.Urls
@@ -83,10 +84,12 @@ class PulsarContext private constructor(): AutoCloseable {
             if (initialized.compareAndSet(false, true)) {
                 applicationContext = context
                 initEnvironment()
+                AppContext.start()
             }
         }
 
         fun shutdown() {
+            AppContext.tryTerminate()
             activeContext.getAndSet(null)?.close()
 
             // shutdown application context before progress exit
@@ -98,6 +101,7 @@ class PulsarContext private constructor(): AutoCloseable {
                 }
                 shutdownHook = null
             }
+            AppContext.terminate()
         }
 
         /**
@@ -154,6 +158,7 @@ class PulsarContext private constructor(): AutoCloseable {
 
         private fun ensureAlive() {
             if (closed.get()) {
+                AppContext.tryTerminate()
                 throw IllegalApplicationContextStateException("Pulsar context is closed")
             }
         }

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.proxy
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.config.AppConstants
@@ -125,7 +126,7 @@ open class ProxyPoolManager(
 
     companion object {
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
-        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppConstants.TMP_DIR, AppConstants.USER_HOME)
+        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.TMP_DIR, AppContext.USER_HOME)
                 .map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
 
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)

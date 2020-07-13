@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Systems
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
@@ -21,15 +22,20 @@ open class EmulatorMonitor(
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
     private val instanceRequiredMemory = 500 * 1024 * 1024 // 500 MiB
-    private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
+    private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
 
     override fun watch() {
+        if (!AppContext.isActive) {
+            close()
+            return
+        }
+
         updateActiveTabNumberIfNecessary()
 
         // close open tabs to reduce memory usage
         if (availableMemory < instanceRequiredMemory) {
             // do something
-            val newCapacity = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU) - 1
+            val newCapacity = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU) - 1
             if (newCapacity > 10) {
                 Systems.setProperty(BROWSER_MAX_ACTIVE_TABS, newCapacity)
             } else {

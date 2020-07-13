@@ -34,4 +34,8 @@ object Runtimes {
 
         return exec("ps -ef").filter { it.contains(pattern.toRegex()) }.count()
     }
+
+    fun checkIfProcessRunning(pattern: String): Boolean {
+        return countSystemProcess(pattern) > 0
+    }
 }

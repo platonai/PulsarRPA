@@ -16,6 +16,8 @@ import java.util.*
 class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     private val LOG = LoggerFactory.getLogger(WeakPageIndexer::class.java)
     private val homeUrl = homeUrl.toString()
+    // TODO: temporary use only
+    private val temporaryDeleteAllPage = true
 
     fun home(): WebPage {
         return home
@@ -137,6 +139,13 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     private fun getIndex(pageNo: Int, pageTitle: String): WebPage {
         val url = "$homeUrl/$pageNo"
         var indexPage = webDb.getOrNil(url)
+
+        if (temporaryDeleteAllPage) {
+            webDb.delete(url)
+            webDb.flush()
+            indexPage = WebPage.NIL
+        }
+
         if (indexPage.isNil) {
             val home = home
             home.vividLinks[url] = ""

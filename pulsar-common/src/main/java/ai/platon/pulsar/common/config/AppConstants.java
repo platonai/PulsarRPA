@@ -36,30 +36,9 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @SuppressWarnings("unused")
 public interface AppConstants {
 
-    String USER = SystemUtils.USER_NAME;
-
-    /**
-     * Date time
-     * */
-    Instant impreciseNow = Instant.now();
-    Instant impreciseTomorrow = impreciseNow.plus(1, ChronoUnit.DAYS);
-    Instant imprecise2DaysAhead = impreciseNow.plus(2, ChronoUnit.DAYS);
-    LocalDateTime middleNight = LocalDateTime.now().truncatedTo(DAYS);
-    Instant middleNightInstant = Instant.now().truncatedTo(DAYS);
-    ZoneId defaultZoneId = ZoneId.systemDefault();
-
     String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
     String SCENT_CONTEXT_CONFIG_LOCATION = "classpath:/scent-beans/app-context.xml";
     String MAPR_CONTEXT_CONFIG_LOCATION = "classpath:/mapr/mapr-beans/mapr-context.xml";
-
-    /**
-     * The number of processors available to the Java virtual machine
-     */
-    int NCPU = Runtime.getRuntime().availableProcessors();
-
-    int MAX_MEMORY_MB = (int)(Systems.INSTANCE.getMemoryMax() / 1_000_000);
-
-    int FETCH_THREADS = NCPU;
 
     String YES_STRING = "y";
 
@@ -173,21 +152,6 @@ public interface AppConstants {
 
     String DEFAULT_INDEX_SERVER_HOSTNAME = "master";
     int DEFAULT_INDEX_SERVER_PORT = 8183;
-
-    /**
-     * Directories
-     * */
-    String TMP_DIR = SystemUtils.JAVA_IO_TMPDIR;
-    // User's home directory
-    String USER_HOME = SystemUtils.USER_HOME;
-    // User's current working directory
-    String USER_DIR = SystemUtils.USER_DIR;
-    // The identity of this running instance
-    String APP_NAME = System.getProperty("app.name", "pulsar");
-    String IDENT = System.getProperty("app.id.str", USER);
-    String APP_TMP_PROPERTY = System.getProperty("app.tmp.dir");
-    Path APP_TMP_DIR = APP_TMP_PROPERTY != null ? Paths.get(APP_TMP_PROPERTY) : Paths.get(TMP_DIR).resolve(APP_NAME + "-" + IDENT);
-    Path APP_HOME_DIR = Paths.get(USER_HOME).resolve("." + APP_NAME);
 
     /**
      * Browser

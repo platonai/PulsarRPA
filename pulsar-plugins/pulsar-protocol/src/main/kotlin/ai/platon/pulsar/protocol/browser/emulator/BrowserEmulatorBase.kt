@@ -1,14 +1,11 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
-import ai.platon.pulsar.common.DEFAULT_CHARSET_PATTERN
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.SYSTEM_AVAILABLE_CHARSET_PATTERN
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
-import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
@@ -59,6 +56,7 @@ abstract class BrowserEmulatorBase(
     @Throws(IllegalApplicationContextStateException::class)
     protected fun checkState() {
         if (!isActive) {
+            AppContext.tryTerminate()
             throw IllegalApplicationContextStateException("Emulator is closed")
         }
     }

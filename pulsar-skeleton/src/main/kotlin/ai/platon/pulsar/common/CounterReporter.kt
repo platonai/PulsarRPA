@@ -46,6 +46,11 @@ class CounterReporter(
     }
 
     override fun watch() {
+        if (!AppContext.isActive) {
+            close()
+            return
+        }
+
         if (tick.getAndIncrement() == 0) {
             init()
         }

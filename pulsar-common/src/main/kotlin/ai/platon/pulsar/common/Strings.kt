@@ -16,3 +16,8 @@ fun readableClassName(obj: Any): String {
 fun prependReadableClassName(obj: Any, name: String, separator: String = "."): String {
     return "${readableClassName(obj)}$separator$name"
 }
+
+fun prependReadableClassName(obj: Any, ident: String, name: String, separator: String): String {
+    val prefix = readableClassName(obj)
+    return "$prefix$separator$ident$separator$name"
+}

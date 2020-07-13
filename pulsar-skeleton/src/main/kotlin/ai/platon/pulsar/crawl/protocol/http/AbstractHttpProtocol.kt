@@ -19,7 +19,9 @@
 package ai.platon.pulsar.crawl.protocol.http
 
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.HttpHeaders
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -46,7 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class AbstractHttpProtocol: Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     /**
      * The max retry time
      */
@@ -108,16 +110,27 @@ abstract class AbstractHttpProtocol: Protocol {
             if (i > 0) {
                 log.info("Protocol retry: {}/{} | {}", i, maxTry, page.url)
             }
+
             try {
                 // TODO: FETCH_PROTOCOL does not work if the response is a ForwardingResponse
                 response = getResponse(page, false)
                 retry = response == null || shouldRetry(response)
+            } catch (e: IllegalApplicationContextStateException) {
+                // TODO: we may not handle this exception here
+                AppContext.tryTerminate()
+                log.warn(e.message)
+                response = null
+                lastThrowable = e
             } catch (e: Throwable) {
                 response = null
                 lastThrowable = e
                 log.warn("Unexpected protocol exception", e)
             }
-        } while (retry && ++i < maxTry && !closed.get())
+        } while (retry && ++i < maxTry && isActive)
+
+        if (!isActive) {
+            return ProtocolOutput(ProtocolStatus.failed(ProtocolStatusCodes.CANCELED))
+        }
 
         if (response == null) {
             return getFailedResponse(lastThrowable, i, maxTry)

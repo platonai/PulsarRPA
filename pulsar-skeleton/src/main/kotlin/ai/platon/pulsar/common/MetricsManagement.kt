@@ -36,6 +36,10 @@ class MetricsManagement(
         fun <T: Metric> register(obj: Any, name: String, metric: T) {
             defaultMetricRegistry.register(prependReadableClassName(obj, name), metric)
         }
+
+        fun <T: Metric> register(obj: Any, ident: String, name: String, metric: T) {
+            defaultMetricRegistry.register(prependReadableClassName(obj, ident, name, "."), metric)
+        }
     }
 
     private val timeIdent = DateTimes.formatNow("MMdd")

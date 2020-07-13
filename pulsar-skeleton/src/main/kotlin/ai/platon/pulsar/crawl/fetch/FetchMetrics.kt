@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.WebPage
+import com.codahale.metrics.Gauge
 import com.google.common.collect.ConcurrentHashMultiset
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
@@ -59,9 +60,9 @@ class FetchMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    val chromeInstances = MetricsManagement.meter(this, "chromeInstances")
-    val usedMemoryMB = MetricsManagement.meter(this, "usedMemoryMB")
-    val usedMemoryGB = MetricsManagement.meter(this, "usedMemoryGB")
+    var chromeInstances = 0
+    var usedMemoryMB = 0
+    var usedMemoryGB = 0
 
     val meterSystemNetworkMBytesRecv = MetricsManagement.meter(this, "systemNetworkMBytesRecv")
 
@@ -109,8 +110,13 @@ class FetchMetrics(
 
     init {
         Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
-
         systemNetworkBytesRecv = initSystemNetworkBytesRecv
+
+        mapOf(
+                "waitingDrivers" to Gauge<Int> { chromeInstances },
+                "freeDrivers" to Gauge<Int> { usedMemoryMB },
+                "runningNormalTasks" to Gauge<Int> { usedMemoryGB }
+        ).forEach { MetricsManagement.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)
     }
@@ -306,12 +312,11 @@ class FetchMetrics(
                 .coerceAtLeast(systemNetworkBytesRecv)
         meterSystemNetworkMBytesRecv.mark(systemNetworkBytesRecv / 1024)
 
-        val count = Runtimes.countSystemProcess("chrome")
-        chromeInstances.mark(count.toLong())
+        chromeInstances = Runtimes.countSystemProcess("chrome")
 
         val memory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
-        usedMemoryMB.mark(memory / 1024 / 1024)
-        usedMemoryGB.mark(memory / 1024 / 1024 / 1024)
+        usedMemoryMB = (memory / 1024 / 1024).toInt()
+        usedMemoryGB = (memory / 1024 / 1024 / 1024).toInt()
     }
 
     private fun logAvailableHosts() {

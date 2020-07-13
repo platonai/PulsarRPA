@@ -8,19 +8,4 @@ object AppRuntime {
 
     private val log = LoggerFactory.getLogger(AppRuntime::class.java)
 
-    fun checkIfProcessRunning(regex: String): Boolean {
-        try {
-            val proc = Runtime.getRuntime().exec("ps -ef")
-            val reader = BufferedReader(InputStreamReader(proc.inputStream))
-            var line = ""
-            while (reader.readLine()?.also { line = it } != null) {
-                if (line.matches(regex.toRegex())) {
-                    return true
-                }
-            }
-        } catch (e: Exception) {
-            log.error(Strings.stringifyException(e))
-        }
-        return false
-    }
 }

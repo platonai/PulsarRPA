@@ -3,6 +3,7 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.PulsarContext
 
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.AppContext
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -12,7 +13,7 @@ open class Crawler(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(Crawler::class.java)
     val closed = AtomicBoolean()
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {

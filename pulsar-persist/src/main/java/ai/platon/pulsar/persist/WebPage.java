@@ -16,6 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist;
 
+import ai.platon.pulsar.common.AppContext;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
@@ -377,7 +378,7 @@ public class WebPage implements Comparable<WebPage> {
 
     @NotNull
     public ZoneId getZoneId() {
-        return page.getZoneId() == null ? defaultZoneId : ZoneId.of(page.getZoneId().toString());
+        return page.getZoneId() == null ? AppContext.INSTANCE.getDefaultZoneId() : ZoneId.of(page.getZoneId().toString());
     }
 
     public void setZoneId(@NotNull ZoneId zoneId) {
@@ -1310,7 +1311,7 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     private boolean isValidContentModifyTime(Instant publishTime) {
-        return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(imprecise2DaysAhead);
+        return publishTime.isAfter(MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(AppContext.INSTANCE.getImprecise2DaysAhead());
     }
 
     public boolean updateContentPublishTime(Instant newPublishTime) {

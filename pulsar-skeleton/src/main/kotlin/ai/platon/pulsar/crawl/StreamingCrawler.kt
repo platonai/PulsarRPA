@@ -3,14 +3,12 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
-import com.codahale.metrics.SharedMetricRegistries
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
 import org.h2tools.dev.util.ConcurrentLinkedList
@@ -35,53 +33,61 @@ open class StreamingCrawler(
         autoClose: Boolean = true
 ): Crawler(session, autoClose) {
     companion object {
-        private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
-        private val numRunningTasks = AtomicInteger()
+        private val instanceSequencer = AtomicInteger()
+        private val globalTasks = AtomicInteger()
+        private val globalRunningTasks = AtomicInteger()
+        private val globalFinishedTasks = AtomicInteger()
+        private val systemInfo = SystemInfo()
+        // OSHI cached the value, so it's fast and safe to be called frequently
+        private val availableMemory get() = systemInfo.hardware.memory.available
+        private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
+        private val memoryRemaining get() = availableMemory - requiredMemory
         private val illegalState = AtomicBoolean()
 
         init {
-            metricRegistry.register(prependReadableClassName(this,"runningTasks"), object: Gauge<Int> {
-                override fun getValue(): Int = numRunningTasks.get()
-            })
+            mapOf(
+                    "availableMemory" to Gauge<String> { Strings.readableBytes(availableMemory) },
+                    "memoryRemaining" to Gauge<String> { Strings.readableBytes(memoryRemaining) },
+                    "globalTasks" to Gauge<Int> { globalTasks.get() },
+                    "globalRunningTasks" to Gauge<Int> { globalRunningTasks.get() },
+                    "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() }
+            ).forEach { MetricsManagement.register(this, it.key, it.value) }
         }
     }
 
     private val conf = session.sessionConfig
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
+    private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     private val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
-    private val idleTimeout = Duration.ofMinutes(15)
+    private val idleTimeout = Duration.ofMinutes(20)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = isActive && idleTime > idleTimeout
     private val isAppActive get() = isActive && !isIdle && !illegalState.get()
-    private val systemInfo = SystemInfo()
-    // OSHI cached the value, so it's fast and safe to be called frequently
-    private val availableMemory get() = systemInfo.hardware.memory.available
-    private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
-    private val memoryRemaining get() = availableMemory - requiredMemory
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(6)
     private var flowState = FlowState.CONTINUE
     private var finishScript: Path? = null
 
+    val id = instanceSequencer.incrementAndGet()
     var onLoadComplete: (WebPage) -> Unit = {}
 
     init {
         generateFinishCommand()
+
+        mapOf(
+                "idleTime" to Gauge<String> { idleTime.readable() },
+                "fetchConcurrency" to Gauge<Int> { fetchConcurrency },
+                "numTasks" to Gauge<Int> { numTasks.get() }
+        ).forEach { MetricsManagement.register(this, id.toString(), it.key, it.value) }
     }
 
     open suspend fun run() {
         supervisorScope {
-            urls.forEachIndexed { j, url ->
-                val state = load(j, url, this)
-                if (state != FlowState.CONTINUE) {
-                    return@supervisorScope
-                }
-            }
+            run(this)
         }
 
-        log.info("Total {} tasks are loaded in session {}", numTasks, session)
+        log.info("Total {} tasks are done in session {}", numTasks, session)
     }
 
     open suspend fun run(scope: CoroutineScope) {
@@ -90,24 +96,25 @@ open class StreamingCrawler(
 //                return@forEachIndexed
 //            }
 
+            globalTasks.incrementAndGet()
             val state = load(1 + j, url, scope)
+            globalFinishedTasks.incrementAndGet()
+
             if (state != FlowState.CONTINUE) {
                 return
             }
         }
-
-        log.info("Total {} tasks are loaded in session {}", numTasks, session)
     }
 
     private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
 
-        while (isAppActive && numRunningTasks.get() > fetchConcurrency) {
+        while (isAppActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
                 val elapsedTime = Duration.between(lastActiveTime, Instant.now())
                 log.info("It takes long time to run {} tasks | {} -> {}",
-                        numRunningTasks, lastActiveTime, elapsedTime.readable())
+                        globalRunningTasks, lastActiveTime, elapsedTime.readable())
             }
             delay(1000)
         }
@@ -130,14 +137,14 @@ open class StreamingCrawler(
         }
 
         var page: WebPage?
-        numRunningTasks.incrementAndGet()
+        globalRunningTasks.incrementAndGet()
         val context = Dispatchers.Default + CoroutineName("w")
         scope.launch(context) {
             page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load(url) } }
                     .onFailure { log.warn("Unexpected exception", it) }
                     .getOrNull()
 
-            numRunningTasks.decrementAndGet()
+            globalRunningTasks.decrementAndGet()
             lastActiveTime = Instant.now()
             page?.let(onLoadComplete)
         }
@@ -156,6 +163,7 @@ open class StreamingCrawler(
         when (e) {
             is IllegalApplicationContextStateException -> {
                 if (illegalState.compareAndSet(false, true)) {
+                    AppContext.tryTerminate()
                     log.warn("Illegal context, quit streaming crawler ... | {}", e.message)
                 }
                 return FlowState.BREAK
@@ -169,7 +177,7 @@ open class StreamingCrawler(
 
     private fun handleMemoryShortage(j: Int) {
         log.info("$j.\tnumRunning: {}, availableMemory: {}, requiredMemory: {}, shortage: {}",
-                numRunningTasks,
+                globalRunningTasks,
                 Strings.readableBytes(availableMemory),
                 Strings.readableBytes(requiredMemory),
                 Strings.readableBytes(abs(memoryRemaining))

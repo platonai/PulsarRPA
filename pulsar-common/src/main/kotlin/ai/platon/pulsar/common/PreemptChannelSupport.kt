@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import kotlinx.coroutines.withTimeout
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
@@ -38,8 +39,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numPendingNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
-    protected val normalTaskTimeout = Duration.ofMinutes(5)
-    protected val preemptiveTaskTimeout = Duration.ofMinutes(5)
+    protected val normalTaskTimeout = Duration.ofMinutes(10)
+    protected val preemptiveTaskTimeout = Duration.ofMinutes(20)
     private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numPreemptiveTasks.get() > 0
@@ -59,7 +60,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
     }
 
     suspend fun <T> whenNormalDeferred(task: suspend () -> T): T {
-        return beforeTask().runCatching { task() }.onFailure { afterTask() }.onSuccess { afterTask() }.getOrThrow()
+        return beforeTask().runCatching { withTimeout(normalTaskTimeout.toMillis()) { task() } }
+                .onFailure { afterTask() }.onSuccess { afterTask() }.getOrThrow()
     }
 
     private fun beforePreempt() {

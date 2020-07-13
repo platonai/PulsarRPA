@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.AppConstants.NCPU
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -47,7 +46,7 @@ class FetchLoop(
     private val closed = AtomicBoolean(false)
 
     private val numPrivacyContexts = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-    private val fetchConcurrency = numPrivacyContexts * immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, NCPU)
+    private val fetchConcurrency = numPrivacyContexts * immutableConfig.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
 
     private val isAppActive get() = !fetchMonitor.isMissionComplete && !closed.get() && !illegalState.get()
 
@@ -87,6 +86,7 @@ class FetchLoop(
                     try {
                         schedule()?.let { fetch(it) }
                     } catch (e: IllegalApplicationContextStateException) {
+                        AppContext.tryTerminate()
                         illegalState.set(true)
                         log.warn("Illegal context state | {}", e.message)
                     } catch (e: TimeoutCancellationException) {

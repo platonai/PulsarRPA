@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.MetricsManagement
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -43,7 +43,7 @@ class LoadingWebDriverPool(
 
     private val log = LoggerFactory.getLogger(LoadingWebDriverPool::class.java)
     val id = instanceSequencer.incrementAndGet()
-    val capacity get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppConstants.NCPU)
+    val capacity get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val onlineDrivers = ConcurrentSkipListSet<AbstractWebDriver>()
     val freeDrivers = ArrayBlockingQueue<AbstractWebDriver>(500)
 
