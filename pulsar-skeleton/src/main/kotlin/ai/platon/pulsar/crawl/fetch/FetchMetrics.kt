@@ -113,9 +113,9 @@ class FetchMetrics(
         systemNetworkBytesRecv = initSystemNetworkBytesRecv
 
         mapOf(
-                "waitingDrivers" to Gauge<Int> { chromeInstances },
-                "freeDrivers" to Gauge<Int> { usedMemoryMB },
-                "runningNormalTasks" to Gauge<Int> { usedMemoryGB }
+                "chromeInstances" to Gauge<Int> { chromeInstances },
+                "usedMemoryMB" to Gauge<Int> { usedMemoryMB },
+                "usedMemoryGB" to Gauge<Int> { usedMemoryGB }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)
