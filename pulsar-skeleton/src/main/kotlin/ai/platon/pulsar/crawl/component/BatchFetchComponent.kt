@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -149,7 +150,7 @@ class BatchFetchComponent(
         if (config == null) {
             config = immutableConfig
         }
-        val parallelLevel = config.getUint(CapabilityTypes.FETCH_CONCURRENCY, AppConstants.FETCH_THREADS)
+        val parallelLevel = config.getUint(CapabilityTypes.FETCH_CONCURRENCY, AppContext.NCPU)
         if (urls.size <= parallelLevel) {
             return urls
         }

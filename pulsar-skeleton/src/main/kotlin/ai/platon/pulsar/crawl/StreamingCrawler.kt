@@ -41,13 +41,13 @@ open class StreamingCrawler(
         // OSHI cached the value, so it's fast and safe to be called frequently
         private val availableMemory get() = systemInfo.hardware.memory.available
         private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
-        private val memoryRemaining get() = availableMemory - requiredMemory
+        private val remainingMemory get() = availableMemory - requiredMemory
         private val illegalState = AtomicBoolean()
 
         init {
             mapOf(
                     "availableMemory" to Gauge<String> { Strings.readableBytes(availableMemory) },
-                    "memoryRemaining" to Gauge<String> { Strings.readableBytes(memoryRemaining) },
+                    "remainingMemory" to Gauge<String> { Strings.readableBytes(remainingMemory) },
                     "globalTasks" to Gauge<Int> { globalTasks.get() },
                     "globalRunningTasks" to Gauge<Int> { globalRunningTasks.get() },
                     "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() }
@@ -92,9 +92,10 @@ open class StreamingCrawler(
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
-//            if (!fetchMetrics.isReachable(url)) {
-//                return@forEachIndexed
-//            }
+            if (url.isBlank()) {
+                log.warn("Here comes an blank url, might be caused by a bug from LoadingIterator")
+                return@forEachIndexed
+            }
 
             globalTasks.incrementAndGet()
             val state = load(1 + j, url, scope)
@@ -119,7 +120,7 @@ open class StreamingCrawler(
             delay(1000)
         }
 
-        while (isAppActive && memoryRemaining < 0) {
+        while (isAppActive && remainingMemory < 0) {
             if (j % 20 == 0) {
                 handleMemoryShortage(j)
             }
@@ -180,7 +181,7 @@ open class StreamingCrawler(
                 globalRunningTasks,
                 Strings.readableBytes(availableMemory),
                 Strings.readableBytes(requiredMemory),
-                Strings.readableBytes(abs(memoryRemaining))
+                Strings.readableBytes(abs(remainingMemory))
         )
         session.context.clearCaches()
         System.gc()

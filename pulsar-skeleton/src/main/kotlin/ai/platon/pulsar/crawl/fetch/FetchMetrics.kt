@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 
-
 class FetchMetrics(
         private val metricsManagement: MetricsManagement,
         private val messageWriter: MiscMessageWriter,
@@ -61,8 +60,7 @@ class FetchMetrics(
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
     var chromeInstances = 0
-    var usedMemoryMB = 0
-    var usedMemoryGB = 0
+    var usedMemory = 0L
 
     val meterSystemNetworkMBytesRecv = MetricsManagement.meter(this, "systemNetworkMBytesRecv")
 
@@ -114,8 +112,7 @@ class FetchMetrics(
 
         mapOf(
                 "chromeInstances" to Gauge<Int> { chromeInstances },
-                "usedMemoryMB" to Gauge<Int> { usedMemoryMB },
-                "usedMemoryGB" to Gauge<Int> { usedMemoryGB }
+                "usedMemory" to Gauge<String> { Strings.readableBytes(usedMemory) }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)
@@ -271,8 +268,6 @@ class FetchMetrics(
     }
 
     fun formatStatus(): String {
-        updateSystemInfo()
-
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
@@ -301,22 +296,19 @@ class FetchMetrics(
         }
     }
 
-    private fun updateSystemInfo() {
-        val now = System.currentTimeMillis()
-        if (Duration.ofMillis(now - lastSystemInfoRefreshTime).seconds < 60) {
+    fun updateSystemInfo() {
+        val currentTimeMillis = System.currentTimeMillis()
+        if (Duration.ofMillis(currentTimeMillis - lastSystemInfoRefreshTime).seconds < 60) {
             return
         }
-        lastSystemInfoRefreshTime = now
+        lastSystemInfoRefreshTime = currentTimeMillis
 
         systemNetworkBytesRecv = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
                 .coerceAtLeast(systemNetworkBytesRecv)
         meterSystemNetworkMBytesRecv.mark(systemNetworkBytesRecv / 1024)
 
         chromeInstances = Runtimes.countSystemProcess("chrome")
-
-        val memory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
-        usedMemoryMB = (memory / 1024 / 1024).toInt()
-        usedMemoryGB = (memory / 1024 / 1024 / 1024).toInt()
+        usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
     }
 
     private fun logAvailableHosts() {

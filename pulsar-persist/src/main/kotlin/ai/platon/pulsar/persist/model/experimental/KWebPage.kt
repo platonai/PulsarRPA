@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.persist.model.experimental
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.DateTimes.constructTimeHistory
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.HtmlIntegrity
@@ -164,7 +165,7 @@ class KWebPage : Comparable<KWebPage> {
         }
 
     var zoneId: ZoneId
-        get() = if (page.zoneId == null) AppConstants.defaultZoneId else ZoneId.of(page.zoneId.toString())
+        get() = if (page.zoneId == null) AppContext.defaultZoneId else ZoneId.of(page.zoneId.toString())
         set(zoneId) {
             page.zoneId = zoneId.id
         }
@@ -833,7 +834,7 @@ class KWebPage : Comparable<KWebPage> {
         set(value) { page.anchorOrder = value }
 
     private fun isValidContentModifyTime(publishTime: Instant): Boolean {
-        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(AppConstants.imprecise2DaysAhead)
+        return publishTime.isAfter(AppConstants.MIN_ARTICLE_PUBLISH_TIME) && publishTime.isBefore(AppContext.imprecise2DaysAhead)
     }
 
     fun updateContentPublishTime(newPublishTime: Instant): Boolean {

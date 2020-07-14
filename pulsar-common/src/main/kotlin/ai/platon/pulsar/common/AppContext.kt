@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.Systems.memoryMax
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.Paths
 import java.time.Instant
@@ -14,8 +13,6 @@ object AppContext {
     enum class State {
         NEW, RUNNING, TERMINATING, TERMINATED
     }
-
-    val USER = SystemUtils.USER_NAME
 
     /**
      * Date time
@@ -32,9 +29,7 @@ object AppContext {
      */
     val NCPU = Runtime.getRuntime().availableProcessors()
 
-    val MAX_MEMORY_MB = (memoryMax / 1000000).toInt()
-
-    val FETCH_THREADS = NCPU
+    val USER = SystemUtils.USER_NAME
 
     /**
      * Directories
@@ -46,9 +41,9 @@ object AppContext {
     val USER_DIR = SystemUtils.USER_DIR
     // The identity of this running instance
     val APP_NAME = System.getProperty("app.name", "pulsar")
-    val IDENT = System.getProperty("app.id.str", USER)
+    val APP_IDENT = System.getProperty("app.id.str", USER)
     val APP_TMP_PROPERTY = System.getProperty("app.tmp.dir")
-    val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve("$APP_NAME-$IDENT")
+    val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
     val APP_HOME_DIR = Paths.get(USER_HOME).resolve(".$APP_NAME")
 
     val state = AtomicReference<State>(State.NEW)

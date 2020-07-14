@@ -16,6 +16,7 @@
  */
 package ai.platon.pulsar.common.config;
 
+import ai.platon.pulsar.common.AppContext;
 import ai.platon.pulsar.common.Systems;
 import org.apache.commons.lang3.SystemUtils;
 
@@ -100,6 +101,7 @@ public interface AppConstants {
     int FETCH_PRIORITY_DEPTH_3 = FETCH_PRIORITY_DEPTH_BASE - 3;
     int FETCH_PRIORITY_EMERGENT_INJECT = 30_000;
     int FETCH_PRIORITY_MAX = 10 * 10_000;
+    int FETCH_THREADS = AppContext.INSTANCE.getNCPU();
 
     String CRAWL_DEPTH_FIRST = "depthFirst";
     String CRAWL_STRICT_DEPTH_FIRST = "strictDepthFirst";
