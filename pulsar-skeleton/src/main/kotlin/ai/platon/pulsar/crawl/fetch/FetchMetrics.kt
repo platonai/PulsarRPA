@@ -2,7 +2,6 @@ package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.PATH_UNREACHABLE_HOSTS
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -59,7 +58,7 @@ class FetchMetrics(
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
 
-    var chromeInstances = 0
+    var runningChromeProcesses = 0
     var usedMemory = 0L
 
     val meterSystemNetworkMBytesRecv = MetricsManagement.meter(this, "systemNetworkMBytesRecv")
@@ -111,7 +110,7 @@ class FetchMetrics(
         systemNetworkBytesRecv = initSystemNetworkBytesRecv
 
         mapOf(
-                "chromeInstances" to Gauge<Int> { chromeInstances },
+                "runningChromeProcesses" to Gauge<Int> { runningChromeProcesses },
                 "usedMemory" to Gauge<String> { Strings.readableBytes(usedMemory) }
         ).forEach { MetricsManagement.register(this, it.key, it.value) }
 
@@ -132,7 +131,7 @@ class FetchMetrics(
     fun isReachable(url: String) = !isUnreachable(url)
 
     fun isUnreachable(url: String): Boolean {
-        val host = URLUtil.getHost(url, groupMode)?:return true
+        val host = URLUtil.getHost(url, groupMode) ?: return true
         return unreachableHosts.contains(host)
     }
 
@@ -163,7 +162,7 @@ class FetchMetrics(
      */
     fun trackSuccess(page: WebPage) {
         val url = page.url
-        val host = URLUtil.getHost(url, groupMode)?:throw MalformedURLException(url)
+        val host = URLUtil.getHost(url, groupMode) ?: throw MalformedURLException(url)
 
         // The host is reachable
         unreachableHosts.remove(host)
@@ -297,6 +296,10 @@ class FetchMetrics(
     }
 
     fun updateSystemInfo() {
+        kotlin.runCatching { updateSystemInfo0() }.onFailure { log.warn("Unexpected exception", it) }
+    }
+
+    private fun updateSystemInfo0() {
         val currentTimeMillis = System.currentTimeMillis()
         if (Duration.ofMillis(currentTimeMillis - lastSystemInfoRefreshTime).seconds < 60) {
             return
@@ -307,7 +310,7 @@ class FetchMetrics(
                 .coerceAtLeast(systemNetworkBytesRecv)
         meterSystemNetworkMBytesRecv.mark(systemNetworkBytesRecv / 1024)
 
-        chromeInstances = Runtimes.countSystemProcess("chrome")
+        runningChromeProcesses = Runtimes.countSystemProcess("chrome")
         usedMemory = systemInfo.hardware.memory.total - systemInfo.hardware.memory.available
     }
 
