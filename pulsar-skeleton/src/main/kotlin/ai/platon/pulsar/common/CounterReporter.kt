@@ -22,7 +22,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 class CounterReporter(
@@ -32,14 +31,9 @@ class CounterReporter(
         private val conf: ImmutableConfig
 ): ScheduledMonitor(initialDelay, watchInterval) {
     private var log = LoggerFactory.getLogger(CounterReporter::class.java)
-    private val silent = AtomicBoolean(false)
     private val jobName get() = conf.get(CapabilityTypes.PARAM_JOB_NAME, "UNNAMED JOB")
     private var lastStatus = ""
     private val tick = AtomicInteger()
-
-    fun silent() {
-        silent.set(true)
-    }
 
     fun outputTo(log: Logger) {
         this.log = log
@@ -55,7 +49,6 @@ class CounterReporter(
             init()
         }
 
-        if (silent.get()) return
         val status = counter.getStatus(true)
         if (status.isNotEmpty() && status != lastStatus) {
             log.info(status)

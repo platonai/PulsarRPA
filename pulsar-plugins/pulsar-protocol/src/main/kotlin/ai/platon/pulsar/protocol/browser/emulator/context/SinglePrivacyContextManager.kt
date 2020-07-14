@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.emulator.context
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
+import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
@@ -13,6 +14,7 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 class SinglePrivacyContextManager(
         val driverPoolManager: WebDriverPoolManager,
         val proxyPoolManager: ProxyPoolManager,
+        val fetchMetrics: FetchMetrics,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig, 1) {
     private val privacyContextId = PrivacyContextId.generate()
@@ -22,7 +24,7 @@ class SinglePrivacyContextManager(
     }
 
     override fun newContext(id: PrivacyContextId): BrowserPrivacyContext {
-        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, immutableConfig, id)
+        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, fetchMetrics, immutableConfig, id)
         log.info("Privacy context is created #{}", context.display)
         return context
     }

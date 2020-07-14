@@ -57,11 +57,11 @@ data class BrowserInstanceId(
 }
 
 abstract class PrivacyContext(
-        /**
+    /**
      * The data directory for this context, very context has it's own data directory
      * */
     val id: PrivacyContextId,
-        val conf: ImmutableConfig
+    val conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
@@ -104,17 +104,6 @@ abstract class PrivacyContext(
     val numSmallPages = AtomicInteger()
     val smallPageRate get() = 1.0 * numSmallPages.get() / numTasks.get().coerceAtLeast(1)
     val closed = AtomicBoolean()
-
-    private val systemInfo = SystemInfo()
-    /**
-     * The total all bytes received by the hardware at the application startup
-     * */
-    private val realTimeSystemNetworkBytesRecv: Long
-        get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
-
-    val initSystemNetworkBytesRecv by lazy { realTimeSystemNetworkBytesRecv }
-    val systemNetworkBytesRecv get() = realTimeSystemNetworkBytesRecv - initSystemNetworkBytesRecv
-    val networkSpeed get() = systemNetworkBytesRecv / elapsedTime.seconds.coerceAtLeast(1)
 
     val throughput get() = 1.0 * numSuccesses.get() / elapsedTime.seconds.coerceAtLeast(1)
     val isGood get() = throughput >= minimumThroughput

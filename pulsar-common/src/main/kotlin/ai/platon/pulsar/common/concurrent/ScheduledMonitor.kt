@@ -19,9 +19,6 @@ abstract class ScheduledMonitor(
 
     protected var scheduledFuture: ScheduledFuture<*>? = null
 
-    protected val closed = AtomicBoolean()
-    val isActive get() = !closed.get()
-
     /**
      * Starts the monitor at the given period with the specific runnable action
      * Visible only for testing

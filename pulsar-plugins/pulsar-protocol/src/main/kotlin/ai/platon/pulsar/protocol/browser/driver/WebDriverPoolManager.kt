@@ -196,8 +196,8 @@ class WebDriverPoolManager(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            log.info("Web driver manager is closed\n{}", formatStatus(true))
             driverPools.clear()
-            log.info("Web driver manager is closed\n{}", toString())
         }
     }
 

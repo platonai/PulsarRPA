@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.proxy.NoProxyException
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
@@ -21,6 +22,7 @@ import java.time.Instant
 open class BrowserPrivacyContext(
         val proxyPoolManager: ProxyPoolManager,
         val driverPoolManager: WebDriverPoolManager,
+        val fetchMetrics: FetchMetrics,
         conf: ImmutableConfig,
         id: PrivacyContextId = PrivacyContextId(generateBaseDir())
 ): PrivacyContext(id, conf) {
@@ -72,7 +74,7 @@ open class BrowserPrivacyContext(
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 numSuccesses, String.format("%.2f", throughput),
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.readableBytes(systemNetworkBytesRecv), Strings.readableBytes(networkSpeed),
+                Strings.readableBytes(fetchMetrics.systemNetworkBytesRecv), Strings.readableBytes(fetchMetrics.networkBytesRecvPerSecond),
                 numTasks, numFinished,
                 proxyContext?.proxyEntry
         )
