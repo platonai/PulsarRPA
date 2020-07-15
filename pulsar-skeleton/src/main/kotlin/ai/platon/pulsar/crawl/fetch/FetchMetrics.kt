@@ -299,6 +299,7 @@ class FetchMetrics(
         kotlin.runCatching { updateSystemInfo0() }.onFailure { log.warn("Unexpected exception", it) }
     }
 
+    @Throws(Exception::class)
     private fun updateSystemInfo0() {
         val currentTimeMillis = System.currentTimeMillis()
         if (Duration.ofMillis(currentTimeMillis - lastSystemInfoRefreshTime).seconds < 60) {

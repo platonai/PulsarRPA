@@ -77,7 +77,6 @@ open class StreamingCrawler(
 
         mapOf(
                 "idleTime" to Gauge<String> { idleTime.readable() },
-                "fetchConcurrency" to Gauge<Int> { fetchConcurrency },
                 "numTasks" to Gauge<Int> { numTasks.get() }
         ).forEach { MetricsManagement.register(this, id.toString(), it.key, it.value) }
     }
