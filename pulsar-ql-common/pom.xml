@@ -42,10 +42,15 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-h2</artifactId>
+            <version>${pulsar-h2.version}</version>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-dom</artifactId>
         </dependency>
     </dependencies>
+
+    <properties>
+        <pulsar-h2.version>1.5.3-SNAPSHOT</pulsar-h2.version>
+    </properties>
 </project>

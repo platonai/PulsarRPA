@@ -141,7 +141,6 @@
                 <module>pulsar-third</module>
                 <module>pulsar-third/pulsar-boilerpipe</module>
                 <module>pulsar-third/pulsar-jsoup</module>
-                <module>pulsar-third/pulsar-h2</module>
                 <module>pulsar-third/pulsar-chrome-devtools</module>
                 <module>pulsar-tools</module>
                 <module>pulsar-tools/pulsar-browser</module>
@@ -238,11 +237,6 @@
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-index</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-h2</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
