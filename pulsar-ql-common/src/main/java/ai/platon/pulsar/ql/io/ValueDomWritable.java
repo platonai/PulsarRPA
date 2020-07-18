@@ -1,11 +1,9 @@
 package ai.platon.pulsar.ql.io;
 
+import ai.platon.pulsar.common.ConcurrentLRUCache;
 import ai.platon.pulsar.dom.Documents;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.ql.types.ValueDom;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.apache.hadoop.io.Writable;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,12 +11,9 @@ import org.jsoup.nodes.Element;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 public class ValueDomWritable implements Writable {
 
@@ -26,21 +21,13 @@ public class ValueDomWritable implements Writable {
     private static FeaturedDocument NIL_DOC = FeaturedDocument.Companion.getNIL();
     private static String NIL_DOC_HTML = FeaturedDocument.Companion.getNIL_DOC_HTML();
     private static int NIL_DOC_LENGTH = FeaturedDocument.Companion.getNIL_DOC_LENGTH();
-    private static int CACHE_EXPIRES = 10;
+    private static Duration CACHE_EXPIRES = Duration.ofMinutes(10);
     private static String CACHED_HINT = "(cached)";
 
     // server side
     // TODO: check if this is client side or server side, ensure client side expires after server side
     // TODO: need an instance per session
-    private static LoadingCache<String, String> pageCache = CacheBuilder.newBuilder()
-            .maximumSize(CACHE_SIZE)
-            .expireAfterAccess(CACHE_EXPIRES, TimeUnit.MINUTES)
-            .build(new CacheLoader<String, String>() {
-                @Override
-                public String load(String key) {
-                    return "";
-                }
-            });
+    private static ConcurrentLRUCache<String, String> pageCache = new ConcurrentLRUCache<>(CACHE_EXPIRES, CACHE_SIZE);
 
     // client side
     private static Map<String, FeaturedDocument> documentCache = new ConcurrentHashMap<>();
@@ -69,19 +56,14 @@ public class ValueDomWritable implements Writable {
         out.writeBytes(ele.cssSelector());
         out.write('\n'); // make a line
 
-        String html = "";
-        try {
-            html = pageCache.get(baseUri);
-            if (!html.isEmpty()) {
-                // tell the client it's cached
-                html = CACHED_HINT;
-            } else {
-                // not cached, cache it
-                html = doc.outerHtml();
-                pageCache.put(baseUri, html);
-            }
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+        String html = pageCache.get(baseUri);
+        if (!html.isEmpty()) {
+            // tell the client it's cached
+            html = CACHED_HINT;
+        } else {
+            // not cached, cache it
+            html = doc.outerHtml();
+            pageCache.put(baseUri, html);
         }
 
         out.writeInt(html.length());
