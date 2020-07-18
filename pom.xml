@@ -38,7 +38,7 @@
     <scm>
         <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
-        <url>https://github.com/platonai/pulsar.git</url>
+        <url>https://github.com/platonai/pulsar</url>
     </scm>
 
     <modules>

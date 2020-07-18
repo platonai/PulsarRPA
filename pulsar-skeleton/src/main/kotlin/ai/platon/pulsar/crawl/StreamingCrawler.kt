@@ -11,16 +11,15 @@ import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
-import org.h2tools.dev.util.ConcurrentLinkedList
 import oshi.SystemInfo
 import java.io.IOException
-import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
@@ -28,7 +27,7 @@ import kotlin.math.abs
 open class StreamingCrawler(
         private val urls: Sequence<String>,
         private val options: LoadOptions = LoadOptions.create(),
-        val pageCollector: ConcurrentLinkedList<WebPage>? = null,
+        val pageCollector: ConcurrentLinkedQueue<WebPage>? = null,
         val jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5),
         session: PulsarSession = PulsarContext.createSession(),
         autoClose: Boolean = true

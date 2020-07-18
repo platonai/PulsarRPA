@@ -46,10 +46,6 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-jsoup</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-h2</artifactId>
-        </dependency>
 
         <!-- Required by org.apache.hadoop.conf.Configuration -->
         <dependency>

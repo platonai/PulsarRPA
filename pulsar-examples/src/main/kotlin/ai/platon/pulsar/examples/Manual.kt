@@ -1,6 +1,8 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarContext
+import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.dom.select.firstText
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.withPulsarContext
@@ -55,4 +57,7 @@ object Manual {
     }
 }
 
-fun main() = withPulsarContext { Manual.run() }
+fun main() = withPulsarContext {
+    Systems.setProperty(CapabilityTypes.PROXY_USE_PROXY, false)
+    Manual.run()
+}
