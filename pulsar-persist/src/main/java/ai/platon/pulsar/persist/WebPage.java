@@ -1162,7 +1162,7 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * TODO: Remove redundant url to reduce space
      */
-    public void setLiveLinks(Iterable<HypeLink> liveLinks) {
+    public void setLiveLinks(Iterable<HyperLink> liveLinks) {
         page.getLiveLinks().clear();
         Map<CharSequence, GHypeLink> links = page.getLiveLinks();
         liveLinks.forEach(l -> links.put(l.getUrl(), l.unbox()));
@@ -1175,8 +1175,8 @@ public class WebPage implements Comparable<WebPage> {
         page.setLiveLinks(links);
     }
 
-    public void addLiveLink(HypeLink hypeLink) {
-        page.getLiveLinks().put(hypeLink.getUrl(), hypeLink.unbox());
+    public void addLiveLink(HyperLink hyperLink) {
+        page.getLiveLinks().put(hyperLink.getUrl(), hyperLink.unbox());
     }
 
     public Map<CharSequence, CharSequence> getVividLinks() {
@@ -1216,7 +1216,7 @@ public class WebPage implements Comparable<WebPage> {
      * TODO: compress links
      * TODO: HBase seems not modify any nested array
      */
-    public void addHyperLinks(Iterable<HypeLink> hypeLinks) {
+    public void addHyperLinks(Iterable<HyperLink> hypeLinks) {
         List<CharSequence> links = page.getLinks();
 
         // If there are too many links, Drop the front 1/3 links
@@ -1224,7 +1224,7 @@ public class WebPage implements Comparable<WebPage> {
             links = links.subList(links.size() - MAX_LINK_PER_PAGE / 3, links.size());
         }
 
-        for (HypeLink l : hypeLinks) {
+        for (HyperLink l : hypeLinks) {
             Utf8 url = u8(l.getUrl());
             if (!links.contains(url)) {
                 links.add(url);

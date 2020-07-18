@@ -14,6 +14,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.h2tools.dev.util.ConcurrentLinkedList
 import oshi.SystemInfo
 import java.io.IOException
+import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -47,7 +48,6 @@ open class StreamingCrawler(
         init {
             mapOf(
                     "availableMemory" to Gauge<String> { Strings.readableBytes(availableMemory) },
-                    "remainingMemory" to Gauge<String> { Strings.readableBytes(remainingMemory) },
                     "globalTasks" to Gauge<Int> { globalTasks.get() },
                     "globalRunningTasks" to Gauge<Int> { globalRunningTasks.get() },
                     "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() }
@@ -91,9 +91,8 @@ open class StreamingCrawler(
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
-            if (url.isBlank()) {
-                log.warn("Here comes an blank url, might be caused by a bug from LoadingIterator")
-                return@forEachIndexed
+            if (url.contains("seller")) {
+                println("Loading seller $url")
             }
 
             globalTasks.incrementAndGet()
@@ -101,7 +100,7 @@ open class StreamingCrawler(
             globalFinishedTasks.incrementAndGet()
 
             if (state != FlowState.CONTINUE) {
-                return
+                return@run
             }
         }
     }

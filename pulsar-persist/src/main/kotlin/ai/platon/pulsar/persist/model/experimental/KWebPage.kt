@@ -720,14 +720,14 @@ class KWebPage : Comparable<KWebPage> {
     /**
      * TODO: Remove redundant url to reduce space
      */
-    fun setLiveLinks(liveLinks: Iterable<HypeLink>) {
+    fun setLiveLinks(liveLinks: Iterable<HyperLink>) {
         page.liveLinks.clear()
         val links = page.liveLinks
-        liveLinks.forEach(Consumer { l: HypeLink -> links[l.url] = l.unbox() })
+        liveLinks.forEach(Consumer { l: HyperLink -> links[l.url] = l.unbox() })
     }
 
-    fun addLiveLink(hypeLink: HypeLink) {
-        page.liveLinks[hypeLink.url] = hypeLink.unbox()
+    fun addLiveLink(hyperLink: HyperLink) {
+        page.liveLinks[hyperLink.url] = hyperLink.unbox()
     }
 
     fun getSimpleVividLinks(): Collection<String> {
@@ -768,13 +768,13 @@ class KWebPage : Comparable<KWebPage> {
      * TODO: compress links
      * TODO: HBase seems not modify any nested array
      */
-    fun addHyperLinks(hypeLinks: Iterable<HypeLink>) {
+    fun addHyperLinks(hyperLinks: Iterable<HyperLink>) {
         var links = page.links
         // If there are too many links, Drop the front 1/3 links
         if (links.size > AppConstants.MAX_LINK_PER_PAGE) {
             links = links.subList(links.size - AppConstants.MAX_LINK_PER_PAGE / 3, links.size)
         }
-        for (l in hypeLinks) {
+        for (l in hyperLinks) {
             val url = u8(l.url)
             if (!links.contains(url)) {
                 links.add(url)

@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.crawl.filter.CrawlFilters
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
@@ -56,9 +56,9 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
         mutableFilterReport.clear()
     }
 
-    fun asPredicate(page: WebPage): Predicate<HypeLink> {
+    fun asPredicate(page: WebPage): Predicate<HyperLink> {
         reset(page)
-        return Predicate { l: HypeLink ->
+        return Predicate { l: HyperLink ->
             val r = this.filter(l)
             if (debugLevel > 0) {
                 mutableFilterReport.add(r.toString() + " <- " + l.url + "\t" + l.anchor)
@@ -67,7 +67,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
         }
     }
 
-    fun filter(link: HypeLink): Int {
+    fun filter(link: HyperLink): Int {
         if (noFilter) {
             return 0
         }

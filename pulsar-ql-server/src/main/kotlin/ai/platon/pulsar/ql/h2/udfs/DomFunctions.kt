@@ -17,6 +17,7 @@ import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.time.Duration
 
@@ -331,6 +332,20 @@ object DomFunctions {
     @JvmStatic
     fun value(dom: ValueDom): String {
         return dom.element.`val`()
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun ownerDocument(dom: ValueDom): ValueDom {
+        if (dom.isNil) return ValueDom.NIL
+        return ValueDom.get(dom.element.ownerDocumentNode as Document)
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun ownerBody(dom: ValueDom): ValueDom {
+        if (dom.isNil) return ValueDom.NIL
+        return ValueDom.get(dom.element.ownerBody as Element)
     }
 
     @UDFunction

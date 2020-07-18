@@ -222,7 +222,7 @@ class TestGoraStorage {
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i
             val url2 = AppConstants.EXAMPLE_URL + "/" + (i - 1)
-            val link = HypeLink.parse(url2).unbox()
+            val link = HyperLink.parse(url2).unbox()
             link.anchor = "test anchor ord:1"
 
             page.liveLinks[link.url] = link

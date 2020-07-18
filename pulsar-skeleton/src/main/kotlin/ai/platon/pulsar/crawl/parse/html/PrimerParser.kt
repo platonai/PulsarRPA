@@ -26,7 +26,7 @@ import ai.platon.pulsar.common.Urls.resolveURL
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.parse.Parser
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Maps
 import org.slf4j.LoggerFactory
@@ -337,7 +337,7 @@ class PrimerParser(conf: ImmutableConfig) {
 
     /**
      * This method finds all anchors below the supplied DOM `root`, and
-     * creates appropriate [HypeLink] records for each (relative to the
+     * creates appropriate [HyperLink] records for each (relative to the
      * supplied `base` URL), and adds them to the `outlinks`
      * [ArrayList].
      *
@@ -345,30 +345,30 @@ class PrimerParser(conf: ImmutableConfig) {
      * which contain only single nested links and empty text nodes (this is a
      * common DOM-fixup artifact, at least with nekohtml).
      */
-    fun collectLinks(base: URL, root: Node): MutableSet<HypeLink> {
+    fun collectLinks(base: URL, root: Node): MutableSet<HyperLink> {
         return collectLinks(base, root, null)
     }
 
-    fun collectLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): MutableSet<HypeLink> {
+    fun collectLinks(base: URL, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperLink> {
         return collectLinks(base, mutableSetOf(), root, crawlFilters)
     }
 
-    fun collectLinks(base: URL, hypeLinks: MutableSet<HypeLink>, root: Node, crawlFilters: CrawlFilters?): MutableSet<HypeLink> {
+    fun collectLinks(base: URL, hyperLinks: MutableSet<HyperLink>, root: Node, crawlFilters: CrawlFilters?): MutableSet<HyperLink> {
         val walker = NodeWalker(root)
         while (walker.hasNext()) {
             val currentNode = walker.nextNode()
             if (crawlFilters == null || crawlFilters.isAllowed(currentNode)) {
-                getLinksStep2(base, hypeLinks, currentNode, crawlFilters)
+                getLinksStep2(base, hyperLinks, currentNode, crawlFilters)
                 walker.skipChildren()
             } else {
                 log.debug("Block disallowed, skip : " + DomUtil.getPrettyName(currentNode))
             }
         }
 
-        return hypeLinks
+        return hyperLinks
     }
 
-    private fun getLinksStep2(base: URL, hypeLinks: MutableSet<HypeLink>, root: Node, crawlFilters: CrawlFilters?) {
+    private fun getLinksStep2(base: URL, hyperLinks: MutableSet<HyperLink>, root: Node, crawlFilters: CrawlFilters?) {
         val walker = NodeWalker(root)
         // log.debug("Get hypeLinks for " + DomUtil.getPrettyName(root));
         while (walker.hasNext()) {
@@ -414,7 +414,7 @@ class PrimerParser(conf: ImmutableConfig) {
 
                         if (target != null && !noFollow && !post) try {
                             val url = resolveURL(base, target)
-                            hypeLinks.add(HypeLink(url.toString(), linkText.toString().trim { it <= ' ' }))
+                            hyperLinks.add(HyperLink(url.toString(), linkText.toString().trim { it <= ' ' }))
                         } catch (ignored: MalformedURLException) {
                         }
                     } // if not should throw away

@@ -17,7 +17,7 @@
 package ai.platon.pulsar.crawl.filter
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.gson.GsonBuilder
 import org.slf4j.LoggerFactory
@@ -43,8 +43,8 @@ class CrawlFilters(
             conf
     )
 
-    fun isNormalizedValid(hypeLink: HypeLink): Boolean {
-        return isNormalizedValid(hypeLink.url)
+    fun isNormalizedValid(hyperLink: HyperLink): Boolean {
+        return isNormalizedValid(hyperLink.url)
     }
 
     fun isNormalizedValid(url: String): Boolean {

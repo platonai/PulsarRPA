@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Lists
@@ -91,8 +91,8 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
         webDb.flush()
     }
 
-    private fun update(pageNo: Int, newHypeLinks: HypeLink, remove: Boolean) {
-        updateAll(pageNo, Lists.newArrayList<CharSequence>(newHypeLinks.url), remove)
+    private fun update(pageNo: Int, newHyperLinks: HyperLink, remove: Boolean) {
+        updateAll(pageNo, Lists.newArrayList<CharSequence>(newHyperLinks.url), remove)
     }
 
     @Synchronized

@@ -77,6 +77,7 @@ abstract class ScheduledMonitor(
     override fun close() {
         if (autoClose) {
             stopExecution(executor, scheduledFuture, true)
+            log.info("Scheduled monitor is closed | $this")
         }
     }
 

@@ -170,7 +170,8 @@ object Queries {
     fun <E> toResultSet(colName: String, collection: Iterable<E>): ResultSet {
         val rs = SimpleResultSet().apply { autoClose = false }
         val colType = if (colName.equals("DOM", ignoreCase = true)) ValueDom.type else Value.STRING
-        rs.addColumn(colName, DataType.convertTypeToSQLType(colType), 0, 0)
+        val sqlType = DataType.convertTypeToSQLType(colType)
+        rs.addColumn(colName, sqlType, 0, 0)
 
         if (colType == ValueDom.type) {
             collection.forEach { rs.addRow(it) }

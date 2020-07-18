@@ -27,11 +27,17 @@ class MetricsManagement(
 
         val defaultMetricRegistry = SharedMetricRegistries.getDefault()
 
-        fun counter(obj: Any, name: String) = defaultMetricRegistry.counter(prependReadableClassName(obj, name))
+        fun counter(obj: Any, ident: String, name: String) =
+                defaultMetricRegistry.counter(prependReadableClassName(obj, ident, name))
+        fun counter(obj: Any, name: String) = counter(obj, "", name)
 
-        fun meter(obj: Any, name: String) = defaultMetricRegistry.meter(prependReadableClassName(obj, name))
+        fun meter(obj: Any, ident: String, name: String) =
+                defaultMetricRegistry.meter(prependReadableClassName(obj, ident, name))
+        fun meter(obj: Any, name: String) = meter(obj, "", name)
 
-        fun histogram(obj: Any, name: String) = defaultMetricRegistry.histogram(prependReadableClassName(obj, name))
+        fun histogram(obj: Any, ident: String, name: String) =
+                defaultMetricRegistry.histogram(prependReadableClassName(obj, ident, name))
+        fun histogram(obj: Any, name: String) = histogram(obj, "", name)
 
         fun <T: Metric> register(obj: Any, name: String, metric: T) {
             defaultMetricRegistry.register(prependReadableClassName(obj, name), metric)

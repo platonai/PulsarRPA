@@ -23,7 +23,7 @@ import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexField;
 import ai.platon.pulsar.crawl.index.IndexWriter;
 import ai.platon.pulsar.crawl.index.IndexerMapping;
-import ai.platon.pulsar.persist.HypeLink;
+import ai.platon.pulsar.persist.HyperLink;
 import ai.platon.pulsar.persist.WebDb;
 import ai.platon.pulsar.persist.WebPage;
 import com.google.common.collect.Lists;
@@ -317,7 +317,7 @@ public class SolrIndexWriter implements IndexWriter {
         WebPage page = WebPage.newInternalPage(INDEXER_REPORT_PAGE_HOME + "/solr/failure", "Failed solr indexing pages");
         failedDocs.stream()
                 .map(doc -> doc.get("url").getValue().toString())
-                .map(HypeLink::new)
+                .map(HyperLink::new)
                 .forEach(l -> page.getVividLinks().put(l.getUrl(), ""));
         webDb.put(page);
         webDb.flush();

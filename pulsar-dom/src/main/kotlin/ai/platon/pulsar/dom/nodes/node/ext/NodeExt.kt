@@ -173,6 +173,8 @@ var Node.depth by IntFeature(DEP)
 
 val Node.sequence by IntFeature(SEQ)
 
+val Node.globalId: String get() = "$location $sequence-$left-$top-$width-$height"
+
 /*********************************************************************
  * Geometric information
  * *******************************************************************/

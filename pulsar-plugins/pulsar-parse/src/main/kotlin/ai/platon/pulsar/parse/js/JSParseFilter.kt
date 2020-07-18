@@ -23,7 +23,7 @@ import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
 import ai.platon.pulsar.crawl.parse.Parser
 import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.ParseContext
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -45,7 +45,7 @@ import java.util.*
 class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
 
     /**
-     * Scan the JavaScript looking for possible [HypeLink]'s
+     * Scan the JavaScript looking for possible [HyperLink]'s
      *
      * @param parseContext Context of parse.
      */
@@ -58,7 +58,7 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
         return parseContext.parseResult
     }
 
-    private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hypeLinks: MutableSet<HypeLink>) {
+    private fun walk(n: Node, metaTags: HTMLMetaTags, base: String, hyperLinks: MutableSet<HyperLink>) {
         if (n is Element) {
             val name = n.getNodeName()
             if (name.equals("script", ignoreCase = true)) {
@@ -75,7 +75,7 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
                 // log.info("script: language=" + lang + ", text: " +
                 // script.toString());
                 // }
-                hypeLinks.addAll(getJSLinks(script.toString(), "", base))
+                hyperLinks.addAll(getJSLinks(script.toString(), "", base))
             } else { // process all HTML 4.0 events, if present...
                 val attrs = n.getAttributes()
                 val len = attrs.length
@@ -85,7 +85,7 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
                     // Mouse:
                     // onclick,ondbclick,onmousedown,onmouseout,onmousover,onmouseup
                     val anode = attrs.item(i)
-                    var links = ArrayList<HypeLink>()
+                    var links = ArrayList<HyperLink>()
                     if (anode.nodeName.startsWith("on")) {
                         links = getJSLinks(anode.nodeValue, "", base)
                     } else if (anode.nodeName.equals("href", ignoreCase = true)) {
@@ -94,13 +94,13 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
                             links = getJSLinks(`val`, "", base)
                         }
                     }
-                    hypeLinks.addAll(links)
+                    hyperLinks.addAll(links)
                 }
             }
         }
         val nl = n.childNodes
         for (i in 0 until nl.length) {
-            walk(nl.item(i), metaTags, base, hypeLinks)
+            walk(nl.item(i), metaTags, base, hyperLinks)
         }
     }
     // Alternative pattern, which limits valid url characters.
@@ -138,8 +138,8 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
     /**
      * This method extracts URLs from literals embedded in JavaScript.
      */
-    private fun getJSLinks(plainText: String, anchor: String, base: String): ArrayList<HypeLink> {
-        val hypeLinks = ArrayList<HypeLink>()
+    private fun getJSLinks(plainText: String, anchor: String, base: String): ArrayList<HyperLink> {
+        val hypeLinks = ArrayList<HyperLink>()
         var baseURL: URL? = null
         try {
             baseURL = URL(base)
@@ -189,7 +189,7 @@ class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
                     LOG.trace(" - outlink from JS: '$url'")
                 }
 
-                hypeLinks.add(HypeLink(url, anchor))
+                hypeLinks.add(HyperLink(url, anchor))
             }
         } catch (ex: Exception) {
             // if it is a malformed URL we just throw it away and continue with extraction.

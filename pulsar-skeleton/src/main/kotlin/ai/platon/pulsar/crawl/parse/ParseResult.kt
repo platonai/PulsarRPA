@@ -17,21 +17,19 @@
 package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import ai.platon.pulsar.persist.model.DomStatistics
 import ai.platon.pulsar.persist.model.LabeledHyperLink
-import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
-import kotlin.collections.HashSet
 
 class ParseResult(
         majorCode: Short = NOTPARSED,
         minorCode: Int = SUCCESS_OK,
         message: String? = null
 ) : ParseStatus(majorCode, minorCode, message) {
-    val hypeLinks = mutableSetOf<HypeLink>()
+    val hypeLinks = mutableSetOf<HyperLink>()
     var domStatistics: DomStatistics? = null
     var parser: Parser? = null
     var flowStatus = FlowState.CONTINUE

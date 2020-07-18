@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -58,7 +58,7 @@ class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMess
     fun report(reportGroup: String, page: WebPage) {
         val metricsPageUrl = "$urlPrefix/$reportGroup"
         val metricsPage = getOrCreateMetricsPage(metricsPageUrl)
-        metricsPage.addLiveLink(HypeLink(page.url))
+        metricsPage.addLiveLink(HyperLink(page.url))
         metricsPage.setContent(metricsPage.contentAsString + PageFormatter(page) + "\n")
         metricsPageUrls.add(metricsPageUrl)
         metricsPages[metricsPageUrl] = metricsPage

@@ -22,7 +22,7 @@ import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.protocol.ProtocolException
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.WebPage
 import org.junit.Assert
 import org.junit.Before
@@ -62,7 +62,7 @@ class TestJSParseFilter {
         conf["file.content.limit"] = "-1"
     }
 
-    fun getHypeLink(sampleFiles: Array<String>): MutableSet<HypeLink> {
+    fun getHypeLink(sampleFiles: Array<String>): MutableSet<HyperLink> {
         val urlString = "file:" + sampleDir + fileSeparator + sampleFiles[0]
         val file = File(urlString)
         val bytes = ByteArray(file.length().toInt())

@@ -31,7 +31,7 @@ import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.NamedScoreVector
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.graph.WebGraph
@@ -146,7 +146,7 @@ class SpiderSimulator(
         graph.addEdgeLenient(v1, v1)
 
         // Create outlinks and set metadata
-        page.liveLinks.filter { it.toString() !in store.keys }.map { HypeLink.box(it.value) }.forEach {
+        page.liveLinks.filter { it.toString() !in store.keys }.map { HyperLink.box(it.value) }.forEach {
             val edge = graph.addEdgeLenient(v1, WebVertex(it.url))
             edge.anchor = it.anchor
             edge.options = page.options

@@ -56,6 +56,10 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
         return element;
     }
 
+    public String globalId() {
+        return NodeExtKt.getGlobalId(element);
+    }
+
     public boolean isNil() {
         return this == NIL;
     }
@@ -187,7 +191,7 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
         }
 
         ValueDom dom = (ValueDom) other;
-        return dom.element.equals(this.element);
+        return globalId().equals(dom.globalId());
     }
 
     @Override
@@ -221,7 +225,7 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
 
     @Override
     public int hashCode() {
-        return getOuterHtml().hashCode();
+        return globalId().hashCode();
     }
 
     @Override
@@ -238,6 +242,6 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
 
     @Override
     public int compareTo(@NotNull ValueDom o) {
-        return document.baseUri().compareTo(o.document.baseUri());
+        return globalId().compareTo(o.globalId());
     }
 }

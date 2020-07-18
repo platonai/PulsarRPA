@@ -30,7 +30,7 @@ import ai.platon.pulsar.crawl.filter.CrawlFilters
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.signature.Signature
 import ai.platon.pulsar.crawl.signature.TextMD5Signature
-import ai.platon.pulsar.persist.HypeLink
+import ai.platon.pulsar.persist.HyperLink
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
@@ -129,7 +129,7 @@ class PageParser(
     }
 
     // TODO: optimization
-    private fun filterLinks(page: WebPage, unfilteredLinks: Set<HypeLink>): Set<HypeLink> {
+    private fun filterLinks(page: WebPage, unfilteredLinks: Set<HyperLink>): Set<HyperLink> {
         return unfilteredLinks.asSequence()
                 .filter { linkFilter.asPredicate(page).test(it) } // filter out invalid urls
                 .sortedByDescending { it.anchor.length } // longer anchor comes first
@@ -220,7 +220,7 @@ class PageParser(
         val refreshHref = parseStatus.getArgOrDefault(ParseStatus.REFRESH_HREF, "")
         val newUrl = crawlFilters.normalizeToNull(refreshHref, UrlNormalizers.SCOPE_FETCHER)?:return
 
-        page.addLiveLink(HypeLink(newUrl))
+        page.addLiveLink(HyperLink(newUrl))
         page.metadata[Name.REDIRECT_DISCOVERED] = AppConstants.YES_STRING
         if (newUrl == page.url) {
             val refreshTime = parseStatus.getArgOrDefault(ParseStatus.REFRESH_TIME, "0").toInt()
@@ -229,7 +229,7 @@ class PageParser(
         }
     }
 
-    private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HypeLink>) {
+    private fun processLinks(page: WebPage, unfilteredLinks: MutableSet<HyperLink>) {
         // Collect links
         // TODO : check the no-follow html tag directive
         val follow = (!page.metadata.contains(Name.NO_FOLLOW)

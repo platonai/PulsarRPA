@@ -5,7 +5,7 @@ package ai.platon.pulsar.persist.metadata;
  * <p>
  */
 public enum PageCategory {
-    INDEX, DETAIL, OFFER_LIST, REVIEW, PROFILE, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;
+    INDEX, DETAIL, OFFER_LIST, SELLER, REVIEW, PROFILE, SEARCH, MEDIA, BBS, TIEBA, BLOG, UNKNOWN;
 
     public boolean is(PageCategory pageCategory) {
         return pageCategory == this;
@@ -21,6 +21,10 @@ public enum PageCategory {
 
     public boolean isOfferList() {
         return this == OFFER_LIST;
+    }
+
+    public boolean isSeller() {
+        return this == SELLER;
     }
 
     public boolean isReview() {
@@ -60,6 +64,7 @@ public enum PageCategory {
         if (this == INDEX)        return "I";
         else if (this == DETAIL)  return "D";
         else if (this == REVIEW)  return "R";
+        else if (this == SELLER)  return "SL";
         else if (this == PROFILE) return "P";
         else if (this == SEARCH)  return "S";
         else if (this == MEDIA)   return "M";

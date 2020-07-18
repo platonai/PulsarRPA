@@ -94,7 +94,7 @@ abstract class PrivacyContext(
     val startTime = Instant.now()
     var lastActiveTime = startTime
     val elapsedTime get() = Duration.between(startTime, Instant.now())
-    val idleTimeout = Duration.ofMinutes(15)
+    val idleTimeout = Duration.ofMinutes(20)
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
     val numTasks = AtomicInteger()

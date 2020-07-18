@@ -24,23 +24,23 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /* An hype link in a page. */
-public class HypeLink implements Comparable<HypeLink> {
+public class HyperLink implements Comparable<HyperLink> {
 
     private GHypeLink hypeLink;
 
-    private HypeLink(@NotNull GHypeLink hypeLink) {
+    private HyperLink(@NotNull GHypeLink hypeLink) {
         this.hypeLink = hypeLink;
     }
 
-    public HypeLink(@NotNull String url) {
+    public HyperLink(@NotNull String url) {
         this(url, null);
     }
 
-    public HypeLink(@NotNull String url, @Nullable String anchor) {
+    public HyperLink(@NotNull String url, @Nullable String anchor) {
         this(url, anchor, 0);
     }
 
-    public HypeLink(@NotNull String url, @Nullable String anchor, int order) {
+    public HyperLink(@NotNull String url, @Nullable String anchor, int order) {
         Objects.requireNonNull(url);
 
         hypeLink = new GHypeLink();
@@ -50,17 +50,17 @@ public class HypeLink implements Comparable<HypeLink> {
     }
 
     @NotNull
-    public static HypeLink box(@NotNull GHypeLink hypeLink) {
-        return new HypeLink(hypeLink);
+    public static HyperLink box(@NotNull GHypeLink hypeLink) {
+        return new HyperLink(hypeLink);
     }
 
     @NotNull
-    public static HypeLink parse(@NotNull String link) {
+    public static HyperLink parse(@NotNull String link) {
         String[] linkAnchor = link.split("\\s+");
         if (linkAnchor.length == 1) {
-            return new HypeLink(linkAnchor[0]);
+            return new HyperLink(linkAnchor[0]);
         } else {
-            return new HypeLink(linkAnchor[0], linkAnchor[1]);
+            return new HyperLink(linkAnchor[0], linkAnchor[1]);
         }
     }
 
@@ -100,10 +100,10 @@ public class HypeLink implements Comparable<HypeLink> {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof HypeLink)) {
+        if (!(o instanceof HyperLink)) {
             return getUrl().equals(o.toString());
         }
-        HypeLink other = (HypeLink) o;
+        HyperLink other = (HyperLink) o;
         return getUrl().equals(other.getUrl());
     }
 
@@ -113,12 +113,12 @@ public class HypeLink implements Comparable<HypeLink> {
     }
 
     @Override
-    public int compareTo(@NotNull HypeLink hypeLink) {
-        int r = getUrl().compareTo(hypeLink.getUrl());
+    public int compareTo(@NotNull HyperLink hyperLink) {
+        int r = getUrl().compareTo(hyperLink.getUrl());
         if (r == 0) {
-            r = getAnchor().compareTo(hypeLink.getAnchor());
+            r = getAnchor().compareTo(hyperLink.getAnchor());
             if (r == 0) {
-                r = getOrder() - hypeLink.getOrder();
+                r = getOrder() - hyperLink.getOrder();
             }
         }
         return r;

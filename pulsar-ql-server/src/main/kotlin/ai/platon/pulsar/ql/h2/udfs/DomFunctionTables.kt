@@ -41,7 +41,7 @@ object DomFunctionTables {
     fun loadAll(@H2Context conn: JdbcConnection, portalUrls: ValueArray): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("DOM", listOf<ValueDom>())
         }
 
         val pages = Queries.loadAll(session, portalUrls)
@@ -58,13 +58,13 @@ object DomFunctionTables {
             url: String, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("DOM", listOf<ValueDom>())
         }
 
         val normUrl = session.normalize(url)
         val elements = session.parse(session.load(normUrl)).select(cssQuery, offset, limit)
 
-        return toResultSet("DOM", elements.map { ValueDom.get(it) })
+        return toResultSet("DOM", elements.map { domValue(it) })
     }
 
     @JvmStatic
@@ -73,7 +73,7 @@ object DomFunctionTables {
     fun select(@H2Context conn: JdbcConnection, dom: ValueDom, cssQuery: String, offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("DOM", listOf<ValueDom>())
         }
 
         val doms = dom.element.select(cssQuery, offset, limit) { ValueDom.get(it) }
@@ -88,7 +88,7 @@ object DomFunctionTables {
             portalUrl: Value, restrictCss: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("LINK", listOf<String>())
         }
 
         val links = Queries.loadAll(session, portalUrl, restrictCss, offset, limit, Queries::getLinks)
@@ -102,7 +102,7 @@ object DomFunctionTables {
               dom: ValueDom, cssQuery: String = ":root", offset: Int = 1, limit: Int = Integer.MAX_VALUE): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("LINK", listOf<String>())
         }
 
         return toResultSet("LINK", Queries.getLinks(dom.element, cssQuery, offset, limit))
@@ -184,7 +184,7 @@ object DomFunctionTables {
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("DOM", listOf<ValueDom>())
         }
 
         val docs = Queries.loadOutPages(session, portal, restrictCss, offset, limit, normalize, ignoreQuery)
@@ -236,7 +236,7 @@ object DomFunctionTables {
             ignoreQuery: Boolean = false): ResultSet {
         val session = H2SessionFactory.getSession(conn)
         if (session.isColumnRetrieval(conn)) {
-            return toResultSet("DOM", listOf<Element>())
+            return toResultSet("DOM", listOf<ValueDom>())
         }
 
         val docs =

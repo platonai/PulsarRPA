@@ -21,8 +21,7 @@ package ai.platon.pulsar.parse.html
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
-import ai.platon.pulsar.persist.HypeLink
-import com.google.common.collect.Lists
+import ai.platon.pulsar.persist.HyperLink
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
 import org.junit.Assert
@@ -154,13 +153,13 @@ class TestPrimerParser {
                 "http://www.pulsar.org/",
                 "http://www.pulsar.org/;something")
         // note: should be in page-order
-        private val answerHypeLinks: Array<Array<HypeLink>>
+        private val ANSWER_HYPER_LINKS: Array<Array<HyperLink>>
 
-        private fun linksString(o: ArrayList<HypeLink>): String {
-            return o.stream().map { obj: HypeLink -> obj.toString() }.collect(Collectors.joining("\n"))
+        private fun linksString(o: ArrayList<HyperLink>): String {
+            return o.stream().map { obj: HyperLink -> obj.toString() }.collect(Collectors.joining("\n"))
         }
 
-        private fun compareLinks(expected: ArrayList<HypeLink>, actual: ArrayList<HypeLink>, pageIndex: Int) {
+        private fun compareLinks(expected: ArrayList<HyperLink>, actual: ArrayList<HyperLink>, pageIndex: Int) {
             Assert.assertEquals("Page : p" + (pageIndex + 1) + "\tExpected : [" + linksString(expected) + "]\t Actual : [" + linksString(actual) + "]\t",
                     expected.size.toLong(), actual.size.toLong())
             for (i in expected.indices) {
@@ -174,26 +173,26 @@ class TestPrimerParser {
         }
 
         init {
-            answerHypeLinks = arrayOf(arrayOf(HypeLink("http://www.pulsar.org", "anchor")), arrayOf(HypeLink("http://www.pulsar.org/", "home"),
-                    HypeLink("http://www.pulsar.org/docs/bot.html", "bots")), arrayOf(HypeLink("http://www.pulsar.org/", "separate this"),
-                    HypeLink("http://www.pulsar.org/docs/ok", "from this")), arrayOf(HypeLink("http://www.pulsar.org/", "home"),
-                    HypeLink("http://www.pulsar.org/docs/1", "1"),
-                    HypeLink("http://www.pulsar.org/docs/2", "2")), arrayOf(HypeLink("http://www.pulsar.org/frames/top.html", ""),
-                    HypeLink("http://www.pulsar.org/frames/left.html", ""),
-                    HypeLink("http://www.pulsar.org/frames/invalid.html", ""),
-                    HypeLink("http://www.pulsar.org/frames/right.html", "")), arrayOf(HypeLink("http://www.pulsar.org/maps/logo.gif", ""),
-                    HypeLink("http://www.pulsar.org/index.html", ""),
-                    HypeLink("http://www.pulsar.org/maps/#bottom", ""),
-                    HypeLink("http://www.pulsar.org/bot.html", ""),
-                    HypeLink("http://www.pulsar.org/docs/index.html", "")), arrayOf(HypeLink("http://www.pulsar.org/index.html", "whitespace test")), arrayOf(), arrayOf(HypeLink("http://www.pulsar.org/dummy.jsp", "test2")), arrayOf(), arrayOf(HypeLink("http://www.pulsar.org/;x", "anchor1"),
-                    HypeLink("http://www.pulsar.org/g;x", "anchor2"),
-                    HypeLink("http://www.pulsar.org/g;x?y#s", "anchor3")
+            ANSWER_HYPER_LINKS = arrayOf(arrayOf(HyperLink("http://www.pulsar.org", "anchor")), arrayOf(HyperLink("http://www.pulsar.org/", "home"),
+                    HyperLink("http://www.pulsar.org/docs/bot.html", "bots")), arrayOf(HyperLink("http://www.pulsar.org/", "separate this"),
+                    HyperLink("http://www.pulsar.org/docs/ok", "from this")), arrayOf(HyperLink("http://www.pulsar.org/", "home"),
+                    HyperLink("http://www.pulsar.org/docs/1", "1"),
+                    HyperLink("http://www.pulsar.org/docs/2", "2")), arrayOf(HyperLink("http://www.pulsar.org/frames/top.html", ""),
+                    HyperLink("http://www.pulsar.org/frames/left.html", ""),
+                    HyperLink("http://www.pulsar.org/frames/invalid.html", ""),
+                    HyperLink("http://www.pulsar.org/frames/right.html", "")), arrayOf(HyperLink("http://www.pulsar.org/maps/logo.gif", ""),
+                    HyperLink("http://www.pulsar.org/index.html", ""),
+                    HyperLink("http://www.pulsar.org/maps/#bottom", ""),
+                    HyperLink("http://www.pulsar.org/bot.html", ""),
+                    HyperLink("http://www.pulsar.org/docs/index.html", "")), arrayOf(HyperLink("http://www.pulsar.org/index.html", "whitespace test")), arrayOf(), arrayOf(HyperLink("http://www.pulsar.org/dummy.jsp", "test2")), arrayOf(), arrayOf(HyperLink("http://www.pulsar.org/;x", "anchor1"),
+                    HyperLink("http://www.pulsar.org/g;x", "anchor2"),
+                    HyperLink("http://www.pulsar.org/g;x?y#s", "anchor3")
             ), arrayOf( // this is tricky - see RFC3986 section 5.4.1 example 7
-                    HypeLink("http://www.pulsar.org/g", "anchor1"),
-                    HypeLink("http://www.pulsar.org/g?y#s", "anchor2"),
-                    HypeLink("http://www.pulsar.org/;something?y=1", "anchor3"),
-                    HypeLink("http://www.pulsar.org/;something?y=1#s", "anchor4"),
-                    HypeLink("http://www.pulsar.org/;something?y=1;somethingelse", "anchor5")
+                    HyperLink("http://www.pulsar.org/g", "anchor1"),
+                    HyperLink("http://www.pulsar.org/g?y#s", "anchor2"),
+                    HyperLink("http://www.pulsar.org/;something?y=1", "anchor3"),
+                    HyperLink("http://www.pulsar.org/;something?y=1#s", "anchor4"),
+                    HyperLink("http://www.pulsar.org/;something?y=1;somethingelse", "anchor5")
             ))
         }
     }

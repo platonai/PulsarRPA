@@ -13,7 +13,17 @@ open class UrlExtractor {
                 Pattern.CASE_INSENSITIVE or Pattern.MULTILINE or Pattern.DOTALL)
     }
 
-    protected fun extractTo(line: String, urls: MutableSet<String>) {
+    fun extract(line: String): String? {
+        val matcher = urlPattern.matcher(line)
+        while (matcher.find()) {
+            val start = matcher.start(1)
+            val end = matcher.end()
+            return line.substring(start, end)
+        }
+        return null
+    }
+
+    fun extractTo(line: String, urls: MutableSet<String>) {
         val matcher = urlPattern.matcher(line)
         while (matcher.find()) {
             val start = matcher.start(1)
@@ -27,6 +37,14 @@ internal class ResourceExtractor(val resource: String): UrlExtractor() {
     fun extract(): Set<String> {
         val urls = mutableSetOf<String>()
         ResourceLoader.readAllLines(resource).forEach { extractTo(it, urls) }
+        return urls
+    }
+}
+
+internal class FileExtractor(val path: Path): UrlExtractor() {
+    fun extract(): Set<String> {
+        val urls = mutableSetOf<String>()
+        Files.readAllLines(path).forEach { extractTo(it, urls) }
         return urls
     }
 }
@@ -45,5 +63,6 @@ internal class DirectoryExtractor(val baseDir: Path): UrlExtractor() {
 
 object LinkExtractors {
     fun fromResource(resource: String) = ResourceExtractor(resource).extract()
+    fun fromFile(path: Path) = FileExtractor(path).extract()
     fun fromDirectory(baseDir: Path) = DirectoryExtractor(baseDir).extract()
 }

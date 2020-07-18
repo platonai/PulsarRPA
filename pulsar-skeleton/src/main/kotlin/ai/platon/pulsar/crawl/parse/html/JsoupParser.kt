@@ -33,7 +33,7 @@ class JsoupParser(
         }
 
         try {
-            document = FeaturedDocument(Jsoup.parse(page.contentAsInputStream, page.encoding, page.url))
+            document = FeaturedDocument(Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseUrl))
             return document
         } catch (e: IOException) {
             LOG.warn("Failed to parse page {}", page.url)

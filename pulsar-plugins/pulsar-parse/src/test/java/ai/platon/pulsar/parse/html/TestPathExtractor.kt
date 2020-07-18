@@ -140,7 +140,7 @@ class TestPathExtractor : HtmlParserTestBase() {
     fun testContentSanitize() {
         val htmlPath = Paths.get(SAMPLES_DIR, "selector", "2", "pages", "html_example_4_bbs.html")
         val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
-        val doc = Jsoup.parse(page.contentAsInputStream, page.encoding, page.location)
+        val doc = Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseUrl)
         val content = JsoupUtils.toHtmlPiece(doc, true)
         assertTrue(content.startsWith("<div id=\"pulsarHtml\">"))
         println(content)
