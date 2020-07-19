@@ -7,10 +7,6 @@
 
     <import resource="../proxy-context.xml"/>
 
-    <bean id="protocolFactory" class="ai.platon.pulsar.crawl.protocol.ProtocolFactory" destroy-method="close">
-        <constructor-arg ref="conf" />
-    </bean>
-
     <bean id="driverControl" class="ai.platon.pulsar.protocol.browser.driver.WebDriverControl">
         <constructor-arg ref="conf"/>
     </bean>

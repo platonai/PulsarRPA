@@ -22,6 +22,7 @@ import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.crawl.filter.CrawlFilter
+import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
 import ai.platon.pulsar.crawl.scoring.ScoringFilters
 import ai.platon.pulsar.crawl.signature.SignatureComparator
@@ -58,6 +59,13 @@ class UpdateComponent(
 
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
+
+    constructor(
+            webDb: WebDb,
+            messageWriter: MiscMessageWriter,
+            metricsCounters: MetricsCounters,
+            conf: ImmutableConfig
+    ): this(webDb, DefaultFetchSchedule(conf, messageWriter), ScoringFilters(conf), messageWriter, metricsCounters, conf)
 
     override fun getParams(): Params {
         return Params.of(

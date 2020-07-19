@@ -44,8 +44,8 @@ class LoadComponent(
         val webDb: WebDb,
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent,
-        val updateComponent: UpdateComponent,
-        val messageWriter: MiscMessageWriter,
+        val updateComponent: UpdateComponent? = null,
+        val messageWriter: MiscMessageWriter? = null,
         val immutableConfig: ImmutableConfig
 ): AutoCloseable {
     companion object {
@@ -60,6 +60,13 @@ class LoadComponent(
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
     private val numWrite = AtomicInteger()
+
+    constructor(
+            webDb: WebDb,
+            fetchComponent: BatchFetchComponent,
+            parseComponent: ParseComponent,
+            immutableConfig: ImmutableConfig
+    ): this(webDb, fetchComponent, parseComponent, null, null, immutableConfig)
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -328,8 +335,8 @@ class LoadComponent(
 
         when {
             globalFetchingUrls.contains(url) -> return null
-            fetchMetrics.isFailed(url) -> return null
-            fetchMetrics.isTimeout(url) -> {
+            fetchMetrics?.isFailed(url) == true -> return null
+            fetchMetrics?.isTimeout(url) == true -> {
             }
             // Might use UrlFilter/UrlNormalizer
         }
@@ -358,7 +365,7 @@ class LoadComponent(
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)
         if (lastFetchTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-            messageWriter.debugIllegalLastFetchTime(page)
+            messageWriter?.debugIllegalLastFetchTime(page)
         }
 
         // if (now > lastTime + expires), it's expired
@@ -431,7 +438,7 @@ class LoadComponent(
 
         val protocolStatus = page.protocolStatus
         if (protocolStatus.isFailed) {
-            updateComponent.updateFetchSchedule(page)
+            updateComponent?.updateFetchSchedule(page)
             return
         }
 
@@ -440,7 +447,7 @@ class LoadComponent(
             log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
         }
 
-        updateComponent.updateFetchSchedule(page)
+        updateComponent?.updateFetchSchedule(page)
 
         if (options.persist) {
             persist(page, options)
@@ -516,13 +523,17 @@ class LoadComponent(
                 counters[1] += if (counters[0] > 0) 1 else 0
                 counters[2] += it.get(Self.brokenSubEntity)
             }
-            updateComponent.updateByOutgoingPages(page, outPages)
+
+            updateComponent?.updateByOutgoingPages(page, outPages)
+
             if (persist) {
                 webDb.put(page)
             }
+
             if (persist2) {
                 outPages.forEach { webDb.put(it) }
             }
+
             // log.debug(page.getPageCounters().asStringMap().toString());
             outDocs = outPages.map {
                 WebPageFormatter(it).withLinks(loadOptions2.withLinks).withText(loadOptions2.withText)

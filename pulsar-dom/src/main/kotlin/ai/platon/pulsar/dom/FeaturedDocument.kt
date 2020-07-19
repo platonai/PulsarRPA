@@ -47,7 +47,7 @@ open class FeaturedDocument(val document: Document) {
 
         val featureCalculatorFactory = DocumentFeatureCalculatorFactory()
 
-        val NIL = createShell(NIL_PAGE_URL)
+        val NIL = FeaturedDocument(nilDocument)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
         val NIL_DOC_LENGTH = NIL_DOC_HTML.length
 

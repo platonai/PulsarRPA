@@ -5,47 +5,48 @@ import kotlin.reflect.KProperty
 /**
  * A simple excel like table, every column, every row and every cell can hold metadata and variables
  * */
-class OpenMapTable(val numColumns: Int) {
-    val metadata = Metadata(numColumns)
+class OpenMapTable(
+        val numColumns: Int,
+        val ident: Int = -1
+) {
+    val metadata = Metadata(numColumns, ident)
     val map = mutableMapOf<String, Row>()
 
     val attributes = mutableMapOf<String, Any>()
-    val columns = metadata.columns
-    val rows = map.values
+    val columns get() = metadata.columns
+    val rows get() = map.values
 
-    val keys = map.keys
+    val keys get() = map.keys
     val numRows: Int get() = map.size
     val isEmpty: Boolean get() = numRows == 0
     val isNotEmpty: Boolean get() = !isEmpty
 
-    operator fun get(key: String): Row? {
-        return map[key]
-    }
+    operator fun get(key: String) = map[key]
 
     operator fun set(key: String, row: Row) {
         map[key] = row
     }
 
-    fun computeIfAbsent(key: String): Row {
-        return map.computeIfAbsent(key) { Row(key, numColumns) }
-    }
+    fun computeIfAbsent(key: String) = map.computeIfAbsent(key) { Row(key, numColumns) }
 
-    fun computeIfAbsent(key: String, init: (Row) -> Unit): Row {
-        return map.computeIfAbsent(key) { Row(key, numColumns, init) }
-    }
+    fun computeIfAbsent(key: String, init: (Row) -> Unit) = map.computeIfAbsent(key) { Row(key, numColumns, init) }
 
-    fun count(predicate: (Row) -> Boolean): Int {
-        return rows.count(predicate)
-    }
+    fun count(predicate: (Row) -> Boolean) = rows.count(predicate)
 
-    class Metadata(numColumns: Int) {
-        val columns = IntRange(1, numColumns).map { Column("C$it") }.toTypedArray()
+    class Metadata(val columns: Array<Column>) {
+
+        constructor(numColumns: Int, tableId: Int = -1): this(
+            IntRange(1, numColumns).map { i -> Column(if (tableId < 0) "C$i" else "T${tableId}C$i") }.toTypedArray()
+        )
+
         operator fun get(j: Int): Column {
             return columns[j]
         }
+
         operator fun set(j: Int, column: Column) {
             columns[j] = column
         }
+
         fun attributeRow(key: String): List<Any?> {
             return columns.map { it.attributes[key] }
         }
@@ -59,9 +60,7 @@ class OpenMapTable(val numColumns: Int) {
 
     class Cell(var j: Int = 0, var value: Any? = null) {
         val attributes: MutableMap<String, Any> = mutableMapOf()
-        override fun toString(): String {
-            return value?.toString()?:""
-        }
+        override fun toString() = value?.toString()?:""
     }
 
     class Row(var key: String = "", numColumns: Int) {
@@ -72,18 +71,17 @@ class OpenMapTable(val numColumns: Int) {
         val cells: Array<Cell?> = arrayOfNulls(numColumns)
         val attributes: MutableMap<String, Any> = mutableMapOf()
         val values get() = cells.map { it?.value }
-        operator fun get(j: Int): Cell? {
-            return cells[j]
-        }
+
+        operator fun get(j: Int) = cells[j]
+
         operator fun set(j: Int, cell: Cell) {
             require(j < cells.size)
             require(j == cell.j)
             cells[j] = cell
         }
 
-        fun getValue(j: Int): Any? {
-            return cells[j]?.value
-        }
+        fun getValue(j: Int) = cells[j]?.value
+
         fun setValue(j: Int, value: Any?) {
             require(j < cells.size)
             cells[j] = Cell(j, value)

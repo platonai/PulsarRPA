@@ -48,7 +48,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
      */
     fun getProtocol(page: WebPage): Protocol {
         var mode = page.fetchMode
-        if (mode == null || mode == FetchMode.UNKNOWN) {
+        if (mode == FetchMode.UNKNOWN) {
             mode = FetchMode.BROWSER
         }
         return when (mode.also { page.fetchMode = it }) {

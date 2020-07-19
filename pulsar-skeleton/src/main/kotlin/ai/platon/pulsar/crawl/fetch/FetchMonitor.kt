@@ -293,10 +293,11 @@ class FetchMonitor(
                 handleFewFetchItems()
             }
 
-            /*
+            /**
              * Check throughput(fetch speed)
              * */
-            if (now > throughputCheckTime && fetchMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
+            if (fetchMetrics != null && now > throughputCheckTime
+                    && fetchMetrics.successTasksPerSecond < minSuccessPagesPerSecond) {
                 lowThroughputCount++
                 checkFetchThroughput()
                 throughputCheckTime += throughputCheckInterval
@@ -310,7 +311,7 @@ class FetchMonitor(
                 break
             }
 
-            /*
+            /**
              * Read local file commands
              * */
             if (FileCommand.check("finish-job $jobName")) {
@@ -319,7 +320,7 @@ class FetchMonitor(
                 break
             }
 
-            /*
+            /**
              * All fetch tasks are finished
              * */
             if (isMissionComplete) {

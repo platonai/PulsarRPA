@@ -43,6 +43,8 @@ class ParseComponent(
     private val log = LoggerFactory.getLogger(ParseComponent::class.java)
     private var traceInfo: ConcurrentHashMap<String, Any>? = null
 
+    constructor(conf: ImmutableConfig): this(CrawlFilters(conf), PageParser(conf), conf)
+
     fun parse(page: WebPage, reparseLinks: Boolean = false, noLinkFilter: Boolean = false): ParseResult {
         return parse(page, "", reparseLinks, noLinkFilter)
     }

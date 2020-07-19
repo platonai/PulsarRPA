@@ -37,7 +37,6 @@
         <constructor-arg ref="protocolFactory"/>
         <constructor-arg ref="fetchMetrics"/>
         <constructor-arg ref="lazyFetchTaskManager"/>
-        <constructor-arg ref="fetchTaskExecutor"/>
         <constructor-arg ref="conf"/>
     </bean>
 

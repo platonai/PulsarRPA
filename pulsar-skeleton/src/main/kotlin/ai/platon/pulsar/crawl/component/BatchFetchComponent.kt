@@ -1,7 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -12,23 +11,29 @@ import ai.platon.pulsar.crawl.protocol.ProtocolFactory
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
+import com.google.common.collect.ConcurrentHashMultiset
 import com.google.common.collect.Iterables
-import io.netty.util.concurrent.EventExecutorGroup
-import io.netty.util.concurrent.Future
+import com.google.common.util.concurrent.ListeningExecutorService
+import com.google.common.util.concurrent.ListeningScheduledExecutorService
+import com.google.common.util.concurrent.MoreExecutors
 import java.util.*
-import java.util.concurrent.Callable
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.*
 
 class BatchFetchComponent(
         val webDb: WebDb,
-        fetchMetrics: FetchMetrics,
-        val lazyFetchTaskManager: LazyFetchTaskManager,
+        fetchMetrics: FetchMetrics? = null,
+        val lazyFetchTaskManager: LazyFetchTaskManager? = null,
         protocolFactory: ProtocolFactory,
-        val fetchTaskExecutor: EventExecutorGroup,
         immutableConfig: ImmutableConfig
 ) : FetchComponent(fetchMetrics, protocolFactory, immutableConfig) {
+    constructor(
+            webDb: WebDb,
+            protocolFactory: ProtocolFactory,
+            immutableConfig: ImmutableConfig
+    ): this(webDb, null, null, protocolFactory, immutableConfig)
+
+    val fetchTaskExecutor: ListeningExecutorService = MoreExecutors.newDirectExecutorService()
+
     /**
      * Fetch all the urls, config property 'fetch.concurrency' controls the concurrency level.
      * If concurrency level is not great than 1, fetch all urls in the caller thread
@@ -75,7 +80,7 @@ class BatchFetchComponent(
             if (protocol != null) {
                 pages.addAll(parallelFetchAll0(gUrls, protocol, options))
             } else {
-                fetchMetrics.trackFailedUrls(gUrls)
+                fetchMetrics?.trackFailedUrls(gUrls)
             }
         }
         return pages
@@ -112,7 +117,7 @@ class BatchFetchComponent(
     }
 
     private fun protocolParallelFetchAll(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
-        fetchMetrics.markTaskStart(Iterables.size(urls))
+        fetchMetrics?.markTaskStart(Iterables.size(urls))
         return urls.map { createFetchEntry(it, options) }
                 .let { protocol.getResponses(it, options.volatileConfig?:immutableConfig.toVolatileConfig()) }
                 .map { getProtocolOutput(protocol, it, it.page) }
@@ -120,7 +125,7 @@ class BatchFetchComponent(
 
     private fun manualParallelFetchAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
         val size = Iterables.size(urls)
-        fetchMetrics.markTaskStart(size)
+        fetchMetrics?.markTaskStart(size)
         return urls.map { fetchTaskExecutor.submit(Callable { fetch(it, options) }) }.map { getResponse(it) }
     }
 
@@ -166,7 +171,7 @@ class BatchFetchComponent(
         if (lazyTasks.isNotEmpty()) {
             val mode = options.fetchMode
             // TODO: save url with options
-            lazyFetchTaskManager.commitLazyTasks(mode, lazyTasks)
+            lazyFetchTaskManager?.commitLazyTasks(mode, lazyTasks)
             if (log.isDebugEnabled) {
                 log.debug("Committed {} lazy tasks in mode {}", lazyTasks.size, mode)
             }

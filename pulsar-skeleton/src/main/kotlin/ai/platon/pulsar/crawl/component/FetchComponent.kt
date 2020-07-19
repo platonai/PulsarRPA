@@ -44,7 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 @Component
 open class FetchComponent(
-        val fetchMetrics: FetchMetrics,
+        val fetchMetrics: FetchMetrics? = null,
         val protocolFactory: ProtocolFactory,
         val immutableConfig: ImmutableConfig
 ) : AutoCloseable {
@@ -104,7 +104,7 @@ open class FetchComponent(
      */
     protected fun fetchContent0(page: WebPage): WebPage {
         return try {
-            fetchMetrics.markTaskStart()
+            fetchMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
@@ -121,7 +121,7 @@ open class FetchComponent(
      */
     protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
         return try {
-            fetchMetrics.markTaskStart()
+            fetchMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
@@ -146,22 +146,22 @@ open class FetchComponent(
             ProtocolStatus.CANCELED -> CrawlStatus.STATUS_UNFETCHED
 
             ProtocolStatus.MOVED,
-            ProtocolStatus.TEMP_MOVED -> handleMoved(page, protocolStatus).also { fetchMetrics.trackMoved(url) }
+            ProtocolStatus.TEMP_MOVED -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
 
             ProtocolStatus.ACCESS_DENIED,
             ProtocolStatus.ROBOTS_DENIED,
             ProtocolStatus.UNKNOWN_HOST,
             ProtocolStatus.GONE,
-            ProtocolStatus.NOTFOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics.trackHostUnreachable(url) }
+            ProtocolStatus.NOTFOUND -> CrawlStatus.STATUS_GONE.also { fetchMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.EXCEPTION,
             ProtocolStatus.RETRY,
-            ProtocolStatus.BLOCKED -> CrawlStatus.STATUS_RETRY.also { fetchMetrics.trackHostUnreachable(url) }
+            ProtocolStatus.BLOCKED -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackHostUnreachable(url) }
 
             ProtocolStatus.REQUEST_TIMEOUT,
             ProtocolStatus.THREAD_TIMEOUT,
             ProtocolStatus.WEB_DRIVER_TIMEOUT,
-            ProtocolStatus.SCRIPT_TIMEOUT -> CrawlStatus.STATUS_RETRY.also { fetchMetrics.trackTimeout(url) }
+            ProtocolStatus.SCRIPT_TIMEOUT -> CrawlStatus.STATUS_RETRY.also { fetchMetrics?.trackTimeout(url) }
 
             else -> CrawlStatus.STATUS_RETRY.also { log.warn("Unknown protocol status $protocolStatus") }
         }
@@ -174,9 +174,9 @@ open class FetchComponent(
         }
 
         if (crawlStatus.isFetched) {
-            fetchMetrics.trackSuccess(page)
+            fetchMetrics?.trackSuccess(page)
         } else if (crawlStatus.isFailed) {
-            fetchMetrics.trackFailedUrl(url)
+            fetchMetrics?.trackFailedUrl(url)
         }
 
         return updatedPage

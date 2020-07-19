@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureEntry
 import ai.platon.pulsar.dom.features.FeatureFormatter
 import ai.platon.pulsar.dom.features.NodeFeature
@@ -24,6 +25,7 @@ import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
 import java.nio.file.Path
+import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KProperty
@@ -88,11 +90,11 @@ class ExportPaths(val uri: String) {
     }
 }
 
-val nilNode = Element("div") as Node
+val nilDocument = Document.createShell(AppConstants.NIL_PAGE_URL)
 
-val nilElement = Element("div")
+val nilElement = nilDocument.body()
 
-val nilDocument = Document.createShell("")
+val nilNode = nilElement as Node
 
 val Document.isNil get() = this === nilDocument
 
@@ -153,7 +155,7 @@ fun Element.getStyle(styleKey: String): String {
 
 val Node.isNil get() = this === nilNode
 
-val Node.ownerDocument get() = ownerDocumentNode as Document
+val Node.ownerDocument get() = Objects.requireNonNull(ownerDocumentNode) as Document
 
 /**
  * Get the URL this Document was parsed from. If the starting URL is a redirect,

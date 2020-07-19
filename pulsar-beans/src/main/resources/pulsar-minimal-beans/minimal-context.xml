@@ -9,7 +9,7 @@
         <property name="environment" ref="environment"/>
     </bean>
 
-    <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" init-method="start" destroy-method="close">
+    <bean id="metricsManagement" class="ai.platon.pulsar.common.MetricsManagement" destroy-method="close">
         <constructor-arg ref="metricsCounters"/>
         <constructor-arg ref="conf"/>
     </bean>
@@ -32,19 +32,25 @@
         <constructor-arg ref="conf" />
     </bean>
 
-    <bean id="fetchMetrics" class="ai.platon.pulsar.crawl.fetch.FetchMetrics" destroy-method="close">
-        <constructor-arg ref="metricsManagement"/>
-        <constructor-arg ref="messageWriter"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <bean id="lazyFetchTaskManager" class="ai.platon.pulsar.crawl.fetch.LazyFetchTaskManager" destroy-method="close">
-        <constructor-arg ref="webDb"/>
-        <constructor-arg ref="fetchMetrics"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <bean id="globalCacheManager" class="ai.platon.pulsar.crawl.GlobalCacheManager">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+
+    <bean id="fetchComponent" class="ai.platon.pulsar.crawl.component.BatchFetchComponent" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="protocolFactory"/>
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="parseComponent" class="ai.platon.pulsar.crawl.component.ParseComponent">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent" destroy-method="close">
+        <constructor-arg ref="webDb"/>
+        <constructor-arg ref="fetchComponent"/>
+        <constructor-arg ref="parseComponent"/>
         <constructor-arg ref="conf"/>
     </bean>
 
