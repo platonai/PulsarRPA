@@ -1,14 +1,12 @@
 package ai.platon.pulsar.examples
 
-import ai.platon.pulsar.PulsarContext
-import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.config.CapabilityTypes
+import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.dom.select.firstText
 import ai.platon.pulsar.dom.select.firstTextOrNull
-import ai.platon.pulsar.withPulsarContext
 
-object Manual {
-    val session = PulsarContext.createSession()
+class Manual(context: PulsarContext) {
+    val session = context.createSession()
     val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     fun load() = session.load(url, "-expires 1d")
@@ -57,7 +55,6 @@ object Manual {
     }
 }
 
-fun main() = withPulsarContext {
-    Systems.setProperty(CapabilityTypes.PROXY_USE_PROXY, false)
-    Manual.run()
+fun main() = withContext { context ->
+    Manual(context).run()
 }

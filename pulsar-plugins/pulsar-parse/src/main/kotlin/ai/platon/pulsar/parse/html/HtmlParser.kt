@@ -141,43 +141,4 @@ class HtmlParser(
         val documentFragment = W3CDom().fromJsoup(doc).createDocumentFragment()
         return doc to documentFragment
     }
-
-    @Deprecated(message = "Use jsoup instead")
-    @Throws(Exception::class)
-    private fun parseNeko(baseUri: String, input: InputSource): DocumentFragment {
-        val parser = DOMFragmentParser()
-        try {
-            parser.setFeature("http://cyberneko.org/html/features/scanner/allow-selfclosing-iframe", true)
-            parser.setFeature("http://cyberneko.org/html/features/augmentations", true)
-            parser.setProperty("http://cyberneko.org/html/properties/default-encoding", defaultCharEncoding)
-            parser.setFeature("http://cyberneko.org/html/features/scanner/ignore-specified-charset", true)
-            parser.setFeature("http://cyberneko.org/html/features/balance-tags/ignore-outside-content", false)
-            parser.setFeature("http://cyberneko.org/html/features/balance-tags/document-fragment", true)
-            parser.setFeature("http://cyberneko.org/html/features/report-errors", Parser.LOG.isTraceEnabled)
-        } catch (ignored: SAXException) {
-        }
-
-        // convert Document to DocumentFragment
-        val doc = HTMLDocumentImpl()
-        doc.errorChecking = false
-        val res = doc.createDocumentFragment()
-        var frag = doc.createDocumentFragment()
-        parser.parse(input, frag)
-        res.appendChild(frag)
-
-        try {
-            while (true) {
-                frag = doc.createDocumentFragment()
-                parser.parse(input, frag)
-                if (!frag.hasChildNodes()) break
-                if (Parser.LOG.isInfoEnabled) {
-                    Parser.LOG.info(" - new frag, " + frag.childNodes.length + " nodes.")
-                }
-                res.appendChild(frag)
-            }
-        } catch (x: Exception) {
-            Parser.LOG.error("Failed with the following Exception: ", x)
-        }
-        return res
-    }
 }

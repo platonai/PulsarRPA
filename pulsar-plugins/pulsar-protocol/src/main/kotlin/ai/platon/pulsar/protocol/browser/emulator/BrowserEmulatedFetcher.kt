@@ -26,7 +26,7 @@ import kotlin.math.roundToLong
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class BrowserEmulatedFetcher(
+open class BrowserEmulatedFetcher(
         private val privacyManager: PrivacyManager,
         private val driverManager: WebDriverPoolManager,
         private val browserEmulator: BrowserEmulator,

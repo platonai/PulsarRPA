@@ -18,20 +18,25 @@
  */
 package ai.platon.pulsar.protocol.browser
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.crawl.protocol.ForwardingResponse
+import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulatedFetcher
+import ai.platon.pulsar.protocol.browser.emulator.DefaultBrowserEmulatedFetcher
 import ai.platon.pulsar.protocol.crowd.ForwardingProtocol
 
 class BrowserEmulatorProtocol : ForwardingProtocol() {
+    // TODO: better initialization
     private val browserEmulator by lazy {
-        PulsarContext.applicationContext.getBean(BrowserEmulatedFetcher::class.java)
+        val pulsarContext = PulsarContexts.activeContext as AbstractPulsarContext
+        kotlin.runCatching {
+            pulsarContext.applicationContext.getBean(BrowserEmulatedFetcher::class.java)
+        }.getOrDefault(DefaultBrowserEmulatedFetcher(pulsarContext.unmodifiedConfig))
     }
 
-    override fun supportParallel(): Boolean = true
+    override val supportParallel: Boolean = true
 
     override fun getResponses(pages: Collection<WebPage>, volatileConfig: VolatileConfig): Collection<Response> {
         return browserEmulator.parallelFetchAllPages(pages, volatileConfig)

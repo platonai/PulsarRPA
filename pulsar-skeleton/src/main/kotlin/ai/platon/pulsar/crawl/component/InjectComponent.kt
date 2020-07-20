@@ -25,6 +25,8 @@ class InjectComponent(
     private val seedIndexer: WeakPageIndexer = WeakPageIndexer(AppConstants.SEED_HOME_URL, webDb)
     private val closed = AtomicBoolean(false)
 
+    constructor(webDb: WebDb, conf: ImmutableConfig): this(SeedBuilder(conf), webDb, conf)
+
     override fun getParams(): Params {
         return seedBuilder.params
     }

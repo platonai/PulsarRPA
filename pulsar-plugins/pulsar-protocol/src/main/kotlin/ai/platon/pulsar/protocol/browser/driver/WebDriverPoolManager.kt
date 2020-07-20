@@ -7,10 +7,9 @@ import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TAB
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.common.readable
-import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.withTimeoutOrNull
@@ -32,9 +31,7 @@ class WebDriverTask<R> (
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class WebDriverPoolManager(
-        val driverControl: WebDriverControl,
-        val proxyManager: ProxyPoolManager,
+open class WebDriverPoolManager(
         val driverFactory: WebDriverFactory,
         val immutableConfig: ImmutableConfig
 ): Parameterized, PreemptChannelSupport("WebDriverPoolManager"), AutoCloseable {

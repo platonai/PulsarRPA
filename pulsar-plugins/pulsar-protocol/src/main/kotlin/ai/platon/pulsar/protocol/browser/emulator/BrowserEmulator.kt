@@ -5,18 +5,15 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.model.ActiveDomMessage
-import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -31,13 +28,10 @@ import java.util.concurrent.ThreadLocalRandom
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 open class BrowserEmulator(
-        privacyManager: PrivacyManager,
-        driverControl: WebDriverControl,
         val driverManager: WebDriverPoolManager,
-        eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
-        messageWriter: MiscMessageWriter,
+        eventHandler: BrowserEmulateEventHandler,
         immutableConfig: ImmutableConfig
-): BrowserEmulatorBase(privacyManager, driverControl, eventHandlerFactory, messageWriter, immutableConfig) {
+): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
     private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
     val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))

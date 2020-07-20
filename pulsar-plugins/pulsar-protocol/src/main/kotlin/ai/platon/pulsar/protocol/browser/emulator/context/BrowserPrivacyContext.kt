@@ -20,9 +20,9 @@ import java.time.Instant
  * The privacy context, the context is closed if privacy is leaked
  * */
 open class BrowserPrivacyContext(
-        val proxyPoolManager: ProxyPoolManager,
+        val proxyPoolManager: ProxyPoolManager? = null,
         val driverPoolManager: WebDriverPoolManager,
-        val fetchMetrics: FetchMetrics,
+        val fetchMetrics: FetchMetrics? = null,
         conf: ImmutableConfig,
         id: PrivacyContextId = PrivacyContextId(generateBaseDir())
 ): PrivacyContext(id, conf) {
@@ -36,7 +36,7 @@ open class BrowserPrivacyContext(
     val numAvailableDrivers get() = driverPoolManager.numAvailableDrivers
 
     init {
-        if (proxyPoolManager.isEnabled) {
+        if (proxyPoolManager != null && proxyPoolManager.isEnabled) {
             val proxyPool = proxyPoolManager.proxyPool
             proxyEntry = proxyPoolManager.activeProxyEntries.computeIfAbsent(id.dataDir) {
                 proxyPool.take() ?: throw NoProxyException("No proxy found in pool ${proxyPool.javaClass.simpleName} | $proxyPool")
@@ -47,7 +47,7 @@ open class BrowserPrivacyContext(
         browserInstanceId = BrowserInstanceId.resolve(id.dataDir).apply { proxyServer = proxyEntry?.hostPort }
         driverContext = WebDriverContext(browserInstanceId, driverPoolManager, conf)
 
-        if (proxyPoolManager.isEnabled) {
+        if (proxyPoolManager != null && proxyPoolManager.isEnabled) {
             proxyContext = ProxyContext(proxyEntry, proxyPoolManager, driverContext, conf)
         }
     }
@@ -74,7 +74,7 @@ open class BrowserPrivacyContext(
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 numSuccesses, String.format("%.2f", throughput),
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.readableBytes(fetchMetrics.systemNetworkBytesRecv), Strings.readableBytes(fetchMetrics.networkBytesRecvPerSecond),
+                Strings.readableBytes(fetchMetrics?.systemNetworkBytesRecv?:0), Strings.readableBytes(fetchMetrics?.networkBytesRecvPerSecond?:0),
                 numTasks, numFinished,
                 proxyContext?.proxyEntry
         )

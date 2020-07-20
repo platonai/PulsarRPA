@@ -35,6 +35,9 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
+import static ai.platon.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
+import static ai.platon.pulsar.common.config.CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES;
+
 /**
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
@@ -45,6 +48,8 @@ public abstract class AbstractConfiguration {
 
     // A LinkedHashSet's iterator preserves insertion order, and because it's a Set, its elements are unique.
     public static final LinkedHashSet<String> DEFAULT_RESOURCES = new LinkedHashSet<>();
+
+    public static final String APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml";
 
     private final LinkedHashSet<String> resources = new LinkedHashSet<>();
 
@@ -72,7 +77,7 @@ public abstract class AbstractConfiguration {
     }
 
     public AbstractConfiguration(boolean loadDefaults) {
-        this(loadDefaults, System.getProperty(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, "."));
+        this(loadDefaults, System.getProperty(PULSAR_CONFIG_PREFERRED_DIR, "."));
     }
 
     public AbstractConfiguration(String preferredDir) {
@@ -110,13 +115,11 @@ public abstract class AbstractConfiguration {
         }
 
         if (!preferredDir.isEmpty()) {
-            conf.set(CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
+            conf.set(PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
         }
 
-        String specifiedResources = System.getProperty(CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES);
-        if (specifiedResources != null) {
-            Arrays.spliterator(specifiedResources.split(",")).forEachRemaining(resources::add);
-        }
+        String specifiedResources = System.getProperty(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, APPLICATION_SPECIFIED_RESOURCES);
+        Arrays.spliterator(specifiedResources.split(",")).forEachRemaining(resources::add);
 
         String dir = isDistributedFs() ? "cluster" : "local";
         for (String name : resources) {

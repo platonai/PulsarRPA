@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 open class BrowserEmulateEventHandler(
         private val driverPoolManager: WebDriverPoolManager,
-        private val messageWriter: MiscMessageWriter,
+        private val messageWriter: MiscMessageWriter? = null,
         private val immutableConfig: ImmutableConfig
 ) {
     protected val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
@@ -43,7 +43,7 @@ open class BrowserEmulateEventHandler(
     protected val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     protected val numNavigates = AtomicInteger()
-    protected val jsInvadingEnabled = driverPoolManager.driverControl.jsInvadingEnabled
+    protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverControl.jsInvadingEnabled
 
     protected val metrics = SharedMetricRegistries.getDefault()
     protected val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
@@ -194,7 +194,7 @@ open class BrowserEmulateEventHandler(
             pageDatum.location = urls.location
             if (pageDatum.url != pageDatum.location) {
                 // in-browser redirection
-                messageWriter.debugRedirects(pageDatum.url, urls)
+                messageWriter?.debugRedirects(pageDatum.url, urls)
             }
         }
 

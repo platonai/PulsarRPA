@@ -28,9 +28,8 @@ class BatchFetchComponent(
 ) : FetchComponent(fetchMetrics, protocolFactory, immutableConfig) {
     constructor(
             webDb: WebDb,
-            protocolFactory: ProtocolFactory,
             immutableConfig: ImmutableConfig
-    ): this(webDb, null, null, protocolFactory, immutableConfig)
+    ): this(webDb, null, null, ProtocolFactory(immutableConfig), immutableConfig)
 
     val fetchTaskExecutor: ListeningExecutorService = MoreExecutors.newDirectExecutorService()
 
@@ -109,7 +108,7 @@ class BatchFetchComponent(
      */
     private fun parallelFetchAll0(urls: Iterable<String>, protocol: Protocol, options: LoadOptions): Collection<WebPage> {
         val optimizedUrls = optimizeBatchSize(urls, options)
-        return if (protocol.supportParallel()) {
+        return if (protocol.supportParallel) {
             protocolParallelFetchAll(optimizedUrls, protocol, options)
         } else {
             manualParallelFetchAll(optimizedUrls, options)

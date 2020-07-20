@@ -1,14 +1,12 @@
 package ai.platon.pulsar.app.master
 
-import ai.platon.pulsar.PulsarContext
-
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.context.support.GenericPulsarContext
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent
 import org.springframework.boot.context.event.ApplicationPreparedEvent
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationListener
@@ -20,7 +18,7 @@ import org.springframework.context.annotation.ImportResource
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api", "ai.platon.pulsar.ql.h2.starter")
 class PulsarMaster {
-    val log = LoggerFactory.getLogger(PulsarMaster::class.java)
+    private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
 
     @Bean
     fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
@@ -36,7 +34,7 @@ class PulsarMaster {
 
 fun main(args: Array<String>) {
     val application = SpringApplication(PulsarMaster::class.java)
-    val event = ApplicationListener<ApplicationPreparedEvent> { PulsarContext.initialize(it.applicationContext) }
+    val event = ApplicationListener<ApplicationPreparedEvent> { GenericPulsarContext(it.applicationContext) }
     application.addListeners(event)
     application.run(*args)
 }

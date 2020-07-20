@@ -48,7 +48,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 abstract class AbstractHttpProtocol: Protocol {
     private val log = LoggerFactory.getLogger(AbstractHttpProtocol::class.java)
     protected val closed = AtomicBoolean()
+
     val isActive get() = !closed.get() && AppContext.isActive
+    override val supportParallel: Boolean = true
+
     /**
      * The max retry time
      */

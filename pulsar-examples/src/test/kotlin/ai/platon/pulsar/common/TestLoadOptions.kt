@@ -1,8 +1,8 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.context.PulsarContexts
 import org.junit.Test
 import java.time.Duration
 import kotlin.test.assertEquals
@@ -15,7 +15,7 @@ class TestLoadOptions {
         System.setProperty(CapabilityTypes.PROXY_USE_PROXY, "no")
     }
 
-    var i = PulsarContext.createSession()
+    var i = PulsarContexts.createSession()
     val url = "http://abc.com"
     val taskName = AppPaths.fromUri(url)
     val args = "" +

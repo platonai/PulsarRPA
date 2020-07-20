@@ -5,19 +5,22 @@ import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
+import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
-import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 
 class SinglePrivacyContextManager(
         val driverPoolManager: WebDriverPoolManager,
-        val proxyPoolManager: ProxyPoolManager,
-        val fetchMetrics: FetchMetrics,
+        val proxyPoolManager: ProxyPoolManager? = null,
+        val fetchMetrics: FetchMetrics? = null,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig, 1) {
     private val privacyContextId = PrivacyContextId.generate()
+
+    constructor(driverPoolManager: WebDriverPoolManager, immutableConfig: ImmutableConfig)
+            : this(driverPoolManager, null, null, immutableConfig)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         return run(computeIfAbsent(privacyContextId), task, fetchFun)

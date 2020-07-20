@@ -34,6 +34,7 @@ class BrowserInstanceManager: AutoCloseable {
             unSynchronized.parallelStream().forEach { it.close() }
         }.onFailure {
             // kill -9
+            it.printStackTrace()
         }
     }
 }

@@ -1,8 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult

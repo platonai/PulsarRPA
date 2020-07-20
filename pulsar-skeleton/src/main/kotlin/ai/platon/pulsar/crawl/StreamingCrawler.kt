@@ -1,12 +1,12 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
@@ -29,7 +29,7 @@ open class StreamingCrawler(
         private val options: LoadOptions = LoadOptions.create(),
         val pageCollector: ConcurrentLinkedQueue<WebPage>? = null,
         val jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5),
-        session: PulsarSession = PulsarContext.createSession(),
+        session: PulsarSession = PulsarContexts.createSession(),
         autoClose: Boolean = true
 ): Crawler(session, autoClose) {
     companion object {

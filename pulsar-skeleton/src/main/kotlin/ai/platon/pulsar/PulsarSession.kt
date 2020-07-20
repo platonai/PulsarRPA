@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectNotNull
@@ -25,7 +26,7 @@ open class PulsarSession(
         /**
          * The pulsar context
          * */
-        val context: PulsarContext,
+        val context: AbstractPulsarContext,
         /**
          * The session scope volatile volatileConfig, every item is supposed to be changed at any time and any place
          * */

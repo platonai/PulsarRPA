@@ -31,9 +31,7 @@ import org.slf4j.LoggerFactory
  */
 interface Protocol : Configurable, AutoCloseable {
 
-    fun supportParallel(): Boolean {
-        return false
-    }
+    val supportParallel: Boolean
 
     fun setResponse(response: Response) {}
 

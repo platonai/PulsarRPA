@@ -7,8 +7,8 @@ import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
@@ -16,15 +16,12 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
-        val privacyManager: PrivacyManager,
         val driverControl: WebDriverControl,
-        val eventHandlerFactory: BrowserEmulatorEventHandlerFactory,
-        val messageWriter: MiscMessageWriter,
+        val eventHandler: BrowserEmulateEventHandler,
         val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
     private val tracer = log.takeIf { it.isTraceEnabled }
-    val eventHandler = eventHandlerFactory.eventHandler
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)

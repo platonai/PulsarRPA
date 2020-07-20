@@ -4,9 +4,6 @@ import ai.platon.pulsar.browser.driver.chrome.LauncherConfig
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.proxy.ProxyPool
-import ai.platon.pulsar.common.proxy.ProxyPoolManager
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.protocol.browser.DriverLaunchException
@@ -21,8 +18,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class WebDriverFactory(
         val driverControl: WebDriverControl,
-        val proxyPool: ProxyPool,
-        val proxyPoolManager: ProxyPoolManager,
         val browserInstanceManager: BrowserInstanceManager,
         val immutableConfig: ImmutableConfig
 ) {
@@ -95,25 +90,6 @@ class WebDriverFactory(
             ftpProxy = proxyServer
         }
         capabilities.setCapability(CapabilityType.PROXY, proxy)
-    }
-
-    /**
-     * if we need network interception, enable the forward local proxy
-     * */
-    private fun setInterceptiveProxy() {
-        var proxyEntry: ProxyEntry? = null
-        var hostPort: String? = null
-
-        if (proxyPoolManager.waitUntilOnline()) {
-            val port = proxyPoolManager.localPort
-            val currentProxyEntry = proxyPoolManager.currentInterceptProxyEntry
-            if (port > 0 && currentProxyEntry != null) {
-                proxyEntry = currentProxyEntry
-                hostPort = "127.0.0.1:${proxyPoolManager.localPort}".takeIf { localForwardServerEnabled }?:currentProxyEntry.hostPort
-            } else {
-                log.info("Invalid port for proxy connector, proxy is disabled")
-            }
-        }
     }
 
     /**

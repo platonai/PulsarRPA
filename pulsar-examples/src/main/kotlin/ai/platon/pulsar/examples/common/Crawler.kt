@@ -1,15 +1,14 @@
 package ai.platon.pulsar.examples.common
 
-import ai.platon.pulsar.PulsarContext
-
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.context.support.StaticPulsarContext
 import ai.platon.pulsar.crawl.fetch.BatchHandler
+import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL
@@ -48,7 +47,8 @@ open class Crawler(
 ): AutoCloseable {
     val log = LoggerFactory.getLogger(Crawler::class.java)
 
-    val i = PulsarContext.createSession()
+    val context = StaticPulsarContext()
+    val i = context.createSession()
 
     fun load(url: String, args: String) {
         load(url, LoadOptions.parse(args))
@@ -133,6 +133,5 @@ open class Crawler(
     }
 
     override fun close() {
-        PulsarContext.shutdown()
     }
 }
