@@ -14,7 +14,7 @@ crawling, web scraping, data mining, BI, etc.
 - BI Integration: turn Web sites into tables and charts using just one simple SQL
 - Big data: large scale, various storage: HBase/MongoDB
 
-For more information check out [platonic.fun](http://platonic.fun)
+For more information check out [platon.ai](http://platon.ai)
 
 ## X-SQL
 Crawl and scrape a single page:
