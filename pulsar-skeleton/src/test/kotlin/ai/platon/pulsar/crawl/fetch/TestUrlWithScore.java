@@ -34,7 +34,7 @@ public class TestUrlWithScore {
     public void testSerialization() throws IOException {
         // create a key and test basic functionality
         GraphGroupKey keyOut = new GraphGroupKey(Urls.reverseUrl("http://example.org/"), 1f);
-        assertEquals(Urls.reverseUrl("http://example.org/"), keyOut.getReversedUrl());
+        assertEquals(Urls.reverseUrl("http://example.org/"), keyOut.getReversedUrl().toString());
         assertEquals(1f, keyOut.getScore().get(), 0.001);
 
         // write to out

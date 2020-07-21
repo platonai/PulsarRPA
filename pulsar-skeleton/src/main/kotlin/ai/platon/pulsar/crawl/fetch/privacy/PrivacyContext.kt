@@ -49,6 +49,7 @@ data class BrowserInstanceId(
 
     companion object {
         val DEFAULT_DIR_NAME = "browser"
+        val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
 
         fun resolve(baseDir: Path, dirName: String = DEFAULT_DIR_NAME): BrowserInstanceId {
             return BrowserInstanceId(baseDir.resolve(dirName))

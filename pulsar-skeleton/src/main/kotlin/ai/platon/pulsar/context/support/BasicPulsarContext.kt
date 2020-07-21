@@ -5,7 +5,6 @@ import ai.platon.pulsar.crawl.GlobalCacheManager
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import org.springframework.context.support.StaticApplicationContext
@@ -15,7 +14,7 @@ import org.springframework.context.support.StaticApplicationContext
  *
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
-open class StaticPulsarContext(
+open class BasicPulsarContext(
         applicationContext: StaticApplicationContext = StaticApplicationContext()
 ): GenericPulsarContext(applicationContext) {
     /**
@@ -39,13 +38,9 @@ open class StaticPulsarContext(
      * */
     final override val fetchComponent = BatchFetchComponent(webDb, unmodifiedConfig)
     /**
-     * The parse component
-     * */
-    final override val parseComponent = ParseComponent(unmodifiedConfig)
-    /**
      * The load component
      * */
-    final override val loadComponent = LoadComponent(webDb, fetchComponent, parseComponent, unmodifiedConfig)
+    final override val loadComponent = LoadComponent(webDb, fetchComponent, unmodifiedConfig)
     /**
      * The global cache manager
      * */

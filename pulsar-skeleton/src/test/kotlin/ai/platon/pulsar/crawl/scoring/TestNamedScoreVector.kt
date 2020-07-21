@@ -29,7 +29,7 @@ class TestNamedScoreVector {
 
     @Test
     fun testPriority() {
-        for (i in 0 until score.size()) {
+        for (i in 0..score.size().dec()) {
             Assert.assertEquals(i.toString() + "th", i.toLong(), score[i].priority.toLong())
         }
     }

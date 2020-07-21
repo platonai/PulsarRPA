@@ -122,14 +122,20 @@ open class WebDriverPoolManager(
         return result
     }
 
+    fun createUnmanagedDriverPool(
+            browserId: BrowserInstanceId = BrowserInstanceId.DEFAULT,
+            priority: Int = 0,
+            volatileConfig: VolatileConfig? = null
+    ): LoadingWebDriverPool {
+        return LoadingWebDriverPool(browserId, priority, driverFactory, immutableConfig).also {
+            it.takeIf { eagerAllocateTabs }?.allocate(volatileConfig?:immutableConfig.toVolatileConfig())
+        }
+    }
+
     @Synchronized
     private fun <R> computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask<R>): LoadingWebDriverPool {
-        return driverPools.computeIfAbsent(browserId) { path ->
-            require("browser" in path.toString())
-            LoadingWebDriverPool(browserId, task.priority, driverFactory, immutableConfig).also {
-                it.takeIf { eagerAllocateTabs }?.allocate(task.volatileConfig)
-            }
-        }
+        require("browser" in browserId.toString())
+        return driverPools.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, task.priority, task.volatileConfig) }
     }
 
     fun isRetiredPool(browserId: BrowserInstanceId) = retiredPools.contains(browserId)

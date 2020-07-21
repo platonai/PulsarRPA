@@ -1,18 +1,20 @@
 package ai.platon.pulsar.examples.common
 
-import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.FileCommand
-import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.withContext
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
 import java.net.URL
 
-class GeneralCrawler: Crawler() {
+class GeneralCrawler(context: PulsarContext): Crawler(context) {
     private val seeds = mapOf(
             0 to "http://category.dangdang.com/cid4002590.html",
             1 to "https://list.mogujie.com/book/magic/51894",
@@ -249,6 +251,4 @@ class GeneralCrawler: Crawler() {
     }
 }
 
-fun main() {
-    GeneralCrawler().use { it.run() }
-}
+fun main() = withContext { GeneralCrawler(it).run() }

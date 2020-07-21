@@ -6,7 +6,8 @@ import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.context.support.StaticPulsarContext
+import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.crawl.fetch.BatchHandler
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
@@ -42,12 +43,12 @@ class AfterBatchHandler: BatchHandler() {
 }
 
 open class Crawler(
+        val context: PulsarContext,
         private var beforeBatchHandler: BatchHandler = BeforeBatchHandler(),
         private var afterBatchHandler: BatchHandler = AfterBatchHandler()
-): AutoCloseable {
+) {
     val log = LoggerFactory.getLogger(Crawler::class.java)
 
-    val context = StaticPulsarContext()
     val i = context.createSession()
 
     fun load(url: String, args: String) {
@@ -130,8 +131,5 @@ open class Crawler(
 
     fun truncate() {
         i.context.webDb.truncate()
-    }
-
-    override fun close() {
     }
 }

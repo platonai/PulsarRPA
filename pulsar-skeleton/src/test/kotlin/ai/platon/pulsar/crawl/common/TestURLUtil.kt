@@ -123,9 +123,9 @@ class TestURLUtil {
     @Test
     @Throws(Exception::class)
     fun testGetHostBatches() {
-        var batches: Array<String>
         var url = URL("http://subdomain.example.edu.tr")
-        batches = getHostBatches(url)
+        var batches = getHostBatches(url)
+        println(batches.joinToString())
         assertEquals("subdomain", batches[0])
         assertEquals("example", batches[1])
         assertEquals("edu", batches[2])
@@ -158,33 +158,33 @@ class TestURLUtil {
         val aPath2 = "http://www.a.com/abc/page.html"
         val aPath3 = "http://www.news.a.com/abc/page.html"
         // 1) different domain them keep dest, temp or perm
-// a.com -> b.com*
+        // a.com -> b.com*
         assertEquals(bDotCom, chooseRepr(aDotCom, bDotCom, true))
         assertEquals(bDotCom, chooseRepr(aDotCom, bDotCom, false))
         // 2) permanent and root, keep src
-// *a.com -> a.com?y=1 || *a.com -> a.com/xyz/index.html
+        // *a.com -> a.com?y=1 || *a.com -> a.com/xyz/index.html
         assertEquals(aDotCom, chooseRepr(aDotCom, aQStr, false))
         assertEquals(aDotCom, chooseRepr(aDotCom, aPath, false))
         // 3) permanent and not root and dest root, keep dest
-// a.com/xyz/index.html -> a.com*
+        // a.com/xyz/index.html -> a.com*
         assertEquals(aDotCom, chooseRepr(aPath, aDotCom, false))
         // 4) permanent and neither root keep dest
-// a.com/xyz/index.html -> a.com/abc/page.html*
+        // a.com/xyz/index.html -> a.com/abc/page.html*
         assertEquals(aPath2, chooseRepr(aPath, aPath2, false))
         // 5) temp and root and dest not root keep src
-// *a.com -> a.com/xyz/index.html
+        // *a.com -> a.com/xyz/index.html
         assertEquals(aDotCom, chooseRepr(aDotCom, aPath, true))
         // 6) temp and not root and dest root keep dest
-// a.com/xyz/index.html -> a.com*
+        // a.com/xyz/index.html -> a.com*
         assertEquals(aDotCom, chooseRepr(aPath, aDotCom, true))
         // 7) temp and neither root, keep shortest, if hosts equal by path else by
-// hosts
-// a.com/xyz/index.html -> a.com/abc/page.html*
-// *www.a.com/xyz/index.html -> www.news.a.com/xyz/index.html
+        // hosts
+        // a.com/xyz/index.html -> a.com/abc/page.html*
+        // *www.a.com/xyz/index.html -> www.news.a.com/xyz/index.html
         assertEquals(aPath2, chooseRepr(aPath, aPath2, true))
         assertEquals(aPath, chooseRepr(aPath, aPath3, true))
         // 8) temp and both root keep shortest sub domain
-// *www.a.com -> www.news.a.com
+        // *www.a.com -> www.news.a.com
         assertEquals(aDotCom, chooseRepr(aDotCom, aSubDotCom, true))
     }
 

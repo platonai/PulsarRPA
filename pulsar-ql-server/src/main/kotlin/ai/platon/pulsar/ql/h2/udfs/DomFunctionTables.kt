@@ -14,7 +14,6 @@ import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.h2.Queries.toResultSet
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
-import org.apache.hadoop.classification.InterfaceStability
 import org.h2.ext.pulsar.annotation.H2Context
 import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
@@ -35,7 +34,6 @@ object DomFunctionTables {
      * For example:
      * CALL loadAll(ARRAY('http://...1', 'http://...2', 'http://...3'));
      */
-    @InterfaceStability.Evolving
     @JvmStatic
     @UDFunction(hasShortcut = true, description = "Load all pages specified by the given urls")
     fun loadAll(@H2Context conn: JdbcConnection, portalUrls: ValueArray): ResultSet {

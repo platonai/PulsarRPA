@@ -26,12 +26,10 @@ class BatchFetchComponent(
         protocolFactory: ProtocolFactory,
         immutableConfig: ImmutableConfig
 ) : FetchComponent(fetchMetrics, protocolFactory, immutableConfig) {
-    constructor(
-            webDb: WebDb,
-            immutableConfig: ImmutableConfig
-    ): this(webDb, null, null, ProtocolFactory(immutableConfig), immutableConfig)
+    constructor(webDb: WebDb, immutableConfig: ImmutableConfig)
+            : this(webDb, null, null, ProtocolFactory(immutableConfig), immutableConfig)
 
-    val fetchTaskExecutor: ListeningExecutorService = MoreExecutors.newDirectExecutorService()
+    val fetchTaskExecutor by lazy { MoreExecutors.newDirectExecutorService() }
 
     /**
      * Fetch all the urls, config property 'fetch.concurrency' controls the concurrency level.

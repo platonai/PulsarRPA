@@ -1,13 +1,14 @@
 package ai.platon.pulsar.ql.h2.starter
 
-import ai.platon.pulsar.PulsarContext
-
+import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.GenericPulsarContext
 import org.h2.tools.Server
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent
+import org.springframework.boot.context.event.ApplicationPreparedEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ImportResource
@@ -36,11 +37,7 @@ class H2DbConsole {
 
 fun main(args: Array<String>) {
     val application = SpringApplication(H2DbConsole::class.java)
-
-    val event = ApplicationListener<ApplicationEnvironmentPreparedEvent> {
-        PulsarContext.initialize()
-    }
+    val event = ApplicationListener<ApplicationPreparedEvent> { GenericPulsarContext(it.applicationContext) }
     application.addListeners(event)
-
     application.run(*args)
 }

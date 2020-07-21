@@ -1,8 +1,10 @@
 package ai.platon.pulsar.examples.sites
 
+import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.examples.common.Crawler
 
-class AmazonAccess: Crawler() {
+class AmazonCrawler(context: PulsarContext): Crawler(context) {
     private val url = "https://www.amazon.com/"
     private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
 
@@ -36,5 +38,5 @@ class AmazonAccess: Crawler() {
 fun main() {
     // System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
 
-    AmazonAccess().use { it.laptops() }
+    withContext { AmazonCrawler(it).laptops() }
 }

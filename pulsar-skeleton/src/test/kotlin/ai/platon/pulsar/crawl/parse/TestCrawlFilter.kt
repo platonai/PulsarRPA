@@ -54,7 +54,7 @@ class TestCrawlFilter {
     @Test
     @Throws(MalformedURLException::class)
     fun testMaxKeyRange() {
-        val keyRange = crawlFilters.maxReversedKeyRange
+        val keyRange = arrayOf("\u0000", "\uFFFF")
         println(keyRange[0].toString() + ", " + keyRange[1])
         assertEquals(65438, '\uFFFF' - 'a')
         for (url in detailUrls) {
@@ -64,10 +64,12 @@ class TestCrawlFilter {
             // Note : \uFFFF, not \\uFFFF
             assertFalse("com.jumei.mall:http/\\uFFFF" > reversedUrl)
         }
+
         for (url in detailUrls) {
             val reversedUrl = Urls.reverseUrl(url)
-            assertTrue(keyRange[0]!! < reversedUrl)
-            assertTrue(keyRange[1]!! > reversedUrl)
+            println(reversedUrl)
+            assertTrue(keyRange[0] < reversedUrl)
+            assertTrue(keyRange[1] > reversedUrl)
         }
     }
 }

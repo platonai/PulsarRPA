@@ -14,11 +14,7 @@ object Urls {
     @JvmStatic
     fun getURLOrNull(url: String): URL? {
         if (url.isBlank()) return null
-        return try {
-            URL(url)
-        } catch (ignored: MalformedURLException) {
-            null
-        }
+        return kotlin.runCatching { URL(url) }.getOrNull()
     }
 
     @JvmStatic

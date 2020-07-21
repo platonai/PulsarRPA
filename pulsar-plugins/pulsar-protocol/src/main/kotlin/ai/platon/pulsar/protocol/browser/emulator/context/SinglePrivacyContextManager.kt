@@ -17,7 +17,7 @@ class SinglePrivacyContextManager(
         val fetchMetrics: FetchMetrics? = null,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig, 1) {
-    private val privacyContextId = PrivacyContextId.generate()
+    private val privacyContextId = PrivacyContextId.DEFAULT
 
     constructor(driverPoolManager: WebDriverPoolManager, immutableConfig: ImmutableConfig)
             : this(driverPoolManager, null, null, immutableConfig)

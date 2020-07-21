@@ -23,7 +23,6 @@ import ai.platon.pulsar.common.domain.DomainSuffix
 import ai.platon.pulsar.common.domain.DomainSuffixes
 import org.slf4j.LoggerFactory
 import java.net.*
-import java.util.regex.Pattern
 
 /**
  * Utility class for URL analysis
@@ -31,7 +30,7 @@ import java.util.regex.Pattern
  */
 object URLUtil {
     val LOG = LoggerFactory.getLogger(URLUtil::class.java)
-    private val IP_PATTERN = Pattern.compile("(\\d{1,3}\\.){3}(\\d{1,3})")
+    private val IP_REGEX = Regex("(\\d{1,3}\\.){3}(\\d{1,3})")
 
     fun getHost(url: String): String? {
         val u = getURLOrNull(url) ?: return null
@@ -93,7 +92,7 @@ object URLUtil {
         var host = url.host
         // it seems that java returns hostnames ending with .
         if (host.endsWith(".")) host = host.substring(0, host.length - 1)
-        if (IP_PATTERN.matcher(host).matches()) return host
+        if (IP_REGEX.matches(host)) return host
         var index = 0
         var candidate = host
         while (index >= 0) {
@@ -119,19 +118,12 @@ object URLUtil {
      * @throws MalformedURLException
      */
     @Throws(MalformedURLException::class)
-    fun getDomainName(url: String?): String? {
-        return if (url == null) {
-            null
-        } else getDomainName(URL(url))
+    fun getDomainName(url: String): String? {
+        return getDomainName(URL(url))
     }
 
-    fun getDomainName(url: String?, defaultDomain: String): String {
-        var host: String? = null
-        try {
-            host = getDomainName(url)
-        } catch (ignored: MalformedURLException) {
-        }
-        return host ?: defaultDomain
+    fun getDomainName(url: String, defaultDomain: String): String {
+        return kotlin.runCatching { getDomainName(url) }.getOrNull()?:defaultDomain
     }
 
     /**
@@ -170,7 +162,7 @@ object URLUtil {
 
     fun getDomainSuffix(tlds: DomainSuffixes, url: URL): DomainSuffix? { // DomainSuffixes tlds = DomainSuffixes.getInstance();
         val host = url.host
-        if (IP_PATTERN.matcher(host).matches()) {
+        if (IP_REGEX.matches(host)) {
             return null
         }
         var index = 0
@@ -197,11 +189,11 @@ object URLUtil {
     }
 
     /** Partitions of the hostname of the url by "."  */
-    fun getHostBatches(url: URL): Array<String> {
+    fun getHostBatches(url: URL): List<String> {
         val host = url.host
         // return whole hostname, if it is an ipv4
         // TODO : handle ipv6
-        return if (IP_PATTERN.matcher(host).matches()) arrayOf(host) else host.split("\\.").toTypedArray()
+        return if (IP_REGEX.matches(host)) listOf(host) else host.split(".")
     }
 
     /**
@@ -210,7 +202,7 @@ object URLUtil {
      * @throws MalformedURLException
      */
     @Throws(MalformedURLException::class)
-    fun getHostBatches(url: String?): Array<String> {
+    fun getHostBatches(url: String): List<String> {
         return getHostBatches(URL(url))
     }
 

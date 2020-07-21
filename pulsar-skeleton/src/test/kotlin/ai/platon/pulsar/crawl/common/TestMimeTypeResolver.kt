@@ -75,21 +75,6 @@ class TestMimeTypeResolver {
         }
     }
 
-    /**
-     * test binary file formats (real files)
-     * TODO: java.io.FileNotFoundException: /home/vincent/workspace/pulsar/pulsar-skeleton/target/test-classes/test-mime-util/test.xlsx (No such file or directory)
-     */
-    @Test
-    @Ignore("Lack of test file, FileNotFoundException")
-    @Throws(IOException::class)
-    fun testBinaryFiles() {
-        for (testPage in binaryFiles) {
-            val dataFile = File(sampleDir, testPage[1])
-            val mimeType = getMimeType(urlPrefix + testPage[1], dataFile, testPage[2], false)
-            Assert.assertEquals("", testPage[0], mimeType)
-        }
-    }
-
     companion object {
         var urlPrefix = "http://localhost/"
         /**
@@ -122,10 +107,6 @@ class TestMimeTypeResolver {
                         + "<html>\n<head>\n"
                         + "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
                         + "</head>\n<body>Hello, World!</body></html>"))
-        var binaryFiles = arrayOf(arrayOf(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "test.xlsx", ""
-        ))
         private val defaultCharset = Charset.forName("UTF-8")
     }
 }

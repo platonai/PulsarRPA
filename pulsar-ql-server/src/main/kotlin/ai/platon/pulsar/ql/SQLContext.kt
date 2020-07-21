@@ -1,12 +1,12 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.PulsarContext
-
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
 import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.h2.api.ErrorCode
 import org.h2.engine.Session
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference
  * <li>TODO: machine learning</li>
  * </ul>
  */
-class SQLContext: AutoCloseable {
+class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseable {
 
     companion object {
         private val activeContext = AtomicReference<SQLContext>()
@@ -39,7 +39,7 @@ class SQLContext: AutoCloseable {
         fun getOrCreate(): SQLContext {
             synchronized(SQLContext::class.java) {
                 if (activeContext.get() == null) {
-                    activeContext.set(SQLContext())
+                    activeContext.set(SQLContext(PulsarContexts.activeContext as AbstractPulsarContext))
                 }
                 return activeContext.get()
             }
@@ -53,8 +53,6 @@ class SQLContext: AutoCloseable {
     var status: Status = Status.NOT_READY
 
     val unmodifiedConfig: ImmutableConfig
-
-    val pulsarContext get() = PulsarContext.getOrCreate()
 
     private val backgroundSession get() = pulsarContext.createSession()
 
@@ -172,10 +170,10 @@ class SQLContext: AutoCloseable {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = pulsarContext.lazyFetchTaskManager.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
-            if (urls.isNotEmpty()) {
-                loadAll(urls, backgroundTaskBatchSize, mode)
-            }
+//            val urls = pulsarContext.lazyFetchTaskManager.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
+//            if (urls.isNotEmpty()) {
+//                loadAll(urls, backgroundTaskBatchSize, mode)
+//            }
         }
     }
 
@@ -189,10 +187,10 @@ class SQLContext: AutoCloseable {
         }
 
         for (mode in FetchMode.values()) {
-            val urls = pulsarContext.lazyFetchTaskManager.getSeeds(mode, 1000)
-            if (urls.isNotEmpty()) {
-                loadAll(urls, backgroundTaskBatchSize, mode)
-            }
+//            val urls = pulsarContext.lazyFetchTaskManager.getSeeds(mode, 1000)
+//            if (urls.isNotEmpty()) {
+//                loadAll(urls, backgroundTaskBatchSize, mode)
+//            }
         }
     }
 

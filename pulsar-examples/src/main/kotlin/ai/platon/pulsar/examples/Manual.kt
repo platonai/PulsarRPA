@@ -11,7 +11,7 @@ class Manual(context: PulsarContext) {
 
     fun load() = session.load(url, "-expires 1d")
 
-    fun loadOutPages() = session.loadOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=item]")
+    fun loadOutPages() = session.loadOutPages(url, "-expires 1s -itemExpires 7s -outLink a[href~=item]")
 
     fun scrape() {
         val page = session.load(url, "-expires 1d")

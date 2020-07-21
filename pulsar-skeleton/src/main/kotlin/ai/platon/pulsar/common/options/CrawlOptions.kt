@@ -18,11 +18,11 @@ import java.util.*
 class CrawlOptions : CommonOptions {
 
     @Parameter(names = ["-log", "-verbose"], description = "Log level for this crawl task")
-    val verbose = 0
+    var verbose = 0
     @Parameter(names = ["-i", "--fetch-interval"], converter = DurationConverter::class, description = "Fetch interval")
     var fetchInterval = Duration.ofHours(1)
     @Parameter(names = ["-p", "--fetch-priority"], description = "Fetch priority")
-    val fetchPriority = AppConstants.FETCH_PRIORITY_DEFAULT
+    var fetchPriority = AppConstants.FETCH_PRIORITY_DEFAULT
     @Parameter(names = ["-s", "--score"], description = "Injected score")
     var score = 0
     @Parameter(names = ["-d", "--depth"], description = "Max crawl depth. Do not crawl anything deeper")
@@ -77,7 +77,7 @@ class CrawlOptions : CommonOptions {
         this.linkOptions = LinkOptions("", conf)
     }
 
-    fun formatKeywords(): String {
+    private fun formatKeywords(): String {
         val df = DecimalFormat("##.#")
         return keywords.entries.map { it.key + "^" + df.format(it.value) }.joinToString { it }
     }
@@ -107,17 +107,11 @@ class CrawlOptions : CommonOptions {
         val DEFAULT = CrawlOptions()
 
         fun parse(args: String, conf: ImmutableConfig): CrawlOptions {
-            Objects.requireNonNull(args)
-            Objects.requireNonNull(conf)
-
-            if (StringUtils.isBlank(args)) {
+            if (args.isBlank()) {
                 return CrawlOptions(arrayOf(), conf)
             }
 
-            val options = CrawlOptions(args, conf)
-            options.parse()
-
-            return options
+            return CrawlOptions(args, conf).apply { parse() }
         }
     }
 }

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.annotation.UDAggregation
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 open class QuerySession(
-        val pulsarContext: PulsarContext,
+        val pulsarContext: AbstractPulsarContext,
         val dbSession: DbSession,
         config: SessionConfig
 ): PulsarSession(pulsarContext, config, dbSession.id) {

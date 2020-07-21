@@ -2,10 +2,12 @@ package ai.platon.pulsar.examples.sites
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.examples.common.Crawler
 
-class AmazonCategoryCrawler: Crawler() {
+class AmazonCategoryCrawler(context: PulsarContext): Crawler(context) {
     private val url = "https://www.amazon.com/"
     private val siteDirectory = "https://www.amazon.com/gp/site-directory?ref_=nav_em_T1_0_2_2_35__fullstore"
     private val loadOptions = LoadOptions.parse("-i 1s")
@@ -41,8 +43,4 @@ class AmazonCategoryCrawler: Crawler() {
     }
 }
 
-fun main() {
-    AmazonCategoryCrawler().use {
-        it.collectFromSiteDirectory()
-    }
-}
+fun main() = withContext { AmazonCategoryCrawler(it).collectFromSiteDirectory() }

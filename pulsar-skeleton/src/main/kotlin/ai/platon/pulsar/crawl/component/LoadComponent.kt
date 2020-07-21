@@ -21,8 +21,6 @@ import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
-import org.apache.hadoop.classification.InterfaceStability.Evolving
-import org.apache.hadoop.classification.InterfaceStability.Unstable
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.net.URL
@@ -43,7 +41,7 @@ import java.util.stream.Collectors
 class LoadComponent(
         val webDb: WebDb,
         val fetchComponent: BatchFetchComponent,
-        val parseComponent: ParseComponent,
+        val parseComponent: ParseComponent? = null,
         val updateComponent: UpdateComponent? = null,
         val messageWriter: MiscMessageWriter? = null,
         val immutableConfig: ImmutableConfig
@@ -64,9 +62,8 @@ class LoadComponent(
     constructor(
             webDb: WebDb,
             fetchComponent: BatchFetchComponent,
-            parseComponent: ParseComponent,
             immutableConfig: ImmutableConfig
-    ): this(webDb, fetchComponent, parseComponent, null, null, immutableConfig)
+    ): this(webDb, fetchComponent, null, null, null, immutableConfig)
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -442,9 +439,9 @@ class LoadComponent(
             return
         }
 
-        if (options.parse) {
-            val parseResult = parseComponent.parse(page, options.query, options.reparseLinks, options.noFilter)
-            log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, parseComponent.getTraceInfo())
+        parseComponent?.takeIf { options.parse }?.also {
+            val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
+            log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
         }
 
         updateComponent?.updateFetchSchedule(page)
@@ -481,7 +478,6 @@ class LoadComponent(
     /**
      * We load everything from the internet, our storage is just a cache
      */
-    @Evolving
     fun loadOutPages(url: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
             query: String, logLevel: Int): Map<String, Any> {
         return loadOutPages(url, LoadOptions.parse(loadArgs), parse(linkArgs),
@@ -491,7 +487,6 @@ class LoadComponent(
     /**
      * We load everything from the internet, our storage is just a cache
      */
-    @Evolving
     fun loadOutPages(
             url: String, options: LoadOptions,
             linkOptions: LinkOptions,
@@ -594,7 +589,6 @@ class LoadComponent(
     /**
      * Not stable
      */
-    @Unstable
     private fun buildDebugInfo(
             logLevel: Int, linkOptions: LinkOptions, options: LoadOptions, loadOptions2: LoadOptions): Map<String, String> {
         val debugInfo: MutableMap<String, String> = HashMap()

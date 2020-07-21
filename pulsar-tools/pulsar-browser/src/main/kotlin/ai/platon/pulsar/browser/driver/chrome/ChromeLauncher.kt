@@ -276,9 +276,9 @@ class ChromeLauncher(
         return try {
             shutdownHookRegistry.register(shutdownHookThread)
             process = processLauncher.launch(program, arguments)
-
             process?.also {
-                val pidPath = userDataDir.resolveSibling("chrome.launcher.pid")
+                val pidPath = userDataDir.resolveSibling("chromeLauncher.pid")
+                Files.createDirectories(userDataDir)
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
@@ -389,7 +389,7 @@ class ChromeLauncher(
     private fun prepareUserDataDir() {
         val lock = AppPaths.BROWSER_TMP_DIR_LOCK
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
-        if (Files.exists(prototypeUserDataDir)) {
+        if (Files.exists(prototypeUserDataDir.resolve("Default"))) {
             FileChannel.open(lock, StandardOpenOption.APPEND).use {
                 it.lock()
 

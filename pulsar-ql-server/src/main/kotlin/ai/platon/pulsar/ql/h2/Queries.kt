@@ -14,7 +14,6 @@ import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.QuerySession
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
-import org.apache.hadoop.classification.InterfaceStability
 import org.h2.api.ErrorCode
 import org.h2.message.DbException
 import org.h2.tools.SimpleResultSet
@@ -41,7 +40,6 @@ object Queries {
      * or an array of strings represented by a [ValueArray]
      * @return A collection of [WebPage]s
      */
-    @InterfaceStability.Evolving
     fun loadAll(session: QuerySession, portal: Value): Collection<WebPage> {
         var pages: Collection<WebPage> = listOf()
 
@@ -76,7 +74,6 @@ object Queries {
      * @param transformer    The transformer used to translate a Web page into something else
      * @return A collection of O
      */
-    @InterfaceStability.Evolving
     fun <O> loadAll(session: QuerySession,
                     configuredUrls: Value, restrictCss: String, offset: Int, limit: Int,
                     transformer: (Element, String, Int, Int) -> Collection<O>): Collection<O> {
@@ -166,7 +163,6 @@ object Queries {
      * Get a result set, the result set contains just one column DOM
      * TODO: generalization
      */
-    @InterfaceStability.Evolving
     fun <E> toResultSet(colName: String, collection: Iterable<E>): ResultSet {
         val rs = SimpleResultSet().apply { autoClose = false }
         val colType = if (colName.equals("DOM", ignoreCase = true)) ValueDom.type else Value.STRING

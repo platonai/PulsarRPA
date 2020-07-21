@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.PulsarContext
-
+import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
 import ai.platon.pulsar.ql.QuerySession
@@ -88,7 +88,8 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     @Synchronized
     fun shutdown() {
-        PulsarContext.shutdown()
+        sqlContext.close()
+        PulsarContexts.shutdown()
     }
 
     /**
@@ -97,7 +98,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @Synchronized
     fun shutdownNow() {
         sqlContext.close()
-        PulsarContext.shutdown()
+        PulsarContexts.shutdown()
     }
 }
 

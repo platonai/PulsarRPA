@@ -13,18 +13,14 @@ import ai.platon.pulsar.crawl.GlobalCacheManager
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
-import ai.platon.pulsar.crawl.component.ParseComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
-import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
@@ -60,10 +56,6 @@ abstract class AbstractPulsarContext(
      * */
     open val fetchComponent: BatchFetchComponent get() = getBean()
     /**
-     * The parse component
-     * */
-    open val parseComponent: ParseComponent get() = getBean()
-    /**
      * The load component
      * */
     open val loadComponent: LoadComponent get() = getBean()
@@ -81,8 +73,6 @@ abstract class AbstractPulsarContext(
      * All open sessions
      * */
     val sessions = ConcurrentSkipListMap<Int, PulsarSession>()
-
-    private val log = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
 
     /**
      * Registered closeables, will be closed by Pulsar object
@@ -319,20 +309,13 @@ abstract class AbstractPulsarContext(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            try {
-                sessions.values.forEach {
-                    log.trace("Closing session $it")
-                    it.runCatching { it.close() }.onFailure { log.warn(it.message) }
-                }
-                closableObjects.forEach {
-                    log.debug("Closing closeable $it")
-                    it.runCatching { it.close() }.onFailure { log.warn(it.message) }
-                }
-            } catch (t: Throwable) {
-                log.warn("Unexpected exception", t)
+            sessions.values.forEach {
+                it.runCatching { it.close() }.onFailure { it.printStackTrace() }
             }
 
-            log.debug("PulsarContext is closed")
+            closableObjects.forEach {
+                it.runCatching { it.close() }.onFailure { it.printStackTrace() }
+            }
 
             (applicationContext as? AutoCloseable)?.close()
         }
