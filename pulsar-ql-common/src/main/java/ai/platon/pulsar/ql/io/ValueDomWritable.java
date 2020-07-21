@@ -25,8 +25,7 @@ public class ValueDomWritable implements Writable {
     private static String CACHED_HINT = "(cached)";
 
     // server side
-    // TODO: check if this is client side or server side, ensure client side expires after server side
-    // TODO: need an instance per session
+    // TODO: check if this is client side or server side, ensure items in client side lives longer than that in server side
     private static ConcurrentLRUCache<String, String> pageCache = new ConcurrentLRUCache<>(CACHE_EXPIRES, CACHE_SIZE);
 
     // client side
@@ -57,7 +56,7 @@ public class ValueDomWritable implements Writable {
         out.write('\n'); // make a line
 
         String html = pageCache.get(baseUri);
-        if (!html.isEmpty()) {
+        if (html != null && !html.isEmpty()) {
             // tell the client it's cached
             html = CACHED_HINT;
         } else {

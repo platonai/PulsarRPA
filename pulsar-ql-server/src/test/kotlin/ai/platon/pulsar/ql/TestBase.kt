@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.h2.H2Db
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.store.fs.FileUtils
@@ -34,6 +35,7 @@ abstract class TestBase {
         val history = mutableListOf<String>()
         val startTime = Instant.now()
 
+        val context = PulsarContexts.active()
         val embedDB = H2Db(H2SessionFactory::class.java.name)
         val remoteDB = H2Db(H2SessionFactory::class.java.name)
         val localDbName: String = embedDB.generateTempDbName()
@@ -128,8 +130,8 @@ abstract class TestBase {
         }
     }
 
-    val productIndexUrl = "https://www.mia.com/formulas.html"
-    val productDetailUrl = "https://www.mia.com/item-1687128.html"
+    val productIndexUrl = "http://category.dangdang.com/cid4001403.html"
+    val productDetailUrl = "http://product.dangdang.com/1184814777.html"
     val newsIndexUrl = "http://news.baidu.com/guoji"
     val newsDetailUrl = "http://news.163.com/17/1119/09/D3JJF1290001875P.html"
     val newsDetailUrl2 = "http://www.chinanews.com/gn/2018/03-02/8458538.shtml"
@@ -137,8 +139,8 @@ abstract class TestBase {
     var urlGroups = mutableMapOf<String, Array<String>>()
 
     val seeds = mapOf(
-            0 to "https://www.mia.com/formulas.html",
-            1 to "https://www.mia.com/diapers.html",
+            0 to "http://product.dangdang.com/1184814777.html",
+            1 to "http://category.dangdang.com/cid4003728.html",
             2 to "http://category.dangdang.com/cid4002590.html",
             3 to "https://list.mogujie.com/book/magic/51894",
             4 to "https://category.vip.com/search-5-0-1.html?q=3|103363||&rp=26600|48483&ff=|0|2|2&adidx=1&f=ad&adp=130610&adid=632673",

@@ -12,6 +12,9 @@ object PulsarContexts {
         private set
 
     @Synchronized
+    fun active() = active(BasicPulsarContext())
+
+    @Synchronized
     fun active(context: PulsarContext): PulsarContext {
         contexts.add(context)
         activeContext = context

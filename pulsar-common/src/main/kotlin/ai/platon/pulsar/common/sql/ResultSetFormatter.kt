@@ -133,6 +133,9 @@ class ResultSetFormatter(
                 if (precision !in 0..10) precision = 10
                 if (scale !in 0..10) scale = 10
                 val d = rs.getDouble(columnIndex)
+                if (scale == 0 && precision == 0) {
+                    scale = 10
+                }
                 s = String.format("%" + precision + "." + scale + "f", d)
             }
             else -> s = rs.getString(columnIndex)

@@ -1,9 +1,9 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.PulsarContext
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import org.h2.ext.pulsar.annotation.H2Context
 import org.h2.tools.SimpleResultSet
@@ -61,7 +61,7 @@ class TestAnything {
 
     @Test
     fun testNormalize() {
-        val session = PulsarContext.createSession()
+        val session = PulsarContexts.createSession()
         var url = "http://shop.mogujie.com/detail/1llurfa?acm=3.ms.1_4_1llurfa.15.1331-68998.tPlDtqPaugJED.sd_117_116-swt_15-imt_6-t_tPlDtqPaugJED-lc_3-fcid_10059513-bid_15-dit_17-idx_39-dm1_5002"
         val url2 = session.normalize(url)
         println(url2)

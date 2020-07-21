@@ -11,28 +11,28 @@ class TestCases: TestBase() {
 
     @Test
     fun projectFields() {
-        execute("SELECT 'welcome', DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.welcome')", remote = true)
-        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPrice', 0, 5)")
-        execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic img', 0, 5)")
+        execute("SELECT DOM_TEXT(DOM) AS `breadcrumb` FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '#breadcrumb')", remote = true)
+        execute("SELECT DOM_TEXT(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.shoplist li a', 1, 5)")
+        execute("SELECT DOM_SRC(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.shoplist li a', 1, 5)")
 
-        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.nfPic a', 0, 5)")
-        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), 'a[href~=item]', 0, 5)")
+        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '.shoplist li a', 1, 5)")
+        execute("SELECT DOM_TITLE(DOM), DOM_ABS_HREF(DOM) FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), 'a[href~=product]', 1, 5)")
     }
 
     @Test
     fun projectFields2() {
         val sql = """
             SELECT
-                DOM_HEIGHT(DOM), DOM_TEXT(DOM), DOM_BASE_URI(DOM), DOM_CSS_SELECTOR(DOM) 
+                DOM_HEIGHT(DOM), DOM_TEXT(DOM), DOM_BASE_URI(DOM), DOM_CSS_SELECTOR(DOM)
             FROM
-                DOM_SELECT(DOM_LOAD('https://www.mia.com/formulas.html'), '.welcome');
+                DOM_SELECT(DOM_LOAD('http://category.dangdang.com/cid4001403.html'), '#breadcrumb');
         """.trimIndent()
         execute(sql, remote = true)
     }
 
     @Test
     fun testCondition() {
-        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.nfItem');")
+        execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', '.shoplist li');")
         execute("SELECT * FROM LOAD_AND_GET_FEATURES('$productIndexUrl', 'div', 1, 10000) " +
                 "WHERE WIDTH BETWEEN 200 AND 400 AND HEIGHT BETWEEN 200 AND 400 AND TXT_ND > 0;")
     }
@@ -40,7 +40,7 @@ class TestCases: TestBase() {
     @Test
     fun extractByCssBox() {
         execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:in-box(*,*,323,31)')") // TODO: failed
-        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:in-box(*,*,229,36)', 0, 5)")
+        execute("SELECT * FROM DOM_SELECT(DOM_LOAD('$productIndexUrl'), '*:in-box(*,*,229,36)', 1, 5)")
 
         execute("SELECT IN_BOX_FIRST_TEXT(DOM_LOAD('$productIndexUrl'), '229x36')")
     }
@@ -110,7 +110,7 @@ from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.
         val sql = """
 select
     dom_text(dom)
-from 
+from
     load_out_pages_and_select('https://www.cityflower.net/attribute/21.html -i 1s', '.recommend a[href~=detail]', 1, 40, '.product_detail');
         """.trimIndent()
 
