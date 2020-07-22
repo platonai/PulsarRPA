@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.h2.H2Db
@@ -35,7 +34,7 @@ abstract class TestBase {
         val history = mutableListOf<String>()
         val startTime = Instant.now()
 
-        val context = PulsarContexts.active()
+        val context = PulsarContexts.activate()
         val embedDB = H2Db(H2SessionFactory::class.java.name)
         val remoteDB = H2Db(H2SessionFactory::class.java.name)
         val localDbName: String = embedDB.generateTempDbName()

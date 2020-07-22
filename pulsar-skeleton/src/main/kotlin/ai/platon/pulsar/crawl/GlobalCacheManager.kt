@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class GlobalCacheManager(val immutableConfig: ImmutableConfig) {
     companion object {
@@ -22,5 +23,6 @@ class GlobalCacheManager(val immutableConfig: ImmutableConfig) {
     val pageCache = ConcurrentLRUCache<String, WebPage>(PAGE_CACHE_TTL.seconds, pageCacheCapacity)
     val documentCache = ConcurrentLRUCache<String, FeaturedDocument>(DOCUMENT_CACHE_TTL.seconds, documentCacheCapacity)
 
-    val fetchUrls = ConcurrentNonReentrantQueue<String>()
+    val nonReentrantFetchUrls = ConcurrentNonReentrantQueue<String>()
+    val reentrantFetchUrls = ConcurrentLinkedQueue<String>()
 }

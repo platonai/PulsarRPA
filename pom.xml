@@ -143,7 +143,6 @@
                 <module>pulsar-third/pulsar-jsoup</module>
                 <module>pulsar-third/pulsar-chrome-devtools</module>
                 <module>pulsar-tools</module>
-                <module>pulsar-tools/pulsar-browser</module>
                 <module>pulsar-rest</module>
                 <module>pulsar-ql-common</module>
                 <module>pulsar-ql-server</module>

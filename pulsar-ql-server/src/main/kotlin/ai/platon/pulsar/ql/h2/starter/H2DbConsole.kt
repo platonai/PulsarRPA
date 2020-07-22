@@ -7,7 +7,6 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent
 import org.springframework.boot.context.event.ApplicationPreparedEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
@@ -38,7 +37,7 @@ class H2DbConsole {
 fun main(args: Array<String>) {
     val application = SpringApplication(H2DbConsole::class.java)
     val event = ApplicationListener<ApplicationPreparedEvent> {
-        PulsarContexts.active(GenericPulsarContext(it.applicationContext)) }
+        PulsarContexts.activate(GenericPulsarContext(it.applicationContext)) }
     application.addListeners(event)
     application.run(*args)
 }

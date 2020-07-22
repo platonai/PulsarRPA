@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 class TestExtractCases : TestBase() {
 
-    private val pc = PulsarContexts.active(BasicPulsarContext())
+    private val pc = PulsarContexts.activate(BasicPulsarContext())
 
     @Test
     fun testSavePages() {

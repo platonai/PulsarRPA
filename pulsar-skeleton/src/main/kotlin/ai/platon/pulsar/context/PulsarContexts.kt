@@ -12,10 +12,10 @@ object PulsarContexts {
         private set
 
     @Synchronized
-    fun active() = active(BasicPulsarContext())
+    fun activate() = activate(BasicPulsarContext())
 
     @Synchronized
-    fun active(context: PulsarContext): PulsarContext {
+    fun activate(context: PulsarContext): PulsarContext {
         contexts.add(context)
         activeContext = context
         return context
@@ -23,7 +23,7 @@ object PulsarContexts {
 
     @Synchronized
     fun createSession(): PulsarSession {
-        val context = activeContext?: active(BasicPulsarContext())
+        val context = activeContext?: activate(BasicPulsarContext())
         return context.createSession()
     }
 
@@ -35,19 +35,19 @@ object PulsarContexts {
 }
 
 fun withContext(block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.active(BasicPulsarContext()).use {
+    PulsarContexts.activate(BasicPulsarContext()).use {
         block(it)
     }
 }
 
 fun withContext(contextLocation: String, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.active(ClassPathXmlPulsarContext(contextLocation)).use {
+    PulsarContexts.activate(ClassPathXmlPulsarContext(contextLocation)).use {
         block(it)
     }
 }
 
 fun withContext(applicationContext: ApplicationContext, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.active(GenericPulsarContext(applicationContext)).use {
+    PulsarContexts.activate(GenericPulsarContext(applicationContext)).use {
         block(it)
     }
 }

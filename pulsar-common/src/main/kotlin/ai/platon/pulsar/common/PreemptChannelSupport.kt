@@ -40,7 +40,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numPendingNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
-    protected val normalTaskTimeout = Duration.ofMinutes(10)
+    protected val normalTaskTimeout = Duration.ofMinutes(6)
     protected val preemptiveTaskTimeout = Duration.ofMinutes(20)
     private var pollingInterval = Duration.ofMillis(100)
 

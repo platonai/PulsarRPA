@@ -20,6 +20,7 @@ import java.text.MessageFormat
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 16-7-20.
@@ -49,12 +50,6 @@ class TestAnything {
         Files.write(Paths.get("/tmp/regex-urlfilter.txt"), StringUtils.join(lines2, "\n").toByteArray())
         println(lines2.size)
         println(StringUtils.join(lines2, ","))
-    }
-
-    @Test
-    fun testSystem() {
-        val username = System.getenv("USER")
-        println(username)
     }
 
     @Test

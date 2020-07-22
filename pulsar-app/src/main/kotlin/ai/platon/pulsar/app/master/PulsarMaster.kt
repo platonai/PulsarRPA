@@ -36,7 +36,7 @@ class PulsarMaster {
 fun main(args: Array<String>) {
     val application = SpringApplication(PulsarMaster::class.java)
     val event = ApplicationListener<ApplicationPreparedEvent> {
-        PulsarContexts.active(GenericPulsarContext(it.applicationContext)) }
+        PulsarContexts.activate(GenericPulsarContext(it.applicationContext)) }
     application.addListeners(event)
     application.run(*args)
 }

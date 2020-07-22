@@ -2,9 +2,12 @@ package ai.platon.pulsar.common.collect
 
 import java.util.concurrent.ConcurrentSkipListSet
 
-interface DataLoader<T> {
+interface DataLoader<T>: Comparable<DataLoader<T>> {
+    val priority: Int
     fun hasMore(): Boolean
     fun loadTo(sink: MutableCollection<T>)
+
+    override fun compareTo(other: DataLoader<T>) = priority - other.priority
 }
 
 open class ConcurrentLoadingIterable<T>(
