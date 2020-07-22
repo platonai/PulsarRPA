@@ -111,15 +111,10 @@ open class BrowserEmulator(
 
     @Throws(NavigateTaskCancellationException::class)
     private suspend fun browseWithMinorExceptionsHandled(task: FetchTask, driver: AbstractWebDriver): Response {
-        checkState(task)
-        checkState(driver)
-
         val navigateTask = NavigateTask(task, driver, driverControl)
 
         try {
             val interactResult = navigateAndInteract(task, driver, navigateTask.driverConfig)
-            checkState(task)
-            checkState(driver)
             navigateTask.pageDatum.apply {
                 status = interactResult.protocolStatus
                 activeDomMultiStatus = interactResult.activeDomMessage?.multiStatus
@@ -144,14 +139,14 @@ open class BrowserEmulator(
         // TODO: handle frames
         // driver.switchTo().frame(1);
 
-        withContext(Dispatchers.IO) {
-            meterNavigates.mark()
-            numDeferredNavigates.mark()
+        meterNavigates.mark()
+        numDeferredNavigates.mark()
 
-            log.trace("{}. Navigating | {}", task.page.id, task.url)
+        log.trace("{}. Navigating | {}", task.page.id, task.url)
 
-            driver.navigateTo(task.url)
-        }
+        checkState(driver)
+        checkState(task)
+        driver.navigateTo(task.url)
 
         val interactTask = InteractTask(task, driverConfig, driver)
         return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)
@@ -163,9 +158,10 @@ open class BrowserEmulator(
         var i = 0
         do {
             withContext(Dispatchers.IO) {
+                counterRequests.inc()
+
                 checkState(interactTask.driver)
                 checkState(interactTask.fetchTask)
-                counterRequests.inc()
                 pageSource = interactTask.driver.pageSource
 
                 if (pageSource.length < 20_000) {
@@ -269,10 +265,8 @@ open class BrowserEmulator(
     private suspend fun evaluate(interactTask: InteractTask, expression: String): Any? {
         val scriptTimeout = interactTask.driverConfig.scriptTimeout
         counterRequests.inc()
-        return withTimeoutOrNull(scriptTimeout.toMillis()) {
-            checkState(interactTask.driver)
-            checkState(interactTask.fetchTask)
-            interactTask.driver.evaluate(expression)
-        }
+        checkState(interactTask.driver)
+        checkState(interactTask.fetchTask)
+        return interactTask.driver.evaluate(expression)
     }
 }

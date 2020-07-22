@@ -13,6 +13,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
 
+abstract class PrivacyContextMonitor(
+        initialDelay: Long = 300,
+        watchInterval: Long = 30
+): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
+
 abstract class PrivacyManager(
         val immutableConfig: ImmutableConfig,
         val numPrivacyContexts: Int = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)

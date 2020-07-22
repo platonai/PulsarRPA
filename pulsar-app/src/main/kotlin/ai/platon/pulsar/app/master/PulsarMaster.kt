@@ -2,6 +2,7 @@ package ai.platon.pulsar.app.master
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.GenericPulsarContext
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
@@ -34,7 +35,8 @@ class PulsarMaster {
 
 fun main(args: Array<String>) {
     val application = SpringApplication(PulsarMaster::class.java)
-    val event = ApplicationListener<ApplicationPreparedEvent> { GenericPulsarContext(it.applicationContext) }
+    val event = ApplicationListener<ApplicationPreparedEvent> {
+        PulsarContexts.active(GenericPulsarContext(it.applicationContext)) }
     application.addListeners(event)
     application.run(*args)
 }

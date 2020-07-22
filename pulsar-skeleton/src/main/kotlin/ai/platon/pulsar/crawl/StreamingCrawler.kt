@@ -61,8 +61,8 @@ open class StreamingCrawler(
     private val idleTimeout = Duration.ofMinutes(20)
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    private val isIdle get() = isActive && idleTime > idleTimeout
-    private val isAppActive get() = isActive && !isIdle && !illegalState.get()
+    private val isIdle get() = idleTime > idleTimeout
+    private val isAppActive get() = isActive && !illegalState.get()
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(6)
     private var flowState = FlowState.CONTINUE
@@ -90,8 +90,8 @@ open class StreamingCrawler(
 
     open suspend fun run(scope: CoroutineScope) {
         urls.forEachIndexed { j, url ->
-            if (url.contains("seller")) {
-                println("Loading seller $url")
+            if (!isAppActive) {
+                return@run
             }
 
             globalTasks.incrementAndGet()
@@ -130,7 +130,6 @@ open class StreamingCrawler(
         }
 
         if (!isAppActive) {
-            log.takeIf { isIdle }?.info("Streaming crawling is idle for {}, quit streaming crawler ...", idleTime.readable())
             return FlowState.BREAK
         }
 
@@ -158,6 +157,10 @@ open class StreamingCrawler(
     }
 
     private fun handleException(url: String, e: Throwable): FlowState {
+        if (flowState == FlowState.BREAK) {
+            return flowState
+        }
+
         when (e) {
             is IllegalApplicationContextStateException -> {
                 if (illegalState.compareAndSet(false, true)) {

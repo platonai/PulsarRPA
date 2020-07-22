@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
@@ -50,30 +51,29 @@ abstract class PreemptChannelSupport(val name: String = "") {
      * The freezer is preemptive, if there is at least one freezer task attempt enter the critical section
      * without obtaining a lock, all task attempt must wait
      * */
-    fun <T> preempt(preemptiveTask: () -> T): T {
-        return beforePreempt().runCatching { preemptiveTask() }
-                .onFailure { afterPreempt() }.onSuccess { afterPreempt() }.getOrThrow()
-    }
+    fun <T> preempt(preemptiveTask: () -> T) = beforePreempt().runCatching { preemptiveTask() }
+            .also { afterPreempt() }.getOrThrow()
 
-    fun <T> whenNormal(task: () -> T): T {
-        return beforeTask().runCatching { task() }.onFailure { afterTask() }.onSuccess { afterTask() }.getOrThrow()
-    }
+    fun <T> whenNormal(task: () -> T) = beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
 
-    suspend fun <T> whenNormalDeferred(task: suspend () -> T): T {
-        return beforeTask().runCatching { withTimeout(normalTaskTimeout.toMillis()) { task() } }
-                .onFailure { afterTask() }.onSuccess { afterTask() }.getOrThrow()
+    @Throws(TimeoutCancellationException::class)
+    suspend fun <T> whenNormalDeferred(task: suspend () -> T) =
+            beforeTask().runCatching { withTimeout(normalTaskTimeout.toMillis()) { task() } }
+                    .also { afterTask() }.getOrThrow()
+
+    fun releaseLocks() {
+        if (numRunningNormalTasks.get() == 0) {
+            numPreemptiveTasks.set(0)
+        }
+
+        numRunningNormalTasks.set(0)
     }
 
     private fun beforePreempt() {
         // All workers must NOT pass now
         numPreemptiveTasks.incrementAndGet()
-
-        trace("Preempted with $numPreemptiveTasks preemptive tasks ")
-
         // Wait until all the normal tasks are finished
         waitUntilNoRunningNormalTasks()
-
-        trace("Performing preemptive action ...")
     }
 
     private fun afterPreempt() {
@@ -122,10 +122,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
 
     private fun waitUntilNoPreemptiveTask() {
         lock.withLock {
-            if (numPreemptiveTasks.get() > 0) {
-                trace("There are $numRunningNormalTasks tasks waiting for $numPreemptiveTasks preemptive tasks to finish")
-            }
-
             var nanos = pollingTimeout.toNanos()
             while (numPreemptiveTasks.get() > 0 && nanos > 0) {
                 nanos = noPreemptiveTasks.awaitNanos(nanos)
@@ -135,13 +131,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
             // task channel is open now
             numPendingNormalTasks.decrementAndGet()
             numRunningNormalTasks.incrementAndGet()
-        }
-    }
-
-    private fun trace(message: String) {
-        if (name == "PrivacyManager") {
-            val tid = Thread.currentThread().id
-            println("[$name] [$tid] $message | " + formatPreemptChannelStatus())
         }
     }
 }

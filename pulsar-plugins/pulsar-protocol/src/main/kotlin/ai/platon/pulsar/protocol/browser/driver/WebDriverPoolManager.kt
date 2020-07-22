@@ -1,17 +1,16 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.MetricsManagement
-import ai.platon.pulsar.common.PreemptChannelSupport
+import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -41,17 +40,35 @@ open class WebDriverPoolManager(
 
     private val log = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
-    private val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
-    private val taskTimeout = Duration.ofMinutes(5)
-    private val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
+    val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
+    val taskTimeout = Duration.ofMinutes(5)
+    val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
+    val idleTimeout = Duration.ofMinutes(18)
+    val numPrivacyContexts get() = immutableConfig.getInt(CapabilityTypes.PRIVACY_CONTEXT_NUMBER, 2)
+    val numMaxActiveTabs get() = immutableConfig.getInt(CapabilityTypes.BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
+    val fetchConcurrency get() = numPrivacyContexts * numMaxActiveTabs
+
+    val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
+    val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
 
     val isActive get() = !closed.get()
     val startTime = Instant.now()
+    var lastActiveTime = startTime
+    val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+    val isIdle = idleTime > idleTimeout
+
     val numReset = MetricsManagement.meter(this, "numReset")
     val numTimeout = MetricsManagement.meter(this, "numTimeout")
-    val elapsedTime get() = Duration.between(startTime, Instant.now())
-    val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
-    val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
+    val gauges = mapOf(
+            "waitingDrivers" to Gauge<Int> { numWaiting },
+            "freeDrivers" to Gauge<Int> { numFreeDrivers },
+            "workingDrivers" to Gauge<Int> { numWorkingDrivers },
+            "onlineDrivers" to Gauge<Int> { numOnline },
+            "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
+            "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
+            "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
+            "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
+    )
 
     val numWaiting get() = driverPools.values.sumBy { it.numWaiting.get() }
     val numFreeDrivers get() = driverPools.values.sumBy { it.numFree }
@@ -60,16 +77,7 @@ open class WebDriverPoolManager(
     val numOnline get() = driverPools.values.sumBy { it.onlineDrivers.size }
 
     init {
-        mapOf(
-                "waitingDrivers" to Gauge<Int> { numWaiting },
-                "freeDrivers" to Gauge<Int> { numFreeDrivers },
-                "workingDrivers" to Gauge<Int> { numWorkingDrivers },
-                "onlineDrivers" to Gauge<Int> { numOnline },
-                "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
-                "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
-                "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
-                "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
-        ).forEach { MetricsManagement.register(this, it.key, it.value) }
+        gauges.let { MetricsManagement.registerAll(this, it) }
     }
 
     /**
@@ -87,39 +95,16 @@ open class WebDriverPoolManager(
 
     @Throws(IllegalApplicationContextStateException::class)
     suspend fun <R> run(task: WebDriverTask<R>): R? {
-        val browserId = task.browserId
-        var result: R? = null
-        whenNormalDeferred {
-            checkState()
-
-            if (isRetiredPool(browserId)) {
-                throw WebDriverPoolException("Web driver pool is retired | $browserId")
-            }
-
-            val driverPool = computeDriverPoolIfAbsent(browserId, task)
-            if (!driverPool.isActive) {
-                throw WebDriverPoolException("Driver pool is closed already | $driverPool | $browserId")
-            }
-
-            var driver: AbstractWebDriver? = null
-            try {
-                checkState()
-                driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
-                result = withTimeoutOrNull(taskTimeout.toMillis()) {
-                    checkState()
-                    task.action(driver)
-                }
-
-                if (result == null) {
-                    numTimeout.mark()
-                    log.warn("Task timeout after {} with driver {} | {}", taskTimeout.readable(), driver, browserId)
-                }
-            } finally {
-                driver?.let { driverPool.put(it) }
-            }
+        try {
+            lastActiveTime = Instant.now()
+            return run0(task)
+        } catch (e: TimeoutCancellationException) {
+            log.warn("Timeout to run task in browser | {} | {}", e.message, task.browserId)
         }
 
-        return result
+        lastActiveTime = Instant.now()
+
+        return null
     }
 
     fun createUnmanagedDriverPool(
@@ -130,12 +115,6 @@ open class WebDriverPoolManager(
         return LoadingWebDriverPool(browserId, priority, driverFactory, immutableConfig).also {
             it.takeIf { eagerAllocateTabs }?.allocate(volatileConfig?:immutableConfig.toVolatileConfig())
         }
-    }
-
-    @Synchronized
-    private fun <R> computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask<R>): LoadingWebDriverPool {
-        require("browser" in browserId.toString())
-        return driverPools.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, task.priority, task.volatileConfig) }
     }
 
     fun isRetiredPool(browserId: BrowserInstanceId) = retiredPools.contains(browserId)
@@ -199,12 +178,55 @@ open class WebDriverPoolManager(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info("Web driver manager is closed\n{}", formatStatus(true))
             driverPools.clear()
+            log.info("Web driver manager is closed\n{}", formatStatus(true))
         }
     }
 
     override fun toString(): String = formatStatus(false)
+
+    @Throws(IllegalApplicationContextStateException::class, TimeoutCancellationException::class)
+    private suspend fun <R> run0(task: WebDriverTask<R>): R? {
+        val browserId = task.browserId
+        var result: R? = null
+        whenNormalDeferred {
+            checkState()
+
+            if (isRetiredPool(browserId)) {
+                throw WebDriverPoolException("Web driver pool is retired | $browserId")
+            }
+
+            val driverPool = computeDriverPoolIfAbsent(browserId, task)
+            if (!driverPool.isActive) {
+                throw WebDriverPoolException("Driver pool is closed already | $driverPool | $browserId")
+            }
+
+            var driver: AbstractWebDriver? = null
+            try {
+                checkState()
+                driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
+                result = withTimeoutOrNull(taskTimeout.toMillis()) {
+                    checkState()
+                    task.action(driver)
+                }
+
+                if (result == null) {
+                    numTimeout.mark()
+                    log.warn("Task timeout after {} with driver {} | {}", taskTimeout.readable(), driver, browserId)
+                }
+            } finally {
+                driver?.let { driverPool.put(it) }
+            }
+        }
+
+        return result
+    }
+
+    @Synchronized
+    private fun <R> computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask<R>): LoadingWebDriverPool {
+        require("browser" in browserId.toString())
+        return driverPools.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, task.priority, task.volatileConfig) }
+    }
 
     private fun doCloseDriverPool(browserId: BrowserInstanceId) {
         preempt {
@@ -221,6 +243,9 @@ open class WebDriverPoolManager(
     }
 
     private fun formatStatus(verbose: Boolean = false): String {
-        return driverPools.entries.joinToString("\n") { it.value.formatStatus(verbose) + " | " + it.key }
+        val sb = StringBuilder()
+        gauges.entries.joinTo(sb, " ", "", "\n") { it.key + ": " + it.value.value }
+        driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
+        return sb.toString()
     }
 }

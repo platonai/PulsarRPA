@@ -95,9 +95,6 @@ class FetchTask(
     val state = AtomicReference<State>(State.NOT_READY)
 
     var proxyEntry: ProxyEntry? = null
-    // The number retries inside a privacy context
-    @Deprecated("No longer in use")
-    var nPrivacyRetries: Int = 0
 
     val url get() = page.url
     val domain get() = URLUtil.getDomainName(url)

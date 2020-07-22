@@ -37,7 +37,8 @@ class H2DbConsole {
 
 fun main(args: Array<String>) {
     val application = SpringApplication(H2DbConsole::class.java)
-    val event = ApplicationListener<ApplicationPreparedEvent> { GenericPulsarContext(it.applicationContext) }
+    val event = ApplicationListener<ApplicationPreparedEvent> {
+        PulsarContexts.active(GenericPulsarContext(it.applicationContext)) }
     application.addListeners(event)
     application.run(*args)
 }

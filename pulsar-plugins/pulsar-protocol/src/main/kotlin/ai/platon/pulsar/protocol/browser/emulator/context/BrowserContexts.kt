@@ -70,7 +70,7 @@ class WebDriverContext(
             numGlobalFinishedTasks.incrementAndGet()
 
             if (runningTasks.isEmpty()) {
-                lock.withLock { notBusy.signalAll().also { log.info("No running task in driver context now | {}", browserId) } }
+                lock.withLock { notBusy.signalAll() }
             }
 
             if (numGlobalRunningTasks.get() == 0) {
@@ -121,15 +121,7 @@ class WebDriverContext(
     }
 
     private fun waitUntilNoRunningTasks() {
-        // Wait for all tasks return
-        lock.withLock {
-            var i = 0
-            try {
-                while (i++ < 20 && runningTasks.isNotEmpty()) {
-                    notBusy.await(1, TimeUnit.SECONDS)
-                }
-            } catch (ignored: InterruptedException) {}
-        }
+        lock.withLock { notBusy.await(20, TimeUnit.SECONDS) }
     }
 
     private fun checkAbnormalResult(task: FetchTask): FetchResult? {
