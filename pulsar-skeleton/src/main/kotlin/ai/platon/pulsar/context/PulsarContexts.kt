@@ -18,7 +18,13 @@ object PulsarContexts {
     fun activate(context: PulsarContext): PulsarContext {
         contexts.add(context)
         activeContext = context
+        context.registerShutdownHook()
         return context
+    }
+
+    @Synchronized
+    fun activate(applicationContext: ApplicationContext): PulsarContext {
+        return activate(GenericPulsarContext(applicationContext))
     }
 
     @Synchronized
@@ -47,7 +53,7 @@ fun withContext(contextLocation: String, block: (context: PulsarContext) -> Unit
 }
 
 fun withContext(applicationContext: ApplicationContext, block: (context: PulsarContext) -> Unit) {
-    PulsarContexts.activate(GenericPulsarContext(applicationContext)).use {
+    PulsarContexts.activate(applicationContext).use {
         block(it)
     }
 }

@@ -1,11 +1,8 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.FlowState
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.prependReadableClassName
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
@@ -18,7 +15,6 @@ import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.openqa.selenium.WebDriverException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ThreadLocalRandom
@@ -29,12 +25,12 @@ import java.util.concurrent.ThreadLocalRandom
  */
 open class BrowserEmulator(
         val driverManager: WebDriverPoolManager,
-        eventHandler: BrowserEmulateEventHandler,
+        eventHandler: EventHandler,
         immutableConfig: ImmutableConfig
 ): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
     private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
-    val numDeferredNavigates = metrics.meter(prependReadableClassName(this, "deferredNavigates"))
+    val numDeferredNavigates by lazy { MetricsManagement.meter(this, "deferredNavigates") }
 
     init {
         params.withLogger(log).info()

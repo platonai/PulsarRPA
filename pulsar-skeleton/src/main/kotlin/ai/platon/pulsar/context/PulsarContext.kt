@@ -145,4 +145,6 @@ interface PulsarContext: AutoCloseable {
     fun delete(page: WebPage)
 
     fun flush()
+
+    fun registerShutdownHook()
 }

@@ -46,7 +46,7 @@
     <logger name="ai.platon.pulsar.protocol.browser.driver" level="INFO"/>
 
     <logger name="ai.platon.pulsar.crawl.component" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler" level="INFO"/>
+    <logger name="ai.platon.pulsar.protocol.browser.emulator.EventHandler" level="INFO"/>
 
     <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="INFO"/>
 

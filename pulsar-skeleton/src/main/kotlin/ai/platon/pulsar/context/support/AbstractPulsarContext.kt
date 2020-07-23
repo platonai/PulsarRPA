@@ -21,6 +21,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
+import org.springframework.lang.Nullable
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
@@ -80,6 +81,13 @@ abstract class AbstractPulsarContext(
     private val closableObjects = ConcurrentLinkedQueue<AutoCloseable>()
 
     private val closed = AtomicBoolean()
+
+    /** Synchronization monitor for the "refresh" and "destroy".  */
+    private val startupShutdownMonitor = Any()
+
+    /** Reference to the JVM shutdown hook, if registered.  */
+    @Nullable
+    private var shutdownHook: Thread? = null
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
@@ -307,7 +315,50 @@ abstract class AbstractPulsarContext(
         webDb.takeIf { isActive }?.flush()
     }
 
+    /**
+     * Register a shutdown hook with the JVM runtime, closing this context
+     * on JVM shutdown unless it has already been closed at that time.
+     *
+     * Delegates to `doClose()` for the actual closing procedure.
+     * @see Runtime.addShutdownHook
+     *
+     * @see .close
+     * @see .doClose
+     */
+    override fun registerShutdownHook() {
+        if (this.shutdownHook == null) { // No shutdown hook registered yet.
+            this.shutdownHook = object : Thread() {
+                override fun run() {
+                    synchronized(startupShutdownMonitor) { doClose() }
+                }
+            }
+            Runtime.getRuntime().addShutdownHook(this.shutdownHook)
+        }
+    }
+
+    /**
+     * Close this pulsar context, destroying all beans in its bean factory.
+     *
+     * Delegates to `doClose()` for the actual closing procedure.
+     * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
+     * @see .doClose
+     * @see .registerShutdownHook
+     */
     override fun close() {
+        synchronized(startupShutdownMonitor) {
+            doClose()
+            // If we registered a JVM shutdown hook, we don't need it anymore now:
+            // We've already explicitly closed the context.
+            if (shutdownHook != null) {
+                try {
+                    Runtime.getRuntime().removeShutdownHook(shutdownHook)
+                } catch (ex: IllegalStateException) { // ignore - VM is already shutting down
+                }
+            }
+        }
+    }
+
+    private fun doClose() {
         if (closed.compareAndSet(false, true)) {
             sessions.values.forEach {
                 it.runCatching { it.close() }.onFailure { it.printStackTrace() }

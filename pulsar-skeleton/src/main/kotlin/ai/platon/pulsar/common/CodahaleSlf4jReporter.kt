@@ -39,16 +39,17 @@ class CodahaleSlf4jReporter private constructor(registry: MetricRegistry,
      * not filtering metrics.
      */
     class Builder(private val registry: MetricRegistry) {
-        private var logger: Logger
-        private var loggingLevel: LoggingLevel
-        private var marker: Marker?
-        private var prefix: String
-        private var rateUnit: TimeUnit
-        private var durationUnit: TimeUnit
-        private var filter: MetricFilter
-        private var executor: ScheduledExecutorService?
-        private var shutdownExecutorOnStop: Boolean
-        private var disabledMetricAttributes: Set<MetricAttribute>
+        private var logger = LoggerFactory.getLogger("metrics")
+        private var loggingLevel = LoggingLevel.INFO
+        private var marker: Marker? = null
+        private var prefix = ""
+        private var rateUnit = TimeUnit.SECONDS
+        private var durationUnit = TimeUnit.MILLISECONDS
+        private var filter = MetricFilter.ALL
+        private var executor: ScheduledExecutorService? = null
+        private var shutdownExecutorOnStop = true
+        private var disabledMetricAttributes: Set<MetricAttribute> = setOf()
+
         /**
          * Specifies whether or not, the executor (used for reporting) will be stopped with same time with reporter.
          * Default value is true.
@@ -180,19 +181,6 @@ class CodahaleSlf4jReporter private constructor(registry: MetricRegistry,
 
             return CodahaleSlf4jReporter(registry, loggerProxy, marker, prefix, rateUnit, durationUnit, filter, executor,
                     shutdownExecutorOnStop, disabledMetricAttributes)
-        }
-
-        init {
-            logger = LoggerFactory.getLogger("metrics")
-            marker = null
-            prefix = ""
-            rateUnit = TimeUnit.SECONDS
-            durationUnit = TimeUnit.MILLISECONDS
-            filter = MetricFilter.ALL
-            loggingLevel = LoggingLevel.INFO
-            executor = null
-            shutdownExecutorOnStop = true
-            disabledMetricAttributes = emptySet()
         }
     }
 

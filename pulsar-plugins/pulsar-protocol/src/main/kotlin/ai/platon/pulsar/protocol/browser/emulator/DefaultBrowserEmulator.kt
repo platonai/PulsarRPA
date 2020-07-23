@@ -9,7 +9,7 @@ import ai.platon.pulsar.protocol.browser.emulator.context.SinglePrivacyContextMa
 
 class DefaultWebDriverPoolManager(immutableConfig: ImmutableConfig): WebDriverPoolManager(
         WebDriverFactory(WebDriverControl(immutableConfig), BrowserInstanceManager(), immutableConfig),
-        immutableConfig
+        immutableConfig, suppressMetrics = true
 )
 
 class DefaultBrowserEmulator(
@@ -17,7 +17,7 @@ class DefaultBrowserEmulator(
         immutableConfig: ImmutableConfig
 ): BrowserEmulator(
         driverPoolManager,
-        BrowserEmulateEventHandler(driverPoolManager, null, immutableConfig),
+        EventHandler(driverPoolManager, null, immutableConfig),
         immutableConfig
 )
 

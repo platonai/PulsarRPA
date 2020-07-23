@@ -7,6 +7,8 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import com.google.common.collect.Iterables
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -75,10 +77,8 @@ abstract class PrivacyManager(
             activeContexts.values.forEach { zombieContexts.add(it) }
             activeContexts.clear()
 
-            zombieContexts.forEach {
-                kotlin.runCatching { it.close() }.onFailure {
-                    log.error("Failed to close privacy context", it)
-                }
+            zombieContexts.toList().parallelStream().forEach {
+                kotlin.runCatching { it.close() }.onFailure { it.printStackTrace() }
             }
         }
     }

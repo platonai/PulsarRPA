@@ -42,7 +42,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numRunningNormalTasks = AtomicInteger()
     protected val normalTaskTimeout = Duration.ofMinutes(6)
     protected val preemptiveTaskTimeout = Duration.ofMinutes(20)
-    private var pollingInterval = Duration.ofMillis(100)
+    private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numPreemptiveTasks.get() > 0
     val isNormal get() = !isPreempted
@@ -102,7 +102,7 @@ abstract class PreemptChannelSupport(val name: String = "") {
     }
 
     fun formatPreemptChannelStatus(): String {
-        return "preemptive tasks : $numPreemptiveTasks, " +
+        return "preemptive tasks: $numPreemptiveTasks, " +
                 " running preemptive tasks: $numRunningPreemptiveTasks," +
                 " pending normal tasks: $numPendingNormalTasks" +
                 " running normal tasks: $numRunningNormalTasks"
@@ -110,10 +110,9 @@ abstract class PreemptChannelSupport(val name: String = "") {
 
     private fun waitUntilNoRunningNormalTasks() {
         lock.withLock {
-            // TODO: no timeout await() might be just OK
-            val nanos = pollingInterval.toNanos()
-            while (numRunningNormalTasks.get() > 0) {
-                noRunningNormalTasks.awaitNanos(nanos)
+            var nanos = pollingTimeout.toNanos()
+            while (numRunningNormalTasks.get() > 0 && nanos > 0) {
+                nanos = noRunningNormalTasks.awaitNanos(nanos)
             }
 
             // must be guarded by lock
@@ -123,9 +122,9 @@ abstract class PreemptChannelSupport(val name: String = "") {
 
     private fun waitUntilNoPreemptiveTask() {
         lock.withLock {
-            val nanos = pollingInterval.toNanos()
-            while (numPreemptiveTasks.get() > 0) {
-                noPreemptiveTasks.awaitNanos(nanos)
+            var nanos = pollingTimeout.toNanos()
+            while (numPreemptiveTasks.get() > 0 && nanos > 0) {
+                nanos = noPreemptiveTasks.awaitNanos(nanos)
             }
 
             // must be guarded by lock

@@ -20,7 +20,6 @@ import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import com.codahale.metrics.SharedMetricRegistries
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
@@ -31,12 +30,12 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
-open class BrowserEmulateEventHandler(
+open class EventHandler(
         private val driverPoolManager: WebDriverPoolManager,
         private val messageWriter: MiscMessageWriter? = null,
         private val immutableConfig: ImmutableConfig
 ) {
-    protected val log = LoggerFactory.getLogger(BrowserEmulateEventHandler::class.java)!!
+    protected val log = LoggerFactory.getLogger(EventHandler::class.java)!!
     protected val supportAllCharsets get() = immutableConfig.getBoolean(PARSE_SUPPORT_ALL_CHARSETS, true)
     protected val fetchMaxRetry = immutableConfig.getInt(HTTP_FETCH_MAX_RETRY, 3)
     protected val takeScreenshot get() = immutableConfig.getBoolean(BROWSER_TAKE_SCREENSHOT, false)
@@ -45,14 +44,13 @@ open class BrowserEmulateEventHandler(
     protected val numNavigates = AtomicInteger()
     protected val jsInvadingEnabled = driverPoolManager.driverFactory.driverControl.jsInvadingEnabled
 
-    protected val metrics = SharedMetricRegistries.getDefault()
-    protected val pageSourceBytes = metrics.histogram(prependReadableClassName(this, "pageSourceBytes"))
-    protected val totalPageSourceBytes = metrics.meter(prependReadableClassName(this, "totalPageSourceBytes"))
-    protected val bannedPages = metrics.meter(prependReadableClassName(this, "bannedPages"))
-    protected val smallPages = metrics.meter(prependReadableClassName(this, "smallPages"))
+    protected val pageSourceBytes by lazy { MetricsManagement.meter(this, "pageSourceBytes") }
+    protected val pageSourceByteHistogram by lazy { MetricsManagement.histogram(this, "hPageSourceBytes") }
+    protected val bannedPages by lazy { MetricsManagement.meter(this, "bannedPages") }
+    protected val smallPages by lazy { MetricsManagement.meter(this, "smallPages") }
     protected val smallPageRate get() = 100 * smallPages.count / numNavigates.get()
-    protected val smallPageRateHistogram = metrics.histogram(prependReadableClassName(this, "smallPageRate"))
-    protected val emptyPages = metrics.meter(prependReadableClassName(this, "emptyPages"))
+    protected val smallPageRateHistogram by lazy { MetricsManagement.histogram(this, "smallPageRate") }
+    protected val emptyPages by lazy { MetricsManagement.meter(this, "emptyPages") }
 
     fun logBeforeNavigate(task: FetchTask, driverConfig: BrowserControl) {
         if (log.isTraceEnabled) {
@@ -71,8 +69,8 @@ open class BrowserEmulateEventHandler(
 
         val pageDatum = task.pageDatum
         val length = task.pageSource.length
-        pageSourceBytes.update(length)
-        totalPageSourceBytes.mark(length.toLong())
+        pageSourceByteHistogram.update(length)
+        pageSourceBytes.mark(length.toLong())
 
         pageDatum.pageCategory = sniffPageCategory(task.page)
         pageDatum.status = checkErrorPage(task.page, pageDatum.status)

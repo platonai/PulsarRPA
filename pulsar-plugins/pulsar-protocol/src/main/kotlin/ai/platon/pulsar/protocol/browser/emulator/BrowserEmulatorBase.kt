@@ -5,10 +5,8 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
@@ -17,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class BrowserEmulatorBase(
         val driverControl: WebDriverControl,
-        val eventHandler: BrowserEmulateEventHandler,
+        val eventHandler: EventHandler,
         val immutableConfig: ImmutableConfig
 ): Parameterized, AutoCloseable {
     private val log = LoggerFactory.getLogger(BrowserEmulatorBase::class.java)!!
@@ -27,10 +25,9 @@ abstract class BrowserEmulatorBase(
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
     val isActive get() = !closed.get()
-    val metrics = SharedMetricRegistries.getDefault()
-    val meterNavigates = metrics.meter(prependReadableClassName(this,"navigates"))
-    val counterRequests = metrics.counter(prependReadableClassName(this,"requests"))
-    val counterCancels = metrics.counter(prependReadableClassName(this,"cancels"))
+    val meterNavigates by lazy { MetricsManagement.meter(this,"navigates") }
+    val counterRequests by lazy { MetricsManagement.counter(this,"requests") }
+    val counterCancels by lazy { MetricsManagement.counter(this,"cancels") }
 
     override fun getParams(): Params {
         return Params.of(
@@ -40,7 +37,7 @@ abstract class BrowserEmulatorBase(
                 "scrollDownCount", driverControl.scrollDownCount,
                 "scrollInterval", driverControl.scrollInterval,
                 "jsInvadingEnabled", driverControl.jsInvadingEnabled,
-                "emulatorEventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATE_EVENT_HANDLER)
+                "emulatorEventHandler", immutableConfig.get(CapabilityTypes.BROWSER_EMULATOR_EVENT_HANDLER)
         )
     }
 
