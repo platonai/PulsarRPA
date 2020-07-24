@@ -37,6 +37,21 @@ abstract class PrivacyManager(
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult
 
     open fun computeNextContext(): PrivacyContext {
+        val context = computeIfNecessary()?:synchronized(activeContexts) { iterator.next() }
+        if (context.isActive) {
+            return context
+        }
+
+        close(context)
+
+        return computeIfAbsent(PrivacyContextId.generate())
+    }
+
+    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
+
+    abstract fun newContext(id: PrivacyContextId): PrivacyContext
+
+    open fun computeIfNecessary(): PrivacyContext? {
         if (activeContexts.size < numPrivacyContexts) {
             synchronized(activeContexts) {
                 if (activeContexts.size < numPrivacyContexts) {
@@ -45,19 +60,8 @@ abstract class PrivacyManager(
             }
         }
 
-        val context = synchronized(activeContexts) { iterator.next() }
-        if (context.isActive) {
-            return context
-        }
-
-        close(context)
-
-        return newContext(PrivacyContextId.generate()).also { activeContexts[it.id] = it }
+        return null
     }
-
-    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
-
-    abstract fun newContext(id: PrivacyContextId): PrivacyContext
 
     open fun close(privacyContext: PrivacyContext) {
         val id = privacyContext.id

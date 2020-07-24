@@ -11,17 +11,18 @@ import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 import java.util.*
 
 @UDFGroup
 @UDAggregation(name = "GROUP_FETCH")
 class GroupFetch : Aggregate {
 
-    private lateinit var h2session: Session
+    private var conn: Connection? = null
     private val urls = ArrayList<String>()
 
-    override fun init(h2session: Session) {
-        this.h2session = h2session
+    override fun init(conn: Connection) {
+        this.conn = conn
     }
 
     override fun getInternalType(ints: IntArray): Int {
@@ -48,7 +49,8 @@ class GroupFetch : Aggregate {
     }
 
     override fun getResult(): Any {
-        val session = H2SessionFactory.getSession(h2session.serialId)
+        val session = H2SessionFactory.getSession(conn!!)
+        val h2session = session.dbSession.implementation as org.h2.engine.Session
         val options = LoadOptions.create()
         session.parallelLoadAll(urls, options)
         val values = urls.map { url -> DataType.convertToValue(h2session, url, Value.STRING) }.toTypedArray()

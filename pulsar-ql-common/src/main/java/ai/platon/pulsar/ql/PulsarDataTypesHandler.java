@@ -28,6 +28,7 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
      * when clearing references.
      */
     private static final ArrayList<DataType> TYPES = new ArrayList<>();
+    private static final HashMap<Integer, TypeInfo> TYPE_INFO_BY_VALUE_TYPE = new HashMap<>();
     private static final HashMap<String, DataType> TYPES_BY_NAME = new HashMap<>();
     private static final HashMap<Integer, DataType> TYPES_BY_VALUE_TYPE = new HashMap<>();
 
@@ -44,6 +45,7 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
         dt.name = DOM_DATA_TYPE_NAME;
         dt.sqlType = Types.JAVA_OBJECT;
 
+        TYPE_INFO_BY_VALUE_TYPE.put(dt.type, ValueDom.typeInfo);
         register(dt);
     }
 
@@ -73,6 +75,14 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
     }
 
     @Override
+    public TypeInfo getTypeInfoById(int type, long precision, int scale, ExtTypeInfo extTypeInfo) {
+        if (type == ValueDom.type) {
+            return ValueDom.typeInfo;
+        }
+        return null;
+    }
+
+    @Override
     public String getDataTypeClassName(int type) {
         if (type == DOM_DATA_TYPE_ID) {
             return ValueDom.class.getName();
@@ -94,12 +104,12 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
 
     @Override
     public Value convert(Value source, final int targetType) {
-        if (source.getType() == targetType) {
+        if (source.getType().getValueType() == targetType) {
             return source;
         }
 
         if (targetType == DOM_DATA_TYPE_ID) {
-            switch (source.getType()) {
+            switch (source.getType().getValueType()) {
                 case Value.JAVA_OBJECT: {
                     assert source instanceof ValueJavaObject;
                     return ValueDom.get(new String(source.getBytesNoCopy()));
@@ -114,7 +124,7 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
 
             throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, source.getString());
         } else if (targetType == URI_DATA_TYPE_ID) {
-            switch (source.getType()) {
+            switch (source.getType().getValueType()) {
                 case Value.JAVA_OBJECT: {
                     assert source instanceof ValueJavaObject;
                     return ValueURI.get(new String(source.getBytesNoCopy()));
@@ -159,7 +169,7 @@ public class PulsarDataTypesHandler implements CustomDataTypesHandler {
     public Object getObject(Value value, Class<?> cls) {
         if (cls.equals(ValueDom.class)) {
             // System.out.println(value.getType() + ", " + DataType.getDataType(value.getType()).name);
-            if (value.getType() == DOM_DATA_TYPE_ID) {
+            if (value.getType().getValueType() == DOM_DATA_TYPE_ID) {
                 return value.getObject();
             }
 //            else if (value.getType() == Value.NULL) {

@@ -47,7 +47,6 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     @Synchronized
     override fun createSession(ci: ConnectionInfo): Session {
         val h2session = org.h2.engine.Engine.getInstance().createSession(ci)
-        h2session.database.mode = Mode.getInstance(Mode.SIGMA)
         SysProperties.serializeJavaObject = ci.isPersistent
 
         val h2Log = LoggerFactory.getLogger("org.h2")

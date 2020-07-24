@@ -1,7 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.AppPaths
-import org.h2.engine.SysProperties
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
 import java.sql.Connection
@@ -70,7 +69,7 @@ class H2Db(
      * @return the connection
      */
     fun getConnection(name: String): Connection {
-        return getConnection0(buildURL("$name;MODE=sigma", true), user, password)
+        return getConnection0(buildURL(name, true), user, password)
     }
 
     /**
@@ -125,99 +124,87 @@ class H2Db(
      * @param admin true if the current user is an admin
      * @return the database URL
      */
-    fun buildURL(dbName: String, admin: Boolean): String {
-        var name = dbName
+    fun buildURL(name: String, admin: Boolean): String {
+        var name0 = name
         var url: String
-        if (name.startsWith("jdbc:")) {
-            if (config.mvStore) {
-                name = addOption(name, "MV_STORE", "true")
-                // name = addOption(name, "MVCC", "true");
+        if (name0.startsWith("jdbc:")) {
+            name0 = if (config.mvStore) {
+                addOption(name0, "MV_STORE", "true")
+            } else {
+                addOption(name0, "MV_STORE", "false")
             }
-            return name
+            return name0
         }
-
-        if (admin) {
-            name = addOption(name, "RETENTION_TIME", "10");
-            name = addOption(name, "WRITE_DELAY", "10");
+        if (admin) { // name = addOption(name, "RETENTION_TIME", "10");
+// name = addOption(name, "WRITE_DELAY", "10");
         }
-
-        val idx = name.indexOf(':')
+        val idx = name0.indexOf(':')
         if (idx == -1 && config.memory) {
-            name = "mem:$name"
+            name0 = "mem:$name0"
         } else {
-            if (idx < 0 || idx > 10) {
-                // index > 10 if in options
-                name = buildBaseDir() + "/" + name
+            if (idx < 0 || idx > 10) { // index > 10 if in options
+                name0 = "$baseDir/$name0"
             }
         }
-
         url = if (config.networked) {
-            val proto = if (config.ssl) "ssl" else "tcp"
-            "$proto://localhost:${config.port}/$name"
+            if (config.ssl) {
+                "ssl://localhost:" + config.port + "/" + name0
+            } else {
+                "tcp://localhost:" + config.port + "/" + name0
+            }
         } else {
-            name
+            name0
         }
-
-        url = if (config.mvStore) {
-            addOption(url, "MV_STORE", "true")
-            // url = addOption(url, "MVCC", "true");
+        if (config.mvStore) {
+            url = addOption(url, "MV_STORE", "true")
+            url = addOption(url, "MAX_COMPACT_TIME", "0") // to speed up tests
         } else {
-            addOption(url, "MV_STORE", "false")
+            url = addOption(url, "MV_STORE", "false")
         }
-
         if (!config.memory) {
             if (config.smallLog && admin) {
                 url = addOption(url, "MAX_LOG_SIZE", "1")
             }
         }
-
         if (config.traceSystemOut) {
             url = addOption(url, "TRACE_LEVEL_SYSTEM_OUT", "2")
         }
-
         if (config.traceLevelFile > 0 && admin) {
             url = addOption(url, "TRACE_LEVEL_FILE", "" + config.traceLevelFile)
             url = addOption(url, "TRACE_MAX_FILE_SIZE", "8")
         }
-
-        url = addOption(url, "log", "1")
+        url = addOption(url, "LOG", "1")
         if (config.throttleDefault > 0) {
             url = addOption(url, "THROTTLE", "" + config.throttleDefault)
         } else if (config.throttle > 0) {
             url = addOption(url, "THROTTLE", "" + config.throttle)
         }
-
         url = addOption(url, "LOCK_TIMEOUT", "" + config.lockTimeout)
         if (config.diskUndo && admin) {
             url = addOption(url, "MAX_MEMORY_UNDO", "3")
         }
-
-        if (config.big && admin) {
-            // force operations to disk
+        if (config.big && admin) { // force operations to disk
             url = addOption(url, "MAX_OPERATION_MEMORY", "1")
         }
-
-        if (config.mvcc) {
-            url = addOption(url, "MVCC", "TRUE")
-        }
-
-        if (config.multiThreaded) {
-            url = addOption(url, "MULTI_THREADED", "TRUE")
-        }
-
         if (config.lazy) {
             url = addOption(url, "LAZY_QUERY_EXECUTION", "1")
         }
-
+//        if (config.cacheType != null && admin) {
+//            url = addOption(url, "CACHE_TYPE", config.cacheType)
+//        }
         if (config.diskResult && admin) {
             url = addOption(url, "MAX_MEMORY_ROWS", "100")
             url = addOption(url, "CACHE_SIZE", "0")
         }
-
+//        if (config.cipher != null) {
+//            url = addOption(url, "CIPHER", config.cipher)
+//        }
         if (config.defrag) {
             url = addOption(url, "DEFRAG_ALWAYS", "TRUE")
         }
-
+//        if (config.collation != null) {
+//            url = addOption(url, "COLLATION", config.collation)
+//        }
         return "jdbc:h2:$url"
     }
 

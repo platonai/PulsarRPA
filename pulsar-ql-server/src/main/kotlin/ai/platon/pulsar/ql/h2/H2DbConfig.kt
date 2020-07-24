@@ -28,11 +28,6 @@ class H2DbConfig {
     var memory: Boolean = false
 
     /**
-     * If the multi version concurrency control mode should be used.
-     */
-    var mvcc = mvStore
-
-    /**
      * If the multi-threaded mode should be used.
      */
     var multiThreaded: Boolean = false

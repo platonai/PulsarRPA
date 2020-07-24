@@ -122,12 +122,12 @@ open class QuerySession(
 
         var sql = "DROP AGGREGATE IF EXISTS $aggregateName"
         var command = session.prepareCommand(sql, Int.MAX_VALUE)
-        command.executeUpdate()
+        command.executeUpdate(null)
 
         // Notice : can not use session.prepare(sql) here, which causes a call cycle
         sql = "CREATE AGGREGATE IF NOT EXISTS $aggregateName FOR \"${udafClass.qualifiedName}\""
         command = session.prepareCommand(sql, Int.MAX_VALUE)
-        command.executeUpdate()
+        command.executeUpdate(null)
 
         totalUdas.incrementAndGet()
 
@@ -148,14 +148,15 @@ open class QuerySession(
         alias = alias.replace("_", "").toUpperCase()
 
         var sql = "DROP ALIAS IF EXISTS $alias"
+        println(sql)
         // Notice : can not use session.prepare(sql) here, which causes a call cycle
         var command = session.prepareCommand(sql, Int.MAX_VALUE)
-        command.executeUpdate()
+        command.executeUpdate(null)
 
         // Notice : can not use session.prepare(sql) here, which causes a call cycle
         sql = "CREATE ALIAS IF NOT EXISTS $alias FOR \"${udfClass.qualifiedName}.$method\""
         command = session.prepareCommand(sql, Int.MAX_VALUE)
-        command.executeUpdate()
+        command.executeUpdate(null)
 
         totalUdfs.incrementAndGet()
 

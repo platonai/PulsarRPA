@@ -52,8 +52,9 @@ object Queries {
             is ValueArray ->
                 if (portal.list.isNotEmpty()) {
                     val normUrl = session.normalize(portal.list[0].string)
+                    val itemOptions = normUrl.options.createItemOption()
                     for (configuredUrl in portal.list) {
-                        pages = session.loadAll(portal.list.map { configuredUrl.string }, normUrl.options)
+                        pages = session.loadAll(portal.list.map { configuredUrl.string }, itemOptions)
                     }
                 }
             else -> throw DbException.get(ErrorCode.METHOD_NOT_FOUND_1, "Unsupported type ${Value::class}")
@@ -104,15 +105,16 @@ object Queries {
             normalize: Boolean, ignoreQuery: Boolean): Collection<WebPage> {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 
-        val document = session.parse(session.load(portalUrl)).document
+        val normUrl = session.normalize(portalUrl)
+        val document = session.parse(session.load(normUrl)).document
         var links = transformer(document, restrictCss, offset, limit)
 
         if (normalize) {
             links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
         }
 
-        val normUrl = session.normalize(portalUrl, isItemOption = true)
-        return session.loadAll(links, normUrl.options)
+        val itemOptions = normUrl.options.createItemOption()
+        return session.loadAll(links, itemOptions)
     }
 
     /**

@@ -27,8 +27,8 @@ class DbSession(val id: Int, val implementation: Any) {
     fun executeUpdate(sql: String): Int {
         if (org.h2.engine.Session::class.java.isAssignableFrom(implementation.javaClass)) {
             val session = implementation as org.h2.engine.Session
-            val command = session.prepareCommand(sql)
-            return command.executeUpdate()
+            val command = session.prepareCommand(sql, Int.MAX_VALUE)
+            return command.executeUpdate(null).updateCount
         }
 
         return 0

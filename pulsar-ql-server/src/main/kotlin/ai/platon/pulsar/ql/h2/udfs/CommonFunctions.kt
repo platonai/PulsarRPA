@@ -13,7 +13,8 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.apache.commons.lang3.StringUtils
 import org.h2.engine.Session
-import org.h2.ext.pulsar.annotation.H2Context
+import ai.platon.pulsar.ql.annotation.H2Context
+import ai.platon.pulsar.ql.h2.addColumn
 import org.h2.tools.SimpleResultSet
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -416,7 +417,7 @@ object CommonFunctions {
 
     @UDFunction
     @JvmStatic
-    fun array(vararg values: Value): ValueArray {
+    fun make_array(vararg values: Value): ValueArray {
         return ValueArray.get(values)
     }
 

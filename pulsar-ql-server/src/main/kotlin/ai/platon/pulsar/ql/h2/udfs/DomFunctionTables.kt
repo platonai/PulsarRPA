@@ -14,7 +14,7 @@ import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.h2.Queries.toResultSet
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
-import org.h2.ext.pulsar.annotation.H2Context
+import ai.platon.pulsar.ql.annotation.H2Context
 import org.h2.jdbc.JdbcConnection
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType

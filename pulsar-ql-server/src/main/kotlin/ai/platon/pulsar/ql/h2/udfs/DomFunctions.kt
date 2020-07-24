@@ -12,7 +12,7 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.Session
-import org.h2.ext.pulsar.annotation.H2Context
+import ai.platon.pulsar.ql.annotation.H2Context
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString

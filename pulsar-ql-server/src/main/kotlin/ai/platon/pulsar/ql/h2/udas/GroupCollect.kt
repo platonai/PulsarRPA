@@ -10,17 +10,18 @@ import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueNull
 import org.jsoup.nodes.Element
+import java.sql.Connection
 import java.util.*
 
 @UDFGroup
 @UDAggregation(name = "GROUP_COLLECT")
 class GroupCollect : Aggregate {
 
-    private var h2session: Session? = null
+    private var conn: Connection? = null
     private val values = ArrayList<Value>()
 
-    override fun init(h2session: Session?) {
-        this.h2session = h2session
+    override fun init(conn: Connection) {
+        this.conn = conn
     }
 
     override fun getInternalType(types: IntArray): Int {
@@ -38,7 +39,7 @@ class GroupCollect : Aggregate {
             // TODO: ValueDom is converted to Element by h2, how to avoid the conversion?
             values.add(ValueDom.get(o))
         } else {
-            values.add(DataType.convertToValue(h2session, o, Value.UNKNOWN))
+            // values.add(DataType.convertToValue(conn, o, Value.UNKNOWN))
         }
     }
 

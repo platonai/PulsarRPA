@@ -277,10 +277,16 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-h2</artifactId>
+                <version>${pulsar-h2.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <properties>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
+        <pulsar-h2.version>1.4.201-SNAPSHOT</pulsar-h2.version>
     </properties>
 </project>

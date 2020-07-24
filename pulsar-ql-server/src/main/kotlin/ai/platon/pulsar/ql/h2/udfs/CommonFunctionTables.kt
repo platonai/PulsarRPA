@@ -5,7 +5,8 @@ import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.engine.Session
-import org.h2.ext.pulsar.annotation.H2Context
+import ai.platon.pulsar.ql.annotation.H2Context
+import ai.platon.pulsar.ql.h2.addColumn
 import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
@@ -99,9 +100,9 @@ object CommonFunctionTables {
         }
 
         val template = values.list[0]
-
-        val dt = DataType.getDataType(template.type)
-        rs.addColumn(col, dt.sqlType, template.precision.toInt(), template.scale)
+        val typeInfo = template.type
+        val dt = DataType.getDataType(typeInfo.valueType)
+        rs.addColumn(col, dt.sqlType, typeInfo.precision.toInt(), typeInfo.scale)
 
         for (i in 0 until values.list.size) {
             val value = values.list[i]
@@ -132,8 +133,9 @@ object CommonFunctionTables {
 
         rs.addColumn("POS", Types.INTEGER, 10, 0)
         val template = values.list[0]
-        val dt = DataType.getDataType(template.type)
-        rs.addColumn(col, dt.sqlType, template.precision.toInt(), template.scale)
+        val typeInfo = template.type
+        val dt = DataType.getDataType(typeInfo.valueType)
+        rs.addColumn(col, dt.sqlType, typeInfo.precision.toInt(), typeInfo.scale)
 
         for (i in 0 until values.list.size) {
             rs.addRow(i + 1, values.list[i])

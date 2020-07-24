@@ -3,11 +3,11 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.ql.SQLContext
+import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.engine.Session
-import org.h2.ext.pulsar.annotation.H2Context
 import org.slf4j.LoggerFactory
 
 @UDFGroup(namespace = "ADMIN")

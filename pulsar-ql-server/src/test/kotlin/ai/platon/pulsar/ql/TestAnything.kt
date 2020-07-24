@@ -5,7 +5,8 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
-import org.h2.ext.pulsar.annotation.H2Context
+import ai.platon.pulsar.ql.annotation.H2Context
+import ai.platon.pulsar.ql.h2.addColumn
 import org.h2.tools.SimpleResultSet
 import org.junit.Assert
 import org.junit.Test

@@ -7,7 +7,7 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.Queries
 import org.h2.engine.Session
-import org.h2.ext.pulsar.annotation.H2Context
+import ai.platon.pulsar.ql.annotation.H2Context
 import java.sql.ResultSet
 import java.time.Duration
 
