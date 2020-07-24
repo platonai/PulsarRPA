@@ -8,13 +8,12 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
 import ai.platon.pulsar.ql.SQLContext
+import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import org.apache.commons.lang3.StringUtils
-import org.h2.engine.Session
-import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.addColumn
+import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -22,6 +21,7 @@ import org.h2.value.ValueString
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.Long.MAX_VALUE
+import java.sql.Connection
 import java.time.Duration
 import java.util.*
 
@@ -45,7 +45,7 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun setFetchMode(@H2Context h2session: Session, mode_: String, ttl: Int): String? {
+    fun setFetchMode(@H2Context conn: Connection, mode_: String, ttl: Int): String? {
         var mode = mode_
         try {
             mode = FetchMode.valueOf(mode.toUpperCase()).toString()
@@ -55,14 +55,14 @@ object CommonFunctions {
         }
 
         log.debug("Set fetch mode to $mode")
-        return getAndSetConf(h2session, FETCH_MODE, mode, ttl)
+        return getAndSetConf(conn, FETCH_MODE, mode, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
-    fun unsetFetchMode(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun unsetFetchMode(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(FETCH_MODE)
     }
 
@@ -75,24 +75,24 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun setBrowser(@H2Context h2session: Session, browser: String, ttl: Int): String? {
+    fun setBrowser(@H2Context conn: Connection, browser: String, ttl: Int): String? {
         val browserType = BrowserType.fromString(browser)
         if (browserType == BrowserType.NATIVE) {
-            unsetFetchMode(h2session)
+            unsetFetchMode(conn)
         } else {
-            setFetchMode(h2session, FetchMode.BROWSER.name, ttl)
+            setFetchMode(conn, FetchMode.BROWSER.name, ttl)
         }
 
         log.debug("Set browser to $browser")
-        return getAndSetConf(h2session, BROWSER_TYPE, browserType.name, ttl)
+        return getAndSetConf(conn, BROWSER_TYPE, browserType.name, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
-    fun unsetBrowser(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
-        unsetFetchMode(h2session)
+    fun unsetBrowser(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
+        unsetFetchMode(conn)
         return session.sessionConfig.getAndUnset(BROWSER_TYPE)
     }
 
@@ -102,27 +102,27 @@ object CommonFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun enableFadedLinks(@H2Context h2session: Session, ttl: Int): String? {
-        return getAndSetConf(h2session, PARSE_RETRIEVE_FADED_LINKS, true.toString(), ttl)
+    fun enableFadedLinks(@H2Context conn: Connection, ttl: Int): String? {
+        return getAndSetConf(conn, PARSE_RETRIEVE_FADED_LINKS, true.toString(), ttl)
     }
 
     @UDFunction
     @JvmStatic
-    fun disableFadedLinks(@H2Context h2session: Session, ttl: Int): String? {
-        return getAndSetConf(h2session, PARSE_RETRIEVE_FADED_LINKS, false.toString(), ttl)
+    fun disableFadedLinks(@H2Context conn: Connection, ttl: Int): String? {
+        return getAndSetConf(conn, PARSE_RETRIEVE_FADED_LINKS, false.toString(), ttl)
     }
 
     @UDFunction
     @JvmStatic
-    fun setEagerFetchLimit(@H2Context h2session: Session, parallel: Boolean, ttl: Int): String? {
-        return getAndSetConf(h2session, FETCH_CONCURRENCY, parallel.toString(), ttl)
+    fun setEagerFetchLimit(@H2Context conn: Connection, parallel: Boolean, ttl: Int): String? {
+        return getAndSetConf(conn, FETCH_CONCURRENCY, parallel.toString(), ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
-    fun unsetEagerFetchLimit(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun unsetEagerFetchLimit(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(FETCH_CONCURRENCY)
     }
 
@@ -145,17 +145,17 @@ object CommonFunctions {
     @UDFunction(description = "Set the page expire time with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
-    fun setPageExpires(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
+    fun setPageExpires(@H2Context conn: Connection, duration: String, ttl: Int = 1): String? {
         val d = getDuration(duration)
         val value = d?.toString()
-        return getAndSetConf(h2session, STORAGE_DATUM_EXPIRES, value, ttl)
+        return getAndSetConf(conn, STORAGE_DATUM_EXPIRES, value, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
-    fun unsetPageExpires(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun unsetPageExpires(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(STORAGE_DATUM_EXPIRES)
     }
 
@@ -169,17 +169,17 @@ object CommonFunctions {
     @UDFunction(description = "Set the page load timeout with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
-    fun setPageLoadTimeout(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
+    fun setPageLoadTimeout(@H2Context conn: Connection, duration: String, ttl: Int = 1): String? {
         val d = getDuration(duration)
         val value = d?.toString()
-        return getAndSetConf(h2session, FETCH_PAGE_LOAD_TIMEOUT, value, ttl)
+        return getAndSetConf(conn, FETCH_PAGE_LOAD_TIMEOUT, value, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
-    fun unsetPageLoadTimeout(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun unsetPageLoadTimeout(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(FETCH_PAGE_LOAD_TIMEOUT)
     }
 
@@ -193,17 +193,17 @@ object CommonFunctions {
     @UDFunction(description = "Set the script timeout with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
-    fun setScriptTimeout(@H2Context h2session: Session, duration: String, ttl: Int = 1): String? {
+    fun setScriptTimeout(@H2Context conn: Connection, duration: String, ttl: Int = 1): String? {
         val d = getDuration(duration)
         val value = d?.toString()
-        return getAndSetConf(h2session, FETCH_SCRIPT_TIMEOUT, value, ttl)
+        return getAndSetConf(conn, FETCH_SCRIPT_TIMEOUT, value, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's unmodified volatileConfig")
     @JvmStatic
-    fun unsetScriptTimeout(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun unsetScriptTimeout(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(FETCH_SCRIPT_TIMEOUT)
     }
 
@@ -217,15 +217,15 @@ object CommonFunctions {
     @UDFunction(description = "Set the scroll down count with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
-    fun setScrollDownCount(@H2Context h2session: Session, count: Int, ttl: Int = 1): String? {
-        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_COUNT, count.toString(), ttl)
+    fun setScrollDownCount(@H2Context conn: Connection, count: Int, ttl: Int = 1): String? {
+        return getAndSetConf(conn, FETCH_SCROLL_DOWN_COUNT, count.toString(), ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's initial volatileConfig")
     @JvmStatic
-    fun unsetScrollDownCount(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun unsetScrollDownCount(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(FETCH_SCROLL_DOWN_COUNT)
     }
 
@@ -238,17 +238,17 @@ object CommonFunctions {
      */
     @UDFunction(description = "Set the scroll interval with time-to-life of the calling session")
     @JvmStatic
-    fun setScrollInterval(@H2Context h2session: Session, duration: String, ttl: Int): String? {
+    fun setScrollInterval(@H2Context conn: Connection, duration: String, ttl: Int): String? {
         val d = getDuration(duration)
         val value = d?.toString()
-        return getAndSetConf(h2session, FETCH_SCROLL_DOWN_INTERVAL, value, ttl)
+        return getAndSetConf(conn, FETCH_SCROLL_DOWN_INTERVAL, value, ttl)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's initial volatileConfig")
     @JvmStatic
-    fun setScrollInterval(@H2Context h2session: Session): String? {
-        val session = getSession(h2session)
+    fun setScrollInterval(@H2Context conn: Connection): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(FETCH_SCROLL_DOWN_INTERVAL)
     }
 
@@ -265,50 +265,50 @@ object CommonFunctions {
     @UDFunction(description = "Set the volatileConfig property associated by name with time-to-life of the calling session")
     @JvmStatic
     @JvmOverloads
-    fun setConfig(@H2Context h2session: Session, name: String, value: String, ttl: Int = Integer.MAX_VALUE / 2): String? {
-        val session = getSession(h2session)
+    fun setConfig(@H2Context conn: Connection, name: String, value: String, ttl: Int = Integer.MAX_VALUE / 2): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndSet(name, value, ttl)
     }
 
     @UDFunction(description = "Set the volatileConfig property associated by name with time-to-life of the calling session")
     @JvmStatic
-    fun setConf(@H2Context h2session: Session, name: String, value: String, ttl: Int): String? {
-        return setConfig(h2session, name, value, ttl)
+    fun setConf(@H2Context conn: Connection, name: String, value: String, ttl: Int): String? {
+        return setConfig(conn, name, value, ttl)
     }
 
     @UDFunction(description = "Set the volatileConfig property associated by name of the calling session")
     @JvmStatic
-    fun setConf(@H2Context h2session: Session, name: String, value: String): String? {
-        return setConfig(h2session, name, value, Integer.MAX_VALUE / 2)
+    fun setConf(@H2Context conn: Connection, name: String, value: String): String? {
+        return setConfig(conn, name, value, Integer.MAX_VALUE / 2)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's initial volatileConfig")
     @JvmStatic
-    fun unsetConf(@H2Context h2session: Session, name: String): String? {
-        val session = getSession(h2session)
+    fun unsetConf(@H2Context conn: Connection, name: String): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Unset the volatileConfig property of the calling session, " +
             "so it fallback to the process's initial volatileConfig")
     @JvmStatic
-    fun unsetConfig(@H2Context h2session: Session, name: String): String? {
-        val session = getSession(h2session)
+    fun unsetConfig(@H2Context conn: Connection, name: String): String? {
+        val session = getSession(conn)
         return session.sessionConfig.getAndUnset(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
-    fun getConf(@H2Context h2session: Session, name: String): String? {
-        val session = getSession(h2session)
+    fun getConf(@H2Context conn: Connection, name: String): String? {
+        val session = getSession(conn)
         return session.sessionConfig.get(name)
     }
 
     @UDFunction(description = "Get the value associated by the given key of the calling session")
     @JvmStatic
-    fun getConfig(@H2Context h2session: Session, name: String): String? {
-        return getConf(h2session, name)
+    fun getConfig(@H2Context conn: Connection, name: String): String? {
+        return getConf(conn, name)
     }
 
     @UDFunction(description = "Get the initial configuration properties of the process")
@@ -328,12 +328,12 @@ object CommonFunctions {
 
     @UDFunction(description = "Get the configuration properties of the calling session")
     @JvmStatic
-    fun sessionConfig(@H2Context h2session: Session): SimpleResultSet {
+    fun sessionConfig(@H2Context conn: Connection): SimpleResultSet {
         val rs = SimpleResultSet()
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
 
-        val session = getSession(h2session)
+        val session = getSession(conn)
         for ((key, value) in session.sessionConfig.unbox()) {
             rs.addRow(key, value)
         }
@@ -343,7 +343,7 @@ object CommonFunctions {
 
     @UDFunction(description = "Get the system info")
     @JvmStatic
-    fun sysInfo(@H2Context h2session: Session): SimpleResultSet {
+    fun sysInfo(@H2Context conn: Connection): SimpleResultSet {
         val rs = SimpleResultSet()
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
@@ -441,10 +441,10 @@ object CommonFunctions {
      * If value is null, do not set and return null
      * @return The old value or null on failure
      */
-    private fun getAndSetConf(@H2Context h2session: Session, name: String, value: String?, ttl: Int): String? {
+    private fun getAndSetConf(@H2Context conn: Connection, name: String, value: String?, ttl: Int): String? {
         Objects.requireNonNull(name)
 
-        val session = getSession(h2session)
+        val session = getSession(conn)
         val old = session.sessionConfig.get(name)
         if (value != null) {
             session.sessionConfig.set(name, value, ttl)
@@ -454,8 +454,8 @@ object CommonFunctions {
         return null
     }
 
-    private fun getSession(h2session: Session): QuerySession {
-        return H2SessionFactory.getSession(h2session.serialId)
+    private fun getSession(conn: Connection): QuerySession {
+        return H2SessionFactory.getSession(conn)
     }
 
     private fun getDuration(duration: String): Duration? {

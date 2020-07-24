@@ -11,6 +11,7 @@ import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
+import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Types
 import kotlin.reflect.KCallable
@@ -40,7 +41,7 @@ object CommonFunctionTables {
 
     @UDFunction(deterministic = true, description = "Show all X-SQL functions")
     @JvmStatic
-    fun xsqlHelp(@H2Context h2session: Session): ResultSet {
+    fun xsqlHelp(@H2Context conn: Connection): ResultSet {
         val rs = SimpleResultSet()
         rs.autoClose = false
 
@@ -49,7 +50,7 @@ object CommonFunctionTables {
         rs.addColumn("NATIVE FUNCTION")
         rs.addColumn("DESCRIPTION")
 
-        val session = H2SessionFactory.getSession(h2session.serialId)
+        val session = H2SessionFactory.getSession(conn)
         session.registeredUdfClasses
                 .flatMap { getMetadataOfUdfs(it.kotlin) }
                 .sortedBy { it[0] }
@@ -91,7 +92,7 @@ object CommonFunctionTables {
     @UDFunction(deterministic = true, description = "Create a ResultSet from an array")
     @JvmStatic
     @JvmOverloads
-    fun explode(@H2Context h2session: Session, values: ValueArray, col: String = "COL"): ResultSet {
+    fun explode(@H2Context conn: Connection, values: ValueArray, col: String = "COL"): ResultSet {
         val rs = SimpleResultSet()
         rs.autoClose = false
 

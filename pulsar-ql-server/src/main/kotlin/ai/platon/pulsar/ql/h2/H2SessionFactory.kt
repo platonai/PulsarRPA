@@ -75,6 +75,12 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
     }
 
     @Synchronized
+    fun getH2Session(connection: Connection): Session {
+        val conn = connection as JdbcConnection
+        return getSession(conn.session).dbSession.implementation as Session
+    }
+
+    @Synchronized
     fun getSession(sessionInterface: SessionInterface): QuerySession {
         val h2session = sessionInterface as Session
         return sqlContext.getSession(h2session.serialId)

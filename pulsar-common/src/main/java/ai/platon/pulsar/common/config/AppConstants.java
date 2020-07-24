@@ -37,9 +37,9 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @SuppressWarnings("unused")
 public interface AppConstants {
 
-    String APP_CONTEXT_CONFIG_LOCATION = "classpath:/pulsar-beans/app-context.xml";
-    String SCENT_CONTEXT_CONFIG_LOCATION = "classpath:/scent-beans/app-context.xml";
-    String MAPR_CONTEXT_CONFIG_LOCATION = "classpath:/mapr/mapr-beans/mapr-context.xml";
+    String APP_CONTEXT_CONFIG_LOCATION = "classpath*:/pulsar-beans/app-context.xml";
+    String SCENT_CONTEXT_CONFIG_LOCATION = "classpath*:/scent-beans/app-context.xml";
+    String MAPR_CONTEXT_CONFIG_LOCATION = "classpath*:/mapr/mapr-beans/mapr-context.xml";
 
     String YES_STRING = "y";
 

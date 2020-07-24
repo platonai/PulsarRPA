@@ -9,6 +9,7 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.engine.Session
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 
 @UDFGroup(namespace = "ADMIN")
 object AdminFunctions {
@@ -16,12 +17,12 @@ object AdminFunctions {
     private val sqlContext = SQLContext.getOrCreate()
 
     @UDFunction(deterministic = true) @JvmStatic
-    fun echo(@H2Context h2session: Session, message: String): String {
+    fun echo(@H2Context conn: Connection, message: String): String {
         return message
     }
 
     @UDFunction(deterministic = true) @JvmStatic
-    fun echo(@H2Context h2session: Session, message: String, message2: String): String {
+    fun echo(@H2Context conn: Connection, message: String, message2: String): String {
         return "$message, $message2"
     }
 
@@ -33,15 +34,14 @@ object AdminFunctions {
 
     @UDFunction
     @JvmStatic
-    fun sessionCount(@H2Context h2session: Session): Int {
-        checkPrivilege(h2session)
+    fun sessionCount(@H2Context conn: Connection): Int {
         return sqlContext.sessionCount()
     }
 
     @UDFunction
     @JvmStatic
-    fun closeSession(@H2Context h2session: Session): String {
-        checkPrivilege(h2session)
+    fun closeSession(@H2Context conn: Connection): String {
+        val h2session = H2SessionFactory.getH2Session(conn)
         H2SessionFactory.closeSession(h2session.serialId)
         return h2session.toString()
     }
@@ -49,14 +49,9 @@ object AdminFunctions {
     @UDFunction
     @JvmStatic
     @JvmOverloads
-    fun save(@H2Context h2session: Session, url: String, postfix: String = ".htm"): String {
-        checkPrivilege(h2session)
-        val page = H2SessionFactory.getSession(h2session.serialId).load(url)
+    fun save(@H2Context conn: Connection, url: String, postfix: String = ".htm"): String {
+        val page = H2SessionFactory.getSession(conn).load(url)
         val path = AppPaths.WEB_CACHE_DIR.resolve(AppPaths.fromUri(url, "", postfix))
         return AppFiles.saveTo(page, path).toString()
-    }
-
-    private fun checkPrivilege(h2session: Session) {
-
     }
 }

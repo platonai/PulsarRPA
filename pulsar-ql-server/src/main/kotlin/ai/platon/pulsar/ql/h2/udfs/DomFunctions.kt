@@ -13,12 +13,15 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.Session
 import ai.platon.pulsar.ql.annotation.H2Context
+import ai.platon.pulsar.ql.h2.H2SessionFactory
+import org.h2.jdbc.JdbcConnection
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
+import java.sql.Connection
 import java.time.Duration
 
 /**
@@ -33,22 +36,22 @@ object DomFunctions {
     @UDFunction(description = "Load the page specified by url from db, if absent or expired, " +
             "fetch it from the web, and then parse it into a document")
     @JvmStatic
-    fun load(@H2Context h2session: Session, configuredUrl: String): ValueDom {
+    fun load(@H2Context conn: Connection, configuredUrl: String): ValueDom {
         if (!sqlContext.isActive) return ValueDom.NIL
 
-        return sqlContext.getSession(h2session).run {
-            parseValueDom(load(configuredUrl))
-        }
+        val session = H2SessionFactory.getSession(conn)
+        return session.run { parseValueDom(load(configuredUrl)) }
     }
 
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
-    fun fetch(@H2Context h2session: Session, configuredUrl: String): ValueDom {
+    fun fetch(@H2Context conn: Connection, configuredUrl: String): ValueDom {
         if (!sqlContext.isActive) return ValueDom.NIL
 
         val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
         val options = LoadOptions.parse(urlAndArgs.second).apply { expires = Duration.ZERO }
 
+        val h2session = H2SessionFactory.getH2Session(conn)
         return sqlContext.getSession(h2session.serialId).run {
             parseValueDom(load(urlAndArgs.first, options))
         }

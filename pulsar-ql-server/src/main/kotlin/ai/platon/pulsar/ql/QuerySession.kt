@@ -148,7 +148,6 @@ open class QuerySession(
         alias = alias.replace("_", "").toUpperCase()
 
         var sql = "DROP ALIAS IF EXISTS $alias"
-        println(sql)
         // Notice : can not use session.prepare(sql) here, which causes a call cycle
         var command = session.prepareCommand(sql, Int.MAX_VALUE)
         command.executeUpdate(null)
