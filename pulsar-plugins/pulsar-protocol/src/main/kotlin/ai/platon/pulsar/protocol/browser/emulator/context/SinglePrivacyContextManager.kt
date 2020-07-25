@@ -26,8 +26,8 @@ class SinglePrivacyContextManager(
         return run(computeIfAbsent(privacyContextId), task, fetchFun)
     }
 
-    override fun newContext(id: PrivacyContextId): BrowserPrivacyContext {
-        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, fetchMetrics, immutableConfig, id)
+    override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
+        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, fetchMetrics, conf, id)
         log.info("Privacy context is created #{}", context.display)
         return context
     }

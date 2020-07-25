@@ -7,8 +7,6 @@ import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import com.google.common.collect.Iterables
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -21,15 +19,15 @@ abstract class PrivacyContextMonitor(
 ): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
 
 abstract class PrivacyManager(
-        val immutableConfig: ImmutableConfig,
-        val numPrivacyContexts: Int = immutableConfig.getInt(PRIVACY_CONTEXT_NUMBER, 2)
+        val conf: ImmutableConfig,
+        val numPrivacyContexts: Int = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
 ): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get()
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
-     * TODO: use a priority queue and every time we need a context, take the top one
+     * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
     private val iterator = Iterables.cycle(activeContexts.values).iterator()
@@ -47,10 +45,6 @@ abstract class PrivacyManager(
         return computeIfAbsent(PrivacyContextId.generate())
     }
 
-    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { newContext(it) }
-
-    abstract fun newContext(id: PrivacyContextId): PrivacyContext
-
     open fun computeIfNecessary(): PrivacyContext? {
         if (activeContexts.size < numPrivacyContexts) {
             synchronized(activeContexts) {
@@ -62,6 +56,10 @@ abstract class PrivacyManager(
 
         return null
     }
+
+    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
+
+    abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
 
     open fun close(privacyContext: PrivacyContext) {
         val id = privacyContext.id

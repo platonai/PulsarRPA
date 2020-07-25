@@ -16,7 +16,7 @@ import org.openqa.selenium.remote.RemoteWebDriver
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicInteger
 
-class WebDriverFactory(
+open class WebDriverFactory(
         val driverControl: WebDriverControl,
         val browserInstanceManager: BrowserInstanceManager,
         val immutableConfig: ImmutableConfig

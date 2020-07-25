@@ -32,8 +32,7 @@ class WebDriverTask<R> (
  */
 open class WebDriverPoolManager(
         val driverFactory: WebDriverFactory,
-        val immutableConfig: ImmutableConfig,
-        private val suppressMetrics: Boolean = true
+        val immutableConfig: ImmutableConfig
 ): Parameterized, PreemptChannelSupport("WebDriverPoolManager"), AutoCloseable {
     companion object {
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
@@ -41,6 +40,9 @@ open class WebDriverPoolManager(
 
     private val log = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
+
+    var suppressMetrics = true
+
     val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val taskTimeout = Duration.ofMinutes(6)
     val pollingDriverTimeout = LoadingWebDriverPool.POLLING_TIMEOUT
@@ -55,9 +57,9 @@ open class WebDriverPoolManager(
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     val isIdle = idleTime > idleTimeout
 
-    val numReset = MetricsManagement.meter(this, "numReset")
-    val numTimeout = MetricsManagement.meter(this, "numTimeout")
-    val gauges = if (!suppressMetrics) mapOf(
+    val numReset by lazy { MetricsManagement.meter(this, "numReset") }
+    val numTimeout by lazy { MetricsManagement.meter(this, "numTimeout") }
+    val gauges = mapOf(
             "waitingDrivers" to Gauge<Int> { numWaiting },
             "freeDrivers" to Gauge<Int> { numFreeDrivers },
             "workingDrivers" to Gauge<Int> { numWorkingDrivers },
@@ -66,7 +68,7 @@ open class WebDriverPoolManager(
             "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
             "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
             "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
-    ) else mapOf()
+    ).takeUnless { suppressMetrics }
 
     val numWaiting get() = driverPools.values.sumBy { it.numWaiting.get() }
     val numFreeDrivers get() = driverPools.values.sumBy { it.numFree }
@@ -75,9 +77,7 @@ open class WebDriverPoolManager(
     val numOnline get() = driverPools.values.sumBy { it.onlineDrivers.size }
 
     init {
-        if (!suppressMetrics) {
-            MetricsManagement.registerAll(this, gauges)
-        }
+        gauges?.let { MetricsManagement.registerAll(this, it) }
     }
 
     /**
@@ -244,9 +244,7 @@ open class WebDriverPoolManager(
 
     private fun formatStatus(verbose: Boolean = false): String {
         val sb = StringBuilder()
-        if (!suppressMetrics) {
-            gauges.entries.joinTo(sb, " ", "", "\n") { it.key + ": " + it.value.value }
-        }
+        gauges?.entries?.joinTo(sb, " ", "", "\n") { it.key + ": " + it.value.value }
         driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
         return sb.toString()
     }
