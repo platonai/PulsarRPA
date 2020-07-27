@@ -3,6 +3,7 @@ package ai.platon.pulsar.ql.h2.udfs
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.dom.nodes.A_LABELS
+import ai.platon.pulsar.dom.nodes.node.ext.namedRect
 import ai.platon.pulsar.dom.nodes.node.ext.slimHtml
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -12,6 +13,7 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.value.ValueArray
+import org.h2.value.ValueFloat
 import org.h2.value.ValueString
 import org.jsoup.nodes.Element
 
@@ -94,21 +96,25 @@ object DomSelectFunctions {
         return Strings.getFirstInteger(s, defaultValue)
     }
 
+    /**
+     * convert to ValueFloat manually,
+     * TODO: kotlin.Float can not convert to ValueFloat automatically
+     * */
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
             "and try to extract an number from the element text")
     @JvmStatic
-    fun firstNumber(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): Float {
+    fun firstNumber(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueFloat {
         val s = firstText(dom, cssQuery)
-        return Strings.getFirstFloatNumber(s, defaultValue)
+        return Strings.getFirstFloatNumber(s, defaultValue).let { ValueFloat.get(it) }
     }
 
     @UDFunction(description = "Select the nth element from a DOM by the given css query " +
             "and try to extract an number from the element text")
     @JvmStatic
     @JvmOverloads
-    fun nthNumber(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): Float {
+    fun nthNumber(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): ValueFloat {
         val s = nthText(dom, cssQuery, n)
-        return Strings.getFirstFloatNumber(s, defaultValue)
+        return Strings.getFirstFloatNumber(s, defaultValue).let { ValueFloat.get(it) }
     }
 
     @UDFunction(description = "Select all the element from a DOM by the given css query " +

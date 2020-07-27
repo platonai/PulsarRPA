@@ -13,6 +13,7 @@ import ai.platon.pulsar.crawl.GlobalCacheManager
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -56,6 +57,10 @@ abstract class AbstractPulsarContext(
      * The fetch component
      * */
     open val fetchComponent: BatchFetchComponent get() = getBean()
+    /**
+     * The update component
+     * */
+    open val updateComponent: UpdateComponent get() = getBean()
     /**
      * The load component
      * */

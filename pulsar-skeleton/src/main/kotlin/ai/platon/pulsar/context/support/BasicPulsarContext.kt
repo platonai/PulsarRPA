@@ -5,6 +5,7 @@ import ai.platon.pulsar.crawl.GlobalCacheManager
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
+import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.persist.WebDb
 import org.springframework.context.support.StaticApplicationContext
@@ -38,9 +39,13 @@ open class BasicPulsarContext(
      * */
     final override val fetchComponent = BatchFetchComponent(webDb, unmodifiedConfig)
     /**
+     * The update component
+     * */
+    final override val updateComponent = UpdateComponent(webDb, unmodifiedConfig)
+    /**
      * The load component
      * */
-    final override val loadComponent = LoadComponent(webDb, fetchComponent, unmodifiedConfig)
+    final override val loadComponent = LoadComponent(webDb, fetchComponent, updateComponent, unmodifiedConfig)
     /**
      * The global cache manager
      * */

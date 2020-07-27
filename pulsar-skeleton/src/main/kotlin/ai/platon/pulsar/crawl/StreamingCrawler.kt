@@ -27,8 +27,6 @@ import kotlin.math.abs
 open class StreamingCrawler(
         private val urls: Sequence<String>,
         private val options: LoadOptions = LoadOptions.create(),
-        val pageCollector: ConcurrentLinkedQueue<WebPage>? = null,
-        val jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5),
         session: PulsarSession = PulsarContexts.createSession(),
         autoClose: Boolean = true
 ): Crawler(session, autoClose) {
@@ -37,6 +35,8 @@ open class StreamingCrawler(
         private val globalTasks = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
         private val globalFinishedTasks = AtomicInteger()
+        private val globalTimeout = AtomicInteger()
+        private val globalRetries = AtomicInteger()
         private val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         private val availableMemory get() = systemInfo.hardware.memory.available
@@ -49,7 +49,9 @@ open class StreamingCrawler(
                     "availableMemory" to Gauge<String> { Strings.readableBytes(availableMemory) },
                     "globalTasks" to Gauge<Int> { globalTasks.get() },
                     "globalRunningTasks" to Gauge<Int> { globalRunningTasks.get() },
-                    "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() }
+                    "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() },
+                    "globalTimeout" to Gauge<Int> { globalTimeout.get() },
+                    "globalRetries" to Gauge<Int> { globalRetries.get() }
             ).forEach { MetricsManagement.register(this, it.key, it.value) }
         }
     }
@@ -64,9 +66,13 @@ open class StreamingCrawler(
     private val isIdle get() = idleTime > idleTimeout
     private val isAppActive get() = isActive && !illegalState.get()
     private val numTasks = AtomicInteger()
-    private val taskTimeout = Duration.ofMinutes(6)
+    private val taskTimeout = Duration.ofMinutes(10)
     private var flowState = FlowState.CONTINUE
     private var finishScript: Path? = null
+
+    var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
+    var pageCollector: ConcurrentLinkedQueue<WebPage>? = null
+    var globalCacheManager: GlobalCacheManager? = null
 
     val id = instanceSequencer.incrementAndGet()
     var onLoadComplete: (WebPage) -> Unit = {}
@@ -133,23 +139,41 @@ open class StreamingCrawler(
             return FlowState.BREAK
         }
 
-        var page: WebPage?
-        globalRunningTasks.incrementAndGet()
         val context = Dispatchers.Default + CoroutineName("w")
-        scope.launch(context) {
-            page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load(url) } }
-                    .onFailure { log.warn("Unexpected exception", it) }
-                    .getOrNull()
-
-            globalRunningTasks.decrementAndGet()
-            lastActiveTime = Instant.now()
-            page?.let(onLoadComplete)
-        }
+        // must increase before launch because we have to control the number of running tasks
+        globalRunningTasks.incrementAndGet()
+        scope.launch(context) { load(url) }
 
         return flowState
     }
 
     private suspend fun load(url: String): WebPage? {
+        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url) } }
+                .onFailure { log.warn("Unexpected exception", it) }
+                .getOrNull()
+        globalRunningTasks.decrementAndGet()
+
+        if (page == null) {
+            globalTimeout.incrementAndGet()
+            log.info("Task timeout ({}) to load page | {}", taskTimeout, url)
+        }
+
+        if (page == null || page.crawlStatus.isUnFetched) {
+            globalCacheManager?.also {
+                it.nReentrantFetchUrls.add(url)
+                globalRetries.incrementAndGet()
+                log.info("Retry loading the {}/{}th times | {}",
+                        page?.fetchRetries ?: 0, it.nReentrantFetchUrls.count(url), url)
+            }
+        }
+
+        lastActiveTime = Instant.now()
+        page?.let(onLoadComplete)
+
+        return page
+    }
+
+    private suspend fun load0(url: String): WebPage? {
         return session.runCatching { loadDeferred(url, options) }
                 .onFailure { flowState = handleException(url, it) }
                 .getOrNull()

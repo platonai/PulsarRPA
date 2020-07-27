@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.common.ConcurrentLRUCache
+import ai.platon.pulsar.common.collect.ConcurrentNEntrantQueue
 import ai.platon.pulsar.common.collect.ConcurrentNonReentrantQueue
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -24,5 +25,6 @@ class GlobalCacheManager(val immutableConfig: ImmutableConfig) {
     val documentCache = ConcurrentLRUCache<String, FeaturedDocument>(DOCUMENT_CACHE_TTL.seconds, documentCacheCapacity)
 
     val nonReentrantFetchUrls = ConcurrentNonReentrantQueue<String>()
+    val nReentrantFetchUrls = ConcurrentNEntrantQueue<String>(3)
     val reentrantFetchUrls = ConcurrentLinkedQueue<String>()
 }

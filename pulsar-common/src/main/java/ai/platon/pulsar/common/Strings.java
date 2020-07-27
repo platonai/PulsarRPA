@@ -556,9 +556,9 @@ public final class Strings {
     }
 
     public static float getFirstFloatNumber(String s, float defaultValue) {
-        Pattern floatNumberPattern = Pattern.compile("[-]?[0-9]*\\.?,?[0-9]+");
+        Pattern pattern = Pattern.compile("[-]?[0-9]*\\.?,?[0-9]+");
 
-        Matcher m = floatNumberPattern.matcher(s);
+        Matcher m = pattern.matcher(s);
         if (m.find()) {
             return NumberUtils.toFloat(m.group());
         }

@@ -42,7 +42,7 @@ class LoadComponent(
         val webDb: WebDb,
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent? = null,
-        val updateComponent: UpdateComponent? = null,
+        val updateComponent: UpdateComponent,
         val messageWriter: MiscMessageWriter? = null,
         val immutableConfig: ImmutableConfig
 ): AutoCloseable {
@@ -62,8 +62,9 @@ class LoadComponent(
     constructor(
             webDb: WebDb,
             fetchComponent: BatchFetchComponent,
+            updateComponent: UpdateComponent,
             immutableConfig: ImmutableConfig
-    ): this(webDb, fetchComponent, null, null, null, immutableConfig)
+    ): this(webDb, fetchComponent, null, updateComponent, null, immutableConfig)
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -435,7 +436,7 @@ class LoadComponent(
 
         val protocolStatus = page.protocolStatus
         if (protocolStatus.isFailed) {
-            updateComponent?.updateFetchSchedule(page)
+            updateComponent.updateFetchSchedule(page)
             return
         }
 
@@ -444,7 +445,7 @@ class LoadComponent(
             log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
         }
 
-        updateComponent?.updateFetchSchedule(page)
+        updateComponent.updateFetchSchedule(page)
 
         if (options.persist) {
             persist(page, options)

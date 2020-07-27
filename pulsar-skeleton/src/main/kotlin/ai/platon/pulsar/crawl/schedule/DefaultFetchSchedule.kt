@@ -33,7 +33,7 @@ import java.time.Instant
  */
 class DefaultFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MiscMessageWriter
+        messageWriter: MiscMessageWriter? = null
 ) : AbstractFetchSchedule(conf, messageWriter) {
 
     override fun setFetchSchedule(page: WebPage, prevFetchTime: Instant,

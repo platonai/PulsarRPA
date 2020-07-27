@@ -40,8 +40,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numPendingNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
-    protected val normalTaskTimeout = Duration.ofMinutes(6)
-    protected val preemptiveTaskTimeout = Duration.ofMinutes(20)
     private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numPreemptiveTasks.get() > 0
@@ -56,10 +54,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
 
     fun <T> whenNormal(task: () -> T) = beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
 
-    @Throws(TimeoutCancellationException::class)
     suspend fun <T> whenNormalDeferred(task: suspend () -> T) =
-            beforeTask().runCatching { withTimeout(normalTaskTimeout.toMillis()) { task() } }
-                    .also { afterTask() }.getOrThrow()
+            beforeTask().runCatching { task() }.also { afterTask() }.getOrThrow()
 
     fun releaseLocks() {
         if (numRunningNormalTasks.get() == 0) {
@@ -67,6 +63,13 @@ abstract class PreemptChannelSupport(val name: String = "") {
         }
 
         numRunningNormalTasks.set(0)
+    }
+
+    fun formatPreemptChannelStatus(): String {
+        return "preemptive tasks: $numPreemptiveTasks, " +
+                " running preemptive tasks: $numRunningPreemptiveTasks," +
+                " pending normal tasks: $numPendingNormalTasks" +
+                " running normal tasks: $numRunningNormalTasks"
     }
 
     private fun beforePreempt() {
@@ -99,13 +102,6 @@ abstract class PreemptChannelSupport(val name: String = "") {
                 noRunningNormalTasks.signalAll()
             }
         }
-    }
-
-    fun formatPreemptChannelStatus(): String {
-        return "preemptive tasks: $numPreemptiveTasks, " +
-                " running preemptive tasks: $numRunningPreemptiveTasks," +
-                " pending normal tasks: $numPendingNormalTasks" +
-                " running normal tasks: $numRunningNormalTasks"
     }
 
     private fun waitUntilNoRunningNormalTasks() {

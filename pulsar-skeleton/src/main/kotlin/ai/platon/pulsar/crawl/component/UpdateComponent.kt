@@ -18,9 +18,9 @@
  */
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.config.*
+import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.crawl.filter.CrawlFilter
 import ai.platon.pulsar.crawl.schedule.DefaultFetchSchedule
 import ai.platon.pulsar.crawl.schedule.FetchSchedule
@@ -45,9 +45,9 @@ import java.time.Instant
 class UpdateComponent(
         val webDb: WebDb,
         val fetchSchedule: FetchSchedule,
-        val scoringFilters: ScoringFilters,
-        val messageWriter: MiscMessageWriter,
-        val metricsCounters: MetricsCounters,
+        val scoringFilters: ScoringFilters? = null,
+        val messageWriter: MiscMessageWriter? = null,
+        val metricsCounters: MetricsCounters? = null,
         val conf: ImmutableConfig
 ) : Parameterized {
     val LOG = LoggerFactory.getLogger(UpdateComponent::class.java)
@@ -60,12 +60,7 @@ class UpdateComponent(
     private var fetchRetryMax = conf.getInt(CapabilityTypes.FETCH_MAX_RETRY, 3)
     private var maxFetchInterval: Duration = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(365))
 
-    constructor(
-            webDb: WebDb,
-            messageWriter: MiscMessageWriter,
-            metricsCounters: MetricsCounters,
-            conf: ImmutableConfig
-    ): this(webDb, DefaultFetchSchedule(conf, messageWriter), ScoringFilters(conf), messageWriter, metricsCounters, conf)
+    constructor(webDb: WebDb, conf: ImmutableConfig): this(webDb, DefaultFetchSchedule(conf), null, null, null, conf)
 
     override fun getParams(): Params {
         return Params.of(
@@ -96,10 +91,10 @@ class UpdateComponent(
 
         if (outgoingPage.protocolStatus.isFailed) {
             page.deadLinks.add(outgoingPage.url)
-            messageWriter.debugDeadOutgoingPage(outgoingPage.url, page)
+            messageWriter?.debugDeadOutgoingPage(outgoingPage.url, page)
         }
 
-        scoringFilters.updateContentScore(page)
+        scoringFilters?.updateContentScore(page)
     }
 
     fun updateByOutgoingPages(page: WebPage, outgoingPages: Collection<WebPage>) {
@@ -127,7 +122,7 @@ class UpdateComponent(
                     "brokenSubEntity", brokenSubEntityLastRound
             ).formatAsLine()
 
-            messageWriter.reportBrokenEntity(page.url, message)
+            messageWriter?.reportBrokenEntity(page.url, message)
             LOG.warn(message)
         }
     }
@@ -197,8 +192,8 @@ class UpdateComponent(
                 }
 
                 if (modifiedTime.isBefore(AppConstants.TCP_IP_STANDARDIZED_TIME)) {
-                    metricsCounters.inc(Counter.rBadModTime)
-                    messageWriter.reportBadModifiedTime(Params.of(
+                    metricsCounters?.inc(Counter.rBadModTime)
+                    messageWriter?.reportBadModifiedTime(Params.of(
                             "PFT", prevFetchTime, "FT", fetchTime,
                             "PMT", prevModifiedTime, "MT", modifiedTime,
                             "HMT", page.headers.lastModified,

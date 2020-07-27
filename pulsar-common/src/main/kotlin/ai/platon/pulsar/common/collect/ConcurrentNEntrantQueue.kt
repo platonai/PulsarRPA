@@ -1,11 +1,16 @@
 package ai.platon.pulsar.common.collect
 
+import com.google.common.collect.ConcurrentHashMultiset
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 
-class ConcurrentNonReentrantQueue<E>: AbstractQueue<E>() {
+class ConcurrentNEntrantQueue<E>(
+        val n: Int
+): AbstractQueue<E>() {
     private val set = ConcurrentSkipListSet<E>()
-    private val historyHash = ConcurrentSkipListSet<Int>()
+    private val historyHash = ConcurrentHashMultiset.create<Int>()
+
+    fun count(e: E) = historyHash.count(e)
 
     override fun add(e: E) = offer(e)
 
@@ -13,7 +18,7 @@ class ConcurrentNonReentrantQueue<E>: AbstractQueue<E>() {
         val hashCode = e.hashCode()
 
         synchronized(this) {
-            if (!historyHash.contains(hashCode)) {
+            if (historyHash.count(hashCode) <= 3) {
                 historyHash.add(hashCode)
                 return set.add(e)
             }

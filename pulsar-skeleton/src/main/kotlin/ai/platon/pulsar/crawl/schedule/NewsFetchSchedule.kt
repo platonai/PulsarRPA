@@ -40,7 +40,7 @@ import java.time.temporal.ChronoUnit
  */
 class NewsFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MiscMessageWriter
+        messageWriter: MiscMessageWriter? = null
 ) : AdaptiveFetchSchedule(conf, messageWriter) {
     private val LOG = LoggerFactory.getLogger(NewsFetchSchedule::class.java)
 
@@ -68,7 +68,7 @@ class NewsFetchSchedule(
         }
         val days = ChronoUnit.DAYS.between(time, fetchTime)
         if (days > 7) {
-            messageWriter.reportFetchSchedule(page, false)
+            messageWriter?.reportFetchSchedule(page, false)
             return Duration.ofHours(1)
         }
         return MIN_INTERVAL

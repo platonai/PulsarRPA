@@ -37,8 +37,8 @@ import java.util.concurrent.TimeUnit
  * @author Andrzej Bialecki
  */
 abstract class AbstractFetchSchedule(
-        var conf: ImmutableConfig,
-        var messageWriter: MiscMessageWriter
+        val conf: ImmutableConfig,
+        val messageWriter: MiscMessageWriter? = null
 ) : FetchSchedule {
     private var defaultInterval = conf.getDuration(CapabilityTypes.FETCH_DEFAULT_INTERVAL, Duration.ofDays(30))
     private var maxInterval = conf.getDuration(CapabilityTypes.FETCH_MAX_INTERVAL, Duration.ofDays(90))

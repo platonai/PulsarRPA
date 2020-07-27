@@ -34,7 +34,7 @@ open class ConcurrentLoadingIterable<T>(
 
         @Synchronized
         override fun next(): T {
-            return iterable.data.pollFirst()?:throw NoSuchMethodException()
+            return iterable.data.pollFirst()?:throw NoSuchElementException()
         }
     }
 }

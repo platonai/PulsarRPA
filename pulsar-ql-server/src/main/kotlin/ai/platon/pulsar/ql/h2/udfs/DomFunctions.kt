@@ -14,6 +14,7 @@ import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.engine.Session
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.H2SessionFactory
+import ai.platon.pulsar.ql.h2.domValue
 import org.h2.jdbc.JdbcConnection
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -62,153 +63,107 @@ object DomFunctions {
      */
     @UDFunction
     @JvmStatic
-    fun isNil(dom: ValueDom): Boolean {
-        return dom.isNil
-    }
+    fun isNil(dom: ValueDom) = dom.isNil
 
     /**
      * Check if this is a not nil DOM
      */
     @UDFunction
     @JvmStatic
-    fun isNotNil(dom: ValueDom): Boolean {
-        return dom.isNotNil
-    }
+    fun isNotNil(dom: ValueDom) = dom.isNotNil
 
     /**
      * Get the value of the given attribute
      */
     @UDFunction
     @JvmStatic
-    fun attr(dom: ValueDom, attrName: String): String {
-        return dom.element.attr(attrName)
-    }
+    fun attr(dom: ValueDom, attrName: String) = dom.element.attr(attrName)
 
     /**
      * Get the value of the given attribute
      */
     @UDFunction
     @JvmStatic
-    fun labels(dom: ValueDom): String {
-        return dom.element.attr(A_LABELS)
-    }
+    fun labels(dom: ValueDom) = dom.element.attr(A_LABELS)
 
     /**
      * Get the value of the given indicator
      */
     @UDFunction
     @JvmStatic
-    fun feature(dom: ValueDom, featureName: String): Double {
-        return NodeFeature.getValue(featureName, dom.element)
-    }
+    fun feature(dom: ValueDom, featureName: String) = NodeFeature.getValue(featureName, dom.element)
 
     @UDFunction
     @JvmStatic
-    fun hasAttr(dom: ValueDom, attrName: String): Boolean {
-        return dom.element.hasAttr(attrName)
-    }
+    fun hasAttr(dom: ValueDom, attrName: String) = dom.element.hasAttr(attrName)
 
     @UDFunction
     @JvmStatic
-    fun style(dom: ValueDom, styleName: String): String {
-        return dom.element.getStyle(styleName)
-    }
+    fun style(dom: ValueDom, styleName: String) = dom.element.getStyle(styleName)
 
     @UDFunction
     @JvmStatic
-    fun sequence(dom: ValueDom): Int {
-        return dom.element.sequence
-    }
+    fun sequence(dom: ValueDom) = dom.element.sequence
 
     @UDFunction
     @JvmStatic
-    fun depth(dom: ValueDom): Int {
-        return dom.element.depth
-    }
+    fun depth(dom: ValueDom) = dom.element.depth
 
     @UDFunction
     @JvmStatic
-    fun cssSelector(dom: ValueDom): String {
-        return dom.element.cssSelector()
-    }
+    fun cssSelector(dom: ValueDom) = dom.element.cssSelector()
 
     @UDFunction
     @JvmStatic
-    fun cssPath(dom: ValueDom): String {
-        return dom.element.cssSelector()
-    }
+    fun cssPath(dom: ValueDom) = dom.element.cssSelector()
 
     @UDFunction
     @JvmStatic
-    fun siblingSize(dom: ValueDom): Int {
-        return dom.element.siblingSize()
-    }
+    fun siblingSize(dom: ValueDom) = dom.element.siblingSize()
 
     @UDFunction
     @JvmStatic
-    fun siblingIndex(dom: ValueDom): Int {
-        return dom.element.siblingIndex()
-    }
+    fun siblingIndex(dom: ValueDom) = dom.element.siblingIndex()
 
     @UDFunction
     @JvmStatic
-    fun elementSiblingIndex(dom: ValueDom): Int {
-        return dom.element.elementSiblingIndex()
-    }
+    fun elementSiblingIndex(dom: ValueDom) = dom.element.elementSiblingIndex()
 
     @UDFunction
     @JvmStatic
-    fun baseUri(dom: ValueDom): String {
-        return dom.element.baseUri()
-    }
+    fun baseUri(dom: ValueDom) = dom.element.baseUri()
 
     @UDFunction
     @JvmStatic
-    fun absUrl(dom: ValueDom, attributeKey: String): String {
-        return dom.element.absUrl(attributeKey)
-    }
+    fun absUrl(dom: ValueDom, attributeKey: String) = dom.element.absUrl(attributeKey)
 
     @UDFunction
     @JvmStatic
-    fun location(dom: ValueDom): String {
-        return dom.element.location
-    }
+    fun location(dom: ValueDom) = dom.element.location
 
     @UDFunction
     @JvmStatic
-    fun childNodeSize(dom: ValueDom): Int {
-        return dom.element.childNodeSize()
-    }
+    fun childNodeSize(dom: ValueDom) = dom.element.childNodeSize()
 
     @UDFunction
     @JvmStatic
-    fun tagName(dom: ValueDom): String {
-        return dom.element.tagName()
-    }
+    fun tagName(dom: ValueDom) = dom.element.tagName()
 
     @UDFunction
     @JvmStatic
-    fun href(dom: ValueDom): String {
-        return dom.element.attr("href")
-    }
+    fun href(dom: ValueDom) = dom.element.attr("href")
 
     @UDFunction
     @JvmStatic
-    fun absHref(dom: ValueDom): String {
-        return dom.element.absUrl("href")
-    }
+    fun absHref(dom: ValueDom) = dom.element.absUrl("href")
 
     @UDFunction
     @JvmStatic
-    fun src(dom: ValueDom): String {
-        return dom.element.attr("src")
-    }
+    fun src(dom: ValueDom) = dom.element.attr("src")
 
     @UDFunction
     @JvmStatic
-    fun absSrc(dom: ValueDom): String {
-        return dom.element.absUrl("abs:src")
-    }
+    fun absSrc(dom: ValueDom) = dom.element.absUrl("abs:src")
 
     @UDFunction(description = "Get the element title")
     @JvmStatic
@@ -229,9 +184,7 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun hasText(dom: ValueDom): Boolean {
-        return dom.element.hasText()
-    }
+    fun hasText(dom: ValueDom) = dom.element.hasText()
 
     @UDFunction
     @JvmStatic
@@ -247,27 +200,19 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun textLen(dom: ValueDom): Int {
-        return dom.element.text().length
-    }
+    fun textLen(dom: ValueDom) = dom.element.text().length
 
     @UDFunction
     @JvmStatic
-    fun textLength(dom: ValueDom): Int {
-        return dom.element.text().length
-    }
+    fun textLength(dom: ValueDom) = dom.element.text().length
 
     @UDFunction
     @JvmStatic
-    fun ownText(dom: ValueDom): String {
-        return dom.element.ownText()
-    }
+    fun ownText(dom: ValueDom) = dom.element.ownText()
 
     @UDFunction
     @JvmStatic
-    fun ownTextLen(dom: ValueDom): Int {
-        return dom.element.ownText().length
-    }
+    fun ownTextLen(dom: ValueDom) = dom.element.ownText().length
 
     @UDFunction(description = "Extract the first group of the result of java.util.regex.matcher() over the node text")
     @JvmStatic
@@ -303,39 +248,27 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun data(dom: ValueDom): String {
-        return dom.element.data()
-    }
+    fun data(dom: ValueDom) = dom.element.data()
 
     @UDFunction
     @JvmStatic
-    fun id(dom: ValueDom): String {
-        return dom.element.id()
-    }
+    fun id(dom: ValueDom) = dom.element.id()
 
     @UDFunction
     @JvmStatic
-    fun className(dom: ValueDom): String {
-        return dom.element.className()
-    }
+    fun className(dom: ValueDom) = dom.element.className()
 
     @UDFunction
     @JvmStatic
-    fun classNames(dom: ValueDom): Set<String> {
-        return dom.element.classNames()
-    }
+    fun classNames(dom: ValueDom) = dom.element.classNames()
 
     @UDFunction
     @JvmStatic
-    fun hasClass(dom: ValueDom, className: String): Boolean {
-        return dom.element.hasClass(className)
-    }
+    fun hasClass(dom: ValueDom, className: String) = dom.element.hasClass(className)
 
     @UDFunction
     @JvmStatic
-    fun value(dom: ValueDom): String {
-        return dom.element.`val`()
-    }
+    fun value(dom: ValueDom) = dom.element.`val`()
 
     @UDFunction
     @JvmStatic
@@ -360,6 +293,20 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
+    fun ancestor(dom: ValueDom, n: Int): ValueDom {
+        if (dom.isNil) return ValueDom.NIL
+
+        var i = 0
+        var p = dom.element.parent()
+        while (p != null && i++ < n) {
+            p = dom.element.parent()
+        }
+
+        return p?.let { domValue(it) } ?: ValueDom.NIL
+    }
+
+    @UDFunction
+    @JvmStatic
     fun parentName(dom: ValueDom): String {
         if (dom.isNil) return "nil"
         return parent(dom).element.uniqueName
@@ -367,33 +314,23 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun dom(dom: ValueDom): ValueDom {
-        return dom
-    }
+    fun dom(dom: ValueDom) = dom
 
     @UDFunction
     @JvmStatic
-    fun html(dom: ValueDom): String {
-        return dom.element.html()
-    }
+    fun html(dom: ValueDom) = dom.element.html()
 
     @UDFunction
     @JvmStatic
-    fun outerHtml(dom: ValueDom): String {
-        return dom.element.outerHtml()
-    }
+    fun outerHtml(dom: ValueDom) = dom.element.outerHtml()
 
     @UDFunction
     @JvmStatic
-    fun slim_html(dom: ValueDom): String {
-        return dom.element.slimHtml
-    }
+    fun slim_html(dom: ValueDom) = dom.element.slimHtml
 
     @UDFunction
     @JvmStatic
-    fun uniqueName(dom: ValueDom): String {
-        return dom.element.uniqueName
-    }
+    fun uniqueName(dom: ValueDom) = dom.element.uniqueName
 
     @UDFunction
     @JvmStatic
@@ -404,51 +341,35 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun ch(dom: ValueDom): Double {
-        return getFeature(dom, CH)
-    }
+    fun ch(dom: ValueDom) = getFeature(dom, CH)
 
     @UDFunction
     @JvmStatic
-    fun tn(dom: ValueDom): Double {
-        return getFeature(dom, TN)
-    }
+    fun tn(dom: ValueDom) = getFeature(dom, TN)
 
     @UDFunction
     @JvmStatic
-    fun img(dom: ValueDom): Double {
-        return getFeature(dom, IMG)
-    }
+    fun img(dom: ValueDom) = getFeature(dom, IMG)
 
     @UDFunction
     @JvmStatic
-    fun a(dom: ValueDom): Double {
-        return getFeature(dom, A)
-    }
+    fun a(dom: ValueDom) = getFeature(dom, A)
 
     @UDFunction
     @JvmStatic
-    fun sib(dom: ValueDom): Double {
-        return getFeature(dom, SIB)
-    }
+    fun sib(dom: ValueDom) = getFeature(dom, SIB)
 
     @UDFunction
     @JvmStatic
-    fun c(dom: ValueDom): Double {
-        return getFeature(dom, C)
-    }
+    fun c(dom: ValueDom) = getFeature(dom, C)
 
     @UDFunction
     @JvmStatic
-    fun dep(dom: ValueDom): Double {
-        return getFeature(dom, DEP)
-    }
+    fun dep(dom: ValueDom) = getFeature(dom, DEP)
 
     @UDFunction
     @JvmStatic
-    fun seq(dom: ValueDom): Double {
-        return getFeature(dom, SEQ)
-    }
+    fun seq(dom: ValueDom) = getFeature(dom, SEQ)
 
     @UDFunction
     @JvmStatic

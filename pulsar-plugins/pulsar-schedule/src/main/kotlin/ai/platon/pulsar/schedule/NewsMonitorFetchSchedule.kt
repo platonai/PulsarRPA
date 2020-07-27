@@ -119,7 +119,7 @@ class NewsMonitorFetchSchedule(
         val refArticles = pageCounters.get<PageCounters.Ref>(PageCounters.Ref.item)
         if (fetchCount > 5 && refArticles == 0) {
             pageCounters.increase<PageCounters.Self>(PageCounters.Self.noItem)
-            messageWriter.reportFetchSchedule(page, false)
+            messageWriter?.reportFetchSchedule(page, false)
             // Check it at 1 o'clock next night, decrease fetch frequency if no articles
             interval = Duration.between(LocalDateTime.now(), semiInactivePageCheckTime)
                     .plusDays(fetchCount / 10L).plusHours(fetchCount.toLong())
@@ -150,11 +150,11 @@ class NewsMonitorFetchSchedule(
                 }
             } else {
                 // The page is
-                messageWriter.reportFetchSchedule(page, false)
+                messageWriter?.reportFetchSchedule(page, false)
             }
         } else if (hours > 10 * HOURS_OF_YEAR) {
             // Longer than 10 years, it's very likely the publishTime/modifiedTime is wrong
-            messageWriter.reportFetchSchedule(page, false)
+            messageWriter?.reportFetchSchedule(page, false)
             return super.getFetchInterval(page, fetchTime, modifiedTime, state)
         }
 

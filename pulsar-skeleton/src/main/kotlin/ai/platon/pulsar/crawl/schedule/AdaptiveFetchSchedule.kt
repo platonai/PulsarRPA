@@ -64,7 +64,7 @@ import java.util.concurrent.TimeUnit
  */
 open class AdaptiveFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MiscMessageWriter
+        messageWriter: MiscMessageWriter? = null
 ) : AbstractFetchSchedule(conf, messageWriter) {
 
     protected var INC_RATE = conf.getFloat(CapabilityTypes.SCHEDULE_INC_RATE, 0.2f)

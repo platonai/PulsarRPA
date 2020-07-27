@@ -32,7 +32,8 @@ class WebDriverTask<R> (
  */
 open class WebDriverPoolManager(
         val driverFactory: WebDriverFactory,
-        val immutableConfig: ImmutableConfig
+        val immutableConfig: ImmutableConfig,
+        val suppressMetrics: Boolean = false
 ): Parameterized, PreemptChannelSupport("WebDriverPoolManager"), AutoCloseable {
     companion object {
         val DRIVER_CLOSE_TIME_OUT = Duration.ofSeconds(60)
@@ -40,8 +41,6 @@ open class WebDriverPoolManager(
 
     private val log = LoggerFactory.getLogger(WebDriverPoolManager::class.java)
     private val closed = AtomicBoolean()
-
-    var suppressMetrics = true
 
     val eagerAllocateTabs = immutableConfig.getBoolean(BROWSER_EAGER_ALLOCATE_TABS, false)
     val taskTimeout = Duration.ofMinutes(6)
@@ -55,7 +54,7 @@ open class WebDriverPoolManager(
     val startTime = Instant.now()
     var lastActiveTime = startTime
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-    val isIdle = idleTime > idleTimeout
+    val isIdle get() = idleTime > idleTimeout
 
     val numReset by lazy { MetricsManagement.meter(this, "numReset") }
     val numTimeout by lazy { MetricsManagement.meter(this, "numTimeout") }
@@ -67,7 +66,8 @@ open class WebDriverPoolManager(
             "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
             "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
             "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
-            "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() }
+            "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() },
+            "idleTime" to Gauge<String> { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
     val numWaiting get() = driverPools.values.sumBy { it.numWaiting.get() }
@@ -99,7 +99,8 @@ open class WebDriverPoolManager(
             lastActiveTime = Instant.now()
             return run0(task)
         } catch (e: TimeoutCancellationException) {
-            log.warn("Timeout to run task in browser | {} | {}", e.message, task.browserId)
+            log.warn("Timeout to do browser task | {} | {}", e.message, task.browserId)
+            e.printStackTrace()
         }
 
         lastActiveTime = Instant.now()
