@@ -160,10 +160,12 @@ open class StreamingCrawler(
 
         if (page == null || page.crawlStatus.isUnFetched) {
             globalCacheManager?.also {
-                it.nReentrantFetchUrls.add(url)
+                val added = it.nReentrantFetchUrls.add(url)
                 globalRetries.incrementAndGet()
-                log.info("Retry loading the {}/{}th times | {}",
-                        page?.fetchRetries ?: 0, it.nReentrantFetchUrls.count(url), url)
+                log.info("{}. Will retry task the {}/{}th times | {}",
+                        page?.id?:0,
+                        page?.fetchRetries ?: 0, it.nReentrantFetchUrls.count(url),
+                        url)
             }
         }
 

@@ -10,7 +10,7 @@ class ConcurrentNEntrantQueue<E>(
     private val set = ConcurrentSkipListSet<E>()
     private val historyHash = ConcurrentHashMultiset.create<Int>()
 
-    fun count(e: E) = historyHash.count(e)
+    fun count(e: E) = historyHash.count(e.hashCode())
 
     override fun add(e: E) = offer(e)
 
@@ -18,7 +18,7 @@ class ConcurrentNEntrantQueue<E>(
         val hashCode = e.hashCode()
 
         synchronized(this) {
-            if (historyHash.count(hashCode) <= 3) {
+            if (historyHash.count(hashCode) <= n) {
                 historyHash.add(hashCode)
                 return set.add(e)
             }
