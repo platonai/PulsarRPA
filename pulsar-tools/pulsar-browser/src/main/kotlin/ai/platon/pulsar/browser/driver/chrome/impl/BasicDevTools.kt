@@ -94,7 +94,7 @@ abstract class BasicDevTools(
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
 
     private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
-    private val metricsPrefix = "c.i.BasicDevTools."
+    private val metricsPrefix = "c.i.BasicDevTools"
     private val numInvokes = metrics.counter("$metricsPrefix.invokes")
     private val numAccepts = metrics.counter("$metricsPrefix.accepts")
     private val lock = ReentrantLock() // lock for containers
@@ -108,7 +108,7 @@ abstract class BasicDevTools(
     )
 
     init {
-        gauges.forEach { (name, metric) -> metrics.register("$metricsPrefix.$name", metric) }
+        gauges.forEach { (name, gauge) -> metrics.gauge("$metricsPrefix.$name") { gauge } }
         wsClient.addMessageHandler(this)
     }
 

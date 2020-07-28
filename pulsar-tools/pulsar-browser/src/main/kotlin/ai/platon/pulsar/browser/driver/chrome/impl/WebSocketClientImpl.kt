@@ -10,18 +10,21 @@ import java.io.IOException
 import java.net.URI
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
 import javax.websocket.*
 
 class WebSocketClientImpl : WebSocketClient {
+    val id = instanceSequencer.incrementAndGet()
+
     private val log = LoggerFactory.getLogger(WebSocketClientImpl::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
 
     private lateinit var session: Session
-    private val metricsPrefix = "c.i.WebSocketClient."
+    private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
-    private val meterRequests = metrics.meter("$metricsPrefix.requests")
+    private val meterRequests = metrics.meter("$metricsPrefix.$id.requests")
 
     override fun isClosed(): Boolean {
         return !session.isOpen || closed.get()
@@ -107,6 +110,7 @@ class WebSocketClientImpl : WebSocketClient {
     }
 
     companion object {
+        val instanceSequencer = AtomicInteger()
         private const val WEB_SOCKET_CONTAINER_FACTORY_PROPERTY = "ai.platon.pulsar.browser.driver.chrome.webSocketContainerFactory"
         private val DEFAULT_WEB_SOCKET_CONTAINER_FACTORY = DefaultWebSocketContainerFactory::class.java.getName()
         private val WEB_SOCKET_CONTAINER = createWebSocketContainer()
