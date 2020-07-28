@@ -42,17 +42,18 @@ data class BrowserInstanceId(
         var proxyServer: String? = null
 ): Comparable<BrowserInstanceId> {
 
+    val contextDir = dataDir.parent
     override fun hashCode() = dataDir.hashCode()
     override fun equals(other: Any?) = other is BrowserInstanceId && dataDir == other.dataDir
     override fun compareTo(other: BrowserInstanceId) = dataDir.compareTo(other.dataDir)
     override fun toString() = "$dataDir"
 
     companion object {
-        val DEFAULT_DIR_NAME = "browser"
+        val DIR_NAME = "browser"
         val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
 
-        fun resolve(baseDir: Path, dirName: String = DEFAULT_DIR_NAME): BrowserInstanceId {
-            return BrowserInstanceId(baseDir.resolve(dirName))
+        fun resolve(baseDir: Path): BrowserInstanceId {
+            return BrowserInstanceId(baseDir.resolve(DIR_NAME))
         }
     }
 }

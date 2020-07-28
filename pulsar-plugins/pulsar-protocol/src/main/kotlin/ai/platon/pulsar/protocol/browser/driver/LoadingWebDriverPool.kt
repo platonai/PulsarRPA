@@ -45,7 +45,7 @@ class LoadingWebDriverPool(
     val id = instanceSequencer.incrementAndGet()
     val capacity get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
     val onlineDrivers = ConcurrentSkipListSet<AbstractWebDriver>()
-    val freeDrivers = ArrayBlockingQueue<AbstractWebDriver>(500)
+    val freeDrivers = ArrayBlockingQueue<AbstractWebDriver>(2 * capacity)
 
     private val lock = ReentrantLock()
     private val notBusy = lock.newCondition()
@@ -63,6 +63,12 @@ class LoadingWebDriverPool(
     val isActive get() = !closed.get()
     val numWaiting = AtomicInteger()
     val numWorking = AtomicInteger()
+    val numTasks = AtomicInteger()
+    val numSuccess = AtomicInteger()
+    val numTimeout = AtomicInteger()
+    val numDismissWarnings = AtomicInteger()
+    val maxDismissWarnings = 5
+    val shouldDismiss get() = numDismissWarnings.get() > maxDismissWarnings
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
     val numAvailable get() = capacity - numWorking.get()

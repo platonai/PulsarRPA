@@ -5,12 +5,14 @@ import com.github.kklisura.cdt.protocol.ChromeDevTools
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
 import java.net.URI
+import java.util.concurrent.Future
 import java.util.function.Consumer
 
 interface WebSocketClient: AutoCloseable {
     @Throws(WebSocketServiceException::class)
     fun connect(uri: URI)
     fun send(message: String)
+    fun asyncSend(message: String): Future<Void>
     fun addMessageHandler(consumer: Consumer<String>)
     fun isClosed(): Boolean
 }
@@ -40,7 +42,7 @@ interface RemoteDevTools: ChromeDevTools, AutoCloseable {
             returnProperty: String?,
             clazz: Class<T>,
             returnTypeClasses: Array<Class<out Any>>?,
-            methodInvocation: MethodInvocation
+            method: MethodInvocation
     ): T?
 
     fun waitUntilClosed()

@@ -4,11 +4,11 @@ import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
-import ai.platon.pulsar.common.prependReadableClassName
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.URI
+import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 import javax.websocket.*
@@ -17,9 +17,11 @@ class WebSocketClientImpl : WebSocketClient {
     private val log = LoggerFactory.getLogger(WebSocketClientImpl::class.java)
     private val tracer = log.takeIf { it.isTraceEnabled }
     private val closed = AtomicBoolean()
+
     private lateinit var session: Session
+    private val metricsPrefix = "c.i.WebSocketClient."
     private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
-    private val meterRequests = metrics.meter(prependReadableClassName(this, "requests"))
+    private val meterRequests = metrics.meter("$metricsPrefix.requests")
 
     override fun isClosed(): Boolean {
         return !session.isOpen || closed.get()
@@ -50,9 +52,10 @@ class WebSocketClientImpl : WebSocketClient {
 
     @Throws(WebSocketServiceException::class)
     override fun send(message: String) {
+        meterRequests.mark()
+
         try {
-            tracer?.trace("Sending {} | {}", message, session.requestURI)
-            meterRequests.mark()
+            // TODO: use session.asyncRemote?
             session.basicRemote.sendText(message)
         } catch (e: IOException) {
             throw WebSocketServiceException("The connection is closed", e)
@@ -64,17 +67,29 @@ class WebSocketClientImpl : WebSocketClient {
     }
 
     @Throws(WebSocketServiceException::class)
+    override fun asyncSend(message: String): Future<Void> {
+        meterRequests.mark()
+
+        return try {
+            // TODO: use session.asyncRemote?
+            session.asyncRemote.sendText(message)
+        } catch (e: IOException) {
+            throw WebSocketServiceException("The connection is closed", e)
+        } catch (e: java.lang.IllegalStateException) {
+            throw WebSocketServiceException("The connection is closed", e)
+        } catch (e: Exception) {
+            log.error("Unexpected exception | ${session.requestURI}", e)
+            throw e
+        }
+    }
+
+    @Throws(WebSocketServiceException::class)
     override fun addMessageHandler(consumer: Consumer<String>) {
         if (session.messageHandlers.isNotEmpty()) {
             throw WebSocketServiceException("You are already subscribed to this web socket service.")
         }
 
-        val messageHandle = MessageHandler.Whole<String> { message ->
-            tracer?.trace("Received {} | {}", message, session.requestURI)
-            consumer.accept(message)
-        }
-
-        session.addMessageHandler(messageHandle)
+        session.addMessageHandler(MessageHandler.Whole<String> { consumer.accept(it) })
     }
 
     override fun close() {

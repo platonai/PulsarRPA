@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.browser.driver.BrowserControl
-import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.persist.metadata.BrowserType
@@ -10,7 +9,6 @@ import org.apache.commons.lang3.StringUtils
 import org.openqa.selenium.NoSuchSessionException
 import org.openqa.selenium.chrome.ChromeDriver
 import org.slf4j.LoggerFactory
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -28,22 +26,16 @@ enum class DriverStatus {
 }
 
 class ManagedWebDriver(
-        override val browserInstanceId: BrowserInstanceId,
+        browserInstanceId: BrowserInstanceId,
         val driver: org.openqa.selenium.WebDriver,
-        val priority: Int = 1000,
-        override val proxyEntry: ProxyEntry? = null
-): AbstractWebDriver() {
+        val priority: Int = 1000
+): AbstractWebDriver(browserInstanceId, instanceSequencer.incrementAndGet()) {
     companion object {
         val instanceSequencer = AtomicInteger()
     }
 
     private val log = LoggerFactory.getLogger(ManagedWebDriver::class.java)
-    private val wsRequestTimeout = Duration.ofSeconds(15)
 
-    /**
-     * The driver id
-     * */
-    override val id = instanceSequencer.incrementAndGet()
     /**
      * The driver name
      * */
@@ -55,6 +47,10 @@ class ManagedWebDriver(
 
     val pageViews = AtomicInteger()
 
+    init {
+        setLogLevel()
+    }
+
     val isFree get() = status.get().isFree
     val isWorking get() = status.get().isWorking
     val isNotWorking get() = !isWorking
@@ -62,12 +58,6 @@ class ManagedWebDriver(
     override val isRetired get() = status.get().isRetired
     override val isCanceled get() = status.get().isCanceled
     override val isQuit get() = status.get().isQuit
-
-    /**
-     * The current loading page url
-     * The browser might redirect, so it might not be the same with [currentUrl]
-     * */
-    override var url: String = ""
 
     /**
      * The actual url return by the browser
@@ -97,10 +87,6 @@ class ManagedWebDriver(
         is ChromeDevtoolsDriver -> BrowserType.CHROME
         is ChromeDriver -> BrowserType.SELENIUM_CHROME
         else -> BrowserType.CHROME
-    }
-
-    init {
-        setLogLevel()
     }
 
     override fun free() = status.set(DriverStatus.FREE)

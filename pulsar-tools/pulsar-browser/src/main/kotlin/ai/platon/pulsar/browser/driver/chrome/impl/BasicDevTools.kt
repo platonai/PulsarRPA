@@ -6,7 +6,8 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
-import ai.platon.pulsar.common.prependReadableClassName
+import ai.platon.pulsar.common.readable
+import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -18,6 +19,8 @@ import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
@@ -28,19 +31,19 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Consumer
 import kotlin.concurrent.withLock
 
-internal class InvocationResult(val returnProperty: String? = null) {
+internal class InvocationFuture(val returnProperty: String? = null) {
     var result: JsonNode? = null
     var isSuccess = false
     private val countDownLatch = CountDownLatch(1)
 
-    fun signalResultReady(isSuccess: Boolean, result: JsonNode?) {
+    fun signal(isSuccess: Boolean, result: JsonNode?) {
         this.isSuccess = isSuccess
         this.result = result
         countDownLatch.countDown()
     }
 
     @Throws(InterruptedException::class)
-    fun waitForResult(timeout: Long, timeUnit: TimeUnit): Boolean {
+    fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
         try {
             return if (timeout == 0L) {
                 countDownLatch.await()
@@ -67,8 +70,6 @@ abstract class BasicDevTools(
 ): RemoteDevTools, Consumer<String>, AutoCloseable {
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(BasicDevTools::class.java)
-
         private const val ID_PROPERTY = "id"
         private const val ERROR_PROPERTY = "error"
         private const val RESULT_PROPERTY = "result"
@@ -82,20 +83,32 @@ abstract class BasicDevTools(
         private val instanceSequencer = AtomicInteger()
     }
 
+    private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
     private val id = instanceSequencer.incrementAndGet()
     private val workerGroup = devToolsConfig.workerGroup
-    private val invocationResults: MutableMap<Long, InvocationResult> = ConcurrentHashMap()
+    private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
     private val eventHandlers: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
+
+    private val startTime = Instant.now()
+    private var lastActiveTime = startTime
+    private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+
     private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
-    private val counterInvokes = metrics.counter(prependReadableClassName(this, "invokes"))
-    private val counterAccepts = metrics.counter(prependReadableClassName(this, "accepts"))
+    private val metricsPrefix = "c.i.BasicDevTools."
+    private val numInvokes = metrics.counter("$metricsPrefix.invokes")
+    private val numAccepts = metrics.counter("$metricsPrefix.accepts")
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
     override val isOpen get() = !closed.get() && !wsClient.isClosed()
 
+    private val gauges = mapOf(
+            "idleTime" to Gauge<String> { idleTime.readable() }
+    )
+
     init {
+        gauges.forEach { (name, metric) -> metrics.register("$metricsPrefix.$name", metric) }
         wsClient.addMessageHandler(this)
     }
 
@@ -107,43 +120,45 @@ abstract class BasicDevTools(
             returnProperty: String?,
             clazz: Class<T>,
             returnTypeClasses: Array<Class<out Any>>?,
-            methodInvocation: MethodInvocation
+            method: MethodInvocation
     ): T? {
         if (!isOpen) {
             return null
         }
 
+        numInvokes.inc()
+        lastActiveTime = Instant.now()
+
+        val future = invocationFutures.computeIfAbsent(method.id) { InvocationFuture(returnProperty) }
+
         try {
-            val result = InvocationResult(returnProperty)
-
-            invocationResults[methodInvocation.id] = result
-            counterInvokes.inc()
-            wsClient.send(OBJECT_MAPPER.writeValueAsString(methodInvocation))
-
-            // blocking, should move to a coroutine context
-            val responded = result.waitForResult(devToolsConfig.readTimeout.seconds, TimeUnit.SECONDS)
-            invocationResults.remove(methodInvocation.id)
+            // TODO: use coroutine or wsClient.asyncSend
+            wsClient.send(OBJECT_MAPPER.writeValueAsString(method))
+            val responded = future.await(devToolsConfig.readTimeout.seconds, TimeUnit.SECONDS)
+            invocationFutures.remove(method.id)
+            lastActiveTime = Instant.now()
 
             lock.withLock {
-                if (invocationResults.isEmpty()) {
+                if (invocationFutures.isEmpty()) {
                     notBusy.signalAll()
                 }
             }
 
             if (!responded) {
-                throw ChromeDevToolsInvocationException("Timeout to wait for response")
+                logger.warn("Timeout to wait for ws response #$numInvokes")
+                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #$numInvokes")
             }
 
-            if (result.isSuccess) {
+            if (future.isSuccess) {
                 return when {
                     Void.TYPE == clazz -> null
-                    returnTypeClasses != null -> readJsonObject(returnTypeClasses, clazz, result.result)
-                    else -> readJsonObject(clazz, result.result)
+                    returnTypeClasses != null -> readJsonObject(returnTypeClasses, clazz, future.result)
+                    else -> readJsonObject(clazz, future.result)
                 }
             }
 
             // Received a error
-            val error = readJsonObject(ErrorObject::class.java, result.result)
+            val error = readJsonObject(ErrorObject::class.java, future.result)
             val sb = StringBuilder(error.message)
             if (error.data != null) {
                 sb.append(": ")
@@ -178,34 +193,34 @@ abstract class BasicDevTools(
     }
 
     override fun accept(message: String) {
-        LOG.takeIf { it.isTraceEnabled }?.trace("Accept {}", message)
+        logger.takeIf { it.isTraceEnabled }?.trace("Accept {}", message)
 
-        counterAccepts.inc()
+        numAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
             val idNode = jsonNode.get(ID_PROPERTY)
             if (idNode != null) {
                 val id = idNode.asLong()
-                val result = invocationResults[id]
-                if (result != null) {
+                val future = invocationFutures[id]
+                if (future != null) {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)
                     if (errorNode != null) {
-                        result.signalResultReady(false, errorNode)
+                        future.signal(false, errorNode)
                     } else {
-                        if (result.returnProperty != null) {
+                        if (future.returnProperty != null) {
                             if (resultNode != null) {
-                                resultNode = resultNode.get(result.returnProperty)
+                                resultNode = resultNode.get(future.returnProperty)
                             }
                         }
                         if (resultNode != null) {
-                            result.signalResultReady(true, resultNode)
+                            future.signal(true, resultNode)
                         } else {
-                            result.signalResultReady(true, null)
+                            future.signal(true, null)
                         }
                     }
                 } else {
-                    LOG.warn("Received response with unknown invocation #{} - {}", id, jsonNode.asText())
+                    logger.warn("Received response with unknown invocation #{} - {}", id, jsonNode.asText())
                 }
             } else {
                 val methodNode = jsonNode.get(METHOD_PROPERTY)
@@ -215,9 +230,9 @@ abstract class BasicDevTools(
                 }
             }
         } catch (ex: IOException) {
-            LOG.error("Failed reading web socket message!", ex)
+            logger.error("Failed reading web socket message", ex)
         } catch (ex: java.lang.Exception) {
-            LOG.error("Failed receiving web socket message!", ex)
+            logger.error("Failed receiving web socket message", ex)
         }
     }
 
@@ -226,7 +241,7 @@ abstract class BasicDevTools(
             if (it is InterruptedException) {
                 // ignored
             } else {
-                LOG.warn("Unexpected exception", it)
+                logger.warn("Unexpected exception", it)
             }
         }
     }
@@ -237,22 +252,22 @@ abstract class BasicDevTools(
             lock.withLock {
                 try {
                     var i = 0
-                    while (i++ < 5 && invocationResults.isNotEmpty()) {
+                    while (i++ < 5 && invocationFutures.isNotEmpty()) {
                         notBusy.await(1, TimeUnit.SECONDS)
                     }
                 } catch (ignored: InterruptedException) {}
             }
 
-            LOG.trace("Closing ws client ... | {}", wsClient)
+            logger.trace("Closing ws client ... | {}", wsClient)
 
             try {
                 wsClient.close()
                 workerGroup.shutdownGracefully()
             } catch (e: Throwable) {
-                LOG.warn("Unexpected throwable", e)
+                logger.warn("Unexpected throwable", e)
             }
 
-            // LOG.info("Web socket client #{} is closed | {}", id, wsClient)
+            // logger.info("Web socket client #{} is closed | {}", id, wsClient)
 
             closeLatch.countDown()
         }
@@ -281,11 +296,11 @@ abstract class BasicDevTools(
                         try {
                             listener.handler.onEvent(event)
                         } catch (t: Throwable) {
-                            LOG.warn("Unexpected exception", t)
+                            logger.warn("Unexpected exception", t)
                         }
                     }
                 } catch (e: Exception) {
-                    LOG.error("Error while processing event {}", name, e)
+                    logger.error("Error while processing event {}", name, e)
                 }
             }
         }

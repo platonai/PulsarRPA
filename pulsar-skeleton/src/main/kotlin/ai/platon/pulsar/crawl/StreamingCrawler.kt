@@ -148,10 +148,18 @@ open class StreamingCrawler(
     }
 
     private suspend fun load(url: String): WebPage? {
+        if (!isAppActive) {
+            return null
+        }
+
         val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url) } }
                 .onFailure { log.warn("Unexpected exception", it) }
                 .getOrNull()
         globalRunningTasks.decrementAndGet()
+
+        if (!isAppActive) {
+            return null
+        }
 
         if (page == null) {
             globalTimeout.incrementAndGet()
