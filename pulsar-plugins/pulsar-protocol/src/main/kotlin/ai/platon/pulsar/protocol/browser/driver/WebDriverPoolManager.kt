@@ -1,7 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_EAGER_ALLOCATE_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
@@ -10,7 +9,6 @@ import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolException
 import com.codahale.metrics.Gauge
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -50,7 +48,7 @@ open class WebDriverPoolManager(
     val driverPools = ConcurrentSkipListMap<BrowserInstanceId, LoadingWebDriverPool>()
     val retiredPools = ConcurrentSkipListSet<BrowserInstanceId>()
 
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     val startTime = Instant.now()
     var lastActiveTime = startTime
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -95,17 +93,8 @@ open class WebDriverPoolManager(
 
     @Throws(IllegalApplicationContextStateException::class)
     suspend fun <R> run(task: WebDriverTask<R>): R? {
-        try {
-            lastActiveTime = Instant.now()
-            return run0(task)
-        } catch (e: TimeoutCancellationException) {
-            log.warn("Timeout to do browser task | {} | {}", e.message, task.browserId)
-            e.printStackTrace()
-        }
-
         lastActiveTime = Instant.now()
-
-        return null
+        return run0(task).also { lastActiveTime = Instant.now() }
     }
 
     fun createUnmanagedDriverPool(
@@ -186,7 +175,7 @@ open class WebDriverPoolManager(
 
     override fun toString(): String = formatStatus(false)
 
-    @Throws(IllegalApplicationContextStateException::class, TimeoutCancellationException::class)
+    @Throws(IllegalApplicationContextStateException::class)
     private suspend fun <R> run0(task: WebDriverTask<R>): R? {
         val browserId = task.browserId
         var result: R? = null
@@ -206,6 +195,7 @@ open class WebDriverPoolManager(
             try {
                 checkState()
                 driver = driverPool.poll(task.priority, task.volatileConfig, pollingDriverTimeout).apply { startWork() }
+                driverPool.numTasks.incrementAndGet()
                 result = withTimeoutOrNull(taskTimeout.toMillis()) {
                     checkState()
                     task.action(driver)
@@ -213,7 +203,15 @@ open class WebDriverPoolManager(
 
                 if (result == null) {
                     numTimeout.mark()
-                    log.warn("Task timeout({}) | {} | {}", taskTimeout.readable(), formatStatus(browserId), browserId)
+                    driverPool.numTimeout.incrementAndGet()
+                    driverPool.numDismissWarnings.incrementAndGet()
+
+                    // This should not happen since the task itself should handle the timeout event
+                    log.warn("Web driver task timeout({}) | {} | {}",
+                            taskTimeout.readable(), formatStatus(browserId), browserId)
+                } else {
+                    driverPool.numSuccess.incrementAndGet()
+                    driverPool.numDismissWarnings.decrementAndGet()
                 }
             } finally {
                 driver?.let { driverPool.put(it) }
