@@ -24,7 +24,7 @@ class WebSocketClientImpl : WebSocketClient {
     private lateinit var session: Session
     private val metricsPrefix = "c.i.WebSocketClient"
     private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
-    private val meterRequests = metrics.meter("$metricsPrefix.$id.requests")
+    private val meterRequests = metrics.meter("$metricsPrefix.requests")
 
     override fun isClosed(): Boolean {
         return !session.isOpen || closed.get()
