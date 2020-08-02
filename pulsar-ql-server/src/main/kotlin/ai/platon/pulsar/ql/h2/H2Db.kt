@@ -20,11 +20,6 @@ class H2Db(
     }
 
     /**
-     * The temporary directory.
-     */
-    val tmpDir = AppPaths.TMP_DIR.resolve("h2")
-
-    /**
      * The base directory to write test databases.
      */
     val baseDir = AppPaths.DATA_DIR.resolve("h2")
@@ -136,7 +131,7 @@ class H2Db(
             return name0
         }
         if (admin) { // name = addOption(name, "RETENTION_TIME", "10");
-// name = addOption(name, "WRITE_DELAY", "10");
+            // name = addOption(name, "WRITE_DELAY", "10");
         }
         val idx = name0.indexOf(':')
         if (idx == -1 && config.memory) {

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.message.MiscMessageWriter
@@ -15,7 +16,7 @@ class BrowserFetchMetrics(
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
-    private val metricRegistry = SharedMetricRegistries.getOrCreate("pulsar")
+    private val metricRegistry = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
 
     val startTime = Instant.now()
     val elapsedTime get() = Duration.between(startTime, Instant.now())

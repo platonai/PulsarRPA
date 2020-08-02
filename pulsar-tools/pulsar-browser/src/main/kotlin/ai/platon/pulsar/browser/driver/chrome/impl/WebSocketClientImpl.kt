@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.DefaultWebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.WebSocketContainerFactory
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.config.AppConstants
 import com.codahale.metrics.SharedMetricRegistries
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -23,7 +24,7 @@ class WebSocketClientImpl : WebSocketClient {
 
     private lateinit var session: Session
     private val metricsPrefix = "c.i.WebSocketClient"
-    private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
+    private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val meterRequests = metrics.meter("$metricsPrefix.requests")
 
     override fun isClosed(): Boolean {

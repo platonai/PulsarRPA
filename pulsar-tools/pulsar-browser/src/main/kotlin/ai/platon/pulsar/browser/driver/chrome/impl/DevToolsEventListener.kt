@@ -1,8 +1,14 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
+import org.slf4j.LoggerFactory
+import java.io.IOException
+import java.util.function.Consumer
 
 class DevToolsEventListener(
         val key: String,

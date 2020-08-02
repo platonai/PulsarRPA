@@ -179,6 +179,11 @@ public interface AppConstants {
     int PROXY_SERVER_PORT_BASE = 8584;
 
     /**
+     * Metrics
+     * */
+    String DEFAULT_METRICS_NAME = "pulsar";
+
+    /**
      * SQL engine
      * */
     String H2_SESSION_FACTORY = "ai.platon.pulsar.ql.h2.H2SessionFactory";

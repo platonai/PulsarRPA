@@ -87,6 +87,8 @@ abstract class TestBase {
             FileUtils.deleteRecursive(embedDB.baseDir.toString(), true)
             DeleteDbFiles.execute(embedDB.baseDir.toString(), null, true)
 
+            log.info("Database base dir: " + embedDB.baseDir)
+
             remoteDB.config.networked = true
             val config = remoteDB.config
             val args = if (config.ssl)

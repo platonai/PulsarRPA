@@ -20,8 +20,11 @@ open class WebDriverPoolMonitor(
         }
 
         if (driverPoolManager.isIdle) {
-            log.info("Driver pool is idle | {}", driverPoolManager)
-            driverPoolManager.releaseLocks()
+            log.info("[Idle] {}", driverPoolManager)
+
+            if (driverPoolManager.isPreempted) {
+                driverPoolManager.releaseLocks()
+            }
         }
     }
 }

@@ -127,6 +127,10 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
+    fun elementSiblingSize(dom: ValueDom) = dom.element.siblingElements().size
+
+    @UDFunction
+    @JvmStatic
     fun elementSiblingIndex(dom: ValueDom) = dom.element.elementSiblingIndex()
 
     @UDFunction
@@ -144,6 +148,10 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun childNodeSize(dom: ValueDom) = dom.element.childNodeSize()
+
+    @UDFunction
+    @JvmStatic
+    fun childElementSize(dom: ValueDom) = dom.element.children().size
 
     @UDFunction
     @JvmStatic
@@ -326,7 +334,7 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun slim_html(dom: ValueDom) = dom.element.slimHtml
+    fun slimHtml(dom: ValueDom) = dom.element.slimHtml
 
     @UDFunction
     @JvmStatic

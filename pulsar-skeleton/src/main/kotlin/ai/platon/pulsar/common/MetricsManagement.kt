@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
@@ -19,10 +20,10 @@ class MetricsManagement(
         conf: ImmutableConfig
 ): AutoCloseable {
     companion object {
-        const val DEFAULT_METRICS_NAME = "pulsar"
-
         init {
-            SharedMetricRegistries.setDefault(DEFAULT_METRICS_NAME)
+            if (SharedMetricRegistries.tryGetDefault() == null) {
+                SharedMetricRegistries.setDefault(AppConstants.DEFAULT_METRICS_NAME)
+            }
         }
 
         val defaultMetricRegistry = SharedMetricRegistries.getDefault()
@@ -63,7 +64,7 @@ class MetricsManagement(
     private val slf4jReportInterval = conf.getDuration("metrics.slf4j.report.interval", Duration.ofMinutes(2))
     private val counterReportInterval = conf.getDuration("metrics.counter.report.interval", Duration.ofSeconds(30))
 
-    private val metricRegistry = SharedMetricRegistries.getOrCreate(DEFAULT_METRICS_NAME)
+    private val metricRegistry = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
     private val jmxReporter: JmxReporter
     private val csvReporter: CsvReporter
     private val slf4jReporter: CodahaleSlf4jReporter

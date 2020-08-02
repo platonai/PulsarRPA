@@ -36,11 +36,12 @@ abstract class PreemptChannelSupport(val name: String = "") {
     private val lock = ReentrantLock()
     private val noPreemptiveTasks = lock.newCondition()
     private val noRunningNormalTasks = lock.newCondition()
+    private var pollingTimeout = Duration.ofMillis(100)
+
     protected val numPreemptiveTasks = AtomicInteger()
     protected val numRunningPreemptiveTasks = AtomicInteger()
     protected val numPendingNormalTasks = AtomicInteger()
     protected val numRunningNormalTasks = AtomicInteger()
-    private var pollingTimeout = Duration.ofMillis(100)
 
     val isPreempted get() = numPreemptiveTasks.get() > 0
     val isNormal get() = !isPreempted
@@ -59,17 +60,19 @@ abstract class PreemptChannelSupport(val name: String = "") {
 
     fun releaseLocks() {
         if (numRunningNormalTasks.get() == 0) {
+            System.err.println("Force release preemptive locks | ${formatPreemptChannelStatus()}")
             numPreemptiveTasks.set(0)
+            numRunningPreemptiveTasks.set(0)
         }
 
         numRunningNormalTasks.set(0)
     }
 
     fun formatPreemptChannelStatus(): String {
-        return "preemptive tasks: $numPreemptiveTasks, " +
-                " running preemptive tasks: $numRunningPreemptiveTasks," +
-                " pending normal tasks: $numPendingNormalTasks" +
-                " running normal tasks: $numRunningNormalTasks"
+        return "preemptiveTasks: $numPreemptiveTasks," +
+                " runningPreemptiveTasks: $numRunningPreemptiveTasks," +
+                " pendingNormalTasks: $numPendingNormalTasks," +
+                " runningNormalTasks: $numRunningNormalTasks"
     }
 
     private fun beforePreempt() {

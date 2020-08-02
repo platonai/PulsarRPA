@@ -36,6 +36,10 @@ class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseabl
     companion object {
         private val activeContext = AtomicReference<SQLContext>()
 
+        fun active(pulsarContext: AbstractPulsarContext) {
+            activeContext.set(SQLContext(pulsarContext))
+        }
+
         fun getOrCreate(): SQLContext {
             synchronized(SQLContext::class.java) {
                 if (activeContext.get() == null) {

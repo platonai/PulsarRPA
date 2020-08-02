@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.WebSocketClient
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDevToolsInvocationException
 import ai.platon.pulsar.browser.driver.chrome.util.WebSocketServiceException
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
@@ -23,6 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -44,16 +46,14 @@ internal class InvocationFuture(val returnProperty: String? = null) {
 
     @Throws(InterruptedException::class)
     fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
-        try {
-            return if (timeout == 0L) {
+        return try {
+            if (timeout == 0L) {
                 countDownLatch.await()
                 true
             } else countDownLatch.await(timeout, timeUnit)
-        } catch (e: InterruptedException) {
-            // ignored
+        } catch (ignored: InterruptedException) {
+            false
         }
-
-        return false
     }
 }
 
@@ -81,34 +81,37 @@ abstract class BasicDevTools(
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
         private val instanceSequencer = AtomicInteger()
+
+        private val startTime = Instant.now()
+        private var lastActiveTime = startTime
+        private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
+
+        private val metrics = SharedMetricRegistries.getOrCreate(AppConstants.DEFAULT_METRICS_NAME)
+        private val metricsPrefix = "c.i.BasicDevTools.global"
+        private val numInvokes = metrics.counter("$metricsPrefix.invokes")
+        private val numAccepts = metrics.counter("$metricsPrefix.accepts")
+        private val gauges = mapOf(
+                "idleTime" to Gauge<String> { idleTime.readable() }
+        )
+
+        init {
+            gauges.forEach { (name, gauge) -> metrics.gauge("$metricsPrefix.$name") { gauge } }
+        }
     }
 
     private val logger = LoggerFactory.getLogger(BasicDevTools::class.java)
     private val id = instanceSequencer.incrementAndGet()
     private val workerGroup = devToolsConfig.workerGroup
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
-    private val eventHandlers: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
+    private val eventListeners: MutableMap<String, MutableSet<DevToolsEventListener>> = mutableMapOf()
 
-    private val startTime = Instant.now()
-    private var lastActiveTime = startTime
-    private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
-
-    private val metrics = SharedMetricRegistries.getOrCreate("pulsar")
-    private val metricsPrefix = "c.i.BasicDevTools"
-    private val numInvokes = metrics.counter("$metricsPrefix.invokes")
-    private val numAccepts = metrics.counter("$metricsPrefix.accepts")
     private val lock = ReentrantLock() // lock for containers
     private val notBusy = lock.newCondition()
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
     override val isOpen get() = !closed.get() && !wsClient.isClosed()
 
-    private val gauges = mapOf(
-            "idleTime" to Gauge<String> { idleTime.readable() }
-    )
-
     init {
-        gauges.forEach { (name, gauge) -> metrics.gauge("$metricsPrefix.$name") { gauge } }
         wsClient.addMessageHandler(this)
     }
 
@@ -132,7 +135,7 @@ abstract class BasicDevTools(
         val future = invocationFutures.computeIfAbsent(method.id) { InvocationFuture(returnProperty) }
 
         try {
-            // TODO: use coroutine or wsClient.asyncSend
+            // TODO: consider use coroutine or wsClient.asyncSend
             wsClient.send(OBJECT_MAPPER.writeValueAsString(method))
             val responded = future.await(devToolsConfig.readTimeout.seconds, TimeUnit.SECONDS)
             invocationFutures.remove(method.id)
@@ -179,17 +182,13 @@ abstract class BasicDevTools(
             eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener {
         val name = "$domainName.$eventName"
         val listener = DevToolsEventListener(name, eventHandler, eventType, this)
-        eventHandlers.computeIfAbsent(name) { createEventHandlerSet() }.add(listener)
+        eventListeners.computeIfAbsent(name) { ConcurrentSkipListSet<DevToolsEventListener>() }.add(listener)
         return listener
-    }
-
-    private fun createEventHandlerSet(): MutableSet<DevToolsEventListener> {
-        return Collections.synchronizedSet<DevToolsEventListener>(HashSet())
     }
 
     override fun removeEventListener(eventListener: EventListener) {
         val listener = eventListener as DevToolsEventListener
-        eventHandlers[listener.key]?.removeIf { listener.handler == it.handler }
+        eventListeners[listener.key]?.removeIf { listener.handler == it.handler }
     }
 
     override fun accept(message: String) {
@@ -276,11 +275,11 @@ abstract class BasicDevTools(
     private fun handleEvent(name: String, params: JsonNode) {
         if (!isOpen) return
 
-        val listeners = eventHandlers[name] ?:return
+        val listeners = eventListeners[name] ?:return
 
-        var unmodifiedListeners: Set<DevToolsEventListener>
         // make a copy
-        synchronized(listeners) { unmodifiedListeners = HashSet<DevToolsEventListener>(listeners) }
+        val unmodifiedListeners = mutableSetOf<DevToolsEventListener>()
+        synchronized(listeners) { listeners.toCollection(unmodifiedListeners) }
         if (unmodifiedListeners.isEmpty()) return
 
         // coroutine is OK
