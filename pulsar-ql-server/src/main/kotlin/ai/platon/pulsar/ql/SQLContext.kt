@@ -34,18 +34,18 @@ import java.util.concurrent.atomic.AtomicReference
 class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseable {
 
     companion object {
-        private val activeContext = AtomicReference<SQLContext>()
+        private var activeContext: SQLContext? = null
 
-        fun active(pulsarContext: AbstractPulsarContext) {
-            activeContext.set(SQLContext(pulsarContext))
+        fun active(pulsarContext: AbstractPulsarContext): SQLContext {
+            return SQLContext(pulsarContext).also { activeContext = it }
         }
 
         fun getOrCreate(): SQLContext {
             synchronized(SQLContext::class.java) {
-                if (activeContext.get() == null) {
-                    activeContext.set(SQLContext(PulsarContexts.activeContext as AbstractPulsarContext))
+                if (activeContext == null) {
+                    activeContext = SQLContext((PulsarContexts.activeContext?:PulsarContexts.activate()) as AbstractPulsarContext)
                 }
-                return activeContext.get()
+                return activeContext!!
             }
         }
     }

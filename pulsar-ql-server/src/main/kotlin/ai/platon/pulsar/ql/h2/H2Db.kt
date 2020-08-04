@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.AppPaths
 import org.h2.store.FileLister
 import org.h2.tools.DeleteDbFiles
 import java.sql.Connection
@@ -12,34 +11,12 @@ import kotlin.math.abs
  * The base class for all tests.
  */
 class H2Db(
-        sessionFactory: String = "ai.platon.pulsar.ql.h2.H2SessionFactory",
-        val config: H2DbConfig = H2DbConfig()
+        sessionFactory: String = System.getProperty("h2.sessionFactory", "ai.platon.pulsar.ql.h2.H2SessionFactory"),
+        val conf: H2DbConfig = H2DbConfig()
 ) {
     init {
         System.setProperty("h2.sessionFactory", sessionFactory)
     }
-
-    /**
-     * The base directory to write test databases.
-     */
-    val baseDir = AppPaths.DATA_DIR.resolve("h2")
-
-    /**
-     * Get the file password (only required if file encryption is used).
-     *
-     * @return the file password
-     */
-    val filePassword: String = "filePassword"
-
-    /**
-     * Get the login password. This is usually the user password. If file
-     * encryption is used it is combined with the file password.
-     *
-     * @return the login password
-     */
-    val password: String = getPassword("sa")
-
-    val user: String = "sa"
 
     fun generateTempDbName(): String {
         return "" + System.currentTimeMillis() + "_" + abs(Random().nextInt());
@@ -52,9 +29,7 @@ class H2Db(
      * @param name the database name
      * @return the connection
      */
-    fun getRandomConnection(): Connection {
-        return getConnection(generateTempDbName())
-    }
+    fun getRandomConnection() = getConnection(generateTempDbName())
 
     /**
      * Open a database connection in admin mode. The default user name and
@@ -63,9 +38,7 @@ class H2Db(
      * @param name the database name
      * @return the connection
      */
-    fun getConnection(name: String): Connection {
-        return getConnection0(buildURL(name, true), user, password)
-    }
+    fun getConnection(name: String) = getConnection0(buildURL(name, true), conf.user, conf.password)
 
     /**
      * Open a database connection.
@@ -75,9 +48,8 @@ class H2Db(
      * @param password the password to use
      * @return the connection
      */
-    fun getConnection(name: String, user: String, password: String): Connection {
-        return getConnection0(buildURL(name, false), user, password)
-    }
+    fun getConnection(name: String, user: String, password: String) =
+            getConnection0(buildURL(name, false), user, password)
 
     /**
      * Get the password to use to login for the given user password. The file
@@ -87,10 +59,10 @@ class H2Db(
      * @return the login password
      */
     fun getPassword(userPassword: String): String {
-        return if (config.cipher == null)
+        return if (conf.cipher == null)
             userPassword
         else
-            "$filePassword $userPassword"
+            "${conf.filePassword} $userPassword"
     }
 
     /**
@@ -100,11 +72,11 @@ class H2Db(
      * @return the directory, possibly including file system prefix
      */
     fun buildBaseDir(): String {
-        var dir = baseDir.toString()
-        if (config.reopen) {
+        var dir = conf.baseDir.toString()
+        if (conf.reopen) {
             dir = "rec:memFS:$dir"
         }
-        if (config.splitFileSystem) {
+        if (conf.splitFileSystem) {
             dir = "split:16:$dir"
         }
         // return "split:nioMapped:" + baseDir;
@@ -113,7 +85,7 @@ class H2Db(
 
     /**
      * Get the database URL for the given database name using the current
-     * configuration options.
+     * confuration options.
      *
      * @param name the database name
      * @param admin true if the current user is an admin
@@ -123,7 +95,7 @@ class H2Db(
         var name0 = name
         var url: String
         if (name0.startsWith("jdbc:")) {
-            name0 = if (config.mvStore) {
+            name0 = if (conf.mvStore) {
                 addOption(name0, "MV_STORE", "true")
             } else {
                 addOption(name0, "MV_STORE", "false")
@@ -134,71 +106,71 @@ class H2Db(
             // name = addOption(name, "WRITE_DELAY", "10");
         }
         val idx = name0.indexOf(':')
-        if (idx == -1 && config.memory) {
+        if (idx == -1 && conf.memory) {
             name0 = "mem:$name0"
         } else {
             if (idx < 0 || idx > 10) { // index > 10 if in options
-                name0 = "$baseDir/$name0"
+                name0 = "${conf.baseDir}/$name0"
             }
         }
-        url = if (config.networked) {
-            if (config.ssl) {
-                "ssl://localhost:" + config.port + "/" + name0
+        url = if (conf.networked) {
+            if (conf.ssl) {
+                "ssl://localhost:" + conf.port + "/" + name0
             } else {
-                "tcp://localhost:" + config.port + "/" + name0
+                "tcp://localhost:" + conf.port + "/" + name0
             }
         } else {
             name0
         }
-        if (config.mvStore) {
+        if (conf.mvStore) {
             url = addOption(url, "MV_STORE", "true")
             url = addOption(url, "MAX_COMPACT_TIME", "0") // to speed up tests
         } else {
             url = addOption(url, "MV_STORE", "false")
         }
-        if (!config.memory) {
-            if (config.smallLog && admin) {
+        if (!conf.memory) {
+            if (conf.smallLog && admin) {
                 url = addOption(url, "MAX_LOG_SIZE", "1")
             }
         }
-        if (config.traceSystemOut) {
+        if (conf.traceSystemOut) {
             url = addOption(url, "TRACE_LEVEL_SYSTEM_OUT", "2")
         }
-        if (config.traceLevelFile > 0 && admin) {
-            url = addOption(url, "TRACE_LEVEL_FILE", "" + config.traceLevelFile)
+        if (conf.traceLevelFile > 0 && admin) {
+            url = addOption(url, "TRACE_LEVEL_FILE", "" + conf.traceLevelFile)
             url = addOption(url, "TRACE_MAX_FILE_SIZE", "8")
         }
         url = addOption(url, "LOG", "1")
-        if (config.throttleDefault > 0) {
-            url = addOption(url, "THROTTLE", "" + config.throttleDefault)
-        } else if (config.throttle > 0) {
-            url = addOption(url, "THROTTLE", "" + config.throttle)
+        if (conf.throttleDefault > 0) {
+            url = addOption(url, "THROTTLE", "" + conf.throttleDefault)
+        } else if (conf.throttle > 0) {
+            url = addOption(url, "THROTTLE", "" + conf.throttle)
         }
-        url = addOption(url, "LOCK_TIMEOUT", "" + config.lockTimeout)
-        if (config.diskUndo && admin) {
+        url = addOption(url, "LOCK_TIMEOUT", "" + conf.lockTimeout)
+        if (conf.diskUndo && admin) {
             url = addOption(url, "MAX_MEMORY_UNDO", "3")
         }
-        if (config.big && admin) { // force operations to disk
+        if (conf.big && admin) { // force operations to disk
             url = addOption(url, "MAX_OPERATION_MEMORY", "1")
         }
-        if (config.lazy) {
+        if (conf.lazy) {
             url = addOption(url, "LAZY_QUERY_EXECUTION", "1")
         }
-//        if (config.cacheType != null && admin) {
-//            url = addOption(url, "CACHE_TYPE", config.cacheType)
+//        if (conf.cacheType != null && admin) {
+//            url = addOption(url, "CACHE_TYPE", conf.cacheType)
 //        }
-        if (config.diskResult && admin) {
+        if (conf.diskResult && admin) {
             url = addOption(url, "MAX_MEMORY_ROWS", "100")
             url = addOption(url, "CACHE_SIZE", "0")
         }
-//        if (config.cipher != null) {
-//            url = addOption(url, "CIPHER", config.cipher)
+//        if (conf.cipher != null) {
+//            url = addOption(url, "CIPHER", conf.cipher)
 //        }
-        if (config.defrag) {
+        if (conf.defrag) {
             url = addOption(url, "DEFRAG_ALWAYS", "TRUE")
         }
-//        if (config.collation != null) {
-//            url = addOption(url, "COLLATION", config.collation)
+//        if (conf.collation != null) {
+//            url = addOption(url, "COLLATION", conf.collation)
 //        }
         return "jdbc:h2:$url"
     }
@@ -218,7 +190,7 @@ class H2Db(
      */
     fun deleteDb(dir: String, name: String) {
         DeleteDbFiles.execute(dir, name, true)
-         val list = FileLister.getDatabaseFiles(baseDir.toString(), name, true);
+         val list = FileLister.getDatabaseFiles(conf.baseDir.toString(), name, true);
          if (list.isNotEmpty()) {
             println("Not deleted: $list")
          }

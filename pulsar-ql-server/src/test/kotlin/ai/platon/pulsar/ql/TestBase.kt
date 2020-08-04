@@ -1,8 +1,8 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
@@ -16,10 +16,8 @@ import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.slf4j.LoggerFactory
 import java.nio.file.Files
-import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
-import java.sql.Statement
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -84,13 +82,13 @@ abstract class TestBase {
             }
 
             embedDB.deleteDb(name)
-            FileUtils.deleteRecursive(embedDB.baseDir.toString(), true)
-            DeleteDbFiles.execute(embedDB.baseDir.toString(), null, true)
+            FileUtils.deleteRecursive(embedDB.conf.baseDir.toString(), true)
+            DeleteDbFiles.execute(embedDB.conf.baseDir.toString(), null, true)
 
-            log.info("Database base dir: " + embedDB.baseDir)
+            log.info("Database base dir: " + embedDB.conf.baseDir)
 
-            remoteDB.config.networked = true
-            val config = remoteDB.config
+            remoteDB.conf.networked = true
+            val config = remoteDB.conf
             val args = if (config.ssl)
                 mutableListOf("-tcpSSL", "-tcpPort", config.port.toString())
             else
@@ -115,11 +113,11 @@ abstract class TestBase {
             localConnection.close()
 
             embedDB.deleteDb(name)
-            FileUtils.deleteRecursive(embedDB.baseDir.toString(), true)
+            FileUtils.deleteRecursive(embedDB.conf.baseDir.toString(), true)
 
             server?.stop()
             server?.let { println("[Destroy database] H2 Server status: " + it.status) }
-            FileUtils.deleteRecursive(remoteDB.baseDir.toString(), true)
+            FileUtils.deleteRecursive(remoteDB.conf.baseDir.toString(), true)
 
             log.info("Database destroyed")
         }
