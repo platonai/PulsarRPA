@@ -59,6 +59,8 @@ object AppPaths {
     @RequiredDirectory
     val REPORT_DIR = TMP_DIR.resolve( "report")
     @RequiredDirectory
+    val PROC_DIR = TMP_DIR.resolve( "proc")
+    @RequiredDirectory
     val METRICS_DIR = REPORT_DIR.resolve( "metrics")
     @RequiredDirectory
     val SCRIPT_DIR = TMP_DIR.resolve( "scripts")

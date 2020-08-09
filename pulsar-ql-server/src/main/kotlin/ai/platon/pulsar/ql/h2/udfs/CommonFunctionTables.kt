@@ -101,9 +101,9 @@ object CommonFunctionTables {
         }
 
         val template = values.list[0]
-        val typeInfo = template.type
-        val dt = DataType.getDataType(typeInfo.valueType)
-        rs.addColumn(col, dt.sqlType, typeInfo.precision.toInt(), typeInfo.scale)
+
+        val dt = DataType.getDataType(template.type)
+        rs.addColumn(col, dt.sqlType, template.precision.toInt(), template.scale)
 
         for (i in 0 until values.list.size) {
             val value = values.list[i]
@@ -134,9 +134,8 @@ object CommonFunctionTables {
 
         rs.addColumn("POS", Types.INTEGER, 10, 0)
         val template = values.list[0]
-        val typeInfo = template.type
-        val dt = DataType.getDataType(typeInfo.valueType)
-        rs.addColumn(col, dt.sqlType, typeInfo.precision.toInt(), typeInfo.scale)
+        val dt = DataType.getDataType(template.type)
+        rs.addColumn(col, dt.sqlType, template.precision.toInt(), template.scale)
 
         for (i in 0 until values.list.size) {
             rs.addRow(i + 1, values.list[i])

@@ -373,7 +373,8 @@ open class PulsarSession(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            context.webDb.flush()
+            // org.springframework.beans.factory.BeanCreationNotAllowedException throws if WebDb is not created yet
+            kotlin.runCatching { context.webDb.flush() }.onFailure { log.warn(it.message) }
             closableObjects.forEach { o -> o.close() }
 
             log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",

@@ -139,9 +139,6 @@
                 <module>pulsar-dom</module>
                 <module>pulsar-plugins</module>
                 <module>pulsar-third</module>
-                <module>pulsar-third/pulsar-boilerpipe</module>
-                <module>pulsar-third/pulsar-jsoup</module>
-                <module>pulsar-third/pulsar-chrome-devtools</module>
                 <module>pulsar-tools</module>
                 <module>pulsar-rest</module>
                 <module>pulsar-ql-common</module>
@@ -287,6 +284,6 @@
 
     <properties>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
-        <pulsar-h2.version>1.4.201-SNAPSHOT</pulsar-h2.version>
+        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
     </properties>
 </project>

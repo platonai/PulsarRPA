@@ -45,6 +45,8 @@ abstract class PreemptChannelSupport(val name: String = "") {
 
     val isPreempted get() = numPreemptiveTasks.get() > 0
     val isNormal get() = !isPreempted
+    val hasEvent get() = arrayOf(numRunningPreemptiveTasks,
+            numRunningPreemptiveTasks, numPendingNormalTasks, numRunningNormalTasks).sumBy { it.get() } > 0
 
     /**
      * The freezer is preemptive, if there is at least one freezer task attempt enter the critical section
@@ -69,10 +71,10 @@ abstract class PreemptChannelSupport(val name: String = "") {
     }
 
     fun formatPreemptChannelStatus(): String {
-        return "preemptiveTasks: $numPreemptiveTasks," +
-                " runningPreemptiveTasks: $numRunningPreemptiveTasks," +
-                " pendingNormalTasks: $numPendingNormalTasks," +
-                " runningNormalTasks: $numRunningNormalTasks"
+        return "pTasks: $numPreemptiveTasks," +
+                " rPTasks: $numRunningPreemptiveTasks," +
+                " pNTasks: $numPendingNormalTasks," +
+                " rNTasks: $numRunningNormalTasks"
     }
 
     private fun beforePreempt() {

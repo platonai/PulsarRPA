@@ -397,6 +397,7 @@ public interface CapabilityTypes {
     String SCENT_EXTRACT_REFRESH_FEATURE = "scent.extract.refresh.feature";
     String SCENT_EXTRACT_GREEDY = "scent.extract.greedy";
     String SCENT_EXTRACT_KEEP_ELEMENT_METADATA = "scent.extract.keep.element.metadata";
+    String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
 
     // BUILD
     String SCENT_WIKI_DOMAIN = "scent.wiki.domain";

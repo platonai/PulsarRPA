@@ -6,12 +6,8 @@
 package ai.platon.pulsar.ql.types;
 
 import ai.platon.pulsar.ql.PulsarDataTypesHandler;
-import org.h2.api.ErrorCode;
-import org.h2.engine.CastDataProvider;
-import org.h2.message.DbException;
 import org.h2.util.StringUtils;
 import org.h2.value.CompareMode;
-import org.h2.value.TypeInfo;
 import org.h2.value.Value;
 
 import java.net.URI;
@@ -23,7 +19,6 @@ import java.sql.PreparedStatement;
 public class ValueURI extends Value {
 
     public static int type = PulsarDataTypesHandler.URI_DATA_TYPE_ID;
-    public static TypeInfo typeInfo = new TypeInfo(type, 0, 0, 10, null);
 
     private final URI uri;
 
@@ -56,18 +51,29 @@ public class ValueURI extends Value {
     }
 
     @Override
-    public TypeInfo getType() {
-        return typeInfo;
+    public int getType() {
+        return type;
     }
 
     @Override
-    public int getValueType() {
+    public long getPrecision() {
         return 0;
+    }
+
+    @Override
+    public int getDisplaySize() {
+        // it doesn't make sense to calculate it
+        return uri.toString().length();
     }
 
     @Override
     public String getString() {
         return uri.toString();
+    }
+
+    @Override
+    protected int compareSecure(Value v, CompareMode mode) {
+        return this == v ? 0 : super.toString().compareTo(v.toString());
     }
 
     @Override
@@ -87,18 +93,12 @@ public class ValueURI extends Value {
 
     @Override
     public void set(PreparedStatement prep, int parameterIndex) {
-        throw DbException.get(ErrorCode.FEATURE_NOT_SUPPORTED_1, "ValueURI");
+        throw throwUnsupportedExceptionForType("ValueURI.set");
     }
 
     @Override
     public String getSQL() {
         return "X'" + StringUtils.convertBytesToHex(getBytesNoCopy()) + "'::URI";
-    }
-
-    @Override
-    public StringBuilder getSQL(StringBuilder builder) {
-        builder.append("X'").append(toString()).append("'::URI");
-        return builder;
     }
 
     @Override
@@ -112,11 +112,6 @@ public class ValueURI extends Value {
     @Override
     public byte[] getBytesNoCopy() {
         return uri.toString().getBytes();
-    }
-
-    @Override
-    public int compareTypeSafe(Value v, CompareMode mode, CastDataProvider provider) {
-        return 0;
     }
 
     @Override

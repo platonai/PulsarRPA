@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CONCURRENCY
-import ai.platon.pulsar.common.config.CapabilityTypes.QE_HANDLE_PERIODICAL_FETCH_TASKS
+import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
@@ -43,6 +43,7 @@ class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseabl
         fun getOrCreate(): SQLContext {
             synchronized(SQLContext::class.java) {
                 if (activeContext == null) {
+                    Systems.setPropertyIfAbsent(SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
                     activeContext = SQLContext((PulsarContexts.activeContext?:PulsarContexts.activate()) as AbstractPulsarContext)
                 }
                 return activeContext!!

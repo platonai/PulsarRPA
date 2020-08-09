@@ -417,8 +417,20 @@ object CommonFunctions {
 
     @UDFunction
     @JvmStatic
-    fun make_array(vararg values: Value): ValueArray {
+    fun makeArray(vararg values: Value): ValueArray {
         return ValueArray.get(values)
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun getString(value: Value): String {
+        return value.string
+    }
+
+    @UDFunction
+    @JvmStatic
+    fun getSql(value: Value): String {
+        return value.sql
     }
 
     @UDFunction

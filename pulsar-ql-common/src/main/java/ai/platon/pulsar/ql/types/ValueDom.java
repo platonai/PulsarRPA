@@ -8,11 +8,15 @@ package ai.platon.pulsar.ql.types;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.dom.nodes.node.ext.NodeExtKt;
 import ai.platon.pulsar.ql.PulsarDataTypesHandler;
-import org.h2.engine.CastDataProvider;
+import org.h2.api.ErrorCode;
+import org.h2.message.DbException;
 import org.h2.util.JdbcUtils;
+import org.h2.util.StringUtils;
 import org.h2.value.CompareMode;
-import org.h2.value.TypeInfo;
 import org.h2.value.Value;
+import org.h2.value.ValueBytes;
+import org.h2.value.ValueJavaObject;
+import org.h2.value.ValueString;
 import org.jetbrains.annotations.NotNull;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -33,7 +37,6 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
     public static final ValueDom NIL = new ValueDom(NIL_DOC);
 
     public static int type = PulsarDataTypesHandler.DOM_DATA_TYPE_ID;
-    public static TypeInfo typeInfo = new TypeInfo(type, 128, 128, 10, null);
 
     private final Document document;
     private final Element element;
@@ -74,7 +77,6 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
      * TODO: might use lot of memory so memory should be managed
      * */
     public String getOuterHtml() {
-        // throw new RuntimeException("From here");
         // TODO: document scope cache
         if (outerHtml == null) outerHtml = element.outerHtml();
         return outerHtml;
@@ -123,35 +125,41 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
     }
 
     @Override
-    public int compareTypeSafe(Value v, CompareMode mode, CastDataProvider provider) {
-        return 0;
+    public Value convertTo(int targetType) {
+        if (getType() == targetType) {
+            return this;
+        }
+
+        if (targetType == Value.STRING) {
+            return ValueString.get(getString());
+        } else if (targetType == Value.BYTES) {
+            return ValueBytes.get(getBytesNoCopy());
+        } else if (targetType == Value.JAVA_OBJECT) {
+            System.err.println("Convert ValueDom to ValueJavaObject");
+            return ValueJavaObject.getNoCopy(null, getBytesNoCopy(), getDataHandler());
+        }
+
+        throw DbException.get(ErrorCode.DATA_CONVERSION_ERROR_1, getString());
     }
 
     @Override
-    public TypeInfo getType() {
-        return typeInfo;
+    public int getType() {
+        return type;
     }
 
     @Override
-    public int getValueType() {
-        return 0;
+    public long getPrecision() {
+        return 128;
     }
 
-//    @Override
-//    public long getPrecision() {
-//        return 128;
-//    }
-//
-//    @Override
-//    public int getDisplaySize() {
-//        return 128;
-//    }
+    @Override
+    public int getDisplaySize() {
+        return 128;
+    }
 
     @Override
     public int getMemory() {
-        if (outerHtml == null) {
-            return 32;
-        } else return outerHtml.length();
+        return getDisplaySize() * 2 + 48;
     }
 
     @Override
@@ -159,15 +167,15 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
         return toString();
     }
 
-//    /**
-//     * TODO: performance
-//     * When to use compareSecure?
-//     * */
-//    @Override
-//    protected int compareSecure(Value o, CompareMode mode) {
-//        ValueDom v = (ValueDom) o;
-//        return mode.compareString(getOuterHtml(), v.getOuterHtml(), false);
-//    }
+    /**
+     * TODO: performance
+     * When to use compareSecure?
+     * */
+    @Override
+    protected int compareSecure(Value o, CompareMode mode) {
+        ValueDom v = (ValueDom) o;
+        return mode.compareString(getOuterHtml(), v.getOuterHtml(), false);
+    }
 
     /**
      * TODO: We might have a better Element.equals implementation
@@ -197,8 +205,8 @@ public class ValueDom extends Value implements Comparable<ValueDom> {
     }
 
     @Override
-    public StringBuilder getSQL(StringBuilder builder) {
-        return builder.append("X'").append(toString()).append("::Dom");
+    public String getSQL() {
+        return "X'" + StringUtils.convertBytesToHex(getBytesNoCopy()) + "'::Dom";
     }
 
     @Override
