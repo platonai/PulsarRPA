@@ -1,5 +1,6 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
+import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -24,6 +25,11 @@ abstract class PrivacyManager(
 ): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
+
+    val numTasks = MetricsManagement.meter(this, "numTasks")
+    val numSuccesses = MetricsManagement.meter(this, "numSuccesses")
+    val numFinished = MetricsManagement.meter(this, "numFinished")
+
     val isActive get() = !closed.get()
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
@@ -90,7 +96,7 @@ abstract class PrivacyManager(
             val prefix = "The latest context throughput: "
             val postfix = " (success/sec)"
             zombieContexts.take(15)
-                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.throughput) }
+                    .joinToString(", ", prefix, postfix) { String.format("%.2f", it.numSuccesses.meanRate) }
                     .let { log.info(it) }
         }
     }

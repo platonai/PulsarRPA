@@ -59,9 +59,7 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val normUrl = session.normalize(url)
-        val elements = session.parse(session.load(normUrl)).select(cssQuery, offset, limit)
-
+        val elements = session.loadAndParse(url).select(cssQuery, offset, limit)
         return toResultSet("DOM", elements.map { domValue(it) })
     }
 

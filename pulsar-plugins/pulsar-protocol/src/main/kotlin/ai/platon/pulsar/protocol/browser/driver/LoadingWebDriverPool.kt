@@ -68,7 +68,7 @@ class LoadingWebDriverPool(
     val numTimeout = AtomicInteger()
     val numDismissWarnings = AtomicInteger()
     val maxDismissWarnings = 5
-    val shouldDismiss get() = numDismissWarnings.get() > maxDismissWarnings
+    val shouldRetire get() = numDismissWarnings.get() > maxDismissWarnings
     val numFree get() = freeDrivers.size
     val numActive get() = numWorking.get() + numFree
     val numAvailable get() = capacity - numWorking.get()

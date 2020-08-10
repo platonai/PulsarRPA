@@ -7,3 +7,7 @@ import org.h2.value.Value
 fun SimpleResultSet.addColumn(name: String) {
     addColumn(name, DataType.convertTypeToSQLType(Value.STRING), 0, 0)
 }
+
+fun SimpleResultSet.addColumns(vararg names: String) {
+    names.forEach { addColumn(it) }
+}

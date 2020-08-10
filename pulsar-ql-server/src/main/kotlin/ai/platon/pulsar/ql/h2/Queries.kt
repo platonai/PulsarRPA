@@ -163,7 +163,6 @@ object Queries {
 
     /**
      * Get a result set, the result set contains just one column DOM
-     * TODO: generalization
      */
     fun <E> toResultSet(colName: String, collection: Iterable<E>): ResultSet {
         val rs = SimpleResultSet().apply { autoClose = false }
@@ -185,13 +184,7 @@ object Queries {
      */
     fun toResultSet(anchors: Collection<Anchor>): ResultSet {
         val rs = SimpleResultSet()
-        rs.addColumn("URL")
-        rs.addColumn("TEXT")
-        rs.addColumn("PATH")
-        rs.addColumn("LEFT")
-        rs.addColumn("TOP")
-        rs.addColumn("WIDTH")
-        rs.addColumn("HEIGHT")
+        rs.addColumns("URL", "TEXT", "PATH", "LEFT", "TOP", "WIDTH", "HEIGHT")
 
         anchors.forEach {
             rs.addRow(it.url, it.text, it.path, it.left, it.top, it.width, it.height)
@@ -233,8 +226,7 @@ object Queries {
      */
     fun toResultSet(page: WebPage): ResultSet {
         val rs = SimpleResultSet()
-        rs.addColumn("KEY")
-        rs.addColumn("VALUE")
+        rs.addColumns("KEY", "VALUE")
 
         val fields = WebPageFormatter(page).toMap()
         for (entry in fields.entries) {

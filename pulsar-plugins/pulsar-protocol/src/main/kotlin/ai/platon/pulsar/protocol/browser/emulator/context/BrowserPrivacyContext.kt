@@ -72,7 +72,7 @@ open class BrowserPrivacyContext(
         log.info("Privacy context #{}{}{} has lived for {}" +
                 " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
-                numSuccesses, String.format("%.2f", throughput),
+                numSuccesses, String.format("%.2f", numSuccesses.meanRate),
                 numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
                 Strings.readableBytes(fetchMetrics?.systemNetworkBytesRecv?:0), Strings.readableBytes(fetchMetrics?.networkBytesRecvPerSecond?:0),
                 numTasks, numFinished,
@@ -85,7 +85,7 @@ open class BrowserPrivacyContext(
         }
 
         // 0 to disable
-        if (throughput < 0) {
+        if (numSuccesses.meanRate < 0) {
             log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
             // check the zombie context list, if the context keeps go bad, the proxy provider is bad
         }
@@ -108,20 +108,20 @@ open class BrowserPrivacyContext(
 
     private fun beforeRun(task: FetchTask) {
         lastActiveTime = Instant.now()
-        numTasks.incrementAndGet()
+        numTasks.mark()
         numRunningTasks.incrementAndGet()
     }
 
     private fun afterRun(result: FetchResult) {
         lastActiveTime = Instant.now()
         numRunningTasks.decrementAndGet()
-        numFinished.incrementAndGet()
+        numFinished.mark()
         if (result.status.isSuccess) {
-            numSuccesses.incrementAndGet()
+            numSuccesses.mark()
         }
 
         if (result.isSmall) {
-            numSmallPages.incrementAndGet()
+            numSmallPages.mark()
         }
     }
 }

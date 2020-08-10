@@ -270,6 +270,8 @@ open class PulsarSession(
         return parse(load(normUrl))
     }
 
+    fun loadAndParse(normUrl: NormUrl) = parse(load(normUrl))
+
     fun scrape(url: String, args: String, vararg cssQueries: String): Map<String, String?> {
         val page = load(url, args)
         val document = parse(page)

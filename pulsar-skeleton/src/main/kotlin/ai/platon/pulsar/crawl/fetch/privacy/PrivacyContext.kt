@@ -1,6 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.MetricsManagement
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
@@ -93,22 +94,21 @@ abstract class PrivacyContext(
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
+    val numTasks = MetricsManagement.meter(this, sequence.toString(), "numTasks")
+    val numSuccesses = MetricsManagement.meter(this, sequence.toString(), "numSuccesses")
+    val numFinished = MetricsManagement.meter(this, sequence.toString(), "numFinished")
+    val numSmallPages = MetricsManagement.meter(this, sequence.toString(), "numSmallPages")
+    val smallPageRate get() = 1.0 * numSmallPages.count / numTasks.count.coerceAtLeast(1)
+
     val startTime = Instant.now()
     var lastActiveTime = startTime
     val elapsedTime get() = Duration.between(startTime, Instant.now())
     val idleTimeout = Duration.ofMinutes(20)
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-
-    val numTasks = AtomicInteger()
     val numRunningTasks = AtomicInteger()
-    val numSuccesses = AtomicInteger()
-    val numFinished = AtomicInteger()
-    val numSmallPages = AtomicInteger()
-    val smallPageRate get() = 1.0 * numSmallPages.get() / numTasks.get().coerceAtLeast(1)
-    val closed = AtomicBoolean()
 
-    val throughput get() = 1.0 * numSuccesses.get() / elapsedTime.seconds.coerceAtLeast(1)
-    val isGood get() = throughput >= minimumThroughput
+    val closed = AtomicBoolean()
+    val isGood get() = numSuccesses.meanRate >= minimumThroughput
     val isLeaked get() = privacyLeakWarnings.get() >= maximumWarnings
     val isActive get() = !isLeaked && !closed.get()
 

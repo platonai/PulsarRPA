@@ -55,6 +55,6 @@ class SinglePrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: PrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.throughput)
+        return String.format("%s(%.2f)", privacyContext.id.display, privacyContext.numSuccesses.fiveMinuteRate)
     }
 }
