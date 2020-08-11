@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import com.codahale.metrics.CsvReporter
 import com.codahale.metrics.Metric
+import com.codahale.metrics.MetricFilter
 import com.codahale.metrics.SharedMetricRegistries
 import com.codahale.metrics.jmx.JmxReporter
 import com.google.common.util.concurrent.ThreadFactoryBuilder
@@ -14,6 +15,17 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+
+object MetricFilters {
+
+    fun startsWith(prefix: String) = MetricFilter { name: String, metric -> name.startsWith(prefix) }
+
+    fun endsWith(suffix: String) = MetricFilter { name, metric -> name.endsWith(suffix) }
+
+    fun contains(substring: String) = MetricFilter { name, metric -> name.contains(substring) }
+
+    fun not(filter: MetricFilter) = MetricFilter { name, metric -> !filter.matches(name, metric) }
+}
 
 class MetricsManagement(
         val metricsCounters: MetricsCounters,
@@ -26,6 +38,7 @@ class MetricsManagement(
             }
         }
 
+        const val SHADOW_METRIC_SUFFIX = "_"
         val defaultMetricRegistry = SharedMetricRegistries.getDefault()
 
         fun counter(obj: Any, ident: String, name: String) =
@@ -75,10 +88,13 @@ class MetricsManagement(
     init {
         Files.createDirectories(reportDir)
 
-        jmxReporter = JmxReporter.forRegistry(metricRegistry).build()
+        jmxReporter = JmxReporter.forRegistry(metricRegistry)
+                .filter(MetricFilters.not(MetricFilters.endsWith(SHADOW_METRIC_SUFFIX)))
+                .build()
         csvReporter = CsvReporter.forRegistry(metricRegistry)
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .filter(MetricFilters.not(MetricFilters.endsWith(SHADOW_METRIC_SUFFIX)))
                 .build(reportDir.toFile())
 
         val threadFactory = ThreadFactoryBuilder().setNameFormat("reporter-%d").build()
@@ -88,6 +104,7 @@ class MetricsManagement(
                 .outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .filter(MetricFilters.not(MetricFilters.endsWith(SHADOW_METRIC_SUFFIX)))
                 .build()
         counterReporter.outputTo(LoggerFactory.getLogger(CounterReporter::class.java))
     }

@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
-import oshi.SystemInfo
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -94,10 +93,11 @@ abstract class PrivacyContext(
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
-    val numTasks = MetricsManagement.meter(this, sequence.toString(), "numTasks")
-    val numSuccesses = MetricsManagement.meter(this, sequence.toString(), "numSuccesses")
-    val numFinished = MetricsManagement.meter(this, sequence.toString(), "numFinished")
-    val numSmallPages = MetricsManagement.meter(this, sequence.toString(), "numSmallPages")
+    private val smSuffix = MetricsManagement.SHADOW_METRIC_SUFFIX
+    val numTasks = MetricsManagement.meter(this, sequence.toString(), "numTasks$smSuffix")
+    val numSuccesses = MetricsManagement.meter(this, sequence.toString(), "numSuccesses$smSuffix")
+    val numFinished = MetricsManagement.meter(this, sequence.toString(), "numFinished$smSuffix")
+    val numSmallPages = MetricsManagement.meter(this, sequence.toString(), "numSmallPages$smSuffix")
     val smallPageRate get() = 1.0 * numSmallPages.count / numTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()
