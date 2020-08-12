@@ -193,7 +193,8 @@ public class WebPage implements Comparable<WebPage> {
         }
 
         page.setLocation(url);
-        page.setModifiedTime(Instant.now());
+        page.setModifiedTime(Instant.EPOCH);
+        page.setPrevFetchTime(Instant.EPOCH);
         page.setFetchTime(Instant.parse("3000-01-01T00:00:00Z"));
         page.setFetchInterval(ChronoUnit.CENTURIES.getDuration());
         page.setFetchPriority(FETCH_PRIORITY_MIN);

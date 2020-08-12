@@ -50,7 +50,7 @@ import java.util.*
  * The domain file defaults to domain-urlfilter.txt in the classpath but can be
  * overridden using the:
  *
- * property "urlfilter.domain.file" in ./conf/pulsar-*.xml, and * attribute "file" in plugin.xml of this plugin
+ * property "urlfilter.domain.file" in ./config/pulsar-*.xml, and * attribute "file" in plugin.xml of this plugin
  */
 class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
     private val domainSet: MutableSet<String> = LinkedHashSet()
@@ -58,7 +58,7 @@ class DomainUrlFilter(conf: ImmutableConfig) : UrlFilter {
 
     init {
         val stringResource = conf[PARAM_URLFILTER_DOMAIN_RULES]
-        val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
         val fileResource = conf[PARAM_URLFILTER_DOMAIN_FILE, "domain-urlfilter.txt"]
         domainSet.addAll(ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix))
         LOG.info("Allowed domains : " + StringUtils.join(domainSet, ", "))

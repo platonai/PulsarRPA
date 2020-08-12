@@ -1,13 +1,11 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.concurrent.ScheduledMonitor
-import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
-import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -19,52 +17,40 @@ abstract class PrivacyContextMonitor(
         watchInterval: Long = 30
 ): ScheduledMonitor(Duration.ofSeconds(initialDelay), Duration.ofSeconds(watchInterval))
 
-abstract class PrivacyManager(
-        val conf: ImmutableConfig,
-        val numPrivacyContexts: Int = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
-): AutoCloseable {
+abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
 
-    val numTasks = MetricsManagement.meter(this, "numTasks")
-    val numSuccesses = MetricsManagement.meter(this, "numSuccesses")
-    val numFinished = MetricsManagement.meter(this, "numFinished")
-
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**
      * NOTE: we can use a priority queue and every time we need a context, take the top one
      * */
     val activeContexts = ConcurrentHashMap<PrivacyContextId, PrivacyContext>()
-    private val iterator = Iterables.cycle(activeContexts.values).iterator()
 
+    /**
+     * Run a task within this privacy manager
+     * */
     abstract suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult
 
-    open fun computeNextContext(): PrivacyContext {
-        val context = computeIfNecessary()?:synchronized(activeContexts) { iterator.next() }
-        if (context.isActive) {
-            return context
-        }
+    /**
+     * Create a new context or return an exist one
+     * */
+    abstract fun computeNextContext(): PrivacyContext
 
-        close(context)
+    /**
+     * Create a new context or return an exist one
+     * */
+    abstract fun computeIfNecessary(): PrivacyContext
 
-        return computeIfAbsent(PrivacyContextId.generate())
-    }
+    /**
+     * Create a context with [id] and add to active context list if not absent
+     * */
+    abstract fun computeIfAbsent(id: PrivacyContextId): PrivacyContext
 
-    open fun computeIfNecessary(): PrivacyContext? {
-        if (activeContexts.size < numPrivacyContexts) {
-            synchronized(activeContexts) {
-                if (activeContexts.size < numPrivacyContexts) {
-                    return computeIfAbsent(PrivacyContextId.generate())
-                }
-            }
-        }
-
-        return null
-    }
-
-    open fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
-
+    /**
+     * Create a context and do not add to active context list
+     * */
     abstract fun createUnmanagedContext(id: PrivacyContextId): PrivacyContext
 
     open fun close(privacyContext: PrivacyContext) {

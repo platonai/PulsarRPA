@@ -8,7 +8,7 @@ import java.util.*
 import javax.xml.parsers.DocumentBuilderFactory
 
 class WebsiteFactory {
-    val resource = "conf/known-websites.xml"
+    val resource = "config/known-websites.xml"
     val learningFile = "output/learning/website.txt"
 
     // maintains all websites

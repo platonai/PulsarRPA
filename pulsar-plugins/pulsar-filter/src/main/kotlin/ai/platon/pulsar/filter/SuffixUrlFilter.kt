@@ -34,7 +34,7 @@ import java.util.*
 /**
  * Filters URLs based on a file of URL suffixes. The file is named by
  *
- *  1. property "urlfilter.suffix.file" in ./conf/pulsar-default.xml, and
+ *  1. property "urlfilter.suffix.file" in ./config/pulsar-default.xml, and
  *  1. attribute "file" in plugin.xml of this plugin
  *
  * Attribute "file" has higher precedence if defined. If the config file is
@@ -208,7 +208,7 @@ class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : UrlFilter {
         private fun load(conf: ImmutableConfig): List<String> {
             val stringResource = conf[PARAM_URLFILTER_SUFFIX_RULES]
             val fileResource = conf[PARAM_URLFILTER_SUFFIX_FILE, "suffix-urlfilter.txt"]
-            val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+            val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
             return ResourceLoader.readAllLines(stringResource, fileResource, resourcePrefix)
         }
 

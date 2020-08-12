@@ -32,10 +32,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
-import static ai.platon.pulsar.common.config.CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR;
+import static ai.platon.pulsar.common.config.CapabilityTypes.LEGACY_CONFIG_PROFILE;
 import static ai.platon.pulsar.common.config.CapabilityTypes.SYSTEM_PROPERTY_SPECIFIED_RESOURCES;
 
 /**
@@ -53,18 +56,18 @@ public abstract class AbstractConfiguration {
 
     private final LinkedHashSet<String> resources = new LinkedHashSet<>();
 
-    private String preferredDir = "";
+    private String profile = "";
 
-    private final LinkedHashSet<String> fullPathResources = new LinkedHashSet<>();
+    private final LinkedHashSet<URL> fullPathResources = new LinkedHashSet<>();
 
     /**
      * we will remove dependency on {@link Configuration} later
-     * */
+     */
     private Configuration conf;
 
     /**
      * Spring core is the first class dependency now, we will remove dependency on {@link Configuration} later
-     * */
+     */
     private Environment environment;
 
     /**
@@ -77,15 +80,15 @@ public abstract class AbstractConfiguration {
     }
 
     public AbstractConfiguration(boolean loadDefaults) {
-        this(loadDefaults, System.getProperty(PULSAR_CONFIG_PREFERRED_DIR, "."));
+        this(loadDefaults, System.getProperty(LEGACY_CONFIG_PROFILE, ""));
     }
 
-    public AbstractConfiguration(String preferredDir) {
-        this(true, preferredDir);
+    public AbstractConfiguration(String profile) {
+        this(true, profile);
     }
 
-    public AbstractConfiguration(boolean loadDefaults, String preferredDir) {
-        this(loadDefaults, preferredDir, DEFAULT_RESOURCES);
+    public AbstractConfiguration(boolean loadDefaults, String profile) {
+        this(loadDefaults, profile, DEFAULT_RESOURCES);
     }
 
     /**
@@ -93,8 +96,8 @@ public abstract class AbstractConfiguration {
      *
      * @see Configuration#addDefaultResource
      */
-    public AbstractConfiguration(boolean loadDefaults, String preferredDir, Iterable<String> resources) {
-        loadConfResources(loadDefaults, preferredDir, resources);
+    public AbstractConfiguration(boolean loadDefaults, String profile, Iterable<String> resources) {
+        loadConfResources(loadDefaults, profile, resources);
     }
 
     public AbstractConfiguration(Configuration conf) {
@@ -105,25 +108,25 @@ public abstract class AbstractConfiguration {
         this.environment = environment;
     }
 
-    private void loadConfResources(boolean loadDefaults, String preferredDir, Iterable<String> extraResources) {
+    private void loadConfResources(boolean loadDefaults, String profile, Iterable<String> extraResources) {
         conf = new Configuration(loadDefaults);
         extraResources.forEach(resources::add);
-        this.preferredDir = preferredDir;
+        this.profile = profile;
 
         if (!loadDefaults) {
             return;
         }
 
-        if (!preferredDir.isEmpty()) {
-            conf.set(PULSAR_CONFIG_PREFERRED_DIR, preferredDir);
+        if (!profile.isEmpty()) {
+            conf.set(LEGACY_CONFIG_PROFILE, profile);
         }
 
         String specifiedResources = System.getProperty(SYSTEM_PROPERTY_SPECIFIED_RESOURCES, APPLICATION_SPECIFIED_RESOURCES);
         Arrays.spliterator(specifiedResources.split(",")).forEachRemaining(resources::add);
 
-        String dir = isDistributedFs() ? "cluster" : "local";
+        String mode = isDistributedFs() ? "cluster" : "local";
         for (String name : resources) {
-            String realResource = getRealResource(preferredDir, dir, name);
+            URL realResource = getRealResource(profile, mode, name);
             if (realResource != null) {
                 fullPathResources.add(realResource);
             } else {
@@ -136,75 +139,21 @@ public abstract class AbstractConfiguration {
         LOG.info(toString());
     }
 
-    /**
-     * Most logging systems check it's environment by itself, if not, use this one
-     * */
-    private void checkLogConfig() {
-        if (!checkLogbackConfig() && !checkLog4jProperties()) {
-            System.err.println("Failed to find log4j or logback configuration");
+    private URL getRealResource(String profile, String mode, String name) {
+        String prefix = "config/legacy";
+        String suffix = mode + "/" + name;
+        String[] searchPaths = {
+                prefix + "/" + suffix, prefix + "/" + profile + "/" + suffix,
+                prefix + "/" + name, prefix + "/" + profile + "/" + name,
+                name
+        };
+
+        URL resource = Stream.of(searchPaths).sorted(Comparator.comparingInt(String::length).reversed())
+                .map(this::getResource).filter(Objects::nonNull).findFirst().orElse(null);
+        if (resource != null) {
+            LOG.info("Find legacy resource: " + resource);
         }
-    }
-
-    private boolean checkLogbackConfig() {
-        String logback = System.getProperty("logback.configurationFile");
-        if (logback != null) {
-            LOG.info("Logback(specified): " + logback);
-        } else {
-            URL url = getResource("logback.xml");
-            if (url != null) {
-                LOG.info("Logback(classpath): " + url);
-                return true;
-            }
-        }
-        return true;
-    }
-
-    private boolean checkLog4jProperties() {
-        String log4j = System.getProperty("Log4j.configuration");
-        if (log4j != null) {
-            LOG.info("Log4j(specified): " + log4j);
-        } else {
-            URL url = getResource("log4j.properties");
-            if (url != null) {
-                LOG.info("Log4j(classpath): " + url);
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private String getRealResource(String prefix, String dir, String name) {
-        String realResource = null;
-
-        if (!prefix.isEmpty()) {
-            realResource = getRealResource(prefix + "/" + dir, name);
-        }
-
-        if (realResource == null) {
-            realResource = getRealResource(dir, name);
-        }
-
-        return realResource;
-    }
-
-    private String getRealResource(String prefix, String name) {
-        String realResource = prefix + "/" + name;
-
-        URL url = getResource(realResource);
-        if (url != null) {
-            LOG.info("Find resource {}", url);
-            return realResource;
-        }
-
-        url = getResource(name);
-        if (url != null) {
-            LOG.info("Find resource {}", url);
-            realResource = name;
-            return realResource;
-        }
-
-        return null;
+        return resource;
     }
 
     public boolean isDryRun() {
@@ -527,6 +476,7 @@ public abstract class AbstractConfiguration {
     }
 
     public URL getResource(String resource) {
+        // System.err.println("Search path: " + resource);
         return SParser.wrap(resource).getResource();
     }
 
@@ -574,8 +524,8 @@ public abstract class AbstractConfiguration {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("Expected " + conf);
-        if (!preferredDir.isEmpty()) {
-            sb.append(", preferred dir: ").append(preferredDir);
+        if (!profile.isEmpty()) {
+            sb.append(", profile: ").append(profile);
         }
         return sb.toString();
     }

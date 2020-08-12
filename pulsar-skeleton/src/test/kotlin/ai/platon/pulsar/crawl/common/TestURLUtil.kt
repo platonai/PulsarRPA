@@ -44,7 +44,7 @@ class TestURLUtil {
     @Before
     fun setup() {
         conf = ImmutableConfig()
-        val resourcePrefix = conf!![CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+        val resourcePrefix = conf!![CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
         // tlds = DomainSuffixes.getInstance(resourcePrefix);
     }
 

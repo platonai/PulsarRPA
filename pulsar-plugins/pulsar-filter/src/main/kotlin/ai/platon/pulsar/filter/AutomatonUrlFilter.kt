@@ -47,7 +47,7 @@ class AutomatonUrlFilter(reader: Reader?, conf: ImmutableConfig) : RegexUrlFilte
     override fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLFILTER_AUTOMATON_RULES]
         val fileResource = conf[URLFILTER_AUTOMATON_FILE, "automaton-urlfilter.txt"]
-        val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
                 ?:throw IOException("Failed to find resource $stringResource or $fileResource with prefix $resourcePrefix")
     }

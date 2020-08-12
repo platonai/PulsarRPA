@@ -67,7 +67,7 @@
             <directoryMode>0755</directoryMode>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/../conf</directory>
+            <directory>${project.basedir}/../config</directory>
             <outputDirectory>conf</outputDirectory>
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
@@ -81,7 +81,7 @@
                 <include>CHANGES*</include>
                 <include>NOTICE*</include>
                 <include>VERSION</include>
-                <include>conf/**</include>
+                <include>config/**</include>
             </includes>
             <excludes>
                 <exclude>*/**</exclude>

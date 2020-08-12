@@ -48,7 +48,7 @@ object AppContext {
 
     val state = AtomicReference<State>(State.NEW)
 
-    val isActive get() = state.get() != State.TERMINATING && state.get() != State.TERMINATED
+    val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
 
     fun start() = state.set(State.RUNNING)
 

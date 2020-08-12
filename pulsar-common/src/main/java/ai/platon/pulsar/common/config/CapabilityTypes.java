@@ -27,9 +27,7 @@ public interface CapabilityTypes {
     /**
      * Common Parameters
      */
-    String PULSAR_CONFIG_DIR = "pulsar.configuration.dir";
-    String PULSAR_CONFIG_ID = "pulsar.config.id";
-    String PULSAR_CONFIG_PREFERRED_DIR = "pulsar.config.preferred.dir";
+    String LEGACY_CONFIG_PROFILE = "hadoop.config.profile";
     String SYSTEM_PROPERTY_SPECIFIED_RESOURCES = "system.property.specified.resources";
 
     String PARAM_OUTPUT_DIR = "pulsar.output.dir";
