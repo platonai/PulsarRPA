@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.emulator.context
 
-import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.proxy.*
@@ -37,9 +37,9 @@ class WebDriverContext(
         private val notBusy = lock.newCondition()
 
         init {
-            MetricsManagement.register(this,"globalRunningTasks", Gauge<Int> { numGlobalRunningTasks.get() })
-            MetricsManagement.register(this,"globalTasks", Gauge<Int> { numGlobalTasks.get() })
-            MetricsManagement.register(this,"globalFinishedTasks", Gauge<Int> { numGlobalFinishedTasks.get() })
+            AppMetrics.register(this,"globalRunningTasks", Gauge<Int> { numGlobalRunningTasks.get() })
+            AppMetrics.register(this,"globalTasks", Gauge<Int> { numGlobalTasks.get() })
+            AppMetrics.register(this,"globalFinishedTasks", Gauge<Int> { numGlobalFinishedTasks.get() })
         }
     }
 
@@ -158,7 +158,7 @@ class ProxyContext(
             mapOf(
                     "proxyAbsences" to Gauge<Int> { numProxyAbsence.get() },
                     "runningTasks" to Gauge<Int> { numRunningTasks.get() }
-            ).forEach { MetricsManagement.register(this, it.key, it.value) }
+            ).forEach { AppMetrics.register(this, it.key, it.value) }
         }
     }
 

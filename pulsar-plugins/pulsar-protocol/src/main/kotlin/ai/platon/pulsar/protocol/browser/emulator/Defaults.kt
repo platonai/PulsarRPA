@@ -5,7 +5,7 @@ import ai.platon.pulsar.protocol.browser.driver.BrowserInstanceManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
 import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.emulator.context.SinglePrivacyContextManager
+import ai.platon.pulsar.protocol.browser.emulator.context.BasicPrivacyContextManager
 
 class DefaultWebDriverControl(conf: ImmutableConfig): WebDriverControl(conf)
 
@@ -28,7 +28,7 @@ class DefaultBrowserEmulatedFetcher(
         conf: ImmutableConfig,
         driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)
 ): BrowserEmulatedFetcher(
-        SinglePrivacyContextManager(driverPoolManager, conf),
+        BasicPrivacyContextManager(driverPoolManager, conf),
         driverPoolManager,
         DefaultBrowserEmulator(driverPoolManager, conf),
         conf

@@ -1,7 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_DRIVER_INSTANCE_REQUIRED_MEMORY
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -57,8 +57,8 @@ class LoadingWebDriverPool(
     // OSHI cached the value, so it's fast and safe to be called frequently
     private val availableMemory get() = systemInfo.hardware.memory.available
 
-    val counterRetired = MetricsManagement.counter(this, "retired")
-    val counterQuit = MetricsManagement.counter(this, "quit")
+    val counterRetired = AppMetrics.counter(this, "retired")
+    val counterQuit = AppMetrics.counter(this, "quit")
 
     val isActive get() = !closed.get()
     val numWaiting = AtomicInteger()

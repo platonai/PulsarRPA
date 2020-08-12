@@ -399,12 +399,10 @@ open class PulsarSession(
         return options
     }
 
-    private fun ensureAlive(): Boolean {
+    private fun ensureAlive() {
         if (!isActive) {
-            return false
+            throw IllegalApplicationContextStateException("Pulsar session $this is not active")
         }
-
-        return true
     }
 
     private fun <T> ensureAlive(action: () -> T): T

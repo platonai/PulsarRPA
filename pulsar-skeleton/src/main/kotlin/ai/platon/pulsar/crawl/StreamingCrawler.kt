@@ -52,7 +52,7 @@ open class StreamingCrawler(
                     "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() },
                     "globalTimeout" to Gauge<Int> { globalTimeout.get() },
                     "globalRetries" to Gauge<Int> { globalRetries.get() }
-            ).forEach { MetricsManagement.register(this, it.key, it.value) }
+            ).forEach { AppMetrics.register(this, it.key, it.value) }
         }
     }
 
@@ -83,7 +83,7 @@ open class StreamingCrawler(
         mapOf(
                 "idleTime" to Gauge<String> { idleTime.readable() },
                 "numTasks" to Gauge<Int> { numTasks.get() }
-        ).forEach { MetricsManagement.register(this, id.toString(), it.key, it.value) }
+        ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
     }
 
     open suspend fun run() {

@@ -56,6 +56,30 @@ open class BrowserPrivacyContext(
         return checkAbnormalResult(task) ?: run0(task, browseFun)
     }
 
+    override fun report() {
+        val isIdle = proxyContext?.proxyEntry?.isIdle == true
+        log.info("Privacy context #{}{}{} has lived for {}" +
+                " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
+                display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
+                numSuccesses.count, String.format("%.2f", numSuccesses.meanRate),
+                numSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
+                Strings.readableBytes(fetchMetrics?.systemNetworkBytesRecv?:0), Strings.readableBytes(fetchMetrics?.networkBytesRecvPerSecond?:0),
+                numTasks.count, numFinished.count,
+                proxyContext?.proxyEntry
+        )
+
+        if (smallPageRate > 0.5) {
+            log.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
+                    sequence, numSmallPages.count, String.format("%.1f%%", 100 * smallPageRate))
+        }
+
+        // 0 to disable
+        if (numSuccesses.meanRate < 0) {
+            log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
+            // check the zombie context list, if the context keeps go bad, the proxy provider is bad
+        }
+    }
+
     /**
      * Block until all the drivers are closed and the proxy is offline
      * */
@@ -64,30 +88,6 @@ open class BrowserPrivacyContext(
             report()
             driverContext.shutdown()
             proxyContext?.close()
-        }
-    }
-
-    override fun report() {
-        val isIdle = proxyContext?.proxyEntry?.isIdle == true
-        log.info("Privacy context #{}{}{} has lived for {}" +
-                " | success: {}({} pages/s) | small: {}({}) | traffic: {}({}/s) | tasks: {} total run: {} | {}",
-                display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
-                numSuccesses, String.format("%.2f", numSuccesses.meanRate),
-                numSmallPages, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.readableBytes(fetchMetrics?.systemNetworkBytesRecv?:0), Strings.readableBytes(fetchMetrics?.networkBytesRecvPerSecond?:0),
-                numTasks, numFinished,
-                proxyContext?.proxyEntry
-        )
-
-        if (smallPageRate > 0.5) {
-            log.warn("Privacy context #{} is disqualified, too many small pages: {}({})",
-                    sequence, numSmallPages, String.format("%.1f%%", 100 * smallPageRate))
-        }
-
-        // 0 to disable
-        if (numSuccesses.meanRate < 0) {
-            log.warn("Privacy context #{} is disqualified, it's expected 120 pages in 120 seconds at least", sequence)
-            // check the zombie context list, if the context keeps go bad, the proxy provider is bad
         }
     }
 

@@ -29,7 +29,7 @@
         <appender-ref ref="stdout"/>
     </root>
 
-    <logger name="ai.platon.pulsar.common.MetricsManagement" level="INFO" additivity="false">
+    <logger name="ai.platon.pulsar.common.AppMetrics" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
     </logger>
 

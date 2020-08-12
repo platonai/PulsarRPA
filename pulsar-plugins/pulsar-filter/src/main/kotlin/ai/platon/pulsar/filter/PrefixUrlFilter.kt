@@ -32,7 +32,7 @@ import java.util.*
 
 /**
  * Filters URLs based on a file of URL prefixes. The file is named by (1)
- * property "urlfilter.prefix.file" in ./conf/pulsar-default.xml, and (2)
+ * property "urlfilter.prefix.file" in ./config/pulsar-default.xml, and (2)
  * attribute "file" in plugin.xml of this plugin Attribute "file" has higher
  * precedence if defined.
  *
@@ -85,7 +85,7 @@ class PrefixUrlFilter(conf: ImmutableConfig) : UrlFilter {
     protected fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLFILTER_PREFIX_RULES]
         val fileResource = conf[URLFILTER_PREFIX_FILE, "prefix-urlfilter.txt"]
-        val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
                 ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }

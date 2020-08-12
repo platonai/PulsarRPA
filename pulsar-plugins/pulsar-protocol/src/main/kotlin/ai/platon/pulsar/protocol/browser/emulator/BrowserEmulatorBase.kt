@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.protocol.browser.driver.WebDriverControl
-import com.codahale.metrics.SharedMetricRegistries
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,9 +24,9 @@ abstract class BrowserEmulatorBase(
     val fetchMaxRetry = immutableConfig.getInt(CapabilityTypes.HTTP_FETCH_MAX_RETRY, 3)
     val closed = AtomicBoolean(false)
     val isActive get() = !closed.get()
-    val meterNavigates by lazy { MetricsManagement.meter(this,"navigates") }
-    val counterRequests by lazy { MetricsManagement.counter(this,"requests") }
-    val counterCancels by lazy { MetricsManagement.counter(this,"cancels") }
+    val meterNavigates by lazy { AppMetrics.meter(this,"navigates") }
+    val counterRequests by lazy { AppMetrics.counter(this,"requests") }
+    val counterCancels by lazy { AppMetrics.counter(this,"cancels") }
 
     override fun getParams(): Params {
         return Params.of(

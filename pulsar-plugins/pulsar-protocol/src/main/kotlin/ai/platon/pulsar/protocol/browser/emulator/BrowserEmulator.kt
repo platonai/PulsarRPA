@@ -30,7 +30,7 @@ open class BrowserEmulator(
 ): BrowserEmulatorBase(driverManager.driverFactory.driverControl, eventHandler, immutableConfig) {
     private val log = LoggerFactory.getLogger(BrowserEmulator::class.java)!!
 
-    val numDeferredNavigates by lazy { MetricsManagement.meter(this, "deferredNavigates") }
+    val numDeferredNavigates by lazy { AppMetrics.meter(this, "deferredNavigates") }
 
     init {
         params.withLogger(log).info()

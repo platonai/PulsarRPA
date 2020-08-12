@@ -15,8 +15,8 @@ public class ImmutableConfig extends AbstractConfiguration {
         super(loadDefaultResource);
     }
 
-    public ImmutableConfig(String resourcePrefix) {
-        super(resourcePrefix);
+    public ImmutableConfig(String profile) {
+        super(profile);
     }
 
     public ImmutableConfig(Configuration conf) {

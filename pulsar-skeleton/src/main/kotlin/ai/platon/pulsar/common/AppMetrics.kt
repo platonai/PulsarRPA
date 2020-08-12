@@ -27,7 +27,7 @@ object MetricFilters {
     fun not(filter: MetricFilter) = MetricFilter { name, metric -> !filter.matches(name, metric) }
 }
 
-class MetricsManagement(
+class AppMetrics(
         val metricsCounters: MetricsCounters,
         conf: ImmutableConfig
 ): AutoCloseable {
@@ -101,7 +101,7 @@ class MetricsManagement(
         val executor = Executors.newSingleThreadScheduledExecutor(threadFactory)
         slf4jReporter = CodahaleSlf4jReporter.forRegistry(metricRegistry)
                 .scheduleOn(executor).shutdownExecutorOnStop(true)
-                .outputTo(LoggerFactory.getLogger(MetricsManagement::class.java))
+                .outputTo(LoggerFactory.getLogger(AppMetrics::class.java))
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .filter(MetricFilters.not(MetricFilters.endsWith(SHADOW_METRIC_SUFFIX)))

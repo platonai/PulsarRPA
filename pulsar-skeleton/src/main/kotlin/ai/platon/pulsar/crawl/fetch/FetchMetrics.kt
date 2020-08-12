@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 class FetchMetrics(
-        private val metricsManagement: MetricsManagement,
         private val messageWriter: MiscMessageWriter,
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
@@ -61,22 +60,22 @@ class FetchMetrics(
     var runningChromeProcesses = 0
     var usedMemory = 0L
 
-    val meterSystemNetworkMBytesRecv = MetricsManagement.meter(this, "systemNetworkMBytesRecv")
+    val meterSystemNetworkMBytesRecv = AppMetrics.meter(this, "systemNetworkMBytesRecv")
 
     /**
      * The total bytes of page content of all success web pages
      * */
-    val tasks = MetricsManagement.meter(this, "tasks")
-    val successTasks = MetricsManagement.meter(this, "successTasks")
-    val finishedTasks = MetricsManagement.meter(this, "finishedTasks")
-    val meterContentBytes = MetricsManagement.meter(this, "mContentBytes")
-    val histogramContentBytes = MetricsManagement.histogram(this, "hContentBytes")
+    val tasks = AppMetrics.meter(this, "tasks")
+    val successTasks = AppMetrics.meter(this, "successTasks")
+    val finishedTasks = AppMetrics.meter(this, "finishedTasks")
+    val meterContentBytes = AppMetrics.meter(this, "mContentBytes")
+    val histogramContentBytes = AppMetrics.histogram(this, "hContentBytes")
 
-    val pageImages = MetricsManagement.histogram(this, "pageImages")
-    val pageAnchors = MetricsManagement.histogram(this, "pageAnchors")
-    val pageNumbers = MetricsManagement.histogram(this, "pageNumbers")
-    val pageSmallTexts = MetricsManagement.histogram(this, "pageSmallTexts")
-    val pageHeights = MetricsManagement.histogram(this, "pageHeights")
+    val pageImages = AppMetrics.histogram(this, "pageImages")
+    val pageAnchors = AppMetrics.histogram(this, "pageAnchors")
+    val pageNumbers = AppMetrics.histogram(this, "pageNumbers")
+    val pageSmallTexts = AppMetrics.histogram(this, "pageSmallTexts")
+    val pageHeights = AppMetrics.histogram(this, "pageHeights")
 
     val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
     /**
@@ -112,7 +111,7 @@ class FetchMetrics(
         mapOf(
                 "runningChromeProcesses" to Gauge<Int> { runningChromeProcesses },
                 "usedMemory" to Gauge<String> { Strings.readableBytes(usedMemory) }
-        ).forEach { MetricsManagement.register(this, it.key, it.value) }
+        ).forEach { AppMetrics.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)
     }

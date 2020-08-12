@@ -1,6 +1,7 @@
 package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -73,7 +74,7 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
-    val isActive get() = !closed.get()
+    val isActive get() = !closed.get() && AppContext.isActive
 
     /**
      * All open sessions

@@ -69,7 +69,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : UrlNormalizer {
     protected fun getRulesReader(conf: ImmutableConfig): Reader {
         val stringResource = conf[URLNORMALIZER_REGEX_RULES]
         val fileResource = conf[URLNORMALIZER_REGEX_FILE, "regex-normalize.xml"]
-        val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+        val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
         return ResourceLoader.getMultiSourceReader(stringResource, fileResource, resourcePrefix)
                 ?:throw FileNotFoundException("Resource not found $stringResource/$fileResource, prefix: $resourcePrefix")
     }
@@ -91,7 +91,7 @@ class RegexUrlNormalizer(private val conf: ImmutableConfig) : UrlNormalizer {
         if (curRules == null) { // try to populate
             val fileResource = conf["$URLNORMALIZER_REGEX_FILE.$scope"]
             if (fileResource != null) {
-                val resourcePrefix = conf[CapabilityTypes.PULSAR_CONFIG_PREFERRED_DIR, ""]
+                val resourcePrefix = conf[CapabilityTypes.LEGACY_CONFIG_PROFILE, ""]
                 LOG.debug("resource for scope '$scope': $fileResource")
                 ResourceLoader.getResourceAsReader(fileResource, resourcePrefix).use {
                     reader -> curRules = readConfiguration(reader!!)

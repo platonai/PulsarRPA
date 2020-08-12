@@ -292,7 +292,7 @@ object DomSelectFunctions {
     }
 
     private fun nthElement(root: Element, cssQuery: String, n: Int): Element? {
-        if (n < 0) throw IndexOutOfBoundsException("n should be in [1, )")
+        if (n < 1) throw IndexOutOfBoundsException("n should be in [1, )")
         val elements = root.select2(cssQuery)
         return if (elements.size >= n) { elements[n - 1] } else null
     }

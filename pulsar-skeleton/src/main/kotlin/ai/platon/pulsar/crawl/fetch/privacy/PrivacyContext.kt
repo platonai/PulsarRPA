@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.MetricsManagement
+import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
@@ -93,11 +93,11 @@ abstract class PrivacyContext(
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
 
-    private val smSuffix = MetricsManagement.SHADOW_METRIC_SUFFIX
-    val numTasks = MetricsManagement.meter(this, sequence.toString(), "numTasks$smSuffix")
-    val numSuccesses = MetricsManagement.meter(this, sequence.toString(), "numSuccesses$smSuffix")
-    val numFinished = MetricsManagement.meter(this, sequence.toString(), "numFinished$smSuffix")
-    val numSmallPages = MetricsManagement.meter(this, sequence.toString(), "numSmallPages$smSuffix")
+    private val smSuffix = AppMetrics.SHADOW_METRIC_SUFFIX
+    val numTasks = AppMetrics.meter(this, sequence.toString(), "numTasks$smSuffix")
+    val numSuccesses = AppMetrics.meter(this, sequence.toString(), "numSuccesses$smSuffix")
+    val numFinished = AppMetrics.meter(this, sequence.toString(), "numFinished$smSuffix")
+    val numSmallPages = AppMetrics.meter(this, sequence.toString(), "numSmallPages$smSuffix")
     val smallPageRate get() = 1.0 * numSmallPages.count / numTasks.count.coerceAtLeast(1)
 
     val startTime = Instant.now()

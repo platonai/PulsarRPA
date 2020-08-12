@@ -32,10 +32,10 @@ class TestAnything {
     @Throws(IOException::class)
     fun generateRegexUrlFilter() {
         val files = arrayOf(
-                "conf/seeds/aboard.txt",
-                "conf/seeds/bbs.txt",
-                "conf/seeds/national.txt",
-                "conf/seeds/papers.txt"
+                "config/seeds/aboard.txt",
+                "config/seeds/bbs.txt",
+                "config/seeds/national.txt",
+                "config/seeds/papers.txt"
         )
         val lines: MutableList<String> = Lists.newArrayList()
         for (file in files) {

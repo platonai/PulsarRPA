@@ -11,19 +11,19 @@ import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 
-class SinglePrivacyContextManager(
+class BasicPrivacyContextManager(
         val driverPoolManager: WebDriverPoolManager,
         val proxyPoolManager: ProxyPoolManager? = null,
         val fetchMetrics: FetchMetrics? = null,
         immutableConfig: ImmutableConfig
-): PrivacyManager(immutableConfig, 1) {
+): PrivacyManager(immutableConfig) {
     private val privacyContextId = PrivacyContextId.DEFAULT
 
     constructor(driverPoolManager: WebDriverPoolManager, immutableConfig: ImmutableConfig)
             : this(driverPoolManager, null, null, immutableConfig)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
-        return run(computeIfAbsent(privacyContextId), task, fetchFun)
+        return run0(computeIfAbsent(privacyContextId), task, fetchFun)
     }
 
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
@@ -32,11 +32,22 @@ class SinglePrivacyContextManager(
         return context
     }
 
-    private suspend fun run(privacyContext: PrivacyContext, task: FetchTask,
-                            fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult)
-            = takeIf { isActive }?.run0(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task)
+    override fun computeNextContext(): PrivacyContext {
+        val context = computeIfNecessary()
+        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(PrivacyContextId.generate()) }
+    }
+
+    override fun computeIfNecessary(): PrivacyContext {
+        return activeContexts.values.firstOrNull() ?: computeIfAbsent(PrivacyContextId.generate())
+    }
+
+    override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }
 
     private suspend fun run0(privacyContext: PrivacyContext, task: FetchTask,
+                            fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult)
+            = takeIf { isActive }?.run1(privacyContext, task, fetchFun) ?: FetchResult.crawlRetry(task)
+
+    private suspend fun run1(privacyContext: PrivacyContext, task: FetchTask,
                              fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
         if (privacyContext !is BrowserPrivacyContext) {
             throw ClassCastException("The privacy context should be a BrowserPrivacyContext")
