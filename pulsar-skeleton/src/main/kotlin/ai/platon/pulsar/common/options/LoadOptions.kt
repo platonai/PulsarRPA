@@ -7,6 +7,7 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 /**
  * Created by vincent on 19-4-24.
@@ -78,7 +79,7 @@ open class LoadOptions: CommonOptions {
     var itemExtractor = ItemExtractor.DEFAULT
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
-    var itemExpires = Duration.ofDays(36500)
+    var itemExpires = ChronoUnit.CENTURIES.duration
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
             description = "The same as scrollCount, but only works for item pages in harvest tasks")
