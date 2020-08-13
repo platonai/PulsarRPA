@@ -285,5 +285,6 @@
     <properties>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
         <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
+        <jackson.version>2.10.0</jackson.version>
     </properties>
 </project>

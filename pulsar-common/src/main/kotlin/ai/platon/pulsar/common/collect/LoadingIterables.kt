@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.collect
 
-import java.util.concurrent.ConcurrentSkipListSet
+import java.util.concurrent.ConcurrentLinkedQueue
 
 interface DataCollector<T>: Comparable<DataCollector<T>> {
     enum class Priority(val value: Int) {
@@ -25,7 +25,7 @@ open class ConcurrentLoadingIterable<T>(
         val lowerCapacity: Int = 200
 ): Iterable<T> {
 
-    private val data = ConcurrentSkipListSet<T>()
+    private val data = ConcurrentLinkedQueue<T>()
 
     override fun iterator() = LoadingIterator(this)
 
@@ -44,7 +44,7 @@ open class ConcurrentLoadingIterable<T>(
 
         @Synchronized
         override fun next(): T {
-            return iterable.data.pollFirst()?:throw NoSuchElementException()
+            return iterable.data.poll()?:throw NoSuchElementException()
         }
     }
 }
