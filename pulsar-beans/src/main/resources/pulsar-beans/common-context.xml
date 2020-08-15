@@ -9,14 +9,14 @@
         <property name="environment" ref="environment"/>
     </bean>
 
-    <bean id="appMetrics" class="ai.platon.pulsar.common.AppMetrics" init-method="start" destroy-method="close">
-        <constructor-arg ref="metricsCounters"/>
-        <constructor-arg ref="conf"/>
-    </bean>
-
     <!--Web Page Database -->
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb" destroy-method="close">
         <constructor-arg ref="conf" />
+    </bean>
+
+    <bean id="appMetrics" class="ai.platon.pulsar.common.AppMetrics" init-method="start" destroy-method="close" lazy-init="false">
+        <constructor-arg ref="metricsCounters"/>
+        <constructor-arg ref="conf"/>
     </bean>
 
     <!--System counters -->

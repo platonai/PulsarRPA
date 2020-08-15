@@ -3,8 +3,9 @@ package ai.platon.pulsar.dom
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.config.AppConstants.*
-import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_NODE_FEATURE_CALCULATOR
+import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
+import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR_CLASS
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
 import ai.platon.pulsar.dom.nodes.forEach
 import ai.platon.pulsar.dom.nodes.forEachElement
@@ -23,6 +24,8 @@ import java.awt.Dimension
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
 
+@Deprecated("We have better implementation",
+        replaceWith = ReplaceWith("ai.platon.pulsar.dom.FeatureCalculatorFactory"))
 class DocumentFeatureCalculatorFactory {
 
     val featureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
@@ -30,7 +33,7 @@ class DocumentFeatureCalculatorFactory {
     val newInstance get() = featureCalculatorClass.newInstance() as NodeVisitor
 
     private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
-        val className = System.getProperty(NODE_FEATURE_CALCULATOR, DEFAULT_NODE_FEATURE_CALCULATOR)
+        val className = System.getProperty(NODE_FEATURE_CALCULATOR_CLASS, DEFAULT_NODE_FEATURE_CALCULATOR)
         return ResourceLoader.loadUserClass(className)
     }
 }
@@ -45,7 +48,10 @@ open class FeaturedDocument(val document: Document) {
 
         val globalNumDocuments = AtomicInteger()
 
-        val featureCalculatorFactory = DocumentFeatureCalculatorFactory()
+        /**
+         * TODO: it might not be a good idea to put it here
+         * */
+        val calculatorFactory = FeatureCalculatorFactory()
 
         val NIL = FeaturedDocument(nilDocument)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -85,8 +91,7 @@ open class FeaturedDocument(val document: Document) {
         }
 
         if (document.isInitialized.compareAndSet(false, true)) {
-            val featureCalculator = featureCalculatorFactory.newInstance
-            NodeTraversor.traverse(featureCalculator, document)
+            calculatorFactory.activeCalculator.calculate(document)
             require(features.isNotEmpty)
 
             globalNumDocuments.incrementAndGet()
@@ -200,7 +205,7 @@ open class FeaturedDocument(val document: Document) {
 
     fun formatFeatures(vararg featureKeys: Int) = document.formatEachFeatures(*featureKeys)
 
-    fun formatNamedFeatures() = document.formatVariables()
+    fun formatNamedFeatures() = document.formatNamedFeatures()
 
     fun removeAttrs(vararg attributeKeys: String) {
         NodeTraversor.traverse({ node, _ ->  node.removeAttrs(*attributeKeys) }, document)

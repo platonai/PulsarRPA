@@ -359,7 +359,7 @@ public interface CapabilityTypes {
      */
     String CACHING_FORBIDDEN_ALL = "all";
 
-    String NODE_FEATURE_CALCULATOR = "pulsar.node.feature.calculator";
+    String NODE_FEATURE_CALCULATOR_CLASS = "pulsar.node.feature.calculator";
 
     String PULSAR_DOMAIN = "scent.domain";
     String SCENT_TASK_IDENT = "scent.task.ident";

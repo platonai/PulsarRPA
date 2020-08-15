@@ -4,8 +4,6 @@ import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.toHexString
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
 import ai.platon.pulsar.dom.nodes.V_OWNER_BODY
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.nodes.node.ext.name
@@ -24,13 +22,87 @@ data class FeatureEntry(val key: Int, val value: Double) {
     constructor(key: Int, value: Boolean): this(key, if (value) 1.0 else 0.0)
 }
 
+object FeatureRegistry {
+
+    var registeredFeatures: Set<NodeFeature> = setOf()
+        private set
+    val dimension get() = registeredFeatures.size
+
+    var primaryFeatures: List<NodeFeature> = listOf()
+        private set
+    var floatFeatures: List<NodeFeature> = listOf()
+        private set
+
+    var featureKeys: List<Int> = listOf()
+        private set
+    var primaryFeatureKeys: List<Int> = listOf()
+        private set
+    var floatFeatureKeys: List<Int> = listOf()
+        private set
+
+    var featureNames: List<String> = listOf()
+        private set
+    var primaryFeatureNames: List<String> = listOf()
+        private set
+    var floatFeatureNames: List<String> = listOf()
+        private set
+
+    var featureNamesToKeys: Map<String, Int> = mapOf()
+        private set
+    var featureKeysToNames: Map<Int, String> = mapOf()
+        private set
+
+    var primaryFeatureNamesToKeys: Map<String, Int> = mapOf()
+        private set
+    var primaryFeatureKeysToNames : Map<Int, String> = mapOf()
+        private set
+
+    var floatFeatureNamesToKeys: Map<String, Int> = mapOf()
+        private set
+    var floatFeatureKeysToNames: Map<Int, String> = mapOf()
+        private set
+
+    fun register(features: Iterable<NodeFeature>) {
+        registeredFeatures = features.toSet()
+
+        primaryFeatures = registeredFeatures.filter { it.isPrimary }
+        floatFeatures = registeredFeatures.filter { it.isFloat }
+
+        featureKeys = registeredFeatures.map { it.key }
+        primaryFeatureKeys = primaryFeatures.map { it.key }
+        floatFeatureKeys = floatFeatures.map { it.key }
+
+        featureNames = registeredFeatures.map { it.name }
+        primaryFeatureNames = primaryFeatures.map { it.name }
+        floatFeatureNames = floatFeatures.map { it.name }
+
+        // featureNamesToKeys = registeredFeatures.associate { it.name to it.key }
+        featureNamesToKeys = registeredFeatures.associateBy({ it.name }, { it.key })
+        featureKeysToNames = registeredFeatures.associateBy({ it.key }, { it.name })
+
+        primaryFeatureNamesToKeys = primaryFeatures.associateBy({ it.name }, { it.key })
+        primaryFeatureKeysToNames = primaryFeatures.associateBy({ it.key }, { it.name })
+
+        floatFeatureNamesToKeys = floatFeatures.associateBy({ it.name }, { it.key })
+        floatFeatureKeysToNames = floatFeatures.associateBy({ it.key }, { it.name })
+    }
+}
+
 data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = true, val isFloat: Boolean = false) {
 
     var value: Double = 0.0
 
     val toEntry = FeatureEntry(key, value)
 
+    /**
+     * TODO: avoid object
+     * */
     companion object {
+        /*
+         * affect _sep
+         * can be modified in configuration
+         * */
+        val SEPARATORS = arrayOf(":", "：")
 
         private val keyGen = AtomicInteger(0)
         /**
@@ -42,90 +114,21 @@ data class NodeFeature(val key: Int, val name: String, val isPrimary: Boolean = 
          * */
         val incKey: Int get() = keyGen.getAndIncrement()
 
-        /*
-         * affect _sep
-         * can be modified in configuration
-         * */
-        val SEPARATORS = arrayOf(":", "：")
-
-        var registeredFeatures: Set<NodeFeature> = setOf()
-            private set
-        val dimension get() = registeredFeatures.size
-
-        var primaryFeatures: List<NodeFeature> = listOf()
-            private set
-        var floatFeatures: List<NodeFeature> = listOf()
-            private set
-
-        var featureKeys: List<Int> = listOf()
-            private set
-        var primaryFeatureKeys: List<Int> = listOf()
-            private set
-        var floatFeatureKeys: List<Int> = listOf()
-            private set
-
-        var featureNames: List<String> = listOf()
-            private set
-        var primaryFeatureNames: List<String> = listOf()
-            private set
-        var floatFeatureNames: List<String> = listOf()
-            private set
-
-        var featureNamesToKeys: Map<String, Int> = mapOf()
-            private set
-        var featureKeysToNames: Map<Int, String> = mapOf()
-            private set
-
-        var primaryFeatureNamesToKeys: Map<String, Int> = mapOf()
-            private set
-        var primaryFeatureKeysToNames : Map<Int, String> = mapOf()
-            private set
-
-        var floatFeatureNamesToKeys: Map<String, Int> = mapOf()
-            private set
-        var floatFeatureKeysToNames: Map<Int, String> = mapOf()
-            private set
-
-        fun register(features: Iterable<NodeFeature>) {
-            registeredFeatures = features.toSet()
-
-            primaryFeatures = registeredFeatures.filter { it.isPrimary }
-            floatFeatures = registeredFeatures.filter { it.isFloat }
-
-            featureKeys = registeredFeatures.map { it.key }
-            primaryFeatureKeys = primaryFeatures.map { it.key }
-            floatFeatureKeys = floatFeatures.map { it.key }
-
-            featureNames = registeredFeatures.map { it.name }
-            primaryFeatureNames = primaryFeatures.map { it.name }
-            floatFeatureNames = floatFeatures.map { it.name }
-
-            // featureNamesToKeys = registeredFeatures.associate { it.name to it.key }
-            featureNamesToKeys = registeredFeatures.associateBy({ it.name }, { it.key })
-            featureKeysToNames = registeredFeatures.associateBy({ it.key }, { it.name })
-
-            primaryFeatureNamesToKeys = primaryFeatures.associateBy({ it.name }, { it.key })
-            primaryFeatureKeysToNames = primaryFeatures.associateBy({ it.key }, { it.name })
-
-            floatFeatureNamesToKeys = floatFeatures.associateBy({ it.name }, { it.key })
-            floatFeatureKeysToNames = floatFeatures.associateBy({ it.key }, { it.name })
-        }
-
         fun getKey(name: String): Int {
-            return featureNamesToKeys[name.toLowerCase()]?:
-                throw IllegalArgumentException("Unknown feature name $name")
+            return FeatureRegistry.featureNamesToKeys[name.toLowerCase()]?:
+            throw IllegalArgumentException("Unknown feature name $name")
         }
 
         fun getValue(name: String, node: Node): Double {
             return node.getFeature(name)
         }
-        
+
         fun isFloating(name: String): Boolean {
-            return floatFeatureNames.contains(name)
+            return FeatureRegistry.floatFeatureNames.contains(name)
         }
 
         fun isFloating(key: Int): Boolean {
-            return floatFeatureKeys.contains(key)
+            return FeatureRegistry.floatFeatureKeys.contains(key)
         }
     }
 }
@@ -160,17 +163,17 @@ object FeatureFormatter {
                featureKeys: Iterable<Int>, sb: StringBuilder = StringBuilder(), eps: Double = 0.001): StringBuilder {
         val size = Iterables.size(featureKeys)
         if (size == 0) {
-            for (i in featureNames.indices) {
+            for (i in FeatureRegistry.featureNames.indices) {
                 val value = features[i]
                 if (!Precision.equals(value, 0.0, eps)) {
-                    sb.append(featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
+                    sb.append(FeatureRegistry.featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
                 }
             }
         } else {
             for (i in featureKeys) {
                 val value = features.getEntry(i)
                 if (!Precision.equals(value, 0.0, eps)) {
-                    sb.append(featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
+                    sb.append(FeatureRegistry.featureNames[i]).append(":").append(formatValue(i, value, eps)).append(' ')
                 }
             }
         }
@@ -207,7 +210,7 @@ object FeatureFormatter {
     }
 
     fun formatValue(key: Int, value: Double, eps: Double = 0.001): String {
-        return formatValue(value, isFloating(key))
+        return formatValue(value, NodeFeature.isFloating(key))
     }
 
     fun formatValue(value: Double, isFloating: Boolean = true, eps: Double = 0.001): String {

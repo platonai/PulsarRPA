@@ -690,7 +690,7 @@ fun Node.formatFeatures(vararg featureKeys: Int): String {
     return FeatureFormatter.format(features, featureKeys.asIterable()).toString()
 }
 
-fun Node.formatVariables(): String {
+fun Node.formatNamedFeatures(): String {
     val sb = StringBuilder()
 
     NodeTraversor.traverse({ node, _ ->

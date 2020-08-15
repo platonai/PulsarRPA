@@ -2,19 +2,18 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.ql.SQLContext
+import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import org.h2.engine.Session
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 
 @UDFGroup(namespace = "ADMIN")
 object AdminFunctions {
     val log = LoggerFactory.getLogger(AdminFunctions::class.java)
-    private val sqlContext = SQLContext.getOrCreate()
+    private val sqlContext get() = SQLContexts.activeContext!!
 
     @UDFunction(deterministic = true) @JvmStatic
     fun echo(@H2Context conn: Connection, message: String): String {

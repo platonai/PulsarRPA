@@ -7,7 +7,7 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
-import ai.platon.pulsar.ql.SQLContext
+import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
@@ -30,8 +30,8 @@ object CommonFunctions {
 
     private val log = LoggerFactory.getLogger(CommonFunctions::class.java)
 
-    private val sqlContext = SQLContext.getOrCreate()
-    private val unmodifiedConfig = sqlContext.unmodifiedConfig
+    private val sqlContext get() = SQLContexts.activeContext!!
+    private val unmodifiedConfig get() = sqlContext.unmodifiedConfig
 
     /**
      * Set volatileConfig to the given value

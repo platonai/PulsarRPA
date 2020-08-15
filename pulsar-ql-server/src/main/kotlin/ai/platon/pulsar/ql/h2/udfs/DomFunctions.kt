@@ -7,15 +7,13 @@ import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
-import ai.platon.pulsar.ql.SQLContext
+import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.types.ValueDom
-import org.h2.engine.Session
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.domValue
-import org.h2.jdbc.JdbcConnection
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
@@ -32,7 +30,7 @@ import java.time.Duration
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
 object DomFunctions {
-    private val sqlContext = SQLContext.getOrCreate()
+    private val sqlContext get() = SQLContexts.activeContext!!
 
     @UDFunction(description = "Load the page specified by url from db, if absent or expired, " +
             "fetch it from the web, and then parse it into a document")

@@ -2,6 +2,7 @@ package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -38,6 +39,10 @@ import kotlin.reflect.KClass
 abstract class AbstractPulsarContext(
         override val applicationContext: ApplicationContext
 ): PulsarContext, AutoCloseable {
+    init {
+        println("PulsarContext is created | ${this.hashCode()}")
+    }
+
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
@@ -66,7 +71,9 @@ abstract class AbstractPulsarContext(
      * The load component
      * */
     open val loadComponent: LoadComponent get() = getBean()
-
+    /**
+     * The global cache manager
+     * */
     open val globalCacheManager: GlobalCacheManager get() = getBean()
 
     /**

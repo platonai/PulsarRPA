@@ -15,7 +15,7 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
     val isNotNil get() = !isNil
     val isValid get() = u != null
     val isInvalid get() = !isValid
-    val configuredUrl get() = "$url $options"
+    val configuredUrl = "$url $options"
 
     fun toURL(): URL? { return u }
 
@@ -23,11 +23,11 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
     operator fun component2() = options
 
     override fun hashCode(): Int {
-        return url.hashCode()
+        return configuredUrl.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is NormUrl && url == other.url && options == other.options
+        return other is NormUrl && configuredUrl == other.configuredUrl
     }
 
     override fun compareTo(other: NormUrl): Int {

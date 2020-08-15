@@ -27,4 +27,5 @@ class GlobalCacheManager(val conf: ImmutableConfig) {
     val nonReentrantFetchUrls = ConcurrentNonReentrantQueue<String>()
     val nReentrantFetchUrls = ConcurrentNEntrantQueue<String>(3)
     val reentrantFetchUrls = ConcurrentLinkedQueue<String>()
+    val fetchUrls get() = arrayOf(nonReentrantFetchUrls, nReentrantFetchUrls, reentrantFetchUrls)
 }

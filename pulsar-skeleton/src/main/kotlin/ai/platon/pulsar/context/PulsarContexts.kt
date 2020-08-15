@@ -1,6 +1,5 @@
 package ai.platon.pulsar.context
 
-import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.context.support.ClassPathXmlPulsarContext
 import ai.platon.pulsar.context.support.GenericPulsarContext
@@ -12,7 +11,7 @@ object PulsarContexts {
         private set
 
     @Synchronized
-    fun activate() = activate(BasicPulsarContext())
+    fun activate() = activeContext ?: activate(BasicPulsarContext())
 
     @Synchronized
     fun activate(context: PulsarContext): PulsarContext {
@@ -28,10 +27,7 @@ object PulsarContexts {
     }
 
     @Synchronized
-    fun createSession(): PulsarSession {
-        val context = activeContext?: activate(BasicPulsarContext())
-        return context.createSession()
-    }
+    fun createSession() = contexts.first().createSession()
 
     @Synchronized
     fun shutdown() {
