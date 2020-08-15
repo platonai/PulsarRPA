@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.Systems
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -31,25 +32,7 @@ import java.util.concurrent.atomic.AtomicReference
  * <li>TODO: machine learning</li>
  * </ul>
  */
-class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseable {
-
-    companion object {
-        private var activeContext: SQLContext? = null
-
-        fun active(pulsarContext: AbstractPulsarContext): SQLContext {
-            return SQLContext(pulsarContext).also { activeContext = it }
-        }
-
-        fun getOrCreate(): SQLContext {
-            synchronized(SQLContext::class.java) {
-                if (activeContext == null) {
-                    Systems.setPropertyIfAbsent(SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
-                    activeContext = SQLContext((PulsarContexts.activeContext?:PulsarContexts.activate()) as AbstractPulsarContext)
-                }
-                return activeContext!!
-            }
-        }
-    }
+class SQLContext(val pulsarContext: AbstractPulsarContext): AutoCloseable {
 
     private val log = LoggerFactory.getLogger(SQLContext::class.java)
 
@@ -59,7 +42,7 @@ class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseabl
 
     val unmodifiedConfig: ImmutableConfig
 
-    private val backgroundSession get() = pulsarContext.createSession()
+    private val backgroundSession = pulsarContext.createSession()
 
     /**
      * The sessions container
@@ -79,13 +62,12 @@ class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseabl
 
     private val closed = AtomicBoolean()
 
-    val isActive = !closed.get()
+    val isActive = !closed.get() && pulsarContext.isActive
 
     init {
-        status = Status.INITIALIZING
+        Systems.setPropertyIfAbsent(SCENT_EXTRACT_TABULATE_CELL_TYPE, "DATABASE")
 
-        // TODO: should be closed by database engine?
-        pulsarContext.registerClosable(this)
+        status = Status.INITIALIZING
 
         unmodifiedConfig = pulsarContext.unmodifiedConfig
         handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, false)
@@ -100,14 +82,13 @@ class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseabl
 
         status = Status.RUNNING
 
-        log.info("SQLContext is created")
+        log.info("SQLContext is created | {}", this.hashCode())
     }
 
     fun createSession(dbSession: DbSession): QuerySession {
         ensureRunning()
-        val querySession = QuerySession(pulsarContext, dbSession, SessionConfig(dbSession, unmodifiedConfig))
-        sessions[dbSession] = querySession
-        return querySession
+        return sessions.computeIfAbsent(dbSession) {
+            QuerySession(pulsarContext, dbSession, SessionConfig(dbSession, unmodifiedConfig)) }
     }
 
     fun sessionCount(): Int {
@@ -122,8 +103,12 @@ class SQLContext(private val pulsarContext: AbstractPulsarContext): AutoCloseabl
 
     fun getSession(sessionId: Int): QuerySession {
         ensureRunning()
-        val key = DbSession(sessionId, Any())
-        return sessions[key]?:throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session #$sessionId is closed")
+        val session = sessions[DbSession(sessionId, Any())]
+        if (session == null) {
+            log.warn("Session is closed | #{} {}", sessionId, this)
+            throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session #$sessionId is closed")
+        }
+        return session
     }
 
     fun closeSession(sessionId: Int) {

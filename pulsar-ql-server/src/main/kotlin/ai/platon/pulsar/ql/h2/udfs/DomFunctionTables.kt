@@ -1,7 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating
+import ai.platon.pulsar.dom.features.FeatureRegistry
+import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.SIB
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.select.getAnchors
@@ -375,8 +375,8 @@ object DomFunctionTables {
         rs.autoClose = false
 
         rs.addColumn("DOM", DataType.convertTypeToSQLType(ValueDom.type), 0, 0)
-        for (name in featureNames) {
-            if (isFloating(name)) {
+        for (name in FeatureRegistry.featureNames) {
+            if (NodeFeature.isFloating(name)) {
                 val type = DataType.convertTypeToSQLType(Value.DOUBLE)
                 rs.addColumn(name.toUpperCase(), type, 0, 0)
             } else {

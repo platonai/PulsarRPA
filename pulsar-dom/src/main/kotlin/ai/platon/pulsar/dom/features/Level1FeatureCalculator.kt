@@ -3,35 +3,53 @@ package ai.platon.pulsar.dom.features
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.registeredFeatures
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.DOMRect
-import ai.platon.pulsar.dom.nodes.DOMRect.Companion.parseDOMRect
 import ai.platon.pulsar.dom.nodes.forEachElement
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import org.apache.commons.math3.linear.ArrayRealVector
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
+import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 
-class NodeFeatureCalculator : NodeVisitor {
-    var sequence: Int = 0
-        private set
-
+class Level1FeatureCalculator: AbstractFeatureCalculator() {
     companion object {
         init {
             ResourceLoader.addClassFactory(ClassFactory())
-
-            NodeFeature.register(F.values().map { it.toFeature() })
-            require(registeredFeatures.size == N)
+            if (FeatureRegistry.registeredFeatures.isEmpty()) {
+                FeatureRegistry.register(F.values().map { it.toFeature() })
+                require(FeatureRegistry.registeredFeatures.size == N)
+            }
         }
     }
 
+    override fun calculate(document: Document) {
+        NodeTraversor.traverse(Level1NodeFeatureCalculatorVisitor(), document)
+    }
+}
+
+class ClassFactory : ai.platon.pulsar.common.ResourceLoader.ClassFactory {
+    override fun match(name: String): Boolean {
+        return name.startsWith(this.javaClass.`package`.name)
+    }
+
+    @Throws(ClassNotFoundException::class)
+    override fun loadClass(name: String): Class<*> {
+        return this.javaClass.classLoader.loadClass(name)
+    }
+}
+
+private class Level1NodeFeatureCalculatorVisitor: NodeVisitor {
+    var sequence: Int = 0
+        private set
+
     // hit when the node is first seen
     override fun head(node: Node, depth: Int) {
-        node.features = ArrayRealVector(registeredFeatures.size)
+        node.features = ArrayRealVector(FeatureRegistry.registeredFeatures.size)
 
         node.features[DEP] = depth.toDouble()
         node.features[SEQ] = sequence.toDouble()
@@ -162,14 +180,14 @@ class NodeFeatureCalculator : NodeVisitor {
 
     private fun getDOMRect(node: Node): DOMRect {
         return if (node is TextNode) getDOMRectInternal("tv", node)
-        else parseDOMRect(node.attr("vi"))
+        else DOMRect.parseDOMRect(node.attr("vi"))
     }
 
     private fun getDOMRectInternal(attrKey: String, node: TextNode): DOMRect {
         val parent = node.parent()
         val i = node.siblingIndex()
         val vi = parent.attr("$attrKey$i")
-        return parseDOMRect(vi)
+        return DOMRect.parseDOMRect(vi)
     }
 
     private fun calculateBodyRect(body: Node): DOMRect {
@@ -195,16 +213,5 @@ class NodeFeatureCalculator : NodeVisitor {
         val d = ele.getFeature(denominator)
 
         return if (d == 0.0) divideByZeroValue else n / d
-    }
-}
-
-class ClassFactory : ai.platon.pulsar.common.ResourceLoader.ClassFactory {
-    override fun match(name: String): Boolean {
-        return name.startsWith(this.javaClass.`package`.name)
-    }
-
-    @Throws(ClassNotFoundException::class)
-    override fun loadClass(name: String): Class<*> {
-        return this.javaClass.classLoader.loadClass(name)
     }
 }

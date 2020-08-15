@@ -1,11 +1,10 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.DbSession
 import ai.platon.pulsar.ql.H2Config
 import ai.platon.pulsar.ql.QuerySession
-import ai.platon.pulsar.ql.SQLContext
+import ai.platon.pulsar.ql.SQLContexts
 import org.h2.engine.*
 import org.h2.jdbc.JdbcConnection
 import org.h2.message.TraceSystem
@@ -18,7 +17,7 @@ object H2SessionFactory : org.h2.engine.SessionFactory {
 
     private val log = LoggerFactory.getLogger(H2SessionFactory::class.java)!!
 
-    private val sqlContext = SQLContext.getOrCreate()
+    private val sqlContext get() = SQLContexts.activate()
 
     init {
         H2Config.config()

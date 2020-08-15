@@ -24,25 +24,9 @@ class DbSession(val id: Int, val implementation: Any) {
         }
     }
 
-    fun executeUpdate(sql: String): Int {
-        if (org.h2.engine.Session::class.java.isAssignableFrom(implementation.javaClass)) {
-            val session = implementation as org.h2.engine.Session
-            val command = session.prepareCommand(sql, Int.MAX_VALUE)
-            return command.executeUpdate(null).updateCount
-        }
+    override fun hashCode() = id
 
-        return 0
-    }
+    override fun toString() = name
 
-    override fun hashCode(): Int {
-        return id
-    }
-
-    override fun toString(): String {
-        return name
-    }
-
-    override fun equals(obj: Any?): Boolean {
-        return obj is DbSession && obj.id == id
-    }
+    override fun equals(other: Any?) = other is DbSession && other.id == id
 }

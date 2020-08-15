@@ -1,6 +1,6 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.dom.features.NodeFeature.Companion.featureNames
+import ai.platon.pulsar.dom.features.FeatureRegistry
 import ai.platon.pulsar.dom.features.defined.HEIGHT
 import ai.platon.pulsar.dom.features.defined.LEFT
 import ai.platon.pulsar.dom.features.defined.TOP
@@ -80,7 +80,7 @@ internal abstract class MathematicalEvaluator : Evaluator() {
         private val expression = Expression(expr)
 
         override fun matches(root: Element, element: Element): Boolean {
-            for (name in featureNames) {
+            for (name in FeatureRegistry.featureNames) {
                 // the prefix "_" is compatible with Web SQL, may remove in later versions
                 val v = element.getFeature(name)
                 if (v.isNaN()) {

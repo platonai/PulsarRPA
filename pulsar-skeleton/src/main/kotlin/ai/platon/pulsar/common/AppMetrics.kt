@@ -22,6 +22,8 @@ object MetricFilters {
 
     fun endsWith(suffix: String) = MetricFilter { name, metric -> name.endsWith(suffix) }
 
+    fun notEndsWith(suffix: String) = MetricFilter { name, metric -> !name.endsWith(suffix) }
+
     fun contains(substring: String) = MetricFilter { name, metric -> name.contains(substring) }
 
     fun not(filter: MetricFilter) = MetricFilter { name, metric -> !filter.matches(name, metric) }
@@ -104,7 +106,7 @@ class AppMetrics(
                 .outputTo(LoggerFactory.getLogger(AppMetrics::class.java))
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .filter(MetricFilters.not(MetricFilters.endsWith(SHADOW_METRIC_SUFFIX)))
+                .filter(MetricFilters.notEndsWith(SHADOW_METRIC_SUFFIX))
                 .build()
         counterReporter.outputTo(LoggerFactory.getLogger(CounterReporter::class.java))
     }

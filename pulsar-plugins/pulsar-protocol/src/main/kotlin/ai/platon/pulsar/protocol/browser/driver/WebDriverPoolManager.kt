@@ -61,10 +61,10 @@ open class WebDriverPoolManager(
             "freeDrivers" to Gauge<Int> { numFreeDrivers },
             "workingDrivers" to Gauge<Int> { numWorkingDrivers },
             "onlineDrivers" to Gauge<Int> { numOnline },
-            "preemptiveTasks" to Gauge<Int> { numPreemptiveTasks.get() },
-            "runningPreemptiveTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
-            "pendingNormalTasks" to Gauge<Int> { numPendingNormalTasks.get() },
-            "runningNormalTasks" to Gauge<Int> { numRunningNormalTasks.get() },
+            "pTasks" to Gauge<Int> { numPreemptiveTasks.get() },
+            "runningPTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
+            "pendingNTasks" to Gauge<Int> { numPendingNormalTasks.get() },
+            "runningNTasks" to Gauge<Int> { numRunningNormalTasks.get() },
             "idleTime" to Gauge<String> { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
@@ -243,7 +243,7 @@ open class WebDriverPoolManager(
 
     private fun formatStatus(verbose: Boolean = false): String {
         val sb = StringBuilder()
-        gauges?.entries?.joinTo(sb, ", ", "", "\n") { it.key + ": " + it.value.value }
+        gauges?.entries?.joinTo(sb, ", ", "gauges: ", "\n") { it.key + ": " + it.value.value }
         driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
         return sb.toString()
     }
