@@ -110,7 +110,7 @@ open class PulsarSession(
             val (url, options) = normUrl
             val now = Instant.now()
             return pageCache.getDatum(url, options.expires, now)
-                    ?:context.load(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+                    ?: context.load(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
         }
 
         return context.load(normUrl)
@@ -156,7 +156,7 @@ open class PulsarSession(
             val (url, options) = normUrl
             val now = Instant.now()
             return pageCache.getDatum(url, options.expires, now)
-                    ?:context.loadDeferred(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+                    ?: context.loadDeferred(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
         }
 
         return context.loadDeferred(normUrl)
@@ -256,6 +256,8 @@ open class PulsarSession(
 
         return documentCache.computeIfAbsent(page.url) { context.parse(page) }
     }
+
+    fun loadAndParse(url: String, args: String) = loadAndParse(url, LoadOptions.parse(args))
 
     fun loadAndParse(url: String, options: LoadOptions = LoadOptions.create()): FeaturedDocument {
         ensureAlive()
