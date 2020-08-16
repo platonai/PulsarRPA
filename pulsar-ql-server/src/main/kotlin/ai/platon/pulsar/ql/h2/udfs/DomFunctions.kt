@@ -187,9 +187,7 @@ object DomFunctions {
 
     @UDFunction(description = "Get the element title")
     @JvmStatic
-    fun title(dom: ValueDom): String {
-        return dom.element.attr("title")
-    }
+    fun title(dom: ValueDom) = dom.element.attr("title")
 
     @UDFunction(description = "Get the document title")
     @JvmStatic
