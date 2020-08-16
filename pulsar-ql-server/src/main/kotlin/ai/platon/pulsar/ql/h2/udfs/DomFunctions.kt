@@ -2,18 +2,21 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
 import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
 import ai.platon.pulsar.ql.SQLContexts
+import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
-import ai.platon.pulsar.ql.types.ValueDom
-import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.domValue
+import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
@@ -47,12 +50,23 @@ object DomFunctions {
     fun fetch(@H2Context conn: Connection, configuredUrl: String): ValueDom {
         if (!sqlContext.isActive) return ValueDom.NIL
 
-        val urlAndArgs = Urls.splitUrlArgs(configuredUrl)
-        val options = LoadOptions.parse(urlAndArgs.second).apply { expires = Duration.ZERO }
-
         val h2session = H2SessionFactory.getH2Session(conn)
         return sqlContext.getSession(h2session.serialId).run {
-            parseValueDom(load(urlAndArgs.first, options))
+            val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
+            parseValueDom(load(normUrl))
+        }
+    }
+
+    @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
+    @JvmStatic
+    fun fetchAndEvaluate(@H2Context conn: Connection, configuredUrl: String, expression: String): ValueDom {
+        if (!sqlContext.isActive) return ValueDom.NIL
+
+        val h2session = H2SessionFactory.getH2Session(conn)
+        return sqlContext.getSession(h2session).run {
+            val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
+            normUrl.options.volatileConfig!!.set(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expression)
+            parseValueDom(load(normUrl))
         }
     }
 

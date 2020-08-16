@@ -2,6 +2,7 @@ package ai.platon.pulsar
 
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
@@ -13,6 +14,7 @@ import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -99,16 +101,19 @@ open class PulsarSession(
     fun load(url: String): WebPage = load(normalize(url))
 
     @Throws(Exception::class)
-    fun load(url: NormUrl): WebPage {
+    fun load(normUrl: NormUrl): WebPage {
         ensureAlive()
 
-        initOptions(url.options)
+        initOptions(normUrl.options)
 
-        return if (enableCache) {
-            pageCache.get(url.url) ?: context.load(url).also { pageCache.put(it.url, it) }
-        } else {
-            context.load(url)
+        if (enableCache) {
+            val (url, options) = normUrl
+            val now = Instant.now()
+            return pageCache.getDatum(url, options.expires, now)
+                    ?:context.load(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
         }
+
+        return context.load(normUrl)
     }
 
     /**
@@ -142,14 +147,19 @@ open class PulsarSession(
     }
 
     @Throws(Exception::class)
-    suspend fun loadDeferred(url: NormUrl): WebPage {
+    suspend fun loadDeferred(normUrl: NormUrl): WebPage {
         ensureAlive()
 
-        initOptions(url.options)
+        initOptions(normUrl.options)
 
-        return if (enableCache) {
-            pageCache.get(url.url) ?: context.loadDeferred(url).also { pageCache.put(it.url, it) }
-        } else context.loadDeferred(url)
+        if (enableCache) {
+            val (url, options) = normUrl
+            val now = Instant.now()
+            return pageCache.getDatum(url, options.expires, now)
+                    ?:context.loadDeferred(normUrl).also { pageCache.put(url, ExpiringItem(it, now)) }
+        }
+
+        return context.loadDeferred(normUrl)
     }
 
     @Throws(Exception::class)
@@ -173,7 +183,7 @@ open class PulsarSession(
         val opt = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
-            getCachedOrLoadAll(normUrls, opt)
+            loadAllWithCache(normUrls, opt)
         } else {
             context.loadAll(normUrls, opt)
         }
@@ -193,7 +203,7 @@ open class PulsarSession(
         val opt = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
-            getCachedOrLoadAll(normUrls, opt)
+            loadAllWithCache(normUrls, opt)
         } else {
             context.loadAll(normUrls, opt)
         }
@@ -240,28 +250,11 @@ open class PulsarSession(
             return FeaturedDocument.NIL
         }
 
-        if (noCache) {
+        if (noCache || !enableCache) {
             return context.parse(page)
         }
 
-        val url = page.url
-        if (!enableCache) {
-            return context.parse(page)
-        }
-
-        var document = documentCache.get(url)
-        if (document == null) {
-            // TODO: review if the synchronization is correct and necessary
-            synchronized(documentCache) {
-                document = documentCache.get(url)
-                if (document == null) {
-                    document = context.parse(page)
-                    documentCache.put(url, document)
-                }
-            }
-        }
-
-        return document
+        return documentCache.computeIfAbsent(page.url) { context.parse(page) }
     }
 
     fun loadAndParse(url: String, options: LoadOptions = LoadOptions.create()): FeaturedDocument {
@@ -278,32 +271,18 @@ open class PulsarSession(
         return cssQueries.associate { it to document.selectFirstOrNull(it)?.text() }
     }
 
-    fun cache(page: WebPage): WebPage = page.also { pageCache.put(it.url, it) }
+    fun cache(page: WebPage): WebPage = page.also { pageCache.putDatum(it.url, it) }
+    fun disableCache(page: WebPage): WebPage? = pageCache.remove(page.url)?.datum
 
-    fun removePageCache(url: String): WebPage? = pageCache.remove(url)
+    fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { documentCache.putDatum(it.baseUri, it) }
+    fun disableCache(doc: FeaturedDocument): FeaturedDocument? = documentCache.remove(doc.baseUri)?.datum
 
-    fun removePageCache(urls: Iterable<String>) = urls.forEach { removePageCache(it) }
-
-    fun cache(doc: FeaturedDocument): FeaturedDocument = doc.also { documentCache.put(it.location, it) }
-
-    fun removeDocumentCache(url: String): FeaturedDocument? = documentCache.remove(url)
-
-    fun removeDocumentCache(urls: Iterable<String>) = urls.forEach { removeDocumentCache(it) }
-
-    private fun getCachedOrGet(url: String): WebPage? {
-        ensureAlive()
-        var page: WebPage? = pageCache.get(url)
-        if (page != null) {
-            return page
-        }
-
-        page = context.get(url)
-        pageCache.put(url, page)
-
-        return page
+    fun disableCache(url: String): WebPage? {
+        documentCache.remove(url)
+        return pageCache.remove(url)?.datum
     }
 
-    private fun getCachedOrLoadAll(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+    private fun loadAllWithCache(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
         ensureAlive()
         urls.forEach { initOptions(it.options) }
         initOptions(options)
@@ -311,8 +290,9 @@ open class PulsarSession(
         val pages = ArrayList<WebPage>()
         val pendingUrls = ArrayList<NormUrl>()
 
+        val now = Instant.now()
         for (url in urls) {
-            val page = pageCache.get(url.url)
+            val page = pageCache.getDatum(url.url, options.expires, now)
             if (page != null) {
                 pages.add(page)
             } else {
@@ -357,7 +337,7 @@ open class PulsarSession(
 
     fun export(doc: FeaturedDocument, ident: String = ""): Path {
         ensureAlive()
-        val filename = AppPaths.fromUri(doc.location, "", ".htm")
+        val filename = AppPaths.fromUri(doc.baseUri, "", ".htm")
         val path = WEB_CACHE_DIR.resolve("export").resolve(ident).resolve(filename)
         return AppFiles.saveTo(doc.prettyHtml, path, true)
     }

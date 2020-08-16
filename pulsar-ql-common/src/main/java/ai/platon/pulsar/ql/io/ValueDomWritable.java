@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.io;
 
-import ai.platon.pulsar.common.ConcurrentLRUCache;
+import ai.platon.pulsar.common.concurrent.ConcurrentLRUCache;
 import ai.platon.pulsar.dom.Documents;
 import ai.platon.pulsar.dom.FeaturedDocument;
 import ai.platon.pulsar.ql.types.ValueDom;

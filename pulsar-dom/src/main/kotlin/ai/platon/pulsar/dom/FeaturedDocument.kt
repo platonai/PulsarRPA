@@ -121,7 +121,16 @@ open class FeaturedDocument(val document: Document) {
         get() = document.title()
         set(value) = document.title(value)
 
-    val location: String get() = document.location()
+    /**
+     * Get the URL this Document was parsed from.
+     */
+    val baseUri get() = document.baseUri()
+
+    /**
+     * Get the URL this Document was parsed from. If the starting URL is a redirect,
+     * this will return the final URL from which the document was served from.
+     */
+    val location get() = document.location()
 
     val head: Element
         get() = document.head() ?: throw RuntimeException("Bad document, head tag is missing")
