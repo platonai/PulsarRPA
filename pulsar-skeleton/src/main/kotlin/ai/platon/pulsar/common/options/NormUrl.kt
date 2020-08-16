@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import java.net.URL
+import java.time.Duration
 
 open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
     constructor(u: URL, options: LoadOptions): this(u.toString(), options)
@@ -40,5 +41,11 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
 
     companion object {
         val nil = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
+
+        fun parse(configuredUrl: String): NormUrl {
+            val (url, args) = Urls.splitUrlArgs(configuredUrl)
+            val options = LoadOptions.parse(args)
+            return NormUrl(url, options)
+        }
     }
 }

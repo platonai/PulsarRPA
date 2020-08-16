@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common;
 
+import ai.platon.pulsar.common.concurrent.ConcurrentLRUCache;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;

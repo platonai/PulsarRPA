@@ -206,7 +206,9 @@ public interface CapabilityTypes {
     String FETCH_SCRIPT_TIMEOUT = "fetch.script.timeout";
     String FETCH_SCROLL_DOWN_COUNT = "fetch.scroll.down.count";
     String FETCH_SCROLL_DOWN_INTERVAL = "fetch.scroll.down.interval";
+
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
+    String FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE = "fetch.browser.client.js.after.feature.compute";
     String FETCH_CLIENT_JS_COMPUTED_STYLES = "fetch.browser.client.js.computed.styles";
     String FETCH_CLIENT_JS_PROPERTY_NAMES = "fetch.browser.client.js.property.names";
     /**
