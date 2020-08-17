@@ -8,14 +8,13 @@ import java.util.*
 import kotlin.math.abs
 
 /**
- * The base class for all tests.
+ * A wrapper for h2 database
  */
 class H2Db(
-        sessionFactory: String = System.getProperty("h2.sessionFactory", "ai.platon.pulsar.ql.h2.H2SessionFactory"),
         val conf: H2DbConfig = H2DbConfig()
 ) {
     init {
-        System.setProperty("h2.sessionFactory", sessionFactory)
+        System.setProperty("h2.sessionFactory", conf.sessionFactory)
     }
 
     fun generateTempDbName(): String {

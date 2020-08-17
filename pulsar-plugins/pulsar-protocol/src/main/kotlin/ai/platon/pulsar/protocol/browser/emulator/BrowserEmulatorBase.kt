@@ -30,7 +30,6 @@ abstract class BrowserEmulatorBase(
 
     override fun getParams(): Params {
         return Params.of(
-                "charsetPattern", StringUtils.abbreviateMiddle(charsetPattern.toString(), "...", 200),
                 "pageLoadTimeout", driverControl.pageLoadTimeout,
                 "scriptTimeout", driverControl.scriptTimeout,
                 "scrollDownCount", driverControl.scrollDownCount,

@@ -12,7 +12,7 @@ import static org.apache.commons.lang3.StringUtils.SPACE;
  * Created by vincent on 16-6-15.
  *
  * the screen coordinate system:
- * 0------>x
+ * 0------\>x
  * |
  * |   *
  * v

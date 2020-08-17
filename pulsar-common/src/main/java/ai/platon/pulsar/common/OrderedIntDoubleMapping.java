@@ -25,7 +25,7 @@ import java.io.Serializable;
 /**
  * From mahout
  *
- * @see {http://mahout.apache.org/docs/0.13.0/api/docs/mahout-math/index.html?org/apache/mahout/math/map/OpenIntDoubleHashMap.html}
+ * @link {http://mahout.apache.org/docs/0.13.0/api/docs/mahout-math/index.html?org/apache/mahout/math/map/OpenIntDoubleHashMap.html}
  */
 public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
 

@@ -2,15 +2,12 @@ package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.withContext
-import ai.platon.pulsar.ql.h2.H2Db
+import ai.platon.pulsar.ql.h2.H2MemoryDb
 
 class SqlManual {
-    val conn = H2Db().getRandomConnection()
-    val statement = conn.createStatement()
-
-    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
-
-    fun load() = execute("select dom_doc_title(dom_load('$url -i 1d')) as title")
+    private val conn = H2MemoryDb().getRandomConnection()
+    private val statement = conn.createStatement()
+    private val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     fun scrape() = execute("""
         select
@@ -28,8 +25,7 @@ class SqlManual {
             load_out_pages('$url -i 1d -ii 7d', 'a[href~=item]')"""
     )
 
-    fun run() {
-        load()
+    fun runAll() {
         scrape()
         scrapeOutPages()
     }
@@ -46,4 +42,4 @@ class SqlManual {
     }
 }
 
-fun main() = withContext { SqlManual().run() }
+fun main() = withContext { SqlManual().runAll() }

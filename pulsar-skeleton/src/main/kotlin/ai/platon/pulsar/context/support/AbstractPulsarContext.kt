@@ -1,8 +1,8 @@
 package ai.platon.pulsar.context.support
 
+import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.AppMetrics
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -37,11 +37,9 @@ import kotlin.reflect.KClass
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
 abstract class AbstractPulsarContext(
-        override val applicationContext: ApplicationContext
+        override val applicationContext: ApplicationContext,
+        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment().apply { initialize() }
 ): PulsarContext, AutoCloseable {
-    init {
-        println("PulsarContext is created | ${this.hashCode()}")
-    }
 
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
@@ -124,14 +122,14 @@ abstract class AbstractPulsarContext(
         closableObjects.add(closable)
     }
 
-    private fun initOptions(options: LoadOptions, isItemOption: Boolean = false): LoadOptions {
+    private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
         if (options.volatileConfig == null) {
             options.volatileConfig = VolatileConfig(unmodifiedConfig)
         }
 
         options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)
 
-        return if (isItemOption) options.createItemOption() else options
+        return if (toItemOption) options.createItemOption() else options
     }
 
     fun clearCaches() {
@@ -139,11 +137,11 @@ abstract class AbstractPulsarContext(
         globalCacheManager.documentCache.clear()
     }
 
-    override fun normalize(url: String, isItemOption: Boolean): NormUrl {
-        return normalize(url, LoadOptions.create(), isItemOption)
+    override fun normalize(url: String, toItemOption: Boolean): NormUrl {
+        return normalize(url, LoadOptions.create(), toItemOption)
     }
 
-    override fun normalize(url: String, options: LoadOptions, isItemOption: Boolean): NormUrl {
+    override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val parts = Urls.splitUrlArgs(url)
         var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
         if (!options.noNorm) {
@@ -151,22 +149,20 @@ abstract class AbstractPulsarContext(
         }
 
         if (parts.second.isBlank()) {
-            return NormUrl(normalizedUrl, initOptions(options, isItemOption))
+            return NormUrl(normalizedUrl, initOptions(options, toItemOption))
         }
 
         val parsedOptions = LoadOptions.parse(parts.second)
         val options2 = LoadOptions.mergeModified(parsedOptions, options)
-        return NormUrl(normalizedUrl, initOptions(options2, isItemOption))
+        return NormUrl(normalizedUrl, initOptions(options2, toItemOption))
     }
 
-    override fun normalize(urls: Iterable<String>, isItemOption: Boolean): List<NormUrl> {
-        return urls.takeIf { isActive }?.mapNotNull { normalize(it, isItemOption).takeIf { it.isNotNil } }
-                ?:listOf()
+    override fun normalize(urls: Iterable<String>, toItemOption: Boolean): List<NormUrl> {
+        return urls.mapNotNull { normalize(it, toItemOption).takeIf { it.isNotNil } }
     }
 
-    override fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean): List<NormUrl> {
-        return urls.takeIf { isActive }?.mapNotNull { normalize(it, options, isItemOption).takeIf { it.isNotNil } }
-                ?: listOf()
+    override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
+        return urls.mapNotNull { normalize(it, options, toItemOption).takeIf { it.isNotNil } }
     }
 
     /**
@@ -317,7 +313,7 @@ abstract class AbstractPulsarContext(
     }
 
     override fun delete(url: String) {
-        webDb.takeIf { isActive }?.apply { delete(url); delete(normalize(url).url) }
+        webDb.takeIf { isActive }?.run { delete(url); delete(normalize(url).url) }
     }
 
     override fun delete(page: WebPage) {

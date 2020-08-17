@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Copyright @ 2013-2019 Platon AI. All rights reserved
  *
  */
-class AutoDetectedStorageService private constructor(conf: ImmutableConfig): AutoCloseable {
-    private val log = LoggerFactory.getLogger(AutoDetectedStorageService::class.java)
+class AutoDetectStorageProvider(conf: ImmutableConfig): AutoCloseable {
+    private val log = LoggerFactory.getLogger(AutoDetectStorageProvider::class.java)
 
     val storeClassName: String = detectDataStoreClassName(conf)
     val pageStoreClass: Class<out DataStore<String, GWebPage>> = detectDataStoreClass(conf)
@@ -37,12 +37,12 @@ class AutoDetectedStorageService private constructor(conf: ImmutableConfig): Aut
 
     companion object {
 
-        private var instance: AutoDetectedStorageService? = null
+        private var instance: AutoDetectStorageProvider? = null
 
-        // TODO: in MapR, should be initialized after Job/Map/Reduer initialization since crawlId can be passed from command line
-        fun create(initializeConf: ImmutableConfig): AutoDetectedStorageService {
+        // TODO: in MapRContext, should be initialized after Job/Map/Reduer initialization since crawlId can be passed from command line
+        fun create(initializeConf: ImmutableConfig): AutoDetectStorageProvider {
             if (instance == null) {
-                instance = AutoDetectedStorageService(initializeConf)
+                instance = AutoDetectStorageProvider(initializeConf)
             }
             return instance!!
         }

@@ -126,7 +126,6 @@ public abstract class AbstractNativeHttpProtocol extends AbstractHttpProtocol {
         this.accept = jobConf.get("http.accept", accept);
         this.mimeTypes = new MimeTypeResolver(jobConf);
         this.useHttp11 = jobConf.getBoolean("http.useHttp11", false);
-
     }
 
     public byte[] processGzipEncoded(byte[] compressed, URL url) throws IOException {

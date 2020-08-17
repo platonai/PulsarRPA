@@ -17,6 +17,7 @@
 package ai.platon.pulsar.parse.tika
 
 import ai.platon.pulsar.common.ReflectionUtils
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
@@ -34,6 +35,7 @@ import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
 import org.apache.html.dom.HTMLDocumentImpl
+import org.apache.tika.config.TikaConfig
 import org.apache.tika.metadata.Metadata
 import org.apache.tika.metadata.TikaCoreProperties
 import org.apache.tika.parser.ParseContext
@@ -54,7 +56,7 @@ class TikaParser(
 ) : Parser {
     private val LOG = LoggerFactory.getLogger(TikaParser::class.java)
     private val primerParser = PrimerParser(conf)
-    private val tikaConfig = PulsarTikaConfig.defaultConfig
+    private val tikaConfig = TikaConfig.getDefaultConfig()
     private val cachingPolicy = conf.get(PARSE_CACHING_FORBIDDEN_POLICY, AppConstants.CACHING_FORBIDDEN_CONTENT)
     private var htmlMapper = conf.get(PARSE_TIKA_HTML_MAPPER_NAME)?.let { ReflectionUtils.forNameOrNull<HtmlMapper>(it) }
 
@@ -68,7 +70,6 @@ class TikaParser(
         }
         // get the right parser using the mime type as a clue
         val mimeType = page.contentType
-        val parser = tikaConfig.getParser(mimeType) ?: return failed(ParseStatus.FAILED_NO_PARSER, mimeType)
         val tikamd = Metadata()
         val doc = HTMLDocumentImpl()
         doc.errorChecking = false
@@ -84,7 +85,7 @@ class TikaParser(
         try {
             val raw = page.content
             if (raw != null) {
-                parser.parse(ByteArrayInputStream(raw.array(), raw.arrayOffset()
+                tikaConfig.parser.parse(ByteArrayInputStream(raw.array(), raw.arrayOffset()
                         + raw.position(), raw.remaining()), domhandler, tikamd, context)
             }
         } catch (e: Exception) {

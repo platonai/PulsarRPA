@@ -128,7 +128,8 @@ public final class Strings {
      * Convenience call for {@link #toHexString(ByteBuffer, String, int)}, where
      * <code>sep = null; lineLen = Integer.MAX_VALUE</code>.
      *
-     * @param buf
+     * @param buf The byte buffer
+     * @return The hex string
      */
     public static String toHexString(ByteBuffer buf) {
         return toHexString(buf, null, Integer.MAX_VALUE);
@@ -143,6 +144,7 @@ public final class Strings {
      *                null if no separation is needed.
      * @param lineLen break the output String into lines containing output for lineLen
      *                bytes.
+     * @return The hex string
      */
     public static String toHexString(ByteBuffer buf, String sep, int lineLen) {
         return toHexString(buf.array(), buf.arrayOffset() + buf.position(), buf.remaining(), sep, lineLen);
@@ -152,7 +154,7 @@ public final class Strings {
      * Convenience call for {@link #toHexString(byte[], String, int)}, where
      * <code>sep = null; lineLen = Integer.MAX_VALUE</code>.
      *
-     * @param buf
+     * @param buf the buffer
      */
     public static String toHexString(byte[] buf) {
         return toHexString(buf, null, Integer.MAX_VALUE);
@@ -832,7 +834,7 @@ public final class Strings {
     /**
      * Splits a comma separated value <code>String</code>, trimming leading and trailing whitespace on each value.
      * Duplicate and empty values are removed.
-     * @param str a comma separated <String> with values
+     * @param str a comma separated string with values
      * @return a <code>Collection</code> of <code>String</code> values
      */
     public static Collection<String> getTrimmedStringCollection(String str){
@@ -843,7 +845,7 @@ public final class Strings {
 
     /**
      * Splits a comma separated value <code>String</code>, trimming leading and trailing whitespace on each value.
-     * @param str a comma separated <String> with values
+     * @param str a comma separated String with values
      * @return an array of <code>String</code> values
      */
     public static String[] getTrimmedStrings(String str){

@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.stream.Collectors
 
 /**
  * Creates and caches [Protocol] plugins. Protocol plugins should define
@@ -38,8 +37,25 @@ import java.util.stream.Collectors
  */
 @Component
 class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoCloseable {
+    private val log = LoggerFactory.getLogger(ProtocolFactory::class.java)
+
     private val protocols: MutableMap<String, Protocol> = ConcurrentHashMap()
     private val closed = AtomicBoolean()
+
+    init {
+        val results = ResourceLoader.readAllLines("protocol-plugins.txt")
+                .map { it.trim { it <= ' ' } }
+                .filter { !it.startsWith("#") }
+                .map { it.split("\\s+".toRegex()).toTypedArray() }
+                .filter { it.size >= 2 }
+                .map { it[0] to getInstance(it) }
+                .filter { it.second != null }
+                .onEach { it.second!!.conf = immutableConfig }
+                .associate { it.first to it.second!! }
+        protocols.putAll(results)
+        log.info(protocols.keys.joinToString(", ", "Supported protocols: ", ""))
+    }
+
     /**
      * TODO: configurable, using major protocol/sub protocol is a good idea
      * Using major protocol/sub protocol is a good idea, for example:
@@ -80,11 +96,11 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
             val className = config[1]
             return Class.forName(className).newInstance() as Protocol
         } catch (e: ClassNotFoundException) {
-            LOG.error(Strings.stringifyException(e))
+            log.error(Strings.stringifyException(e))
         } catch (e: InstantiationException) {
-            LOG.error(Strings.stringifyException(e))
+            log.error(Strings.stringifyException(e))
         } catch (e: IllegalAccessException) {
-            LOG.error(Strings.stringifyException(e))
+            log.error(Strings.stringifyException(e))
         }
         return null
     }
@@ -95,29 +111,10 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
                 try {
                     protocol.close()
                 } catch (e: Throwable) {
-                    LOG.error(e.toString())
+                    log.error(e.toString())
                 }
             }
             protocols.clear()
         }
-    }
-
-    companion object {
-        val LOG = LoggerFactory.getLogger(ProtocolFactory::class.java)
-    }
-
-    init {
-        val results = ResourceLoader.readAllLines("protocol-plugins.txt")
-                .map { it.trim { it <= ' ' } }
-                .filter { !it.startsWith("#") }
-                .map { it.split("\\s+".toRegex()).toTypedArray() }
-                .filter { it.size >= 2 }
-                .map { it[0] to getInstance(it) }
-                .filter { it.second != null }
-                .onEach { it.second!!.conf = immutableConfig }
-                .associate { it.first to it.second!! }
-        protocols.putAll(results)
-        LOG.info(protocols.keys.stream()
-                .collect(Collectors.joining(", ", "Supported protocols: ", "")))
     }
 }

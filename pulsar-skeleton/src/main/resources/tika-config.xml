@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<properties>
+	<service-loader loadErrorHandler="IGNORE"/>
+	<service-loader initializableProblemHandler="ignore"/>
+	<parsers>
+		<parser class="org.apache.tika.parser.DefaultParser">
+			<mime-exclude>image/jpeg</mime-exclude>
+			<mime-exclude>application/x-sqlite3</mime-exclude>
+			<parser-exclude class="org.apache.tika.parser.jdbc.SQLite3Parser"/>
+		</parser>
+	</parsers>
+</properties>

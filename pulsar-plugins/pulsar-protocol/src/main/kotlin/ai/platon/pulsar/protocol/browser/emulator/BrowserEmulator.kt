@@ -37,7 +37,7 @@ open class BrowserEmulator(
     val numDeferredNavigates by lazy { AppMetrics.meter(this, "deferredNavigates") }
 
     init {
-        params.withLogger(log).info()
+        params.withLogger(log).info(true)
     }
 
     /**

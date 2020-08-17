@@ -29,7 +29,6 @@ import java.util.Stack;
  * called in tree order.
  * </p>
  * <p>
- * <p>
  * Currently this class is not thread safe. It is assumed that only one thread
  * will be accessing the <code>NodeWalker</code> at any given time.
  * </p>

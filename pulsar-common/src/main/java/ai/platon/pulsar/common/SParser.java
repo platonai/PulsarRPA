@@ -369,6 +369,7 @@ public class SParser {
      * (ms), seconds (s), minutes (m), hours (h), and days (d).
      * @param defaultValue Value returned if no mapping exists.
      * @param unit Unit to convert the stored property, if it exists.
+     * @return The time duration
      * @throws NumberFormatException If the property stripped of its unit is not
      *         a number
      */
@@ -692,8 +693,9 @@ public class SParser {
     }
 
     /**
-     * Set the socket address for property as
-     * a <code>host:port</code>.
+     * Set the socket address for property as a <code>host:port</code>.
+     *
+     * @param addr The socket address
      */
     public void setSocketAddr(InetSocketAddress addr) {
         set(NetUtils.getHostPortString(addr));
@@ -717,6 +719,7 @@ public class SParser {
     /**
      * Load a class by name.
      *
+     * @param name The class name
      * @return the class object.
      * @throws ClassNotFoundException if the class is not found.
      */
@@ -829,6 +832,7 @@ public class SParser {
      *
      * @param defaultValue default value.
      * @param xface the interface implemented by the named class.
+     * @param <U> The base class
      * @return property value as a <code>Class</code>,
      *         or <code>defaultValue</code>.
      */
@@ -870,6 +874,7 @@ public class SParser {
      * @param dirsProp directory in which to locate the file.
      * @param path file-path.
      * @return local file under the directory with the given path.
+     * @throws IOException If no valid local directories
      */
     public File getFile(String dirsProp, String path)
             throws IOException {
@@ -1252,6 +1257,7 @@ public class SParser {
         }
 
         /**
+         * @param symbol The symbol
          * @return The TraditionalBinaryPrefix object corresponding to the symbol.
          */
         public static TraditionalBinaryPrefix valueOf(char symbol) {

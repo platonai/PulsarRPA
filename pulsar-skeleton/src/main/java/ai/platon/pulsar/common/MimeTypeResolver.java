@@ -19,6 +19,7 @@ package ai.platon.pulsar.common;
 
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import org.apache.tika.Tika;
+import org.apache.tika.config.TikaConfig;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MimeType;
@@ -42,15 +43,19 @@ public final class MimeTypeResolver {
     private static final String SEPARATOR = ";";
     /* our log stream */
     private static final Logger LOG = LoggerFactory.getLogger(MimeTypeResolver.class.getName());
+
     /* our Tika mime type registry */
     private MimeTypes mimeTypes;
+
+    private TikaConfig tikaConfig;
     /* the tika detectors */
     private Tika tika;
     /* whether or not magic should be employed or not */
     private boolean mimeMagic;
 
     public MimeTypeResolver(ImmutableConfig conf) {
-        tika = new Tika();
+        tikaConfig = TikaConfig.getDefaultConfig();
+        tika = new Tika(tikaConfig);
         ObjectCache objectCache = ObjectCache.get(conf);
         MimeTypes mt = objectCache.getBean(MimeTypes.class);
 

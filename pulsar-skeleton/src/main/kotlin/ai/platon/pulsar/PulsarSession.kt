@@ -9,6 +9,8 @@ import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
+import ai.platon.pulsar.dom.select.firstTextOrNull
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.dom.select.selectNotNull
 import ai.platon.pulsar.persist.WebPage
 import org.jsoup.nodes.Element
@@ -61,25 +63,17 @@ open class PulsarSession(
 
     fun disableCache() = ensureAlive { enableCache = false }
 
-    fun normalize(url: String, isItemOption: Boolean = false): NormUrl {
-        ensureAlive()
-        return context.normalize(url, isItemOption).also { initOptions(it.options) }
-    }
+    fun normalize(url: String, toItemOption: Boolean = false) =
+            context.normalize(url, toItemOption).also { initOptions(it.options) }
 
-    fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl {
-        ensureAlive()
-        return context.normalize(url, initOptions(options), isItemOption)
-    }
+    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false) =
+            context.normalize(url, initOptions(options), toItemOption)
 
-    fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl> {
-        ensureAlive()
-        return context.normalize(urls, isItemOption).onEach { initOptions(it.options) }
-    }
+    fun normalize(urls: Iterable<String>, toItemOption: Boolean = false) =
+            context.normalize(urls, toItemOption).onEach { initOptions(it.options) }
 
-    fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl> {
-        ensureAlive()
-        return context.normalize(urls, options, isItemOption).onEach { initOptions(it.options) }
-    }
+    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false) =
+            context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
 
     /**
      * Inject a url
@@ -134,22 +128,13 @@ open class PulsarSession(
      * @return The web page
      */
     @Throws(Exception::class)
-    fun load(url: String, options: LoadOptions): WebPage {
-        ensureAlive()
-        val normUrl = normalize(url, options)
-        return load(normUrl)
-    }
+    fun load(url: String, options: LoadOptions) = load(normalize(url, options))
 
     @Throws(Exception::class)
-    suspend fun loadDeferred(url: String): WebPage {
-        ensureAlive()
-        return loadDeferred(normalize(url))
-    }
+    suspend fun loadDeferred(url: String) = loadDeferred(normalize(url))
 
     @Throws(Exception::class)
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        ensureAlive()
-
         initOptions(normUrl.options)
 
         if (enableCache) {
@@ -163,11 +148,7 @@ open class PulsarSession(
     }
 
     @Throws(Exception::class)
-    suspend fun loadDeferred(url: String, options: LoadOptions): WebPage {
-        ensureAlive()
-        val normUrl = normalize(url, options)
-        return loadDeferred(normUrl)
-    }
+    suspend fun loadDeferred(url: String, options: LoadOptions) = loadDeferred(normalize(url, options))
 
     /**
      * Load all urls with specified options, this may cause a parallel fetching if required
@@ -177,9 +158,9 @@ open class PulsarSession(
      * @return The web pages
      */
     @JvmOverloads
-    fun loadAll(urls: Iterable<String>, options: LoadOptions, itemPages: Boolean = false): Collection<WebPage> {
+    fun loadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean = false): Collection<WebPage> {
         ensureAlive()
-        val normUrls = normalize(urls, options, itemPages)
+        val normUrls = normalize(urls, options, areItems)
         val opt = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
@@ -196,10 +177,10 @@ open class PulsarSession(
      * @param options The load options
      * @return The web pages
      */
-    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions, itemPages: Boolean = false): Collection<WebPage> {
+    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions, areItems: Boolean = false): Collection<WebPage> {
         ensureAlive()
         options.preferParallel = true
-        val normUrls = normalize(urls, options, itemPages)
+        val normUrls = normalize(urls, options, areItems)
         val opt = normUrls.firstOrNull()?.options ?: return listOf()
 
         return if (enableCache) {
@@ -216,9 +197,7 @@ open class PulsarSession(
      * @param args         The load args
      * @return The web pages
      */
-    fun loadOutPages(portalUrl: String, args: String): Collection<WebPage> {
-        return loadOutPages(portalUrl, LoadOptions.parse(args))
-    }
+    fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, LoadOptions.parse(args))
 
     /**
      * Load all out pages in a portal page
@@ -243,34 +222,60 @@ open class PulsarSession(
      * Parse the Web page into DOM.
      * If the Web page is not changed since last parse, use the last result if available
      */
-    fun parse(page: WebPage, noCache: Boolean = false): FeaturedDocument {
-        ensureAlive()
+    fun parse(page: WebPage, noCache: Boolean = false) = parse0(page, noCache)
 
-        if (page.isNil) {
-            return FeaturedDocument.NIL
-        }
+    fun loadAsDocument(url: String, args: String) = loadAsDocument(url, LoadOptions.parse(args))
 
-        if (noCache || !enableCache) {
-            return context.parse(page)
-        }
-
-        return documentCache.computeIfAbsent(page.url) { context.parse(page) }
-    }
-
-    fun loadAndParse(url: String, args: String) = loadAndParse(url, LoadOptions.parse(args))
-
-    fun loadAndParse(url: String, options: LoadOptions = LoadOptions.create()): FeaturedDocument {
+    fun loadAsDocument(url: String, options: LoadOptions = LoadOptions.create()): FeaturedDocument {
         ensureAlive()
         val normUrl = normalize(url, options)
         return parse(load(normUrl))
     }
 
-    fun loadAndParse(normUrl: NormUrl) = parse(load(normUrl))
+    fun loadAsDocument(normUrl: NormUrl) = parse(load(normUrl))
 
-    fun scrape(url: String, args: String, vararg cssQueries: String): Map<String, String?> {
-        val page = load(url, args)
-        val document = parse(page)
-        return cssQueries.associate { it to document.selectFirstOrNull(it)?.text() }
+    fun scrape(url: String, args: String, fieldCss: Iterable<String>): Map<String, String?> {
+        val document = loadAsDocument(url, args)
+        return fieldCss.associateWith { document.selectFirstOrNull(it)?.text() }
+    }
+
+    fun scrape(url: String, args: String, fieldCss: Map<String, String>): Map<String, String?> {
+        val document = loadAsDocument(url, args)
+        return fieldCss.entries.associate { it.key to document.selectFirstOrNull(it.value)?.text() }
+    }
+
+    fun scrape(url: String, args: String, restrictCss: String, fieldCss: Iterable<String>): List<Map<String, String?>> {
+        return loadAsDocument(url, args).select(restrictCss).map { ele ->
+            fieldCss.associateWith { ele.selectFirstOrNull(it)?.text() }
+        }
+    }
+
+    fun scrape(url: String, args: String, restrictCss: String, fieldCss: Map<String, String>): List<Map<String, String?>> {
+        return loadAsDocument(url, args).select(restrictCss).map { ele ->
+            fieldCss.entries.associate { it.key to ele.selectFirstOrNull(it.value)?.text() }
+        }
+    }
+
+    fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Iterable<String>) =
+            scrapeOutPages(portalUrl, args, ":root", fieldsCss)
+
+    fun scrapeOutPages(portalUrl: String,
+                       args: String, restrictCss: String, fieldsCss: Iterable<String>): List<Map<String, String?>> {
+        return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
+                .mapNotNull { it.selectFirstOrNull(restrictCss) }
+                .map { ele -> fieldsCss.associateWith { ele.firstTextOrNull(it) } }
+                .toList()
+    }
+
+    fun scrapeOutPages(portalUrl: String, args: String, fieldsCss: Map<String, String>) =
+            scrapeOutPages(portalUrl, args, ":root", fieldsCss)
+
+    fun scrapeOutPages(portalUrl: String,
+                       args: String, restrictCss: String, fieldsCss: Map<String, String>): List<Map<String, String?>> {
+        return loadOutPages(portalUrl, args).asSequence().map { parse(it) }
+                .mapNotNull { it.selectFirstOrNull(restrictCss) }
+                .map { ele -> fieldsCss.entries.associate { it.key to ele.firstTextOrNull(it.value) } }
+                .toList()
     }
 
     fun cache(page: WebPage): WebPage = page.also { pageCache.putDatum(it.url, it) }
@@ -282,38 +287,6 @@ open class PulsarSession(
     fun disableCache(url: String): WebPage? {
         documentCache.remove(url)
         return pageCache.remove(url)?.datum
-    }
-
-    private fun loadAllWithCache(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        ensureAlive()
-        urls.forEach { initOptions(it.options) }
-        initOptions(options)
-
-        val pages = ArrayList<WebPage>()
-        val pendingUrls = ArrayList<NormUrl>()
-
-        val now = Instant.now()
-        for (url in urls) {
-            val page = pageCache.getDatum(url.url, options.expires, now)
-            if (page != null) {
-                pages.add(page)
-            } else {
-                pendingUrls.add(url)
-            }
-        }
-
-        val freshPages = if (options.preferParallel) {
-            context.parallelLoadAll(pendingUrls, options)
-        } else {
-            context.loadAll(pendingUrls, options)
-        }
-
-        pages.addAll(freshPages)
-
-        // Notice: we do not cache batch loaded pages, batch loaded pages are not used frequently
-        // do not do this: sessionCachePutAll(freshPages);
-
-        return pages
     }
 
     fun getVariable(name: String): Any? = ensureAlive(null) { variables[name] }
@@ -365,6 +338,52 @@ open class PulsarSession(
                     display,
                     Strings.readableBytes(Systems.memoryUsed), Strings.readableBytes(Systems.memoryFree))
         }
+    }
+
+    private fun loadAllWithCache(urls: Iterable<NormUrl>, options: LoadOptions): Collection<WebPage> {
+        ensureAlive()
+        urls.forEach { initOptions(it.options) }
+        initOptions(options)
+
+        val pages = ArrayList<WebPage>()
+        val pendingUrls = ArrayList<NormUrl>()
+
+        val now = Instant.now()
+        for (url in urls) {
+            val page = pageCache.getDatum(url.url, options.expires, now)
+            if (page != null) {
+                pages.add(page)
+            } else {
+                pendingUrls.add(url)
+            }
+        }
+
+        val freshPages = if (options.preferParallel) {
+            context.parallelLoadAll(pendingUrls, options)
+        } else {
+            context.loadAll(pendingUrls, options)
+        }
+
+        pages.addAll(freshPages)
+
+        // Notice: we do not cache batch loaded pages, batch loaded pages are not used frequently
+        // do not do this: sessionCachePutAll(freshPages);
+
+        return pages
+    }
+
+    private fun parse0(page: WebPage, noCache: Boolean = false): FeaturedDocument {
+        ensureAlive()
+
+        if (page.isNil) {
+            return FeaturedDocument.NIL
+        }
+
+        if (noCache || !enableCache) {
+            return context.parse(page)
+        }
+
+        return documentCache.computeIfAbsent(page.url) { context.parse(page) }
     }
 
     private fun getLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {

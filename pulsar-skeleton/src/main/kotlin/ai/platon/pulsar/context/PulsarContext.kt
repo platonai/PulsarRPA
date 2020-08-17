@@ -1,5 +1,6 @@
 package ai.platon.pulsar.context
 
+import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -16,6 +17,8 @@ import java.net.URL
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
 interface PulsarContext: AutoCloseable {
+    val pulsarEnvironment: PulsarEnvironment
+
     val applicationContext: ApplicationContext
 
     fun createSession(): PulsarSession
@@ -27,13 +30,13 @@ interface PulsarContext: AutoCloseable {
      * */
     fun registerClosable(closable: AutoCloseable)
 
-    fun normalize(url: String, isItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, toItemOption: Boolean = false): NormUrl
 
-    fun normalize(url: String, options: LoadOptions, isItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
 
-    fun normalize(urls: Iterable<String>, isItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Iterable<String>, toItemOption: Boolean = false): List<NormUrl>
 
-    fun normalize(urls: Iterable<String>, options: LoadOptions, isItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
 
     /**
      * Inject an url
