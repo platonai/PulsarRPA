@@ -14,7 +14,7 @@ import kotlin.random.Random
 open class BrowserControl(
         parameters: Map<String, Any> = mapOf(),
         var jsDirectory: String = "js",
-        conf: ImmutableConfig = ImmutableConfig()
+        val conf: ImmutableConfig = ImmutableConfig()
 ) {
     companion object {
         // required
@@ -27,25 +27,25 @@ open class BrowserControl(
         }
     }
 
-    var supervisorProcess = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
-    var supervisorProcessArgs = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
-    var headless = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
-    var imagesEnabled = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
-    var jsInvadingEnabled = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
-    var userDataDir = conf.getPathOrNull(BROWSER_DATA_DIR)?:generateUserDataDir()
-    var enableUrlBlocking = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
+    val supervisorProcess get() = conf.get(BROWSER_LAUNCH_SUPERVISOR_PROCESS)
+    val supervisorProcessArgs get() = conf.getTrimmedStringCollection(BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS)
+    val headless get() = conf.getBoolean(BROWSER_DRIVER_HEADLESS, true)
+    val imagesEnabled get() = conf.getBoolean(BROWSER_IMAGES_ENABLED, false)
+    val jsInvadingEnabled get() = conf.getBoolean(BROWSER_JS_INVADING_ENABLED, true)
+    val userDataDir get() = conf.getPathOrNull(BROWSER_DATA_DIR)?:generateUserDataDir()
+    val enableUrlBlocking get() = conf.getBoolean(BROWSER_ENABLE_URL_BLOCKING, false)
 
     // We will wait for document ready manually using javascript
     var pageLoadStrategy = "none"
 
     // The javascript to execute by Web browsers
-    var propertyNames = conf.getTrimmedStrings(
+    val propertyNames get() = conf.getTrimmedStrings(
             FETCH_CLIENT_JS_COMPUTED_STYLES, AppConstants.CLIENT_JS_PROPERTY_NAMES)
 
-    var pageLoadTimeout = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
-    var scriptTimeout = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
-    var scrollDownCount = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5)
-    var scrollInterval = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
+    val pageLoadTimeout get() = conf.getDuration(FETCH_PAGE_LOAD_TIMEOUT, Duration.ofMinutes(3))
+    val scriptTimeout get() = conf.getDuration(FETCH_SCRIPT_TIMEOUT, Duration.ofSeconds(60))
+    val scrollDownCount get() = conf.getInt(FETCH_SCROLL_DOWN_COUNT, 5)
+    val scrollInterval get() = conf.getDuration(FETCH_SCROLL_DOWN_INTERVAL, Duration.ofMillis(500))
 
     var clientJsVersion = "0.2.3"
     val scripts = mutableMapOf<String, String>()

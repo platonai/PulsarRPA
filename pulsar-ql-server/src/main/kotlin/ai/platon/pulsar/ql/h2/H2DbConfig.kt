@@ -9,6 +9,8 @@ import java.nio.file.Path
  */
 data class H2DbConfig(
 
+        val sessionFactory: String = System.getProperty("h2.sessionFactory", "ai.platon.pulsar.ql.h2.H2SessionFactory"),
+
         /**
          * The base directory to write test databases.
          */

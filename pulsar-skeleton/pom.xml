@@ -43,7 +43,8 @@
         <!-- For parsers -->
         <dependency>
             <groupId>org.apache.tika</groupId>
-            <artifactId>tika-core</artifactId>
+            <artifactId>tika-parsers</artifactId>
+            <version>${tika.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.code.crawler-commons/crawler-commons -->

@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HA
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.context.support.BasicPulsarContext
 import ai.platon.pulsar.crawl.fetch.BatchHandler
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
@@ -117,7 +116,7 @@ open class Crawler(
 
     fun extractAds() {
         val url = "https://wuhan.baixing.com/xianhualipin/a1100414743.html"
-        val doc = i.loadAndParse(url)
+        val doc = i.loadAsDocument(url)
         doc.select("a[href~=mssp.baidu]").map {  }
     }
 

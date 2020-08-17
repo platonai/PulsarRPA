@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.ql.h2.H2Db
-import ai.platon.pulsar.ql.h2.H2SessionFactory
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
 import org.h2.tools.Server
@@ -36,8 +35,8 @@ abstract class TestBase {
         val history = mutableListOf<String>()
         val startTime = Instant.now()
 
-        val embedDB = H2Db(H2SessionFactory::class.java.name)
-        val remoteDB = H2Db(H2SessionFactory::class.java.name)
+        val embedDB = H2Db()
+        val remoteDB = H2Db()
         val name: String = embedDB.generateTempDbName()
         val localConnection = embedDB.getConnection(name)
         val localStat = localConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)

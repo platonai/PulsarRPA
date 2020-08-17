@@ -82,13 +82,13 @@ object Queries {
 
         when (configuredUrls) {
             is ValueString -> {
-                val doc = session.loadAndParse(configuredUrls.getString())
+                val doc = session.loadAsDocument(configuredUrls.getString())
                 collection = transformer(doc.document, restrictCss, offset, limit)
             }
             is ValueArray -> {
                 collection = ArrayList()
                 for (configuredUrl in configuredUrls.list) {
-                    val doc = session.loadAndParse(configuredUrl.string)
+                    val doc = session.loadAsDocument(configuredUrl.string)
                     collection.addAll(transformer(doc.document, restrictCss, offset, limit))
                 }
             }

@@ -395,10 +395,4 @@ class TestAnything {
         assertFalse(InetAddresses.isInetAddress("12.3.3.4:80"))
         assertFalse(InetAddresses.isInetAddress(".3.3.4:80"))
     }
-
-//    @Test
-//    fun testTika() {
-//        val tikaConfig = TikaConfig.getDefaultConfig()
-//        assertTrue { tikaConfig.parser != null }
-//    }
 }

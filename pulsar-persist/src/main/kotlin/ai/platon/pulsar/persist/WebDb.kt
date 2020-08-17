@@ -17,7 +17,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(WebDb::class.java)
 
     val store: DataStore<String, GWebPage>
-        get() = AutoDetectedStorageService.create(conf).pageStore
+        get() = AutoDetectStorageProvider.create(conf).pageStore
     val schemaName: String
         get() = store.schemaName
 

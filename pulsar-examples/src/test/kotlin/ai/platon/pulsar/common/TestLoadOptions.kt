@@ -97,7 +97,7 @@ class TestLoadOptions {
         val normUrl = i.normalize(url, options)
         println(normUrl.configuredUrl)
 
-        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"), isItemOption = true)
+        val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"), toItemOption = true)
         println(normUrl2.configuredUrl)
 
         assertEquals(1, normUrl2.options.expires.toDays())
