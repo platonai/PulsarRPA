@@ -18,8 +18,8 @@ import org.springframework.context.annotation.ImportResource
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 @ComponentScan("ai.platon.pulsar.rest.api", "ai.platon.pulsar.ql.h2.starter")
-class PulsarMaster {
-    private val log = LoggerFactory.getLogger(PulsarMaster::class.java)
+class Application {
+    private val log = LoggerFactory.getLogger(Application::class.java)
 
     @Bean
     fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
@@ -34,9 +34,9 @@ class PulsarMaster {
 }
 
 fun main(args: Array<String>) {
-    val application = SpringApplication(PulsarMaster::class.java)
-    val event = ApplicationListener<ApplicationPreparedEvent> {
-        PulsarContexts.activate(GenericPulsarContext(it.applicationContext)) }
-    application.addListeners(event)
-    application.run(*args)
+    val event = ApplicationListener<ApplicationPreparedEvent> { PulsarContexts.activate(it.applicationContext) }
+    SpringApplication(Application::class.java).apply {
+        addListeners(event)
+        run(*args)
+    }
 }

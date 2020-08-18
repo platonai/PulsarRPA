@@ -10,6 +10,8 @@ install_utils() {
 install_chrome() {
     echo "Installing latest stable google-chrome"
 
+    install_utils
+
     wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
     sudo dpkg -i google-chrome*.deb
     sudo apt-get install -f
@@ -18,8 +20,6 @@ install_chrome() {
 }
 
 cd /tmp/ || exit
-
-install_utils
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"

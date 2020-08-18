@@ -18,7 +18,8 @@
 package ai.platon.pulsar.common;
 
 /**
- * A minimal String utility class. Designed for internal dom use only.
+ * A minimal math utility class.
+ * @deprecated Use a professional library
  */
 public final class MathUtils {
 

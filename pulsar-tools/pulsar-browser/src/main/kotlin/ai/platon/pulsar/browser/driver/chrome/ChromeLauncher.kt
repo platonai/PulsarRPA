@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.impl.Chrome
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeProcessTimeoutException
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes
 import org.apache.commons.io.FileUtils
@@ -202,7 +203,7 @@ class ChromeLauncher(
         val p = process ?: return
         this.process = null
         if (p.isAlive) {
-            destroyProcess(p)
+            Runtimes.destroyProcess(p, config.shutdownWaitTime)
             kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
                     .onFailure { log.warn("Unexpected exception", it) }
         }
@@ -211,7 +212,6 @@ class ChromeLauncher(
             cleanUp()
         } catch (e: IOException) {
             log.warn("Failed to clear user data dir | {} | {}", userDataDir, e.message)
-        } finally {
         }
     }
 
@@ -278,7 +278,6 @@ class ChromeLauncher(
             process = processLauncher.launch(program, arguments)
             process?.also {
                 val pidPath = userDataDir.resolveSibling("chromeLauncher.pid")
-                Files.createDirectories(userDataDir)
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }
             waitForDevToolsServer(process!!)
@@ -336,50 +335,6 @@ class ChromeLauncher(
         return port
     }
 
-    private fun destroyProcess(process: Process) {
-        val info = formatProcessInfo(process.toHandle())
-
-        process.children().forEach { destroyChildProcess(it) }
-
-        process.destroy()
-        try {
-            if (!process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)) {
-                process.destroyForcibly()
-                process.waitFor(config.shutdownWaitTime.seconds, TimeUnit.SECONDS)
-            }
-
-            log.info("Exit | {}", info)
-        } catch (e: InterruptedException) {
-            log.error("Interrupted while waiting for chrome process to shutdown", e)
-            process.destroyForcibly()
-        } finally {
-        }
-    }
-
-    private fun destroyChildProcess(process: ProcessHandle) {
-        process.children().forEach { destroyChildProcess(it) }
-
-        val info = formatProcessInfo(process)
-        process.destroy()
-        if (process.isAlive) {
-            process.destroyForcibly()
-        }
-
-        log.debug("Exit | {}", info)
-    }
-
-    private fun formatProcessInfo(process: ProcessHandle): String {
-        val info = process.info()
-        val user = info.user().orElse("")
-        val pid = process.pid()
-        val ppid = process.parent().orElseGet { null }?.pid()?.toString()?:"?"
-        val startTime = info.startInstant().orElse(null)
-        val cpuDuration = info.totalCpuDuration()?.orElse(null)
-        val cmdLine = info.commandLine().orElseGet { "" }
-
-        return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
-    }
-
     private fun close(thread: Thread) {
         try {
             thread.join(config.threadWaitTime.toMillis())
@@ -410,13 +365,17 @@ class ChromeLauncher(
     @Throws(IOException::class)
     private fun cleanUp() {
         val target = userDataDir
-        FileUtils.deleteQuietly(target.toFile())
-        if (Files.exists(target)) {
-            log.warn("Failed to delete browser cache, try again | {}", target)
-            forceDeleteDirectory(target)
 
+        // delete user data dir only if it's in the system tmp dir
+        if (target.startsWith(AppPaths.SYS_TMP_DIR)) {
+            FileUtils.deleteQuietly(target.toFile())
             if (Files.exists(target)) {
-                log.error("Can not delete browser cache | {}", target)
+                log.warn("Failed to delete browser cache, try again | {}", target)
+                forceDeleteDirectory(target)
+
+                if (Files.exists(target)) {
+                    log.error("Could not delete browser cache | {}", target)
+                }
             }
         }
     }
@@ -425,9 +384,7 @@ class ChromeLauncher(
      * Force delete all browser data
      * */
     private fun forceDeleteDirectory(dirToDelete: Path) {
-        // TODO: delete data only if they contain privacy data, cookies, sessions, local storage, etc
         synchronized(ChromeLauncher::class.java) {
-            // TODO: should use a better file lock
             val lock = AppPaths.BROWSER_TMP_DIR_LOCK
 
             val maxTry = 10
