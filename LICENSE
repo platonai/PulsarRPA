@@ -200,3 +200,46 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+
+==============================================================================
+Apache Ignite Subcomponents:
+
+The Apache Ignite project contains subcomponents with separate copyright
+notices and license terms. Your use of the source code for the these
+subcomponents is subject to the terms and conditions of the following
+licenses.
+
+
+==============================================================================
+For SnapTree:
+==============================================================================
+This product bundles SnapTree, which is available under a
+"3-clause BSD" license.  For details, see
+https://github.com/nbronson/snaptree/blob/master/LICENSE.
+
+==============================================================================
+For netlib-java:
+==============================================================================
+This product bundles netlib-java, which is available under a
+"3-clause BSD" license.  For details, see
+https://github.com/fommil/netlib-java/blob/master/LICENSE.txt.
+
+==============================================================================
+For JSR 166 classes in "org.jsr166" package
+==============================================================================
+This product bundles JSR-166 classes which are donated to public domain.
+For details, see CC0 1.0 Universal (1.0), Public Domain Dedication,
+http://creativecommons.org/publicdomain/zero/1.0/
+
+==============================================================================
+For books used for tests in "org.apache.ignite.internal.processors.hadoop.books"
+==============================================================================
+This code bundles book text files used for testing purposes which contain
+the following header:
+
+This eBook is for the use of anyone anywhere at no cost and with
+almost no restrictions whatsoever.  You may copy it, give it away or
+re-use it under the terms of the Project Gutenberg License included
+with this eBook or online at www.gutenberg.org
