@@ -198,18 +198,8 @@ open class LoadOptions: CommonOptions {
 
     open fun createItemOption(conf: VolatileConfig? = null): LoadOptions {
         val itemOptions = clone()
+        itemOptions.itemOptions2MajorOptions()
 
-        itemOptions.expires = itemExpires
-        itemOptions.scrollCount = itemScrollCount
-        itemOptions.scriptTimeout = itemScriptTimeout
-        itemOptions.scrollInterval = itemScrollInterval
-        itemOptions.pageLoadTimeout = itemPageLoadTimeout
-        itemOptions.requireNotBlank = itemRequireNotBlank
-        itemOptions.requireSize = itemRequireSize
-        itemOptions.requireImages = itemRequireImages
-        itemOptions.requireAnchors = itemRequireAnchors
-
-        itemOptions.browser = itemBrowser
         if (itemOptions.browser == BrowserType.NATIVE) {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
@@ -217,6 +207,19 @@ open class LoadOptions: CommonOptions {
         itemOptions.volatileConfig = conf?:volatileConfig
 
         return itemOptions
+    }
+
+    open fun itemOptions2MajorOptions() {
+        expires = itemExpires
+        scrollCount = itemScrollCount
+        scriptTimeout = itemScriptTimeout
+        scrollInterval = itemScrollInterval
+        pageLoadTimeout = itemPageLoadTimeout
+        requireNotBlank = itemRequireNotBlank
+        requireSize = itemRequireSize
+        requireImages = itemRequireImages
+        requireAnchors = itemRequireAnchors
+        browser = itemBrowser
     }
 
     open fun isDefault(option: String): Boolean {

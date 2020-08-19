@@ -8,12 +8,7 @@ import kotlin.math.abs
 /**
  * The base class for all tests.
  */
-class H2MemoryDb(
-        val conf: H2DbConfig = H2DbConfig()
-) {
-    init {
-        System.setProperty("h2.sessionFactory", conf.sessionFactory)
-    }
+class H2MemoryDb(val conf: H2DbConfig = H2DbConfig()) {
 
     /**
      * Open a database with a random named connection in admin mode.

@@ -64,7 +64,7 @@ class BrowserInstance(
 
     override fun close() {
         if (launched.get() && closed.compareAndSet(false, true)) {
-            log.info("Closing {} devtools ... ", devToolsList.size)
+            log.info("Closing {} devtools ... | {}", devToolsList.size, id.display)
 
             val nonSynchronized = devToolsList.toList().also { devToolsList.clear() }
             nonSynchronized.parallelStream().forEach {
@@ -76,7 +76,7 @@ class BrowserInstance(
             chrome.close()
             launcher.close()
 
-            log.info("Launcher is closed | {}", id)
+            log.info("Launcher is closed | {}", id.display)
         }
     }
 }

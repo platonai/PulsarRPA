@@ -10,13 +10,7 @@ import kotlin.math.abs
 /**
  * A wrapper for h2 database
  */
-class H2Db(
-        val conf: H2DbConfig = H2DbConfig()
-) {
-    init {
-        System.setProperty("h2.sessionFactory", conf.sessionFactory)
-    }
-
+class H2Db(val conf: H2DbConfig = H2DbConfig()) {
     fun generateTempDbName(): String {
         return "" + System.currentTimeMillis() + "_" + abs(Random().nextInt());
     }

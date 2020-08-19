@@ -32,7 +32,7 @@ import kotlin.reflect.KClass
 class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfig): AutoCloseable {
     private val log = LoggerFactory.getLogger(ParseFilters::class.java)
 
-    private val parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
+    val parseFilters = Collections.synchronizedList(initParseFilters.toMutableList())
     private val closed = AtomicBoolean()
 
     fun clear() = parseFilters.clear()

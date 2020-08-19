@@ -43,6 +43,8 @@ data class BrowserInstanceId(
 ): Comparable<BrowserInstanceId> {
 
     val contextDir = dataDir.parent
+    val ident = contextDir.last().toString()
+    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
     override fun hashCode() = dataDir.hashCode()
     override fun equals(other: Any?) = other is BrowserInstanceId && dataDir == other.dataDir
     override fun compareTo(other: BrowserInstanceId) = dataDir.compareTo(other.dataDir)
@@ -52,9 +54,7 @@ data class BrowserInstanceId(
         val DIR_NAME = "browser"
         val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
 
-        fun resolve(baseDir: Path): BrowserInstanceId {
-            return BrowserInstanceId(baseDir.resolve(DIR_NAME))
-        }
+        fun resolve(baseDir: Path) = BrowserInstanceId(baseDir.resolve(DIR_NAME))
     }
 }
 
