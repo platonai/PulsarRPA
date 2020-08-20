@@ -23,20 +23,9 @@
 
     <name>Pulsar Tools</name>
 
-    <profiles>
-        <profile>
-            <id>tools</id>
-            <activation>
-                <property>
-                    <name>active-tools</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-browser</module>
-            </modules>
-        </profile>
-    </profiles>
+    <modules>
+        <module>pulsar-browser</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>

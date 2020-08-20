@@ -17,6 +17,7 @@
 package ai.platon.pulsar.parse.js
 
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.ParseFilter
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
@@ -42,14 +43,14 @@ import java.util.*
  *
  * @author Andrzej Bialecki &lt;ab@getopt.org&gt;
  */
-class JSParseFilter(val conf: ImmutableConfig) : ParseFilter, Parser {
+class JSParseFilter(val conf: ImmutableConfig) : AbstractParseFilter(), Parser {
 
     /**
      * Scan the JavaScript looking for possible [HyperLink]'s
      *
      * @param parseContext Context of parse.
      */
-    override fun filter(parseContext: ParseContext): ParseResult {
+    override fun doFilter(parseContext: ParseContext): ParseResult {
         val documentFragment = parseContext.documentFragment
         val metaTags = parseContext.metaTags
         if (documentFragment != null && metaTags != null) {

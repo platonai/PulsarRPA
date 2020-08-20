@@ -48,9 +48,6 @@ open class FeaturedDocument(val document: Document) {
 
         val globalNumDocuments = AtomicInteger()
 
-        /**
-         * TODO: it might not be a good idea to put it here
-         * */
         val calculatorFactory = FeatureCalculatorFactory()
 
         val NIL = FeaturedDocument(nilDocument)

@@ -23,6 +23,7 @@ import ai.platon.pulsar.boilerpipe.extractors.ChineseNewsExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.boilerpipe.utils.ProcessingException
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.ParseFilter
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
@@ -34,12 +35,12 @@ import org.apache.commons.logging.LogFactory
 /**
  * Parse html document into fields
  */
-class BoilerpipeExtractor(val conf: ImmutableConfig) : ParseFilter {
+class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
     private val log = LogFactory.getLog(BoilerpipeExtractor::class.java.name)
 
     private val primerParser = PrimerParser(conf)
 
-    override fun filter(parseContext: ParseContext): ParseResult {
+    override fun doFilter(parseContext: ParseContext): ParseResult {
         val page = parseContext.page
         val parseResult = parseContext.parseResult
         extract(page, page.getEncodingOrDefault("UTF-8"))

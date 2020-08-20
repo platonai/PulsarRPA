@@ -23,20 +23,9 @@
 
     <name>Pulsar Third</name>
 
-    <profiles>
-        <profile>
-            <id>third</id>
-            <activation>
-                <property>
-                    <name>active-third</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-boilerpipe</module>
-                <module>pulsar-jsoup</module>
-                <module>pulsar-chrome-devtools</module>
-            </modules>
-        </profile>
-    </profiles>
+    <modules>
+        <module>pulsar-boilerpipe</module>
+        <module>pulsar-jsoup</module>
+        <module>pulsar-chrome-devtools</module>
+    </modules>
 </project>

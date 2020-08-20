@@ -20,6 +20,7 @@ package ai.platon.pulsar.parse.metatags
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.ParseFilter
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.ParseContext
@@ -33,11 +34,11 @@ import kotlin.collections.HashSet
  * metadata so that they can be indexed with the index-metadata plugin with the
  * prefix 'metatag.'. Metatags are matched ignoring case.
  */
-class MetaTagsParser(val conf: ImmutableConfig) : ParseFilter {
+class MetaTagsParser(val conf: ImmutableConfig) : AbstractParseFilter() {
     private val metatagset: Set<String> = conf.getStrings(CapabilityTypes.METATAG_NAMES, "*")
             .mapTo(HashSet()) { it.toLowerCase() }
 
-    override fun filter(parseContext: ParseContext): ParseResult {
+    override fun doFilter(parseContext: ParseContext): ParseResult {
         val page = parseContext.page
         val metaTags = parseContext.metaTags?:return parseContext.parseResult
         val generalMetaTags = metaTags.generalTags

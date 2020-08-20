@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -27,20 +26,37 @@ import java.util.concurrent.atomic.AtomicInteger
  * to parses provided by the html or tika plugins. All plugins found which
  * implement this extension point are run sequentially on the parse.
  */
-interface ParseFilter : Parameterized, AutoCloseable {
-    val id: Int
+abstract class AbstractParseFilter(
+        override val id: Int = instanceSequencer.incrementAndGet(),
+        override var parent: ParseFilter? = null
+): ParseFilter {
+    companion object {
+        val instanceSequencer = AtomicInteger()
+    }
 
-    var parent: ParseFilter?
-    val children: List<ParseFilter>
+    override val children = mutableListOf<ParseFilter>()
 
-    /**
-     * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
-     */
-    fun filter(parseContext: ParseContext): ParseResult
+    override fun filter(parseContext: ParseContext): ParseResult {
+        val result = doFilter(parseContext)
+        children.forEach { it.filter(parseContext) }
+        return result
+    }
 
-    fun addFirst(child: ParseFilter)
+    open fun doFilter(parseContext: ParseContext) = parseContext.parseResult
 
-    fun addLast(child: ParseFilter)
+    override fun addFirst(child: ParseFilter) {
+        child.parent = this
+        children.add(0, child)
+    }
 
-    override fun close() {}
+    override fun addLast(child: ParseFilter) {
+        child.parent = this
+        children.add(child)
+    }
+
+    override fun close() {
+        children.forEach { it.close() }
+        children.clear()
+        super.close()
+    }
 }

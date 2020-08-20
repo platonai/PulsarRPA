@@ -3,6 +3,7 @@ package ai.platon.pulsar.parse.html.filters
 import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.EntityOptions
+import ai.platon.pulsar.crawl.parse.AbstractParseFilter
 import ai.platon.pulsar.crawl.parse.ParseFilter
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory
 class PathExtractor(
         val metricsCounters: MetricsCounters,
         val conf: ImmutableConfig
-) : ParseFilter {
+) : AbstractParseFilter() {
 
     companion object {
         enum class Counter { jsoupFailure, noEntity, brokenEntity, brokenSubEntity }
@@ -38,7 +39,7 @@ class PathExtractor(
     /**
      * Extract all fields in the page
      */
-    override fun filter(parseContext: ParseContext): ParseResult {
+    override fun doFilter(parseContext: ParseContext): ParseResult {
         val page = parseContext.page
         val parseResult = parseContext.parseResult
         val parser = JsoupParser(page, conf)
