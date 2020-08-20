@@ -74,6 +74,27 @@
                     <exists>DEVELOPMENT.txt</exists>
                 </file>
             </activation>
+
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+
             <repositories>
                 <repository>
                     <id>sonatype-snapshots</id>
@@ -94,6 +115,7 @@
                 <file>
                     <missing>DEVELOPMENT.txt</missing>
                 </file>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <modules>
                 <module>pulsar-distribution</module>
@@ -107,7 +129,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.1</version>
                         <configuration>
                             <doclint>none</doclint>
 <!--                            <doclint>all,-missing</doclint>-->
