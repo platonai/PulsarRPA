@@ -111,12 +111,6 @@
 
         <profile>
             <id>apache-release</id>
-            <activation>
-                <file>
-                    <missing>DEVELOPMENT.txt</missing>
-                </file>
-                <activeByDefault>false</activeByDefault>
-            </activation>
             <modules>
                 <module>pulsar-distribution</module>
             </modules>

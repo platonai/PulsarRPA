@@ -23,7 +23,7 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>apache-release</id>
             <build>
                 <defaultGoal>install</defaultGoal>
                 <plugins>
