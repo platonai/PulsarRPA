@@ -55,82 +55,17 @@
         <module>pulsar-dom</module>
         <module>pulsar-plugins</module>
         <module>pulsar-beans</module>
+
+        <module>pulsar-tools</module>
+        <module>pulsar-third</module>
+        <module>pulsar-ql-common</module>
+        <module>pulsar-ql-server</module>
+        <module>pulsar-rest</module>
+        <module>pulsar-app</module>
+        <module>pulsar-examples</module>
     </modules>
 
     <profiles>
-
-        <profile>
-            <id>sql</id>
-            <activation>
-                <property>
-                    <name>active-sql</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql-server</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>rest</id>
-            <activation>
-                <property>
-                    <name>active-rest</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-rest</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>third</id>
-            <activation>
-                <property>
-                    <name>active-third</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-third</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>tools</id>
-            <activation>
-                <property>
-                    <name>active-tools</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-tools</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>app</id>
-            <activation>
-                <property>
-                    <name>active-app</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-app</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>examples</id>
-            <activation>
-                <property>
-                    <name>active-examples</name>
-                </property>
-            </activation>
-            <modules>
-                <module>pulsar-examples</module>
-            </modules>
-        </profile>
 
         <profile>
             <id>dev</id>
@@ -161,13 +96,7 @@
                 </file>
             </activation>
             <modules>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
-                <module>pulsar-third</module>
-                <module>pulsar-tools</module>
-                <module>pulsar-rest</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql-server</module>
+                <module>pulsar-distribution</module>
             </modules>
             <properties>
                 <pulsar.skip.assembly>false</pulsar.skip.assembly>
@@ -227,24 +156,6 @@
             </build>
         </profile>
     </profiles>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
 
     <dependencyManagement>
         <dependencies>

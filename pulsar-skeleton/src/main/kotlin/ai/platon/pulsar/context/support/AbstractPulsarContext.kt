@@ -3,6 +3,7 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -101,7 +102,11 @@ abstract class AbstractPulsarContext(
     private var shutdownHook: Thread? = null
 
     @Throws(BeansException::class)
-    fun <T : Any> getBean(requiredType: KClass<T>): T = applicationContext.getBean(requiredType.java)
+    fun <T : Any> getBean(requiredType: KClass<T>): T {
+        return applicationContext.takeIf { isActive }
+                ?.getBean(requiredType.java)
+                ?:throw IllegalApplicationContextStateException("Pulsar context is not active")
+    }
 
     @Throws(BeansException::class)
     inline fun <reified T : Any> getBean(): T = getBean(T::class)

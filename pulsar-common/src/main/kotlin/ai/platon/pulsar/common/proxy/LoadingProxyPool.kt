@@ -99,9 +99,11 @@ class LoadingProxyPool(
     // Block until timeout or an available proxy entry returns
     private fun poll0(): ProxyEntry? {
         // Retrieves and removes the head of the queue
-        val proxy = freeProxies.runCatching { poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS) }
-                .onFailure { log.warn("Unexpected exception", it) }
-                .getOrNull()?:return null
+        val proxy = try {
+            freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
+        } catch (e: InterruptedException) {
+            null
+        }?:return null
 
         val banState = handleBanState(proxy).takeIf { it.isBanned }?.also {
             numProxyBanned++
