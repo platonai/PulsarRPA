@@ -43,13 +43,6 @@ PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dpulsar.root.logger=${PULSAR_ROOT_LOGGER:-INF
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dlogging.dir=$PULSAR_LOG_DIR")
 PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dlogging.file=$PULSAR_LOGFILE")
 
-# the default number of fetch thread is the number of cpu cores
-PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dfetch.concurrency=${FETCH_THREADS:-$(nproc)}")
-
-if [[ $DRY_RUN == "1" ]]; then
-    PULSAR_OPTS=("${PULSAR_OPTS[@]}" "-Dpulsar.dry.run=1")
-fi
-
 export CLASSPATH
 if [[ $VERBOSE_LEVEL == "1" ]]; then
   echo "$CLASSPATH"
@@ -57,9 +50,6 @@ fi
 
 JAVA="$JAVA_HOME/bin/java"
 
-# fix for the external Xerces lib issue with SAXParserFactory
-# PULSAR_OPTS=(-Djavax.xml.parsers.DocumentBuilderFactory=com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl "${PULSAR_OPTS[@]}")
-# EXEC_CALL=("$JAVA" -Dproc_"$COMMAND" "-XX:OnOutOfMemoryError=\"kill -9 %p\"" "$JAVA_HEAP_MAX" "${PULSAR_OPTS[@]}")
 EXEC_CALL=("$JAVA" -Dproc_"$COMMAND" "${PULSAR_OPTS[@]}")
 
 VERSION=$("${PULSAR_HOME}"/bin/version)

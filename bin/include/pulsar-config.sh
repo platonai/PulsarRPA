@@ -50,13 +50,6 @@ if [ "$PULSAR_HOME" = "" ]; then
   export PULSAR_HOME=$PULSAR_HOME
 fi
 
-# Detect the runtime mode
-for f in "${PULSAR_HOME}"/pulsar-enterprise-*-job.jar; do
-  if [ -f "$f" ]; then
-    export PULSAR_RUNTIME_MODE="PACKED"
-  fi
-done
-
 if [ "$PULSAR_RUNTIME_MODE" = ""  ]; then
   if [ -f "$PULSAR_HOME/pom.xml" ]; then
     export PULSAR_RUNTIME_MODE="DEVELOPMENT"
@@ -87,19 +80,11 @@ if [ "$PULSAR_PID_DIR" = "" ]; then
   export PULSAR_PID_DIR="$PULSAR_TMP_DIR"
 fi
 
-# The key and password to connect the H2 TCP server instance
-if [ "$PULSAR_DB_KEY" = "" ]; then
-  export PULSAR_DB_KEY="pulsar"
-fi
-if [ "$PULSAR_DB_PASSWORD" = "" ]; then
-  export PULSAR_DB_PASSWORD="pulsar"
-fi
-
 if [[ "$PULSAR_NICENESS" = "" ]]; then
     export PULSAR_NICENESS=0
 fi
 
-# Source the hbase-env.sh.  Will have JAVA_HOME defined
+# Source the pulsar-env.sh.  Will have JAVA_HOME defined
 if [ -z "$PULSAR_ENV_INIT" ]; then
   [ -f "${PULSAR_CONF_DIR}/pulsar-env.sh" ] && . "${PULSAR_CONF_DIR}/pulsar-env.sh"
   [ -f "$HOME/.pulsar/pulsar-env.sh" ] && . $HOME/.pulsar/pulsar-env.sh
@@ -107,11 +92,7 @@ if [ -z "$PULSAR_ENV_INIT" ]; then
   export PULSAR_ENV_INIT="true"
 fi
 
-# Newer versions of glibc use an arena memory allocator that causes virtual
-# memory usage to explode. Tune the variable down to prevent vmem explosion.
-export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-4}
-
-# Now having JAVA_HOME defined is required 
+# Now having JAVA_HOME defined is required
 if [[ -z "$JAVA_HOME" ]]; then
     cat 1>&2 <<EOF
 +======================================================================+
