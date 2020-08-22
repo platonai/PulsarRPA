@@ -26,12 +26,12 @@ object Runtimes {
     }
 
     fun countSystemProcess(pattern: String): Int {
-        if (!SystemUtils.IS_OS_LINUX) {
-            System.err.println("Only available in linux")
-            return 0
+        val command = when {
+            SystemUtils.IS_OS_WINDOWS -> "tasklist /NH"
+            SystemUtils.IS_OS_LINUX -> "ps -ef"
+            else -> return 0
         }
-
-        return exec("ps -ef").filter { it.contains(pattern.toRegex()) }.count()
+        return exec(command).filter { it.contains(pattern.toRegex()) }.count()
     }
 
     fun checkIfProcessRunning(pattern: String): Boolean {

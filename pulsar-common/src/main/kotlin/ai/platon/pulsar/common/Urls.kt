@@ -142,7 +142,7 @@ object Urls {
     @JvmStatic
     fun normalizedUrlAndKey(originalUrl: String, ignoreQuery: Boolean = false): Pair<String, String> {
         val url = if (ignoreQuery) normalize(originalUrl) else originalUrl
-        val key = Urls.reverseUrlOrEmpty(url)
+        val key = reverseUrlOrEmpty(url)
         return url to key
     }
 

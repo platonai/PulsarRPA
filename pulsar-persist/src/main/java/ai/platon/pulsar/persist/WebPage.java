@@ -65,14 +65,18 @@ import static ai.platon.pulsar.common.config.AppConstants.*;
 
 /**
  * The core data structure across the whole program execution
+ *
  * <p>
  * Notice: Use a build-in java string or a Utf8 to serialize strings?
+ * </p>
  *
- * see org .apache .gora. hbase. util .HBaseByteInterface #fromBytes
  * <p>
- * In serializetion phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
+ * see org.apache.gora.hbase.util.HBaseByteInterface#fromBytes
+ * </p>
+ * <p>
+ * In serialization phrase, a byte array created by s.getBytes(UTF8_CHARSET) is serialized, and
  * in deserialization phrase, every string are wrapped to be a Utf8
- * <p>
+ * </p>
  * So both build-in string and a Utf8 wrap is OK to serialize, and Utf8 is always returned
  */
 public class WebPage implements Comparable<WebPage> {
