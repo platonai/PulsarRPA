@@ -21,22 +21,6 @@
     <artifactId>pulsar-ql-common</artifactId>
     <name>Pulsar QL Common</name>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <verbose>true</verbose>
-                    <fork>true</fork>
-                    <!-- Compatible with projects with lower java version support, e.g. metabase platon -->
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
         <!-- Internal -->
         <dependency>
