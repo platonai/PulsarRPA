@@ -68,7 +68,7 @@ public class SpellCheckedMultiMetadata extends MultiMetadata {
                 }
             }
         }
-        normalized = NAMES_IDX.keySet().toArray(new String[NAMES_IDX.size()]);
+        normalized = NAMES_IDX.keySet().toArray(new String[0]);
     }
 
     /**
