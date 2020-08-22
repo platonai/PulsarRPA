@@ -277,6 +277,7 @@ class ChromeLauncher(
             shutdownHookRegistry.register(shutdownHookThread)
             process = processLauncher.launch(program, arguments)
             process?.also {
+                Files.createDirectories(userDataDir)
                 val pidPath = userDataDir.resolveSibling("chromeLauncher.pid")
                 Files.writeString(pidPath, it.pid().toString(), StandardOpenOption.CREATE)
             }

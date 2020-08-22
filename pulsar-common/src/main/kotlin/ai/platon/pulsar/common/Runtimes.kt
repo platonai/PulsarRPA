@@ -12,11 +12,6 @@ object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
 
     fun exec(name: String): List<String> {
-        if (!SystemUtils.IS_OS_LINUX) {
-            System.err.println("Only available in linux")
-            return listOf()
-        }
-
         val lines = mutableListOf<String>()
         try {
             val p = Runtime.getRuntime().exec(name)
