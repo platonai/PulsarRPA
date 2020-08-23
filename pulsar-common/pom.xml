@@ -21,30 +21,6 @@
     <artifactId>pulsar-common</artifactId>
     <name>Pulsar Common</name>
 
-    <profiles>
-        <profile>
-            <id>snapshot</id>
-            <activation>
-                <file>
-                    <exists>${basedir}/SNAPSHOT.txt</exists>
-                </file>
-            </activation>
-
-            <repositories>
-                <repository>
-                    <id>sonatype-snapshots</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-        </profile>
-    </profiles>
-
     <dependencies>
         <!-- Required by configurations -->
         <dependency>
