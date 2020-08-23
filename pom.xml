@@ -67,10 +67,10 @@
 
     <profiles>
         <profile>
-            <id>dev</id>
+            <id>snapshot</id>
             <activation>
                 <file>
-                    <exists>${basedir}/DEVELOPMENT.txt</exists>
+                    <exists>${basedir}/SNAPSHOT.txt</exists>
                 </file>
             </activation>
 
