@@ -9,11 +9,11 @@ import org.w3c.dom.DocumentFragment
  * Created by vincent on 17-7-28.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
-class ParseContext(
+class ParseContext constructor(
         val page: WebPage,
         val parseResult: ParseResult = ParseResult(),
+        var document: FeaturedDocument? = null,
         val metaTags: HTMLMetaTags? = null,
         // deprecated, may not support in further version. Use jsoup instead
-        val documentFragment: DocumentFragment? = null,
-        var document: FeaturedDocument? = null
+        val documentFragment: DocumentFragment? = null
 )

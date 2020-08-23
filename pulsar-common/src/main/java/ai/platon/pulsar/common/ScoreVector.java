@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 public class ScoreVector implements Comparable<ScoreVector> {
 
     // Reserved
-    private int dimension;
-    private ArrayList<ScoreEntry> entries;
+    private final int dimension;
+    private final ArrayList<ScoreEntry> entries;
 
     public static ScoreVector ZERO = new ScoreVector(0);
 

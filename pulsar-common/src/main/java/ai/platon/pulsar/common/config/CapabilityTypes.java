@@ -239,6 +239,7 @@ public interface CapabilityTypes {
     String BROWSER_TAKE_SCREENSHOT = "browser.take.screenshot";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS = "browser.launch.supervisor.process";
     String BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS = "browser.launch.supervisor.process.args";
+
     /**
      * Proxy
      */
@@ -337,6 +338,13 @@ public interface CapabilityTypes {
     String INDEXER_ZK = "indexer.zookeeper.hosts";
     String INDEXER_COLLECTION = "indexer.collection";
     String INDEXER_WRITE_COMMIT_SIZE = "indexer.write.commit.size";
+
+    /**
+     * Crawl
+     * */
+    String SESSION_PAGE_CACHE_SIZE = "session.page.cache.size";
+    String SESSION_DOCUMENT_CACHE_SIZE = "session.document.cache.size";
+
     /**
      * Stat
      */

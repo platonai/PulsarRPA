@@ -31,15 +31,14 @@ class WebDriverContext(
 ): AutoCloseable {
     companion object {
         private val numGlobalRunningTasks = AtomicInteger()
-        private val numGlobalTasks = AtomicInteger()
-        private val numGlobalFinishedTasks = AtomicInteger()
+        private val globalTasks = AppMetrics.meter(this, "globalTasks")
+        private val globalFinishedTasks = AppMetrics.meter(this, "globalFinishedTasks")
+
         private val lock = ReentrantLock()
         private val notBusy = lock.newCondition()
 
         init {
             AppMetrics.register(this,"globalRunningTasks", Gauge<Int> { numGlobalRunningTasks.get() })
-            AppMetrics.register(this,"globalTasks", Gauge<Int> { numGlobalTasks.get() })
-            AppMetrics.register(this,"globalFinishedTasks", Gauge<Int> { numGlobalFinishedTasks.get() })
         }
     }
 
@@ -51,7 +50,7 @@ class WebDriverContext(
     private val isShutdown = AtomicBoolean()
 
     suspend fun run(task: FetchTask, browseFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
-        numGlobalTasks.incrementAndGet()
+        globalTasks.mark()
         return checkAbnormalResult(task) ?: try {
             runningTasks.add(task)
             numGlobalRunningTasks.incrementAndGet()
@@ -67,14 +66,14 @@ class WebDriverContext(
         } finally {
             runningTasks.remove(task)
             numGlobalRunningTasks.decrementAndGet()
-            numGlobalFinishedTasks.incrementAndGet()
+            globalFinishedTasks.mark()
 
             if (runningTasks.isEmpty()) {
                 lock.withLock { notBusy.signalAll() }
             }
 
-            if (numGlobalRunningTasks.get() == 0) {
-                log.info("No running task now | $numGlobalFinishedTasks/$numGlobalTasks (finished/all)")
+            if (numGlobalRunningTasks.get() == 0 && globalFinishedTasks.fiveMinuteRate > 0.1) {
+                log.info("No running task now | ${globalFinishedTasks.count}/${globalTasks.count} (finished/all)")
             }
         }
     }
@@ -113,7 +112,7 @@ class WebDriverContext(
     private fun closeUnderlyingLayer() {
         // Mark all working tasks are canceled, so they return as soon as possible,
         // the ready tasks are blocked to wait for driverManager.reset() finish
-        // TODO: why the caneled tasks do not return in time?
+        // TODO: why the canceled tasks do not return in time?
         runningTasks.forEach { it.cancel() }
         // may wait for cancelling finish?
         // Close all online drivers and delete the browser data
