@@ -66,12 +66,11 @@
     </modules>
 
     <profiles>
-
         <profile>
             <id>dev</id>
             <activation>
                 <file>
-                    <exists>DEVELOPMENT.txt</exists>
+                    <exists>${basedir}/DEVELOPMENT.txt</exists>
                 </file>
             </activation>
 
