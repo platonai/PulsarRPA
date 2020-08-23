@@ -76,12 +76,11 @@ class TestPathExtractor : HtmlParserTestBase() {
         val page = getPage(String(Files.readAllBytes(htmlPath)), Charset.forName("utf-8"))
         page.options = "-Ftitle=.art_tit! -Fcontent=.art_content! -Finfo=.art_info! -Fauthor=.editer! -Fnobody=.not-exist"
         val filter = PathExtractor(MetricsCounters(), conf)
-        val parseResult = ParseResult()
-        val parseContext = ParseContext(page, parseResult)
+        val parseContext = ParseContext(page)
 
         filter.filter(parseContext)
 
-        assertTrue(parseResult.isParsed)
+        assertTrue(parseContext.parseResult.isParsed)
         val fieldGroup = page.pageModel.firstOrNull()
         requireNotNull(fieldGroup)
         val fields = fieldGroup.fields

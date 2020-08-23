@@ -114,27 +114,15 @@ class PageEntity(baseUri_: String = NIL_PAGE_URL, var category: FragmentCategory
         return attributes.values.filter { it.fullName.contains(category.name) }
     }
 
-    fun first(name: String): PageAttribute? {
-        return get(name).firstOrNull()
-    }
+    fun first(name: String) = get(name).firstOrNull()
 
-    fun firstValue(name: String): String? {
-        return first(name)?.value
-    }
+    fun firstValue(name: String) = first(name)?.value
 
-    fun firstText(name: String): String {
-        return firstValue(name) ?: ""
-    }
+    fun firstText(name: String) = firstValue(name) ?: ""
 
-    fun joinToString(name: String, sep: String = ", "): String {
-        return get(name).joinToString { sep }
-    }
+    fun joinToString(name: String, sep: String = ", ") = get(name).joinToString { sep }
 
-    override fun hashCode(): Int {
-        return baseUri.hashCode()
-    }
+    override fun hashCode() = baseUri.hashCode()
 
-    override fun equals(other: Any?): Boolean {
-        return other is PageEntity && baseUri.equals(other.baseUri)
-    }
+    override fun equals(other: Any?) = other is PageEntity && baseUri == other.baseUri
 }

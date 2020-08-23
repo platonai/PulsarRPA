@@ -34,15 +34,12 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
-import org.apache.html.dom.HTMLDocumentImpl
-import org.cyberneko.html.parsers.DOMFragmentParser
 import org.jsoup.Jsoup
 import org.jsoup.helper.W3CDom
 import org.jsoup.nodes.Document
 import org.slf4j.LoggerFactory
 import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
-import org.xml.sax.SAXException
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
@@ -103,7 +100,7 @@ class HtmlParser(
         val metaTags = parseMetaTags(baseURL, documentFragment, page)
         val parseResult = initParseResult(metaTags)
 
-        val parseContext = ParseContext(page, parseResult, metaTags, documentFragment, FeaturedDocument(document))
+        val parseContext = ParseContext(page, parseResult, FeaturedDocument(document), metaTags, documentFragment)
         parseFilters.filter(parseContext)
 
         return parseContext.parseResult

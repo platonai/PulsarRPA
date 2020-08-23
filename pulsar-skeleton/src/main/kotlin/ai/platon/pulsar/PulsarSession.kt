@@ -48,8 +48,8 @@ open class PulsarSession(
     val sessionBeanFactory = BeanFactory(sessionConfig)
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
-    private val pageCache = context.globalCacheManager.pageCache
-    private val documentCache = context.globalCacheManager.documentCache
+    private val pageCache get() = context.globalCache.pageCache
+    private val documentCache get() = context.globalCache.documentCache
     val display = "$id"
     // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()

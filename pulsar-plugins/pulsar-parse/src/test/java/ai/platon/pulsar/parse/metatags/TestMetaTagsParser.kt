@@ -115,7 +115,7 @@ class TestMetaTagsParser {
                 val baseUrl = getURLOrNull(urlString)
                 val metaTags = HTMLMetaTags(node, baseUrl)
                 val parseResult = ParseResult()
-                metaTagsParser!!.filter(ParseContext(page, parseResult, metaTags, node))
+                metaTagsParser!!.filter(ParseContext(page, parseResult, metaTags = metaTags, documentFragment = node))
                 Assert.assertTrue(parseResult.isParsed)
             }
             // System.out.println(page.getContentAsString());

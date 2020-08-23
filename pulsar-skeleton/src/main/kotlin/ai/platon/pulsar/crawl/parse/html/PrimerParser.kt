@@ -125,7 +125,7 @@ class PrimerParser(conf: ImmutableConfig) {
 
     /**
      * Collect links use [PrimerParser]
-     * TODO: If we are using native browser mode, the link parsing can be done inside the browser
+     * NOTE: If we are using native browser mode, the link parsing can be done inside the browser
      * */
     fun collectLinks(baseURLHint: URL, parseContext: ParseContext, crawlFilters: CrawlFilters) {
         crawlFilters.normalizeToNull(parseContext.page.url)?:return

@@ -32,17 +32,14 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
      * A convenience method. Returns the current value of `noIndex`.
      */
     var noIndex = false
-        private set
     /**
      * A convenience method. Returns the current value of `noFollow`.
      */
     var noFollow = false
-        private set
     /**
      * A convenience method. Returns the current value of `noCache`.
      */
     var noCache = false
-        private set
     /**
      * A convenience method. Returns the `baseHref`, if set, or
      * `null` otherwise.
@@ -158,23 +155,23 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                                 val directives = contentNode.nodeValue.toLowerCase()
                                 var index = directives.indexOf("none")
                                 if (index >= 0) {
-                                    setNoIndex()
-                                    setNoFollow()
+                                    noIndex = true
+                                    noFollow = true
                                 }
                                 index = directives.indexOf("all")
                                 if (index >= 0) { // do nothing...
                                 }
                                 index = directives.indexOf("noindex")
                                 if (index >= 0) {
-                                    setNoIndex()
+                                    noIndex = true
                                 }
                                 index = directives.indexOf("nofollow")
                                 if (index >= 0) {
-                                    setNoFollow()
+                                    noFollow = true
                                 }
-                                index = directives.indexOf("noarchive")
+                                index = directives.indexOf("nocache")
                                 if (index >= 0) {
-                                    setNoCache()
+                                    noCache = true
                                 }
                             }
                         } // end if (name == robots)
@@ -188,7 +185,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                         if ("pragma" == name) {
                             content = content.toLowerCase()
                             val index = content.indexOf("no-cache")
-                            if (index >= 0) setNoCache()
+                            if (index >= 0) noCache = true
                         } else if ("refresh" == name) {
                             var idx = content.indexOf(';')
                             val time = if (idx == -1) { // just the refresh time
@@ -229,8 +226,9 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                                 }
                             }
                             if (refresh) {
-                                if (refreshUrl == null) { // apparently only refresh time was present. set the URL
-// to the same URL.
+                                if (refreshUrl == null) {
+                                    // apparently only refresh time was present. set the URL
+                                    // to the same URL.
                                     refreshUrl = currURL
                                 }
                                 refreshHref = refreshUrl
@@ -263,15 +261,13 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
 
     override fun toString(): String {
         val sb = StringBuffer()
-        sb.append("base=" + baseHref + ", noCache=" + noCache + ", noFollow="
-                + noFollow + ", noIndex=" + noIndex + ", refresh=" + refresh
-                + ", refreshHref=" + refreshHref + "\n")
+        sb.append("base=$baseHref, noCache=$noCache, noFollow=$noFollow, noIndex=$noIndex, refresh=$refresh, refreshHref=$refreshHref")
         sb.append(" * general tags:\n")
-        for (name in generalTags.names()) {
+        generalTags.names().forEach { name ->
             sb.append("   - " + name + "\t=\t" + generalTags[name] + "\n")
         }
         sb.append(" * http-equiv tags:\n")
-        for (o in httpEquivTags.keys) {
+        httpEquivTags.keys.forEach { o ->
             val key = o as String
             sb.append("   - " + key + "\t=\t" + httpEquivTags[key] + "\n")
         }

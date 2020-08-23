@@ -62,9 +62,10 @@ class ManagedWebDriver(
     /**
      * The actual url return by the browser
      * */
-    val currentUrl: String get() = "".takeIf { isQuit }?:driver.runCatching { currentUrl }
+    override val currentUrl: String? get() = if (isQuit) null else
+        driver.runCatching { currentUrl }
             .onFailure { log.warn("Unexpected exception", it) }
-            .getOrDefault("")
+            .getOrNull()
 
     /**
      * The real time page source return by the browser

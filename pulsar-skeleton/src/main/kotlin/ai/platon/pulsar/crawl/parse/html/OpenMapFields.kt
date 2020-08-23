@@ -5,8 +5,6 @@ import java.util.*
 /**
  * Created by vincent on 17-8-3.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
- *
- * TODO: bad to inherit from HashMap
  */
 class OpenMapFields {
     var name: String = ""

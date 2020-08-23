@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.crawl.GlobalCacheManager
+import ai.platon.pulsar.crawl.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
@@ -73,7 +73,7 @@ abstract class AbstractPulsarContext(
     /**
      * The global cache manager
      * */
-    open val globalCacheManager: GlobalCacheManager get() = getBean()
+    open val globalCache: GlobalCache get() = getBean()
 
     /**
      * The start time
@@ -138,8 +138,8 @@ abstract class AbstractPulsarContext(
     }
 
     fun clearCaches() {
-        globalCacheManager.pageCache.clear()
-        globalCacheManager.documentCache.clear()
+        globalCache.pageCache.clear()
+        globalCache.documentCache.clear()
     }
 
     override fun normalize(url: String, toItemOption: Boolean): NormUrl {

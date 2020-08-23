@@ -7,7 +7,7 @@ class ConcurrentNonReentrantQueue<E>: AbstractQueue<E>() {
     private val set = ConcurrentSkipListSet<E>()
     private val historyHash = ConcurrentSkipListSet<Int>()
 
-    override fun add(e: E) = offer(e)
+    override fun add(element: E) = offer(element)
 
     override fun offer(e: E): Boolean {
         val hashCode = e.hashCode()
