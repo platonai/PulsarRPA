@@ -1,7 +1,7 @@
 package ai.platon.pulsar.context.support
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.crawl.GlobalCacheManager
+import ai.platon.pulsar.crawl.GlobalCache
 import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
@@ -49,7 +49,7 @@ open class BasicPulsarContext(
     /**
      * The global cache manager
      * */
-    final override val globalCacheManager = GlobalCacheManager(unmodifiedConfig)
+    final override val globalCache = GlobalCache(unmodifiedConfig)
 
     init {
         applicationContext.refresh()

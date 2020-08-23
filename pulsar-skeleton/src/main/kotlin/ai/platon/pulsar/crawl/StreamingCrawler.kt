@@ -72,7 +72,7 @@ open class StreamingCrawler(
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
     var pageCollector: ConcurrentLinkedQueue<WebPage>? = null
-    var globalCacheManager: GlobalCacheManager? = null
+    var globalCache: GlobalCache? = null
 
     val id = instanceSequencer.incrementAndGet()
     var onLoadComplete: (WebPage) -> Unit = {}
@@ -167,12 +167,12 @@ open class StreamingCrawler(
         }
 
         if (page == null || page.crawlStatus.isUnFetched) {
-            globalCacheManager?.also {
-                val added = it.nReentrantFetchUrls.add(url)
+            globalCache?.also {
+                val added = it.limitedReentrantFetchUrls.add(url)
                 globalRetries.incrementAndGet()
                 log.info("{}. Will retry task the {}/{}th times | {}",
                         page?.id?:0,
-                        page?.fetchRetries ?: 0, it.nReentrantFetchUrls.count(url),
+                        page?.fetchRetries ?: 0, it.limitedReentrantFetchUrls.count(url),
                         url)
             }
         }

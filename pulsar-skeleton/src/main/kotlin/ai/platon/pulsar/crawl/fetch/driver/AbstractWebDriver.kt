@@ -24,6 +24,7 @@ abstract class AbstractWebDriver(
     abstract val name: String
     abstract val browserType: BrowserType
     abstract val sessionId: String?
+    abstract val currentUrl: String?
     abstract val pageSource: String
 
     abstract fun navigateTo(url: String)

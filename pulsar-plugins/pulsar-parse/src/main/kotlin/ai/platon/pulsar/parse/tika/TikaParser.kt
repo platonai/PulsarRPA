@@ -17,7 +17,6 @@
 package ai.platon.pulsar.parse.tika
 
 import ai.platon.pulsar.common.ReflectionUtils
-import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.PARSE_CACHING_FORBIDDEN_POLICY
@@ -127,7 +126,7 @@ class TikaParser(
             parseResult.args[ParseStatus.REFRESH_HREF] = metaTags.refreshHref.toString()
             parseResult.args[ParseStatus.REFRESH_TIME] = Integer.toString(metaTags.refreshTime)
         }
-        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult, metaTags, root))
+        parseFilters.filter(ai.platon.pulsar.crawl.parse.html.ParseContext(page, parseResult, metaTags = metaTags, documentFragment = root))
         if (metaTags.noCache) { // not okay to cache
             page.metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
