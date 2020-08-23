@@ -25,28 +25,28 @@
     <version>1.5.7-SNAPSHOT</version>
 
     <name>Pulsar</name>
+    <description>The most easy way to crawl and scrape the web:
+        turn large web sites into tables and charts using simple native api, SQL or RESTful api</description>
 
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
+    <properties>
+        <pulsar.skip.assembly>true</pulsar.skip.assembly>
+        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
+        <jackson.version>2.10.0</jackson.version>
+        <tika.version>1.24.1</tika.version>
+    </properties>
 
-    <developers>
-        <developer>
-            <name>Vincent Zhang</name>
-            <email>ivincent.zhang@gmail.com</email>
-            <organization>platon.ai</organization>
-            <timezone>+8</timezone>
-        </developer>
-    </developers>
-
-    <scm>
-        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
-        <url>https://github.com/platonai/pulsar</url>
-    </scm>
+    <repositories>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <modules>
         <module>pulsar-common</module>
@@ -66,34 +66,6 @@
     </modules>
 
     <profiles>
-        <profile>
-            <id>snapshot</id>
-            <activation>
-                <file>
-                    <exists>${basedir}/SNAPSHOT.txt</exists>
-                </file>
-            </activation>
-
-            <repositories>
-                <repository>
-                    <id>sonatype-snapshots</id>
-                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-
-            <dependencies>
-                <dependency>
-                    <groupId>ai.platon.pulsar</groupId>
-                    <artifactId>pulsar-h2</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
 
         <profile>
             <id>apache-release</id>
@@ -256,10 +228,26 @@
         </dependencies>
     </dependencyManagement>
 
-    <properties>
-        <pulsar.skip.assembly>true</pulsar.skip.assembly>
-        <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
-        <jackson.version>2.10.0</jackson.version>
-        <tika.version>1.24.1</tika.version>
-    </properties>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Vincent Zhang</name>
+            <email>ivincent.zhang@gmail.com</email>
+            <organization>platon.ai</organization>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/platonai/pulsar.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/pulsar.git</developerConnection>
+        <url>https://github.com/platonai/pulsar</url>
+    </scm>
+
 </project>
