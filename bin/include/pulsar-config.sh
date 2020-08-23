@@ -93,6 +93,12 @@ if [ -z "$PULSAR_ENV_INIT" ]; then
 fi
 
 # Now having JAVA_HOME defined is required
+JAVA=$(command -v java)
+if [[ -e $JAVA ]]; then
+  export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
+fi
+
+# Now having JAVA_HOME defined is required
 if [[ -z "$JAVA_HOME" ]]; then
     cat 1>&2 <<EOF
 +======================================================================+
