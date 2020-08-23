@@ -86,6 +86,13 @@
                     </snapshots>
                 </repository>
             </repositories>
+
+            <dependencies>
+                <dependency>
+                    <groupId>ai.platon.pulsar</groupId>
+                    <artifactId>pulsar-h2</artifactId>
+                </dependency>
+            </dependencies>
         </profile>
 
         <profile>
@@ -240,6 +247,7 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- Other dependency -->
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-h2</artifactId>
