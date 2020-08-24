@@ -12,9 +12,12 @@ import ai.platon.pulsar.context.withContext
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import com.google.common.collect.Lists
+import org.slf4j.LoggerFactory
 import java.net.URL
 
 class GeneralCrawler(context: PulsarContext): Crawler(context) {
+    private val log = LoggerFactory.getLogger(GeneralCrawler::class.java)
+
     private val seeds = mapOf(
             0 to "http://category.dangdang.com/cid4002590.html",
             1 to "https://list.mogujie.com/book/magic/51894",
@@ -128,8 +131,8 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
         println("Export to: file://$path")
 
         val links = document.select(outlink) { it.attr("abs:href") }
-                .mapTo(mutableSetOf()) { i.normalize(it) }
-                .take(20).map { it.url }
+                .mapNotNullTo(mutableSetOf()) { i.normalizeOrNull(it)?.spec }
+                .take(20)
         links.forEach { println(it) }
 
         i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())

@@ -21,8 +21,7 @@ open class H2Shell: Shell() {
         val options = LinkedList<String>()
         var i = 0
         while (i < args.size) {
-            val arg = args[i]
-            when (arg) {
+            when (val arg = args[i]) {
                 "-url" -> url = args[++i]
                 "-user" -> user = args[++i]
                 "-password" -> password = args[++i]
@@ -32,7 +31,7 @@ open class H2Shell: Shell() {
             i++
         }
 
-        val l = Lists.newArrayList("-url", url, "-user", user, "-password", password, "-driver", driver)
+        val l = listOf("-url", url, "-user", user, "-password", password, "-driver", driver)
         options.addAll(0, l)
         super.runTool(*options.toTypedArray())
     }

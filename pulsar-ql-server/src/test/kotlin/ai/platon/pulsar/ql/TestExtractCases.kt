@@ -46,7 +46,7 @@ class TestExtractCases : TestBase() {
     fun testAccumulateVividLinks() {
         val session = pc.createSession()
         session.load("$productIndexUrl -i 1d")
-        println(WebPageFormatter(session.getOrNil(productIndexUrl)))
+        println(WebPageFormatter(session.get(productIndexUrl)))
     }
 
     @Test
@@ -54,7 +54,7 @@ class TestExtractCases : TestBase() {
     fun testBackgroundLoading() {
         val session = pc.createSession()
 
-        val page = session.getOrNil(productIndexUrl)
+        val page = session.get(productIndexUrl)
         page.vividLinks.keys.map { it.toString() }
                 .map { session.load(it) }
                 .filter { !it.protocolStatus.isSuccess }
@@ -65,10 +65,10 @@ class TestExtractCases : TestBase() {
         val optins = LoadOptions.create()
         session.loadAll(page.vividLinks.keys.map { it -> it.toString() }, optins)
 
-        var page2 = session.getOrNil(URL_TRACKER_HOME_URL)
+        var page2 = session.get(URL_TRACKER_HOME_URL)
         println(WebPageFormatter(page2))
         for (i in 1..60) {
-            page2 = session.getOrNil(URL_TRACKER_HOME_URL + "/" + (LAZY_FETCH_URLS_PAGE_BASE + FetchMode.BROWSER.ordinal))
+            page2 = session.get(URL_TRACKER_HOME_URL + "/" + (LAZY_FETCH_URLS_PAGE_BASE + FetchMode.BROWSER.ordinal))
             println(WebPageFormatter(page2).toMap()["linksMessage"])
 
             TimeUnit.SECONDS.sleep(30)

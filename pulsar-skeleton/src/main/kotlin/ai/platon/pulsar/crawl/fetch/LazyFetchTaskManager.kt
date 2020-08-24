@@ -57,7 +57,7 @@ class LazyFetchTaskManager(
         val now = Instant.now()
         return seedIndexer.getAll(pageNo)
                 .asSequence()
-                .mapNotNull { webDb.get(it.toString()) }
+                .mapNotNull { webDb.getOrNull(it.toString()) }
                 .filter { it.fetchMode == mode && it.fetchTime.isBefore(now) }
                 .take(limit).mapTo(HashSet()) { it.url }
     }

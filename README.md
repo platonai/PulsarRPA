@@ -28,7 +28,7 @@ Crawl and scrape a single page:
 
 The SQL above downloads a Web page from wikipedia, find out the references section and extract all external reference links.
 
-Crawl out pages from a portal and scrape each out page:
+Crawl out pages from a portal and scrape each:
 
     select
         dom_first_text(dom, '.sku-name') as name,
@@ -41,7 +41,7 @@ Crawl out pages from a portal and scrape each out page:
     where dom_first_number(dom, '.p-price .price', 0.00) > 0
     order by dom_first_number(dom, '.p-price .price', 0.00);
 
-The SQL above visits a portal page in jd.com, download detail pages and then extract data from them.
+The SQL above visits a portal page in jd.com, downloads detail pages and then scrape data from them.
 
 You can clone a copy of Pulsar code and run the SQLs yourself, or run them from our [online demo](http://bi.platonic.fun/).
 
@@ -50,17 +50,18 @@ Check [sql-history.sql](sql-history.sql) to see more example SQLs. All SQL funct
 ## Use pulsar as a library
 See [Tutorials](https://github.com/platonai/pulsar-tutorials).
 
-## Use pulsar as a X-SQL server
-Use the customized [Metabase](https://github.com/platonai/metabase) to write X-SQLs and turn web sites into tables and 
+## Use pulsar as an X-SQL server
+Once pulsar runs in X-SQL server mode, the web can be used just like the normal database.
+You can use our customized [Metabase](https://github.com/platonai/metabase) to write X-SQLs and turn web sites into tables and 
 charts immediately. Everyone in your company can ask questions and learn from WEB DATA now, for the first time.
 
 # Build & Run
-## Install dependencies
+## Check & install dependencies
     
     bin/tools/install-depends.sh
     
 ## Install mongodb
-MongoDB is optional but is recommanded. You can skip this step, in such case, all data will lose after pulsar shutdown.
+MongoDB is optional but is recommended. You can skip this step, in such case, all data will lose after pulsar shutdown.
 Ubuntu/Debian:
 
     sudo apt install mongodb
@@ -68,7 +69,7 @@ Ubuntu/Debian:
 ## Build from source
     
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn -Pdev
+    cd pulsar && mvn
     
 ## Run the native api demo
 
@@ -92,5 +93,5 @@ from the web.
 
 # Enterprise Edition:
 
-Pulsar Enterprise Edition supports Auto Web Mining: unsupervised machine learning, no rules or training required, 
-turn Web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/)
+Pulsar Enterprise Edition supports Auto Web Mining: advanced machine learning, no rules or training required, 
+turn web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/)

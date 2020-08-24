@@ -155,9 +155,9 @@ class LoadComponent(
         val knownPages: MutableSet<WebPage> = mutableSetOf()
         val pendingUrls: MutableSet<String> = mutableSetOf()
         for (normUrl in filteredUrls) {
-            val url = normUrl.url
+            val url = normUrl.spec
             val opt = normUrl.options
-            var page = webDb.getOrNil(url, opt.shortenKey)
+            var page = webDb.get(url, opt.shortenKey)
             val reason = getFetchReason(page, opt)
             tracer?.trace("Fetch reason: {} | {} {}", FetchReason.toString(reason), url, opt)
             val status = page.protocolStatus
@@ -265,15 +265,11 @@ class LoadComponent(
     }
 
     private fun createLoadEntry(normUrl: NormUrl): WebPage {
-        if (normUrl.isInvalid) {
-            log.warn("Malformed url | {}", normUrl)
-            return WebPage.NIL
-        }
-        if (normUrl.url == AppConstants.NIL_PAGE_URL) {
+        if (normUrl.spec == AppConstants.NIL_PAGE_URL) {
             return WebPage.NIL
         }
 
-        val url = normUrl.url
+        val url = normUrl.spec
         val options = normUrl.options
         if (globalFetchingUrls.contains(url)) {
             log.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
@@ -281,7 +277,7 @@ class LoadComponent(
         }
 
         var page = if (options.expires.seconds > 1) {
-            webDb.getOrNil(url, options.ignoreQuery)
+            webDb.get(url, options.ignoreQuery)
         } else WebPage.NIL
 
         val reason = getFetchReason(page, options)
@@ -320,7 +316,7 @@ class LoadComponent(
     }
 
     private fun filterUrlToNull(url: NormUrl): NormUrl? {
-        val u = filterUrlToNull(url.url) ?: return null
+        val u = filterUrlToNull(url.spec) ?: return null
         return NormUrl(u, url.options)
     }
 
@@ -476,20 +472,50 @@ class LoadComponent(
         }
     }
 
+    fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {
+        if (start < 0) throw IllegalArgumentException("Argument start must be greater than 0")
+        if (limit < 0) throw IllegalArgumentException("Argument limit must be greater than 0")
+
+        val pages = links.asSequence().drop(start).take(limit).map { load(it, options) }
+                .filter { it.protocolStatus.isSuccess }.toList()
+        if (!options.lazyFlush) {
+            flush()
+        }
+        return pages
+    }
+
     /**
      * We load everything from the internet, our storage is just a cache
+     * @param portalUrl The portal url we are scraping out pages from
+     * @param loadArgs The load args of portal page
+     * @param linkArgs The link args of portal page
+     * @param start zero based start link to load
+     * @param limit The limit of links to load
+     * @param loadArgs2 The args of item pages
+     * @param query The query on item pages
+     * @param logLevel The log level
+     * @return The scrape result
      */
-    fun loadOutPages(url: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
-            query: String, logLevel: Int): Map<String, Any> {
-        return loadOutPages(url, LoadOptions.parse(loadArgs), parse(linkArgs),
+    fun scrapeOutPages(portalUrl: String, loadArgs: String, linkArgs: String, start: Int, limit: Int, loadArgs2: String,
+                       query: String, logLevel: Int): Map<String, Any> {
+        return scrapeOutPages(portalUrl, LoadOptions.parse(loadArgs), parse(linkArgs),
                 start, limit, LoadOptions.parse(loadArgs2), query, logLevel)
     }
 
     /**
      * We load everything from the internet, our storage is just a cache
+     * @param portalUrl The portal url we are scraping out pages from
+     * @param loadArgs The load args of portal page
+     * @param linkArgs The link args of portal page
+     * @param start zero based start link to load
+     * @param limit The limit of links to load
+     * @param loadArgs2 The args of item pages
+     * @param query The query on item pages
+     * @param logLevel The log level
+     * @return The scrape result
      */
-    fun loadOutPages(
-            url: String, options: LoadOptions,
+    fun scrapeOutPages(
+            portalUrl: String, options: LoadOptions,
             linkOptions: LinkOptions,
             start: Int, limit: Int, loadOptions2: LoadOptions,
             query: String,
@@ -498,20 +524,24 @@ class LoadComponent(
             return mapOf()
         }
 
+        if (start < 0) throw IllegalArgumentException("Argument start must be greater than 0")
+        if (limit < 0) throw IllegalArgumentException("Argument limit must be greater than 0")
+
         val persist = options.persist
         options.persist = false
         val persist2 = loadOptions2.persist
         loadOptions2.persist = false
-        val page = load(url, options)
+        val page = load(portalUrl, options)
         var filteredLinks: List<GHypeLink> = emptyList()
         var outPages: List<WebPage> = emptyList()
         var outDocs = emptyList<Map<String, Any?>>()
         val counters = intArrayOf(0, 0, 0)
         if (page.protocolStatus.isSuccess) {
-            filteredLinks = page.liveLinks.values
-                    .filter { l -> l.url.toString() != url }
+            filteredLinks = page.liveLinks.values.asSequence()
+                    .filter { l -> l.url.toString() != portalUrl }
                     .filter { l -> !page.deadLinks.contains(Utf8(l.url.toString())) }
                     .filter { linkOptions.asGHypeLinkPredicate().test(it) }
+                    .toList()
             loadOptions2.query = query
             outPages = loadOutPages(filteredLinks, start, limit, loadOptions2)
             outPages.map { it.pageCounters }.forEach {
@@ -520,7 +550,7 @@ class LoadComponent(
                 counters[2] += it.get(Self.brokenSubEntity)
             }
 
-            updateComponent?.updateByOutgoingPages(page, outPages)
+            updateComponent.updateByOutgoingPages(page, outPages)
 
             if (persist) {
                 webDb.put(page)
@@ -566,22 +596,7 @@ class LoadComponent(
         return response
     }
 
-    fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {
-        val pages = links.stream()
-                .skip(if (start > 1) (start - 1).toLong() else 0.toLong())
-                .limit(limit.toLong())
-                .map { l: GHypeLink -> load(l, options) }
-                .filter { p: WebPage -> p.protocolStatus.isSuccess }
-                .collect(Collectors.toList())
-        if (!options.lazyFlush) {
-            flush()
-        }
-        return pages
-    }
-
-    fun flush() {
-        webDb.flush()
-    }
+    fun flush() = webDb.flush()
 
     override fun close() {
         closed.set(true)

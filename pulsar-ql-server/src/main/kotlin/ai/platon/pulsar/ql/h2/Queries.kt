@@ -52,7 +52,7 @@ object Queries {
             is ValueArray ->
                 if (portal.list.isNotEmpty()) {
                     val normUrl = session.normalize(portal.list[0].string)
-                    val itemOptions = normUrl.options.createItemOption()
+                    val itemOptions = normUrl.options.createItemOptions()
                     for (configuredUrl in portal.list) {
                         pages = session.loadAll(portal.list.map { configuredUrl.string }, itemOptions)
                     }
@@ -82,13 +82,13 @@ object Queries {
 
         when (configuredUrls) {
             is ValueString -> {
-                val doc = session.loadAsDocument(configuredUrls.getString())
+                val doc = session.loadDocument(configuredUrls.getString())
                 collection = transformer(doc.document, restrictCss, offset, limit)
             }
             is ValueArray -> {
                 collection = ArrayList()
                 for (configuredUrl in configuredUrls.list) {
-                    val doc = session.loadAsDocument(configuredUrl.string)
+                    val doc = session.loadDocument(configuredUrl.string)
                     collection.addAll(transformer(doc.document, restrictCss, offset, limit))
                 }
             }
@@ -106,14 +106,14 @@ object Queries {
         val transformer = if (ignoreQuery) this::getLinksIgnoreQuery else this::getLinks
 
         val normUrl = session.normalize(portalUrl)
-        val document = session.parse(session.load(normUrl)).document
-        var links = transformer(document, restrictCss, offset, limit)
+        val document = session.loadDocument(normUrl)
+        var links = transformer(document.document, restrictCss, offset, limit)
 
         if (normalize) {
-            links = links.mapNotNull { session.normalize(it).takeIf { it.isValid }?.url }
+            links = links.mapNotNull { session.normalizeOrNull(it)?.spec }
         }
 
-        val itemOptions = normUrl.options.createItemOption()
+        val itemOptions = normUrl.options.createItemOptions()
         return session.loadAll(links, itemOptions)
     }
 

@@ -36,7 +36,7 @@ class InjectComponent(
     }
 
     fun inject(url: String, args: String): WebPage {
-        var page = webDb.getOrNil(url, false)
+        var page = webDb.get(url, false)
 
         if (page.isNil) {
             page = seedBuilder.create(url, args)
@@ -75,7 +75,7 @@ class InjectComponent(
     }
 
     fun unInject(url: String): WebPage {
-        val page = webDb.getOrNil(url)
+        val page = webDb.get(url)
         if (page.isSeed) {
             unInject(page)
         }
@@ -94,7 +94,7 @@ class InjectComponent(
     }
 
     fun unInjectAll(vararg urls: String): List<WebPage> {
-        val pages = urls.mapNotNull { webDb.get(it) }.filter { it.isSeed }.onEach { unInject(it) }
+        val pages = urls.mapNotNull { webDb.getOrNull(it) }.filter { it.isSeed }.onEach { unInject(it) }
         LOG.debug("UnInjected " + pages.size + " urls")
         seedIndexer.removeAll(pages.map { it.url })
         return pages
@@ -106,7 +106,7 @@ class InjectComponent(
     }
 
     fun report(): String {
-        val seedHome = webDb.getOrNil(AppConstants.SEED_PAGE_1_URL)
+        val seedHome = webDb.get(AppConstants.SEED_PAGE_1_URL)
         if (seedHome.isNil) {
             val count = seedHome.liveLinks.size
             return "Total " + count + " seeds in store " + webDb.schemaName
@@ -127,7 +127,7 @@ class InjectComponent(
     }
 
     private fun loadOrCreate(url: String): WebPage {
-        var page = webDb.getOrNil(url)
+        var page = webDb.get(url)
         if (page.isNil) {
             page = WebPage.newWebPage(url)
         }
