@@ -1,3 +1,0 @@
-This copy of source code is in development mode, you must delete this file for a release.
-
-If this file is exists, maven profile snapshot is activated.

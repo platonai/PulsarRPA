@@ -38,6 +38,11 @@ object Urls {
     }
 
     @JvmStatic
+    fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
+        return normalize(url, ignoreQuery).takeIf { it.isBlank() }
+    }
+
+    @JvmStatic
     fun normalizeUrls(urls: Iterable<String>, ignoreQuery: Boolean = false): List<String> {
         return urls.mapNotNull { normalize(it, ignoreQuery).takeIf { it.isNotBlank() } }
     }

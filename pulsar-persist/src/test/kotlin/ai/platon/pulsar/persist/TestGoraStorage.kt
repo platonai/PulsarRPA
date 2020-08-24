@@ -69,8 +69,8 @@ class TestGoraStorage {
         // webDb.put(page.getUrl(), page, true);
         webDb.put(page)
         webDb.flush()
-        page = webDb.getOrNil(url)
-        val page2 = webDb.getOrNil(url)
+        page = webDb.get(url)
+        val page2 = webDb.get(url)
         assertEquals(page.url, page2.url)
         assertEquals(page.contentAsString, page2.contentAsString)
         assertTrue(page.isNotNil)
@@ -78,16 +78,16 @@ class TestGoraStorage {
         page.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
-        val page3 = webDb.getOrNil(url)
+        val page3 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page3.links.size.toLong())
         page.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
-        val page4 = webDb.getOrNil(url)
+        val page4 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page4.links.size.toLong())
         webDb.delete(url)
         webDb.flush()
-        page = webDb.getOrNil(url)
+        page = webDb.get(url)
         assertTrue(page.isNil)
         webDb.delete(url)
     }
@@ -185,7 +185,7 @@ class TestGoraStorage {
     @Test
     fun testUpdateNestedArray2() {
         createExamplePage()
-        var page = webDb.getOrNil(exampleUrl)
+        var page = webDb.get(exampleUrl)
         page.links = ArrayList()
         // page.getLinks().clear();
         assertTrue(page.links.isEmpty())
@@ -194,7 +194,7 @@ class TestGoraStorage {
         page.links.add(AppConstants.EXAMPLE_URL + "/1")
         webDb.put(page, true)
         webDb.flush()
-        page = webDb.getOrNil(exampleUrl)
+        page = webDb.get(exampleUrl)
         assertTrue(page.isNotNil)
         assertEquals(2, page.links.size.toLong())
     }
@@ -202,12 +202,12 @@ class TestGoraStorage {
     @Test
     fun testUpdateNestedMap() {
         createExamplePage()
-        var page = webDb.getOrNil(exampleUrl)
+        var page = webDb.get(exampleUrl)
         page.inlinks.clear()
         assertTrue(page.inlinks.isEmpty())
         webDb.put(page)
         webDb.flush()
-        page = webDb.getOrNil(exampleUrl)
+        page = webDb.get(exampleUrl)
         assertTrue(page.isNotNil)
         assertTrue(page.inlinks.isEmpty())
     }

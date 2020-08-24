@@ -59,7 +59,7 @@ object DomFunctionTables {
             return toResultSet("DOM", listOf<ValueDom>())
         }
 
-        val elements = session.loadAsDocument(url).select(cssQuery, offset, limit)
+        val elements = session.loadDocument(url).select(cssQuery, offset, limit)
         return toResultSet("DOM", elements.map { domValue(it) })
     }
 
@@ -115,7 +115,7 @@ object DomFunctionTables {
             return toResultSet(listOf())
         }
 
-        val doc = session.loadAsDocument(portalUrl)
+        val doc = session.loadDocument(portalUrl)
         val anchors = doc.document.getAnchors(restrictCss, offset, limit)
 
         return toResultSet(anchors)

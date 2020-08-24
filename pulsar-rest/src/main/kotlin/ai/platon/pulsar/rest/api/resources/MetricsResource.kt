@@ -15,7 +15,7 @@ constructor(private val webDb: WebDb) {
 
     @GetMapping
     fun list(@PathVariable("limit") limit: Int): String {
-        val page = webDb.getOrNil(METRICS_HOME_URL)
+        val page = webDb.get(METRICS_HOME_URL)
         return if (page.isNil || page.liveLinks.isEmpty()) {
             "[]"
         } else {

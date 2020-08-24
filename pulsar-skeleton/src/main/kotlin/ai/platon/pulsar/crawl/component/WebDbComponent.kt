@@ -53,7 +53,7 @@ class WebDbComponent(private val webDb: WebDb, private val conf: ImmutableConfig
     }
 
     operator fun get(url: String): WebPage {
-        return webDb.getOrNil(url)
+        return webDb.get(url)
     }
 
     fun delete(url: String): Boolean {

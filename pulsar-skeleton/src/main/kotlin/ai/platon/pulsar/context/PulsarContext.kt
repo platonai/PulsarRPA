@@ -30,13 +30,11 @@ interface PulsarContext: AutoCloseable {
      * */
     fun registerClosable(closable: AutoCloseable)
 
-    fun normalize(url: String, toItemOption: Boolean = false): NormUrl
+    fun normalize(url: String, options: LoadOptions = opts(), toItemOption: Boolean = false): NormUrl
 
-    fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormUrl
+    fun normalizeOrNull(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl?
 
-    fun normalize(urls: Iterable<String>, toItemOption: Boolean = false): List<NormUrl>
-
-    fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormUrl>
+    fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false): List<NormUrl>
 
     /**
      * Inject an url
@@ -46,9 +44,11 @@ interface PulsarContext: AutoCloseable {
      */
     fun inject(url: String): WebPage
 
-    fun get(url: String): WebPage?
+    fun inject(url: NormUrl): WebPage
 
-    fun getOrNil(url: String): WebPage
+    fun get(url: String): WebPage
+
+    fun getOrNull(url: String): WebPage?
 
     fun scan(urlPrefix: String): Iterator<WebPage>
 
@@ -57,12 +57,13 @@ interface PulsarContext: AutoCloseable {
     fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage>
 
     /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
+     * Load a url with specified options, see [LoadOptions] for all options
      *
-     * @param url The url followed by options
+     * @param url     The url followed by options
+     * @param options The options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    fun load(url: String): WebPage
+    fun load(url: String, options: LoadOptions = opts()): WebPage
 
     /**
      * Load a url with specified options, see [LoadOptions] for all options
@@ -71,24 +72,7 @@ interface PulsarContext: AutoCloseable {
      * @param options The options
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
-    fun load(url: String, options: LoadOptions): WebPage
-
-    /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
-     *
-     * @param url The url followed by options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    fun load(url: URL): WebPage
-
-    /**
-     * Load a url with specified options, see [LoadOptions] for all options
-     *
-     * @param url     The url followed by options
-     * @param options The options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    fun load(url: URL, options: LoadOptions): WebPage
+    fun load(url: URL, options: LoadOptions = opts()): WebPage
 
     /**
      * Load a url, options can be specified following the url, see [LoadOptions] for all options
@@ -113,9 +97,9 @@ interface PulsarContext: AutoCloseable {
      * @param options The options
      * @return Pages for all urls.
      */
-    fun loadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage>
+    fun loadAll(urls: Iterable<String>, options: LoadOptions = opts()): Collection<WebPage>
 
-    fun loadAll(urls: Collection<NormUrl>, options: LoadOptions = LoadOptions.create()): Collection<WebPage>
+    fun loadAll(urls: Collection<NormUrl>, options: LoadOptions = opts()): Collection<WebPage>
 
     /**
      * Load a batch of urls with the specified options.
@@ -130,9 +114,9 @@ interface PulsarContext: AutoCloseable {
      * @param options The options
      * @return Pages for all urls.
      */
-    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = LoadOptions.create()): Collection<WebPage>
+    fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions = opts()): Collection<WebPage>
 
-    fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions = LoadOptions.create()): Collection<WebPage>
+    fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions = opts()): Collection<WebPage>
 
     /**
      * Parse the WebPage using Jsoup
@@ -150,4 +134,6 @@ interface PulsarContext: AutoCloseable {
     fun flush()
 
     fun registerShutdownHook()
+
+    fun opts() = LoadOptions.create()
 }

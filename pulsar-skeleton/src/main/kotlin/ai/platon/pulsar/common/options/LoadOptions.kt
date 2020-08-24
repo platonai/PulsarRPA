@@ -196,7 +196,7 @@ open class LoadOptions: CommonOptions {
         addObjects(this)
     }
 
-    open fun createItemOption(conf: VolatileConfig? = null): LoadOptions {
+    open fun createItemOptions(conf: VolatileConfig? = null): LoadOptions {
         val itemOptions = clone()
         itemOptions.itemOptions2MajorOptions()
 

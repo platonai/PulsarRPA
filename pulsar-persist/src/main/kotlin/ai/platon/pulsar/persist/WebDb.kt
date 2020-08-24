@@ -29,7 +29,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @return the WebPage corresponding to the key or null if it cannot be found
      */
     @JvmOverloads
-    fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
+    fun getOrNull(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage? {
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
         if (log.isTraceEnabled) {
@@ -55,10 +55,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
      * @return the WebPage corresponding to the key or WebPage.NIL if it cannot be found
      */
     @JvmOverloads
-    fun getOrNil(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
+    fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
-        val page = get(url, ignoreQuery, null)
+        val page = getOrNull(url, ignoreQuery, null)
         return page ?: WebPage.NIL
     }
 

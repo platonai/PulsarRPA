@@ -25,7 +25,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
-import org.springframework.lang.Nullable
+import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
@@ -46,30 +46,37 @@ abstract class AbstractPulsarContext(
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
     open val unmodifiedConfig: ImmutableConfig get() = getBean()
+
     /**
      * Url normalizers
      * */
     open val urlNormalizers: UrlNormalizers get() = getBean()
+
     /**
      * The web db
      * */
     open val webDb: WebDb get() = getBean()
+
     /**
      * The inject component
      * */
     open val injectComponent: InjectComponent get() = getBean()
+
     /**
      * The fetch component
      * */
     open val fetchComponent: BatchFetchComponent get() = getBean()
+
     /**
      * The update component
      * */
     open val updateComponent: UpdateComponent get() = getBean()
+
     /**
      * The load component
      * */
     open val loadComponent: LoadComponent get() = getBean()
+
     /**
      * The global cache manager
      * */
@@ -98,14 +105,15 @@ abstract class AbstractPulsarContext(
     private val startupShutdownMonitor = Any()
 
     /** Reference to the JVM shutdown hook, if registered.  */
-    @Nullable
     private var shutdownHook: Thread? = null
+
+    private val activeWebDb: WebDb? get() = webDb.takeIf { isActive }
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
         return applicationContext.takeIf { isActive }
                 ?.getBean(requiredType.java)
-                ?:throw IllegalApplicationContextStateException("Pulsar context is not active")
+                ?: throw IllegalApplicationContextStateException("Pulsar context is not active")
     }
 
     @Throws(BeansException::class)
@@ -127,47 +135,33 @@ abstract class AbstractPulsarContext(
         closableObjects.add(closable)
     }
 
-    private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
-        if (options.volatileConfig == null) {
-            options.volatileConfig = VolatileConfig(unmodifiedConfig)
-        }
-
-        options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)
-
-        return if (toItemOption) options.createItemOption() else options
-    }
-
     fun clearCaches() {
         globalCache.pageCache.clear()
         globalCache.documentCache.clear()
     }
 
-    override fun normalize(url: String, toItemOption: Boolean): NormUrl {
-        return normalize(url, LoadOptions.create(), toItemOption)
-    }
-
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val parts = Urls.splitUrlArgs(url)
-        var normalizedUrl = Urls.normalize(parts.first, options.shortenKey)
+        val (spec, args) = Urls.splitUrlArgs(url)
+        var normalizedUrl = Urls.normalize(spec, options.shortenKey)
         if (!options.noNorm) {
-            normalizedUrl = urlNormalizers.normalize(normalizedUrl)?:return NormUrl.nil
+            normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
 
-        if (parts.second.isBlank()) {
+        if (args.isBlank()) {
             return NormUrl(normalizedUrl, initOptions(options, toItemOption))
         }
 
-        val parsedOptions = LoadOptions.parse(parts.second)
+        val parsedOptions = LoadOptions.parse(args)
         val options2 = LoadOptions.mergeModified(parsedOptions, options)
         return NormUrl(normalizedUrl, initOptions(options2, toItemOption))
     }
 
-    override fun normalize(urls: Iterable<String>, toItemOption: Boolean): List<NormUrl> {
-        return urls.mapNotNull { normalize(it, toItemOption).takeIf { it.isNotNil } }
+    override fun normalizeOrNull(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl? {
+        return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
-        return urls.mapNotNull { normalize(it, options, toItemOption).takeIf { it.isNotNil } }
+        return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
 
     /**
@@ -177,38 +171,31 @@ abstract class AbstractPulsarContext(
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
-        return WebPage.NIL.takeUnless { isActive }?:injectComponent.inject(Urls.splitUrlArgs(url))
+        return WebPage.NIL.takeIf { !isActive }?:injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
-    override fun get(url: String): WebPage? {
-        return webDb.takeIf { isActive }?.get(normalize(url).url, false)
+    override fun inject(url: NormUrl): WebPage {
+        return WebPage.NIL.takeIf { !isActive }?:injectComponent.inject(url.spec, url.args)
     }
 
-    override fun getOrNil(url: String): WebPage {
-        return webDb.takeIf { isActive }?.getOrNil(normalize(url).url, false)?: WebPage.NIL
+    override fun getOrNull(url: String): WebPage? {
+        return activeWebDb?.getOrNull(normalize(url).spec, false)
+    }
+
+    override fun get(url: String): WebPage {
+        return activeWebDb?.get(normalize(url).spec, false)?: WebPage.NIL
     }
 
     override fun scan(urlPrefix: String): Iterator<WebPage> {
-        return webDb.takeIf { isActive }?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
+        return activeWebDb?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
 
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
-        return webDb.takeIf { isActive }?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
+        return activeWebDb?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
-        return webDb.takeIf { isActive }?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
-    }
-
-    /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
-     *
-     * @param url The url followed by options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    override fun load(url: String): WebPage {
-        val normUrl = normalize(url)
-        return loadComponent.takeIf { isActive }?.load(normUrl)?: WebPage.NIL
+        return activeWebDb?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     /**
@@ -221,16 +208,6 @@ abstract class AbstractPulsarContext(
     override fun load(url: String, options: LoadOptions): WebPage {
         val normUrl = normalize(url, options)
         return loadComponent.takeIf { isActive }?.load(normUrl)?: WebPage.NIL
-    }
-
-    /**
-     * Load a url, options can be specified following the url, see [LoadOptions] for all options
-     *
-     * @param url The url followed by options
-     * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
-     */
-    override fun load(url: URL): WebPage {
-        return loadComponent.takeIf { isActive }?.load(url, LoadOptions.create())?: WebPage.NIL
     }
 
     /**
@@ -306,27 +283,28 @@ abstract class AbstractPulsarContext(
      * Parse the WebPage using Jsoup
      */
     override fun parse(page: WebPage): FeaturedDocument {
-        return FeaturedDocument.NIL.takeUnless { isActive }?:JsoupParser(page, unmodifiedConfig).parse()
+        return FeaturedDocument.NIL.takeIf { !isActive }?:JsoupParser(page, unmodifiedConfig).parse()
     }
 
     override fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument {
-        return FeaturedDocument.NIL.takeUnless { isActive }?:JsoupParser(page, mutableConfig).parse()
+        return FeaturedDocument.NIL.takeIf { !isActive }?:JsoupParser(page, mutableConfig).parse()
     }
 
     override fun persist(page: WebPage) {
-        webDb.takeIf { isActive }?.put(page, false)
+        activeWebDb?.put(page, false)
     }
 
     override fun delete(url: String) {
-        webDb.takeIf { isActive }?.run { delete(url); delete(normalize(url).url) }
+        activeWebDb?.delete(url)
+        activeWebDb?.delete(normalize(url).spec)
     }
 
     override fun delete(page: WebPage) {
-        webDb.takeIf { isActive }?.delete(page.url)
+        activeWebDb?.delete(page.url)
     }
 
     override fun flush() {
-        webDb.takeIf { isActive }?.flush()
+        activeWebDb?.flush()
     }
 
     /**
@@ -384,5 +362,15 @@ abstract class AbstractPulsarContext(
 
             (applicationContext as? AutoCloseable)?.close()
         }
+    }
+
+    private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
+        if (options.volatileConfig == null) {
+            options.volatileConfig = VolatileConfig(unmodifiedConfig)
+        }
+
+        options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)
+
+        return if (toItemOption) options.createItemOptions() else options
     }
 }

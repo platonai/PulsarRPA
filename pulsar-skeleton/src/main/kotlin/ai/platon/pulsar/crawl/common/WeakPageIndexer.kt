@@ -121,7 +121,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     @get:Synchronized
     private val home: WebPage
         get() {
-            var home = webDb.getOrNil(homeUrl)
+            var home = webDb.get(homeUrl)
             if (home.isNil) {
                 home = WebPage.newInternalPage(homeUrl, "Web Page Index Home")
                 LOG.debug("Creating weak index home: $homeUrl")
@@ -138,7 +138,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     @Synchronized
     private fun getIndex(pageNo: Int, pageTitle: String): WebPage {
         val url = "$homeUrl/$pageNo"
-        var indexPage = webDb.getOrNil(url)
+        var indexPage = webDb.get(url)
 
         if (temporaryDeleteAllPage) {
             webDb.delete(url)

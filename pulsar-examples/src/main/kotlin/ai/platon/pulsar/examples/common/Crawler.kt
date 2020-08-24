@@ -28,15 +28,15 @@ class AfterBatchHandler: BatchHandler() {
         val lengthAfterCompress = pages.asSequence()
                 .map { it.content?.array()?:"".toByteArray() }
                 .joinToString { Strings.readableBytes(compress(it).second.toLong()) }
-        println("After fetching - Fetched $size pages\nLength: \n$length\nCompressed: \n$lengthAfterCompress")
+        println("After fetching - Fetched $size pages. Length: $length\tCompressed: $lengthAfterCompress")
     }
 
     fun compress(input: ByteArray): Pair<ByteArray, Int> {
         val output = ByteArray(input.size)
-        val compresser = Deflater()
-        compresser.setInput(input)
-        compresser.finish()
-        val compressedDataLength = compresser.deflate(output)
+        val compressor = Deflater()
+        compressor.setInput(input)
+        compressor.finish()
+        val compressedDataLength = compressor.deflate(output)
         return output to compressedDataLength
     }
 }
@@ -46,13 +46,11 @@ open class Crawler(
         private var beforeBatchHandler: BatchHandler = BeforeBatchHandler(),
         private var afterBatchHandler: BatchHandler = AfterBatchHandler()
 ) {
-    val log = LoggerFactory.getLogger(Crawler::class.java)
+    private val log = LoggerFactory.getLogger(Crawler::class.java)
 
     val i = context.createSession()
 
-    fun load(url: String, args: String) {
-        load(url, LoadOptions.parse(args))
-    }
+    fun load(url: String, args: String) = load(url, LoadOptions.parse(args))
 
     fun load(url: String, options: LoadOptions) {
         val page = i.load(url)
@@ -75,9 +73,7 @@ open class Crawler(
         log.info("Export to: file://{}", path)
     }
 
-    fun loadOutPages(portalUrl: String, args: String) {
-        loadOutPages(portalUrl, LoadOptions.parse(args))
-    }
+    fun loadOutPages(portalUrl: String, args: String) = loadOutPages(portalUrl, LoadOptions.parse(args))
 
     fun loadOutPages(portalUrl: String, options: LoadOptions) {
         val page = i.load(portalUrl, options)
@@ -88,14 +84,14 @@ open class Crawler(
         log.info("Portal page is exported to: file://$path")
 
         val links = document.select(options.outlinkSelector) { it.attr("abs:href") }
-                .mapTo(mutableSetOf()) { i.normalize(it) }
-                .take(options.topLinks).map { it.url }
-        log.info("Total " + links.size + " items to load")
+                .mapNotNullTo(mutableSetOf()) { i.normalizeOrNull(it)?.spec }
+                .take(options.topLinks)
+        log.info("Total ${links.size} items to load")
 
         i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
         i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
 
-        val pages = i.loadAll(links, options.createItemOption())
+        val pages = i.loadAll(links, options.createItemOptions())
 
         val query = options.query
         if (query != null) {
@@ -116,7 +112,7 @@ open class Crawler(
 
     fun extractAds() {
         val url = "https://wuhan.baixing.com/xianhualipin/a1100414743.html"
-        val doc = i.loadAsDocument(url)
+        val doc = i.loadDocument(url)
         doc.select("a[href~=mssp.baidu]").map {  }
     }
 

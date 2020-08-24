@@ -2,25 +2,24 @@ package ai.platon.pulsar.common.options
 
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.AppConstants
+import java.net.MalformedURLException
 import java.net.URL
-import java.time.Duration
 
-open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUrl> {
-    constructor(u: URL, options: LoadOptions): this(u.toString(), options)
+open class NormUrl(val url: URL, val options: LoadOptions): Comparable<NormUrl> {
 
-    private val u by lazy { Urls.getURLOrNull(url) }
+    @Throws(MalformedURLException::class)
+    constructor(spec: String, options: LoadOptions): this(URL(spec), options)
 
-    val isEmpty get() = url.isEmpty()
+    val spec = url.toString()
+    val args = options.toString()
+    val configuredUrl = "$spec $args"
+
+    val isEmpty get() = spec.isEmpty()
     val isNotEmpty get() = !isEmpty
-    val isNil get() = this == nil
+    val isNil get() = this == NIL
     val isNotNil get() = !isNil
-    val isValid get() = u != null
-    val isInvalid get() = !isValid
-    val configuredUrl = "$url $options"
 
-    fun toURL(): URL? { return u }
-
-    operator fun component1() = url
+    operator fun component1() = spec
     operator fun component2() = options
 
     override fun hashCode(): Int {
@@ -40,7 +39,7 @@ open class NormUrl(val url: String, val options: LoadOptions): Comparable<NormUr
     }
 
     companion object {
-        val nil = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
+        val NIL = NormUrl(AppConstants.NIL_PAGE_URL, LoadOptions.default)
 
         fun parse(configuredUrl: String): NormUrl {
             val (url, args) = Urls.splitUrlArgs(configuredUrl)
