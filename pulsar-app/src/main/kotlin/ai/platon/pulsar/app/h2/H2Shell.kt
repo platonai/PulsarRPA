@@ -1,4 +1,4 @@
-package ai.platon.pulsar.ql.h2.starter
+package ai.platon.pulsar.app.h2
 
 import ai.platon.pulsar.ql.H2Config
 import com.google.common.collect.Lists
