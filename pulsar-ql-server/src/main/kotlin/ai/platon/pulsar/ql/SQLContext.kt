@@ -1,12 +1,10 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.common.Systems
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.persist.metadata.FetchMode
 import org.h2.api.ErrorCode
@@ -16,7 +14,6 @@ import org.h2.message.DbException
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The SQLContext fuses h2database and pulsar big data engine

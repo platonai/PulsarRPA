@@ -4,7 +4,7 @@ function __dev_mode_enable_module() {
   M=$1
   shift
 
-  echo "Enable module $M"
+  # echo "Enable module $M"
 
   if [ "$M" == "pulsar-app" ]; then
     CLASSPATH=${CLASSPATH}:"$PULSAR_HOME/$M"/src/main/resources;
