@@ -25,6 +25,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
+import org.springframework.context.support.AbstractApplicationContext
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -323,6 +324,7 @@ abstract class AbstractPulsarContext(
                 }
             }
             Runtime.getRuntime().addShutdownHook(this.shutdownHook)
+            (applicationContext as? AbstractApplicationContext)?.registerShutdownHook()
         }
     }
 
@@ -358,7 +360,7 @@ abstract class AbstractPulsarContext(
                 it.runCatching { it.close() }.onFailure { it.printStackTrace() }
             }
 
-//            (applicationContext as? AutoCloseable)?.close()
+            webDb.close()
         }
     }
 

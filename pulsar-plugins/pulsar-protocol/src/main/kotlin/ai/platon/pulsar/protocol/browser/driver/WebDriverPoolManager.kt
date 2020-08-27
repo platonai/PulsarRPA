@@ -168,6 +168,7 @@ open class WebDriverPoolManager(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
+            driverPools.keys.forEach { doCloseDriverPool(it) }
             driverPools.clear()
             log.info("Web driver manager is closed\n{}", formatStatus(true))
         }

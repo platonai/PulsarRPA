@@ -11,15 +11,15 @@ import org.apache.commons.collections4.CollectionUtils
 import org.apache.gora.filter.Filter
 import org.apache.gora.store.DataStore
 import org.slf4j.LoggerFactory
+import java.util.concurrent.atomic.AtomicBoolean
 
 class WebDb(val conf: ImmutableConfig): AutoCloseable {
 
     private val log = LoggerFactory.getLogger(WebDb::class.java)
+    private val closed = AtomicBoolean()
 
-    val store: DataStore<String, GWebPage>
-        get() = AutoDetectStorageProvider.create(conf).pageStore
-    val schemaName: String
-        get() = store.schemaName
+    val store: DataStore<String, GWebPage> by lazy { AutoDetectStorageProvider(conf).createPageStore() }
+    val schemaName: String get() = store.schemaName
 
     /**
      * Returns the WebPage corresponding to the given url.
@@ -63,9 +63,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     }
 
     @JvmOverloads
-    fun put(page: WebPage, replaceIfExists: Boolean = false): Boolean {
-        return putInternal(page, replaceIfExists)
-    }
+    fun put(page: WebPage, replaceIfExists: Boolean = false) = putInternal(page, replaceIfExists)
 
     /**
      * Notice:
@@ -95,9 +93,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         return true
     }
 
-    fun putAll(pages: Iterable<WebPage>) {
-        pages.forEach { put(it, false) }
-    }
+    fun putAll(pages: Iterable<WebPage>) = pages.forEach { put(it, false) }
 
     @JvmOverloads
     fun delete(originalUrl: String, ignoreQuery: Boolean = false): Boolean {
@@ -227,7 +223,10 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     }
 
     override fun close() {
-        flush()
+        if (closed.compareAndSet(false, true)) {
+            flush()
+            store.close()
+        }
     }
 
     private fun prepareFields(fields: MutableSet<String>): Array<String> {

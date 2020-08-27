@@ -27,7 +27,7 @@ object PulsarContexts {
     }
 
     @Synchronized
-    fun createSession() = contexts.first().createSession()
+    fun createSession() = activate().createSession()
 
     @Synchronized
     fun shutdown() {

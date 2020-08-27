@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: use mvn dependency:build-classpath
 function __dev_mode_enable_module() {
   M=$1
   shift
