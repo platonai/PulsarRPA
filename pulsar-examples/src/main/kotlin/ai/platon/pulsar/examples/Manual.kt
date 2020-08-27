@@ -1,10 +1,10 @@
 package ai.platon.pulsar.examples
 
+import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.context.withContext
 
-class Manual(context: PulsarContext) {
-    val session = context.createSession()
+class Manual(val session: PulsarSession) {
     val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     /**
@@ -34,11 +34,11 @@ class Manual(context: PulsarContext) {
      * */
     fun scrape() = session.scrape(url, "-expires 1d", "li[data-sku]", listOf(".p-name em", ".p-price"))
 
-    fun scrape1() = session.scrape(url, "-i 1d", "li[data-sku]",
+    fun scrape2() = session.scrape(url, "-i 1d", "li[data-sku]",
             mapOf("name" to ".p-name em", "price" to ".p-price"))
 
     fun scrapeOutPages(): List<Map<String, String?>> = session.scrapeOutPages(url,
-            "-expires 1d -itemExpires 7d -outLink a[href~=item]",
+            "-expires 1d -itemExpires 7s -outLink a[href~=item]",
             ".product-intro",
             listOf(".sku-name", ".p-price"))
 
@@ -48,23 +48,23 @@ class Manual(context: PulsarContext) {
             mapOf("name" to ".sku-name", "price" to ".p-price"))
 
     fun runAll() {
-        val fmt = "price: %-20s name: %s"
-
-        println("== LOAD ==")
+        println("Load:")
         load()
-        println("\n== loadOutPages ==")
+        println("Load out pages:")
         loadOutPages()
 
-        println("\n== scrape ==")
-        scrape().map { String.format(fmt, it[".p-price"], it[".p-name em"]) }.forEach { println(it) }
-        println("\n== scrape1 ==")
-        scrape1().map { String.format(fmt, it["price"], it["name"]) }.forEach { println(it) }
+        println("Scrape:")
+        println(scrape().joinToString("\n") { it[".p-price"] + " | " + it[".p-name em"] })
+        println("Scrape 2:")
+        println(scrape2().joinToString("\n") { it["price"] + " | " + it["name"] })
 
-        println("\n== scrapeOutPages ==")
-        scrapeOutPages().map { String.format(fmt, it[".p-price"], it[".sku-name"]) }.forEach { println(it) }
-        println("\n== scrapeOutPages2 ==")
-        scrapeOutPages2().map { String.format(fmt, it["price"], it["name"]) }.forEach { println(it) }
+        println("Scrape out pages:")
+        println(scrapeOutPages().joinToString("\n") { it[".p-price"] + " | " + it[".sku-name"] })
+        println("Scrape out pages - 2:")
+        println(scrapeOutPages2().joinToString("\n") { it["price"] + " | " + it["name"] })
     }
 }
 
-fun main() = withContext { Manual(it).runAll() }
+fun main() = withContext {
+    Manual(it.createSession()).runAll()
+}

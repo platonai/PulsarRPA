@@ -32,7 +32,7 @@ interface PulsarContext: AutoCloseable {
 
     fun normalize(url: String, options: LoadOptions = opts(), toItemOption: Boolean = false): NormUrl
 
-    fun normalizeOrNull(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl?
+    fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl?
 
     fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false): List<NormUrl>
 

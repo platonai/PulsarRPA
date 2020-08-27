@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
 
+# TODO: use mvn dependency:build-classpath
 function __dev_mode_enable_module() {
   M=$1
   shift
 
-  # echo "Enable module $M"
+  cd "$PULSAR_HOME/$M" || exit
+  outputFile="/tmp/$M.classpath"
+  mvn dependency:build-classpath -Dmdep.outputFile="$outputFile"
+  cd - || exit
 
+  MODULE_CLASSPATH=$(cat "$outputFile")
+  CLASSPATH=${CLASSPATH}:"$MODULE_CLASSPATH"
+  CLASSPATH=${CLASSPATH}:"$PULSAR_HOME/$M/target/$M-$VERSION".jar;
+
+  # additional resources
   if [ "$M" == "pulsar-app" ]; then
     CLASSPATH=${CLASSPATH}:"$PULSAR_HOME/$M"/src/main/resources;
   fi
-
-  # development mode
-  for f in "$PULSAR_HOME/$M"/lib/*.jar; do
-    if [[ -f "$f" ]]; then
-      CLASSPATH=${CLASSPATH}:$f;
-    fi
-  done
-
-  for f in "$PULSAR_HOME/$M"/target/*.jar; do
-    [[ ! $f =~ (-tests|-sources|-job).jar$ ]] && CLASSPATH=${CLASSPATH}:$f;
-  done
 }
 
 function __check_pid_before_start() {
