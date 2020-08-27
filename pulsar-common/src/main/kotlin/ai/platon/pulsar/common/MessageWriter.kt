@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import org.slf4j.LoggerFactory
 import java.io.PrintWriter
 import java.io.Writer
 import java.nio.file.*
@@ -15,6 +16,7 @@ class MessageWriter(
         var levelFile: Int = DEFAULT_LOG_LEVEL
 ): AutoCloseable {
 
+    private val log = LoggerFactory.getLogger(MessageWriter::class.java)
     private var maxFileSize = DEFAULT_MAX_FILE_SIZE
     private var dateFormat: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss ")
     private var fileWriter: Writer? = null
@@ -90,7 +92,7 @@ class MessageWriter(
 
     @Synchronized
     private fun closeWriter() {
-        println("closeWriter | $path")
+        log.info("Closing writer | $path")
         printWriter?.flush()
         printWriter?.close()
         fileWriter?.close()

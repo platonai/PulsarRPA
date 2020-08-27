@@ -12,8 +12,10 @@ import org.h2.engine.Session
 import org.h2.engine.SessionInterface
 import org.h2.message.DbException
 import org.slf4j.LoggerFactory
+import java.text.MessageFormat
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The SQLContext fuses h2database and pulsar big data engine
@@ -31,15 +33,19 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class SQLContext(val pulsarContext: AbstractPulsarContext): AutoCloseable {
 
+    companion object {
+        val instanceSequencer = AtomicInteger()
+    }
+
     private val log = LoggerFactory.getLogger(SQLContext::class.java)
 
     enum class Status { NOT_READY, INITIALIZING, RUNNING, CLOSING, CLOSED }
 
+    val id = instanceSequencer.incrementAndGet()
+
     var status: Status = Status.NOT_READY
 
     val unmodifiedConfig: ImmutableConfig
-
-    private val backgroundSession = pulsarContext.createSession()
 
     /**
      * The sessions container
@@ -47,15 +53,7 @@ class SQLContext(val pulsarContext: AbstractPulsarContext): AutoCloseable {
      */
     private val sessions = ConcurrentHashMap<DbSession, QuerySession>()
 
-    private val backgroundTaskBatchSize: Int
-
-//    private val backgroundThread: Thread
-
-    private var lazyTaskRound = 0
-
     private val loading = AtomicBoolean()
-
-    private var handlePeriodicalFetchTasks: Boolean
 
     private val closed = AtomicBoolean()
 
@@ -67,25 +65,18 @@ class SQLContext(val pulsarContext: AbstractPulsarContext): AutoCloseable {
         status = Status.INITIALIZING
 
         unmodifiedConfig = pulsarContext.unmodifiedConfig
-        handlePeriodicalFetchTasks = unmodifiedConfig.getBoolean(QE_HANDLE_PERIODICAL_FETCH_TASKS, false)
-
-        backgroundSession.disableCache()
-        backgroundTaskBatchSize = unmodifiedConfig.getUint(FETCH_CONCURRENCY, 20)
-
-        // TODO: use ScheduledExecutorService
-//        backgroundThread = Thread { runBackgroundTasks() }
-//        backgroundThread.isDaemon = true
-//        backgroundThread.start()
 
         status = Status.RUNNING
 
-        log.info("SQLContext is created | {}", this.hashCode())
+        log.info("SQLContext is created | #$id")
     }
 
     fun createSession(dbSession: DbSession): QuerySession {
         ensureRunning()
-        return sessions.computeIfAbsent(dbSession) {
+        val session = sessions.computeIfAbsent(dbSession) {
             QuerySession(pulsarContext, dbSession, SessionConfig(dbSession, unmodifiedConfig)) }
+        log.info("Session is created | #{}/{}", session.id, id)
+        return session
     }
 
     fun sessionCount(): Int {
@@ -102,8 +93,10 @@ class SQLContext(val pulsarContext: AbstractPulsarContext): AutoCloseable {
         ensureRunning()
         val session = sessions[DbSession(sessionId, Any())]
         if (session == null) {
-            log.warn("Session is closed | #{} {}", sessionId, this)
-            throw DbException.get(ErrorCode.OBJECT_CLOSED, "Session #$sessionId is closed")
+            val message = MessageFormat.format("Session is already closed | #{0}/{1}",
+                    sessionId, id)
+            log.warn(message)
+            throw DbException.get(ErrorCode.OBJECT_CLOSED, message)
         }
         return session
     }
@@ -112,107 +105,25 @@ class SQLContext(val pulsarContext: AbstractPulsarContext): AutoCloseable {
         ensureRunning()
         val key = DbSession(sessionId, Any())
         sessions.remove(key)?.close()
+        log.debug("Session is closed | #{}/{}", sessionId, id)
     }
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             status = Status.CLOSING
 
-            log.info("Closing SQLContext ...")
-
-//            backgroundThread.interrupt()
-//            backgroundThread.join()
-
             // database engine will close the sessions
             sessions.clear()
 
             status = Status.CLOSED
 
-            log.info("SQLContext is closed ...")
-        }
-    }
-
-    private fun runBackgroundTasks() {
-        // start after 30 seconds
-        sleepSeconds(1)
-
-        while (!closed.get()) {
-            if (handlePeriodicalFetchTasks) {
-                loadLazyTasks()
-                fetchSeeds()
-            }
-
-            sleepSeconds(5)
-        }
-    }
-
-    /**
-     * Get background tasks and run them
-     * TODO: should handle lazy tasks in a better place
-     */
-    private fun loadLazyTasks() {
-        ensureRunning()
-        if (loading.get()) {
-            return
-        }
-
-        for (mode in FetchMode.values()) {
-//            val urls = pulsarContext.lazyFetchTaskManager.takeLazyTasks(mode, backgroundTaskBatchSize).map { it.toString() }
-//            if (urls.isNotEmpty()) {
-//                loadAll(urls, backgroundTaskBatchSize, mode)
-//            }
-        }
-    }
-
-    /**
-     * Get periodical tasks and run them
-     */
-    private fun fetchSeeds() {
-        ensureRunning()
-        if (loading.get()) {
-            return
-        }
-
-        for (mode in FetchMode.values()) {
-//            val urls = pulsarContext.lazyFetchTaskManager.getSeeds(mode, 1000)
-//            if (urls.isNotEmpty()) {
-//                loadAll(urls, backgroundTaskBatchSize, mode)
-//            }
-        }
-    }
-
-    private fun loadAll(urls: Iterable<String>, batchSize: Int, mode: FetchMode) {
-        ensureRunning()
-        if (!urls.iterator().hasNext() || batchSize <= 0) {
-            log.debug("Not loading lazy tasks")
-            return
-        }
-
-        loading.set(true)
-
-        val options = LoadOptions.create().apply {
-            fetchMode = mode
-            background = true
-        }
-
-        // TODO: lower priority
-        urls.asSequence().chunked(batchSize).forEach { loadAll(it, options) }
-
-        loading.set(false)
-    }
-
-    private fun loadAll(urls: Collection<String>, loadOptions: LoadOptions) {
-        ensureRunning()
-        if (!closed.get()) {
-            ++lazyTaskRound
-            log.debug("Running {}th round for lazy tasks", lazyTaskRound)
-            backgroundSession.parallelLoadAll(urls, loadOptions)
+            log.info("SQLContext is closed | #$id")
         }
     }
 
     private fun ensureRunning() {
         if (!isActive) {
-            throw IllegalStateException("SQLContext is closed")
+            throw IllegalStateException("SQLContext is closed | #$id")
         }
     }
 }

@@ -9,7 +9,7 @@ import java.time.Duration
 open class WebDriverPoolMonitor(
         val driverPoolManager: WebDriverPoolManager,
         val conf: ImmutableConfig
-): ScheduledMonitor(Duration.ofMinutes(20), Duration.ofMinutes(5)) {
+): ScheduledMonitor(Duration.ofMinutes(20), Duration.ofSeconds(30)) {
     private val log = LoggerFactory.getLogger(WebDriverPoolMonitor::class.java)
     val isActive get() = AppContext.isActive
 

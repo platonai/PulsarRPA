@@ -5,7 +5,6 @@ import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Lists
 import org.slf4j.LoggerFactory
-import java.util.*
 
 /**
  * Created by vincent on 17-6-18.
@@ -16,47 +15,36 @@ import java.util.*
 class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     private val LOG = LoggerFactory.getLogger(WeakPageIndexer::class.java)
     private val homeUrl = homeUrl.toString()
+
     // TODO: temporary use only
     private val temporaryDeleteAllPage = true
 
-    fun home(): WebPage {
-        return home
-    }
+    fun home() = home
 
-    operator fun get(pageNo: Int): WebPage {
-        return getIndex(pageNo)
-    }
+    operator fun get(pageNo: Int) = getIndex(pageNo)
 
-    fun index(url: CharSequence) {
-        indexAll(1, mutableListOf(url))
-    }
+    fun index(url: CharSequence) = indexAll(1, mutableListOf(url))
 
-    fun indexAll(urls: Iterable<CharSequence>) {
-        indexAll(1, urls)
-    }
+    fun indexAll(urls: Iterable<CharSequence>) = indexAll(1, urls)
 
-    fun indexAll(pageNo: Int, urls: Iterable<CharSequence>) {
-        updateAll(pageNo, urls, false)
-    }
+    fun indexAll(pageNo: Int, urls: Iterable<CharSequence>) = updateAll(pageNo, urls, false)
 
-    fun getAll(pageNo: Int): Set<CharSequence> {
-        return get(pageNo).vividLinks.keys
-    }
+    fun getAll(pageNo: Int) = get(pageNo).vividLinks.keys
 
     /**
      * Return a copy of all urls in page N, and clear it's urls
      */
     @Synchronized
     fun takeN(pageNo: Int, n: Int): Set<CharSequence> {
-        var n = n
+        var n1 = n
         val page = get(pageNo)
-        val urls: MutableSet<CharSequence> = HashSet()
+        val urls: MutableSet<CharSequence> = mutableSetOf()
         val it: MutableIterator<Map.Entry<CharSequence, CharSequence>> = page.vividLinks.entries.iterator()
-        while (n-- > 0 && it.hasNext()) {
+        while (n1-- > 0 && it.hasNext()) {
             urls.add(it.next().key)
             it.remove()
         }
-        if (!urls.isEmpty()) {
+        if (urls.isNotEmpty()) {
             if (LOG.isDebugEnabled) {
                 LOG.debug("Taken {} urls from page {}", urls.size, page.url)
             }
@@ -67,29 +55,17 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
     }
 
     @Synchronized
-    fun takeAll(pageNo: Int): Set<CharSequence> {
-        return takeN(pageNo, Int.MAX_VALUE)
-    }
+    fun takeAll(pageNo: Int) = takeN(pageNo, Int.MAX_VALUE)
 
-    fun remove(url: String) {
-        remove(1, url)
-    }
+    fun remove(url: String) = remove(1, url)
 
-    fun removeAll(urls: Iterable<CharSequence>) {
-        removeAll(1, urls)
-    }
+    fun removeAll(urls: Iterable<CharSequence>) = removeAll(1, urls)
 
-    fun remove(pageNo: Int, url: CharSequence) {
-        updateAll(pageNo, arrayListOf(url), true)
-    }
+    fun remove(pageNo: Int, url: CharSequence) = updateAll(pageNo, arrayListOf(url), true)
 
-    fun removeAll(pageNo: Int, urls: Iterable<CharSequence>) {
-        updateAll(pageNo, urls, true)
-    }
+    fun removeAll(pageNo: Int, urls: Iterable<CharSequence>) = updateAll(pageNo, urls, true)
 
-    fun commit() {
-        webDb.flush()
-    }
+    fun commit() = webDb.flush()
 
     private fun update(pageNo: Int, newHyperLinks: HyperLink, remove: Boolean) {
         updateAll(pageNo, Lists.newArrayList<CharSequence>(newHyperLinks.url), remove)
@@ -131,9 +107,7 @@ class WeakPageIndexer(homeUrl: CharSequence, private val webDb: WebDb) {
             return home
         }
 
-    private fun getIndex(pageNo: Int): WebPage {
-        return getIndex(pageNo, "Web Page Index $pageNo")
-    }
+    private fun getIndex(pageNo: Int) = getIndex(pageNo, "Web Page Index $pageNo")
 
     @Synchronized
     private fun getIndex(pageNo: Int, pageTitle: String): WebPage {

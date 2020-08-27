@@ -91,8 +91,8 @@ open class ProxyPoolManager(
 
     companion object {
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
-        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.TMP_DIR, AppContext.USER_HOME)
-                .map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
+        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.USER_HOME,
+                AppContext.APP_HOME_DIR.toString(), AppContext.TMP_DIR).map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
 
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH

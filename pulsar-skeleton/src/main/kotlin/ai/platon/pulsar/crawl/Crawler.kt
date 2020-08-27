@@ -11,7 +11,6 @@ open class Crawler(
         val session: PulsarSession = PulsarContexts.createSession(),
         val autoClose: Boolean = true
 ): AutoCloseable {
-    val log = LoggerFactory.getLogger(Crawler::class.java)
     val closed = AtomicBoolean()
     val isActive get() = !closed.get() && AppContext.isActive
 

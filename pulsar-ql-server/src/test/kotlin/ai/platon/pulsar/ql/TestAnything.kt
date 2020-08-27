@@ -1,13 +1,12 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
+import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.addColumn
-import org.h2.tools.SimpleResultSet
+import ai.platon.pulsar.ql.h2.udfs.CommonFunctions
 import org.junit.Assert
 import org.junit.Test
 import java.sql.Types
@@ -50,7 +49,7 @@ class TestAnything {
 
     @Test
     fun testResultSetFormatter() {
-        val rs = SimpleResultSet()
+        val rs = ResultSets.newSimpleResultSet()
         rs.addColumn("A", Types.DOUBLE, 6, 4)
         rs.addColumn("B")
         val a = arrayOf(0.8056499951626754, 0.5259673975756397, 0.869188405723, 0.4140625)

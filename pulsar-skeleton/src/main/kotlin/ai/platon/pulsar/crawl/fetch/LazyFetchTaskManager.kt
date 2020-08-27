@@ -67,7 +67,7 @@ class LazyFetchTaskManager(
 
         // Urls with different fetch mode are indexed in different pages and the page number is just the enum ordinal
         val pageNo = LAZY_FETCH_URLS_PAGE_BASE + mode.ordinal
-        urlTrackerIndexer.indexAll(pageNo, CollectionUtils.collect(urls) { url -> url as CharSequence })
+        urlTrackerIndexer.indexAll(pageNo, urls)
         webDb.flush()
     }
 
@@ -101,7 +101,7 @@ class LazyFetchTaskManager(
     }
 
     private fun commitLazyTasks() {
-        log.info("Commit urls: timeout: {} failed: {} dead: {}", timeoutUrls.size, failedUrls.size, deadUrls.size)
+        log.info("Commit urls, timeout: {} failed: {} dead: {}", timeoutUrls.size, failedUrls.size, deadUrls.size)
 
         // Trace failed tasks for further fetch as a background tasks
         timeoutUrls.takeIf { it.isNotEmpty() }?.let { urlTrackerIndexer.indexAll(TIMEOUT_URLS_PAGE, it) }

@@ -12,6 +12,7 @@ import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.types.ValueDom
 import org.apache.commons.math3.linear.RealVector
 import org.h2.api.ErrorCode
@@ -165,7 +166,7 @@ object Queries {
      * Get a result set, the result set contains just one column DOM
      */
     fun <E> toResultSet(colName: String, collection: Iterable<E>): ResultSet {
-        val rs = SimpleResultSet().apply { autoClose = false }
+        val rs = ResultSets.newSimpleResultSet()
         val colType = if (colName.equals("DOM", ignoreCase = true)) ValueDom.type else Value.STRING
         val sqlType = DataType.convertTypeToSQLType(colType)
         rs.addColumn(colName, sqlType, 0, 0)

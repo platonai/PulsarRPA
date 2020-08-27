@@ -45,42 +45,42 @@ abstract class AbstractPulsarContext(
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
-    open val unmodifiedConfig: ImmutableConfig get() = getBean()
+    open val unmodifiedConfig: ImmutableConfig by lazy { getBean() }
 
     /**
      * Url normalizers
      * */
-    open val urlNormalizers: UrlNormalizers get() = getBean()
+    open val urlNormalizers: UrlNormalizers by lazy { getBean() }
 
     /**
      * The web db
      * */
-    open val webDb: WebDb get() = getBean()
+    open val webDb: WebDb by lazy { getBean() }
 
     /**
      * The inject component
      * */
-    open val injectComponent: InjectComponent get() = getBean()
+    open val injectComponent: InjectComponent by lazy { getBean() }
 
     /**
      * The fetch component
      * */
-    open val fetchComponent: BatchFetchComponent get() = getBean()
+    open val fetchComponent: BatchFetchComponent by lazy { getBean() }
 
     /**
      * The update component
      * */
-    open val updateComponent: UpdateComponent get() = getBean()
+    open val updateComponent: UpdateComponent by lazy { getBean() }
 
     /**
      * The load component
      * */
-    open val loadComponent: LoadComponent get() = getBean()
+    open val loadComponent: LoadComponent by lazy { getBean() }
 
     /**
      * The global cache manager
      * */
-    open val globalCache: GlobalCache get() = getBean()
+    open val globalCache: GlobalCache by lazy { getBean() }
 
     /**
      * The start time
@@ -282,13 +282,10 @@ abstract class AbstractPulsarContext(
     /**
      * Parse the WebPage using Jsoup
      */
-    override fun parse(page: WebPage): FeaturedDocument {
-        return FeaturedDocument.NIL.takeIf { !isActive }?:JsoupParser(page, unmodifiedConfig).parse()
-    }
+    override fun parse(page: WebPage) = JsoupParser(page, unmodifiedConfig).parse()
 
-    override fun parse(page: WebPage, mutableConfig: MutableConfig): FeaturedDocument {
-        return FeaturedDocument.NIL.takeIf { !isActive }?:JsoupParser(page, mutableConfig).parse()
-    }
+    override fun parse(page: WebPage, mutableConfig: MutableConfig) =
+            JsoupParser(page, mutableConfig).parse()
 
     override fun persist(page: WebPage) {
         activeWebDb?.put(page, false)
@@ -360,7 +357,7 @@ abstract class AbstractPulsarContext(
                 it.runCatching { it.close() }.onFailure { it.printStackTrace() }
             }
 
-            (applicationContext as? AutoCloseable)?.close()
+//            (applicationContext as? AutoCloseable)?.close()
         }
     }
 

@@ -7,6 +7,7 @@ import ai.platon.pulsar.dom.nodes.node.ext.getFeature
 import ai.platon.pulsar.dom.select.getAnchors
 import ai.platon.pulsar.dom.select.select
 import ai.platon.pulsar.dom.select.select2
+import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
@@ -371,8 +372,7 @@ object DomFunctionTables {
     }
 
     private fun createFeatureResultSet(): SimpleResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = ResultSets.newSimpleResultSet()
 
         rs.addColumn("DOM", DataType.convertTypeToSQLType(ValueDom.type), 0, 0)
         for (name in FeatureRegistry.featureNames) {

@@ -7,6 +7,7 @@ import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.ql.QuerySession
+import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -314,7 +315,7 @@ object CommonFunctions {
     @UDFunction(description = "Get the initial configuration properties of the process")
     @JvmStatic
     fun volatileConfig(): SimpleResultSet {
-        val rs = SimpleResultSet()
+        val rs = ResultSets.newSimpleResultSet()
 
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
@@ -329,7 +330,7 @@ object CommonFunctions {
     @UDFunction(description = "Get the configuration properties of the calling session")
     @JvmStatic
     fun sessionConfig(@H2Context conn: Connection): SimpleResultSet {
-        val rs = SimpleResultSet()
+        val rs = ResultSets.newSimpleResultSet()
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
 
@@ -344,7 +345,7 @@ object CommonFunctions {
     @UDFunction(description = "Get the system info")
     @JvmStatic
     fun sysInfo(@H2Context conn: Connection): SimpleResultSet {
-        val rs = SimpleResultSet()
+        val rs = ResultSets.newSimpleResultSet()
         rs.addColumn("NAME")
         rs.addColumn("VALUE")
 

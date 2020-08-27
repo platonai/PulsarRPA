@@ -33,6 +33,10 @@ interface ParseFilter : Parameterized, AutoCloseable {
     var parent: ParseFilter?
     val children: List<ParseFilter>
 
+    val parentId get() = parent?.id?:0
+    val isRoot get() = parent == null
+    val isLeaf get() = children.isEmpty()
+
     /**
      * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
      */
