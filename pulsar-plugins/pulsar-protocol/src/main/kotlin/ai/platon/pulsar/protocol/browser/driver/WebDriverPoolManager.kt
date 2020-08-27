@@ -57,15 +57,15 @@ open class WebDriverPoolManager(
     val numReset by lazy { AppMetrics.meter(this, "numReset") }
     val numTimeout by lazy { AppMetrics.meter(this, "numTimeout") }
     val gauges = mapOf(
-            "waitingDrivers" to Gauge<Int> { numWaiting },
-            "freeDrivers" to Gauge<Int> { numFreeDrivers },
-            "workingDrivers" to Gauge<Int> { numWorkingDrivers },
-            "onlineDrivers" to Gauge<Int> { numOnline },
-            "pTasks" to Gauge<Int> { numPreemptiveTasks.get() },
-            "runningPTasks" to Gauge<Int> { numRunningPreemptiveTasks.get() },
-            "pendingNTasks" to Gauge<Int> { numPendingNormalTasks.get() },
-            "runningNTasks" to Gauge<Int> { numRunningNormalTasks.get() },
-            "idleTime" to Gauge<String> { idleTime.readable() }
+            "waitingDrivers" to Gauge { numWaiting },
+            "freeDrivers" to Gauge { numFreeDrivers },
+            "workingDrivers" to Gauge { numWorkingDrivers },
+            "onlineDrivers" to Gauge { numOnline },
+            "pTasks" to Gauge { numPreemptiveTasks.get() },
+            "runningPTasks" to Gauge { numRunningPreemptiveTasks.get() },
+            "pendingNTasks" to Gauge { numPendingNormalTasks.get() },
+            "runningNTasks" to Gauge { numRunningNormalTasks.get() },
+            "idleTime" to Gauge { idleTime.readable() }
     ).takeUnless { suppressMetrics }
 
     val numWaiting get() = driverPools.values.sumBy { it.numWaiting.get() }

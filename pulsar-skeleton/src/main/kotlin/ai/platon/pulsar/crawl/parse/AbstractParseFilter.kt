@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * implement this extension point are run sequentially on the parse.
  */
 abstract class AbstractParseFilter(
-        override val id: Int = instanceSequencer.incrementAndGet(),
+        final override val id: Int = instanceSequencer.incrementAndGet(),
         override var parent: ParseFilter? = null
 ): ParseFilter {
     companion object {

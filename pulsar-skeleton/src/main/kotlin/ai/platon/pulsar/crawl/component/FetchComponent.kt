@@ -108,7 +108,7 @@ open class FetchComponent(
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
-            log.warn("No protocol found | {}", page.url)
+            log.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
         }
     }

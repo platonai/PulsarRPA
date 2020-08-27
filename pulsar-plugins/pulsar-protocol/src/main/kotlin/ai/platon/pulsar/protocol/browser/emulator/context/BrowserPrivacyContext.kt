@@ -14,6 +14,7 @@ import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContextId
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import org.slf4j.LoggerFactory
 import java.time.Instant
 
 /**
@@ -26,7 +27,7 @@ open class BrowserPrivacyContext(
         conf: ImmutableConfig,
         id: PrivacyContextId = PrivacyContextId(generateBaseDir())
 ): PrivacyContext(id, conf) {
-
+    private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
     private val browserInstanceId: BrowserInstanceId
     private val driverContext: WebDriverContext
     private var proxyContext: ProxyContext? = null
@@ -63,7 +64,8 @@ open class BrowserPrivacyContext(
                 display, if (isIdle) "(idle)" else "", if (isLeaked) "(leaked)" else "", elapsedTime.readable(),
                 numSuccesses.count, String.format("%.2f", numSuccesses.meanRate),
                 numSmallPages.count, String.format("%.1f%%", 100 * smallPageRate),
-                Strings.readableBytes(fetchMetrics?.systemNetworkBytesRecv?:0), Strings.readableBytes(fetchMetrics?.networkBytesRecvPerSecond?:0),
+                Strings.readableBytes(fetchMetrics?.systemNetworkBytesRecv?:0),
+                Strings.readableBytes(fetchMetrics?.networkBytesRecvPerSecond?:0),
                 numTasks.count, numFinished.count,
                 proxyContext?.proxyEntry
         )

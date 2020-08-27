@@ -10,7 +10,6 @@ import ai.platon.pulsar.ql.h2.H2Db
 import org.h2.store.fs.FileUtils
 import org.h2.tools.DeleteDbFiles
 import org.h2.tools.Server
-import org.h2.tools.SimpleResultSet
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.slf4j.LoggerFactory
@@ -321,6 +320,6 @@ abstract class TestBase {
             e.printStackTrace()
         }
 
-        return SimpleResultSet()
+        return ResultSets.newResultSet()
     }
 }

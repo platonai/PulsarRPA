@@ -1,13 +1,12 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.ql.ResultSets
+import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import org.h2.engine.Session
-import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.h2.addColumn
-import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
@@ -27,8 +26,7 @@ object CommonFunctionTables {
             "can be configured by adding load options to the url parameter")
     @JvmStatic
     fun loadOptions(): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = ResultSets.newSimpleResultSet()
         rs.addColumn("OPTION")
         rs.addColumn("TYPE")
         rs.addColumn("DEFAULT")
@@ -42,8 +40,7 @@ object CommonFunctionTables {
     @UDFunction(deterministic = true, description = "Show all X-SQL functions")
     @JvmStatic
     fun xsqlHelp(@H2Context conn: Connection): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = ResultSets.newSimpleResultSet()
 
         rs.addColumn("NAMESPACE")
         rs.addColumn("XSQL FUNCTION")
@@ -63,8 +60,7 @@ object CommonFunctionTables {
             description = "Create a ResultSet from a list of values, the values should have format kvkv ... kv")
     @JvmStatic
     fun map(vararg kvs: Value): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = ResultSets.newSimpleResultSet()
         rs.addColumn("KEY")
         rs.addColumn("VALUE")
 
@@ -84,17 +80,14 @@ object CommonFunctionTables {
     @UDFunction(deterministic = true, description = "Create an empty ResultSet")
     @JvmStatic
     fun explode(): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
-        return rs
+        return ResultSets.newSimpleResultSet()
     }
 
     @UDFunction(deterministic = true, description = "Create a ResultSet from an array")
     @JvmStatic
     @JvmOverloads
     fun explode(@H2Context conn: Connection, values: ValueArray, col: String = "COL"): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = ResultSets.newSimpleResultSet()
 
         if (values.list.isEmpty()) {
             return rs
@@ -116,17 +109,14 @@ object CommonFunctionTables {
     @UDFunction(deterministic = true, description = "Create an empty ResultSet")
     @JvmStatic
     fun posexplode(): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
-        return rs
+        return ResultSets.newSimpleResultSet()
     }
 
     @UDFunction(deterministic = true, description = "Create a ResultSet from an array with the position in the array")
     @JvmStatic
     @JvmOverloads
     fun posexplode(values: ValueArray, col: String = "COL"): ResultSet {
-        val rs = SimpleResultSet()
-        rs.autoClose = false
+        val rs = ResultSets.newSimpleResultSet()
 
         if (values.list.isEmpty()) {
             return rs

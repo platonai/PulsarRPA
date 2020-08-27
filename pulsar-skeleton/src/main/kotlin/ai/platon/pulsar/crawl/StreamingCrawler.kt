@@ -11,6 +11,7 @@ import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.RandomStringUtils
+import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.io.IOException
 import java.nio.file.Files
@@ -46,16 +47,17 @@ open class StreamingCrawler(
 
         init {
             mapOf(
-                    "availableMemory" to Gauge<String> { Strings.readableBytes(availableMemory) },
-                    "globalTasks" to Gauge<Int> { globalTasks.get() },
-                    "globalRunningTasks" to Gauge<Int> { globalRunningTasks.get() },
-                    "globalFinishedTasks" to Gauge<Int> { globalFinishedTasks.get() },
-                    "globalTimeout" to Gauge<Int> { globalTimeout.get() },
-                    "globalRetries" to Gauge<Int> { globalRetries.get() }
+                    "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
+                    "globalTasks" to Gauge { globalTasks.get() },
+                    "globalRunningTasks" to Gauge { globalRunningTasks.get() },
+                    "globalFinishedTasks" to Gauge { globalFinishedTasks.get() },
+                    "globalTimeout" to Gauge { globalTimeout.get() },
+                    "globalRetries" to Gauge { globalRetries.get() }
             ).forEach { AppMetrics.register(this, it.key, it.value) }
         }
     }
 
+    private val log = LoggerFactory.getLogger(StreamingCrawler::class.java)
     private val conf = session.sessionConfig
     private val numPrivacyContexts get() = conf.getInt(PRIVACY_CONTEXT_NUMBER, 2)
     private val numMaxActiveTabs get() = conf.getInt(BROWSER_MAX_ACTIVE_TABS, AppContext.NCPU)
@@ -81,8 +83,8 @@ open class StreamingCrawler(
         generateFinishCommand()
 
         mapOf(
-                "idleTime" to Gauge<String> { idleTime.readable() },
-                "numTasks" to Gauge<Int> { numTasks.get() }
+                "idleTime" to Gauge { idleTime.readable() },
+                "numTasks" to Gauge { numTasks.get() }
         ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
     }
 

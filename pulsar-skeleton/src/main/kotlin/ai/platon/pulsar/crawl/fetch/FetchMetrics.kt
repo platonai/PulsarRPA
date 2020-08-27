@@ -77,7 +77,8 @@ class FetchMetrics(
     val pageSmallTexts = AppMetrics.histogram(this, "pageSmallTexts")
     val pageHeights = AppMetrics.histogram(this, "pageHeights")
 
-    val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }.toLong()
+    val realTimeSystemNetworkBytesRecv get() = systemInfo.hardware.networkIFs.sumBy { it.bytesRecv.toInt() }
+            .toLong().coerceAtLeast(0)
     /**
      * The total all bytes received by the hardware at the application startup
      * */
@@ -106,11 +107,10 @@ class FetchMetrics(
 
     init {
         Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
-        systemNetworkBytesRecv = initSystemNetworkBytesRecv
 
         mapOf(
-                "runningChromeProcesses" to Gauge<Int> { runningChromeProcesses },
-                "usedMemory" to Gauge<String> { Strings.readableBytes(usedMemory) }
+                "runningChromeProcesses" to Gauge { runningChromeProcesses },
+                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
         ).forEach { AppMetrics.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)

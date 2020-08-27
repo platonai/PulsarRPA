@@ -43,17 +43,19 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
     private val closed = AtomicBoolean()
 
     init {
-        val results = ResourceLoader.readAllLines("protocol-plugins.txt")
-                .map { it.trim { it <= ' ' } }
-                .filter { !it.startsWith("#") }
-                .map { it.split("\\s+".toRegex()).toTypedArray() }
+        ResourceLoader.readAllLines("protocol-plugins.txt")
+                .asSequence()
+                .map { it.trim() }
+                .filterNot { it.startsWith("#") }
+                .map { it.split("\\s+".toRegex()) }
                 .filter { it.size >= 2 }
                 .map { it[0] to getInstance(it) }
                 .filter { it.second != null }
-                .onEach { it.second!!.conf = immutableConfig }
                 .associate { it.first to it.second!! }
-        protocols.putAll(results)
-        log.info(protocols.keys.joinToString(", ", "Supported protocols: ", ""))
+                .onEach { it.value.conf = immutableConfig }
+                .toMap(protocols)
+        protocols.keys.joinToString(", ", "Supported protocols: ", "")
+                .also { log.info(it) }
     }
 
     /**
@@ -90,11 +92,11 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
         return getProtocol(mode.name.toLowerCase() + "://")
     }
 
-    private fun getInstance(config: Array<String>): Protocol? {
+    private fun getInstance(config: List<String>): Protocol? {
         try {
             // config[0] is the protocol name, config[1] is the class name, and the rest are properties
             val className = config[1]
-            return Class.forName(className).newInstance() as Protocol
+            return Class.forName(className).constructors.first().newInstance() as Protocol
         } catch (e: ClassNotFoundException) {
             log.error(Strings.stringifyException(e))
         } catch (e: InstantiationException) {

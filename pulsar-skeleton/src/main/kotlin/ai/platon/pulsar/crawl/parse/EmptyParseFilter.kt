@@ -18,9 +18,13 @@
  */
 package ai.platon.pulsar.crawl.parse
 
-open class ParseException : Exception {
-    constructor() : super() {}
-    constructor(message: String) : super(message) {}
-    constructor(message: String, cause: Throwable) : super(message, cause) {}
-    constructor(cause: Throwable) : super(cause) {}
-}
+import ai.platon.pulsar.common.config.Parameterized
+import ai.platon.pulsar.crawl.parse.html.ParseContext
+import java.util.concurrent.atomic.AtomicInteger
+
+/**
+ * Extension point for DOM-based parsers. Permits one to add additional metadata
+ * to parses provided by the html or tika plugins. All plugins found which
+ * implement this extension point are run sequentially on the parse.
+ */
+class EmptyParseFilter : AbstractParseFilter()

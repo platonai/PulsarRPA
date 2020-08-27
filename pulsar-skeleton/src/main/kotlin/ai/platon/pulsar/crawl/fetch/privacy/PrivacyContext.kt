@@ -83,7 +83,7 @@ abstract class PrivacyContext(
         }
     }
 
-    val log = LoggerFactory.getLogger(PrivacyContext::class.java)
+    private val log = LoggerFactory.getLogger(PrivacyContext::class.java)
     val sequence = instanceSequencer.incrementAndGet()
     val display get() = id.display
 

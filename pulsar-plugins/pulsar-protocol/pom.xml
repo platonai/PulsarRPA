@@ -28,7 +28,7 @@
             <artifactId>pulsar-skeleton</artifactId>
         </dependency>
 
-        <!-- SSL support, required by  -->
+        <!-- SSL support, required by httpclient(deprecated) -->
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
