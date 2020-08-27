@@ -21,28 +21,6 @@
     <artifactId>pulsar-app</artifactId>
     <name>Pulsar App</name>
 
-    <build>
-        <plugins>
-            <!-- H2 runtime, scripts need local libs -->
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <inherited>true</inherited>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>

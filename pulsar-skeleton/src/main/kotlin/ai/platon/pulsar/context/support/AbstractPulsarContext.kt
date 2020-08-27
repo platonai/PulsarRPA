@@ -156,7 +156,8 @@ abstract class AbstractPulsarContext(
         return NormUrl(normalizedUrl, initOptions(options2, toItemOption))
     }
 
-    override fun normalizeOrNull(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl? {
+    override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
+        if (url == null) return null
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 

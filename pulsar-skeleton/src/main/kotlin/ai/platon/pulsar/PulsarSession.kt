@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.nodes.node.ext.isAnchor
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -31,7 +32,7 @@ open class PulsarSession(
          * */
         val context: AbstractPulsarContext,
         /**
-         * The session scope volatile volatileConfig, every item is supposed to be changed at any time and any place
+         * The session scope volatile config, every setting is supposed to be changed at any time and any place
          * */
         val sessionConfig: VolatileConfig,
         /**
@@ -65,7 +66,7 @@ open class PulsarSession(
     fun normalize(url: String, options: LoadOptions = opts(), toItemOption: Boolean = false) =
             context.normalize(url, initOptions(options), toItemOption)
 
-    fun normalizeOrNull(url: String, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+    fun normalizeOrNull(url: String?, options: LoadOptions = opts(), toItemOption: Boolean = false) =
             context.normalizeOrNull(url, initOptions(options), toItemOption)
 
     fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
@@ -192,11 +193,12 @@ open class PulsarSession(
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = opts()): Collection<WebPage> {
         val outlinkSelector = appendSelectorIfMissing(options.outlinkSelector, "a")
+
         val normUrl = normalize(portalUrl, options)
 
         val opts = normUrl.options
         val links = loadDocument(normUrl).select(outlinkSelector) {
-            getLink(it, !opts.noNorm, opts.ignoreUrlQuery)?.substringBeforeLast("#")
+            parseLink(it, !opts.noNorm, opts.ignoreUrlQuery)?.substringBeforeLast("#")
         }.mapNotNullTo(mutableSetOf()) { it }.take(opts.topLinks)
 
         return loadAll(links, normUrl.options.createItemOptions())
@@ -370,10 +372,13 @@ open class PulsarSession(
         return documentCache.computeIfAbsent(page.url) { context.parse(page) }
     }
 
-    private fun getLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
-        var link: String? = ele.attr("abs:href").takeIf { it.startsWith("http") }?:return null
-        link = link?.takeIf { normalize }?.let { runCatching { normalize(it).spec }.getOrNull() }
-        return link?.takeIf { ignoreQuery }?.let { Urls.getUrlWithoutParameters(it) }
+    private fun parseLink(ele: Element, normalize: Boolean = false, ignoreQuery: Boolean = false): String? {
+        var link = ele.attr("abs:href").takeIf { it.startsWith("http") } ?: return null
+        if (normalize) {
+            link = normalizeOrNull(link)?.spec ?: return null
+        }
+
+        return link.takeUnless { ignoreQuery } ?: Urls.getUrlWithoutParameters(link)
     }
 
     private fun initOptions(options: LoadOptions): LoadOptions {

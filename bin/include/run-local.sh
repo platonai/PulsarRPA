@@ -5,7 +5,6 @@ if [[ $PULSAR_RUNTIME_MODE == "DEVELOPMENT" ]]; then
   # development mode
   __dev_mode_enable_module "$MODULE"
 elif [[ $PULSAR_RUNTIME_MODE == "ASSEMBLY" ]]; then
-
   for f in "$PULSAR_HOME"/lib/*.jar; do
     CLASSPATH=${CLASSPATH}:$f;
   done
@@ -14,7 +13,6 @@ elif [[ $PULSAR_RUNTIME_MODE == "ASSEMBLY" ]]; then
     CLASSPATH=${CLASSPATH}:$f;
   done
 
-  # binary mode
   for f in "$PULSAR_HOME"/*.jar; do
     CLASSPATH=${CLASSPATH}:$f;
   done

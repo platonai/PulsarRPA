@@ -6,7 +6,7 @@ import ai.platon.pulsar.examples.common.Crawler
 
 class AmazonCrawler(context: PulsarContext): Crawler(context) {
     private val url = "https://www.amazon.com/"
-    private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol \"a[href~=/dp/]\""
+    private val loadOutPagesArgs = "-ic -i 1s -ii 7d -ol a[href~=/dp/]"
 
     fun load() {
         // TODO: click event support is required
