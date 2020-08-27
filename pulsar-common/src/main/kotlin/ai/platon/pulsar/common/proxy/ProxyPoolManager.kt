@@ -21,6 +21,7 @@ open class ProxyPoolManager(
         val proxyPool: ProxyPool,
         private val conf: ImmutableConfig
 ): AutoCloseable {
+    // Set the active proxy idle, for test purpose
     private val isForceIdle get() = FileCommand.check(AppConstants.CMD_PROXY_FORCE_IDLE, 15)
 
     var lastActiveTime = Instant.now()
@@ -72,9 +73,6 @@ open class ProxyPoolManager(
             numRunningTasks.decrementAndGet()
         }
     }
-
-    @Throws(NoProxyException::class)
-    open fun waitUntilOnline(): Boolean = false
 
     /**
      * Take off the proxy if it is active proxy, and the monitor will choose the next proxy to connect

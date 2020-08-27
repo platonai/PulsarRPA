@@ -57,9 +57,9 @@ charts immediately. Everyone in your company can ask questions and learn from WE
 
 # Build & Run
 ## Check & install dependencies
-    
+
     bin/tools/install-depends.sh
-    
+
 ## Install mongodb
 MongoDB is optional but is recommended. You can skip this step, in such case, all data will lose after pulsar shutdown.
 Ubuntu/Debian:
@@ -67,10 +67,10 @@ Ubuntu/Debian:
     sudo apt install mongodb
 
 ## Build from source
-    
+
     git clone https://github.com/platonai/pulsar.git
     cd pulsar && mvn
-    
+
 ## Run the native api demo
 
     bin/pulsar example ManualKt

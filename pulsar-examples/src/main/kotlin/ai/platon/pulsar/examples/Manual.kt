@@ -1,8 +1,7 @@
 package ai.platon.pulsar.examples
 
 import ai.platon.pulsar.PulsarSession
-import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.context.withContext
+import ai.platon.pulsar.context.PulsarContexts
 
 class Manual(val session: PulsarSession) {
     val url = "https://list.jd.com/list.html?cat=652,12345,12349"
@@ -55,7 +54,7 @@ class Manual(val session: PulsarSession) {
 
         println("Scrape:")
         println(scrape().joinToString("\n") { it[".p-price"] + " | " + it[".p-name em"] })
-        println("Scrape 2:")
+        println("Scrape - 2:")
         println(scrape2().joinToString("\n") { it["price"] + " | " + it["name"] })
 
         println("Scrape out pages:")
@@ -65,6 +64,4 @@ class Manual(val session: PulsarSession) {
     }
 }
 
-fun main() = withContext {
-    Manual(it.createSession()).runAll()
-}
+fun main() = Manual(PulsarContexts.createSession()).runAll()
