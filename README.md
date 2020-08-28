@@ -7,7 +7,6 @@ crawling, web scraping, data mining, BI, etc.
 [Chinese](README.zh.md)
 
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
-![product-screenshot](docs/images/pulsar-product-screenshot-2.png)
 
 # Features
 - X-SQL: eXtended SQL to manage web data: crawling, web scraping, data mining, BI, etc.
@@ -37,9 +36,12 @@ Crawl out pages from a portal and scrape each:
         dom_first_text(dom, '#comment-count .count') as comments,
         dom_first_text(dom, '#summary-service') as logistics,
         dom_base_uri(dom) as baseuri
-    from load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
-    where dom_first_number(dom, '.p-price .price', 0.00) > 0
-    order by dom_first_number(dom, '.p-price .price', 0.00);
+    from
+        load_out_pages('https://list.jd.com/list.html?cat=652,12345,12349 -i 1s -ii 100d', 'a[href~=item]', 1, 100)
+    where
+        dom_first_number(dom, '.p-price .price', 0.00) > 0
+    order by
+        dom_first_number(dom, '.p-price .price', 0.00);
 
 The SQL above visits a portal page in jd.com, downloads detail pages and then scrape data from them.
 
@@ -48,7 +50,43 @@ You can clone a copy of Pulsar code and run the SQLs yourself, or run them from 
 Check [sql-history.sql](sql-history.sql) to see more example SQLs. All SQL functions can be found under [ai.platon.pulsar.ql.h2.udfs](pulsar-ql-server/src/main/kotlin/ai/platon/pulsar/ql/h2/udfs).
 
 ## Use pulsar as a library
-See [Tutorials](https://github.com/platonai/pulsar-tutorials).
+Scrape out pages from a portal url using native api:
+Add maven dependency to your project:
+
+    <dependency>
+        <groupId>ai.platon.pulsar</groupId>
+        <artifactId>pulsar-protocol</artifactId>
+        <version>1.5.7-SNAPSHOT</version>
+    </dependency>
+
+And then scrape web pages using simple native api:
+
+    val url = "https://list.jd.com/list.html?cat=652,12345,12349"
+
+    val session = PulsarContexts.createSession()
+    session.scrapeOutPages(url,
+                "-expires 1d -itemExpires 7d -outLink a[href~=item]",
+                ".product-intro",
+                listOf(".sku-name", ".p-price"))
+
+Scrape out pages from a portal url using x-sql:
+Add maven dependency to your project:
+
+    <dependency>
+        <groupId>ai.platon.pulsar</groupId>
+        <artifactId>pulsar-ql-server</artifactId>
+        <version>1.5.7-SNAPSHOT</version>
+    </dependency>
+
+And then scrape web pages using:
+
+    select
+        dom_first_text(dom, '.sku-name') as name,
+        dom_first_text(dom, '.p-price') as price
+    from
+        load_out_pages('$url -i 1d -ii 7d', 'a[href~=item]')
+
+Check out [Tutorials](https://github.com/platonai/pulsar-tutorials) for details.
 
 ## Use pulsar as an X-SQL server
 Once pulsar runs in X-SQL server mode, the web can be used just like the normal database.
@@ -79,6 +117,12 @@ Ubuntu/Debian:
 
     bin/pulsar
 
+## Use sql console
+
+    bin/pulsar sql
+    
+Now you can execute any x-sql using the command line. 
+    
 ## Use web console
 Open web console [http://localhost:8082](http://localhost:8082) using your favourite browser now, enjoy playing with X-SQL.
 
@@ -93,5 +137,5 @@ from the web.
 
 # Enterprise Edition:
 
-Pulsar Enterprise Edition supports Auto Web Mining: advanced machine learning, no rules or training required, 
+Pulsar Enterprise Edition supports Auto Web Mining: advanced machine learning, no rules or training required,
 turn web sites into tables automatically. Here are some examples: [Auto Web Mining Examples](http://bi.platonic.fun/)
