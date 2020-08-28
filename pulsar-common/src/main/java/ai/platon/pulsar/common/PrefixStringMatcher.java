@@ -23,6 +23,9 @@ import java.util.Iterator;
 /**
  * A class for efficiently matching <code>String</code>s against a set of
  * prefixes.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class PrefixStringMatcher extends TrieStringMatcher {
 
@@ -30,6 +33,8 @@ public class PrefixStringMatcher extends TrieStringMatcher {
      * Creates a new <code>PrefixStringMatcher</code> which will match
      * <code>String</code>s with any prefix in the supplied array. Zero-length
      * <code>Strings</code> are ignored.
+     *
+     * @param prefixes an array of {@link java.lang.String} objects.
      */
     public PrefixStringMatcher(String[] prefixes) {
         super();
@@ -42,9 +47,10 @@ public class PrefixStringMatcher extends TrieStringMatcher {
      * <code>String</code>s with any prefix in the supplied
      * <code>Collection</code>.
      *
-     * @throws ClassCastException
+     * @throws java.lang.ClassCastException
      *           if any <code>Object</code>s in the collection are not
      *           <code>String</code>s
+     * @param prefixes a {@link java.util.Collection} object.
      */
     public PrefixStringMatcher(Collection<String> prefixes) {
         super();
@@ -53,6 +59,11 @@ public class PrefixStringMatcher extends TrieStringMatcher {
             addPatternForward(iter.next());
     }
 
+    /**
+     * <p>main.</p>
+     *
+     * @param argv an array of {@link java.lang.String} objects.
+     */
     public static final void main(String[] argv) {
         PrefixStringMatcher matcher = new PrefixStringMatcher(new String[]{
                 "abcd", "abc", "aac", "baz", "foo", "foobar"});
@@ -69,6 +80,8 @@ public class PrefixStringMatcher extends TrieStringMatcher {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns true if the given <code>String</code> is matched by a prefix in the
      * trie
      */
@@ -85,6 +98,8 @@ public class PrefixStringMatcher extends TrieStringMatcher {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns the shortest prefix of <code>input<code> that is matched,
      * or <code>null<code> if no match exists.
      */
@@ -101,6 +116,8 @@ public class PrefixStringMatcher extends TrieStringMatcher {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns the longest prefix of <code>input<code> that is matched,
      * or <code>null<code> if no match exists.
      */

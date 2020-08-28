@@ -30,6 +30,9 @@ import java.util.zip.GZIPOutputStream;
 
 /**
  * A collection of utility methods for working on GZIPed data.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class GZIPUtils {
 
@@ -41,6 +44,9 @@ public class GZIPUtils {
      * Returns an gunzipped copy of the input array. If the gzipped input has been
      * truncated or corrupted, a best-effort attempt is made to unzip as much as
      * possible. If no data can be extracted <code>null</code> is returned.
+     *
+     * @param in an array of {@link byte} objects.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] unzipBestEffort(byte[] in) {
         return unzipBestEffort(in, Integer.MAX_VALUE);
@@ -51,6 +57,10 @@ public class GZIPUtils {
      * <code>sizeLimit</code> bytes, if necessary. If the gzipped input has been
      * truncated or corrupted, a best-effort attempt is made to unzip as much as
      * possible. If no data can be extracted <code>null</code> is returned.
+     *
+     * @param in an array of {@link byte} objects.
+     * @param sizeLimit a int.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] unzipBestEffort(byte[] in, int sizeLimit) {
         try {
@@ -93,8 +103,10 @@ public class GZIPUtils {
     /**
      * Returns an gunzipped copy of the input array.
      *
-     * @throws IOException
+     * @throws java.io.IOException
      *           if the input cannot be properly decompressed
+     * @param in an array of {@link byte} objects.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] unzip(byte[] in) throws IOException {
         // decompress using GZIPInputStream
@@ -117,6 +129,9 @@ public class GZIPUtils {
 
     /**
      * Returns an gzipped copy of the input array.
+     *
+     * @param in an array of {@link byte} objects.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] zip(byte[] in) {
         try {

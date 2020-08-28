@@ -26,10 +26,14 @@ import java.io.Serializable;
  * From mahout
  *
  * @link {http://mahout.apache.org/docs/0.13.0/api/docs/mahout-math/index.html?org/apache/mahout/math/map/OpenIntDoubleHashMap.html}
+ * @author vincent
+ * @version $Id: $Id
  */
 public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
 
+    /** Constant <code>DEFAULT_VALUE=0.0</code> */
     public static final double DEFAULT_VALUE = 0.0;
+    /** Constant <code>EMPTY</code> */
     public static final OrderedIntDoubleMapping EMPTY = new OrderedIntDoubleMapping(0);
 
     private int[] indices;
@@ -40,56 +44,120 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
     // treated like any other value.
     private boolean noDefault = true;
 
+    /**
+     * <p>Constructor for OrderedIntDoubleMapping.</p>
+     *
+     * @param noDefault a boolean.
+     */
     public OrderedIntDoubleMapping(boolean noDefault) {
         this();
         this.noDefault = noDefault;
     }
 
+    /**
+     * <p>Constructor for OrderedIntDoubleMapping.</p>
+     */
     public OrderedIntDoubleMapping() {
         // no-arg constructor for deserializer
         this(11);
     }
 
+    /**
+     * <p>Constructor for OrderedIntDoubleMapping.</p>
+     *
+     * @param capacity a int.
+     */
     public OrderedIntDoubleMapping(int capacity) {
         indices = new int[capacity];
         values = new double[capacity];
         numMappings = 0;
     }
 
+    /**
+     * <p>Constructor for OrderedIntDoubleMapping.</p>
+     *
+     * @param indices an array of {@link int} objects.
+     * @param values an array of {@link double} objects.
+     * @param numMappings a int.
+     */
     public OrderedIntDoubleMapping(int[] indices, double[] values, int numMappings) {
         this.indices = indices;
         this.values = values;
         this.numMappings = numMappings;
     }
 
+    /**
+     * <p>isEmpty.</p>
+     *
+     * @return a boolean.
+     */
     public boolean isEmpty() {
         return this == EMPTY || (indices.length == 0 && values.length == 0 && numMappings == 0);
     }
 
+    /**
+     * <p>Getter for the field <code>indices</code>.</p>
+     *
+     * @return an array of {@link int} objects.
+     */
     public int[] getIndices() {
         return indices;
     }
 
+    /**
+     * <p>indexAt.</p>
+     *
+     * @param offset a int.
+     * @return a int.
+     */
     public int indexAt(int offset) {
         return indices[offset];
     }
 
+    /**
+     * <p>setIndexAt.</p>
+     *
+     * @param offset a int.
+     * @param index a int.
+     */
     public void setIndexAt(int offset, int index) {
         indices[offset] = index;
     }
 
+    /**
+     * <p>Getter for the field <code>values</code>.</p>
+     *
+     * @return an array of {@link double} objects.
+     */
     public double[] getValues() {
         return values;
     }
 
+    /**
+     * <p>setValueAt.</p>
+     *
+     * @param offset a int.
+     * @param value a double.
+     */
     public void setValueAt(int offset, double value) {
         values[offset] = value;
     }
 
+    /**
+     * <p>Getter for the field <code>numMappings</code>.</p>
+     *
+     * @return a int.
+     */
     public int getNumMappings() {
         return numMappings;
     }
 
+    /**
+     * <p>toSparseVector.</p>
+     *
+     * @param dimension a int.
+     * @return a {@link org.apache.commons.math3.linear.SparseRealVector} object.
+     */
     public SparseRealVector toSparseVector(int dimension) {
         OpenMapRealVector vector = new OpenMapRealVector(dimension);
         for (int index : indices) {
@@ -98,6 +166,12 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         return vector;
     }
 
+    /**
+     * <p>toArray.</p>
+     *
+     * @param dim a int.
+     * @return an array of {@link double} objects.
+     */
     public double[] toArray(int dim) {
         double[] values = new double[dim];
         for (int i = 0; i < dim; i++) {
@@ -134,11 +208,23 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         return -(low + 1);
     }
 
+    /**
+     * <p>get.</p>
+     *
+     * @param index a int.
+     * @return a double.
+     */
     public double get(int index) {
         int offset = find(index);
         return offset >= 0 ? values[offset] : DEFAULT_VALUE;
     }
 
+    /**
+     * <p>set.</p>
+     *
+     * @param index a int.
+     * @param value a double.
+     */
     public void set(int index, double value) {
         if (numMappings == 0 || index > indices[numMappings - 1]) {
             if (!noDefault || value != DEFAULT_VALUE) {
@@ -207,6 +293,7 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         numMappings = k;
     }
 
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         int result = 0;
@@ -217,6 +304,7 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         return result;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
         if (o instanceof OrderedIntDoubleMapping) {
@@ -233,6 +321,7 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         return false;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder(10 * numMappings);
@@ -246,12 +335,19 @@ public final class OrderedIntDoubleMapping implements Serializable, Cloneable {
         return result.toString();
     }
 
+    /** {@inheritDoc} */
     @SuppressWarnings("CloneDoesntCallSuperClone")
     @Override
     public OrderedIntDoubleMapping clone() {
         return new OrderedIntDoubleMapping(indices.clone(), values.clone(), numMappings);
     }
 
+    /**
+     * <p>increment.</p>
+     *
+     * @param index a int.
+     * @param increment a double.
+     */
     public void increment(int index, double increment) {
         int offset = find(index);
         if (offset >= 0) {

@@ -44,14 +44,20 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.SYSTEM_PROPERTY_SPE
 /**
  * Created by vincent on 17-1-17.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public abstract class AbstractConfiguration {
 
+    /** Constant <code>LOG</code> */
     public static final Logger LOG = LoggerFactory.getLogger(AbstractConfiguration.class);
 
     // A LinkedHashSet's iterator preserves insertion order, and because it's a Set, its elements are unique.
+    /** Constant <code>DEFAULT_RESOURCES</code> */
     public static final LinkedHashSet<String> DEFAULT_RESOURCES = new LinkedHashSet<>();
 
+    /** Constant <code>APPLICATION_SPECIFIED_RESOURCES="pulsar-default.xml,pulsar-site.xml,puls"{trunked}</code> */
     public static final String APPLICATION_SPECIFIED_RESOURCES = "pulsar-default.xml,pulsar-site.xml,pulsar-task.xml";
 
     private final LinkedHashSet<String> resources = new LinkedHashSet<>();
@@ -71,7 +77,7 @@ public abstract class AbstractConfiguration {
     private Environment environment;
 
     /**
-     * Create a {@link AbstractConfiguration}. This will load the standard
+     * Create a {@link ai.platon.pulsar.common.config.AbstractConfiguration}. This will load the standard
      * resources, <code>pulsar-default.xml</code>, <code>pulsar-site.xml</code>, <code>pulsar-task.xml</code>
      * and hadoop resources.
      */
@@ -79,31 +85,60 @@ public abstract class AbstractConfiguration {
         this(true);
     }
 
+    /**
+     * <p>Constructor for AbstractConfiguration.</p>
+     *
+     * @param loadDefaults a boolean.
+     */
     public AbstractConfiguration(boolean loadDefaults) {
         this(loadDefaults, System.getProperty(LEGACY_CONFIG_PROFILE, ""));
     }
 
+    /**
+     * <p>Constructor for AbstractConfiguration.</p>
+     *
+     * @param profile a {@link java.lang.String} object.
+     */
     public AbstractConfiguration(String profile) {
         this(true, profile);
     }
 
+    /**
+     * <p>Constructor for AbstractConfiguration.</p>
+     *
+     * @param loadDefaults a boolean.
+     * @param profile a {@link java.lang.String} object.
+     */
     public AbstractConfiguration(boolean loadDefaults, String profile) {
         this(loadDefaults, profile, DEFAULT_RESOURCES);
     }
 
     /**
-     * Construct the {@link AbstractConfiguration}, load default resource if required
+     * Construct the {@link ai.platon.pulsar.common.config.AbstractConfiguration}, load default resource if required
      *
      * @see Configuration#addDefaultResource
+     * @param loadDefaults a boolean.
+     * @param profile a {@link java.lang.String} object.
+     * @param resources a {@link java.lang.Iterable} object.
      */
     public AbstractConfiguration(boolean loadDefaults, String profile, Iterable<String> resources) {
         loadConfResources(loadDefaults, profile, resources);
     }
 
+    /**
+     * <p>Constructor for AbstractConfiguration.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     */
     public AbstractConfiguration(Configuration conf) {
         this.conf = new Configuration(conf);
     }
 
+    /**
+     * <p>Setter for the field <code>environment</code>.</p>
+     *
+     * @param environment a {@link org.springframework.core.env.Environment} object.
+     */
     public void setEnvironment(Environment environment) {
         this.environment = environment;
     }
@@ -156,19 +191,39 @@ public abstract class AbstractConfiguration {
         return resource;
     }
 
+    /**
+     * <p>isDryRun.</p>
+     *
+     * @return a boolean.
+     */
     public boolean isDryRun() {
         return getBoolean(CapabilityTypes.DRY_RUN, false);
     }
 
+    /**
+     * <p>isDistributedFs.</p>
+     *
+     * @return a boolean.
+     */
     public boolean isDistributedFs() {
         String fsName = get("fs.defaultFS");
         return fsName != null && fsName.startsWith("hdfs");
     }
 
+    /**
+     * <p>unbox.</p>
+     *
+     * @return a {@link org.apache.hadoop.conf.Configuration} object.
+     */
     public Configuration unbox() {
         return conf;
     }
 
+    /**
+     * <p>size.</p>
+     *
+     * @return a int.
+     */
     public int size() {
         return conf.size();
     }
@@ -233,7 +288,7 @@ public abstract class AbstractConfiguration {
      * @param defaultValue default value.
      * @return property value as an <code>int</code>,
      * or <code>defaultValue</code>.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public int getInt(String name, int defaultValue) {
         return p(name).getInt(defaultValue);
@@ -263,7 +318,7 @@ public abstract class AbstractConfiguration {
      * @param defaultValue default value.
      * @return property value as a <code>long</code>,
      * or <code>defaultValue</code>.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public long getLong(String name, long defaultValue) {
         return p(name).getLong(defaultValue);
@@ -279,7 +334,7 @@ public abstract class AbstractConfiguration {
      * @param defaultValue default value.
      * @return property value as a <code>float</code>,
      * or <code>defaultValue</code>.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public float getFloat(String name, float defaultValue) {
         return p(name).getFloat(defaultValue);
@@ -295,7 +350,7 @@ public abstract class AbstractConfiguration {
      * @param defaultValue default value.
      * @return property value as a <code>double</code>,
      * or <code>defaultValue</code>.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      */
     public double getDouble(String name, double defaultValue) {
         return p(name).getDouble(defaultValue);
@@ -320,8 +375,10 @@ public abstract class AbstractConfiguration {
      *
      * @param name         Property name
      * @param defaultValue Value returned if no mapping exists
-     * @throws IllegalArgumentException If mapping is illegal for the type
+     * @throws java.lang.IllegalArgumentException If mapping is illegal for the type
      *                                  provided
+     * @param <T> a T object.
+     * @return a T object.
      */
     @NotNull
     public <T extends Enum<T>> T getEnum(String name, T defaultValue) {
@@ -442,39 +499,93 @@ public abstract class AbstractConfiguration {
      * Support both ISO-8601 standard and hadoop time duration format
      * ISO-8601 standard : PnDTnHnMn.nS
      * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
+     *
+     * @param name a {@link java.lang.String} object.
+     * @return a {@link java.time.Duration} object.
      */
     public Duration getDuration(String name) {
         return p(name).getDuration();
     }
 
+    /**
+     * <p>getDuration.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a {@link java.time.Duration} object.
+     * @return a {@link java.time.Duration} object.
+     */
     public Duration getDuration(String name, Duration defaultValue) {
         return p(name).getDuration(defaultValue);
     }
 
+    /**
+     * <p>getInstant.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a {@link java.time.Instant} object.
+     * @return a {@link java.time.Instant} object.
+     */
     public Instant getInstant(String name, Instant defaultValue) {
         return p(name).getInstant(defaultValue);
     }
 
+    /**
+     * <p>getPath.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param elsePath a {@link java.nio.file.Path} object.
+     * @return a {@link java.nio.file.Path} object.
+     */
     public Path getPath(String name, Path elsePath) {
         return p(name).getPath(elsePath);
     }
 
+    /**
+     * <p>getPathOrNull.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @return a {@link java.nio.file.Path} object.
+     */
     public Path getPathOrNull(String name) {
         return p(name).getPathOrNull();
     }
 
+    /**
+     * <p>getKvs.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @return a {@link java.util.Map} object.
+     */
     public Map<String, String> getKvs(String name) {
         return p(name).getKvs();
     }
 
+    /**
+     * <p>getConfResourceAsInputStream.</p>
+     *
+     * @param resource a {@link java.lang.String} object.
+     * @return a {@link java.io.InputStream} object.
+     */
     public InputStream getConfResourceAsInputStream(String resource) {
         return SParser.wrap(resource).getResourceAsInputStream();
     }
 
+    /**
+     * <p>getConfResourceAsReader.</p>
+     *
+     * @param resource a {@link java.lang.String} object.
+     * @return a {@link java.io.Reader} object.
+     */
     public Reader getConfResourceAsReader(String resource) {
         return SParser.wrap(resource).getResourceAsReader();
     }
 
+    /**
+     * <p>getResource.</p>
+     *
+     * @param resource a {@link java.lang.String} object.
+     * @return a {@link java.net.URL} object.
+     */
     public URL getResource(String resource) {
         // System.err.println("Search path: " + resource);
         return SParser.wrap(resource).getResource();
@@ -509,6 +620,7 @@ public abstract class AbstractConfiguration {
      * @param xface        the interface implemented by the named class.
      * @return property value as a <code>Class</code>,
      * or <code>defaultValue</code>.
+     * @param <U> a U object.
      */
     public <U> Class<? extends U> getClass(String name,
                                            Class<? extends U> defaultValue,
@@ -521,6 +633,7 @@ public abstract class AbstractConfiguration {
         return new SParser(get(name));
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("Expected " + conf);

@@ -6,6 +6,9 @@ import java.util.Map;
 
 /**
  * Created by vincent on 16-9-24.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class PulsarParams extends Params {
 
@@ -93,9 +96,13 @@ public class PulsarParams extends Params {
      * Depth (number of cycles) of a crawl.
      */
     public static final String ARG_DEPTH = "-depth";
+    /** Constant <code>ARG_START_KEY="-startKey"</code> */
     public static final String ARG_START_KEY = "-startKey";
+    /** Constant <code>ARG_END_KEY="-endKey"</code> */
     public static final String ARG_END_KEY = "-endKey";
+    /** Constant <code>ARG_LIMIT="-limit"</code> */
     public static final String ARG_LIMIT = "-limit";
+    /** Constant <code>ARG_VERBOSE="-verbose"</code> */
     public static final String ARG_VERBOSE = "-verbose";
     /**
      * Injector Relative
@@ -109,6 +116,7 @@ public class PulsarParams extends Params {
      * Generate Relative
      */
     public static final String ARG_PRIORITY = "-priority";
+    /** Constant <code>ARG_SCORE="-score"</code> */
     public static final String ARG_SCORE = "-score";
     /**
      * Fetcher Relative
@@ -116,6 +124,7 @@ public class PulsarParams extends Params {
   /* Fetch interval. */
     public static final String ARG_FETCH_INTERVAL = "-fetchInterval";
     /* Fetch mode. */
+    /** Constant <code>ARG_FETCH_MODE="-fetchMode"</code> */
     public static final String ARG_FETCH_MODE = "-fetchMode";
     /**
      * Generator Relative
@@ -162,32 +171,61 @@ public class PulsarParams extends Params {
      * Index document fields
      */
     public static final String DOC_FIELD_PUBLISH_TIME = "publish_time";
+    /** Constant <code>DOC_FIELD_MODIFIED_TIME="modified_time"</code> */
     public static final String DOC_FIELD_MODIFIED_TIME = "modified_time";
+    /** Constant <code>DOC_FIELD_ARTICLE_TILE="article_title"</code> */
     public static final String DOC_FIELD_ARTICLE_TILE = "article_title";
+    /** Constant <code>DOC_FIELD_PAGE_TITLE="page_title"</code> */
     public static final String DOC_FIELD_PAGE_TITLE = "page_title";
+    /** Constant <code>DOC_FIELD_CONTENT_TILE="article_title"</code> */
     public static final String DOC_FIELD_CONTENT_TILE = "article_title";
+    /** Constant <code>DOC_FIELD_PAGE_CATEGORY="page_category"</code> */
     public static final String DOC_FIELD_PAGE_CATEGORY = "page_category";
+    /** Constant <code>DOC_FIELD_LINKS_COUNT="links_count"</code> */
     public static final String DOC_FIELD_LINKS_COUNT = "links_count";
+    /** Constant <code>DOC_FIELD_HTML_CONTENT="html_content"</code> */
     public static final String DOC_FIELD_HTML_CONTENT = "html_content";
+    /** Constant <code>DOC_FIELD_TEXT_CONTENT="text_content"</code> */
     public static final String DOC_FIELD_TEXT_CONTENT = "text_content";
+    /** Constant <code>DOC_FIELD_TEXT_CONTENT_LENGTH="text_content_length"</code> */
     public static final String DOC_FIELD_TEXT_CONTENT_LENGTH = "text_content_length";
+    /** Constant <code>DOC_FIELD_HTML_CONTENT_LENGTH="html_content_length"</code> */
     public static final String DOC_FIELD_HTML_CONTENT_LENGTH = "html_content_length";
     /**
      * Temporary variable holders
      */
     public static final String VAR_LINKS_COUNT = "links_count";
+    /** Constant <code>VAR_DROPPED_LINKS_COUNT="dropped_links_count"</code> */
     public static final String VAR_DROPPED_LINKS_COUNT = "dropped_links_count";
+    /** Constant <code>VAR_PAGE_EXISTENCE="page_existence"</code> */
     public static final String VAR_PAGE_EXISTENCE = "page_existence";
+    /** Constant <code>VAR_PAGE_CONTENT_LENGTH="page_content_length"</code> */
     public static final String VAR_PAGE_CONTENT_LENGTH = "page_content_length";
+    /** Constant <code>VAR_GENERATE_FORCE_FIRST="generate_force_first"</code> */
     public static final String VAR_GENERATE_FORCE_FIRST = "generate_force_first";
 
+    /**
+     * <p>Constructor for PulsarParams.</p>
+     */
     public PulsarParams() {
     }
 
+    /**
+     * <p>Constructor for PulsarParams.</p>
+     *
+     * @param key a {@link java.lang.String} object.
+     * @param value a {@link java.lang.Object} object.
+     * @param others a {@link java.lang.Object} object.
+     */
     public PulsarParams(String key, Object value, Object... others) {
         super(key, value, others);
     }
 
+    /**
+     * <p>Constructor for PulsarParams.</p>
+     *
+     * @param args a {@link java.util.Map} object.
+     */
     public PulsarParams(Map<String, Object> args) {
         super(args);
     }

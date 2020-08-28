@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.context.PulsarContexts
 
-class Manual(val session: PulsarSession) {
+class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
     val url = "https://list.jd.com/list.html?cat=652,12345,12349"
 
     /**
@@ -64,4 +64,4 @@ class Manual(val session: PulsarSession) {
     }
 }
 
-fun main() = Manual(PulsarContexts.createSession()).runAll()
+fun main() = Manual().runAll()

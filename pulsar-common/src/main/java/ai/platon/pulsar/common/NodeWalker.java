@@ -32,6 +32,9 @@ import java.util.Stack;
  * Currently this class is not thread safe. It is assumed that only one thread
  * will be accessing the <code>NodeWalker</code> at any given time.
  * </p>
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class NodeWalker {
 
@@ -43,7 +46,7 @@ public class NodeWalker {
     /**
      * Starts the <code>Node</code> tree from the root node.
      *
-     * @param rootNode
+     * @param rootNode a {@link org.w3c.dom.Node} object.
      */
     public NodeWalker(Node rootNode) {
 
@@ -120,7 +123,7 @@ public class NodeWalker {
     /**
      * * Returns true if there are more nodes on the current stack.
      *
-     * @return
+     * @return a boolean.
      */
     public boolean hasNext() {
         return (nodes.size() > 0);

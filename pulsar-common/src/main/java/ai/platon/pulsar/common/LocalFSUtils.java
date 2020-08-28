@@ -29,18 +29,32 @@ import java.util.List;
 
 /**
  * Utility methods for common filesystem operations.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class LocalFSUtils {
 
+    /** Constant <code>LOG</code> */
     public static final Logger LOG = LoggerFactory.getLogger(LocalFSUtils.class);
 
     /**
      * Read all lines in file, if it's under HDFS, read from HDFS, or read from local file system
+     *
+     * @param path a {@link java.lang.String} object.
+     * @return a {@link java.util.List} object.
+     * @throws java.io.IOException if any.
      */
     public static List<String> readAllLines(String path) throws IOException {
         return Files.readAllLines(Paths.get(path));
     }
 
+    /**
+     * <p>readAllLinesSilent.</p>
+     *
+     * @param path a {@link java.nio.file.Path} object.
+     * @return a {@link java.util.List} object.
+     */
     public static List<String> readAllLinesSilent(Path path) {
         try {
             if (Files.exists(path)) {

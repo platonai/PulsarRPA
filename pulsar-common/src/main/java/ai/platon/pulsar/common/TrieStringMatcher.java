@@ -24,18 +24,28 @@ import java.util.ListIterator;
 /**
  * TrieStringMatcher is a base class for simple tree-based string matching.
  *
+ * @author vincent
+ * @version $Id: $Id
  */
 public abstract class TrieStringMatcher {
     protected TrieNode root;
 
+    /**
+     * <p>Constructor for TrieStringMatcher.</p>
+     */
     protected TrieStringMatcher() {
         this.root = new TrieNode('\000', false);
     }
 
     /**
-     * Returns the next {@link TrieNode} visited, given that you are at
+     * Returns the next {@link ai.platon.pulsar.common.TrieStringMatcher.TrieNode} visited, given that you are at
      * <code>node</code>, and the the next character in the input is the
      * <code>idx</code>'th character of <code>s</code>.
+     *
+     * @param node a {@link ai.platon.pulsar.common.TrieStringMatcher.TrieNode} object.
+     * @param s a {@link java.lang.String} object.
+     * @param idx a int.
+     * @return a {@link ai.platon.pulsar.common.TrieStringMatcher.TrieNode} object.
      */
     protected final TrieNode matchChar(TrieNode node, String s, int idx) {
         return node.getChild(s.charAt(idx));
@@ -45,6 +55,8 @@ public abstract class TrieStringMatcher {
      * Adds any necessary nodes to the trie so that the given <code>String</code>
      * can be decoded and the last character is represented by a terminal node.
      * Zero-length <code>Strings</code> are ignored.
+     *
+     * @param s a {@link java.lang.String} object.
      */
     protected final void addPatternForward(String s) {
         TrieNode node = root;
@@ -61,6 +73,8 @@ public abstract class TrieStringMatcher {
      * Adds any necessary nodes to the trie so that the given <code>String</code>
      * can be decoded <em>in reverse</em> and the first character is represented
      * by a terminal node. Zero-length <code>Strings</code> are ignored.
+     *
+     * @param s a {@link java.lang.String} object.
      */
     protected final void addPatternBackward(String s) {
         TrieNode node = root;
@@ -74,6 +88,9 @@ public abstract class TrieStringMatcher {
     /**
      * Returns true if the given <code>String</code> is matched by a pattern in
      * the trie
+     *
+     * @param input a {@link java.lang.String} object.
+     * @return a boolean.
      */
     public abstract boolean matches(String input);
 
@@ -81,6 +98,9 @@ public abstract class TrieStringMatcher {
      * Returns the shortest substring of <code>input<code> that is
      * matched by a pattern in the trie, or <code>null<code> if no match
      * exists.
+     *
+     * @param input a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
      */
     public abstract String shortestMatch(String input);
 
@@ -88,6 +108,9 @@ public abstract class TrieStringMatcher {
      * Returns the longest substring of <code>input<code> that is
      * matched by a pattern in the trie, or <code>null<code> if no match
      * exists.
+     *
+     * @param input a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
      */
     public abstract String longestMatch(String input);
 

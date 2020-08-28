@@ -20,14 +20,31 @@ import static ai.platon.pulsar.common.config.CapabilityTypes.*;
 /**
  * Created by vincent on 17-5-15.
  * Copyright @ 2013-2017 Platon AI. All rights reserved
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class GoraStorage {
+    /** Constant <code>log</code> */
     public static final Logger log = LoggerFactory.getLogger(GoraStorage.class);
 
     // load properties from gora.properties
+    /** Constant <code>properties</code> */
     public static Properties properties = DataStoreFactory.createProps();
     private static Map<String, Object> dataStores = new HashMap<>();
 
+    /**
+     * <p>createDataStore.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @param keyClass a {@link java.lang.Class} object.
+     * @param persistentClass a {@link java.lang.Class} object.
+     * @param <K> a K object.
+     * @param <V> a V object.
+     * @return a {@link org.apache.gora.store.DataStore} object.
+     * @throws org.apache.gora.util.GoraException if any.
+     * @throws java.lang.ClassNotFoundException if any.
+     */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>
     createDataStore(Configuration conf, Class<K> keyClass, Class<V> persistentClass)
@@ -39,6 +56,13 @@ public class GoraStorage {
 
     /**
      * Creates a store for the given persistentClass. Currently supports WebPage store
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @param keyClass a {@link java.lang.Class} object.
+     * @param persistentClass a {@link java.lang.Class} object.
+     * @param dataStoreClass a {@link java.lang.Class} object.
+     * @return a {@link org.apache.gora.store.DataStore} object.
+     * @throws org.apache.gora.util.GoraException if any.
      */
     @SuppressWarnings("unchecked")
     public synchronized static <K, V extends Persistent> DataStore<K, V>

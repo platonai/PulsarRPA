@@ -11,9 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by vincent on 17-3-2.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class ReflectionUtils {
 
+    /** Constant <code>LOG</code> */
     public static final Logger LOG = LoggerFactory.getLogger(ReflectionUtils.class);
 
     private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
@@ -22,6 +26,13 @@ public class ReflectionUtils {
 
     volatile private static SerializationFactory serialFactory = null;
 
+    /**
+     * <p>newInstance.</p>
+     *
+     * @param theClass a {@link java.lang.Class} object.
+     * @param <T> a T object.
+     * @return a T object.
+     */
     public static <T> T newInstance(Class<T> theClass) {
         T result;
         try {
@@ -38,10 +49,27 @@ public class ReflectionUtils {
         return result;
     }
 
+    /**
+     * <p>forName.</p>
+     *
+     * @param className a {@link java.lang.String} object.
+     * @param <T> a T object.
+     * @return a T object.
+     * @throws java.lang.ClassNotFoundException if any.
+     * @throws java.lang.IllegalAccessException if any.
+     * @throws java.lang.InstantiationException if any.
+     */
     public static <T> T forName(@NotNull String className) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
          return (T)Class.forName(className).newInstance();
     }
 
+    /**
+     * <p>forNameOrNull.</p>
+     *
+     * @param className a {@link java.lang.String} object.
+     * @param <T> a T object.
+     * @return a T object.
+     */
     public static <T> T forNameOrNull(@NotNull String className) {
         try {
             return (T)Class.forName(className).newInstance();

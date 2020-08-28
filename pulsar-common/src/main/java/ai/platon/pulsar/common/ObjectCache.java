@@ -25,7 +25,10 @@ import java.util.function.Function;
 
 /**
  * TODO: use BeanFactory(Spring or Apache Configuration)
- * */
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class ObjectCache {
 
     private static final WeakHashMap<Configuration, ObjectCache> CACHE = new WeakHashMap<>();
@@ -35,10 +38,22 @@ public class ObjectCache {
     private ObjectCache() {
     }
 
+    /**
+     * <p>get.</p>
+     *
+     * @param conf a {@link ai.platon.pulsar.common.config.ImmutableConfig} object.
+     * @return a {@link ai.platon.pulsar.common.ObjectCache} object.
+     */
     public static ObjectCache get(ImmutableConfig conf) {
         return get(conf.unbox());
     }
 
+    /**
+     * <p>get.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @return a {@link ai.platon.pulsar.common.ObjectCache} object.
+     */
     public static ObjectCache get(Configuration conf) {
         ObjectCache objectCache = CACHE.get(conf);
         if (objectCache == null) {
@@ -49,14 +64,34 @@ public class ObjectCache {
         return objectCache;
     }
 
+    /**
+     * <p>hasBean.</p>
+     *
+     * @param key a {@link java.lang.String} object.
+     * @return a boolean.
+     */
     public boolean hasBean(String key) {
         return objectMap.get(key) != null;
     }
 
+    /**
+     * <p>getBean.</p>
+     *
+     * @param key a {@link java.lang.String} object.
+     * @return a {@link java.lang.Object} object.
+     */
     public Object getBean(String key) {
         return objectMap.get(key);
     }
 
+    /**
+     * <p>getBean.</p>
+     *
+     * @param key a {@link java.lang.String} object.
+     * @param defaultValue a T object.
+     * @param <T> a T object.
+     * @return a T object.
+     */
     @SuppressWarnings("unchecked")
     public <T> T getBean(String key, T defaultValue) {
         Object obj = objectMap.get(key);
@@ -66,10 +101,25 @@ public class ObjectCache {
         return (T) obj;
     }
 
+    /**
+     * <p>getBean.</p>
+     *
+     * @param clazz a {@link java.lang.Class} object.
+     * @param <T> a T object.
+     * @return a T object.
+     */
     public <T> T getBean(Class<T> clazz) {
         return (T) objectMap.get(clazz.getName());
     }
 
+    /**
+     * <p>computeIfAbsent.</p>
+     *
+     * @param clazz a {@link java.lang.Class} object.
+     * @param mappingFunction a {@link java.util.function.Function} object.
+     * @param <T> a T object.
+     * @return a T object.
+     */
     public <T> T computeIfAbsent(Class<T> clazz, Function<Class<T>, T> mappingFunction) {
         T value = getBean(clazz);
         if (value == null) {
@@ -79,10 +129,21 @@ public class ObjectCache {
         return value;
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param key a {@link java.lang.String} object.
+     * @param value a {@link java.lang.Object} object.
+     */
     public void put(String key, Object value) {
         objectMap.put(key, value);
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param obj a {@link java.lang.Object} object.
+     */
     public void put(Object obj) {
         objectMap.put(obj.getClass().getName(), obj);
     }

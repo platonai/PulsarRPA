@@ -36,9 +36,11 @@ import java.util.stream.Collectors;
  *
  * @author Chris Mattmann
  * @author J&eacute;r&ocirc;me Charron
+ * @version $Id: $Id
  */
 public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
 
+    /** Constant <code>META_TMP="TMP_"</code> */
     public static final String META_TMP = "TMP_";
 
     /**
@@ -55,6 +57,8 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
 
     /**
      * Constructs a new, empty data.
+     *
+     * @param kvs a {@link java.lang.String} object.
      */
     public MultiMetadata(String... kvs) {
         int length = kvs.length;
@@ -86,6 +90,11 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         return data.keySet();
     }
 
+    /**
+     * <p>asMultimap.</p>
+     *
+     * @return a {@link com.google.common.collect.Multimap} object.
+     */
     public Multimap<String, String> asMultimap() {
         return data;
     }
@@ -106,6 +115,12 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         }
     }
 
+    /**
+     * <p>get.</p>
+     *
+     * @param name a {@link ai.platon.pulsar.persist.metadata.Name} object.
+     * @return a {@link java.lang.String} object.
+     */
     public String get(Name name) {
         return get(name.text());
     }
@@ -120,6 +135,12 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         return CollectionUtils.emptyIfNull(data.get(name));
     }
 
+    /**
+     * <p>getNonNullValues.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @return a {@link java.util.Collection} object.
+     */
     public Collection<String> getNonNullValues(String name) {
         return getValues(name).stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
@@ -135,37 +156,88 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         data.put(name, value);
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param name a {@link ai.platon.pulsar.persist.metadata.Name} object.
+     * @param value a {@link java.lang.String} object.
+     */
     public void put(Name name, String value) {
         put(name.text(), value);
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param name a {@link ai.platon.pulsar.persist.metadata.Name} object.
+     * @param value a int.
+     */
     public void put(Name name, int value) {
         put(name, String.valueOf(value));
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param name a {@link ai.platon.pulsar.persist.metadata.Name} object.
+     * @param value a long.
+     */
     public void put(Name name, long value) {
         put(name, String.valueOf(value));
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param name a {@link ai.platon.pulsar.persist.metadata.Name} object.
+     * @param value a {@link java.time.Instant} object.
+     */
     public void put(Name name, Instant value) {
         put(name, DateTimes.isoInstantFormat(value));
     }
 
+    /**
+     * <p>set.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param value a {@link java.lang.String} object.
+     */
     public void set(String name, String value) {
         data.removeAll(name);
         data.put(name, value);
     }
 
+    /**
+     * <p>getInt.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a int.
+     * @return a int.
+     */
     public int getInt(String name, int defaultValue) {
         String s = get(name);
         return NumberUtils.toInt(s, defaultValue);
     }
 
+    /**
+     * <p>getLong.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a long.
+     * @return a long.
+     */
     public long getLong(String name, long defaultValue) {
         String s = get(name);
         return NumberUtils.toLong(s, defaultValue);
     }
 
+    /**
+     * <p>getBoolean.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a {@link java.lang.Boolean} object.
+     * @return a boolean.
+     */
     public boolean getBoolean(String name, Boolean defaultValue) {
         String s = get(name);
         if (s == null) {
@@ -174,6 +246,13 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         return Boolean.parseBoolean(s);
     }
 
+    /**
+     * <p>getInstant.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a {@link java.time.Instant} object.
+     * @return a {@link java.time.Instant} object.
+     */
     public Instant getInstant(String name, Instant defaultValue) {
         return DateTimes.parseInstant(get(name), defaultValue);
     }
@@ -191,6 +270,11 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         }
     }
 
+    /**
+     * <p>putAll.</p>
+     *
+     * @param metadata a {@link java.util.Map} object.
+     */
     public void putAll(Map<String, String> metadata) {
         metadata.forEach((key, value) -> data.put(key, value));
     }
@@ -211,6 +295,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         data.clear();
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof MultiMetadata)) {
@@ -227,6 +312,7 @@ public class MultiMetadata implements DublinCore, HttpHeaders, AppConstants {
         return data.equals(other.data);
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();

@@ -28,6 +28,9 @@ import java.util.zip.InflaterInputStream;
 
 /**
  * A collection of utility methods for working on deflated data.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class DeflateUtils {
 
@@ -39,6 +42,9 @@ public class DeflateUtils {
      * Returns an inflated copy of the input array. If the deflated input has been
      * truncated or corrupted, a best-effort attempt is made to inflate as much as
      * possible. If no data can be extracted <code>null</code> is returned.
+     *
+     * @param in an array of {@link byte} objects.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] inflateBestEffort(byte[] in) {
         return inflateBestEffort(in, Integer.MAX_VALUE);
@@ -49,6 +55,10 @@ public class DeflateUtils {
      * <code>sizeLimit</code> bytes, if necessary. If the deflated input has been
      * truncated or corrupted, a best-effort attempt is made to inflate as much as
      * possible. If no data can be extracted <code>null</code> is returned.
+     *
+     * @param in an array of {@link byte} objects.
+     * @param sizeLimit a int.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] inflateBestEffort(byte[] in, int sizeLimit) {
         // decompress using InflaterInputStream
@@ -89,8 +99,10 @@ public class DeflateUtils {
     /**
      * Returns an inflated copy of the input array.
      *
-     * @throws IOException
+     * @throws java.io.IOException
      *           if the input cannot be properly decompressed
+     * @param in an array of {@link byte} objects.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] inflate(byte[] in) throws IOException {
         // decompress using InflaterInputStream
@@ -114,6 +126,9 @@ public class DeflateUtils {
 
     /**
      * Returns a deflated copy of the input array.
+     *
+     * @param in an array of {@link byte} objects.
+     * @return an array of {@link byte} objects.
      */
     public static final byte[] deflate(byte[] in) {
         // compress using DeflaterOutputStream

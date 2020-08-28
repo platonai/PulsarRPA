@@ -10,19 +10,35 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * <p>MutableConfig class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class MutableConfig extends ImmutableConfig {
 
+    /**
+     * <p>Constructor for MutableConfig.</p>
+     */
     public MutableConfig() {
         this(true);
     }
 
+    /**
+     * <p>Constructor for MutableConfig.</p>
+     *
+     * @param loadDefaultDesource a boolean.
+     */
     public MutableConfig(boolean loadDefaultDesource) {
         super(loadDefaultDesource);
     }
 
     /**
      * TODO: copy on write
-     * */
+     *
+     * @param conf a {@link ai.platon.pulsar.common.config.ImmutableConfig} object.
+     */
     public MutableConfig(ImmutableConfig conf) {
         super(conf.unbox());
     }
@@ -42,12 +58,24 @@ public class MutableConfig extends ImmutableConfig {
         unbox().set(name, value);
     }
 
+    /**
+     * <p>setIfNotNull.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param value a {@link java.lang.String} object.
+     */
     public void setIfNotNull(String name, String value) {
         if (name != null && value != null) {
             set(name, value);
         }
     }
 
+    /**
+     * <p>setIfNotEmpty.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param value a {@link java.lang.String} object.
+     */
     public void setIfNotEmpty(String name, String value) {
         Objects.requireNonNull(name);
         Objects.requireNonNull(value);
@@ -57,6 +85,13 @@ public class MutableConfig extends ImmutableConfig {
         }
     }
 
+    /**
+     * <p>getAndSet.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param value a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     @Nullable
     public String getAndSet(String name, String value) {
         Objects.requireNonNull(name);
@@ -69,6 +104,12 @@ public class MutableConfig extends ImmutableConfig {
         return old;
     }
 
+    /**
+     * <p>getAndUnset.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     @Nullable
     public String getAndUnset(String name) {
         Objects.requireNonNull(name);
@@ -157,27 +198,53 @@ public class MutableConfig extends ImmutableConfig {
      *
      * @param name  property name
      * @param value new value
+     * @param <T> a T object.
      */
     public <T extends Enum<T>> void setEnum(String name, T value) {
         set(name, value.toString());
     }
 
+    /**
+     * <p>setInstant.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param time a {@link java.time.Instant} object.
+     */
     public void setInstant(String name, Instant time) {
         set(name, time.toString());
     }
 
+    /**
+     * <p>setDuration.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param duration a {@link java.time.Duration} object.
+     */
     public void setDuration(String name, Duration duration) {
         set(name, duration.toString());
     }
 
+    /**
+     * <p>unset.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     */
     public void unset(String name) {
         unbox().unset(name);
     }
 
+    /**
+     * <p>clear.</p>
+     */
     public void clear() {
         unbox().clear();
     }
 
+    /**
+     * <p>reset.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     */
     public void reset(Configuration conf) {
         for (Map.Entry<String, String> prop : unbox()) {
             unset(prop.getKey());
@@ -188,6 +255,12 @@ public class MutableConfig extends ImmutableConfig {
         }
     }
 
+    /**
+     * <p>merge.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @param names a {@link java.lang.String} object.
+     */
     public void merge(Configuration conf, String... names) {
         for (Map.Entry<String, String> prop : conf) {
             String key = prop.getKey();
@@ -197,6 +270,11 @@ public class MutableConfig extends ImmutableConfig {
         }
     }
 
+    /**
+     * <p>toVolatileConfig.</p>
+     *
+     * @return a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
+     */
     public VolatileConfig toVolatileConfig() {
         return new VolatileConfig(this);
     }

@@ -1,8 +1,20 @@
 package ai.platon.pulsar.persist.metadata;
 
+/**
+ * <p>BrowserType class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public enum BrowserType {
     NATIVE, CHROME, SELENIUM_CHROME, PHANTOMJS;
 
+    /**
+     * <p>fromString.</p>
+     *
+     * @param s a {@link java.lang.String} object.
+     * @return a {@link ai.platon.pulsar.persist.metadata.BrowserType} object.
+     */
     public static BrowserType fromString(String s) {
         if (s == null || s.isEmpty()) {
             return NATIVE;
@@ -15,6 +27,7 @@ public enum BrowserType {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return name().toLowerCase();

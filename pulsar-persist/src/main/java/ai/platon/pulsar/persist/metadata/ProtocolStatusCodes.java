@@ -17,9 +17,13 @@
 package ai.platon.pulsar.persist.metadata;
 
 /**
+ * <p>ProtocolStatusCodes interface.</p>
+ *
  * @link {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
  * @link {http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/org/apache/http/HttpStatus.html}
- * */
+ * @author vincent
+ * @version $Id: $Id
+ */
 public interface ProtocolStatusCodes {
 
     //
@@ -27,6 +31,7 @@ public interface ProtocolStatusCodes {
     // @see {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
     //
 
+    /** Constant <code>SUCCESS_OK=200</code> */
     int SUCCESS_OK = 200;
     /**
      * Resource has moved permanently. New url should be found in args.
