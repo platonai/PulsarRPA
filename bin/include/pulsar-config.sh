@@ -95,7 +95,8 @@ fi
 # Now having JAVA_HOME defined is required
 JAVA=$(command -v java)
 if [[ -e $JAVA ]]; then
-  export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
+  JAVA_HOME=$(readlink -f "$JAVA" | sed "s:bin/java::")
+  export JAVA_HOME
 fi
 
 # Now having JAVA_HOME defined is required
