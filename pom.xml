@@ -77,22 +77,32 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kdoc-maven-plugin</artifactId>
+                        <version>0.12.1230</version>
                         <configuration>
-                            <doclint>none</doclint>
-<!--                            <doclint>all,-missing</doclint>-->
-                            <detectJavaApiLink>false</detectJavaApiLink>
+                            <title>API documentation for ${project.artifactId} ${project.version}</title>
+                            <sources>
+                                <source>src/main/kotlin</source>
+                            </sources>
                         </configuration>
                         <executions>
                             <execution>
-                                <id>attach-javadocs</id>
+                                <id>apidoc</id>
+                                <phase>install</phase>
                                 <goals>
-                                    <goal>jar</goal>
+                                    <goal>apidoc</goal>
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+                    <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
                     </plugin>
                     <!-- We want to sign the artifact, the POM, and all attached artifacts -->
                     <plugin>
