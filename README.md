@@ -27,7 +27,7 @@ Crawl and scrape a single page:
 
 The SQL above downloads a Web page from wikipedia, find out the references section and extract all external reference links.
 
-Crawl out pages from a portal and scrape each:
+Crawl out pages from a portal and scrape each one:
 
     select
         dom_first_text(dom, '.sku-name') as name,
@@ -56,7 +56,7 @@ Add maven dependency to your project:
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-protocol</artifactId>
-        <version>1.5.7-SNAPSHOT</version>
+        <version>1.5.7</version>
     </dependency>
 
 And then scrape web pages using simple native api:
@@ -75,7 +75,7 @@ Add maven dependency to your project:
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-ql-server</artifactId>
-        <version>1.5.7-SNAPSHOT</version>
+        <version>1.5.7</version>
     </dependency>
 
 And then scrape web pages using:
