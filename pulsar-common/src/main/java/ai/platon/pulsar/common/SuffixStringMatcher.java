@@ -23,12 +23,17 @@ import java.util.Iterator;
 /**
  * A class for efficiently matching <code>String</code>s against a set of
  * suffixes. Zero-length <code>Strings</code> are ignored.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class SuffixStringMatcher extends TrieStringMatcher {
 
     /**
      * Creates a new <code>PrefixStringMatcher</code> which will match
      * <code>String</code>s with any suffix in the supplied array.
+     *
+     * @param suffixes an array of {@link java.lang.String} objects.
      */
     public SuffixStringMatcher(String[] suffixes) {
         super();
@@ -40,6 +45,8 @@ public class SuffixStringMatcher extends TrieStringMatcher {
      * Creates a new <code>PrefixStringMatcher</code> which will match
      * <code>String</code>s with any suffix in the supplied
      * <code>Collection</code>
+     *
+     * @param suffixes a {@link java.util.Collection} object.
      */
     public SuffixStringMatcher(Collection<String> suffixes) {
         super();
@@ -48,6 +55,11 @@ public class SuffixStringMatcher extends TrieStringMatcher {
             addPatternBackward(iter.next());
     }
 
+    /**
+     * <p>main.</p>
+     *
+     * @param argv an array of {@link java.lang.String} objects.
+     */
     public static final void main(String[] argv) {
         SuffixStringMatcher matcher = new SuffixStringMatcher(new String[]{"a",
                 "abcd", "bcd", "bcdefg", "defg", "aac", "baz", "foo", "foobar"});
@@ -64,6 +76,8 @@ public class SuffixStringMatcher extends TrieStringMatcher {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns true if the given <code>String</code> is matched by a suffix in the
      * trie
      */
@@ -80,6 +94,8 @@ public class SuffixStringMatcher extends TrieStringMatcher {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns the shortest suffix of <code>input</code> that is matched,
      * or <code>null</code> if no match exists.
      */
@@ -96,6 +112,8 @@ public class SuffixStringMatcher extends TrieStringMatcher {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * Returns the longest suffix of <code>input</code> that is matched,
      * or <code>null</code> if no match exists.
      */

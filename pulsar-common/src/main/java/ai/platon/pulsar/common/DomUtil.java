@@ -36,6 +36,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.util.Set;
 
+/**
+ * <p>DomUtil class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class DomUtil {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomUtil.class);
@@ -43,8 +49,8 @@ public class DomUtil {
     /**
      * Returns parsed dom tree or null if any error
      *
-     * @param is
-     * @return A parsed DOM tree from the given {@link InputStream}.
+     * @param is a {@link java.io.InputStream} object.
+     * @return A parsed DOM tree from the given {@link java.io.InputStream}.
      */
     public static Element getDom(InputStream is) {
 
@@ -75,8 +81,8 @@ public class DomUtil {
     /**
      * save dom into ouputstream
      *
-     * @param os
-     * @param e
+     * @param os a {@link java.io.OutputStream} object.
+     * @param e a {@link org.w3c.dom.Element} object.
      */
     public static void saveDom(OutputStream os, Element e) {
         DOMSource source = new DOMSource(e);
@@ -100,6 +106,13 @@ public class DomUtil {
         }
     }
 
+    /**
+     * <p>getAttribute.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @param attrName a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getAttribute(Node node, String attrName) {
         NamedNodeMap map = node.getAttributes();
 
@@ -113,10 +126,23 @@ public class DomUtil {
         return null;
     }
 
+    /**
+     * <p>getId.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getId(Node node) {
         return getId(node, false);
     }
 
+    /**
+     * <p>getId.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @param prefix a boolean.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getId(Node node, boolean prefix) {
         String id = getAttribute(node, "id");
 
@@ -128,14 +154,33 @@ public class DomUtil {
         return null;
     }
 
+    /**
+     * <p>getClassString.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getClassString(Node node) {
         return getAttribute(node, "class");
     }
 
+    /**
+     * <p>getClasses.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @return a {@link java.util.Set} object.
+     */
     public static Set<String> getClasses(Node node) {
         return getClasses(node, "");
     }
 
+    /**
+     * <p>getClasses.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @param prefix a {@link java.lang.String} object.
+     * @return a {@link java.util.Set} object.
+     */
     public static Set<String> getClasses(Node node, String prefix) {
         Set<String> classes = Sets.newHashSet();
 
@@ -151,6 +196,9 @@ public class DomUtil {
 
     /**
      * TODO : Use real css selector
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @return a {@link java.util.Set} object.
      */
     public static Set<String> getSimpleSelectors(Node node) {
         Set<String> selectors = getClasses(node, ".");
@@ -163,6 +211,12 @@ public class DomUtil {
         return selectors;
     }
 
+    /**
+     * <p>getPrettyName.</p>
+     *
+     * @param node a {@link org.w3c.dom.Node} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getPrettyName(Node node) {
         NamedNodeMap map = node.getAttributes();
         String msg = node.getNodeName().toLowerCase();

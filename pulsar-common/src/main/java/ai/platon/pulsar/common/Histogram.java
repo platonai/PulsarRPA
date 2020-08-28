@@ -18,16 +18,33 @@ package ai.platon.pulsar.common;
 
 import java.util.*;
 
+/**
+ * <p>Histogram class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class Histogram<E> {
 
     private Map<E, HistogramEntry> map = new HashMap<E, HistogramEntry>();
     private float totalValue = 0;
     private int totalCount = 0;
 
+    /**
+     * <p>add.</p>
+     *
+     * @param x a E object.
+     */
     public void add(E x) {
         add(x, 1);
     }
 
+    /**
+     * <p>add.</p>
+     *
+     * @param x a E object.
+     * @param value a float.
+     */
     public void add(E x, float value) {
         HistogramEntry entry;
         if (map.containsKey(x)) {
@@ -44,24 +61,51 @@ public class Histogram<E> {
         totalCount += 1;
     }
 
+    /**
+     * <p>getKeys.</p>
+     *
+     * @return a {@link java.util.Set} object.
+     */
     public Set<E> getKeys() {
         return map.keySet();
     }
 
+    /**
+     * <p>getValue.</p>
+     *
+     * @param x a E object.
+     * @return a float.
+     */
     public float getValue(E x) {
         return map.get(x).value;
     }
 
+    /**
+     * <p>getCount.</p>
+     *
+     * @param x a E object.
+     * @return a int.
+     */
     public int getCount(E x) {
         return map.get(x).count;
     }
 
+    /**
+     * <p>add.</p>
+     *
+     * @param other a {@link ai.platon.pulsar.common.Histogram} object.
+     */
     public void add(Histogram<E> other) {
         for (E x : other.getKeys()) {
             add(x, other.getValue(x));
         }
     }
 
+    /**
+     * <p>normalize.</p>
+     *
+     * @return a {@link ai.platon.pulsar.common.Histogram} object.
+     */
     public Histogram<E> normalize() {
         Histogram<E> normalized = new Histogram<E>();
         Set<E> keys = getKeys();
@@ -71,6 +115,11 @@ public class Histogram<E> {
         return normalized;
     }
 
+    /**
+     * <p>sortInverseByValue.</p>
+     *
+     * @return a {@link java.util.List} object.
+     */
     public List<E> sortInverseByValue() {
         List<Map.Entry<E, HistogramEntry>> list = new Vector<Map.Entry<E, HistogramEntry>>(
                 map.entrySet());
@@ -92,6 +141,11 @@ public class Histogram<E> {
         return list2;
     }
 
+    /**
+     * <p>sortByValue.</p>
+     *
+     * @return a {@link java.util.List} object.
+     */
     public List<E> sortByValue() {
         List<Map.Entry<E, HistogramEntry>> list = new Vector<Map.Entry<E, HistogramEntry>>(
                 map.entrySet());
@@ -113,6 +167,12 @@ public class Histogram<E> {
         return list2;
     }
 
+    /**
+     * <p>toString.</p>
+     *
+     * @param items a {@link java.util.List} object.
+     * @return a {@link java.lang.String} object.
+     */
     public String toString(List<E> items) {
         StringBuilder strBuilder = new StringBuilder();
         for (E item : items) {

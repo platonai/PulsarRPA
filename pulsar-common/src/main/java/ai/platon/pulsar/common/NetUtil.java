@@ -9,24 +9,53 @@ import java.net.*;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
+/**
+ * <p>NetUtil class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class NetUtil {
 
     private static final Logger log = LoggerFactory.getLogger(NetUtil.class);
 
+    /** Constant <code>CONNECTION_TIMEOUT</code> */
     public static Duration CONNECTION_TIMEOUT = Duration.ofSeconds(3);
+    /** Constant <code>PROXY_CONNECTION_TIMEOUT</code> */
     public static Duration PROXY_CONNECTION_TIMEOUT = Duration.ofSeconds(3);
 
     // Pattern for matching ip[:port]
+    /** Constant <code>IP_PORT_PATTERN</code> */
     public static final Pattern IP_PORT_PATTERN = Pattern.compile("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d+)?");
 
+    /**
+     * <p>testNetwork.</p>
+     *
+     * @param ip a {@link java.lang.String} object.
+     * @param port a int.
+     * @return a boolean.
+     */
     public static boolean testNetwork(String ip, int port) {
         return testTcpNetwork(ip, port);
     }
 
+    /**
+     * <p>testHttpNetwork.</p>
+     *
+     * @param url a {@link java.net.URL} object.
+     * @return a boolean.
+     */
     public static boolean testHttpNetwork(URL url) {
         return testHttpNetwork(url, null);
     }
 
+    /**
+     * <p>testHttpNetwork.</p>
+     *
+     * @param url a {@link java.net.URL} object.
+     * @param proxy a {@link java.net.Proxy} object.
+     * @return a boolean.
+     */
     public static boolean testHttpNetwork(URL url, Proxy proxy) {
         boolean reachable = false;
 
@@ -50,6 +79,13 @@ public class NetUtil {
         return reachable;
     }
 
+    /**
+     * <p>testHttpNetwork.</p>
+     *
+     * @param host a {@link java.lang.String} object.
+     * @param port a int.
+     * @return a boolean.
+     */
     public static boolean testHttpNetwork(String host, int port) {
         try {
             URL url = new URL("http", host, port, "/");
@@ -60,10 +96,25 @@ public class NetUtil {
         return false;
     }
 
+    /**
+     * <p>testTcpNetwork.</p>
+     *
+     * @param ip a {@link java.lang.String} object.
+     * @param port a int.
+     * @return a boolean.
+     */
     public static boolean testTcpNetwork(String ip, int port) {
         return testTcpNetwork(ip, port, CONNECTION_TIMEOUT);
     }
 
+    /**
+     * <p>testTcpNetwork.</p>
+     *
+     * @param ip a {@link java.lang.String} object.
+     * @param port a int.
+     * @param timeout a {@link java.time.Duration} object.
+     * @return a boolean.
+     */
     public static boolean testTcpNetwork(String ip, int port, Duration timeout) {
         boolean reachable = false;
         Socket socket = new Socket();
@@ -79,10 +130,26 @@ public class NetUtil {
         return reachable;
     }
 
+    /**
+     * <p>getAgentString.</p>
+     *
+     * @param agentName a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getAgentString(String agentName) {
         return agentName;
     }
 
+    /**
+     * <p>getAgentString.</p>
+     *
+     * @param agentName a {@link java.lang.String} object.
+     * @param agentVersion a {@link java.lang.String} object.
+     * @param agentDesc a {@link java.lang.String} object.
+     * @param agentURL a {@link java.lang.String} object.
+     * @param agentEmail a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getAgentString(String agentName, String agentVersion,
                                         String agentDesc, String agentURL, String agentEmail) {
 
@@ -122,6 +189,15 @@ public class NetUtil {
         return buf.toString();
     }
 
+    /**
+     * <p>getChromeUserAgent.</p>
+     *
+     * @param mozilla a {@link java.lang.String} object.
+     * @param appleWebKit a {@link java.lang.String} object.
+     * @param chrome a {@link java.lang.String} object.
+     * @param safari a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getChromeUserAgent(String mozilla, String appleWebKit, String chrome, String safari) {
         return String.format("Mozilla/%s (X11; Linux x86_64) AppleWebKit/%s (KHTML, like Gecko) Chrome/%s Safari/%s",
                 mozilla, appleWebKit, chrome, safari);
@@ -129,6 +205,7 @@ public class NetUtil {
 
     /**
      * Return hostname without throwing exception.
+     *
      * @return hostname
      */
     public static String getHostname() {
@@ -160,12 +237,23 @@ public class NetUtil {
 
     /**
      * TODO : We may need a better solution to indicate whether it's a master
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @return a boolean.
      */
     public static boolean isMaster(Configuration conf) {
         String masterHostname = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         return masterHostname.equals("localhost") || masterHostname.equals(getHostname());
     }
 
+    /**
+     * <p>getMasterURL.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @param path a {@link java.lang.String} object.
+     * @return a {@link java.net.URL} object.
+     * @throws java.net.MalformedURLException if any.
+     */
     public static URL getMasterURL(Configuration conf, String path) throws MalformedURLException {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST, "localhost");
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
@@ -173,12 +261,25 @@ public class NetUtil {
         return new URL("http", host, port, path);
     }
 
+    /**
+     * <p>getMasterUrl.</p>
+     *
+     * @param conf a {@link org.apache.hadoop.conf.Configuration} object.
+     * @return a {@link java.lang.String} object.
+     */
     public static String getMasterUrl(Configuration conf) {
         String host = conf.get(CapabilityTypes.PULSAR_MASTER_HOST);
         int port = conf.getInt(CapabilityTypes.PULSAR_MASTER_PORT, 8182);
         return "http://" + host + ":" + port;
     }
 
+    /**
+     * <p>isExternalLink.</p>
+     *
+     * @param sourceUrl a {@link java.lang.String} object.
+     * @param destUrl a {@link java.lang.String} object.
+     * @return a boolean.
+     */
     public static boolean isExternalLink(String sourceUrl, String destUrl) {
         try {
             String toHost = new URL(destUrl).getHost().toLowerCase();

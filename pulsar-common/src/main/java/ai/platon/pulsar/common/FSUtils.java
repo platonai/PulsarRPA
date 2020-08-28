@@ -29,13 +29,22 @@ import java.util.List;
 
 /**
  * Utility methods for common filesystem operations.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class FSUtils {
 
+    /** Constant <code>LOG</code> */
     public static final Logger LOG = LoggerFactory.getLogger(FSUtils.class);
 
     /**
      * Read all lines in file, if it's under HDFS, read from HDFS, or read from local file system
+     *
+     * @param path a {@link java.lang.String} object.
+     * @param conf a {@link ai.platon.pulsar.common.config.ImmutableConfig} object.
+     * @return a {@link java.util.List} object.
+     * @throws java.io.IOException if any.
      */
     public static List<String> readAllLines(String path, ImmutableConfig conf) throws IOException {
         boolean isDistributedFs = HdfsUtils.isDistributedFS(conf);
@@ -47,6 +56,13 @@ public class FSUtils {
         }
     }
 
+    /**
+     * <p>readAllLinesSilent.</p>
+     *
+     * @param path a {@link java.nio.file.Path} object.
+     * @param conf a {@link ai.platon.pulsar.common.config.ImmutableConfig} object.
+     * @return a {@link java.util.List} object.
+     */
     public static List<String> readAllLinesSilent(Path path, ImmutableConfig conf) {
         try {
             return readAllLines(path.toString(), conf);

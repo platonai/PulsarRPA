@@ -30,15 +30,28 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * <p>DateTimeDetector class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class DateTimeDetector {
 
+    /** Constant <code>MIN_DATE_TIME_STR_LENGTH="2015-01-01 12:00".length()</code> */
     public static final int MIN_DATE_TIME_STR_LENGTH = "2015-01-01 12:00".length();
+    /** Constant <code>MIN_YEAR_MONTH_STR_LENGTH="201501".length()</code> */
     public static final int MIN_YEAR_MONTH_STR_LENGTH = "201501".length();
+    /** Constant <code>MIN_DATE_STR_LENGTH="20150101".length()</code> */
     public static final int MIN_DATE_STR_LENGTH = "20150101".length();
+    /** Constant <code>MAX_META_STR_LENGTH=200</code> */
     public static final int MAX_META_STR_LENGTH = 200;
+    /** Constant <code>MAX_DATE_TIME_STR_LENGTH="EEE, dd MMM yyyy HH:mm:ss zzz".length()</code> */
     public static final int MAX_DATE_TIME_STR_LENGTH = "EEE, dd MMM yyyy HH:mm:ss zzz".length();
+    /** Constant <code>MAX_TITLE_LENGTH=350</code> */
     public static final int MAX_TITLE_LENGTH = 350;
 
+    /** Constant <code>BAD_DATE_TIME_STRING_CONTAINS</code> */
     public static final String[] BAD_DATE_TIME_STRING_CONTAINS = new String[]{
             "GMT+8",
             "UTC+8",
@@ -48,24 +61,39 @@ public class DateTimeDetector {
             "visit"
     };
 
+    /** Constant <code>OLD_DATE_DAYS=30</code> */
     public static final int OLD_DATE_DAYS = 30;
+    /** Constant <code>CURRENT_DATE</code> */
     public static final LocalDate CURRENT_DATE = LocalDate.now();
+    /** Constant <code>CURRENT_DATE_EPOCH_DAYS=CURRENT_DATE.toEpochDay()</code> */
     public static final long CURRENT_DATE_EPOCH_DAYS = CURRENT_DATE.toEpochDay();
+    /** Constant <code>CURRENT_YEAR=CURRENT_DATE.getYear()</code> */
     public static final int CURRENT_YEAR = CURRENT_DATE.getYear();
+    /** Constant <code>CURRENT_YEAR_STR="String.valueOf(CURRENT_YEAR)"</code> */
     public static final String CURRENT_YEAR_STR = String.valueOf(CURRENT_YEAR);
+    /** Constant <code>CURRENT_MONTH=CURRENT_DATE.getMonthValue()</code> */
     public static final int CURRENT_MONTH = CURRENT_DATE.getMonthValue();
+    /** Constant <code>YEAR_LOWER_BOUND=1990</code> */
     public static final int YEAR_LOWER_BOUND = 1990;
+    /** Constant <code>VALID_WORK_YEARS</code> */
     public static final List<String> VALID_WORK_YEARS = IntStream.range(2010, 2030)
             .mapToObj(String::valueOf).collect(Collectors.toList());
+    /** Constant <code>VALID_WORK_YEARS_SHORT</code> */
     public static final List<String> VALID_WORK_YEARS_SHORT = IntStream.range(10, 30)
             .mapToObj(String::valueOf).collect(Collectors.toList());
+    /** Constant <code>VALID_WORK_YEARS_ARRAY</code> */
     public static final String[] VALID_WORK_YEARS_ARRAY = VALID_WORK_YEARS.toArray(new String[0]);
+    /** Constant <code>VALID_WORK_YEARS_SHORT_ARRAY</code> */
     public static final String[] VALID_WORK_YEARS_SHORT_ARRAY = VALID_WORK_YEARS_SHORT.toArray(new String[0]);
+    /** Constant <code>OLD_YEARS</code> */
     public static Set<String> OLD_YEARS;
+    /** Constant <code>OLD_MONTH</code> */
     public static Set<String> OLD_MONTH;
+    /** Constant <code>OLD_MONTH_URL_DATE_PATTERN</code> */
     public static Pattern OLD_MONTH_URL_DATE_PATTERN;
     // 2016-03-05 20:07:51
     // TODO : What's the difference between HH and hh? 24 hours VS 12 hours?
+    /** Constant <code>COMMON_DATE_FORMATS</code> */
     public static String[] COMMON_DATE_FORMATS = new String[]{
             "yyyyMMdd",
             "yyyy.MM.dd",
@@ -73,6 +101,7 @@ public class DateTimeDetector {
             "yyyy年MM月dd日",
             "yyyy/MM/dd",
     };
+    /** Constant <code>COMMON_DATE_TIME_FORMATS</code> */
     public static String[] COMMON_DATE_TIME_FORMATS = new String[]{
             "yyyy.MM.dd HH:mm:ss",
 
@@ -130,10 +159,19 @@ public class DateTimeDetector {
     private final String[] dateTimeFormats;
     private ZoneId zoneId = ZoneId.systemDefault();
 
+    /**
+     * <p>Constructor for DateTimeDetector.</p>
+     */
     public DateTimeDetector() {
         this(COMMON_DATE_FORMATS, COMMON_DATE_TIME_FORMATS);
     }
 
+    /**
+     * <p>Constructor for DateTimeDetector.</p>
+     *
+     * @param dateFormats an array of {@link java.lang.String} objects.
+     * @param dateTimeFormats an array of {@link java.lang.String} objects.
+     */
     public DateTimeDetector(String[] dateFormats, String[] dateTimeFormats) {
         this.dateFormats = dateFormats;
         this.dateTimeFormats = dateTimeFormats;
@@ -143,14 +181,30 @@ public class DateTimeDetector {
         }
     }
 
+    /**
+     * <p>Getter for the field <code>zoneId</code>.</p>
+     *
+     * @return a {@link java.time.ZoneId} object.
+     */
     public ZoneId getZoneId() {
         return zoneId;
     }
 
+    /**
+     * <p>Setter for the field <code>zoneId</code>.</p>
+     *
+     * @param zoneId a {@link java.time.ZoneId} object.
+     */
     public void setZoneId(ZoneId zoneId) {
         this.zoneId = zoneId;
     }
 
+    /**
+     * <p>detectPossibleDateTimeString.</p>
+     *
+     * @param text a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public String detectPossibleDateTimeString(String text) {
         String possibleDate = StringUtils.substringBefore(text, "\n");
 
@@ -178,6 +232,12 @@ public class DateTimeDetector {
         return possibleDate;
     }
 
+    /**
+     * <p>detectDateTimeLeniently.</p>
+     *
+     * @param text a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
+     */
     public OffsetDateTime detectDateTimeLeniently(String text) {
         OffsetDateTime dateTime = detectDateTime(text);
         if (dateTime == null) {
@@ -189,6 +249,9 @@ public class DateTimeDetector {
 
     /**
      * Sniffy publish date
+     *
+     * @param text a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
      */
     public OffsetDateTime detectDateTime(String text) {
         if (text == null || text.length() < MIN_DATE_TIME_STR_LENGTH) {
@@ -237,11 +300,23 @@ public class DateTimeDetector {
         return dateTime;
     }
 
+    /**
+     * <p>detectYearMonth.</p>
+     *
+     * @param text a {@link java.lang.String} object.
+     * @return a {@link java.time.YearMonth} object.
+     */
     public YearMonth detectYearMonth(String text) {
         String possibleYearMonth = detectPossibleDateTimeString(text);
         return possibleYearMonth != null ? tryParseYearMonthStrictly(possibleYearMonth) : null;
     }
 
+    /**
+     * <p>tryParseYearMonthStrictly.</p>
+     *
+     * @param possibleYearMonth a {@link java.lang.String} object.
+     * @return a {@link java.time.YearMonth} object.
+     */
     public YearMonth tryParseYearMonthStrictly(String possibleYearMonth) {
         try {
             final Pattern pattern = Pattern.compile("20[0-9][0-9][0-1][0-9].+");
@@ -267,11 +342,23 @@ public class DateTimeDetector {
         return null;
     }
 
+    /**
+     * <p>detectDate.</p>
+     *
+     * @param text a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
+     */
     public OffsetDateTime detectDate(String text) {
         String possibleDate = detectPossibleDateTimeString(text);
         return possibleDate != null ? tryParseDateStrictly(possibleDate) : null;
     }
 
+    /**
+     * <p>tryParseDateStrictly.</p>
+     *
+     * @param possibleDate a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
+     */
     public OffsetDateTime tryParseDateStrictly(String possibleDate) {
         try {
             final Pattern pattern = Pattern.compile("20[0-9][0-9][0-1][0-9][0-3][0-9].+");
@@ -305,14 +392,33 @@ public class DateTimeDetector {
         return null;
     }
 
+    /**
+     * <p>parseDateStrictly.</p>
+     *
+     * @param dateStr a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
+     */
     public OffsetDateTime parseDateStrictly(String dateStr) {
         return parseDateStrictly(dateStr, dateFormats);
     }
 
+    /**
+     * <p>parseDateTimeStrictly.</p>
+     *
+     * @param dateStr a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
+     */
     public OffsetDateTime parseDateTimeStrictly(String dateStr) {
         return parseDateStrictly(dateStr, dateTimeFormats);
     }
 
+    /**
+     * <p>parseDateStrictly.</p>
+     *
+     * @param dateStr a {@link java.lang.String} object.
+     * @param formats a {@link java.lang.String} object.
+     * @return a {@link java.time.OffsetDateTime} object.
+     */
     public OffsetDateTime parseDateStrictly(String dateStr, String... formats) {
         Date parsedDate = null;
 
@@ -324,6 +430,13 @@ public class DateTimeDetector {
         return parsedDate == null ? null : OffsetDateTime.ofInstant(parsedDate.toInstant(), zoneId);
     }
 
+    /**
+     * <p>parseDateTimeStrictly.</p>
+     *
+     * @param dateStr a {@link java.lang.String} object.
+     * @param defaultValue a {@link java.time.Instant} object.
+     * @return a {@link java.time.Instant} object.
+     */
     public Instant parseDateTimeStrictly(String dateStr, Instant defaultValue) {
         try {
             return DateUtils.parseDateStrictly(dateStr, dateTimeFormats).toInstant();
@@ -336,7 +449,12 @@ public class DateTimeDetector {
     /**
      * For urls who contains date information, for example
      * http://bond.hexun.com/2011-01-07/126641872.html
-     * */
+     *
+     * @param text a {@link java.lang.String} object.
+     * @param days a int.
+     * @param zoneId a {@link java.time.ZoneId} object.
+     * @return a boolean.
+     */
     public boolean containsOldDate(String text, int days, ZoneId zoneId) {
         if (text == null) {
             return false;

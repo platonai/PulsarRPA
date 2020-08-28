@@ -26,6 +26,12 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * <p>CommandRunner class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class CommandRunner {
 
     private static final int BUF = 4096;
@@ -41,38 +47,74 @@ public class CommandRunner {
 
     private CyclicBarrier barrier;
 
+    /**
+     * <p>getExitValue.</p>
+     *
+     * @return a int.
+     */
     public int getExitValue() {
         return xit;
     }
 
+    /**
+     * <p>Getter for the field <code>command</code>.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String getCommand() {
         return command;
     }
 
+    /**
+     * <p>Setter for the field <code>command</code>.</p>
+     *
+     * @param s a {@link java.lang.String} object.
+     */
     public void setCommand(String s) {
         command = s;
     }
 
+    /**
+     * <p>setInputStream.</p>
+     *
+     * @param is a {@link java.io.InputStream} object.
+     */
     public void setInputStream(InputStream is) {
         stdin = is;
     }
 
+    /**
+     * <p>setStdOutputStream.</p>
+     *
+     * @param os a {@link java.io.OutputStream} object.
+     */
     public void setStdOutputStream(OutputStream os) {
         stdout = os;
     }
 
+    /**
+     * <p>setStdErrorStream.</p>
+     *
+     * @param os a {@link java.io.OutputStream} object.
+     */
     public void setStdErrorStream(OutputStream os) {
         stderr = os;
     }
 
+    /**
+     * <p>evaluate.</p>
+     *
+     * @throws java.io.IOException if any.
+     */
     public void evaluate() throws IOException {
         this.exec();
     }
 
     /**
+     * <p>exec.</p>
      *
      * @return process exit value (return code) or -1 if timed out.
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public int exec() throws IOException {
         Process proc = Runtime.getRuntime().exec(command);
@@ -150,22 +192,47 @@ public class CommandRunner {
         return xit;
     }
 
+    /**
+     * <p>getThrownError.</p>
+     *
+     * @return a {@link java.lang.Throwable} object.
+     */
     public Throwable getThrownError() {
         return _thrownError;
     }
 
+    /**
+     * <p>Getter for the field <code>timeout</code>.</p>
+     *
+     * @return a int.
+     */
     public int getTimeout() {
         return timeout;
     }
 
+    /**
+     * <p>Setter for the field <code>timeout</code>.</p>
+     *
+     * @param timeout a int.
+     */
     public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
 
+    /**
+     * <p>Getter for the field <code>waitForExit</code>.</p>
+     *
+     * @return a boolean.
+     */
     public boolean getWaitForExit() {
         return waitForExit;
     }
 
+    /**
+     * <p>Setter for the field <code>waitForExit</code>.</p>
+     *
+     * @param waitForExit a boolean.
+     */
     public void setWaitForExit(boolean waitForExit) {
         this.waitForExit = waitForExit;
     }
@@ -232,6 +299,12 @@ public class CommandRunner {
         }
     }
     
+    /**
+     * <p>main.</p>
+     *
+     * @param args an array of {@link java.lang.String} objects.
+     * @throws java.lang.Exception if any.
+     */
     public static void main(String[] args) throws Exception {
         String commandPath = null;
         String filePath = null;

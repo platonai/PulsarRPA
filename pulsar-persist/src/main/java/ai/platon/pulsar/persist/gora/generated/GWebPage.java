@@ -17,7 +17,14 @@
  */
 package ai.platon.pulsar.persist.gora.generated;  
 
+/**
+ * <p>GWebPage class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
+  /** Constant <code>SCHEMA$</code> */
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GWebPage\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"createTime\",\"type\":\"long\",\"default\":0},{\"name\":\"distance\",\"type\":\"int\",\"default\":-1},{\"name\":\"fetchCount\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchPriority\",\"type\":\"int\",\"default\":0},{\"name\":\"fetchInterval\",\"type\":\"int\",\"default\":0},{\"name\":\"zoneId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"options\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"batchId\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"crawlStatus\",\"type\":\"int\",\"default\":0},{\"name\":\"prevFetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchTime\",\"type\":\"long\",\"default\":0},{\"name\":\"fetchRetries\",\"type\":\"int\",\"default\":0},{\"name\":\"reprUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"prevModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"modifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"protocolStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GProtocolStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"encoding\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentType\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"content\",\"type\":[\"null\",\"bytes\"],\"doc\":\"The entire raw document content e.g. raw XHTML\",\"default\":null},{\"name\":\"baseUrl\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"referrer\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"anchorOrder\",\"type\":\"int\",\"default\":-1},{\"name\":\"parseStatus\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"GParseStatus\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}],\"default\":null},{\"name\":\"pageTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTitle\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentText\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentTextLen\",\"type\":\"int\",\"default\":0},{\"name\":\"pageCategory\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"contentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentModifiedTime\",\"type\":\"long\",\"default\":0},{\"name\":\"contentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"refContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevRefContentPublishTime\",\"type\":\"long\",\"default\":0},{\"name\":\"prevSignature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"signature\",\"type\":[\"null\",\"bytes\"],\"default\":null},{\"name\":\"contentScore\",\"type\":\"float\",\"default\":0},{\"name\":\"score\",\"type\":\"float\",\"default\":0},{\"name\":\"sortScore\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"pageCounters\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"int\"]},\"default\":{}},{\"name\":\"headers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"links\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"liveLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",{\"type\":\"record\",\"name\":\"GHypeLink\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}]},\"default\":[]},{\"name\":\"vividLinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"deadLinks\",\"type\":{\"type\":\"array\",\"items\":\"string\"},\"default\":[]},{\"name\":\"inlinks\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"markers\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}},{\"name\":\"metadata\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"bytes\"]},\"default\":{}},{\"name\":\"pageModel\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"GFieldGroup\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}},\"default\":[]}]}");
   private static final long serialVersionUID = 106768163334616612L;
   /** Enum containing all data bean's fields. */
@@ -110,6 +117,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     public String toString() {return name;}
   };
 
+  /** Constant <code>_ALL_FIELDS</code> */
   public static final String[] _ALL_FIELDS = {
   "createTime",
   "distance",
@@ -166,6 +174,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the total field count.
+   *
    * @return int field count
    */
   public int getFieldsCount() {
@@ -224,8 +233,14 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   private java.util.Map<CharSequence, CharSequence> markers;
   private java.util.Map<CharSequence,java.nio.ByteBuffer> metadata;
   private java.util.List<GFieldGroup> pageModel;
+  /**
+   * <p>getSchema.</p>
+   *
+   * @return a {@link org.apache.avro.Schema} object.
+   */
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
+  /** {@inheritDoc} */
   public Object get(int field$) {
     switch (field$) {
     case 0: return createTime;
@@ -284,6 +299,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   }
 
   // Used by DatumReader.  Applications should not call.
+  /** {@inheritDoc} */
   @SuppressWarnings(value="unchecked")
   public void put(int field$, Object value) {
     switch (field$) {
@@ -344,6 +360,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'createTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getCreateTime() {
     return createTime;
@@ -351,6 +369,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'createTime' field.
+   *
    * @param value the value to set.
    */
   public void setCreateTime(Long value) {
@@ -360,7 +379,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'createTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isCreateTimeDirty() {
     return isDirty(0);
@@ -368,6 +388,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'distance' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getDistance() {
     return distance;
@@ -375,6 +397,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'distance' field.
+   *
    * @param value the value to set.
    */
   public void setDistance(Integer value) {
@@ -384,7 +407,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'distance' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isDistanceDirty() {
     return isDirty(1);
@@ -392,6 +416,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'fetchCount' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getFetchCount() {
     return fetchCount;
@@ -399,6 +425,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'fetchCount' field.
+   *
    * @param value the value to set.
    */
   public void setFetchCount(Integer value) {
@@ -408,7 +435,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'fetchCount' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isFetchCountDirty() {
     return isDirty(2);
@@ -416,6 +444,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'fetchPriority' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getFetchPriority() {
     return fetchPriority;
@@ -423,6 +453,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'fetchPriority' field.
+   *
    * @param value the value to set.
    */
   public void setFetchPriority(Integer value) {
@@ -432,7 +463,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'fetchPriority' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isFetchPriorityDirty() {
     return isDirty(3);
@@ -440,6 +472,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'fetchInterval' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getFetchInterval() {
     return fetchInterval;
@@ -447,6 +481,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'fetchInterval' field.
+   *
    * @param value the value to set.
    */
   public void setFetchInterval(Integer value) {
@@ -456,7 +491,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'fetchInterval' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isFetchIntervalDirty() {
     return isDirty(4);
@@ -464,6 +500,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'zoneId' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getZoneId() {
     return zoneId;
@@ -471,6 +509,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'zoneId' field.
+   *
    * @param value the value to set.
    */
   public void setZoneId(CharSequence value) {
@@ -480,7 +519,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'zoneId' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isZoneIdDirty() {
     return isDirty(5);
@@ -488,6 +528,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'options' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getOptions() {
     return options;
@@ -495,6 +537,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'options' field.
+   *
    * @param value the value to set.
    */
   public void setOptions(CharSequence value) {
@@ -504,7 +547,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'options' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isOptionsDirty() {
     return isDirty(6);
@@ -512,6 +556,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'batchId' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getBatchId() {
     return batchId;
@@ -519,6 +565,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'batchId' field.
+   *
    * @param value the value to set.
    */
   public void setBatchId(CharSequence value) {
@@ -528,7 +575,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'batchId' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isBatchIdDirty() {
     return isDirty(7);
@@ -536,6 +584,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'crawlStatus' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getCrawlStatus() {
     return crawlStatus;
@@ -543,6 +593,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'crawlStatus' field.
+   *
    * @param value the value to set.
    */
   public void setCrawlStatus(Integer value) {
@@ -552,7 +603,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'crawlStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isCrawlStatusDirty() {
     return isDirty(8);
@@ -560,6 +612,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'prevFetchTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getPrevFetchTime() {
     return prevFetchTime;
@@ -567,6 +621,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'prevFetchTime' field.
+   *
    * @param value the value to set.
    */
   public void setPrevFetchTime(Long value) {
@@ -576,7 +631,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'prevFetchTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPrevFetchTimeDirty() {
     return isDirty(9);
@@ -584,6 +640,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'fetchTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getFetchTime() {
     return fetchTime;
@@ -591,6 +649,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'fetchTime' field.
+   *
    * @param value the value to set.
    */
   public void setFetchTime(Long value) {
@@ -600,7 +659,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'fetchTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isFetchTimeDirty() {
     return isDirty(10);
@@ -608,6 +668,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'fetchRetries' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getFetchRetries() {
     return fetchRetries;
@@ -615,6 +677,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'fetchRetries' field.
+   *
    * @param value the value to set.
    */
   public void setFetchRetries(Integer value) {
@@ -624,7 +687,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'fetchRetries' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isFetchRetriesDirty() {
     return isDirty(11);
@@ -632,6 +696,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'reprUrl' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getReprUrl() {
     return reprUrl;
@@ -639,6 +705,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'reprUrl' field.
+   *
    * @param value the value to set.
    */
   public void setReprUrl(CharSequence value) {
@@ -648,7 +715,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'reprUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isReprUrlDirty() {
     return isDirty(12);
@@ -656,6 +724,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'prevModifiedTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getPrevModifiedTime() {
     return prevModifiedTime;
@@ -663,6 +733,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'prevModifiedTime' field.
+   *
    * @param value the value to set.
    */
   public void setPrevModifiedTime(Long value) {
@@ -672,7 +743,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'prevModifiedTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPrevModifiedTimeDirty() {
     return isDirty(13);
@@ -680,6 +752,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'modifiedTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getModifiedTime() {
     return modifiedTime;
@@ -687,6 +761,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'modifiedTime' field.
+   *
    * @param value the value to set.
    */
   public void setModifiedTime(Long value) {
@@ -696,7 +771,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'modifiedTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isModifiedTimeDirty() {
     return isDirty(14);
@@ -704,6 +780,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'protocolStatus' field.
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GProtocolStatus} object.
    */
   public GProtocolStatus getProtocolStatus() {
     return protocolStatus;
@@ -711,6 +789,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'protocolStatus' field.
+   *
    * @param value the value to set.
    */
   public void setProtocolStatus(GProtocolStatus value) {
@@ -720,7 +799,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'protocolStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isProtocolStatusDirty() {
     return isDirty(15);
@@ -728,6 +808,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'encoding' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getEncoding() {
     return encoding;
@@ -735,6 +817,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'encoding' field.
+   *
    * @param value the value to set.
    */
   public void setEncoding(CharSequence value) {
@@ -744,7 +827,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'encoding' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isEncodingDirty() {
     return isDirty(16);
@@ -752,6 +836,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentType' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getContentType() {
     return contentType;
@@ -759,6 +845,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentType' field.
+   *
    * @param value the value to set.
    */
   public void setContentType(CharSequence value) {
@@ -768,7 +855,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentType' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentTypeDirty() {
     return isDirty(17);
@@ -776,7 +864,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'content' field.
-   * The entire raw document content e.g. raw XHTML   */
+   * The entire raw document content e.g. raw XHTML
+   *
+   * @return a {@link java.nio.ByteBuffer} object.
+   */
   public java.nio.ByteBuffer getContent() {
     return content;
   }
@@ -784,6 +875,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   /**
    * Sets the value of the 'content' field.
    * The entire raw document content e.g. raw XHTML   * @param value the value to set.
+   *
+   * @param value a {@link java.nio.ByteBuffer} object.
    */
   public void setContent(java.nio.ByteBuffer value) {
     this.content = value;
@@ -793,6 +886,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   /**
    * Checks the dirty status of the 'content' field. A field is dirty if it represents a change that has not yet been written to the database.
    * The entire raw document content e.g. raw XHTML   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentDirty() {
     return isDirty(18);
@@ -800,6 +895,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'baseUrl' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getBaseUrl() {
     return baseUrl;
@@ -807,6 +904,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'baseUrl' field.
+   *
    * @param value the value to set.
    */
   public void setBaseUrl(CharSequence value) {
@@ -816,7 +914,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'baseUrl' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isBaseUrlDirty() {
     return isDirty(19);
@@ -824,6 +923,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'referrer' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getReferrer() {
     return referrer;
@@ -831,6 +932,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'referrer' field.
+   *
    * @param value the value to set.
    */
   public void setReferrer(CharSequence value) {
@@ -840,7 +942,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'referrer' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isReferrerDirty() {
     return isDirty(20);
@@ -848,6 +951,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'anchor' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getAnchor() {
     return anchor;
@@ -855,6 +960,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'anchor' field.
+   *
    * @param value the value to set.
    */
   public void setAnchor(CharSequence value) {
@@ -864,7 +970,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'anchor' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isAnchorDirty() {
     return isDirty(21);
@@ -872,6 +979,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'anchorOrder' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getAnchorOrder() {
     return anchorOrder;
@@ -879,6 +988,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'anchorOrder' field.
+   *
    * @param value the value to set.
    */
   public void setAnchorOrder(Integer value) {
@@ -888,7 +998,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'anchorOrder' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isAnchorOrderDirty() {
     return isDirty(22);
@@ -896,6 +1007,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'parseStatus' field.
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus} object.
    */
   public GParseStatus getParseStatus() {
     return parseStatus;
@@ -903,6 +1016,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'parseStatus' field.
+   *
    * @param value the value to set.
    */
   public void setParseStatus(GParseStatus value) {
@@ -912,7 +1026,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'parseStatus' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isParseStatusDirty() {
     return isDirty(23);
@@ -920,6 +1035,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'pageTitle' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getPageTitle() {
     return pageTitle;
@@ -927,6 +1044,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'pageTitle' field.
+   *
    * @param value the value to set.
    */
   public void setPageTitle(CharSequence value) {
@@ -936,7 +1054,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'pageTitle' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPageTitleDirty() {
     return isDirty(24);
@@ -944,6 +1063,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'pageText' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getPageText() {
     return pageText;
@@ -951,6 +1072,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'pageText' field.
+   *
    * @param value the value to set.
    */
   public void setPageText(CharSequence value) {
@@ -960,7 +1082,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'pageText' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPageTextDirty() {
     return isDirty(25);
@@ -968,6 +1091,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentTitle' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getContentTitle() {
     return contentTitle;
@@ -975,6 +1100,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentTitle' field.
+   *
    * @param value the value to set.
    */
   public void setContentTitle(CharSequence value) {
@@ -984,7 +1110,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentTitle' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentTitleDirty() {
     return isDirty(26);
@@ -992,6 +1119,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentText' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getContentText() {
     return contentText;
@@ -999,6 +1128,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentText' field.
+   *
    * @param value the value to set.
    */
   public void setContentText(CharSequence value) {
@@ -1008,7 +1138,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentText' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentTextDirty() {
     return isDirty(27);
@@ -1016,6 +1147,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentTextLen' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getContentTextLen() {
     return contentTextLen;
@@ -1023,6 +1156,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentTextLen' field.
+   *
    * @param value the value to set.
    */
   public void setContentTextLen(Integer value) {
@@ -1032,7 +1166,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentTextLen' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentTextLenDirty() {
     return isDirty(28);
@@ -1040,6 +1175,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'pageCategory' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getPageCategory() {
     return pageCategory;
@@ -1047,6 +1184,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'pageCategory' field.
+   *
    * @param value the value to set.
    */
   public void setPageCategory(CharSequence value) {
@@ -1056,7 +1194,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'pageCategory' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPageCategoryDirty() {
     return isDirty(29);
@@ -1064,6 +1203,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentModifiedTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getContentModifiedTime() {
     return contentModifiedTime;
@@ -1071,6 +1212,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentModifiedTime' field.
+   *
    * @param value the value to set.
    */
   public void setContentModifiedTime(Long value) {
@@ -1080,7 +1222,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentModifiedTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentModifiedTimeDirty() {
     return isDirty(30);
@@ -1088,6 +1231,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'prevContentModifiedTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getPrevContentModifiedTime() {
     return prevContentModifiedTime;
@@ -1095,6 +1240,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'prevContentModifiedTime' field.
+   *
    * @param value the value to set.
    */
   public void setPrevContentModifiedTime(Long value) {
@@ -1104,7 +1250,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'prevContentModifiedTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPrevContentModifiedTimeDirty() {
     return isDirty(31);
@@ -1112,6 +1259,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentPublishTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getContentPublishTime() {
     return contentPublishTime;
@@ -1119,6 +1268,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentPublishTime' field.
+   *
    * @param value the value to set.
    */
   public void setContentPublishTime(Long value) {
@@ -1128,7 +1278,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentPublishTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentPublishTimeDirty() {
     return isDirty(32);
@@ -1136,6 +1287,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'prevContentPublishTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getPrevContentPublishTime() {
     return prevContentPublishTime;
@@ -1143,6 +1296,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'prevContentPublishTime' field.
+   *
    * @param value the value to set.
    */
   public void setPrevContentPublishTime(Long value) {
@@ -1152,7 +1306,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'prevContentPublishTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPrevContentPublishTimeDirty() {
     return isDirty(33);
@@ -1160,6 +1315,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'refContentPublishTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getRefContentPublishTime() {
     return refContentPublishTime;
@@ -1167,6 +1324,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'refContentPublishTime' field.
+   *
    * @param value the value to set.
    */
   public void setRefContentPublishTime(Long value) {
@@ -1176,7 +1334,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'refContentPublishTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isRefContentPublishTimeDirty() {
     return isDirty(34);
@@ -1184,6 +1343,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'prevRefContentPublishTime' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getPrevRefContentPublishTime() {
     return prevRefContentPublishTime;
@@ -1191,6 +1352,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'prevRefContentPublishTime' field.
+   *
    * @param value the value to set.
    */
   public void setPrevRefContentPublishTime(Long value) {
@@ -1200,7 +1362,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'prevRefContentPublishTime' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPrevRefContentPublishTimeDirty() {
     return isDirty(35);
@@ -1208,6 +1371,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'prevSignature' field.
+   *
+   * @return a {@link java.nio.ByteBuffer} object.
    */
   public java.nio.ByteBuffer getPrevSignature() {
     return prevSignature;
@@ -1215,6 +1380,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'prevSignature' field.
+   *
    * @param value the value to set.
    */
   public void setPrevSignature(java.nio.ByteBuffer value) {
@@ -1224,7 +1390,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'prevSignature' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPrevSignatureDirty() {
     return isDirty(36);
@@ -1232,6 +1399,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'signature' field.
+   *
+   * @return a {@link java.nio.ByteBuffer} object.
    */
   public java.nio.ByteBuffer getSignature() {
     return signature;
@@ -1239,6 +1408,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'signature' field.
+   *
    * @param value the value to set.
    */
   public void setSignature(java.nio.ByteBuffer value) {
@@ -1248,7 +1418,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'signature' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isSignatureDirty() {
     return isDirty(37);
@@ -1256,6 +1427,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'contentScore' field.
+   *
+   * @return a {@link java.lang.Float} object.
    */
   public Float getContentScore() {
     return contentScore;
@@ -1263,6 +1436,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'contentScore' field.
+   *
    * @param value the value to set.
    */
   public void setContentScore(Float value) {
@@ -1272,7 +1446,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'contentScore' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isContentScoreDirty() {
     return isDirty(38);
@@ -1280,6 +1455,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'score' field.
+   *
+   * @return a {@link java.lang.Float} object.
    */
   public Float getScore() {
     return score;
@@ -1287,6 +1464,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'score' field.
+   *
    * @param value the value to set.
    */
   public void setScore(Float value) {
@@ -1296,7 +1474,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'score' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isScoreDirty() {
     return isDirty(39);
@@ -1304,6 +1483,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'sortScore' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getSortScore() {
     return sortScore;
@@ -1311,6 +1492,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'sortScore' field.
+   *
    * @param value the value to set.
    */
   public void setSortScore(CharSequence value) {
@@ -1320,7 +1502,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'sortScore' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isSortScoreDirty() {
     return isDirty(40);
@@ -1328,6 +1511,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'pageCounters' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, Integer> getPageCounters() {
     return pageCounters;
@@ -1335,6 +1520,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'pageCounters' field.
+   *
    * @param value the value to set.
    */
   public void setPageCounters(java.util.Map<CharSequence, Integer> value) {
@@ -1344,7 +1530,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'pageCounters' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPageCountersDirty() {
     return isDirty(41);
@@ -1352,6 +1539,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'headers' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, CharSequence> getHeaders() {
     return headers;
@@ -1359,6 +1548,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'headers' field.
+   *
    * @param value the value to set.
    */
   public void setHeaders(java.util.Map<CharSequence, CharSequence> value) {
@@ -1368,7 +1558,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'headers' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isHeadersDirty() {
     return isDirty(42);
@@ -1376,6 +1567,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'links' field.
+   *
+   * @return a {@link java.util.List} object.
    */
   public java.util.List<CharSequence> getLinks() {
     return links;
@@ -1383,6 +1576,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'links' field.
+   *
    * @param value the value to set.
    */
   public void setLinks(java.util.List<CharSequence> value) {
@@ -1392,7 +1586,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'links' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isLinksDirty() {
     return isDirty(43);
@@ -1400,6 +1595,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'liveLinks' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, GHypeLink> getLiveLinks() {
     return liveLinks;
@@ -1407,6 +1604,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'liveLinks' field.
+   *
    * @param value the value to set.
    */
   public void setLiveLinks(java.util.Map<CharSequence, GHypeLink> value) {
@@ -1416,7 +1614,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'liveLinks' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isLiveLinksDirty() {
     return isDirty(44);
@@ -1424,6 +1623,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'vividLinks' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, CharSequence> getVividLinks() {
     return vividLinks;
@@ -1431,6 +1632,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'vividLinks' field.
+   *
    * @param value the value to set.
    */
   public void setVividLinks(java.util.Map<CharSequence, CharSequence> value) {
@@ -1440,7 +1642,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'vividLinks' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isVividLinksDirty() {
     return isDirty(45);
@@ -1448,6 +1651,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'deadLinks' field.
+   *
+   * @return a {@link java.util.List} object.
    */
   public java.util.List<CharSequence> getDeadLinks() {
     return deadLinks;
@@ -1455,6 +1660,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'deadLinks' field.
+   *
    * @param value the value to set.
    */
   public void setDeadLinks(java.util.List<CharSequence> value) {
@@ -1464,7 +1670,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'deadLinks' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isDeadLinksDirty() {
     return isDirty(46);
@@ -1472,6 +1679,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'inlinks' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, CharSequence> getInlinks() {
     return inlinks;
@@ -1479,6 +1688,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'inlinks' field.
+   *
    * @param value the value to set.
    */
   public void setInlinks(java.util.Map<CharSequence, CharSequence> value) {
@@ -1488,7 +1698,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'inlinks' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isInlinksDirty() {
     return isDirty(47);
@@ -1496,6 +1707,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'markers' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, CharSequence> getMarkers() {
     return markers;
@@ -1503,6 +1716,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'markers' field.
+   *
    * @param value the value to set.
    */
   public void setMarkers(java.util.Map<CharSequence, CharSequence> value) {
@@ -1512,7 +1726,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'markers' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isMarkersDirty() {
     return isDirty(48);
@@ -1520,6 +1735,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'metadata' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence,java.nio.ByteBuffer> getMetadata() {
     return metadata;
@@ -1527,6 +1744,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'metadata' field.
+   *
    * @param value the value to set.
    */
   public void setMetadata(java.util.Map<CharSequence,java.nio.ByteBuffer> value) {
@@ -1536,7 +1754,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'metadata' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isMetadataDirty() {
     return isDirty(49);
@@ -1544,6 +1763,8 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Gets the value of the 'pageModel' field.
+   *
+   * @return a {@link java.util.List} object.
    */
   public java.util.List<GFieldGroup> getPageModel() {
     return pageModel;
@@ -1551,6 +1772,7 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Sets the value of the 'pageModel' field.
+   *
    * @param value the value to set.
    */
   public void setPageModel(java.util.List<GFieldGroup> value) {
@@ -1560,23 +1782,38 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
 
   /**
    * Checks the dirty status of the 'pageModel' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isPageModelDirty() {
     return isDirty(50);
   }
 
-  /** Creates a new GWebPage RecordBuilder */
+  /**
+   * Creates a new GWebPage RecordBuilder
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GWebPage.Builder} object.
+   */
   public static GWebPage.Builder newBuilder() {
     return new GWebPage.Builder();
   }
 
-  /** Creates a new GWebPage RecordBuilder by copying an existing Builder */
+  /**
+   * Creates a new GWebPage RecordBuilder by copying an existing Builder
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GWebPage.Builder} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GWebPage.Builder} object.
+   */
   public static GWebPage.Builder newBuilder(GWebPage.Builder other) {
     return new GWebPage.Builder(other);
   }
 
-  /** Creates a new GWebPage RecordBuilder by copying an existing GWebPage instance */
+  /**
+   * Creates a new GWebPage RecordBuilder by copying an existing GWebPage instance
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GWebPage.Builder} object.
+   */
   public static GWebPage.Builder newBuilder(GWebPage other) {
     return new GWebPage.Builder(other);
   }
@@ -3197,10 +3434,20 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
     }
   }
 
+  /**
+   * <p>getTombstone.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GWebPage.Tombstone} object.
+   */
   public Tombstone getTombstone(){
   	return TOMBSTONE;
   }
 
+  /**
+   * <p>newInstance.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GWebPage} object.
+   */
   public GWebPage newInstance(){
     return newBuilder().build();
   }
@@ -4393,10 +4640,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
             DATUM_READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
 
   /**
+   * {@inheritDoc}
+   *
    * Writes AVRO data bean to output stream in the form of AVRO Binary encoding format. This will transform
    * AVRO data bean from its Java object form to it s serializable form.
-   *
-   * @param out java.io.ObjectOutput output stream to write data bean in serializable form
    */
   @Override
   public void writeExternal(java.io.ObjectOutput out)
@@ -4408,10 +4655,10 @@ public class GWebPage extends org.apache.gora.persistency.impl.PersistentBase im
   }
 
   /**
+   * {@inheritDoc}
+   *
    * Reads AVRO data bean from input stream in it s AVRO Binary encoding format to Java object format.
    * This will transform AVRO data bean from it s serializable form to deserialized Java object form.
-   *
-   * @param in java.io.ObjectOutput input stream to read data bean in serializable form
    */
   @Override
   public void readExternal(java.io.ObjectInput in)

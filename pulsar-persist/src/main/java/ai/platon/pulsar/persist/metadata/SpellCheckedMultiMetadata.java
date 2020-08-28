@@ -28,7 +28,10 @@ import java.util.Map;
 /**
  * A decorator to MultiMetadata that adds spellchecking capabilities to property
  * names. Currently used spelling vocabulary contains just the httpheaders from
- * {@link HttpHeaders} class.
+ * {@link ai.platon.pulsar.common.HttpHeaders} class.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class SpellCheckedMultiMetadata extends MultiMetadata {
 
@@ -120,26 +123,31 @@ public class SpellCheckedMultiMetadata extends MultiMetadata {
         return (value != null) ? value : name;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void removeAll(String name) {
         super.removeAll(getNormalizedName(name));
     }
 
+    /** {@inheritDoc} */
     @Override
     public void put(String name, final String value) {
         super.put(getNormalizedName(name), value);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Collection<String> getValues(String name) {
         return super.getValues(getNormalizedName(name));
     }
 
+    /** {@inheritDoc} */
     @Override
     public String get(String name) {
         return super.get(getNormalizedName(name));
     }
 
+    /** {@inheritDoc} */
     @Override
     public void set(String name, final String value) {
         super.set(getNormalizedName(name), value);

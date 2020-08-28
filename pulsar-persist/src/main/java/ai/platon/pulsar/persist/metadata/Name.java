@@ -6,6 +6,9 @@ package ai.platon.pulsar.persist.metadata;
  * <p>
  * All valid Metadata names are listed here.
  * A metadata field can be moved to be a WebPage field if it's stable
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public enum Name {
     UNKNOWN(""),
@@ -100,6 +103,11 @@ public enum Name {
         this.text = name;
     }
 
+    /**
+     * <p>text.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String text() {
         return this.text;
     }

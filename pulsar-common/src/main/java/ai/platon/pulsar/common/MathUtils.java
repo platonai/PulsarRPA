@@ -19,10 +19,23 @@ package ai.platon.pulsar.common;
 
 /**
  * A minimal math utility class.
+ *
  * @deprecated Use a professional library
+ * @author vincent
+ * @version $Id: $Id
  */
 public final class MathUtils {
 
+    /**
+     * <p>hashFloat.</p>
+     *
+     * @param x a float.
+     * @param in a float.
+     * @param in2 a float.
+     * @param out a float.
+     * @param out2 a float.
+     * @return a float.
+     */
     public static float hashFloat(float x, float in, float in2, float out, float out2) {
         if (x < out) return out;
         if (x > out2) return out2;
@@ -31,6 +44,16 @@ public final class MathUtils {
         return out + (out2 - out) / (in2 - in) * (x - in);
     }
 
+    /**
+     * <p>hashInt.</p>
+     *
+     * @param x a int.
+     * @param in a int.
+     * @param in2 a int.
+     * @param out a int.
+     * @param out2 a int.
+     * @return a int.
+     */
     public static int hashInt(int x, int in, int in2, int out, int out2) {
         if (x < out) return out;
         if (x > out2) return out2;

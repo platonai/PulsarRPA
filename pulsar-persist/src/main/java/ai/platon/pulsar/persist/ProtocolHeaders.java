@@ -30,6 +30,9 @@ import java.util.stream.Collectors;
  * CONTENT_TYPE,
  * LAST_MODIFIED
  * and LOCATION.
+ *
+ * @author vincent
+ * @version $Id: $Id
  */
 public class ProtocolHeaders implements HttpHeaders {
 
@@ -52,45 +55,92 @@ public class ProtocolHeaders implements HttpHeaders {
         this.headers = headers;
     }
 
+    /**
+     * <p>box.</p>
+     *
+     * @param headers a {@link java.util.Map} object.
+     * @return a {@link ai.platon.pulsar.persist.ProtocolHeaders} object.
+     */
     public static ProtocolHeaders box(Map<CharSequence, CharSequence> headers) {
         return new ProtocolHeaders(headers);
     }
 
+    /**
+     * <p>unbox.</p>
+     *
+     * @return a {@link java.util.Map} object.
+     */
     public Map<CharSequence, CharSequence> unbox() {
         return headers;
     }
 
+    /**
+     * <p>get.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public String get(String name) {
         CharSequence value = headers.get(WebPage.u8(name));
         return value == null ? null : value.toString();
     }
 
+    /**
+     * <p>getOrDefault.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param defaultValue a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public String getOrDefault(String name, String defaultValue) {
         CharSequence value = headers.get(WebPage.u8(name));
         return value == null ? defaultValue : value.toString();
     }
 
+    /**
+     * <p>put.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     * @param value a {@link java.lang.String} object.
+     */
     public void put(String name, String value) {
         headers.put(WebPage.u8(name), WebPage.u8(value));
     }
 
+    /**
+     * <p>putAll.</p>
+     *
+     * @param map a {@link java.util.Map} object.
+     */
     public void putAll(Map<String, String> map) {
         for (Map.Entry<String, String> entry : map.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
 
+    /**
+     * <p>putAll.</p>
+     *
+     * @param map a {@link com.google.common.collect.Multimap} object.
+     */
     public void putAll(Multimap<String, String> map) {
         for (Map.Entry<String, String> entry : map.entries()) {
             put(entry.getKey(), entry.getValue());
         }
     }
 
+    /**
+     * <p>remove.</p>
+     *
+     * @param name a {@link java.lang.String} object.
+     */
     public void remove(String name) {
         headers.remove(WebPage.u8(name));
     }
 
     /**
+     * <p>getLastModified.</p>
+     *
      * @return Get LAST_MODIFIED in protocol header, Instant.EPOCH if not specified
      */
     public Instant getLastModified() {
@@ -103,6 +153,8 @@ public class ProtocolHeaders implements HttpHeaders {
     }
 
     /**
+     * <p>getContentLength.</p>
+     *
      * @return Get CONTENT_LENGTH in protocol header, -1 if not specified
      */
     public int getContentLength() {
@@ -121,7 +173,9 @@ public class ProtocolHeaders implements HttpHeaders {
      * Patterns used to extract filename from possible non-standard
      * HTTP header "Content-Disposition". Typically it looks like:
      * Content-Disposition: inline; filename="foo.ppt"
-     * */
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String getDispositionFilename() {
         CharSequence contentDisposition = get(HttpHeaders.CONTENT_DISPOSITION);
         if (contentDisposition == null) {
@@ -138,6 +192,11 @@ public class ProtocolHeaders implements HttpHeaders {
         return null;
     }
 
+    /**
+     * <p>getDecodedDispositionFilename.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String getDecodedDispositionFilename() {
         try {
             return getDecodedDispositionFilename(StandardCharsets.UTF_8);
@@ -146,6 +205,13 @@ public class ProtocolHeaders implements HttpHeaders {
         }
     }
 
+    /**
+     * <p>getDecodedDispositionFilename.</p>
+     *
+     * @param charset a {@link java.nio.charset.Charset} object.
+     * @return a {@link java.lang.String} object.
+     * @throws java.io.UnsupportedEncodingException if any.
+     */
     public String getDecodedDispositionFilename(Charset charset) throws UnsupportedEncodingException {
         String filename = getDispositionFilename();
 
@@ -156,15 +222,24 @@ public class ProtocolHeaders implements HttpHeaders {
         return null;
     }
 
+    /**
+     * <p>clear.</p>
+     */
     public void clear() {
         headers.clear();
     }
 
+    /**
+     * <p>asStringMap.</p>
+     *
+     * @return a {@link java.util.Map} object.
+     */
     public Map<String, String> asStringMap() {
         return headers.entrySet().stream()
                 .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString(), (e, e2) -> e));
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return headers.entrySet().stream()

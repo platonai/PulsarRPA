@@ -5,7 +5,14 @@
  */
 package ai.platon.pulsar.persist.gora.generated;  
 
+/**
+ * <p>GParseStatus class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
+  /** Constant <code>SCHEMA$</code> */
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GParseStatus\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"majorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"minorCode\",\"type\":\"int\",\"default\":0},{\"name\":\"args\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}");
   private static final long serialVersionUID = -2420792196436275871L;
   /** Enum containing all data bean's fields. */
@@ -50,6 +57,7 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
     public String toString() {return name;}
   };
 
+  /** Constant <code>_ALL_FIELDS</code> */
   public static final String[] _ALL_FIELDS = {
   "majorCode",
   "minorCode",
@@ -58,6 +66,7 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Gets the total field count.
+   *
    * @return int field count
    */
   public int getFieldsCount() {
@@ -67,8 +76,14 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
   private int majorCode;
   private int minorCode;
   private java.util.Map<CharSequence, CharSequence> args;
+  /**
+   * <p>getSchema.</p>
+   *
+   * @return a {@link org.apache.avro.Schema} object.
+   */
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
+  /** {@inheritDoc} */
   public Object get(int field$) {
     switch (field$) {
     case 0: return majorCode;
@@ -79,6 +94,7 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
   }
 
   // Used by DatumReader.  Applications should not call.
+  /** {@inheritDoc} */
   @SuppressWarnings(value="unchecked")
   public void put(int field$, Object value) {
     switch (field$) {
@@ -91,6 +107,8 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Gets the value of the 'majorCode' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getMajorCode() {
     return majorCode;
@@ -98,6 +116,7 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Sets the value of the 'majorCode' field.
+   *
    * @param value the value to set.
    */
   public void setMajorCode(Integer value) {
@@ -107,7 +126,8 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Checks the dirty status of the 'majorCode' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isMajorCodeDirty() {
     return isDirty(0);
@@ -115,6 +135,8 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Gets the value of the 'minorCode' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getMinorCode() {
     return minorCode;
@@ -122,6 +144,7 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Sets the value of the 'minorCode' field.
+   *
    * @param value the value to set.
    */
   public void setMinorCode(Integer value) {
@@ -131,7 +154,8 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Checks the dirty status of the 'minorCode' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isMinorCodeDirty() {
     return isDirty(1);
@@ -139,6 +163,8 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Gets the value of the 'args' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, CharSequence> getArgs() {
     return args;
@@ -146,6 +172,7 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Sets the value of the 'args' field.
+   *
    * @param value the value to set.
    */
   public void setArgs(java.util.Map<CharSequence, CharSequence> value) {
@@ -155,23 +182,38 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
 
   /**
    * Checks the dirty status of the 'args' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isArgsDirty() {
     return isDirty(2);
   }
 
-  /** Creates a new GParseStatus RecordBuilder */
+  /**
+   * Creates a new GParseStatus RecordBuilder
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus.Builder} object.
+   */
   public static GParseStatus.Builder newBuilder() {
     return new GParseStatus.Builder();
   }
 
-  /** Creates a new GParseStatus RecordBuilder by copying an existing Builder */
+  /**
+   * Creates a new GParseStatus RecordBuilder by copying an existing Builder
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus.Builder} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus.Builder} object.
+   */
   public static GParseStatus.Builder newBuilder(GParseStatus.Builder other) {
     return new GParseStatus.Builder(other);
   }
 
-  /** Creates a new GParseStatus RecordBuilder by copying an existing GParseStatus instance */
+  /**
+   * Creates a new GParseStatus RecordBuilder by copying an existing GParseStatus instance
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus.Builder} object.
+   */
   public static GParseStatus.Builder newBuilder(GParseStatus other) {
     return new GParseStatus.Builder(other);
   }
@@ -323,10 +365,20 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
     }
   }
 
+  /**
+   * <p>getTombstone.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus.Tombstone} object.
+   */
   public Tombstone getTombstone(){
   	return TOMBSTONE;
   }
 
+  /**
+   * <p>newInstance.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GParseStatus} object.
+   */
   public GParseStatus newInstance(){
     return newBuilder().build();
   }
@@ -415,10 +467,10 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
             DATUM_READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
 
   /**
+   * {@inheritDoc}
+   *
    * Writes AVRO data bean to output stream in the form of AVRO Binary encoding format. This will transform
    * AVRO data bean from its Java object form to it s serializable form.
-   *
-   * @param out java.io.ObjectOutput output stream to write data bean in serializable form
    */
   @Override
   public void writeExternal(java.io.ObjectOutput out)
@@ -430,10 +482,10 @@ public class GParseStatus extends org.apache.gora.persistency.impl.PersistentBas
   }
 
   /**
+   * {@inheritDoc}
+   *
    * Reads AVRO data bean from input stream in it s AVRO Binary encoding format to Java object format.
    * This will transform AVRO data bean from it s serializable form to deserialized Java object form.
-   *
-   * @param in java.io.ObjectOutput input stream to read data bean in serializable form
    */
   @Override
   public void readExternal(java.io.ObjectInput in)

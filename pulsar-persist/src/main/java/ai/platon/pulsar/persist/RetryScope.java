@@ -1,5 +1,11 @@
 package ai.platon.pulsar.persist;
 
+/**
+ * <p>RetryScope class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public enum RetryScope {
     /**
      * Retry at crawl schedule level

@@ -5,7 +5,14 @@
  */
 package ai.platon.pulsar.persist.gora.generated;  
 
+/**
+ * <p>GFieldGroup class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
+  /** Constant <code>SCHEMA$</code> */
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GFieldGroup\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"default\":0},{\"name\":\"parentId\",\"type\":\"long\",\"default\":0},{\"name\":\"name\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"fields\",\"type\":{\"type\":\"map\",\"values\":[\"null\",\"string\"]},\"default\":{}}]}");
   private static final long serialVersionUID = -1092470099062642149L;
   /** Enum containing all data bean's fields. */
@@ -51,6 +58,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
     public String toString() {return name;}
   };
 
+  /** Constant <code>_ALL_FIELDS</code> */
   public static final String[] _ALL_FIELDS = {
   "id",
   "parentId",
@@ -60,6 +68,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Gets the total field count.
+   *
    * @return int field count
    */
   public int getFieldsCount() {
@@ -70,8 +79,14 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
   private long parentId;
   private CharSequence name;
   private java.util.Map<CharSequence, CharSequence> fields;
+  /**
+   * <p>getSchema.</p>
+   *
+   * @return a {@link org.apache.avro.Schema} object.
+   */
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
+  /** {@inheritDoc} */
   public Object get(int field$) {
     switch (field$) {
     case 0: return id;
@@ -83,6 +98,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
   }
 
   // Used by DatumReader.  Applications should not call.
+  /** {@inheritDoc} */
   @SuppressWarnings(value="unchecked")
   public void put(int field$, Object value) {
     switch (field$) {
@@ -96,6 +112,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Gets the value of the 'id' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getId() {
     return id;
@@ -103,6 +121,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Sets the value of the 'id' field.
+   *
    * @param value the value to set.
    */
   public void setId(Long value) {
@@ -112,7 +131,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Checks the dirty status of the 'id' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isIdDirty() {
     return isDirty(0);
@@ -120,6 +140,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Gets the value of the 'parentId' field.
+   *
+   * @return a {@link java.lang.Long} object.
    */
   public Long getParentId() {
     return parentId;
@@ -127,6 +149,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Sets the value of the 'parentId' field.
+   *
    * @param value the value to set.
    */
   public void setParentId(Long value) {
@@ -136,7 +159,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Checks the dirty status of the 'parentId' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isParentIdDirty() {
     return isDirty(1);
@@ -144,6 +168,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Gets the value of the 'name' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getName() {
     return name;
@@ -151,6 +177,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Sets the value of the 'name' field.
+   *
    * @param value the value to set.
    */
   public void setName(CharSequence value) {
@@ -160,7 +187,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Checks the dirty status of the 'name' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isNameDirty() {
     return isDirty(2);
@@ -168,6 +196,8 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Gets the value of the 'fields' field.
+   *
+   * @return a {@link java.util.Map} object.
    */
   public java.util.Map<CharSequence, CharSequence> getFields() {
     return fields;
@@ -175,6 +205,7 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Sets the value of the 'fields' field.
+   *
    * @param value the value to set.
    */
   public void setFields(java.util.Map<CharSequence, CharSequence> value) {
@@ -184,23 +215,38 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
 
   /**
    * Checks the dirty status of the 'fields' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isFieldsDirty() {
     return isDirty(3);
   }
 
-  /** Creates a new GFieldGroup RecordBuilder */
+  /**
+   * Creates a new GFieldGroup RecordBuilder
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup.Builder} object.
+   */
   public static GFieldGroup.Builder newBuilder() {
     return new GFieldGroup.Builder();
   }
 
-  /** Creates a new GFieldGroup RecordBuilder by copying an existing Builder */
+  /**
+   * Creates a new GFieldGroup RecordBuilder by copying an existing Builder
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup.Builder} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup.Builder} object.
+   */
   public static GFieldGroup.Builder newBuilder(GFieldGroup.Builder other) {
     return new GFieldGroup.Builder(other);
   }
 
-  /** Creates a new GFieldGroup RecordBuilder by copying an existing GFieldGroup instance */
+  /**
+   * Creates a new GFieldGroup RecordBuilder by copying an existing GFieldGroup instance
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup.Builder} object.
+   */
   public static GFieldGroup.Builder newBuilder(GFieldGroup other) {
     return new GFieldGroup.Builder(other);
   }
@@ -383,10 +429,20 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
     }
   }
 
+  /**
+   * <p>getTombstone.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup.Tombstone} object.
+   */
   public Tombstone getTombstone(){
   	return TOMBSTONE;
   }
 
+  /**
+   * <p>newInstance.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GFieldGroup} object.
+   */
   public GFieldGroup newInstance(){
     return newBuilder().build();
   }
@@ -498,10 +554,10 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
             DATUM_READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
 
   /**
+   * {@inheritDoc}
+   *
    * Writes AVRO data bean to output stream in the form of AVRO Binary encoding format. This will transform
    * AVRO data bean from its Java object form to it s serializable form.
-   *
-   * @param out java.io.ObjectOutput output stream to write data bean in serializable form
    */
   @Override
   public void writeExternal(java.io.ObjectOutput out)
@@ -513,10 +569,10 @@ public class GFieldGroup extends org.apache.gora.persistency.impl.PersistentBase
   }
 
   /**
+   * {@inheritDoc}
+   *
    * Reads AVRO data bean from input stream in it s AVRO Binary encoding format to Java object format.
    * This will transform AVRO data bean from it s serializable form to deserialized Java object form.
-   *
-   * @param in java.io.ObjectOutput input stream to read data bean in serializable form
    */
   @Override
   public void readExternal(java.io.ObjectInput in)

@@ -42,10 +42,15 @@ import java.util.regex.PatternSyntaxException;
 
 /**
  * A common string parser
- * */
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class SParser {
+    /** Constant <code>LOG</code> */
     public static final Log LOG = LogFactory.getLog(SParser.class);
 
+    /** Constant <code>INVALID_DURATION</code> */
     public static final Duration INVALID_DURATION = Duration.ofSeconds(Integer.MIN_VALUE);
 
     private static final Map<ClassLoader, Map<String, WeakReference<Class<?>>>> CACHE_CLASSES = new WeakHashMap<>();
@@ -69,21 +74,45 @@ public class SParser {
     }
     private String value;
 
+    /**
+     * <p>Constructor for SParser.</p>
+     */
     public SParser() {
     }
 
+    /**
+     * <p>Constructor for SParser.</p>
+     *
+     * @param value a {@link java.lang.String} object.
+     */
     public SParser(String value) {
         this.value = value;
     }
 
+    /**
+     * <p>wrap.</p>
+     *
+     * @param value a {@link java.lang.String} object.
+     * @return a {@link ai.platon.pulsar.common.SParser} object.
+     */
     public static SParser wrap(String value) {
         return new SParser(value);
     }
 
+    /**
+     * <p>set.</p>
+     *
+     * @param value a {@link java.lang.String} object.
+     */
     public void set(String value) {
         this.value = value;
     }
 
+    /**
+     * <p>setIfUnset.</p>
+     *
+     * @param value a {@link java.lang.String} object.
+     */
     public synchronized void setIfUnset(String value) {
         if (this.value == null) {
             set(value);
@@ -139,14 +168,31 @@ public class SParser {
         return ret == null ? defaultValue : ret;
     }
 
+    /**
+     * <p>getRaw.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String getRaw() {
         return value;
     }
 
+    /**
+     * <p>get.</p>
+     *
+     * @param defaultValue a {@link java.lang.String} object.
+     * @return a {@link java.lang.String} object.
+     */
     public String get(String defaultValue) {
         return value == null ? defaultValue : value;
     }
 
+    /**
+     * <p>getInt.</p>
+     *
+     * @param defaultValue a int.
+     * @return a int.
+     */
     public int getInt(int defaultValue) {
         String valueString = getTrimmed();
         if (valueString == null)
@@ -158,6 +204,11 @@ public class SParser {
         return Integer.parseInt(valueString);
     }
 
+    /**
+     * <p>getInts.</p>
+     *
+     * @return an array of {@link int} objects.
+     */
     public int[] getInts() {
         String[] strings = getTrimmedStrings();
         int[] ints = new int[strings.length];
@@ -167,6 +218,11 @@ public class SParser {
         return ints;
     }
 
+    /**
+     * <p>setInt.</p>
+     *
+     * @param value a int.
+     */
     public void setInt(int value) {
         set(Integer.toString(value));
     }
@@ -178,7 +234,7 @@ public class SParser {
      * then an error is thrown.
      *
      * @param defaultValue default value.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>long</code>,
      *         or <code>defaultValue</code>.
      */
@@ -202,7 +258,7 @@ public class SParser {
      * t(tera), p(peta), e(exa)
      *
      * @param defaultValue default value.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>long</code>,
      *         or <code>defaultValue</code>.
      */
@@ -247,7 +303,7 @@ public class SParser {
      * then an error is thrown.
      *
      * @param defaultValue default value.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>float</code>,
      *         or <code>defaultValue</code>.
      */
@@ -274,7 +330,7 @@ public class SParser {
      * then an error is thrown.
      *
      * @param defaultValue default value.
-     * @throws NumberFormatException when the value is invalid
+     * @throws java.lang.NumberFormatException when the value is invalid
      * @return property value as a <code>double</code>,
      *         or <code>defaultValue</code>.
      */
@@ -327,6 +383,7 @@ public class SParser {
 
     /**
      * Set the given property, if it is currently unset.
+     *
      * @param value new value
      */
     public void setBooleanIfUnset(boolean value) {
@@ -336,7 +393,9 @@ public class SParser {
     /**
      * Set the value of property to the given type. This
      * is equivalent to <code>set(&lt;name&gt;, value.toString())</code>.
+     *
      * @param value new value
+     * @param <T> a T object.
      */
     public <T extends Enum<T>> void setEnum(T value) {
         set(value.toString());
@@ -344,9 +403,12 @@ public class SParser {
 
     /**
      * Return value matching this enumerated type.
+     *
      * @param defaultValue Value returned if no mapping exists
-     * @throws IllegalArgumentException If mapping is illegal for the type
+     * @throws java.lang.IllegalArgumentException If mapping is illegal for the type
      * provided
+     * @param <T> a T object.
+     * @return a T object.
      */
     public <T extends Enum<T>> T getEnum(T defaultValue) {
         return null == value
@@ -356,6 +418,7 @@ public class SParser {
 
     /**
      * Set the value to the given time duration
+     *
      * @param value Time duration
      * @param unit Unit of time
      */
@@ -367,10 +430,11 @@ public class SParser {
      * Return time duration in the given time unit. Valid units are encoded in
      * properties as suffixes: nanoseconds (ns), microseconds (us), milliseconds
      * (ms), seconds (s), minutes (m), hours (h), and days (d).
+     *
      * @param defaultValue Value returned if no mapping exists.
      * @param unit Unit to convert the stored property, if it exists.
      * @return The time duration
-     * @throws NumberFormatException If the property stripped of its unit is not
+     * @throws java.lang.NumberFormatException If the property stripped of its unit is not
      *         a number
      */
     public long getTimeDuration(long defaultValue, TimeUnit unit) {
@@ -425,6 +489,7 @@ public class SParser {
 
     /**
      * Parse the given attribute as a set of integer ranges
+     *
      * @param defaultValue the default value if it is not set
      * @return a new set of ranges from the configured value
      */
@@ -444,6 +509,12 @@ public class SParser {
         return Strings.getStringCollection(value);
     }
 
+    /**
+     * <p>getPair.</p>
+     *
+     * @param defaultValue a {@link org.apache.commons.lang3.tuple.Pair} object.
+     * @return a {@link org.apache.commons.lang3.tuple.Pair} object.
+     */
     public Pair<String, String> getPair(Pair<String, String> defaultValue) {
         if (value == null) {
             return defaultValue;
@@ -457,14 +528,32 @@ public class SParser {
         return defaultValue;
     }
 
+    /**
+     * <p>getKvs.</p>
+     *
+     * @return a {@link java.util.Map} object.
+     */
     public Map<String, String> getKvs() {
         return getKvs("[\\s+|,]", ":");
     }
 
+    /**
+     * <p>getKvs.</p>
+     *
+     * @param kvDelimeter a {@link java.lang.String} object.
+     * @return a {@link java.util.Map} object.
+     */
     public Map<String, String> getKvs(String kvDelimeter) {
         return getKvs("[\\s+|,]", kvDelimeter);
     }
 
+    /**
+     * <p>getKvs.</p>
+     *
+     * @param pairDelimeterPattern a {@link java.lang.String} object.
+     * @param kvDelimeter a {@link java.lang.String} object.
+     * @return a {@link java.util.Map} object.
+     */
     public Map<String, String> getKvs(String pairDelimeterPattern, String kvDelimeter) {
         Map<String, String> kvs = new HashMap<>();
         if (value == null) {
@@ -590,12 +679,22 @@ public class SParser {
         return value;
     }
 
+    /**
+     * <p>setIfNotNull.</p>
+     *
+     * @param value a {@link java.lang.String} object.
+     */
     public void setIfNotNull(String value) {
         if (value != null) {
             set(value);
         }
     }
 
+    /**
+     * <p>setIfNotEmpty.</p>
+     *
+     * @param value a {@link java.lang.String} object.
+     */
     public void setIfNotEmpty(String value) {
         if (value != null && !value.isEmpty()) {
             set(value);
@@ -606,6 +705,9 @@ public class SParser {
      * Support both ISO-8601 standard and hadoop time duration format
      * ISO-8601 standard : PnDTnHnMn.nS
      * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
+     *
+     * @param defaultValue a {@link java.time.Duration} object.
+     * @return a {@link java.time.Duration} object.
      */
     public Duration getDuration(Duration defaultValue) {
         if (value == null) {
@@ -631,10 +733,21 @@ public class SParser {
         }
     }
 
+    /**
+     * <p>getDuration.</p>
+     *
+     * @return a {@link java.time.Duration} object.
+     */
     public Duration getDuration() {
         return getDuration(INVALID_DURATION);
     }
 
+    /**
+     * <p>getInstant.</p>
+     *
+     * @param defaultValue a {@link java.time.Instant} object.
+     * @return a {@link java.time.Instant} object.
+     */
     public Instant getInstant(Instant defaultValue) {
         if (value == null) {
             return defaultValue;
@@ -647,6 +760,14 @@ public class SParser {
         return DateTimes.parseInstant(value, defaultValue);
     }
 
+    /**
+     * <p>getPath.</p>
+     *
+     * @param defaultValue a {@link java.nio.file.Path} object.
+     * @param createDirectories a boolean.
+     * @return a {@link java.nio.file.Path} object.
+     * @throws java.io.IOException if any.
+     */
     public Path getPath(Path defaultValue, boolean createDirectories) throws IOException {
         Path path = (value != null) ? Paths.get(value) : defaultValue;
         if (createDirectories) {
@@ -655,6 +776,12 @@ public class SParser {
         return path;
     }
 
+    /**
+     * <p>getPath.</p>
+     *
+     * @param defaultValue a {@link java.nio.file.Path} object.
+     * @return a {@link java.nio.file.Path} object.
+     */
     public Path getPath(Path defaultValue) {
         try {
             Path path = (value != null) ? Paths.get(value) : defaultValue;
@@ -665,6 +792,11 @@ public class SParser {
         return defaultValue;
     }
 
+    /**
+     * <p>getPathOrNull.</p>
+     *
+     * @return a {@link java.nio.file.Path} object.
+     */
     @Nullable
     public Path getPathOrNull() {
         try {
@@ -681,6 +813,7 @@ public class SParser {
     /**
      * Get the socket address for <code>name</code> property as a
      * <code>InetSocketAddress</code>.
+     *
      * @param name property name.
      * @param defaultAddress the default value
      * @param defaultPort the default port
@@ -705,6 +838,7 @@ public class SParser {
      * Set the socket address a client can use to connect for the
      * <code>name</code> property as a <code>host:port</code>.  The wildcard
      * address is replaced with the local host's address.
+     *
      * @param name property name.
      * @param addr InetSocketAddress of a listener to store in the given property
      * @return InetSocketAddress for clients to connect
@@ -721,7 +855,7 @@ public class SParser {
      *
      * @param name The class name
      * @return the class object.
-     * @throws ClassNotFoundException if the class is not found.
+     * @throws java.lang.ClassNotFoundException if the class is not found.
      */
     public Class<?> getClassByName(String name) throws ClassNotFoundException {
         Class<?> ret = getClassByNameOrNull(name);
@@ -874,7 +1008,7 @@ public class SParser {
      * @param dirsProp directory in which to locate the file.
      * @param path file-path.
      * @return local file under the directory with the given path.
-     * @throws IOException If no valid local directories
+     * @throws java.io.IOException If no valid local directories
      */
     public File getFile(String dirsProp, String path)
             throws IOException {
@@ -892,7 +1026,7 @@ public class SParser {
     }
 
     /**
-     * Get the {@link URL} for the named resource.
+     * Get the {@link java.net.URL} for the named resource.
      *
      * @return the url for the named resource.
      */
@@ -923,7 +1057,7 @@ public class SParser {
     }
 
     /**
-     * Get a {@link Reader}
+     * Get a {@link java.io.Reader}
      *
      * @return a reader attached to the resource.
      */
@@ -945,7 +1079,7 @@ public class SParser {
     }
 
     /**
-     * Get the {@link ClassLoader} for this job.
+     * Get the {@link java.lang.ClassLoader} for this job.
      *
      * @return the correct class loader.
      */

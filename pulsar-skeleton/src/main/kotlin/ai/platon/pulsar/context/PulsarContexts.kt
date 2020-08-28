@@ -22,8 +22,7 @@ object PulsarContexts {
     }
 
     @Synchronized
-    fun activate(applicationContext: ApplicationContext): PulsarContext =
-            activate(GenericPulsarContext(applicationContext))
+    fun activate(applicationContext: ApplicationContext) = activate(GenericPulsarContext(applicationContext))
 
     @Synchronized
     fun createSession() = activate().createSession()

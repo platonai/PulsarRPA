@@ -5,7 +5,14 @@
  */
 package ai.platon.pulsar.persist.gora.generated;  
 
+/**
+ * <p>GHypeLink class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase implements org.apache.avro.specific.SpecificRecord, org.apache.gora.persistency.Persistent {
+  /** Constant <code>SCHEMA$</code> */
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"GHypeLink\",\"namespace\":\"ai.platon.pulsar.persist.gora.generated\",\"fields\":[{\"name\":\"url\",\"type\":\"string\",\"default\":\"\"},{\"name\":\"anchor\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"order\",\"type\":\"int\",\"default\":0}]}");
   private static final long serialVersionUID = -7365210677982337286L;
   /** Enum containing all data bean's fields. */
@@ -50,6 +57,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     public String toString() {return name;}
   };
 
+  /** Constant <code>_ALL_FIELDS</code> */
   public static final String[] _ALL_FIELDS = {
   "url",
   "anchor",
@@ -58,6 +66,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Gets the total field count.
+   *
    * @return int field count
    */
   public int getFieldsCount() {
@@ -67,8 +76,14 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
   private CharSequence url;
   private CharSequence anchor;
   private int order;
+  /**
+   * <p>getSchema.</p>
+   *
+   * @return a {@link org.apache.avro.Schema} object.
+   */
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
+  /** {@inheritDoc} */
   public Object get(int field$) {
     switch (field$) {
     case 0: return url;
@@ -79,6 +94,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
   }
 
   // Used by DatumReader.  Applications should not call.
+  /** {@inheritDoc} */
   @SuppressWarnings(value="unchecked")
   public void put(int field$, Object value) {
     switch (field$) {
@@ -91,6 +107,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Gets the value of the 'url' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getUrl() {
     return url;
@@ -98,6 +116,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Sets the value of the 'url' field.
+   *
    * @param value the value to set.
    */
   public void setUrl(CharSequence value) {
@@ -107,7 +126,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Checks the dirty status of the 'url' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isUrlDirty() {
     return isDirty(0);
@@ -115,6 +135,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Gets the value of the 'anchor' field.
+   *
+   * @return a {@link java.lang.CharSequence} object.
    */
   public CharSequence getAnchor() {
     return anchor;
@@ -122,6 +144,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Sets the value of the 'anchor' field.
+   *
    * @param value the value to set.
    */
   public void setAnchor(CharSequence value) {
@@ -131,7 +154,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Checks the dirty status of the 'anchor' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isAnchorDirty() {
     return isDirty(1);
@@ -139,6 +163,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Gets the value of the 'order' field.
+   *
+   * @return a {@link java.lang.Integer} object.
    */
   public Integer getOrder() {
     return order;
@@ -146,6 +172,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Sets the value of the 'order' field.
+   *
    * @param value the value to set.
    */
   public void setOrder(Integer value) {
@@ -155,23 +182,38 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 
   /**
    * Checks the dirty status of the 'order' field. A field is dirty if it represents a change that has not yet been written to the database.
-   * @param value the value to set.
+   *
+   * @return a boolean.
    */
   public boolean isOrderDirty() {
     return isDirty(2);
   }
 
-  /** Creates a new GHypeLink RecordBuilder */
+  /**
+   * Creates a new GHypeLink RecordBuilder
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder} object.
+   */
   public static GHypeLink.Builder newBuilder() {
     return new GHypeLink.Builder();
   }
 
-  /** Creates a new GHypeLink RecordBuilder by copying an existing Builder */
+  /**
+   * Creates a new GHypeLink RecordBuilder by copying an existing Builder
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder} object.
+   */
   public static GHypeLink.Builder newBuilder(GHypeLink.Builder other) {
     return new GHypeLink.Builder(other);
   }
 
-  /** Creates a new GHypeLink RecordBuilder by copying an existing GHypeLink instance */
+  /**
+   * Creates a new GHypeLink RecordBuilder by copying an existing GHypeLink instance
+   *
+   * @param other a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder} object.
+   */
   public static GHypeLink.Builder newBuilder(GHypeLink other) {
     return new GHypeLink.Builder(other);
   }
@@ -324,10 +366,20 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     }
   }
 
+  /**
+   * <p>getTombstone.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink.Tombstone} object.
+   */
   public Tombstone getTombstone(){
   	return TOMBSTONE;
   }
 
+  /**
+   * <p>newInstance.</p>
+   *
+   * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+   */
   public GHypeLink newInstance(){
     return newBuilder().build();
   }
@@ -416,10 +468,10 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
             DATUM_READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);
 
   /**
+   * {@inheritDoc}
+   *
    * Writes AVRO data bean to output stream in the form of AVRO Binary encoding format. This will transform
    * AVRO data bean from its Java object form to it s serializable form.
-   *
-   * @param out java.io.ObjectOutput output stream to write data bean in serializable form
    */
   @Override
   public void writeExternal(java.io.ObjectOutput out)
@@ -431,10 +483,10 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
   }
 
   /**
+   * {@inheritDoc}
+   *
    * Reads AVRO data bean from input stream in it s AVRO Binary encoding format to Java object format.
    * This will transform AVRO data bean from it s serializable form to deserialized Java object form.
-   *
-   * @param in java.io.ObjectOutput input stream to read data bean in serializable form
    */
   @Override
   public void readExternal(java.io.ObjectInput in)

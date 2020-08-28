@@ -24,6 +24,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /* An hype link in a page. */
+/**
+ * <p>HyperLink class.</p>
+ *
+ * @author vincent
+ * @version $Id: $Id
+ */
 public class HyperLink implements Comparable<HyperLink> {
 
     private GHypeLink hypeLink;
@@ -32,14 +38,32 @@ public class HyperLink implements Comparable<HyperLink> {
         this.hypeLink = hypeLink;
     }
 
+    /**
+     * <p>Constructor for HyperLink.</p>
+     *
+     * @param url a {@link java.lang.String} object.
+     */
     public HyperLink(@NotNull String url) {
         this(url, null);
     }
 
+    /**
+     * <p>Constructor for HyperLink.</p>
+     *
+     * @param url a {@link java.lang.String} object.
+     * @param anchor a {@link java.lang.String} object.
+     */
     public HyperLink(@NotNull String url, @Nullable String anchor) {
         this(url, anchor, 0);
     }
 
+    /**
+     * <p>Constructor for HyperLink.</p>
+     *
+     * @param url a {@link java.lang.String} object.
+     * @param anchor a {@link java.lang.String} object.
+     * @param order a int.
+     */
     public HyperLink(@NotNull String url, @Nullable String anchor, int order) {
         Objects.requireNonNull(url);
 
@@ -49,11 +73,23 @@ public class HyperLink implements Comparable<HyperLink> {
         hypeLink.setOrder(order);
     }
 
+    /**
+     * <p>box.</p>
+     *
+     * @param hypeLink a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+     * @return a {@link ai.platon.pulsar.persist.HyperLink} object.
+     */
     @NotNull
     public static HyperLink box(@NotNull GHypeLink hypeLink) {
         return new HyperLink(hypeLink);
     }
 
+    /**
+     * <p>parse.</p>
+     *
+     * @param link a {@link java.lang.String} object.
+     * @return a {@link ai.platon.pulsar.persist.HyperLink} object.
+     */
     @NotNull
     public static HyperLink parse(@NotNull String link) {
         String[] linkAnchor = link.split("\\s+");
@@ -64,40 +100,83 @@ public class HyperLink implements Comparable<HyperLink> {
         }
     }
 
+    /**
+     * <p>equals.</p>
+     *
+     * @param l a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+     * @param l2 a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+     * @return a boolean.
+     */
     public static boolean equals(GHypeLink l, GHypeLink l2) {
         return l.getUrl().equals(l2.getUrl());
     }
 
+    /**
+     * <p>unbox.</p>
+     *
+     * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+     */
     public GHypeLink unbox() {
         return hypeLink;
     }
 
+    /**
+     * <p>getUrl.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     public String getUrl() {
         return hypeLink.getUrl().toString();
     }
 
+    /**
+     * <p>setUrl.</p>
+     *
+     * @param url a {@link java.lang.String} object.
+     */
     public void setUrl(String url) {
         hypeLink.setUrl(url);
     }
 
+    /**
+     * <p>getAnchor.</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
     @NotNull
     public String getAnchor() {
         CharSequence anchor = hypeLink.getAnchor();
         return anchor == null ? "" : anchor.toString();
     }
 
+    /**
+     * <p>setAnchor.</p>
+     *
+     * @param anchor a {@link java.lang.String} object.
+     */
     public void setAnchor(@Nullable String anchor) {
         hypeLink.setAnchor(anchor);
     }
 
+    /**
+     * <p>getOrder.</p>
+     *
+     * @return a int.
+     */
     public int getOrder() {
         return hypeLink.getOrder();
     }
 
+    /**
+     * <p>setOrder.</p>
+     *
+     * @param order a int.
+     */
     public void setOrder(int order) {
         hypeLink.setOrder(order);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof HyperLink)) {
@@ -107,11 +186,13 @@ public class HyperLink implements Comparable<HyperLink> {
         return getUrl().equals(other.getUrl());
     }
 
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return getUrl().hashCode();
     }
 
+    /** {@inheritDoc} */
     @Override
     public int compareTo(@NotNull HyperLink hyperLink) {
         int r = getUrl().compareTo(hyperLink.getUrl());
@@ -124,6 +205,7 @@ public class HyperLink implements Comparable<HyperLink> {
         return r;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return getUrl() + " " + getAnchor() + " odr:" + getOrder();
