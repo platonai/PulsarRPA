@@ -3,7 +3,6 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -19,14 +18,12 @@ import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.springframework.beans.BeansException
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
-import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
@@ -46,42 +43,42 @@ abstract class AbstractPulsarContext(
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
-    open val unmodifiedConfig: ImmutableConfig by lazy { getBean() }
+    open val unmodifiedConfig: ImmutableConfig get() = getBean()
 
     /**
      * Url normalizers
      * */
-    open val urlNormalizers: UrlNormalizers by lazy { getBean() }
+    open val urlNormalizers: UrlNormalizers get() = getBean()
 
     /**
      * The web db
      * */
-    open val webDb: WebDb by lazy { getBean() }
+    open val webDb: WebDb get() = getBean()
 
     /**
      * The inject component
      * */
-    open val injectComponent: InjectComponent by lazy { getBean() }
+    open val injectComponent: InjectComponent get() = getBean()
 
     /**
      * The fetch component
      * */
-    open val fetchComponent: BatchFetchComponent by lazy { getBean() }
+    open val fetchComponent: BatchFetchComponent get() = getBean()
 
     /**
      * The update component
      * */
-    open val updateComponent: UpdateComponent by lazy { getBean() }
+    open val updateComponent: UpdateComponent get() = getBean()
 
     /**
      * The load component
      * */
-    open val loadComponent: LoadComponent by lazy { getBean() }
+    open val loadComponent: LoadComponent get() = getBean()
 
     /**
      * The global cache manager
      * */
-    open val globalCache: GlobalCache by lazy { getBean() }
+    open val globalCache: GlobalCache get() = getBean()
 
     /**
      * The start time
@@ -89,6 +86,7 @@ abstract class AbstractPulsarContext(
     val startTime = System.currentTimeMillis()
 
     val isActive get() = !closed.get() && AppContext.isActive
+            && (applicationContext as AbstractApplicationContext).isActive
 
     /**
      * All open sessions
@@ -108,13 +106,13 @@ abstract class AbstractPulsarContext(
     /** Reference to the JVM shutdown hook, if registered.  */
     private var shutdownHook: Thread? = null
 
-    private val activeWebDb: WebDb? get() = webDb.takeIf { isActive }
+    private val webDbOrNull: WebDb? get() = webDb.takeIf { isActive }
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
-        return applicationContext.takeIf { isActive }
-                ?.getBean(requiredType.java)
-                ?: throw IllegalApplicationContextStateException("Pulsar context is not active")
+        return applicationContext.getBean(requiredType.java)
+//        return applicationContext.takeIf { isActive }?.getBean(requiredType.java)
+//                ?: throw IllegalApplicationContextStateException("Pulsar context is not active")
     }
 
     @Throws(BeansException::class)
@@ -181,23 +179,23 @@ abstract class AbstractPulsarContext(
     }
 
     override fun getOrNull(url: String): WebPage? {
-        return activeWebDb?.getOrNull(normalize(url).spec, false)
+        return webDbOrNull?.getOrNull(normalize(url).spec, false)
     }
 
     override fun get(url: String): WebPage {
-        return activeWebDb?.get(normalize(url).spec, false)?: WebPage.NIL
+        return webDbOrNull?.get(normalize(url).spec, false)?: WebPage.NIL
     }
 
     override fun scan(urlPrefix: String): Iterator<WebPage> {
-        return activeWebDb?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
+        return webDbOrNull?.scan(urlPrefix) ?: listOf<WebPage>().iterator()
     }
 
     override fun scan(urlPrefix: String, fields: Iterable<GWebPage.Field>): Iterator<WebPage> {
-        return activeWebDb?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
+        return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     override fun scan(urlPrefix: String, fields: Array<String>): Iterator<WebPage> {
-        return activeWebDb?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
+        return webDbOrNull?.scan(urlPrefix, fields) ?: listOf<WebPage>().iterator()
     }
 
     /**
@@ -290,20 +288,20 @@ abstract class AbstractPulsarContext(
             JsoupParser(page, mutableConfig).parse()
 
     override fun persist(page: WebPage) {
-        activeWebDb?.put(page, false)
+        webDbOrNull?.put(page, false)
     }
 
     override fun delete(url: String) {
-        activeWebDb?.delete(url)
-        activeWebDb?.delete(normalize(url).spec)
+        webDbOrNull?.delete(url)
+        webDbOrNull?.delete(normalize(url).spec)
     }
 
     override fun delete(page: WebPage) {
-        activeWebDb?.delete(page.url)
+        webDbOrNull?.delete(page.url)
     }
 
     override fun flush() {
-        activeWebDb?.flush()
+        webDbOrNull?.flush()
     }
 
     /**
@@ -359,8 +357,6 @@ abstract class AbstractPulsarContext(
             closableObjects.forEach {
                 it.runCatching { it.close() }.onFailure { it.printStackTrace() }
             }
-
-            webDb.close()
         }
     }
 
