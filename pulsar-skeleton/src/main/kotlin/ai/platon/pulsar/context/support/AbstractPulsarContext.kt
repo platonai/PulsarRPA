@@ -3,6 +3,7 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -37,7 +38,7 @@ import kotlin.reflect.KClass
  */
 abstract class AbstractPulsarContext(
         override val applicationContext: ApplicationContext,
-        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment().apply { initialize() }
+        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
 
     /**
@@ -110,9 +111,11 @@ abstract class AbstractPulsarContext(
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
-        return applicationContext.getBean(requiredType.java)
-//        return applicationContext.takeIf { isActive }?.getBean(requiredType.java)
-//                ?: throw IllegalApplicationContextStateException("Pulsar context is not active")
+        try {
+            return applicationContext.getBean(requiredType.java)
+        } catch (e: java.lang.IllegalStateException) {
+            throw IllegalApplicationContextStateException(e)
+        }
     }
 
     @Throws(BeansException::class)
