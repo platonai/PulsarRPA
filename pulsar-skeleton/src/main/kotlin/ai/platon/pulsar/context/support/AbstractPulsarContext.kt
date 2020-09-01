@@ -37,7 +37,7 @@ import kotlin.reflect.KClass
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
 abstract class AbstractPulsarContext(
-        override val applicationContext: ApplicationContext,
+        override val applicationContext: AbstractApplicationContext,
         override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
 
@@ -86,8 +86,7 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
-    val isActive get() = !closed.get() && AppContext.isActive
-            && (applicationContext as AbstractApplicationContext).isActive
+    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
      * All open sessions
@@ -111,11 +110,10 @@ abstract class AbstractPulsarContext(
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
-        try {
-            return applicationContext.getBean(requiredType.java)
-        } catch (e: java.lang.IllegalStateException) {
-            throw IllegalApplicationContextStateException(e)
-        }
+        return applicationContext.takeIf { isActive }?.getBean(requiredType.java)
+                ?: throw IllegalApplicationContextStateException("Pulsar context is currently not active. " +
+                        "Status: pulsar context: $closed, app context: ${AppContext.state.get()}, " +
+                        "application context: ${applicationContext.isActive}")
     }
 
     @Throws(BeansException::class)

@@ -38,7 +38,7 @@ class WebDriverContext(
         private val notBusy = lock.newCondition()
 
         init {
-            AppMetrics.register(this,"globalRunningTasks", Gauge<Int> { numGlobalRunningTasks.get() })
+            AppMetrics.register(this,"globalRunningTasks", Gauge { numGlobalRunningTasks.get() })
         }
     }
 

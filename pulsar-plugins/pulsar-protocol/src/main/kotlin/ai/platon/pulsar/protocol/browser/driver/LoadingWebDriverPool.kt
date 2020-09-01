@@ -190,15 +190,20 @@ class LoadingWebDriverPool(
         onlineDrivers.remove(driver)
     }
 
-    @Throws(WebDriverPoolExhaustedException::class)
+    @Throws(WebDriverPoolException::class)
     private fun poll0(priority: Int, conf: VolatileConfig? = null, timeout: Long, unit: TimeUnit): AbstractWebDriver {
         if (conf != null) {
             createDriverIfNecessary(priority, conf)
         }
 
         numWaiting.incrementAndGet()
-        val driver = freeDrivers.poll(timeout, unit)
-        numWaiting.decrementAndGet()
+        val driver = try {
+            freeDrivers.poll(timeout, unit)
+        } catch (e: InterruptedException) {
+            throw WebDriverPoolException(e)
+        } finally {
+            numWaiting.decrementAndGet()
+        }
 
         return driver?:throw WebDriverPoolExhaustedException("Driver pool is exhausted (" + formatStatus() + ")")
     }
