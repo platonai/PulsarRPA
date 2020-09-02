@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.AppPaths.AVAILABLE_PROVIDER_DIR
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -37,7 +38,7 @@ open class ProxyPoolManager(
     val workingProxyEntries = ConcurrentSkipListSet<ProxyEntry>()
     open val localPort = -1
     open val currentInterceptProxyEntry: ProxyEntry? = null
-    val isEnabled = isProxyEnabled(conf)
+    val isEnabled get() = isProxyEnabled(conf)
     val isDisabled get() = !isEnabled
 
     private val closed = AtomicBoolean()
@@ -89,18 +90,12 @@ open class ProxyPoolManager(
 
     companion object {
         private const val PROXY_PROVIDER_FILE_NAME = "proxy.providers.txt"
-        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.USER_HOME,
-                AppContext.APP_HOME_DIR.toString(), AppContext.TMP_DIR).map { Paths.get(it, PROXY_PROVIDER_FILE_NAME) }
+        private val DEFAULT_PROXY_PROVIDER_FILES = arrayOf(AppContext.USER_HOME, AppContext.TMP_DIR)
+                .map { Paths.get(it).resolve(PROXY_PROVIDER_FILE_NAME) }
 
         private val PROXY_FILE_WATCH_INTERVAL = Duration.ofSeconds(30)
         private var providerDirLastWatchTime = Instant.EPOCH
         private var numEnabledProviderFiles = 0L
-
-        init {
-            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
-                FileUtils.copyFileToDirectory(it.toFile(), AppPaths.AVAILABLE_PROVIDER_DIR.toFile())
-            }
-        }
 
         /**
          * Proxy system can be enabled/disabled at runtime
@@ -138,19 +133,23 @@ open class ProxyPoolManager(
         }
 
         fun enableDefaultProviders() {
-            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
+            DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
+                FileUtils.copyFileToDirectory(it.toFile(), AVAILABLE_PROVIDER_DIR.toFile())
+            }
+            AVAILABLE_PROVIDER_DIR.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
         }
 
         fun enableProvider(providerPath: Path) {
             val filename = providerPath.fileName
-            arrayOf(AppPaths.AVAILABLE_PROVIDER_DIR, AppPaths.ENABLED_PROVIDER_DIR)
-                    .map { it.resolve(filename) }
-                    .filterNot { Files.exists(it) }
-                    .forEach { Files.copy(providerPath, it) }
+            val target = AppPaths.ENABLED_PROVIDER_DIR.resolve(filename)
+            Files.deleteIfExists(target)
+            Files.createSymbolicLink(target, providerPath)
         }
 
         fun disableProviders() {
-            Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.forEach { Files.delete(it) }
+            Files.list(AppPaths.ENABLED_PROVIDER_DIR)
+                    .filter { Files.isRegularFile(it) || Files.isSymbolicLink(it) }
+                    .forEach { Files.delete(it) }
         }
     }
 }

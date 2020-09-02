@@ -125,27 +125,23 @@ class ResultSetFormatter(
      */
     @Throws(SQLException::class)
     private fun formatColumn(columnIndex: Int): String {
-        var s: String?
-        when (rs.metaData.getColumnType(columnIndex)) {
+        return when (rs.metaData.getColumnType(columnIndex)) {
             Types.DOUBLE, Types.FLOAT, Types.REAL -> {
-                var precision = rs.metaData.getPrecision(columnIndex)
-                var scale = rs.metaData.getScale(columnIndex)
-                if (precision !in 0..10) precision = 10
-                if (scale !in 0..10) scale = 10
-                val d = rs.getDouble(columnIndex)
-                if (scale == 0 && precision == 0) {
-                    scale = 10
-                }
-                s = String.format("%" + precision + "." + scale + "f", d)
+                String.format(getColumnFormat(columnIndex), rs.getDouble(columnIndex)).trimEnd('0').trimEnd('.')
             }
-            else -> s = rs.getString(columnIndex)
+            else -> rs.getString(columnIndex) ?: "null"
         }
+    }
 
-        if (s == null) {
-            s = "null"
+    private fun getColumnFormat(columnIndex: Int): String {
+        val precision = rs.metaData.getPrecision(columnIndex)
+        val scale = rs.metaData.getScale(columnIndex)
+        return when {
+            precision == 0 && scale == 0 -> "%f"
+            precision == 0 -> "%.${scale}f"
+            scale == 0 -> "%${precision}.f"
+            else -> "%f"
         }
-
-        return s
     }
 
     private fun formatRows() {

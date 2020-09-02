@@ -112,8 +112,8 @@ abstract class AbstractPulsarContext(
     fun <T : Any> getBean(requiredType: KClass<T>): T {
         return applicationContext.takeIf { isActive }?.getBean(requiredType.java)
                 ?: throw IllegalApplicationContextStateException("Pulsar context is currently not active. " +
-                        "Status: pulsar context: $closed, app context: ${AppContext.state.get()}, " +
-                        "application context: ${applicationContext.isActive}")
+                        "Status: pulsar context closed? $closed, app context status: ${AppContext.state.get()}, " +
+                        "application context active?: ${applicationContext.isActive}")
     }
 
     @Throws(BeansException::class)

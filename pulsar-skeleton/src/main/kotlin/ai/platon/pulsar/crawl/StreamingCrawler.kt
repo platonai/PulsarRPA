@@ -14,6 +14,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import oshi.SystemInfo
 import java.io.IOException
+import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
@@ -198,16 +199,17 @@ open class StreamingCrawler(
         }
 
         when (e) {
+            is CancellationException,
+            is IllegalStateException,
             is IllegalApplicationContextStateException -> {
                 if (illegalState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("Illegal context, quit streaming crawler ... | {}", e.message)
+                    log.warn("Illegal app context, quit streaming crawler ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
             is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
-            else -> log.error("Unexpected exception", e)
         }
         return FlowState.CONTINUE
     }
