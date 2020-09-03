@@ -38,9 +38,20 @@ open class PulsarSession(
         /**
          * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
          * */
-        val id: Int = 9000000 + idGen.incrementAndGet()
+        val id: Int = nextId
 ) : AutoCloseable {
-    protected val log = LoggerFactory.getLogger(PulsarSession::class.java)
+
+    companion object {
+        const val ID_CAPACITY = 1_000_000
+        const val ID_START = 1_000_000
+        const val ID_END = ID_START + ID_CAPACITY - 1
+
+        private val idGen = AtomicInteger()
+        private val nextId get() = ID_START + idGen.incrementAndGet()
+        private fun opts() = LoadOptions.create()
+    }
+
+    private val log = LoggerFactory.getLogger(PulsarSession::class.java)
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * TODO: session scoped?
@@ -317,12 +328,8 @@ open class PulsarSession(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // org.springframework.beans.factory.BeanCreationNotAllowedException throws if WebDb is not created yet
-            kotlin.runCatching { context.webDb.flush() }.onFailure { log.warn(it.message) }
             closableObjects.forEach { o -> o.close() }
-
-            log.debug("Pulsar session #{} is closed. Used memory: {}, free memory: {}",
-                    display,
-                    Strings.readableBytes(Systems.memoryUsed), Strings.readableBytes(Systems.memoryFree))
+            log.debug("Pulsar session #{} is closed", display)
         }
     }
 
@@ -398,10 +405,4 @@ open class PulsarSession(
             = if (isActive) action() else throw IllegalApplicationContextStateException("Pulsar session is not alive")
 
     private fun <T> ensureActive(defaultValue: T, action: () -> T): T = defaultValue.takeIf { !isActive } ?: action()
-
-    private fun opts() = LoadOptions.create()
-
-    companion object {
-        private val idGen = AtomicInteger()
-    }
 }

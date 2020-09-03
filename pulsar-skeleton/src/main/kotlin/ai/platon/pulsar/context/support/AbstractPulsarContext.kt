@@ -22,7 +22,9 @@ import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
+import org.springframework.beans.factory.parsing.BeanEntry
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
@@ -40,6 +42,7 @@ abstract class AbstractPulsarContext(
         override val applicationContext: AbstractApplicationContext,
         override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
+    private val log = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
 
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
@@ -106,14 +109,11 @@ abstract class AbstractPulsarContext(
     /** Reference to the JVM shutdown hook, if registered.  */
     private var shutdownHook: Thread? = null
 
-    private val webDbOrNull: WebDb? get() = webDb.takeIf { isActive }
+    private val webDbOrNull: WebDb? get() = if (isActive) webDb else null
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
-        return applicationContext.takeIf { isActive }?.getBean(requiredType.java)
-                ?: throw IllegalApplicationContextStateException("Pulsar context is currently not active. " +
-                        "Status: pulsar context closed? $closed, app context status: ${AppContext.state.get()}, " +
-                        "application context active?: ${applicationContext.isActive}")
+        return applicationContext.getBean(requiredType.java)
     }
 
     @Throws(BeansException::class)
@@ -208,7 +208,7 @@ abstract class AbstractPulsarContext(
      */
     override fun load(url: String, options: LoadOptions): WebPage {
         val normUrl = normalize(url, options)
-        return loadComponent.takeIf { isActive }?.load(normUrl)?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(normUrl)
     }
 
     /**
@@ -219,7 +219,7 @@ abstract class AbstractPulsarContext(
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: URL, options: LoadOptions): WebPage {
-        return loadComponent.takeIf { isActive }?.load(url, initOptions(options))?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(url, initOptions(options))
     }
 
     /**
@@ -230,12 +230,12 @@ abstract class AbstractPulsarContext(
      */
     override fun load(url: NormUrl): WebPage {
         initOptions(url.options)
-        return loadComponent.takeIf { isActive }?.load(url)?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(url)
     }
 
     override suspend fun loadDeferred(url: NormUrl): WebPage {
         initOptions(url.options)
-        return loadComponent.takeIf { isActive }?.loadDeferred(url)?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.loadDeferred(url)
     }
 
     /**
@@ -252,11 +252,11 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.loadAll(normalize(urls, options), options)?: listOf()
+        return if (isActive) loadComponent.loadAll(normalize(urls, options), options) else listOf()
     }
 
     override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.loadAll(urls, initOptions(options))?: listOf()
+        return if (isActive) loadComponent.loadAll(urls, initOptions(options)) else listOf()
     }
 
     /**
@@ -273,11 +273,11 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.parallelLoadAll(normalize(urls, options), options)?: listOf()
+        return if (isActive) loadComponent.parallelLoadAll(normalize(urls, options), options) else listOf()
     }
 
     override fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.loadAll(urls, initOptions(options))?: listOf()
+        return if (isActive) loadComponent.parallelLoadAll(urls, initOptions(options)) else listOf()
     }
 
     /**
@@ -351,12 +351,14 @@ abstract class AbstractPulsarContext(
 
     private fun doClose() {
         if (closed.compareAndSet(false, true)) {
+            kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
+
             sessions.values.forEach {
-                it.runCatching { it.close() }.onFailure { it.printStackTrace() }
+                it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
 
             closableObjects.forEach {
-                it.runCatching { it.close() }.onFailure { it.printStackTrace() }
+                it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
         }
     }
