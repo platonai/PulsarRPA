@@ -136,6 +136,8 @@ abstract class AbstractPulsarContext(
     }
 
     fun clearCaches() {
+        if (!isActive) return
+
         globalCache.pageCache.clear()
         globalCache.documentCache.clear()
     }
@@ -172,11 +174,11 @@ abstract class AbstractPulsarContext(
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
-        return WebPage.NIL.takeIf { !isActive }?:injectComponent.inject(Urls.splitUrlArgs(url))
+        return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
     override fun inject(url: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive }?:injectComponent.inject(url.spec, url.args)
+        return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(url.spec, url.args)
     }
 
     override fun getOrNull(url: String): WebPage? {
@@ -285,8 +287,7 @@ abstract class AbstractPulsarContext(
      */
     override fun parse(page: WebPage) = JsoupParser(page, unmodifiedConfig).parse()
 
-    override fun parse(page: WebPage, mutableConfig: MutableConfig) =
-            JsoupParser(page, mutableConfig).parse()
+    override fun parse(page: WebPage, mutableConfig: MutableConfig) = JsoupParser(page, mutableConfig).parse()
 
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
@@ -317,11 +318,7 @@ abstract class AbstractPulsarContext(
      */
     override fun registerShutdownHook() {
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
-            this.shutdownHook = object : Thread() {
-                override fun run() {
-                    synchronized(startupShutdownMonitor) { doClose() }
-                }
-            }
+            this.shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
             Runtime.getRuntime().addShutdownHook(this.shutdownHook)
             (applicationContext as? AbstractApplicationContext)?.registerShutdownHook()
         }
@@ -343,7 +340,8 @@ abstract class AbstractPulsarContext(
             if (shutdownHook != null) {
                 try {
                     Runtime.getRuntime().removeShutdownHook(shutdownHook)
-                } catch (ex: IllegalStateException) { // ignore - VM is already shutting down
+                } catch (ex: IllegalStateException) {
+                    // ignore - VM is already shutting down
                 }
             }
         }

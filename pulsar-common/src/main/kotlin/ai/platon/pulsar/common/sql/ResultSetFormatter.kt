@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.sql
 
 import org.apache.commons.lang3.StringUtils
+import java.lang.Exception
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
@@ -10,6 +11,7 @@ class ResultSetFormatter(
         private val rs: ResultSet,
         private val asList: Boolean = false,
         private val withHeader: Boolean = false,
+        private val textOnly: Boolean = false,
         val buffer: StringBuilder = StringBuilder()
 ) {
     private val meta = rs.metaData
@@ -125,23 +127,24 @@ class ResultSetFormatter(
      */
     @Throws(SQLException::class)
     private fun formatColumn(columnIndex: Int): String {
+        if (textOnly) {
+            return rs.getString(columnIndex)?.replace("\n", "") ?: "null"
+        }
+
         return when (rs.metaData.getColumnType(columnIndex)) {
             Types.DOUBLE, Types.FLOAT, Types.REAL -> {
-                String.format(getColumnFormat(columnIndex), rs.getDouble(columnIndex)).trimEnd('0').trimEnd('.')
+                val fmt = getFloatColumnFormat(columnIndex)
+                val value = rs.getDouble(columnIndex)
+                String.format(fmt, value)
             }
-            else -> rs.getString(columnIndex) ?: "null"
+            else -> rs.getString(columnIndex)?.replace("\n", "") ?: "null"
         }
     }
 
-    private fun getColumnFormat(columnIndex: Int): String {
-        val precision = rs.metaData.getPrecision(columnIndex)
-        val scale = rs.metaData.getScale(columnIndex)
-        return when {
-            precision == 0 && scale == 0 -> "%f"
-            precision == 0 -> "%.${scale}f"
-            scale == 0 -> "%${precision}.f"
-            else -> "%f"
-        }
+    private fun getFloatColumnFormat(columnIndex: Int): String {
+        val precision = rs.metaData.getPrecision(columnIndex).coerceIn(6, 10)
+        val scale = rs.metaData.getScale(columnIndex).coerceIn(2, 6)
+        return "%${precision}.${scale}f"
     }
 
     private fun formatRows() {

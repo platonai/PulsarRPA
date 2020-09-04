@@ -208,7 +208,7 @@ object DomFunctions {
     @JvmStatic
     @JvmOverloads
     fun text(dom: ValueDom, truncate: Int = Int.MAX_VALUE): String {
-        val text = dom.element.text()!!
+        val text = dom.element.text()
         return if (truncate > text.length) {
             text
         } else {
@@ -227,6 +227,10 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun ownText(dom: ValueDom) = dom.element.ownText()
+
+    @UDFunction
+    @JvmStatic
+    fun ownTexts(dom: ValueDom) = dom.element.ownTexts()
 
     @UDFunction
     @JvmStatic

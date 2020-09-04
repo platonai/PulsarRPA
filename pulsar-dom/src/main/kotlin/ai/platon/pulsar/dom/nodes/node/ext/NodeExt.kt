@@ -10,7 +10,6 @@ import ai.platon.pulsar.common.geometric.str
 import ai.platon.pulsar.common.geometric.str2
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.set
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.FeatureEntry
 import ai.platon.pulsar.dom.features.FeatureFormatter
 import ai.platon.pulsar.dom.features.NodeFeature
@@ -19,6 +18,7 @@ import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
+import org.jsoup.internal.StringUtil
 import org.jsoup.nodes.*
 import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
@@ -130,6 +130,16 @@ val Element.isNil get() = this === nilElement
 fun Element.addClasses(vararg classNames: String): Element {
     classNames.forEach { addClass(it) }
     return this
+}
+
+fun Element.slimCopy(): Element {
+    val ele = this.clone()
+    ele.forEachElement { it.clearAttributes() }
+    return ele
+}
+
+fun Element.ownTexts(): List<String> {
+    return this.childNodes().mapNotNullTo(mutableListOf()) { (it as? TextNode)?.text() }
 }
 
 fun Element.qualifiedClassNames(): Set<String> {
@@ -350,7 +360,7 @@ val Node.textRepresentation: String get() =
     }
 
 /**
- * TODO: slim html for table
+ * TODO: slim table
  * */
 val Node.slimHtml by field {
     val nm = it.nodeName()
@@ -358,7 +368,7 @@ val Node.slimHtml by field {
         it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
         it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
             String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
-        it is Element -> String.format("<div>%s</div>", it.cleanText)
+        it is Element -> it.slimCopy().outerHtml()
         else -> String.format("<b>%s</b>", it.name)
     }
 }
@@ -377,7 +387,7 @@ private fun atomSlimHtml(node: Node): String {
 }
 
 private fun createSlimImageHtml(node: Node): String = node.run { String.format("<img src='%s' vi='%s' alt='%s'/>",
-            absUrl("src"), attr("vi"), attr("alt")) }
+        absUrl("src"), attr("vi"), attr("alt")) }
 
 val Node.key: String get() = "$location#$sequence"
 
@@ -399,7 +409,9 @@ val Node.name: String
                 nodeName()
             }
             is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                val postfix = if (siblingSize() > 1) {
+                    "~" + siblingIndex()
+                } else ""
                 return bestElement.name + postfix
             }
             else -> nodeName()
@@ -429,7 +441,9 @@ val Node.canonicalName: String
                 return "${nodeName()}$id$classes"
             }
             is TextNode -> {
-                val postfix = if (siblingSize() > 1) { "~" + siblingIndex() } else ""
+                val postfix = if (siblingSize() > 1) {
+                    "~" + siblingIndex()
+                } else ""
                 return bestElement.canonicalName + postfix
             }
             else -> return nodeName()
@@ -762,6 +776,6 @@ private fun Node.calculateViewPort(): Dimension {
     val default = AppConstants.DEFAULT_VIEW_PORT
     val parts = ownerBody.attr("view-port").split("x")
     return if (parts.size == 2)
-        Dimension(parts[0].toIntOrNull()?:default.width, parts[1].toIntOrNull()?:default.height)
+        Dimension(parts[0].toIntOrNull() ?: default.width, parts[1].toIntOrNull() ?: default.height)
     else default
 }
