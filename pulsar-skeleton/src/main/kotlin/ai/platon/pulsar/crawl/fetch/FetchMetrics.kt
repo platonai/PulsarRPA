@@ -184,7 +184,7 @@ class FetchMetrics(
 
         val i = finishedTasks.count
 
-        if (log.isInfoEnabled && i % 20 == 0L) {
+        if (log.isInfoEnabled && tasks.count > 0L && i % 20 == 0L) {
             log.info(formatStatus())
         }
 
@@ -266,6 +266,8 @@ class FetchMetrics(
     }
 
     fun formatStatus(): String {
+        if (tasks.count == 0L) return ""
+
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
@@ -285,12 +287,14 @@ class FetchMetrics(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info(formatStatus())
+            if (tasks.count > 0) {
+                log.info(formatStatus())
 
-            log.info("There are " + unreachableHosts.size + " unreachable hosts")
-            AppFiles.logUnreachableHosts(this.unreachableHosts)
+                log.info("There are " + unreachableHosts.size + " unreachable hosts")
+                AppFiles.logUnreachableHosts(this.unreachableHosts)
 
-            logAvailableHosts()
+                logAvailableHosts()
+            }
         }
     }
 

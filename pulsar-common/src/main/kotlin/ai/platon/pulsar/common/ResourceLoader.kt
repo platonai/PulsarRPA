@@ -107,7 +107,6 @@ object ResourceLoader {
         }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
     }
 
-    @JvmStatic
     fun readAllLines(fileResource: String): List<String> {
         return kotlin.runCatching {
             getResourceAsReader(fileResource)?.use { reader ->
@@ -148,15 +147,11 @@ object ResourceLoader {
      */
     fun getResourceAsStream(name: String): InputStream? {
         return try {
-            val url = getResource(name)
-            if (url == null) {
-                // LOG.info(name + " not found");
-                return null
-            } else {
-                log.info("Find resource $name at $url")
-            }
+            val url = getResource(name) ?: return null
+            log.info("Find resource $name | $url")
             url.openStream()
-        } catch (e: Exception) {
+        } catch (e: IOException) {
+            log.warn("Failed to read resource {} | {}", name, e.message)
             null
         }
     }
@@ -268,5 +263,4 @@ object ResourceLoader {
         @Throws(ClassNotFoundException::class)
         fun loadClass(name: String): Class<*>?
     }
-
 }

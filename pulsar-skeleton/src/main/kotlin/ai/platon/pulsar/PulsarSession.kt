@@ -62,7 +62,6 @@ open class PulsarSession(
     private val pageCache get() = context.globalCache.pageCache
     private val documentCache get() = context.globalCache.documentCache
     val display = "$id"
-    // Session variables
     private val closableObjects = mutableSetOf<AutoCloseable>()
     private val closed = AtomicBoolean()
     val isActive get() = !closed.get() && context.isActive
@@ -327,9 +326,8 @@ open class PulsarSession(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            // org.springframework.beans.factory.BeanCreationNotAllowedException throws if WebDb is not created yet
             closableObjects.forEach { o -> o.close() }
-            log.debug("Pulsar session #{} is closed", display)
+            log.info("Session #{} is closed", display)
         }
     }
 

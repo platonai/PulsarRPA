@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -118,20 +119,23 @@ open class ProxyPoolManager(
             return hasEnabledProvider()
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun hasEnabledProvider(): Boolean {
             val now = Instant.now()
-            synchronized(ProxyPoolManager::class.java) {
-                if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
-                    providerDirLastWatchTime = now
-                    numEnabledProviderFiles = try {
-                        Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
-                    } catch (e: Throwable) { 0 }
-                }
+
+            if (Duration.between(providerDirLastWatchTime, now) > PROXY_FILE_WATCH_INTERVAL) {
+                providerDirLastWatchTime = now
+                numEnabledProviderFiles = try {
+                    Files.list(AppPaths.ENABLED_PROVIDER_DIR).filter { Files.isRegularFile(it) }.count()
+                } catch (e: Throwable) { 0 }
             }
 
             return numEnabledProviderFiles > 0
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun enableDefaultProviders() {
             DEFAULT_PROXY_PROVIDER_FILES.mapNotNull { it.takeIf { Files.exists(it) } }.forEach {
                 FileUtils.copyFileToDirectory(it.toFile(), AVAILABLE_PROVIDER_DIR.toFile())
@@ -139,13 +143,17 @@ open class ProxyPoolManager(
             AVAILABLE_PROVIDER_DIR.mapNotNull { it.takeIf { Files.exists(it) } }.forEach { enableProvider(it) }
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun enableProvider(providerPath: Path) {
             val filename = providerPath.fileName
-            val target = AppPaths.ENABLED_PROVIDER_DIR.resolve(filename)
-            Files.deleteIfExists(target)
-            Files.createSymbolicLink(target, providerPath)
+            val link = AppPaths.ENABLED_PROVIDER_DIR.resolve(filename)
+            Files.deleteIfExists(link)
+            Files.createSymbolicLink(link, providerPath)
         }
 
+        @Synchronized
+        @Throws(IOException::class)
         fun disableProviders() {
             Files.list(AppPaths.ENABLED_PROVIDER_DIR)
                     .filter { Files.isRegularFile(it) || Files.isSymbolicLink(it) }

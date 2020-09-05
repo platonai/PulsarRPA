@@ -18,7 +18,6 @@
  */
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.ResourceLoader.readAllLines
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
@@ -126,7 +125,7 @@ class TestString {
 
     @Test
     fun testReplaceCharsetInHtml() {
-        val lines = readAllLines("data/html-charsets.txt")
+        val lines = ResourceLoader.readAllLines("data/html-charsets.txt")
         for (line in lines) {
             val l = Strings.replaceCharsetInHtml(line, "UTF-8")
             assertTrue(l.contains("UTF-8"))
@@ -341,7 +340,7 @@ class TestString {
     fun testLoadSlashedLines() {
         var seeds = "@data/lines-with-slashes.txt"
         if (seeds.startsWith("@")) {
-            seeds = java.lang.String.join("\n", readAllLines(seeds.substring(1)))
+            seeds = java.lang.String.join("\n", ResourceLoader.readAllLines(seeds.substring(1)))
         }
         val seedFile = File.createTempFile("seed", ".txt")
         val unslashedLines = Strings.getUnslashedLines(seeds)
