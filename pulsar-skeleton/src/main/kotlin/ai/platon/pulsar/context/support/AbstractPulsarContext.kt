@@ -3,7 +3,6 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -24,10 +23,9 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
-import org.springframework.beans.factory.parsing.BeanEntry
-import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -143,7 +141,9 @@ abstract class AbstractPulsarContext(
     }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val (spec, args) = Urls.splitUrlArgs(url)
+        val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
+
+        val (spec, args) = Urls.splitUrlArgs(url0)
         var normalizedUrl = Urls.normalize(spec, options.shortenKey)
         if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL

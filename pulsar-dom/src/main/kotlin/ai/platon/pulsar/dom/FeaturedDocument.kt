@@ -220,7 +220,7 @@ open class FeaturedDocument(val document: Document) {
     fun stripScripts() {
         val removal = mutableSetOf<Node>()
         NodeTraversor.traverse({ node, _ ->  if (node.nodeName() == "script") removal.add(node) }, document)
-        removal.forEach { it.remove() }
+        removal.forEach { it.takeIf { it.hasParent() }?.remove() }
     }
 
     fun stripStyles() {
@@ -230,6 +230,7 @@ open class FeaturedDocument(val document: Document) {
                     || node.attr("ref") == "stylesheet") {
                 removal.add(node)
             }
+            node.removeAttr("style")
         }, document)
         removal.forEach { it.remove() }
     }
