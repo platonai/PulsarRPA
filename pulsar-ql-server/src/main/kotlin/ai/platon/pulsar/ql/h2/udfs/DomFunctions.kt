@@ -28,7 +28,7 @@ import java.time.Duration
 
 /**
  * Created by vincent on 17-11-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2020 Platon AI. All rights reserved
  */
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")

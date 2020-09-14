@@ -14,6 +14,7 @@ import ai.platon.pulsar.ql.h2.Queries
 import ai.platon.pulsar.ql.types.ValueDom
 import org.h2.value.ValueArray
 import org.h2.value.ValueFloat
+import org.h2.value.ValueInt
 import org.h2.value.ValueString
 import org.jsoup.nodes.Element
 
@@ -79,6 +80,14 @@ object DomSelectFunctions {
         return Queries.selectNthOrNull(dom, cssQuery, n) { it.slimHtml } ?: ""
     }
 
+    @UDFunction(description = "Select all the element from a DOM by the given css query " +
+            "and try to extract an integer from the element text, if the text is not an integer, fill the default value")
+    @JvmStatic
+    @JvmOverloads
+    fun allIntegers(dom: ValueDom, cssQuery: String, defaultValue: Int = 0): ValueArray {
+        return Queries.select(dom, cssQuery) { ValueInt.get(Strings.getFirstInteger(it.text(), defaultValue)) }
+    }
+
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
             "and try to extract an integer from the element text")
     @JvmStatic
@@ -94,6 +103,14 @@ object DomSelectFunctions {
     fun nthInteger(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Int = 0): Int {
         val s = nthText(dom, cssQuery, n)
         return Strings.getFirstInteger(s, defaultValue)
+    }
+
+    @UDFunction(description = "Select all the element from a DOM by the given css query " +
+            "and try to extract an number from the element text")
+    @JvmStatic
+    @JvmOverloads
+    fun allNumbers(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueArray {
+        return Queries.select(dom, cssQuery) { ValueFloat.get(Strings.getFirstFloatNumber(it.text(), defaultValue)) }
     }
 
     /**
