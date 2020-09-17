@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.crawl.common
 
-import ai.platon.pulsar.common.Urls.getURLOrNull
+import ai.platon.pulsar.common.url.Urls.getURLOrNull
 import ai.platon.pulsar.common.domain.DomainSuffix
 import ai.platon.pulsar.common.domain.DomainSuffixes
 import org.slf4j.LoggerFactory
@@ -26,7 +26,7 @@ import java.net.*
 
 /**
  * Utility class for URL analysis
- * TODO: merge with ai.platon.pulsar.common.Urls
+ * TODO: merge with ai.platon.pulsar.common.url.Urls
  */
 object URLUtil {
     val LOG = LoggerFactory.getLogger(URLUtil::class.java)

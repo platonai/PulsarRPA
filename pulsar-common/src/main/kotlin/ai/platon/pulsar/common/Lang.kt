@@ -9,6 +9,10 @@ enum class FlowState {
     val isContinue get() = this == CONTINUE
 }
 
+enum class Priority(val value: Int) {
+    HIGHEST(0), HIGHER(100), NORMAL(1000), LOWER(1100), LOWEST(1200)
+}
+
 /** Unsafe lazy, usually be used in single thread */
 fun <T> usfLazy(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
 

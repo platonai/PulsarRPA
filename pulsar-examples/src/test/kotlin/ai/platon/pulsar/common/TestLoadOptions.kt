@@ -2,6 +2,7 @@ package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import org.junit.Test
 import java.time.Duration
@@ -31,7 +32,7 @@ class TestLoadOptions {
     fun testOptions() {
         val args0 = Urls.splitUrlArgs(url).second
         val options = LoadOptions.parse("$args0 $args")
-        assertEquals("\".products a\"", options.outlinkSelector)
+        assertEquals("\".products a\"", options.outLinkSelector)
 
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
         val options3 = options.mergeModified(options2)
@@ -106,7 +107,7 @@ class TestLoadOptions {
 
     private fun assertOptions(options: LoadOptions) {
         assertTrue(options.incognito)
-        assertEquals("\".products a\"", options.outlinkSelector)
+        assertEquals("\".products a\"", options.outLinkSelector)
         assertEquals(1, options.expires.seconds)
         assertEquals(20, options.itemScrollCount)
         assertEquals(1, options.itemScrollInterval.seconds)

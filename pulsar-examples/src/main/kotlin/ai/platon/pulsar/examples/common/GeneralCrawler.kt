@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.common
 
 import ai.platon.pulsar.common.FileCommand
 import ai.platon.pulsar.common.NetUtil
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER

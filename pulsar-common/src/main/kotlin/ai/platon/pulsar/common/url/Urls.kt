@@ -1,5 +1,6 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.url
 
+import ai.platon.pulsar.common.Strings
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
@@ -7,7 +8,6 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
-
 
 object Urls {
 

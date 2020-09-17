@@ -24,7 +24,7 @@ import ai.platon.pulsar.crawl.parse.PageParser
 import ai.platon.pulsar.crawl.parse.ParseException
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.protocol.ProtocolException
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Lists
 import org.junit.Assert
@@ -95,7 +95,7 @@ class TestRSSParser {
             // check that there are 2 liveLinks:
 // http://www-scf.usc.edu/~mattmann/
 // http://www.pulsar.org
-            val urls = parseResult.hypeLinks.stream().map { obj: HyperLink -> obj.url }.collect(Collectors.toList())
+            val urls = parseResult.hypeLinks.stream().map { obj: HyperlinkPersistable -> obj.url }.collect(Collectors.toList())
             if (!urls.containsAll(Lists.newArrayList("http://www-scf.usc.edu/~mattmann/", "http://www.pulsar.org/"))) {
                 Assert.fail("Live links read from sample rss file are not correct!")
             }

@@ -16,8 +16,8 @@
  */
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.Urls.reverseUrl
-import ai.platon.pulsar.common.Urls.unreverseUrl
+import ai.platon.pulsar.common.url.Urls.reverseUrl
+import ai.platon.pulsar.common.url.Urls.unreverseUrl
 import org.junit.Assert
 import org.junit.Test
 

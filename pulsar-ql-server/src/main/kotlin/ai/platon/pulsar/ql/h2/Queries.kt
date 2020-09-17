@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.math.vectors.get
 import ai.platon.pulsar.common.math.vectors.isEmpty
 import ai.platon.pulsar.dom.features.NodeFeature.Companion.isFloating

@@ -1,15 +1,24 @@
 package ai.platon.pulsar.common.collect
 
-enum class Priority(val value: Int) {
-    HIGHEST(0), HIGHER(100), NORMAL(1000), LOWER(1100), LOWEST(1200)
-}
+import ai.platon.pulsar.common.Priority
 
+/**
+ * A data collector does not know the sink until collectTo is called
+ * */
 interface DataCollector<T> {
     fun hasMore(): Boolean = false
-    fun collectTo(sink: MutableCollection<T>) {}
+    fun collectTo(element: T, sink: MutableCollection<T>)
+    fun collectTo(sink: MutableCollection<T>)
 }
 
-abstract class AbstractDataCollector<T>: DataCollector<T>
+abstract class AbstractDataCollector<T>: DataCollector<T> {
+    override fun collectTo(element: T, sink: MutableCollection<T>) {
+        sink.add(element)
+    }
+
+    override fun collectTo(sink: MutableCollection<T>) {
+    }
+}
 
 abstract class AbstractPriorityDataCollector<T>(
         val priority: Int = Priority.NORMAL.value

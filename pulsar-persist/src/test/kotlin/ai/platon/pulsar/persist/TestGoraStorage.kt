@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
@@ -222,7 +222,7 @@ class TestGoraStorage {
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i
             val url2 = AppConstants.EXAMPLE_URL + "/" + (i - 1)
-            val link = HyperLink.parse(url2).unbox()
+            val link = HyperlinkPersistable.parse(url2).unbox()
             link.anchor = "test anchor ord:1"
 
             page.liveLinks[link.url] = link

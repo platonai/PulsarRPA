@@ -1,8 +1,8 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.Urls.splitUrlArgs
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter

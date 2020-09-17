@@ -1,6 +1,6 @@
 package ai.platon.pulsar.dom.select
 
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.dom.nodes.Anchor
 import ai.platon.pulsar.dom.nodes.TraverseState
 import ai.platon.pulsar.dom.nodes.node.ext.cleanText

@@ -22,9 +22,9 @@ import ai.platon.pulsar.common.DateTimes.parseInstant
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.HtmlIntegrity.Companion.fromString
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.Urls.normalize
-import ai.platon.pulsar.common.Urls.reverseUrlOrEmpty
-import ai.platon.pulsar.common.Urls.unreverseUrl
+import ai.platon.pulsar.common.url.Urls.normalize
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.common.url.Urls.unreverseUrl
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.persist.*
@@ -720,14 +720,14 @@ class KWebPage : Comparable<KWebPage> {
     /**
      * TODO: Remove redundant url to reduce space
      */
-    fun setLiveLinks(liveLinks: Iterable<HyperLink>) {
+    fun setLiveLinks(liveLinks: Iterable<HyperlinkPersistable>) {
         page.liveLinks.clear()
         val links = page.liveLinks
-        liveLinks.forEach(Consumer { l: HyperLink -> links[l.url] = l.unbox() })
+        liveLinks.forEach(Consumer { l: HyperlinkPersistable -> links[l.url] = l.unbox() })
     }
 
-    fun addLiveLink(hyperLink: HyperLink) {
-        page.liveLinks[hyperLink.url] = hyperLink.unbox()
+    fun addLiveLink(hyperlink: HyperlinkPersistable) {
+        page.liveLinks[hyperlink.url] = hyperlink.unbox()
     }
 
     fun getSimpleVividLinks(): Collection<String> {
@@ -768,7 +768,7 @@ class KWebPage : Comparable<KWebPage> {
      * TODO: compress links
      * TODO: HBase seems not modify any nested array
      */
-    fun addHyperLinks(hyperLinks: Iterable<HyperLink>) {
+    fun addHyperlinks(hyperLinks: Iterable<HyperlinkPersistable>) {
         var links = page.links
         // If there are too many links, Drop the front 1/3 links
         if (links.size > AppConstants.MAX_LINK_PER_PAGE) {

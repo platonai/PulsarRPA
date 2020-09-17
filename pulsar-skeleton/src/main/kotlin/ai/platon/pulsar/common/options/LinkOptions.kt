@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.options
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
 import com.beust.jcommander.Parameter
 import java.util.*
@@ -57,8 +57,8 @@ class LinkOptions : PulsarOptions {
         maxAnchorLength = conf.getUint(CapabilityTypes.PARSE_MAX_ANCHOR_LENGTH, 40)
     }
 
-    fun filter(l: HyperLink): Int {
-        return filter(l.url, l.anchor)
+    fun filter(l: HyperlinkPersistable): Int {
+        return filter(l.url, l.text)
     }
 
     fun filter(url: String, anchor: String): Int {
@@ -102,12 +102,12 @@ class LinkOptions : PulsarOptions {
         }
     }
 
-    fun asPredicate(): Predicate<HyperLink> {
+    fun asPredicate(): Predicate<HyperlinkPersistable> {
         report.clear()
-        return Predicate { l: HyperLink ->
-            val r = this.filter(l.url, l.anchor)
+        return Predicate { l: HyperlinkPersistable ->
+            val r = this.filter(l.url, l.text)
             if (logLevel > 0) {
-                report.add(r.toString() + " <- " + l.url + "\t" + l.anchor)
+                report.add(r.toString() + " <- " + l.url + "\t" + l.text)
             }
             0 == r
         }

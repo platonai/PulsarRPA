@@ -18,7 +18,7 @@ package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig

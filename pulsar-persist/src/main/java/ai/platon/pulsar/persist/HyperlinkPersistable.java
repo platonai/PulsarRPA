@@ -23,80 +23,79 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-/* An hype link in a page. */
 /**
- * <p>HyperLink class.</p>
+ * <p>An hype link in a page.</p>
  *
  * @author vincent
  * @version $Id: $Id
  */
-public class HyperLink implements Comparable<HyperLink> {
+public class HyperlinkPersistable implements Comparable<HyperlinkPersistable> {
 
-    private GHypeLink hypeLink;
+    private GHypeLink hyperlink;
 
-    private HyperLink(@NotNull GHypeLink hypeLink) {
-        this.hypeLink = hypeLink;
+    private HyperlinkPersistable(@NotNull GHypeLink hyperlink) {
+        this.hyperlink = hyperlink;
     }
 
     /**
-     * <p>Constructor for HyperLink.</p>
+     * <p>Constructor for Hyperlink.</p>
      *
-     * @param url a {@link java.lang.String} object.
+     * @param url The of the hyper link.
      */
-    public HyperLink(@NotNull String url) {
+    public HyperlinkPersistable(@NotNull String url) {
         this(url, null);
     }
 
     /**
-     * <p>Constructor for HyperLink.</p>
+     * <p>Constructor for Hyperlink.</p>
      *
      * @param url a {@link java.lang.String} object.
-     * @param anchor a {@link java.lang.String} object.
+     * @param text a {@link java.lang.String} object.
      */
-    public HyperLink(@NotNull String url, @Nullable String anchor) {
-        this(url, anchor, 0);
+    public HyperlinkPersistable(@NotNull String url, @Nullable String text) {
+        this(url, text, 0);
     }
 
     /**
-     * <p>Constructor for HyperLink.</p>
+     * <p>Constructor for Hyperlink.</p>
      *
      * @param url a {@link java.lang.String} object.
-     * @param anchor a {@link java.lang.String} object.
+     * @param text a {@link java.lang.String} object.
      * @param order a int.
      */
-    public HyperLink(@NotNull String url, @Nullable String anchor, int order) {
+    public HyperlinkPersistable(@NotNull String url, @Nullable String text, int order) {
         Objects.requireNonNull(url);
 
-        hypeLink = new GHypeLink();
-        hypeLink.setUrl(url);
-        hypeLink.setAnchor(anchor);
-        hypeLink.setOrder(order);
+        hyperlink = new GHypeLink();
+        hyperlink.setUrl(url);
+        hyperlink.setAnchor(text);
+        hyperlink.setOrder(order);
     }
 
     /**
      * <p>box.</p>
      *
-     * @param hypeLink a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
-     * @return a {@link ai.platon.pulsar.persist.HyperLink} object.
+     * @param hyperlink a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
+     * @return a {@link HyperlinkPersistable} object.
      */
     @NotNull
-    public static HyperLink box(@NotNull GHypeLink hypeLink) {
-        return new HyperLink(hypeLink);
+    public static HyperlinkPersistable box(@NotNull GHypeLink hyperlink) {
+        return new HyperlinkPersistable(hyperlink);
     }
 
     /**
      * <p>parse.</p>
      *
      * @param link a {@link java.lang.String} object.
-     * @return a {@link ai.platon.pulsar.persist.HyperLink} object.
+     * @return a {@link HyperlinkPersistable} object.
      */
     @NotNull
-    public static HyperLink parse(@NotNull String link) {
-        String[] linkAnchor = link.split("\\s+");
-        if (linkAnchor.length == 1) {
-            return new HyperLink(linkAnchor[0]);
+    public static HyperlinkPersistable parse(@NotNull String link) {
+        String[] urlText = link.split("\\s+");
+        if (urlText.length == 1) {
+            return new HyperlinkPersistable(urlText[0]);
         } else {
-            return new HyperLink(linkAnchor[0], linkAnchor[1]);
+            return new HyperlinkPersistable(urlText[0], urlText[1]);
         }
     }
 
@@ -117,7 +116,7 @@ public class HyperLink implements Comparable<HyperLink> {
      * @return a {@link ai.platon.pulsar.persist.gora.generated.GHypeLink} object.
      */
     public GHypeLink unbox() {
-        return hypeLink;
+        return hyperlink;
     }
 
     /**
@@ -126,7 +125,7 @@ public class HyperLink implements Comparable<HyperLink> {
      * @return a {@link java.lang.String} object.
      */
     public String getUrl() {
-        return hypeLink.getUrl().toString();
+        return hyperlink.getUrl().toString();
     }
 
     /**
@@ -135,27 +134,37 @@ public class HyperLink implements Comparable<HyperLink> {
      * @param url a {@link java.lang.String} object.
      */
     public void setUrl(String url) {
-        hypeLink.setUrl(url);
+        hyperlink.setUrl(url);
     }
 
     /**
-     * <p>getAnchor.</p>
+     * Get the anchor text.
+     *
+     * The [anchor text](https://en.wikipedia.org/wiki/Anchor_text), link label or link text is the visible,
+     * clickable text in an HTML hyperlink.
+     * The term "anchor" was used in older versions of the HTML specification[1] for what is currently referred to
+     * as the "a element".
      *
      * @return a {@link java.lang.String} object.
      */
     @NotNull
-    public String getAnchor() {
-        CharSequence anchor = hypeLink.getAnchor();
+    public String getText() {
+        CharSequence anchor = hyperlink.getAnchor();
         return anchor == null ? "" : anchor.toString();
     }
 
     /**
-     * <p>setAnchor.</p>
+     * Set the anchor text.
      *
-     * @param anchor a {@link java.lang.String} object.
+     * The [anchor text](https://en.wikipedia.org/wiki/Anchor_text), link label or link text is the visible,
+     * clickable text in an HTML hyperlink.
+     * The term "anchor" was used in older versions of the HTML specification[1] for what is currently referred to
+     * as the "a element".
+     *
+     * @param text a {@link java.lang.String} object.
      */
-    public void setAnchor(@Nullable String anchor) {
-        hypeLink.setAnchor(anchor);
+    public void setText(@Nullable String text) {
+        hyperlink.setAnchor(text);
     }
 
     /**
@@ -164,7 +173,7 @@ public class HyperLink implements Comparable<HyperLink> {
      * @return a int.
      */
     public int getOrder() {
-        return hypeLink.getOrder();
+        return hyperlink.getOrder();
     }
 
     /**
@@ -173,16 +182,16 @@ public class HyperLink implements Comparable<HyperLink> {
      * @param order a int.
      */
     public void setOrder(int order) {
-        hypeLink.setOrder(order);
+        hyperlink.setOrder(order);
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof HyperLink)) {
+        if (!(o instanceof HyperlinkPersistable)) {
             return getUrl().equals(o.toString());
         }
-        HyperLink other = (HyperLink) o;
+        HyperlinkPersistable other = (HyperlinkPersistable) o;
         return getUrl().equals(other.getUrl());
     }
 
@@ -194,10 +203,10 @@ public class HyperLink implements Comparable<HyperLink> {
 
     /** {@inheritDoc} */
     @Override
-    public int compareTo(@NotNull HyperLink hyperLink) {
+    public int compareTo(@NotNull HyperlinkPersistable hyperLink) {
         int r = getUrl().compareTo(hyperLink.getUrl());
         if (r == 0) {
-            r = getAnchor().compareTo(hyperLink.getAnchor());
+            r = getText().compareTo(hyperLink.getText());
             if (r == 0) {
                 r = getOrder() - hyperLink.getOrder();
             }
@@ -208,6 +217,6 @@ public class HyperLink implements Comparable<HyperLink> {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return getUrl() + " " + getAnchor() + " odr:" + getOrder();
+        return getUrl() + " " + getText() + " odr:" + getOrder();
     }
 }

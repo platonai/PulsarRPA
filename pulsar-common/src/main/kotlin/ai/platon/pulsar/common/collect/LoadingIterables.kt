@@ -16,11 +16,15 @@ open class ConcurrentLoadingIterable<T>(
     ): Iterator<T> {
 
         @Synchronized
-        override fun hasNext(): Boolean {
+        fun tryLoad() {
             if (iterable.collector.hasMore() && iterable.queue.size < iterable.lowerCapacity) {
                 iterable.collector.collectTo(iterable.queue)
             }
+        }
 
+        @Synchronized
+        override fun hasNext(): Boolean {
+            tryLoad()
             return iterable.queue.isNotEmpty()
         }
 

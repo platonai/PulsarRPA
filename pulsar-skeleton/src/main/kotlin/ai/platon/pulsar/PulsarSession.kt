@@ -6,9 +6,9 @@ import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.dom.FeaturedDocument
-import ai.platon.pulsar.dom.nodes.node.ext.isAnchor
 import ai.platon.pulsar.dom.select.appendSelectorIfMissing
 import ai.platon.pulsar.dom.select.firstTextOrNull
 import ai.platon.pulsar.dom.select.selectFirstOrNull
@@ -202,7 +202,7 @@ open class PulsarSession(
      * @return The web pages
      */
     fun loadOutPages(portalUrl: String, options: LoadOptions = opts()): Collection<WebPage> {
-        val outlinkSelector = appendSelectorIfMissing(options.outlinkSelector, "a")
+        val outlinkSelector = appendSelectorIfMissing(options.outLinkSelector, "a")
 
         val normUrl = normalize(portalUrl, options)
 

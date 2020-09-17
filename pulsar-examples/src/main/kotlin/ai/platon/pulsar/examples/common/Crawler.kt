@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.common
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
@@ -58,7 +58,7 @@ open class Crawler(
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select(options.outlinkSelector) { it.attr("abs:href") }.asSequence()
+        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
                 .filter { Urls.isValidUrl(it) }
                 .mapTo(HashSet()) { it.substringBefore(".com") }
                 .asSequence()
@@ -83,7 +83,7 @@ open class Crawler(
         val path = i.export(document)
         log.info("Portal page is exported to: file://$path")
 
-        val links = document.select(options.outlinkSelector) { it.attr("abs:href") }
+        val links = document.select(options.outLinkSelector) { it.attr("abs:href") }
                 .mapNotNullTo(mutableSetOf()) { i.normalizeOrNull(it)?.spec }
                 .take(options.topLinks)
         log.info("Total ${links.size} items to load")

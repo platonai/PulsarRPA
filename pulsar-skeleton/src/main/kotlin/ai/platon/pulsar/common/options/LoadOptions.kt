@@ -18,18 +18,24 @@ import java.time.temporal.ChronoUnit
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
 open class LoadOptions: CommonOptions {
+
+    @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
+    var label = ""
+
     /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = Duration.ofDays(36500)
-    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
-    var incognito = false
 
     /** Arrange links */
-    @Parameter(names = ["-ol", "-outLink", "-outlink", "-outlinkSelector", "--outlink-selector"],
+    @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
-    var outlinkSelector = ""
+    var outLinkSelector = ""
+
+    @Parameter(names = ["-olp", "-outLinkPattern", "--out-link-pattern"], description = "The pattern of the out links")
+    var outLinkPattern = ".+"
+
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
@@ -126,6 +132,8 @@ open class LoadOptions: CommonOptions {
             description = "Parallel fetch pages whenever applicable")
     var preferParallel = true
 
+    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
+    var incognito = false
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")

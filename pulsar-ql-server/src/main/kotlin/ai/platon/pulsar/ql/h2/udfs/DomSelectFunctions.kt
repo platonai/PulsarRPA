@@ -109,7 +109,7 @@ object DomSelectFunctions {
             "and try to extract an number from the element text")
     @JvmStatic
     @JvmOverloads
-    fun allNumbers(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueArray {
+    fun allFloats(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueArray {
         return Queries.select(dom, cssQuery) { ValueFloat.get(Strings.getFirstFloatNumber(it.text(), defaultValue)) }
     }
 
@@ -120,7 +120,7 @@ object DomSelectFunctions {
     @UDFunction(description = "Select the first element from a DOM by the given css query " +
             "and try to extract an number from the element text")
     @JvmStatic
-    fun firstNumber(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueFloat {
+    fun firstFloat(dom: ValueDom, cssQuery: String, defaultValue: Float = 0.0f): ValueFloat {
         val s = firstText(dom, cssQuery)
         return Strings.getFirstFloatNumber(s, defaultValue).let { ValueFloat.get(it) }
     }
@@ -129,7 +129,7 @@ object DomSelectFunctions {
             "and try to extract an number from the element text")
     @JvmStatic
     @JvmOverloads
-    fun nthNumber(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): ValueFloat {
+    fun nthFloat(dom: ValueDom, cssQuery: String, n: Int, defaultValue: Float = 0.0f): ValueFloat {
         val s = nthText(dom, cssQuery, n)
         return Strings.getFirstFloatNumber(s, defaultValue).let { ValueFloat.get(it) }
     }
