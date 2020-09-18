@@ -29,6 +29,30 @@ const val V_VIEW_PORT = "V_VIEW_PORT"
 val BOX_SYNTAX_PATTERN_1 = Pattern.compile("(\\d+)[xX](\\d+)")
 val BOX_SYNTAX_PATTERN = Pattern.compile("$BOX_SYNTAX_PATTERN_1(,$BOX_SYNTAX_PATTERN_1)?")
 
+val STANDARD_ATTRIBUTES = setOf(
+        "abbr", "accept", "accept-charset", "accesskey", "action", "align",
+        "alink", "alt", "archive", "axis", "background", "bgcolor", "border",
+        "cellpadding", "cellspacing", "char", "charoff", "charset",
+        "checked", "cite", "class", "classid", "clear", "code", "codebase",
+        "codetype", "color", "cols", "colspan", "compact", "content", "coords",
+        "data", "datetime", "declare", "defer", "dir", "disabled", "enctype",
+        "face", "for", "frame", "frameborder", "headers", "height", "href", "hreflang",
+        "hspace", "http-equiv", "id", "ismap", "label", "lang", "language", "link",
+        "longdesc", "marginheight", "marginwidth", "maxlength", "media", "method", "multiple",
+        "name", "nohref", "noresize", "noshade", "nowrap", "object", "onblur", "onchange",
+        "onclick", "ondblclick", "onfocus", "onkeydown", "onkeypress", "onkeyup", "onload",
+        "onmousedown", "onmousemove", "onmouseout", "onmouseover", "onmouseup", "onreset",
+        "onselect", "onsubmit", "onunload",
+        "profile", "prompt", "readonly", "rel", "rev", "rows", "rowspan", "rules", "scheme",
+        "scope", "scrolling", "selected", "shape", "size", "span", "src", "standby",
+        "start", "style", "summary", "tabindex", "target", "text", "title", "type",
+        "usemap", "valign", "value", "valuetype", "version", "vlink", "vspace", "width"
+)
+
+val TEMPORARY_ATTRIBUTES = setOf(
+        "vi", "_ps_lazy", "_cw", "tv0", "tv1", "tv2", "tv3", "tv4", "tv5", "tv6"
+)
+
 /**
  * Cases:
  * <ul>

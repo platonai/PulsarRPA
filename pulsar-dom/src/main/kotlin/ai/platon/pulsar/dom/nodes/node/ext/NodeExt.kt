@@ -18,7 +18,6 @@ import ai.platon.pulsar.dom.model.createLink
 import ai.platon.pulsar.dom.nodes.*
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.math3.linear.ArrayRealVector
-import org.jsoup.internal.StringUtil
 import org.jsoup.nodes.*
 import org.jsoup.select.NodeTraversor
 import java.awt.Dimension
@@ -134,7 +133,7 @@ fun Element.addClasses(vararg classNames: String): Element {
 
 fun Element.slimCopy(): Element {
     val ele = this.clone()
-    ele.forEachElement { it.clearAttributes() }
+    ele.forEachElement(includeRoot = true) { it.removeNonStandardAttrs() }
     return ele
 }
 
@@ -149,6 +148,20 @@ fun Element.qualifiedClassNames(): Set<String> {
 
 fun Element.anyAttr(attributeKey: String, attributeValue: Any): Element {
     this.attr(attributeKey, attributeValue.toString())
+    return this
+}
+
+fun Element.removeTemporaryAttrs(): Element {
+    this.attributes().map { it.key }.filter { it in TEMPORARY_ATTRIBUTES || it.startsWith("tv") }.forEach {
+        this.removeAttr(it)
+    }
+    return this
+}
+
+fun Element.removeNonStandardAttrs(): Element {
+    this.attributes().map { it.key }.forEach { if (it !in STANDARD_ATTRIBUTES) {
+        this.removeAttr(it)
+    } }
     return this
 }
 
@@ -368,7 +381,7 @@ val Node.slimHtml by field {
         it.isImage || it.isAnchor || it.isNumericLike || it.isMoneyLike || it is TextNode || nm == "li" || nm == "td" -> atomSlimHtml(it)
         it is Element && (nm == "ul" || nm == "ol" || nm == "tr") ->
             String.format("<$nm>%s</$nm>", it.children().joinToString("") { c -> atomSlimHtml(c) })
-        it is Element -> it.slimCopy().outerHtml()
+        it is Element -> it.slimCopy().removeNonStandardAttrs().outerHtml()
         else -> String.format("<b>%s</b>", it.name)
     }
 }

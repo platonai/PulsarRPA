@@ -336,11 +336,11 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun html(dom: ValueDom) = dom.element.html()
+    fun html(dom: ValueDom) = dom.element.slimCopy().html()
 
     @UDFunction
     @JvmStatic
-    fun outerHtml(dom: ValueDom) = dom.element.outerHtml()
+    fun outerHtml(dom: ValueDom) = dom.element.slimCopy().outerHtml()
 
     @UDFunction
     @JvmStatic
