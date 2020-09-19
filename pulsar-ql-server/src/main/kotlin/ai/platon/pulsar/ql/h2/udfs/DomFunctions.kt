@@ -226,7 +226,7 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun ownTexts(dom: ValueDom) = dom.element.ownTexts()
+    fun ownTexts(dom: ValueDom) = ValueArray.get(dom.element.ownTexts().map { ValueString.get(it) }.toTypedArray())
 
     @UDFunction
     @JvmStatic
