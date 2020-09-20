@@ -710,15 +710,17 @@ public class SParser {
      * @return a {@link java.time.Duration} object.
      */
     public Duration getDuration(Duration defaultValue) {
-        if (value == null) {
+        if (value == null || value.length() < 2) {
             return defaultValue;
         }
 
+        String upperCase = value.toUpperCase();
         try {
-            if (value.startsWith("P") || value.startsWith("-P")) {
+            if (upperCase.startsWith("P") || upperCase.startsWith("-P")) {
                 try {
-                    return Duration.parse(value);
+                    return Duration.parse(upperCase);
                 } catch (Throwable ignored) {
+                    return defaultValue;
                 }
             }
 

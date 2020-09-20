@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 class TestFiledLines {
     val log = LoggerFactory.getLogger(Test::class.java)
 
-    val resource = "log4j.properties"
+    val resource = "data/lines-without-slashes.txt"
 
     @Test
     fun testSingleFiledLines() {

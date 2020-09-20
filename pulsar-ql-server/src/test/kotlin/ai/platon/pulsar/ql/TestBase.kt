@@ -25,10 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger
 abstract class TestBase {
 
     companion object {
-        init {
-            PulsarContexts.activate()
-        }
-
         val log = LoggerFactory.getLogger(TestBase::class.java)
 
         val history = mutableListOf<String>()
@@ -244,12 +240,6 @@ abstract class TestBase {
                 "http://item.jd.com/1304923.html",
                 "http://item.jd.com/3188580.html",
                 "http://item.jd.com/1304915.html"
-        )
-        urlGroups["mia"] = arrayOf(
-                "https://www.mia.com/formulas.html",
-                "https://www.mia.com/item-2726793.html",
-                "https://www.mia.com/item-1792382.html",
-                "https://www.mia.com/item-1142813.html"
         )
         urlGroups["mogujie"] = arrayOf(
                 "http://list.mogujie.com/book/jiadian/10059513",
