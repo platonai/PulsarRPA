@@ -38,6 +38,8 @@ object AppPaths {
     val CHROME_DATA_DIR_PROTOTYPE = BROWSER_DATA_DIR.resolve("chrome/prototype/google-chrome")
     @RequiredDirectory
     val DATA_DIR = HOME_DIR.resolve("data")
+    @RequiredDirectory
+    val LOCAL_STORAGE_DIR = DATA_DIR.resolve("store")
 
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR

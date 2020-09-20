@@ -47,7 +47,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
             }
 
             return when {
-                conf.isDryRun -> MEM_STORE_CLASS
+                conf.isDryRun -> FILE_BACKEND_STORE_CLASS
                 conf.isDistributedFs -> conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
                 Runtimes.checkIfProcessRunning(".+HMaster.+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, HBASE_STORE_CLASS)
@@ -55,7 +55,7 @@ class AutoDetectStorageProvider(val conf: ImmutableConfig) {
                     conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
                 Runtimes.checkIfProcessRunning(".+/tmp/.+extractmongod .+") ->
                     conf.get(STORAGE_DATA_STORE_CLASS, MONGO_STORE_CLASS)
-                else -> MEM_STORE_CLASS
+                else -> FILE_BACKEND_STORE_CLASS
             }
         }
 

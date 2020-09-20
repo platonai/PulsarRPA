@@ -36,13 +36,13 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
             log.trace("Getting $key")
         }
 
-        val datum = store.get(key, fields)
-        if (datum != null) {
+        val page = fields?.let { store.get(key, it) } ?: store.get(key)
+        if (page != null) {
             if (log.isTraceEnabled) {
                 log.trace("Got $key")
             }
 
-            return WebPage.box(url, key, datum)
+            return WebPage.box(url, key, page)
         }
 
         return null

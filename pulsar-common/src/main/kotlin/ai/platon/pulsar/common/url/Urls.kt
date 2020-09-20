@@ -139,7 +139,8 @@ object Urls {
                     null, // Ignore the query part of the input url
                     uri.fragment)
             return uri.toString()
-        } catch (ignored: Throwable) {}
+        } catch (ignored: Throwable) {
+        }
 
         return ""
     }
@@ -268,6 +269,9 @@ object Urls {
 
         return buf.toString()
     }
+
+    @JvmStatic
+    fun unreverseUrlOrNull(reversedUrl: String) = kotlin.runCatching { unreverseUrl(reversedUrl) }.getOrNull()
 
     /**
      * Get unreversed and tenanted url of reversedUrl, reversedUrl can be both tenanted or not tenanted,
