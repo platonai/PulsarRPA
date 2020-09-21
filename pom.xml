@@ -31,6 +31,7 @@
     <properties>
         <pulsar-h2.version>1.4.196-SNAPSHOT</pulsar-h2.version>
         <pulsar.skip.assembly>true</pulsar.skip.assembly>
+
         <!-- skipTests is set to be true in platon.pom which will be removed from platon.pom later -->
         <skipTests>false</skipTests>
     </properties>
