@@ -80,7 +80,7 @@ open class LabeledHyperlink(
         url: String,
         val anchorText: String = "",
         val order: Int = 0,
-        var depth: Int
+        var depth: Int = 0
 ): AbstractUrl(url) {
     fun data() = LabeledHyperlinkDatum(label, url, anchorText, order, depth)
 }
