@@ -26,6 +26,18 @@ class FetchMetrics(
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
+    companion object {
+        var runningChromeProcesses = 0
+        var usedMemory = 0L
+
+        init {
+            mapOf(
+                "runningChromeProcesses" to Gauge { runningChromeProcesses },
+                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
+            ).forEach { AppMetrics.register(this, it.key, it.value) }
+        }
+    }
+
     private val log = LoggerFactory.getLogger(FetchMetrics::class.java)!!
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
@@ -56,9 +68,6 @@ class FetchMetrics(
     val failedUrls = ConcurrentSkipListSet<String>()
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
-
-    var runningChromeProcesses = 0
-    var usedMemory = 0L
 
     val meterSystemNetworkMBytesRecv = AppMetrics.meter(this, "systemNetworkMBytesRecv")
 
@@ -107,11 +116,6 @@ class FetchMetrics(
 
     init {
         Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
-
-        mapOf(
-                "runningChromeProcesses" to Gauge { runningChromeProcesses },
-                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
-        ).forEach { AppMetrics.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)
     }

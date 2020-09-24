@@ -24,7 +24,10 @@ open class ConcurrentLoadingIterable<T>(
 
         @Synchronized
         override fun hasNext(): Boolean {
-            tryLoad()
+            while (iterable.queue.isEmpty() && iterable.collector.hasMore()) {
+                tryLoad()
+            }
+
             return iterable.queue.isNotEmpty()
         }
 
