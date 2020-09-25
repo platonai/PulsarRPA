@@ -140,22 +140,33 @@ abstract class AbstractPulsarContext(
         globalCache.documentCache.clear()
     }
 
+    /**
+     * Normalize an url, the url can be one of the following:
+     * 1. a configured url
+     * 2. a base64 encoded url
+     * 3. a base64 encoded configured url
+     *
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
+     * but default values in LoadOptions are ignored.
+     * */
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
 
         val (spec, args) = Urls.splitUrlArgs(url0)
-        var normalizedUrl = Urls.normalize(spec, options.shortenKey)
+        var normalizedUrl = Urls.normalizeOrNull(spec, options.shortenKey) ?: return NormUrl.NIL
         if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
 
-        if (args.isBlank()) {
-            return NormUrl(normalizedUrl, initOptions(options, toItemOption))
+        return if (args.isBlank()) {
+            NormUrl(normalizedUrl, initOptions(options, toItemOption))
+        } else {
+            // options parsed from args overrides options parsed from url
+            val secondaryOptions = LoadOptions.parse(args)
+            val finalOptions = LoadOptions.mergeModified(secondaryOptions, options)
+            NormUrl(normalizedUrl, initOptions(finalOptions, toItemOption))
         }
-
-        val parsedOptions = LoadOptions.parse(args)
-        val options2 = LoadOptions.mergeModified(parsedOptions, options)
-        return NormUrl(normalizedUrl, initOptions(options2, toItemOption))
     }
 
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
@@ -163,6 +174,14 @@ abstract class AbstractPulsarContext(
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
+    /**
+     * Normalize urls, remove invalid urls
+     *
+     * @param urls The urls to normalize
+     * @param options The LoadOptions applied to each url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return All normalized urls, all invalid input urls are removed
+     * */
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }

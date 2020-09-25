@@ -21,6 +21,8 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
     var label = ""
+    @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
+    var authToken = ""
 
     /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
@@ -50,7 +52,7 @@ open class LoadOptions: CommonOptions {
     var waitNonBlank: String = ""
     @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
-    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize")
+    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
     var requireSize = 0
     @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
     var requireImages = 0
@@ -269,6 +271,11 @@ open class LoadOptions: CommonOptions {
 
     /**
      * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
+     *
+     * The other options overrides this options
+     *
+     * @param other The other LoadOptions who overrides each item if it's not the default value
+     * @return A new LoadOptions
      * */
     open fun mergeModified(other: LoadOptions): LoadOptions {
         val modified = other.modifiedOptions
@@ -334,6 +341,9 @@ open class LoadOptions: CommonOptions {
             return options
         }
 
+        /**
+         * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
+         * */
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
             val options = LoadOptions()
