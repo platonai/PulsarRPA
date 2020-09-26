@@ -39,7 +39,7 @@ object Urls {
 
     @JvmStatic
     fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
-        return normalize(url, ignoreQuery).takeIf { it.isBlank() }
+        return normalize(url, ignoreQuery).takeUnless { it.isBlank() }
     }
 
     @JvmStatic
