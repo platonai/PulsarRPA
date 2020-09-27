@@ -202,6 +202,7 @@ public class WebPage implements Comparable<WebPage> {
         page.setVolatileConfig(volatileConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(Instant.now());
+        page.setModifiedTime(Instant.now());
         page.setScore(0);
         page.setFetchCount(0);
 
