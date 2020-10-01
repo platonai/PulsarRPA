@@ -3,7 +3,7 @@ Pulsar README
 Pulsar focus on web data processing, it extends SQL to handle the entire life cycle of web data processing:
 crawling, web scraping, data mining, BI, etc.
 
-## Other lauguage
+## Other language
 [Chinese](README.zh.md)
 
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
@@ -107,7 +107,7 @@ Ubuntu/Debian:
 ## Build from source
 
     git clone https://github.com/platonai/pulsar.git
-    cd pulsar && mvn
+    cd pulsar && mvn -DskipTests=true
 
 ## Run the native api demo
 
