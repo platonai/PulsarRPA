@@ -1,6 +1,7 @@
 # comments start with the pound sign
 net
 apache.org
+foobar.net
 be
 www.yahoo.com
 sz.sxrb.com

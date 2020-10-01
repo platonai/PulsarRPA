@@ -1,53 +1,64 @@
 package ai.platon.pulsar.filter
 
+import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.common.config.MutableConfig
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import java.io.StringReader
 import java.nio.file.Paths
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-2-23.
  */
 @RunWith(SpringJUnit4ClassRunner::class)
-class TestDomainUrlFilter : UrlFilterTestBase() {
+class TestDomainUrlFilter : UrlFilterTestBase("") {
+    override lateinit var conf: MutableConfig
+
+    @Before
+    fun setup() {
+        conf = MutableConfig()
+        val rules = ResourceLoader.readString("domain/data/general/hosts.txt")
+        conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES] = rules
+    }
+
     @Test
-    @Throws(Exception::class)
     fun testDomainFilter() {
-        val domainFile = Paths.get(SAMPLES_DIR, "domain", "data", "general", "hosts.txt").toString()
-        conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_FILE] = domainFile
         val domainFilter = DomainUrlFilter(conf)
-        Assert.assertNotNull(domainFilter.filter("http://lucene.apache.org"))
-        Assert.assertNotNull(domainFilter.filter("http://hadoop.apache.org"))
-        Assert.assertNotNull(domainFilter.filter("http://www.apache.org"))
-        Assert.assertNull(domainFilter.filter("http://www.google.com"))
-        Assert.assertNull(domainFilter.filter("http://mail.yahoo.com"))
-        Assert.assertNotNull(domainFilter.filter("http://www.foobar.net"))
-        Assert.assertNotNull(domainFilter.filter("http://www.foobas.net"))
-        Assert.assertNotNull(domainFilter.filter("http://www.yahoo.com"))
-        Assert.assertNotNull(domainFilter.filter("http://www.foobar.be"))
-        Assert.assertNull(domainFilter.filter("http://www.adobe.com"))
+
+        domainFilter.domainSet.forEach { println() }
+        println(conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_RULES])
+        assertTrue { domainFilter.domainSet.contains("apache.org") }
+
+        assertNotNull(domainFilter.filter("http://lucene.apache.org"))
+        assertNotNull(domainFilter.filter("http://hadoop.apache.org"))
+        assertNotNull(domainFilter.filter("http://www.apache.org"))
+        assertNull(domainFilter.filter("http://www.google.com"))
+        assertNull(domainFilter.filter("http://mail.yahoo.com"))
+        assertNotNull(domainFilter.filter("http://www.foobar.net"))
+        assertNotNull(domainFilter.filter("http://www.foobas.net"))
+        assertNotNull(domainFilter.filter("http://www.yahoo.com"))
+        assertNotNull(domainFilter.filter("http://www.foobar.be"))
+        assertNull(domainFilter.filter("http://www.adobe.com"))
     }
 
     @Test
-    @Throws(Exception::class)
     fun testNoDomainAllowedFilter() {
-        val domainFile = Paths.get(SAMPLES_DIR, "domain", "data", "none", "hosts.txt").toString()
-        conf[DomainUrlFilter.PARAM_URLFILTER_DOMAIN_FILE] = domainFile
         val domainFilter = DomainUrlFilter(conf)
-        Assert.assertNull(domainFilter.filter("http://lucene.apache.org"))
-        Assert.assertNull(domainFilter.filter("http://hadoop.apache.org"))
-        Assert.assertNull(domainFilter.filter("http://www.apache.org"))
-        Assert.assertNull(domainFilter.filter("http://www.google.com"))
-        Assert.assertNull(domainFilter.filter("http://mail.yahoo.com"))
-        Assert.assertNull(domainFilter.filter("http://www.foobar.net"))
-        Assert.assertNull(domainFilter.filter("http://www.foobas.net"))
-        Assert.assertNull(domainFilter.filter("http://www.yahoo.com"))
-        Assert.assertNull(domainFilter.filter("http://www.foobar.be"))
-        Assert.assertNull(domainFilter.filter("http://www.adobe.com"))
-    }
-
-    companion object {
-        private val SAMPLES_DIR = System.getProperty("test.data", ".")
+        assertNull(domainFilter.filter("http://lucene.apache.org"))
+        assertNull(domainFilter.filter("http://hadoop.apache.org"))
+        assertNull(domainFilter.filter("http://www.apache.org"))
+        assertNull(domainFilter.filter("http://www.google.com"))
+        assertNull(domainFilter.filter("http://mail.yahoo.com"))
+        assertNull(domainFilter.filter("http://www.foobar.net"))
+        assertNull(domainFilter.filter("http://www.foobas.net"))
+        assertNull(domainFilter.filter("http://www.yahoo.com"))
+        assertNull(domainFilter.filter("http://www.foobar.be"))
+        assertNull(domainFilter.filter("http://www.adobe.com"))
     }
 }

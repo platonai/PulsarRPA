@@ -100,19 +100,15 @@ object ResourceLoader {
      */
     @JvmOverloads
     fun readAllLines(stringResource: String?, fileResource: String, resourcePrefix: String = ""): List<String> {
-        return kotlin.runCatching {
-            getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.use { reader ->
-                BufferedReader(reader).lines().filter { !it.startsWith("#") && StringUtils.isNotBlank(it) }.toList()
-            }
-        }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
+        return getMultiSourceReader(stringResource, fileResource, resourcePrefix)?.useLines {
+            it.filter { it.isNotBlank() }.filter { !it.startsWith("#") }.toList()
+        } ?: listOf()
     }
 
     fun readAllLines(fileResource: String): List<String> {
-        return kotlin.runCatching {
-            getResourceAsReader(fileResource)?.use { reader ->
-                BufferedReader(reader).lines().filter { !it.startsWith("#") && StringUtils.isNotBlank(it) }.toList()
-            }
-        }.onFailure { log.error("IO failure {}", it.message) }.getOrNull() ?: listOf()
+        return getResourceAsReader(fileResource)?.useLines {
+            it.filter { it.isNotBlank() }.filter { !it.startsWith("#") }.toList()
+        } ?: listOf()
     }
 
     fun readAllLinesIfModified(path: Path): List<String> {
@@ -129,12 +125,9 @@ object ResourceLoader {
     }
 
     fun readStringTo(fileResource: String, sb: StringBuilder): StringBuilder {
-        kotlin.runCatching {
-            getResourceAsReader(fileResource)?.use { reader ->
-                BufferedReader(reader).lines().forEach { sb.append(it) }
-            }
-        }.onFailure { log.error("IO failure {}", it.message) }
-
+        getResourceAsReader(fileResource)?.forEachLine {
+            sb.appendLine(it)
+        }
         return sb
     }
 
@@ -161,7 +154,7 @@ object ResourceLoader {
      */
     fun getResourceAsStream(name: String, vararg resourcePrefixes: String): InputStream? {
         var found = false
-        return resourcePrefixes.asIterable().filter { StringUtils.isNotBlank(it) }
+        return resourcePrefixes.asIterable().filter { it.isNotBlank() }
                 .mapNotNull { if (!found) getResourceAsStream("$it/$name") else null }
                 .onEach { found = true }
                 .firstOrNull() ?: getResourceAsStream(name)
@@ -198,7 +191,7 @@ object ResourceLoader {
         while (url == null && it.hasNext()) {
             url = it.next().javaClass.getResource(name)
         }
-        return url ?: classLoader!!.getResource(name)
+        return url ?: classLoader.getResource(name)
     }
 
     /**

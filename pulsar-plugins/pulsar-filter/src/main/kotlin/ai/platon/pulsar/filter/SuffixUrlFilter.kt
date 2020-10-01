@@ -222,9 +222,9 @@ class SuffixUrlFilter(lines: List<String>, conf: ImmutableConfig) : UrlFilter {
                 SuffixUrlFilter(conf)
             }
 
-            val `in` = BufferedReader(InputStreamReader(System.`in`))
+            val input = BufferedReader(InputStreamReader(System.`in`))
             var line: String
-            while (`in`.readLine().also { line = it } != null) {
+            while (input.readLine().also { line = it } != null) {
                 val out = filter.filter(line)
                 if (out != null) {
                     println("ACCEPTED $out")

@@ -14,28 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.normalizer;
+package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.crawl.filter.UrlNormalizers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import ai.platon.pulsar.crawl.filter.UrlNormalizers
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 
-import static org.junit.Assert.assertEquals;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {"classpath:/test-context/filter-beans.xml"})
-public class TestPassUrlNormalizer {
-
+@RunWith(SpringJUnit4ClassRunner::class)
+@ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
+class TestPassUrlNormalizer {
     @Autowired
-    private PassUrlNormalizer normalizer;
-
+    private val normalizer: PassUrlNormalizer? = null
     @Test
-    public void testPassURLNormalizer() {
-        String url = "http://www.example.com/test/..//";
-        String result = normalizer.normalize(url, UrlNormalizers.SCOPE_DEFAULT);
-        assertEquals(url, result);
+    fun testPassURLNormalizer() {
+        val url = "http://www.example.com/test/..//"
+        val result = normalizer!!.normalize(url, UrlNormalizers.SCOPE_DEFAULT)
+        Assert.assertEquals(url, result)
     }
 }

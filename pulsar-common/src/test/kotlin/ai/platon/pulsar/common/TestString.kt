@@ -344,18 +344,13 @@ class TestString {
     fun testLoadSlashedLines() {
         var seeds = "@data/lines-with-slashes.txt"
         if (seeds.startsWith("@")) {
-            seeds = java.lang.String.join("\n", ResourceLoader.readAllLines(seeds.substring(1)))
+            seeds = ResourceLoader.readAllLines(seeds.substring(1)).joinToString("\n")
         }
         val seedFile = File.createTempFile("seed", ".txt")
         val unslashedLines = Strings.getUnslashedLines(seeds)
-        //        for (int i = 0; i < unslashedLines.size(); i++) {
-//            System.out.println(i + "\t" + unslashedLines.get(i));
-//        }
         assertEquals(111, unslashedLines.size.toLong())
         FileUtils.writeLines(seedFile, unslashedLines)
         assertEquals(111, Files.readAllLines(seedFile.toPath()).size.toLong())
-        //    System.out.println(StringUtil.getUnslashedLines(seeds).size());
-//    System.out.println(seedFile.getAbsolutePath());
     }
 
     @Test

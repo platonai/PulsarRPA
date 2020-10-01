@@ -10,14 +10,11 @@ import org.springframework.test.context.ContextConfiguration
  * Copyright @ 2013-2017 Platon AI. All rights reserved
  */
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
-open class UrlFilterTestBase {
-    @JvmField
+open class UrlFilterTestBase(val testResourcePrefix: String = "") {
     @Autowired
-    protected var conf: MutableConfig = MutableConfig()
+    open var conf: MutableConfig = MutableConfig()
 
     companion object {
-        @JvmField
-        val TEST_DIR = System.getProperty("test.data", ".")
         @JvmField
         val LOG = LoggerFactory.getLogger(RegexUrlFilterBaseTest::class.java)
     }

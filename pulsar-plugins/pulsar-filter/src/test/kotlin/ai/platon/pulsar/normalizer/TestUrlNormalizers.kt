@@ -14,46 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ai.platon.pulsar.normalizer;
+package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.crawl.filter.UrlNormalizers;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import ai.platon.pulsar.crawl.filter.UrlNormalizer
+import ai.platon.pulsar.crawl.filter.UrlNormalizers
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {"classpath:/test-context/filter-beans.xml"})
-public class TestUrlNormalizers {
-
-    private static String[] registeredNormalizers = {
-            "ai.platon.pulsar.normalizer.BasicUrlNormalizer",
-            "ai.platon.pulsar.normalizer.RegexUrlNormalizer",
-            "ai.platon.pulsar.normalizer.PassUrlNormalizer"
-    };
+@RunWith(SpringJUnit4ClassRunner::class)
+@ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
+class TestUrlNormalizers {
     @Autowired
-    private UrlNormalizers urlNormalizers;
-
+    private val urlNormalizers: UrlNormalizers? = null
     @Test
-    public void testURLNormalizers() {
-        assertEquals(3, urlNormalizers.getURLNormalizers(UrlNormalizers.SCOPE_DEFAULT).size());
-
-        String url = "http://www.example.com/";
-        String normalizedUrl = urlNormalizers.normalize(url, UrlNormalizers.SCOPE_DEFAULT);
-        assertEquals(url, normalizedUrl);
-
-        url = "http://www.example.org//path/to//somewhere.html";
-        String normalizedSlashes = urlNormalizers.normalize(url, UrlNormalizers.SCOPE_DEFAULT);
-        assertEquals("http://www.example.org/path/to/somewhere.html", normalizedSlashes);
+    fun testURLNormalizers() {
+        Assert.assertEquals(3, urlNormalizers!!.getURLNormalizers(UrlNormalizers.SCOPE_DEFAULT).size.toLong())
+        var url = "http://www.example.com/"
+        val normalizedUrl = urlNormalizers.normalize(url, UrlNormalizers.SCOPE_DEFAULT)
+        Assert.assertEquals(url, normalizedUrl)
+        url = "http://www.example.org//path/to//somewhere.html"
+        val normalizedSlashes = urlNormalizers.normalize(url, UrlNormalizers.SCOPE_DEFAULT)
+        Assert.assertEquals("http://www.example.org/path/to/somewhere.html", normalizedSlashes)
 
         // check the order
-        String[] impls = urlNormalizers.getURLNormalizers(UrlNormalizers.SCOPE_DEFAULT)
-                .stream().map(urlNormalizer -> urlNormalizer.getClass().getName())
-                .toArray(String[]::new);
-        assertArrayEquals(impls, registeredNormalizers);
+        val impls = urlNormalizers.getURLNormalizers(UrlNormalizers.SCOPE_DEFAULT)
+                .map { it.javaClass.name }
+                .toTypedArray()
+        Assert.assertArrayEquals(impls, registeredNormalizers)
+    }
+
+    companion object {
+        private val registeredNormalizers = arrayOf(
+                "ai.platon.pulsar.normalizer.BasicUrlNormalizer",
+                "ai.platon.pulsar.normalizer.RegexUrlNormalizer",
+                "ai.platon.pulsar.normalizer.PassUrlNormalizer"
+        )
     }
 }

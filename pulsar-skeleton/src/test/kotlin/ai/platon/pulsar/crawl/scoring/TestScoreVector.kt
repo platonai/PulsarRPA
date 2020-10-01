@@ -72,7 +72,6 @@ class TestScoreVector {
         Assert.assertTrue("$score <-> $score2", score.compareTo(score2) == 0)
         Assert.assertEquals("$score <-> $score2", score, score2)
         Assert.assertEquals(1, 1)
-        Assert.assertNotEquals(1, 1)
     }
 
     @Test

@@ -19,7 +19,8 @@
 package ai.platon.pulsar.filter
 
 import ai.platon.pulsar.common.ResourceLoader.readAllLines
-import org.junit.Assert
+import junit.framework.Assert.assertNotNull
+import junit.framework.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.io.IOException
-import java.nio.file.Paths
 import java.time.ZoneId
 
 /**
@@ -37,9 +37,9 @@ import java.time.ZoneId
  */
 @RunWith(SpringJUnit4ClassRunner::class)
 @ContextConfiguration(locations = ["classpath:/test-context/filter-beans.xml"])
-class TestDateUrlFilter : UrlFilterTestBase() {
+class TestDateUrlFilter : UrlFilterTestBase("datedata") {
     @Autowired
-    var dateUrlFilter: DateUrlFilter? = null
+    lateinit var dateUrlFilter: DateUrlFilter
 
     @Before
     @Throws(IOException::class)
@@ -49,19 +49,17 @@ class TestDateUrlFilter : UrlFilterTestBase() {
 
     @Test
     fun testNotSupportedDateFormat() {
-        val dataFile = Paths.get(TEST_DIR, "datedata", "urls_with_not_supported_old_date.txt").toString()
-        val urls = readAllLines(null, dataFile)
+        val urls = readAllLines("datedata/urls_with_not_supported_old_date.txt")
         for (url in urls) {
-            Assert.assertNotNull(url, dateUrlFilter!!.filter(url))
+            assertNotNull(url, dateUrlFilter.filter(url))
         }
     }
 
     @Test
     fun testDateTimeDetector() {
-        val dataFile = Paths.get(TEST_DIR, "datedata", "urls_with_old_date.txt").toString()
-        val urls = readAllLines(null, dataFile)
+        val urls = readAllLines("datedata/urls_with_old_date.txt")
         for (url in urls) {
-            Assert.assertNull(url, dateUrlFilter!!.filter(url))
+            assertNull(url, dateUrlFilter.filter(url))
         }
     }
 }

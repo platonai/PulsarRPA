@@ -21,7 +21,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /** Unit tests for GZIPUtils methods. */
 public class TestGZIPUtils {
@@ -159,65 +159,61 @@ public class TestGZIPUtils {
     public void testZipUnzip(byte[] origBytes) {
         byte[] compressedBytes = GZIPUtils.zip(origBytes);
 
-        assertTrue("compressed array is not smaller!",
-                compressedBytes.length < origBytes.length);
+        assert compressedBytes != null;
+        assertTrue("compressed array is not smaller!", compressedBytes.length < origBytes.length);
 
         byte[] uncompressedBytes = null;
         try {
             uncompressedBytes = GZIPUtils.unzip(compressedBytes);
         } catch (IOException e) {
-            e.printStackTrace();
-            assertTrue("caught exception '" + e + "' during unzip()", false);
+            fail("caught exception '" + e + "' during unzip()");
         }
-        assertTrue("uncompressedBytes is wrong size",
-                uncompressedBytes.length == origBytes.length);
+        assertEquals("uncompressedBytes is wrong size", uncompressedBytes.length, origBytes.length);
 
         for (int i = 0; i < origBytes.length; i++)
             if (origBytes[i] != uncompressedBytes[i])
-                assertTrue("uncompressedBytes does not match origBytes", false);
+                fail("uncompressedBytes does not match origBytes");
     }
 
     public void testZipUnzipBestEffort(byte[] origBytes) {
         byte[] compressedBytes = GZIPUtils.zip(origBytes);
 
+        assert compressedBytes != null;
         assertTrue("compressed array is not smaller!",
                 compressedBytes.length < origBytes.length);
 
         byte[] uncompressedBytes = GZIPUtils.unzipBestEffort(compressedBytes);
-        assertTrue("uncompressedBytes is wrong size",
-                uncompressedBytes.length == origBytes.length);
+        assertEquals("uncompressedBytes is wrong size", uncompressedBytes.length, origBytes.length);
 
         for (int i = 0; i < origBytes.length; i++)
             if (origBytes[i] != uncompressedBytes[i])
-                assertTrue("uncompressedBytes does not match origBytes", false);
+                fail("uncompressedBytes does not match origBytes");
     }
 
     public void testTruncation(byte[] origBytes) {
         byte[] compressedBytes = GZIPUtils.zip(origBytes);
 
         System.out.println("original data has len " + origBytes.length);
+        assert compressedBytes != null;
         System.out.println("compressed data has len " + compressedBytes.length);
 
         for (int i = compressedBytes.length; i >= 0; i--) {
-
             byte[] truncCompressed = new byte[i];
 
-            for (int j = 0; j < i; j++)
-                truncCompressed[j] = compressedBytes[j];
+            System.arraycopy(compressedBytes, 0, truncCompressed, 0, i);
 
             byte[] trunc = GZIPUtils.unzipBestEffort(truncCompressed);
 
             if (trunc == null) {
-                System.out.println("truncated to len " + i + ", trunc is null");
+                // System.out.println("truncated to len " + i + ", trunc is null");
             } else {
-                System.out.println("truncated to len " + i + ", trunc.length=  "
-                        + trunc.length);
+//                System.out.println("truncated to len " + i + ", trunc.length=  "
+//                        + trunc.length);
 
                 for (int j = 0; j < trunc.length; j++)
                     if (trunc[j] != origBytes[j])
-                        assertTrue("truncated/uncompressed array differs at pos " + j
-                                        + " (compressed data had been truncated to len " + i + ")",
-                                false);
+                        fail("truncated/uncompressed array differs at pos " + j
+                                + " (compressed data had been truncated to len " + i + ")");
             }
         }
     }
@@ -225,19 +221,15 @@ public class TestGZIPUtils {
     public void testLimit(byte[] origBytes) {
         byte[] compressedBytes = GZIPUtils.zip(origBytes);
 
-        assertTrue("compressed array is not smaller!",
-                compressedBytes.length < origBytes.length);
+        assertTrue("compressed array is not smaller!", compressedBytes.length < origBytes.length);
 
         for (int i = 0; i < origBytes.length; i++) {
-
             byte[] uncompressedBytes = GZIPUtils.unzipBestEffort(compressedBytes, i);
-
-            assertTrue("uncompressedBytes is wrong size",
-                    uncompressedBytes.length == i);
-
+            assertEquals("uncompressedBytes is wrong size", uncompressedBytes.length, i);
             for (int j = 0; j < i; j++)
-                if (origBytes[j] != uncompressedBytes[j])
-                    assertTrue("uncompressedBytes does not match origBytes", false);
+                if (origBytes[j] != uncompressedBytes[j]) {
+                    fail("uncompressedBytes does not match origBytes");
+                }
         }
     }
 

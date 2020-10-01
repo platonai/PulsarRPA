@@ -1,4 +1,4 @@
-package ai.platon.pulsar.persist.gora.db
+package ai.platon.pulsar.persist.gora
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.url.Urls
