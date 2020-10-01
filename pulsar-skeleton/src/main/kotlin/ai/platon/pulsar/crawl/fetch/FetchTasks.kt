@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig

@@ -37,7 +37,7 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
             mapOf("name" to ".p-name em", "price" to ".p-price"))
 
     fun scrapeOutPages(): List<Map<String, String?>> = session.scrapeOutPages(url,
-            "-expires 1d -itemExpires 7s -outLink a[href~=item]",
+            "-expires 1d -itemExpires 7d -outLink a[href~=item]",
             ".product-intro",
             listOf(".sku-name", ".p-price"))
 
@@ -61,6 +61,9 @@ class Manual(val session: PulsarSession = PulsarContexts.createSession()) {
         println(scrapeOutPages().joinToString("\n") { it[".p-price"] + " | " + it[".sku-name"] })
         println("Scrape out pages - 2:")
         println(scrapeOutPages2().joinToString("\n") { it["price"] + " | " + it["name"] })
+
+        session.flush()
+        session.context.close()
     }
 }
 

@@ -12,6 +12,7 @@ import org.junit.Test
  * @author Jonathan Hedley, jonathan@hedley.net
  */
 class TestElements {
+
     @Test
     fun filter() {
         val h = "<p>Excl</p><div class=headline><p>Hello</p><p>There</p></div><div class=headline><h1>Headline</h1></div>"

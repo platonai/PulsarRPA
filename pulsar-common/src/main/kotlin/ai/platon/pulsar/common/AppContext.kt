@@ -46,7 +46,7 @@ object AppContext {
     val APP_TMP_DIR = if (APP_TMP_PROPERTY != null) Paths.get(APP_TMP_PROPERTY) else Paths.get(TMP_DIR).resolve("$APP_NAME-$APP_IDENT")
     val APP_HOME_DIR = Paths.get(USER_HOME).resolve(".$APP_NAME")
 
-    val state = AtomicReference<State>(State.NEW)
+    val state = AtomicReference(State.NEW)
 
     val isActive get() = state.get().ordinal < State.TERMINATING.ordinal
 

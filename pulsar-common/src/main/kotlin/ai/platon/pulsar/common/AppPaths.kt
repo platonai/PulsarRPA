@@ -1,16 +1,11 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.AppConstants
-import com.google.common.net.InetAddresses
+import ai.platon.pulsar.common.url.Urls
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.SystemUtils
-import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.util.*
 
 @kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
@@ -43,6 +38,8 @@ object AppPaths {
     val CHROME_DATA_DIR_PROTOTYPE = BROWSER_DATA_DIR.resolve("chrome/prototype/google-chrome")
     @RequiredDirectory
     val DATA_DIR = HOME_DIR.resolve("data")
+    @RequiredDirectory
+    val LOCAL_STORAGE_DIR = DATA_DIR.resolve("store")
 
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR

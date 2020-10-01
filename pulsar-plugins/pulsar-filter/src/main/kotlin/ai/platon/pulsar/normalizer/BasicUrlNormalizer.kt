@@ -18,7 +18,7 @@
  */
 package ai.platon.pulsar.normalizer
 
-import ai.platon.pulsar.common.Urls.getURLOrNull
+import ai.platon.pulsar.common.url.Urls.getURLOrNull
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.filter.UrlNormalizer
 import org.apache.hadoop.conf.Configured

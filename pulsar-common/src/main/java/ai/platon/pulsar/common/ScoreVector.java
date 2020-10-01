@@ -314,11 +314,7 @@ public class ScoreVector implements Comparable<ScoreVector> {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (ScoreEntry scoreEntry : entries) {
-            sb.append(",").append(scoreEntry.getValue());
-        }
-        sb.replace(0, 1, "");
-        return sb.toString();
+        return entries.stream().map(ScoreEntry::getValue).map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 }

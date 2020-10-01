@@ -22,7 +22,7 @@ import ai.platon.pulsar.persist.metadata.Name
 import org.jgrapht.graph.DefaultWeightedEdge
 
 class WebEdge(
-        var anchor: String = "",
+        var anchorText: String = "",
         var options: String = "",
         var order: Int = -1
 ) : DefaultWeightedEdge() {

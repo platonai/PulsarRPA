@@ -16,7 +16,7 @@
  */
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GFieldGroup
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
@@ -154,7 +154,7 @@ class WebPageFormatter(page: WebPage) {
         if (withLinks) {
             fields["links"] = page.links.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
             fields["vividLinks"] = page.vividLinks.values.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
-            fields["liveLinks"] = page.liveLinks.values.stream().map { l: GHypeLink? -> HyperLink.box(l!!).toString() }.collect(Collectors.toList())
+            fields["liveLinks"] = page.liveLinks.values.stream().map { l: GHypeLink? -> HyperlinkPersistable.box(l!!).toString() }.collect(Collectors.toList())
             fields["deadLinks"] = page.deadLinks.stream().map { obj: CharSequence -> obj.toString() }.collect(Collectors.toList())
             fields["inlinks"] = page.inlinks.entries.stream()
                     .map { il: Map.Entry<CharSequence, CharSequence> -> il.key.toString() + "\t" + il.value }.collect(Collectors.joining("\n"))

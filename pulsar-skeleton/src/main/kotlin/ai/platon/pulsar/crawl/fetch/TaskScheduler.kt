@@ -280,7 +280,7 @@ class TaskScheduler(
             return
         }
 
-        page.addLiveLink(HyperLink(newUrl))
+        page.addLiveLink(HyperlinkPersistable(newUrl))
         page.metadata.set(Name.REDIRECT_DISCOVERED, YES_STRING)
 
         val threadId = Thread.currentThread().id

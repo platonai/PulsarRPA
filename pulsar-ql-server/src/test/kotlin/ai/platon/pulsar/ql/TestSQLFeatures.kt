@@ -62,26 +62,6 @@ class TestSQLFeatures : TestBase() {
     }
 
     @Test
-    fun testStream() {
-        val sql0 = "SELECT A, B, C" +
-                " FROM TABLE(" +
-                "     A INT=(1, 2, 3, 4, 5, 6)," +
-                "     B VARCHAR=('apple', 'orange', 'banana', 'bluebarry', 'guava', 'lemon')," +
-                "     C DECIMAL=(5.2, 4.9, 2.3, 3.5, 4.1, 4.6)" +
-                " ) t"
-
-        val sql = sql0 +
-                "=>FROM WHICH $ SELECT a, b, c, $._1 * $._3, concat($._2, '1') WHERE $._2 = 'banana'" +
-                "=>FROM WHICH w SELECT w._1, w._2, w._3, w._4, w._5 WHERE concat(w._2, '1') = 'banana1'" +
-                //          " EXPECT a = 3" +
-                ""
-        val rs = localStat.executeQuery(sql)
-        assertTrue(rs.next())
-        assertEquals("banana", rs.getString(2))
-        assertEquals("banana1", rs.getString(5))
-    }
-
-    @Test
     fun testMultipleStatement() {
         val sql = "SELECT A, B, C" +
                 " FROM TABLE(" +

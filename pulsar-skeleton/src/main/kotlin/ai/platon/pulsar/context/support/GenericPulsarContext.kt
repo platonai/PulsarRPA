@@ -1,6 +1,6 @@
 package ai.platon.pulsar.context.support
 
-import org.springframework.context.ApplicationContext
+import org.springframework.context.support.AbstractApplicationContext
 
 /**
  * Main entry point for Pulsar functionality.
@@ -8,5 +8,5 @@ import org.springframework.context.ApplicationContext
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
 open class GenericPulsarContext(
-        override val applicationContext: ApplicationContext
+        override val applicationContext: AbstractApplicationContext
 ): AbstractPulsarContext(applicationContext)

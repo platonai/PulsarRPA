@@ -18,35 +18,25 @@
  */
 package ai.platon.pulsar.filter
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.crawl.filter.UrlFilter
 import org.junit.Assert
 import java.io.BufferedReader
-import java.io.FileReader
-import java.io.IOException
 import java.io.Reader
-import java.nio.file.Paths
-import java.util.function.BiConsumer
 import java.util.function.Consumer
-import java.util.function.Supplier
 import kotlin.streams.toList
 
 // JDK imports
-abstract class RegexUrlFilterBaseTest : UrlFilterTestBase {
-    protected var sampleDir = Paths.get(TEST_DIR, "sample").toString()
-
-    protected constructor() {}
-    protected constructor(sampleDir: String) {
-        this.sampleDir = sampleDir
-    }
+abstract class RegexUrlFilterBaseTest(testDir: String) : UrlFilterTestBase(testDir) {
 
     protected abstract fun getURLFilter(reader: Reader): UrlFilter
 
     protected fun bench(loops: Int, file: String) {
         try {
-            val rulesPath = Paths.get(sampleDir, "$file.rules")
-            val urlPath = Paths.get(sampleDir, "$file.urls")
-            bench(loops, FileReader(rulesPath.toFile()), FileReader(urlPath.toFile()))
+            val rulesReader = ResourceLoader.getResourceAsReader("$testResourcePrefix/$file.rules")!!
+            val urlReader = ResourceLoader.getResourceAsReader("$testResourcePrefix/$file.urls")!!
+            bench(loops, rulesReader, urlReader)
         } catch (e: Exception) {
             Assert.fail(e.toString())
         }
@@ -63,16 +53,15 @@ abstract class RegexUrlFilterBaseTest : UrlFilterTestBase {
         } catch (e: Exception) {
             Assert.fail(e.toString())
         }
-        LOG.info("bench time (" + loops + ") " + (System.currentTimeMillis() - start) + "ms")
+
+        LOG.info("Bench time (" + loops + ") " + (System.currentTimeMillis() - start) + "ms")
     }
 
     protected fun test(file: String) {
         try {
-            val rulesPath = Paths.get(sampleDir, "$file.rules")
-            val urlPath = Paths.get(sampleDir, "$file.urls")
-            LOG.info("Rules File : $rulesPath")
-            LOG.info("Urls File : $urlPath")
-            test(FileReader(rulesPath.toFile()), FileReader(urlPath.toFile()))
+            val rulesReader = ResourceLoader.getResourceAsReader("$testResourcePrefix/$file.rules")!!
+            val urlReader = ResourceLoader.getResourceAsReader("$testResourcePrefix/$file.urls")!!
+            test(rulesReader, urlReader)
         } catch (e: Exception) {
             Assert.fail(e.toString())
         }

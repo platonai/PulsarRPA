@@ -1,11 +1,7 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.RegexExtractor
-import ai.platon.pulsar.common.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
-import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.common.options.NormUrl
-import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
@@ -28,7 +24,7 @@ import java.time.Duration
 
 /**
  * Created by vincent on 17-11-1.
- * Copyright @ 2013-2017 Platon AI. All rights reserved
+ * Copyright @ 2013-2020 Platon AI. All rights reserved
  */
 @Suppress("unused")
 @UDFGroup(namespace = "DOM")
@@ -208,7 +204,7 @@ object DomFunctions {
     @JvmStatic
     @JvmOverloads
     fun text(dom: ValueDom, truncate: Int = Int.MAX_VALUE): String {
-        val text = dom.element.text()!!
+        val text = dom.element.text()
         return if (truncate > text.length) {
             text
         } else {
@@ -227,6 +223,10 @@ object DomFunctions {
     @UDFunction
     @JvmStatic
     fun ownText(dom: ValueDom) = dom.element.ownText()
+
+    @UDFunction
+    @JvmStatic
+    fun ownTexts(dom: ValueDom) = ValueArray.get(dom.element.ownTexts().map { ValueString.get(it) }.toTypedArray())
 
     @UDFunction
     @JvmStatic
@@ -336,11 +336,11 @@ object DomFunctions {
 
     @UDFunction
     @JvmStatic
-    fun html(dom: ValueDom) = dom.element.html()
+    fun html(dom: ValueDom) = dom.element.slimCopy().html()
 
     @UDFunction
     @JvmStatic
-    fun outerHtml(dom: ValueDom) = dom.element.outerHtml()
+    fun outerHtml(dom: ValueDom) = dom.element.slimCopy().outerHtml()
 
     @UDFunction
     @JvmStatic

@@ -1,12 +1,11 @@
 package ai.platon.pulsar.ql.h2.udfs
 
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.Queries
-import org.h2.engine.Session
 import ai.platon.pulsar.ql.annotation.H2Context
 import java.sql.Connection
 import java.sql.ResultSet

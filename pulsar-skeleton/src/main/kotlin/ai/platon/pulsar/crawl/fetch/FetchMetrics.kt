@@ -26,6 +26,18 @@ class FetchMetrics(
         conf: ImmutableConfig
 ): Parameterized, AutoCloseable {
 
+    companion object {
+        var runningChromeProcesses = 0
+        var usedMemory = 0L
+
+        init {
+            mapOf(
+                "runningChromeProcesses" to Gauge { runningChromeProcesses },
+                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
+            ).forEach { AppMetrics.register(this, it.key, it.value) }
+        }
+    }
+
     private val log = LoggerFactory.getLogger(FetchMetrics::class.java)!!
     val groupMode = conf.getEnum(PARTITION_MODE_KEY, URLUtil.GroupMode.BY_HOST)
     val maxHostFailureEvents = conf.getInt(FETCH_MAX_HOST_FAILURES, 20)
@@ -56,9 +68,6 @@ class FetchMetrics(
     val failedUrls = ConcurrentSkipListSet<String>()
     val deadUrls = ConcurrentSkipListSet<String>()
     val failedHosts = ConcurrentHashMultiset.create<String>()
-
-    var runningChromeProcesses = 0
-    var usedMemory = 0L
 
     val meterSystemNetworkMBytesRecv = AppMetrics.meter(this, "systemNetworkMBytesRecv")
 
@@ -107,11 +116,6 @@ class FetchMetrics(
 
     init {
         Files.readAllLines(PATH_UNREACHABLE_HOSTS).mapTo(unreachableHosts) { it }
-
-        mapOf(
-                "runningChromeProcesses" to Gauge { runningChromeProcesses },
-                "usedMemory" to Gauge { Strings.readableBytes(usedMemory) }
-        ).forEach { AppMetrics.register(this, it.key, it.value) }
 
         params.withLogger(log).info(true)
     }
@@ -184,7 +188,7 @@ class FetchMetrics(
 
         val i = finishedTasks.count
 
-        if (log.isInfoEnabled && i % 20 == 0L) {
+        if (log.isInfoEnabled && tasks.count > 0L && i % 20 == 0L) {
             log.info(formatStatus())
         }
 
@@ -266,6 +270,8 @@ class FetchMetrics(
     }
 
     fun formatStatus(): String {
+        if (tasks.count == 0L) return ""
+
         val seconds = elapsedTime.seconds.coerceAtLeast(1)
         val count = successTasks.count.coerceAtLeast(1)
         val bytes = meterContentBytes.count
@@ -285,12 +291,14 @@ class FetchMetrics(
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            log.info(formatStatus())
+            if (tasks.count > 0) {
+                log.info(formatStatus())
 
-            log.info("There are " + unreachableHosts.size + " unreachable hosts")
-            AppFiles.logUnreachableHosts(this.unreachableHosts)
+                log.info("There are " + unreachableHosts.size + " unreachable hosts")
+                AppFiles.logUnreachableHosts(this.unreachableHosts)
 
-            logAvailableHosts()
+                logAvailableHosts()
+            }
         }
     }
 

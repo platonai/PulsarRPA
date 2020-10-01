@@ -9,7 +9,7 @@ import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.common.URLUtil.GroupMode
 import ai.platon.pulsar.crawl.filter.CrawlFilters
-import ai.platon.pulsar.persist.HyperLink
+import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
 import org.slf4j.LoggerFactory
@@ -56,18 +56,18 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
         mutableFilterReport.clear()
     }
 
-    fun asPredicate(page: WebPage): Predicate<HyperLink> {
+    fun asPredicate(page: WebPage): Predicate<HyperlinkPersistable> {
         reset(page)
-        return Predicate { l: HyperLink ->
+        return Predicate { l: HyperlinkPersistable ->
             val r = this.filter(l)
             if (debugLevel > 0) {
-                mutableFilterReport.add(r.toString() + " <- " + l.url + "\t" + l.anchor)
+                mutableFilterReport.add(r.toString() + " <- " + l.url + "\t" + l.text)
             }
             0 == r
         }
     }
 
-    fun filter(link: HyperLink): Int {
+    fun filter(link: HyperlinkPersistable): Int {
         if (noFilter) {
             return 0
         }
@@ -85,7 +85,7 @@ class LinkFilter(private val crawlFilters: CrawlFilters, val conf: ImmutableConf
         if (ignoreExternalLinks && sourceHost != destHost) {
             return 106
         }
-        val r = linkOptions!!.filter(link.url, link.anchor)
+        val r = linkOptions!!.filter(link.url, link.text)
         if (r > 0) {
             return 2000 + r
         }

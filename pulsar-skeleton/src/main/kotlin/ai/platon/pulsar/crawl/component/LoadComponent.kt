@@ -1,8 +1,8 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.Urls.splitUrlArgs
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
@@ -58,6 +58,7 @@ class LoadComponent(
     private val closed = AtomicBoolean()
     private val isActive get() = !closed.get()
     private val numWrite = AtomicInteger()
+    private val abnormalPage get() = WebPage.NIL.takeIf { !isActive }
 
     constructor(
             webDb: WebDb,
@@ -98,11 +99,11 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(originalUrl: String, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load0(NormUrl(originalUrl, options))
+        return abnormalPage ?: loadWithRetry(NormUrl(originalUrl, options))
     }
 
     fun load(url: URL, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load0(NormUrl(url, options))
+        return abnormalPage ?: loadWithRetry(NormUrl(url, options))
     }
 
     /**
@@ -114,16 +115,33 @@ class LoadComponent(
      * @return The WebPage.
      */
     fun load(link: GHypeLink, options: LoadOptions): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load(link.url.toString(), options)
-                .also { it.anchor = link.anchor.toString() }
+        return abnormalPage ?: load(link.url.toString(), options).also { it.anchor = link.anchor.toString() }
     }
 
     fun load(normUrl: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: load0(normUrl)
+        return abnormalPage ?: loadWithRetry(normUrl)
     }
 
     suspend fun loadDeferred(normUrl: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive } ?: loadDeferred0(normUrl)
+        return abnormalPage ?: loadWithRetryDeferred(normUrl)
+    }
+
+    fun loadWithRetry(normUrl: NormUrl): WebPage {
+        var page = load0(normUrl)
+        var n = normUrl.options.nJitRetry
+        while (page.protocolStatus.isRetry && n-- > 0) {
+            page = load0(normUrl)
+        }
+        return page
+    }
+
+    suspend fun loadWithRetryDeferred(normUrl: NormUrl): WebPage {
+        var page = loadDeferred0(normUrl)
+        var n = normUrl.options.nJitRetry
+        while (page.protocolStatus.isRetry && n-- > 0) {
+            page = loadDeferred0(normUrl)
+        }
+        return page
     }
 
     /**

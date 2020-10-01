@@ -104,6 +104,8 @@ public interface AppConstants {
      * Storage
      * */
     String MEM_STORE_CLASS = "org.apache.gora.memory.store.MemStore";
+    /** A minimal file backend store */
+    String FILE_BACKEND_STORE_CLASS = "ai.platon.pulsar.persist.gora.db.FileBackendPageStore";
     /** Constant <code>MONGO_STORE_CLASS="org.apache.gora.mongodb.store.MongoStor"{trunked}</code> */
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
     /** Constant <code>HBASE_STORE_CLASS="org.apache.gora.hbase.store.HBaseStore"</code> */

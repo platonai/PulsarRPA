@@ -16,7 +16,7 @@
  ******************************************************************************/
 package ai.platon.pulsar.crawl.fetch;
 
-import ai.platon.pulsar.common.Urls;
+import ai.platon.pulsar.common.url.Urls;
 import ai.platon.pulsar.persist.graph.GraphGroupKey;
 import org.apache.hadoop.io.RawComparator;
 import org.junit.Test;

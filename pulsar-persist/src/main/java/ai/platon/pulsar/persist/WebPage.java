@@ -20,7 +20,7 @@ import ai.platon.pulsar.common.AppContext;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.common.Urls;
+import ai.platon.pulsar.common.url.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
 import ai.platon.pulsar.persist.gora.generated.GHypeLink;
@@ -202,6 +202,7 @@ public class WebPage implements Comparable<WebPage> {
         page.setVolatileConfig(volatileConfig);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(Instant.now());
+        page.setModifiedTime(Instant.now());
         page.setScore(0);
         page.setFetchCount(0);
 
@@ -1846,7 +1847,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param liveLinks a {@link java.lang.Iterable} object.
      */
-    public void setLiveLinks(Iterable<HyperLink> liveLinks) {
+    public void setLiveLinks(Iterable<HyperlinkPersistable> liveLinks) {
         page.getLiveLinks().clear();
         Map<CharSequence, GHypeLink> links = page.getLiveLinks();
         liveLinks.forEach(l -> links.put(l.getUrl(), l.unbox()));
@@ -1864,9 +1865,9 @@ public class WebPage implements Comparable<WebPage> {
     /**
      * <p>addLiveLink.</p>
      *
-     * @param hyperLink a {@link ai.platon.pulsar.persist.HyperLink} object.
+     * @param hyperLink a {@link HyperlinkPersistable} object.
      */
-    public void addLiveLink(HyperLink hyperLink) {
+    public void addLiveLink(HyperlinkPersistable hyperLink) {
         page.getLiveLinks().put(hyperLink.getUrl(), hyperLink.unbox());
     }
 
@@ -1944,7 +1945,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param hypeLinks a {@link java.lang.Iterable} object.
      */
-    public void addHyperLinks(Iterable<HyperLink> hypeLinks) {
+    public void addHyperlinks(Iterable<HyperlinkPersistable> hypeLinks) {
         List<CharSequence> links = page.getLinks();
 
         // If there are too many links, Drop the front 1/3 links
@@ -1952,7 +1953,7 @@ public class WebPage implements Comparable<WebPage> {
             links = links.subList(links.size() - MAX_LINK_PER_PAGE / 3, links.size());
         }
 
-        for (HyperLink l : hypeLinks) {
+        for (HyperlinkPersistable l : hypeLinks) {
             Utf8 url = u8(l.getUrl());
             if (!links.contains(url)) {
                 links.add(url);

@@ -17,7 +17,7 @@
 package ai.platon.pulsar.indexer.solr;
 
 import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.common.Urls;
+import ai.platon.pulsar.common.url.Urls;
 import ai.platon.pulsar.common.config.ImmutableConfig;
 import ai.platon.pulsar.crawl.index.IndexDocument;
 import ai.platon.pulsar.crawl.index.IndexingException;

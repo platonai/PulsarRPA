@@ -8,7 +8,6 @@ import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
-import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
@@ -101,12 +100,16 @@ class LazyFetchTaskManager(
     }
 
     private fun commitLazyTasks() {
+        val trackingUrls = timeoutUrls.size + failedUrls.size + deadUrls.size
+        if (trackingUrls == 0) return
+
         log.info("Commit urls, timeout: {} failed: {} dead: {}", timeoutUrls.size, failedUrls.size, deadUrls.size)
 
         // Trace failed tasks for further fetch as a background tasks
         timeoutUrls.takeIf { it.isNotEmpty() }?.let { urlTrackerIndexer.indexAll(TIMEOUT_URLS_PAGE, it) }
         failedUrls.takeIf { it.isNotEmpty() }?.let { urlTrackerIndexer.indexAll(FAILED_URLS_PAGE, it) }
         deadUrls.takeIf { it.isNotEmpty() }?.let { urlTrackerIndexer.indexAll(DEAD_URLS_PAGE, it) }
+
         urlTrackerIndexer.commit()
     }
 }

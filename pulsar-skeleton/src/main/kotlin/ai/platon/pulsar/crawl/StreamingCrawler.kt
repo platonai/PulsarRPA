@@ -2,10 +2,12 @@ package ai.platon.pulsar.crawl
 
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -25,8 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
 
-open class StreamingCrawler(
-        private val urls: Sequence<String>,
+open class StreamingCrawler<T: UrlAware>(
+        private val urls: Sequence<T>,
         private val options: LoadOptions = LoadOptions.create(),
         session: PulsarSession = PulsarContexts.createSession(),
         autoClose: Boolean = true
@@ -77,7 +79,7 @@ open class StreamingCrawler(
     var globalCache: GlobalCache? = null
 
     val id = instanceSequencer.incrementAndGet()
-    var onLoadComplete: (WebPage) -> Unit = {}
+    var onLoadComplete: (UrlAware, WebPage) -> Unit = { url: UrlAware, page: WebPage -> }
 
     init {
         generateFinishCommand()
@@ -112,7 +114,7 @@ open class StreamingCrawler(
         }
     }
 
-    private suspend fun load(j: Int, url: String, scope: CoroutineScope): FlowState {
+    private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
 
@@ -149,12 +151,12 @@ open class StreamingCrawler(
         return flowState
     }
 
-    private suspend fun load(url: String): WebPage? {
+    private suspend fun load(url: UrlAware): WebPage? {
         if (!isAppActive) {
             return null
         }
 
-        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url) } }
+        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url.url) } }
                 .onFailure { log.warn("Unexpected exception", it) }
                 .getOrNull()
         globalRunningTasks.decrementAndGet()
@@ -180,7 +182,10 @@ open class StreamingCrawler(
         }
 
         lastActiveTime = Instant.now()
-        page?.let(onLoadComplete)
+        page?.let { onLoadComplete(url, it) }
+
+        // if urls is ConcurrentLoadingIterable
+        (urls.iterator() as? ConcurrentLoadingIterable.LoadingIterator)?.tryLoad()
 
         return page
     }
@@ -198,16 +203,17 @@ open class StreamingCrawler(
         }
 
         when (e) {
+            is CancellationException,
+            is IllegalStateException,
             is IllegalApplicationContextStateException -> {
                 if (illegalState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("Illegal context, quit streaming crawler ... | {}", e.message)
+                    log.warn("Illegal app context, quit streaming crawler ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
             is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
-            else -> log.error("Unexpected exception", e)
         }
         return FlowState.CONTINUE
     }

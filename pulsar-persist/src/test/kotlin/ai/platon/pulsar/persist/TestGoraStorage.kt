@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.Urls.reverseUrlOrEmpty
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrEmpty
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.MutableConfig
@@ -49,9 +49,7 @@ class TestGoraStorage {
         }
     }
 
-    private val exampleUrls = IntStream.range(10000, 10050)
-            .mapToObj { i: Int -> AppConstants.EXAMPLE_URL + "/" + i }
-            .collect(Collectors.toList())
+    private val exampleUrls = IntRange(10000, 10050).map { AppConstants.EXAMPLE_URL + "/$it" }
 
     @Before
     fun setup() {
@@ -69,6 +67,7 @@ class TestGoraStorage {
         // webDb.put(page.getUrl(), page, true);
         webDb.put(page)
         webDb.flush()
+
         page = webDb.get(url)
         val page2 = webDb.get(url)
         assertEquals(page.url, page2.url)
@@ -78,15 +77,18 @@ class TestGoraStorage {
         page.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
+
         val page3 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page3.links.size.toLong())
         page.addLinks(exampleUrls)
         webDb.put(page)
         webDb.flush()
+
         val page4 = webDb.get(url)
         assertEquals(exampleUrls.size.toLong(), page4.links.size.toLong())
         webDb.delete(url)
         webDb.flush()
+
         page = webDb.get(url)
         assertTrue(page.isNil)
         webDb.delete(url)
@@ -104,6 +106,7 @@ class TestGoraStorage {
         page.links[i] = modifiedLink
         store.put(key, page)
         store.flush()
+
         page = store[key]
         assertNotNull(page)
         assertEquals(modifiedLink, page.links[i].toString())
@@ -111,6 +114,7 @@ class TestGoraStorage {
         page.links[i] = Utf8()
         store.put(key, page)
         store.flush()
+
         page = store[key]
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
@@ -118,6 +122,7 @@ class TestGoraStorage {
         page.links[i] = ""
         store.put(key, page)
         store.flush()
+
         page = store[key]
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
@@ -125,6 +130,7 @@ class TestGoraStorage {
         page.links[i] = Utf8("")
         store.put(key, page)
         store.flush()
+
         page = store[key]
         assertNotNull(page)
         assertEquals("", page.links[i].toString())
@@ -222,7 +228,7 @@ class TestGoraStorage {
         for (i in 1..19) {
             val url = AppConstants.EXAMPLE_URL + "/" + i
             val url2 = AppConstants.EXAMPLE_URL + "/" + (i - 1)
-            val link = HyperLink.parse(url2).unbox()
+            val link = HyperlinkPersistable.parse(url2).unbox()
             link.anchor = "test anchor ord:1"
 
             page.liveLinks[link.url] = link

@@ -214,7 +214,8 @@ open class WebDriverPoolManager(
                     driverPool.numSuccess.incrementAndGet()
                     driverPool.numDismissWarnings.decrementAndGet()
                 }
-            } finally {
+            }
+            finally {
                 driver?.let { driverPool.put(it) }
             }
         }

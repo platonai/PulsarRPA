@@ -3,7 +3,7 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
@@ -21,10 +21,11 @@ import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
-import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 import java.net.URL
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -36,9 +37,10 @@ import kotlin.reflect.KClass
  * A PulsarContext can be used to inject, fetch, load, parse, store Web pages.
  */
 abstract class AbstractPulsarContext(
-        override val applicationContext: ApplicationContext,
-        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment().apply { initialize() }
+        override val applicationContext: AbstractApplicationContext,
+        override val pulsarEnvironment: PulsarEnvironment = PulsarEnvironment()
 ): PulsarContext, AutoCloseable {
+    private val log = LoggerFactory.getLogger(AbstractPulsarContext::class.java)
 
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
@@ -85,8 +87,7 @@ abstract class AbstractPulsarContext(
      * */
     val startTime = System.currentTimeMillis()
 
-    val isActive get() = !closed.get() && AppContext.isActive
-            && (applicationContext as AbstractApplicationContext).isActive
+    val isActive get() = !closed.get() && AppContext.isActive && applicationContext.isActive
 
     /**
      * All open sessions
@@ -106,13 +107,11 @@ abstract class AbstractPulsarContext(
     /** Reference to the JVM shutdown hook, if registered.  */
     private var shutdownHook: Thread? = null
 
-    private val webDbOrNull: WebDb? get() = webDb.takeIf { isActive }
+    private val webDbOrNull: WebDb? get() = if (isActive) webDb else null
 
     @Throws(BeansException::class)
     fun <T : Any> getBean(requiredType: KClass<T>): T {
         return applicationContext.getBean(requiredType.java)
-//        return applicationContext.takeIf { isActive }?.getBean(requiredType.java)
-//                ?: throw IllegalApplicationContextStateException("Pulsar context is not active")
     }
 
     @Throws(BeansException::class)
@@ -135,24 +134,39 @@ abstract class AbstractPulsarContext(
     }
 
     fun clearCaches() {
+        if (!isActive) return
+
         globalCache.pageCache.clear()
         globalCache.documentCache.clear()
     }
 
+    /**
+     * Normalize an url, the url can be one of the following:
+     * 1. a configured url
+     * 2. a base64 encoded url
+     * 3. a base64 encoded configured url
+     *
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
+     * but default values in LoadOptions are ignored.
+     * */
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormUrl {
-        val (spec, args) = Urls.splitUrlArgs(url)
-        var normalizedUrl = Urls.normalize(spec, options.shortenKey)
+        val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
+
+        val (spec, args) = Urls.splitUrlArgs(url0)
+        var normalizedUrl = Urls.normalizeOrNull(spec, options.shortenKey) ?: return NormUrl.NIL
         if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
 
-        if (args.isBlank()) {
-            return NormUrl(normalizedUrl, initOptions(options, toItemOption))
+        return if (args.isBlank()) {
+            NormUrl(normalizedUrl, initOptions(options, toItemOption))
+        } else {
+            // options parsed from args overrides options parsed from url
+            val secondaryOptions = LoadOptions.parse(args)
+            val finalOptions = LoadOptions.mergeModified(secondaryOptions, options)
+            NormUrl(normalizedUrl, initOptions(finalOptions, toItemOption))
         }
-
-        val parsedOptions = LoadOptions.parse(args)
-        val options2 = LoadOptions.mergeModified(parsedOptions, options)
-        return NormUrl(normalizedUrl, initOptions(options2, toItemOption))
     }
 
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl? {
@@ -160,6 +174,14 @@ abstract class AbstractPulsarContext(
         return kotlin.runCatching { normalize(url, options, toItemOption) }.getOrNull()
     }
 
+    /**
+     * Normalize urls, remove invalid urls
+     *
+     * @param urls The urls to normalize
+     * @param options The LoadOptions applied to each url
+     * @param toItemOption If the LoadOptions is converted to item load options
+     * @return All normalized urls, all invalid input urls are removed
+     * */
     override fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean): List<NormUrl> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
@@ -171,11 +193,11 @@ abstract class AbstractPulsarContext(
      * @return The web page created
      */
     override fun inject(url: String): WebPage {
-        return WebPage.NIL.takeIf { !isActive }?:injectComponent.inject(Urls.splitUrlArgs(url))
+        return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(Urls.splitUrlArgs(url))
     }
 
     override fun inject(url: NormUrl): WebPage {
-        return WebPage.NIL.takeIf { !isActive }?:injectComponent.inject(url.spec, url.args)
+        return WebPage.NIL.takeIf { !isActive } ?: injectComponent.inject(url.spec, url.args)
     }
 
     override fun getOrNull(url: String): WebPage? {
@@ -207,7 +229,7 @@ abstract class AbstractPulsarContext(
      */
     override fun load(url: String, options: LoadOptions): WebPage {
         val normUrl = normalize(url, options)
-        return loadComponent.takeIf { isActive }?.load(normUrl)?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(normUrl)
     }
 
     /**
@@ -218,7 +240,7 @@ abstract class AbstractPulsarContext(
      * @return The WebPage. If there is no web page at local storage nor remote location, [WebPage.NIL] is returned
      */
     override fun load(url: URL, options: LoadOptions): WebPage {
-        return loadComponent.takeIf { isActive }?.load(url, initOptions(options))?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(url, initOptions(options))
     }
 
     /**
@@ -229,12 +251,12 @@ abstract class AbstractPulsarContext(
      */
     override fun load(url: NormUrl): WebPage {
         initOptions(url.options)
-        return loadComponent.takeIf { isActive }?.load(url)?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.load(url)
     }
 
     override suspend fun loadDeferred(url: NormUrl): WebPage {
         initOptions(url.options)
-        return loadComponent.takeIf { isActive }?.loadDeferred(url)?: WebPage.NIL
+        return WebPage.NIL.takeIf { !isActive } ?: loadComponent.loadDeferred(url)
     }
 
     /**
@@ -251,11 +273,11 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun loadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.loadAll(normalize(urls, options), options)?: listOf()
+        return if (isActive) loadComponent.loadAll(normalize(urls, options), options) else listOf()
     }
 
     override fun loadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.loadAll(urls, initOptions(options))?: listOf()
+        return if (isActive) loadComponent.loadAll(urls, initOptions(options)) else listOf()
     }
 
     /**
@@ -272,11 +294,11 @@ abstract class AbstractPulsarContext(
      * @return Pages for all urls.
      */
     override fun parallelLoadAll(urls: Iterable<String>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.parallelLoadAll(normalize(urls, options), options)?: listOf()
+        return if (isActive) loadComponent.parallelLoadAll(normalize(urls, options), options) else listOf()
     }
 
     override fun parallelLoadAll(urls: Collection<NormUrl>, options: LoadOptions): Collection<WebPage> {
-        return loadComponent.takeIf { isActive }?.loadAll(urls, initOptions(options))?: listOf()
+        return if (isActive) loadComponent.parallelLoadAll(urls, initOptions(options)) else listOf()
     }
 
     /**
@@ -284,8 +306,7 @@ abstract class AbstractPulsarContext(
      */
     override fun parse(page: WebPage) = JsoupParser(page, unmodifiedConfig).parse()
 
-    override fun parse(page: WebPage, mutableConfig: MutableConfig) =
-            JsoupParser(page, mutableConfig).parse()
+    override fun parse(page: WebPage, mutableConfig: MutableConfig) = JsoupParser(page, mutableConfig).parse()
 
     override fun persist(page: WebPage) {
         webDbOrNull?.put(page, false)
@@ -316,11 +337,7 @@ abstract class AbstractPulsarContext(
      */
     override fun registerShutdownHook() {
         if (this.shutdownHook == null) { // No shutdown hook registered yet.
-            this.shutdownHook = object : Thread() {
-                override fun run() {
-                    synchronized(startupShutdownMonitor) { doClose() }
-                }
-            }
+            this.shutdownHook = Thread { synchronized(startupShutdownMonitor) { doClose() } }
             Runtime.getRuntime().addShutdownHook(this.shutdownHook)
             (applicationContext as? AbstractApplicationContext)?.registerShutdownHook()
         }
@@ -342,7 +359,8 @@ abstract class AbstractPulsarContext(
             if (shutdownHook != null) {
                 try {
                     Runtime.getRuntime().removeShutdownHook(shutdownHook)
-                } catch (ex: IllegalStateException) { // ignore - VM is already shutting down
+                } catch (ex: IllegalStateException) {
+                    // ignore - VM is already shutting down
                 }
             }
         }
@@ -350,12 +368,14 @@ abstract class AbstractPulsarContext(
 
     private fun doClose() {
         if (closed.compareAndSet(false, true)) {
+            kotlin.runCatching { webDbOrNull?.flush() }.onFailure { log.warn(it.message) }
+
             sessions.values.forEach {
-                it.runCatching { it.close() }.onFailure { it.printStackTrace() }
+                it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
 
             closableObjects.forEach {
-                it.runCatching { it.close() }.onFailure { it.printStackTrace() }
+                it.runCatching { it.close() }.onFailure { log.warn(it.message) }
             }
         }
     }

@@ -8,11 +8,3 @@ data class DomStatistics(
     var anchorImg: Int = 0,
     var numLike: Int = 0
 )
-
-data class LabeledHyperLink(
-        var label: String,
-        var depth: Int,
-        var order: Int,
-        var anchor: String,
-        var url: String
-)

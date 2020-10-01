@@ -1,7 +1,7 @@
 package ai.platon.pulsar.persist
 
-import ai.platon.pulsar.common.Urls
-import ai.platon.pulsar.common.Urls.reverseUrlOrNull
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.reverseUrlOrNull
 import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.persist.gora.db.DbIterator
@@ -36,13 +36,13 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
             log.trace("Getting $key")
         }
 
-        val datum = store.get(key, fields)
-        if (datum != null) {
+        val page = fields?.let { store.get(key, it) } ?: store.get(key)
+        if (page != null) {
             if (log.isTraceEnabled) {
                 log.trace("Got $key")
             }
 
-            return WebPage.box(url, key, datum)
+            return WebPage.box(url, key, page)
         }
 
         return null

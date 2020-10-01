@@ -1,5 +1,6 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.url
 
+import ai.platon.pulsar.common.Strings
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.NameValuePair
 import org.apache.http.client.utils.URIBuilder
@@ -7,7 +8,6 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
-
 
 object Urls {
 
@@ -39,7 +39,7 @@ object Urls {
 
     @JvmStatic
     fun normalizeOrNull(url: String, ignoreQuery: Boolean = false): String? {
-        return normalize(url, ignoreQuery).takeIf { it.isBlank() }
+        return normalize(url, ignoreQuery).takeUnless { it.isBlank() }
     }
 
     @JvmStatic
@@ -139,7 +139,8 @@ object Urls {
                     null, // Ignore the query part of the input url
                     uri.fragment)
             return uri.toString()
-        } catch (ignored: Throwable) {}
+        } catch (ignored: Throwable) {
+        }
 
         return ""
     }
@@ -268,6 +269,9 @@ object Urls {
 
         return buf.toString()
     }
+
+    @JvmStatic
+    fun unreverseUrlOrNull(reversedUrl: String) = kotlin.runCatching { unreverseUrl(reversedUrl) }.getOrNull()
 
     /**
      * Get unreversed and tenanted url of reversedUrl, reversedUrl can be both tenanted or not tenanted,

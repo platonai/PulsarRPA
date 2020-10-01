@@ -1,4 +1,4 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.url
 
 import org.apache.commons.lang3.Validate
 import java.net.MalformedURLException

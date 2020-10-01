@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.nio.file.Files
 import java.time.Duration
-import kotlin.streams.toList
 
 /**
  * Load proxies from proxy vendors
@@ -23,7 +22,10 @@ open class FileProxyLoader(conf: ImmutableConfig): ProxyLoader(conf) {
 
     @Throws(IOException::class)
     private fun updateProxies0(reloadInterval: Duration): List<ProxyEntry> {
-        return Files.list(AppPaths.ENABLED_PROXY_DIR).filter { Files.isRegularFile(it) }.map { Files.readAllLines(it) }
-                .toList().flatMap { it.mapNotNull { ProxyEntry.parse(it) } }
+        return Files.list(AppPaths.ENABLED_PROXY_DIR).filter { Files.isRegularFile(it) }
+                .iterator().asSequence()
+                .map { Files.readAllLines(it) }
+                .flatMap { it.mapNotNull { ProxyEntry.parse(it) } }
+                .toList()
     }
 }

@@ -16,9 +16,7 @@ import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.addColumn
 import org.apache.commons.lang3.StringUtils
 import org.h2.tools.SimpleResultSet
-import org.h2.value.Value
-import org.h2.value.ValueArray
-import org.h2.value.ValueString
+import org.h2.value.*
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.Long.MAX_VALUE
@@ -420,6 +418,42 @@ object CommonFunctions {
     @JvmStatic
     fun makeArray(vararg values: Value): ValueArray {
         return ValueArray.get(values)
+    }
+
+    /**
+     * For all ValueInts in the values, find out the minimal value, ignore no-integer values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun intArrayMin(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueInt>().minByOrNull { it.int } ?: ValueNull.INSTANCE
+    }
+
+    /**
+     * For all ValueInts in the values, find out the maximal value, ignore no-integer values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun intArrayMax(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueInt>().maxByOrNull { it.int } ?: ValueNull.INSTANCE
+    }
+
+    /**
+     * For all ValueFloats in the values, find out the minimal value, ignore no-float values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun floatArrayMin(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueFloat>().minByOrNull { it.float } ?: ValueNull.INSTANCE
+    }
+
+    /**
+     * For all ValueFloats in the values, find out the maximal value, ignore no-float values
+     * */
+    @UDFunction
+    @JvmStatic
+    fun floatArrayMax(values: ValueArray): Value {
+        return values.list.filterIsInstance<ValueFloat>().maxByOrNull { it.float } ?: ValueNull.INSTANCE
     }
 
     @UDFunction

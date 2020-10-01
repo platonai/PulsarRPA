@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
-import ai.platon.pulsar.common.Urls
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig

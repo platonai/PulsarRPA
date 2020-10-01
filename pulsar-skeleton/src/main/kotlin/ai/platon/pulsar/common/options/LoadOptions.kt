@@ -18,18 +18,26 @@ import java.time.temporal.ChronoUnit
  * Hadoop time duration format : Valid units are : ns, us, ms, s, m, h, d.
  */
 open class LoadOptions: CommonOptions {
+
+    @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
+    var label = ""
+    @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
+    var authToken = ""
+
     /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = Duration.ofDays(36500)
-    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
-    var incognito = false
 
     /** Arrange links */
-    @Parameter(names = ["-ol", "-outLink", "-outlink", "-outlinkSelector", "--outlink-selector"],
+    @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],
             description = "The CSS selector by which the anchors in the portal page are selected to load and analyze, " +
                     "Out pages will be detected automatically if the selector is empty")
-    var outlinkSelector = ""
+    var outLinkSelector = ""
+
+    @Parameter(names = ["-olp", "-outLinkPattern", "--out-link-pattern"], description = "The pattern of the out links")
+    var outLinkPattern = ".+"
+
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
@@ -44,7 +52,7 @@ open class LoadOptions: CommonOptions {
     var waitNonBlank: String = ""
     @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
-    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize")
+    @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
     var requireSize = 0
     @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
     var requireImages = 0
@@ -119,6 +127,9 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-retry", "--retry"],
             description = "Retry fetching the page if it's failed last time")
     var retryFailed = false
+    @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
+            description = "Retry at most n times if RETRY(1601) code return when fetching a page")
+    var nJitRetry = 0
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
             description = "If false, flush persisted pages into database as soon as possible")
     var lazyFlush = true
@@ -126,6 +137,8 @@ open class LoadOptions: CommonOptions {
             description = "Parallel fetch pages whenever applicable")
     var preferParallel = true
 
+    @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
+    var incognito = false
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
@@ -261,6 +274,11 @@ open class LoadOptions: CommonOptions {
 
     /**
      * Merge this LoadOptions and other LoadOptions, return a new LoadOptions
+     *
+     * The other options overrides this options
+     *
+     * @param other The other LoadOptions who overrides each item if it's not the default value
+     * @return A new LoadOptions
      * */
     open fun mergeModified(other: LoadOptions): LoadOptions {
         val modified = other.modifiedOptions
@@ -326,6 +344,9 @@ open class LoadOptions: CommonOptions {
             return options
         }
 
+        /**
+         * Create a new LoadOptions with o1 and o2's items, o2 overrides o1
+         * */
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
             val options = LoadOptions()

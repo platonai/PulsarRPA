@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.sql
 
 import org.apache.commons.lang3.StringUtils
+import java.lang.Exception
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Types
@@ -10,6 +11,7 @@ class ResultSetFormatter(
         private val rs: ResultSet,
         private val asList: Boolean = false,
         private val withHeader: Boolean = false,
+        private val textOnly: Boolean = false,
         val buffer: StringBuilder = StringBuilder()
 ) {
     private val meta = rs.metaData
@@ -125,27 +127,24 @@ class ResultSetFormatter(
      */
     @Throws(SQLException::class)
     private fun formatColumn(columnIndex: Int): String {
-        var s: String?
-        when (rs.metaData.getColumnType(columnIndex)) {
+        if (textOnly) {
+            return rs.getString(columnIndex)?.replace("\n", "") ?: "null"
+        }
+
+        return when (rs.metaData.getColumnType(columnIndex)) {
             Types.DOUBLE, Types.FLOAT, Types.REAL -> {
-                var precision = rs.metaData.getPrecision(columnIndex)
-                var scale = rs.metaData.getScale(columnIndex)
-                if (precision !in 0..10) precision = 10
-                if (scale !in 0..10) scale = 10
-                val d = rs.getDouble(columnIndex)
-                if (scale == 0 && precision == 0) {
-                    scale = 10
-                }
-                s = String.format("%" + precision + "." + scale + "f", d)
+                val fmt = getFloatColumnFormat(columnIndex)
+                val value = rs.getDouble(columnIndex)
+                String.format(fmt, value)
             }
-            else -> s = rs.getString(columnIndex)
+            else -> rs.getString(columnIndex)?.replace("\n", "") ?: "null"
         }
+    }
 
-        if (s == null) {
-            s = "null"
-        }
-
-        return s
+    private fun getFloatColumnFormat(columnIndex: Int): String {
+        val precision = rs.metaData.getPrecision(columnIndex).coerceIn(6, 10)
+        val scale = rs.metaData.getScale(columnIndex).coerceIn(2, 6)
+        return "%${precision}.${scale}f"
     }
 
     private fun formatRows() {
