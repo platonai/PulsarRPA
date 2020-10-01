@@ -2,27 +2,21 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.time.Duration
 import java.util.concurrent.TimeUnit
-import kotlin.streams.toList
 
 object Runtimes {
     private val logger = LoggerFactory.getLogger(Runtimes::class.java)
 
     fun exec(name: String): List<String> {
-        val lines = mutableListOf<String>()
         try {
-            val p = Runtime.getRuntime().exec(name)
-            val input = BufferedReader(InputStreamReader(p.inputStream))
-            input.lines().toList().toCollection(lines)
-            input.close()
+            val process = Runtime.getRuntime().exec(name)
+            return process.inputStream.bufferedReader().useLines { it.toList() }
         } catch (err: Exception) {
             err.printStackTrace()
         }
 
-        return lines
+        return listOf()
     }
 
     fun countSystemProcess(pattern: String): Int {

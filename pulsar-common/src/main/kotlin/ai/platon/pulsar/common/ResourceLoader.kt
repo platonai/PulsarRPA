@@ -16,7 +16,6 @@
  */
 package ai.platon.pulsar.common
 
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.*
 import java.net.URL
@@ -26,7 +25,6 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
-import kotlin.streams.toList
 
 /**
  * Load resources
@@ -126,7 +124,7 @@ object ResourceLoader {
 
     fun readStringTo(fileResource: String, sb: StringBuilder): StringBuilder {
         getResourceAsReader(fileResource)?.forEachLine {
-            sb.appendLine(it)
+            sb.appendln(it)
         }
         return sb
     }
