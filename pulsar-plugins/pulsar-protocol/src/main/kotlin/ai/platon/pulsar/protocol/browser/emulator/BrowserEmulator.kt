@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.FlowState
 import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
@@ -184,13 +185,18 @@ open class BrowserEmulator(
         }
 
         if (result.state.isContinue) {
+            task.fetchTask.page.volatileConfig?.get(FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE)?.let {
+                evaluate(task, it.split(";\n"), 1000)
+            }
+        }
+
+        if (result.state.isContinue) {
             jsComputeFeature(task, result)
         }
 
         if (result.state.isContinue) {
             task.fetchTask.page.volatileConfig?.get(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE)?.let {
-                log.info("Evaluate custom js <<<$it>>>")
-                evaluate(task, it)
+                evaluate(task, it.split(";\n"), 1000)
             }
         }
 
@@ -269,8 +275,15 @@ open class BrowserEmulator(
         }
     }
 
+    private suspend fun evaluate(interactTask: InteractTask, expressions: Iterable<String>, delayTimeMillis: Long) {
+        expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
+            log.info("Evaluate expression >>>$it<<<")
+            evaluate(interactTask, it)
+            delay(delayTimeMillis)
+        }
+    }
+
     private fun evaluate(interactTask: InteractTask, expression: String): Any? {
-        val scriptTimeout = interactTask.driverConfig.scriptTimeout
         counterRequests.inc()
         checkState(interactTask.driver)
         checkState(interactTask.fetchTask)

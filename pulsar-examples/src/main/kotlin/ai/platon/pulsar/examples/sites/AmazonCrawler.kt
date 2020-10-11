@@ -1,7 +1,11 @@
 package ai.platon.pulsar.examples.sites
 
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.context.PulsarContext
+import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.context.withContext
+import ai.platon.pulsar.crawl.fetch.privacy.BrowserInstanceId
 import ai.platon.pulsar.examples.common.Crawler
 
 class AmazonCrawler(context: PulsarContext): Crawler(context) {
@@ -24,6 +28,18 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
         val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
     }
 
+    fun chooseCountry() {
+        val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
+        val expressions = "document.querySelector(\"div#nav-global-location-slot a\").click(); " +
+                "document.querySelector(\"input#GLUXZipUpdateInput\").value = '90001'; " +
+                "document.querySelector(\"div#GLUXChangePostalCodeLink\").click(); " +
+                "document.querySelector(\"div#GLUXZipInputSection input[type=submit]\").click(); "
+        i.sessionConfig.set(CapabilityTypes.FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expressions)
+        val document = i.loadDocument(portalUrl, "-i 1s")
+        val text = document.selectFirstOrNull("#glow-ingress-block")?.text()?:"(unknown)"
+        println(text)
+    }
+
     fun laptops() {
         val portalUrl = "https://www.amazon.com/s?rh=n%3A565108%2Cp_72%3A4-&pf_rd_i=565108&pf_rd_m=ATVPDKIKX0DER&pf_rd_p=2afdf005-5dad-59c6-b6b0-be699f2d03aa&pf_rd_r=5GYSAF186DKPTYBZT9J6&pf_rd_s=merchandised-search-10&pf_rd_t=101&ref=Oct_TopRatedC_565108_SAll"
         loadOutPages(portalUrl, loadOutPagesArgs)
@@ -36,7 +52,7 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 }
 
 fun main() {
-    // System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
+    System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
 
-    withContext { AmazonCrawler(it).laptops() }
+    withContext { AmazonCrawler(it).chooseCountry() }
 }
