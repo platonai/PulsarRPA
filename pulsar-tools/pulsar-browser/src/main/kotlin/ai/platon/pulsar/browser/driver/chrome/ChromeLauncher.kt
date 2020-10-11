@@ -343,8 +343,13 @@ class ChromeLauncher(
     }
 
     private fun prepareUserDataDir() {
-        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
+        if (userDataDir == prototypeUserDataDir) {
+            log.info("Running chrome using prototype dir")
+            return
+        }
+
+        val lock = AppPaths.BROWSER_TMP_DIR_LOCK
         if (Files.exists(prototypeUserDataDir.resolve("Default"))) {
             FileChannel.open(lock, StandardOpenOption.APPEND).use {
                 it.lock()
@@ -354,9 +359,15 @@ class ChromeLauncher(
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))
-                    FileUtils.deleteDirectory(userDataDir.resolve("Default/Local Storage/leveldb").toFile())
+                    val leveldb = userDataDir.resolve("Default/Local Storage/leveldb")
+                    if (Files.exists(leveldb)) {
+                        FileUtils.deleteDirectory(leveldb.toFile())
+                    }
+
                     arrayOf("Default/Cookies", "Default/Local Storage/leveldb").forEach {
-                        Files.copy(prototypeUserDataDir.resolve(it), userDataDir.resolve(it), StandardCopyOption.REPLACE_EXISTING)
+                        val target = userDataDir.resolve(it)
+                        Files.createDirectories(target.parent)
+                        Files.copy(prototypeUserDataDir.resolve(it), target, StandardCopyOption.REPLACE_EXISTING)
                     }
                 }
             }

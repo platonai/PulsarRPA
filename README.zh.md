@@ -3,7 +3,6 @@ Pulsar 说明文档
 Pulsar 是一款面向非结构数据的智能数据处理系统，扩展 SQL 以支持数据处理全周期，涵盖数据采集，结构化，分析，存储和 BI 报表等。
 
 ![产品截图](docs/images/pulsar-product-screenshot-1.png)
-![产品截图](docs/images/pulsar-product-screenshot-2.png)
 
 # 主要特性
 - X-SQL：扩展 SQL，覆盖大数据处理完整生命周期：采集，提取，转换，统计，机器学习、NLP、知识图谱以及 BI 报表

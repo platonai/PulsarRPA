@@ -55,13 +55,13 @@ object DomFunctions {
 
     @UDFunction(description = "Fetch the page specified by url immediately, and then parse it into a document")
     @JvmStatic
-    fun fetchAndEvaluate(@H2Context conn: Connection, configuredUrl: String, expression: String): ValueDom {
+    fun fetchAndEvaluate(@H2Context conn: Connection, configuredUrl: String, expressions: String): ValueDom {
         if (!sqlContext.isActive) return ValueDom.NIL
 
         val h2session = H2SessionFactory.getH2Session(conn)
         return sqlContext.getSession(h2session).run {
             val normUrl = normalize(configuredUrl).apply { options.expires = Duration.ZERO }
-            normUrl.options.volatileConfig!!.set(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expression)
+            normUrl.options.volatileConfig!!.set(FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE, expressions)
             parseValueDom(load(normUrl))
         }
     }

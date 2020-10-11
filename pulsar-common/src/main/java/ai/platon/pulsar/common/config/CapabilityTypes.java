@@ -298,6 +298,8 @@ public interface CapabilityTypes {
 
     /** Constant <code>FETCH_CLIENT_JS="fetch.browser.client.js"</code> */
     String FETCH_CLIENT_JS = "fetch.browser.client.js";
+    /** Constant <code>FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */
+    String FETCH_CLIENT_JS_BEFORE_FEATURE_COMPUTE = "fetch.browser.client.js.before.feature.compute";
     /** Constant <code>FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE="fetch.browser.client.js.after.feature.c"{trunked}</code> */
     String FETCH_CLIENT_JS_AFTER_FEATURE_COMPUTE = "fetch.browser.client.js.after.feature.compute";
     /** Constant <code>FETCH_CLIENT_JS_COMPUTED_STYLES="fetch.browser.client.js.computed.styles"</code> */
