@@ -225,7 +225,6 @@ open class WebDriverPoolManager(
 
     @Synchronized
     private fun <R> computeDriverPoolIfAbsent(browserId: BrowserInstanceId, task: WebDriverTask<R>): LoadingWebDriverPool {
-        require("browser" in browserId.toString())
         return driverPools.computeIfAbsent(browserId) { createUnmanagedDriverPool(browserId, task.priority, task.volatileConfig) }
     }
 
