@@ -121,7 +121,7 @@ Ubuntu/Debian:
 
     bin/pulsar sql
     
-Now you can execute any x-sql using the command line. 
+Now you can execute any x-sql using the command line.
     
 ## Use web console
 Open web console [http://localhost:8082](http://localhost:8082) using your favourite browser now, enjoy playing with X-SQL.

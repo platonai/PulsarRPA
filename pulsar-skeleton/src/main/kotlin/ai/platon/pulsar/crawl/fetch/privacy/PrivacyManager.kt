@@ -21,6 +21,8 @@ abstract class PrivacyManager(val conf: ImmutableConfig): AutoCloseable {
     protected val log = LoggerFactory.getLogger(PrivacyManager::class.java)
     private val closed = AtomicBoolean()
 
+    val privacyContextIdGeneratorFactory = PrivacyContextIdGeneratorFactory(conf)
+    val privacyContextIdGenerator get() = privacyContextIdGeneratorFactory.generator
     val isActive get() = !closed.get() && AppContext.isActive
     val zombieContexts = ConcurrentLinkedDeque<PrivacyContext>()
     /**

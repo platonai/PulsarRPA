@@ -25,7 +25,7 @@ open class BrowserPrivacyContext(
         val driverPoolManager: WebDriverPoolManager,
         val fetchMetrics: FetchMetrics? = null,
         conf: ImmutableConfig,
-        id: PrivacyContextId = PrivacyContextId(generateBaseDir())
+        id: PrivacyContextId
 ): PrivacyContext(id, conf) {
     private val log = LoggerFactory.getLogger(BrowserPrivacyContext::class.java)
     private val browserInstanceId: BrowserInstanceId

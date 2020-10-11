@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl.fetch.privacy
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppMetrics
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.readable
@@ -18,46 +18,6 @@ open class PrivacyContextException(message: String): Exception(message)
 
 class FatalPrivacyContextException(message: String): PrivacyContextException(message)
 
-data class PrivacyContextId(val dataDir: Path): Comparable<PrivacyContextId> {
-    val ident = dataDir.last().toString()
-    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
-    val isDefault get() = this == DEFAULT
-
-    // override fun hashCode() = /** AUTO GENERATED **/
-    // override fun equals(other: Any?) = /** AUTO GENERATED **/
-
-    override fun compareTo(other: PrivacyContextId) = dataDir.compareTo(other.dataDir)
-    override fun toString() = "$dataDir"
-
-    companion object {
-        val DEFAULT = PrivacyContextId(PrivacyContext.DEFAULT_DIR)
-        fun generate(): PrivacyContextId {
-            return PrivacyContextId(PrivacyContext.generateBaseDir())
-        }
-    }
-}
-
-data class BrowserInstanceId(
-        val dataDir: Path,
-        var proxyServer: String? = null
-): Comparable<BrowserInstanceId> {
-
-    val contextDir = dataDir.parent
-    val ident = contextDir.last().toString()
-    val display = ident.substringAfter(PrivacyContext.IDENT_PREFIX)
-    override fun hashCode() = dataDir.hashCode()
-    override fun equals(other: Any?) = other is BrowserInstanceId && dataDir == other.dataDir
-    override fun compareTo(other: BrowserInstanceId) = dataDir.compareTo(other.dataDir)
-    override fun toString() = "$dataDir"
-
-    companion object {
-        val DIR_NAME = "browser"
-        val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
-
-        fun resolve(baseDir: Path) = BrowserInstanceId(baseDir.resolve(DIR_NAME))
-    }
-}
-
 abstract class PrivacyContext(
     /**
      * The data directory for this context, very context has it's own data directory
@@ -67,20 +27,9 @@ abstract class PrivacyContext(
 ): AutoCloseable {
     companion object {
         private val instanceSequencer = AtomicInteger()
-        private val idSequence = AtomicInteger()
         val IDENT_PREFIX = "cx."
-        val BASE_DIR = AppPaths.CONTEXT_TMP_DIR
         val DEFAULT_DIR = AppPaths.CONTEXT_TMP_DIR.resolve("default")
-
-        fun generateBaseDir(): Path {
-            idSequence.incrementAndGet()
-            var impreciseNumInstances = 0L
-            synchronized(BASE_DIR) {
-                impreciseNumInstances = 1 + Files.list(BASE_DIR).filter { Files.isDirectory(it) }.count()
-            }
-            val rand = RandomStringUtils.randomAlphanumeric(5)
-            return BASE_DIR.resolve("$IDENT_PREFIX$idSequence$rand$impreciseNumInstances")
-        }
+        val PROTOTYPE_DIR = AppPaths.CHROME_DATA_DIR_PROTOTYPE
     }
 
     private val log = LoggerFactory.getLogger(PrivacyContext::class.java)

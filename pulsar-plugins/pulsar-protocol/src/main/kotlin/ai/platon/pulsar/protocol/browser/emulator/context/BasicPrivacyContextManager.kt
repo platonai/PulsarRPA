@@ -17,13 +17,11 @@ class BasicPrivacyContextManager(
         val fetchMetrics: FetchMetrics? = null,
         immutableConfig: ImmutableConfig
 ): PrivacyManager(immutableConfig) {
-    private val privacyContextId = PrivacyContextId.DEFAULT
-
     constructor(driverPoolManager: WebDriverPoolManager, immutableConfig: ImmutableConfig)
             : this(driverPoolManager, null, null, immutableConfig)
 
     override suspend fun run(task: FetchTask, fetchFun: suspend (FetchTask, AbstractWebDriver) -> FetchResult): FetchResult {
-        return run0(computeIfAbsent(privacyContextId), task, fetchFun)
+        return run0(computeIfAbsent(privacyContextIdGenerator()), task, fetchFun)
     }
 
     override fun createUnmanagedContext(id: PrivacyContextId): BrowserPrivacyContext {
@@ -34,11 +32,11 @@ class BasicPrivacyContextManager(
 
     override fun computeNextContext(): PrivacyContext {
         val context = computeIfNecessary()
-        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(PrivacyContextId.generate()) }
+        return context.takeIf { it.isActive } ?: run { close(context); computeIfAbsent(privacyContextIdGenerator()) }
     }
 
     override fun computeIfNecessary(): PrivacyContext {
-        return activeContexts.values.firstOrNull() ?: computeIfAbsent(PrivacyContextId.generate())
+        return activeContexts.values.firstOrNull() ?: computeIfAbsent(privacyContextIdGenerator())
     }
 
     override fun computeIfAbsent(id: PrivacyContextId) = activeContexts.computeIfAbsent(id) { createUnmanagedContext(it) }

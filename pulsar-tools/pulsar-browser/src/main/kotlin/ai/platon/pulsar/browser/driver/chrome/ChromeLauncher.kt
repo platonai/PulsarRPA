@@ -344,8 +344,8 @@ class ChromeLauncher(
 
     private fun prepareUserDataDir() {
         val prototypeUserDataDir = AppPaths.CHROME_DATA_DIR_PROTOTYPE
-        if (userDataDir == prototypeUserDataDir) {
-            log.info("Running chrome using prototype dir")
+        if (userDataDir == prototypeUserDataDir || userDataDir.toString().contains("/default/")) {
+            log.info("Running chrome with prototype/default data dir, no cleaning | {}", userDataDir)
             return
         }
 

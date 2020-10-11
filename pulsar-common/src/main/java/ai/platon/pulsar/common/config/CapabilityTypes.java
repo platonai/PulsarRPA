@@ -310,6 +310,8 @@ public interface CapabilityTypes {
      * Privacy control
      */
     String PRIVACY_CONTEXT_NUMBER = "privacy.context.number";
+    /** The class name of privacy context id generator */
+    String PRIVACY_CONTEXT_ID_GENERATOR_CLASS = "privacy.context.id.generator.class";
     /** Constant <code>PRIVACY_MINOR_WARNING_FACTOR="privacy.minor.warning.factor"</code> */
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
     /** Constant <code>PRIVACY_MAX_WARNINGS="privacy.max.warnings"</code> */

@@ -278,7 +278,11 @@ open class BrowserEmulator(
     private suspend fun evaluate(interactTask: InteractTask, expressions: Iterable<String>, delayTimeMillis: Long) {
         expressions.mapNotNull { it.trim().takeIf { it.isNotBlank() } }.filterNot { it.startsWith("// ") }.forEach {
             log.info("Evaluate expression >>>$it<<<")
-            evaluate(interactTask, it)
+            val result = evaluate(interactTask, it)
+            if (result is String) {
+                val s = Strings.stripNonPrintableChar(result)
+                log.info("Result >>>$s<<<")
+            }
             delay(delayTimeMillis)
         }
     }
