@@ -41,6 +41,7 @@ data class BrowserInstanceId(
     override fun toString() = "$dataDir"
 
     companion object {
+        /** TODO: better dir name, e.g. "browser" */
         val DIR_NAME = "google-chrome"
         val DEFAULT = resolve(AppPaths.BROWSER_TMP_DIR)
 
@@ -66,14 +67,14 @@ class SequentialPrivacyContextIdGenerator: PrivacyContextIdGenerator {
     @Synchronized
     private fun nextBaseDir(): Path {
         sequencer.incrementAndGet()
-        var impreciseNumInstances = 0L
-        impreciseNumInstances = 1 + Files.list(BASE_DIR).filter { Files.isDirectory(it) }.count()
+        val impreciseNumInstances = 1 + Files.list(ROOT_DIR).filter { Files.isDirectory(it) }.count()
         val rand = RandomStringUtils.randomAlphanumeric(5)
-        return BASE_DIR.resolve("${PrivacyContext.IDENT_PREFIX}${sequencer}$rand$impreciseNumInstances")
+        return ROOT_DIR.resolve("${PrivacyContext.IDENT_PREFIX}${sequencer}$rand$impreciseNumInstances")
     }
 
     companion object {
-        private val BASE_DIR = AppPaths.CONTEXT_TMP_DIR
+        /** The root directory of privacy contexts, every context have it's own directory in this fold */
+        private val ROOT_DIR = AppPaths.CONTEXT_TMP_DIR
         private val sequencer = AtomicInteger()
     }
 }
