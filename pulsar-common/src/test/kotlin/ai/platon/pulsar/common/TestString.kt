@@ -355,13 +355,43 @@ class TestString {
 
     @Test
     fun testGetFirstInteger() {
-        val s = "-hello world 999 i love you 520 forever"
-        assertEquals(999, Strings.getFirstInteger(s, -1).toLong())
+        val texts = arrayOf(
+                "-hello world 999 i love you 520 forever",
+                "i have received $1964,234 last day",
+                "this is a java number: 1_435_324"
+        )
+        val expects = arrayOf(999, 1964_234, 1_435_324)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getFirstInteger(texts[i], 0), "The $i-th test is failed")
+        }
+    }
+
+    @Test
+    fun testGetLastInteger() {
+        val texts = arrayOf(
+                "-hello world 999 i love you 520 forever",
+                "i have received $1964,234 yesterday, and $2046,123 the day before yesterday",
+                "this is a java number: 1_435_324, and this is another: 2_457_325"
+        )
+        val expects = arrayOf(520, 2046_123, 2_457_325)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getLastInteger(texts[i], 0), "The $i-th test is failed")
+        }
     }
 
     @Test
     fun testGetFirstFloatNumber() {
-        val s = "-hello world 999.00.0 i love you 520.0 forever"
-        assertTrue { Precision.equals(999.00f, Strings.getFirstFloatNumber(s, Float.MIN_VALUE), 0.01f) }
+        val texts = arrayOf(
+                "-hello world 999.234 i love you 520.02 forever",
+                "i have received $1964,234.1 last day",
+                "this is a java number: 1_435_324.92"
+        )
+        val expects = arrayOf(999.234f, 1964_234.1f, 1_435_324.92f)
+
+        IntRange(0, texts.size - 1).forEach { i ->
+            assertEquals(expects[i], Strings.getFirstFloatNumber(texts[i], Float.MIN_VALUE), "The $i-th test is failed")
+        }
     }
 }

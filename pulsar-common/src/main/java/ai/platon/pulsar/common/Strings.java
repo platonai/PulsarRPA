@@ -754,9 +754,9 @@ public final class Strings {
     /**
      * <p>getFirstInteger.</p>
      *
-     * @param s a {@link java.lang.String} object.
-     * @param defaultValue a int.
-     * @return a int.
+     * @param s The string that might contain a integer number.
+     * @param defaultValue the default value if the string has no any integer number.
+     * @return the extracted or the default integer number.
      */
     public static int getFirstInteger(String s, int defaultValue) {
         int numberStart = StringUtils.indexOfAny(s, "123456789");
@@ -770,6 +770,9 @@ public final class Strings {
             char c = s.charAt(i);
             if (Character.isDigit(c)) {
                 sb.append(c);
+            } else if (c == ',' || c == '_') {
+                // skip number delimiter, 12,345,678 or java style 12_345_678
+                // nothing to do
             } else {
                 break;
             }
@@ -779,18 +782,60 @@ public final class Strings {
     }
 
     /**
+     * <p>getLastInteger.</p>
+     *
+     * TODO: do not support prefix +-
+     *
+     * @param s The string that might contain a integer number.
+     * @param defaultValue the default value if the string has no any integer number.
+     * @return the extracted or the default integer number.
+     */
+    public static int getLastInteger(String s, int defaultValue) {
+        s = s.replaceAll("[,_]", "");
+        s = StringUtils.reverse(s);
+        Pattern pattern = Pattern.compile("[0-9]+");
+
+        Matcher m = pattern.matcher(s);
+        if (m.find()) {
+            return NumberUtils.toInt(StringUtils.reverse(m.group()));
+        }
+
+        return defaultValue;
+    }
+
+    /**
      * <p>getFirstFloatNumber.</p>
      *
-     * @param s a {@link java.lang.String} object.
-     * @param defaultValue a float.
-     * @return a float.
+     * @param s The string that might contain a float number.
+     * @param defaultValue the default value if the string has no any float number.
+     * @return the extracted or the default float number.
      */
     public static float getFirstFloatNumber(String s, float defaultValue) {
-        Pattern pattern = Pattern.compile("[-]?[0-9]*\\.?,?[0-9]+");
+        s = s.replaceAll("[,_]", "");
+        Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
 
         Matcher m = pattern.matcher(s);
         if (m.find()) {
             return NumberUtils.toFloat(m.group());
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * <p>getLastFloatNumber.</p>
+     *
+     * @param s The string that might contain a float number.
+     * @param defaultValue the default value if the string has no any float number.
+     * @return the extracted or the default float number.
+     */
+    public static float getLastFloatNumber(String s, float defaultValue) {
+        s = s.replaceAll("[,_]", "");
+        Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
+
+        Matcher m = pattern.matcher(s);
+        if (m.find()) {
+            return NumberUtils.toFloat(m.group(m.groupCount()));
         }
 
         return defaultValue;
