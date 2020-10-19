@@ -56,7 +56,7 @@ Add maven dependency to your project:
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-protocol</artifactId>
-        <version>1.5.7</version>
+        <version>1.5.7-SNAPSHOT</version>
     </dependency>
 
 And then scrape web pages using simple native api:
@@ -75,7 +75,7 @@ Add maven dependency to your project:
     <dependency>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-ql-server</artifactId>
-        <version>1.5.7</version>
+        <version>1.5.7-SNAPSHOT</version>
     </dependency>
 
 And then scrape web pages using:
