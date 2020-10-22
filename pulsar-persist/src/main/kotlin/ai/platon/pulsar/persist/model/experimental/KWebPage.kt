@@ -463,7 +463,7 @@ class KWebPage : Comparable<KWebPage> {
     fun getPageCategory(): PageCategory {
         try {
             if (page.pageCategory != null) {
-                return PageCategory.valueOf(page.pageCategory.toString())
+                return PageCategory.parse(page.pageCategory.toString())
             }
         } catch (ignored: Throwable) {
         }

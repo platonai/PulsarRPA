@@ -27,7 +27,7 @@ open class LoadOptions: CommonOptions {
     /** Fetch */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
-    var expires = Duration.ofDays(36500)
+    var expires = ChronoUnit.CENTURIES.duration
 
     /** Arrange links */
     @Parameter(names = ["-ol", "-outLink", "-outLinkSelector", "--out-link-selector", "-outlink", "-outlinkSelector", "--outlink-selector"],

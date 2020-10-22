@@ -25,6 +25,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.MultiMetadata
+import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMultiStatus
 import ai.platon.pulsar.persist.model.ActiveDomUrls
@@ -64,7 +65,7 @@ class PageDatum(
          */
         val metadata: MultiMetadata = MultiMetadata()
 ) {
-    var pageCategory: PageCategory? = null
+    var pageCategory: OpenPageCategory? = null
     var proxyEntry: ProxyEntry? = null
     var lastBrowser: BrowserType? = null
     var htmlIntegrity: HtmlIntegrity? = null

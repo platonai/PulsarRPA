@@ -135,7 +135,7 @@ open class StreamingCrawler<T: UrlAware>(
         }
 
         if (FileCommand.check("finish-job")) {
-            log.info("Found finish-job command, quit streaming crawler ...")
+            log.info("Find finish-job command, quit streaming crawler ...")
             return FlowState.BREAK
         }
 

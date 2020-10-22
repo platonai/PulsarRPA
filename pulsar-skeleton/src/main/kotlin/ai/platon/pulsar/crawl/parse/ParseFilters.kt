@@ -56,7 +56,9 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     fun filter(parseContext: ParseContext) {
         // loop on each filter
         parseFilters.forEach {
-            kotlin.runCatching { it.filter(parseContext) }.onFailure { log.warn(Strings.simplifyException(it)) }
+            kotlin.runCatching { it.filter(parseContext) }.onFailure {
+                log.warn("Unexpected exception", it)
+            }
 
             val shouldContinue = parseContext.parseResult.shouldContinue
             if (!shouldContinue) {
@@ -71,7 +73,7 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
 
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn(it.message) } }
+            parseFilters.forEach { it.runCatching { it.close() }.onFailure { log.warn("Failed to close ParseFilter", it.message) } }
         }
     }
 }

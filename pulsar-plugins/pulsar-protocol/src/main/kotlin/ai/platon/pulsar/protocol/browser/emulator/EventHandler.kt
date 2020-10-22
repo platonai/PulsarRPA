@@ -16,6 +16,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.RetryScope
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.Name
+import ai.platon.pulsar.persist.metadata.OpenPageCategory
 import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDomMessage
 import ai.platon.pulsar.protocol.browser.driver.ManagedWebDriver
@@ -112,8 +113,8 @@ open class EventHandler(
         return createResponse(task, pageDatum)
     }
 
-    open fun sniffPageCategory(page: WebPage): PageCategory {
-        return PageCategory.UNKNOWN
+    open fun sniffPageCategory(page: WebPage): OpenPageCategory {
+        return OpenPageCategory(PageCategory.UNKNOWN)
     }
 
     open fun checkErrorPage(page: WebPage, status: ProtocolStatus): ProtocolStatus {

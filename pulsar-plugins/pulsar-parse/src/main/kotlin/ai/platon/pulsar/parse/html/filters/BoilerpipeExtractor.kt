@@ -55,7 +55,7 @@ class BoilerpipeExtractor(val conf: ImmutableConfig) : AbstractParseFilter() {
         val doc = extract(page) ?: return null
         page.contentTitle = doc.contentTitle
         page.contentText = doc.textContent
-        page.pageCategory = PageCategory.valueOf(doc.pageCategoryAsString)
+        page.pageCategory = PageCategory.parse(doc.pageCategoryAsString)
         page.updateContentPublishTime(doc.publishTime)
         page.updateContentModifiedTime(doc.modifiedTime)
         val id = 1000

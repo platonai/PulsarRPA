@@ -1,5 +1,7 @@
 package ai.platon.pulsar.persist.metadata;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Created by vincent on 16-12-18.
  * <p>
@@ -147,5 +149,18 @@ public enum PageCategory {
         else if (this == BLOG)    return "G";
         else if (this == UNKNOWN) return "U";
         return n;
+    }
+
+    @Override
+    public String toString() {
+        return name() + " " + symbol();
+    }
+
+    public static PageCategory parse(String category) {
+        try {
+            return PageCategory.valueOf(StringUtils.substringBefore(category, " "));
+        } catch (Throwable e) {
+            return PageCategory.UNKNOWN;
+        }
     }
 }

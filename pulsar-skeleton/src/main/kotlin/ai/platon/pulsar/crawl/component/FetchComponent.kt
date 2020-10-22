@@ -230,7 +230,7 @@ open class FetchComponent(
             page.activeDomMultiStatus = it.activeDomMultiStatus
             page.activeDomUrls = it.activeDomUrls
 
-            it.pageCategory?.let { page.pageCategory = it }
+            it.pageCategory?.let { page.setPageCategory(it) }
             it.htmlIntegrity?.let { page.htmlIntegrity = it }
             it.lastBrowser?.let { page.lastBrowser = it }
         }

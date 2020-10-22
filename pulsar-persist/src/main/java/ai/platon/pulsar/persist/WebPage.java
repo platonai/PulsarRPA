@@ -27,11 +27,7 @@ import ai.platon.pulsar.persist.gora.generated.GHypeLink;
 import ai.platon.pulsar.persist.gora.generated.GParseStatus;
 import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
 import ai.platon.pulsar.persist.gora.generated.GWebPage;
-import ai.platon.pulsar.persist.metadata.BrowserType;
-import ai.platon.pulsar.persist.metadata.FetchMode;
-import ai.platon.pulsar.persist.metadata.Mark;
-import ai.platon.pulsar.persist.metadata.Name;
-import ai.platon.pulsar.persist.metadata.PageCategory;
+import ai.platon.pulsar.persist.metadata.*;
 import ai.platon.pulsar.persist.model.ActiveDomMultiStatus;
 import ai.platon.pulsar.persist.model.ActiveDomUrls;
 import ai.platon.pulsar.persist.model.PageModel;
@@ -1245,7 +1241,7 @@ public class WebPage implements Comparable<WebPage> {
     public PageCategory getPageCategory() {
         try {
             if (page.getPageCategory() != null) {
-                return PageCategory.valueOf(page.getPageCategory().toString());
+                return PageCategory.parse(page.getPageCategory().toString());
             }
         } catch (Throwable ignored) {
         }
@@ -1259,7 +1255,11 @@ public class WebPage implements Comparable<WebPage> {
      * @param pageCategory a {@link ai.platon.pulsar.persist.metadata.PageCategory} object.
      */
     public void setPageCategory(@NotNull PageCategory pageCategory) {
-        page.setPageCategory(pageCategory.name());
+        page.setPageCategory(pageCategory.toString());
+    }
+
+    public void setPageCategory(@NotNull OpenPageCategory pageCategory) {
+        page.setPageCategory(pageCategory.toString());
     }
 
     /**

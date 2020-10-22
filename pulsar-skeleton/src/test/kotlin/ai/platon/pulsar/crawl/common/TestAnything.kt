@@ -89,7 +89,7 @@ class TestAnything {
     fun testEnum() {
         val pageCategory: PageCategory
         pageCategory = try {
-            PageCategory.valueOf("APP")
+            PageCategory.parse("APP")
         } catch (e: Throwable) {
             println(e.localizedMessage)
             PageCategory.UNKNOWN
