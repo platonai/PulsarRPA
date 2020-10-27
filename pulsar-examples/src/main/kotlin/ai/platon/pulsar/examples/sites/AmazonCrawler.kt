@@ -28,6 +28,11 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
         val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
     }
 
+    fun jp() {
+        val portalUrl = "https://www.amazon.co.jp/ -i 1s"
+        i.load(portalUrl)
+    }
+
     fun chooseCountry() {
         val portalUrl = "https://www.amazon.com/gp/browse.html?node=6563140011&ref_=nav_em_T1_0_4_13_1_amazon_smart_home"
         val expressions = "document.querySelector(\"div#nav-global-location-slot a\").click(); " +
@@ -53,6 +58,5 @@ class AmazonCrawler(context: PulsarContext): Crawler(context) {
 
 fun main() {
     System.setProperty(CapabilityTypes.BROWSER_DRIVER_HEADLESS, "false")
-
-    withContext { AmazonCrawler(it).chooseCountry() }
+    withContext { AmazonCrawler(it).jp() }
 }

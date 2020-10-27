@@ -137,6 +137,13 @@ class ResultSetFormatter(
                 val value = rs.getDouble(columnIndex)
                 String.format(fmt, value)
             }
+            Types.ARRAY -> {
+                when (val array = rs.getArray(columnIndex)?.array) {
+                    null -> "null"
+                    is Array<*> -> array.joinToString { it.toString() }
+                    else -> array.toString()
+                }
+            }
             else -> rs.getString(columnIndex)?.replace("\n", "") ?: "null"
         }
     }

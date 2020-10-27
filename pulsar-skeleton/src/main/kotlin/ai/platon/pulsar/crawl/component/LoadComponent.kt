@@ -389,15 +389,13 @@ class LoadComponent(
             return FetchReason.SMALL_CONTENT
         }
 
-        val domStatus = page.activeDomMultiStatus
-        if (domStatus != null) {
-            val (ni, na) = domStatus.lastStat ?: ActiveDomStat()
-            if (ni < options.requireImages) {
-                return FetchReason.MISS_FIELD
-            }
-            if (na < options.requireAnchors) {
-                return FetchReason.MISS_FIELD
-            }
+        val domStats = page.activeDomStats
+        val (ni, na) = domStats["lastStat"] ?: ActiveDomStat()
+        if (ni < options.requireImages) {
+            return FetchReason.MISS_FIELD
+        }
+        if (na < options.requireAnchors) {
+            return FetchReason.MISS_FIELD
         }
 
         return FetchReason.DO_NOT_FETCH

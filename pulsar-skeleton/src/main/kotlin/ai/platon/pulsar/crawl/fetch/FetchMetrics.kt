@@ -178,7 +178,7 @@ class FetchMetrics(
         histogramContentBytes.update(bytes)
         meterContentBytes.mark(bytes)
 
-        page.activeDomMultiStatus?.lastStat?.apply {
+        page.activeDomStats["lastStat"]?.apply {
             pageAnchors.update(na)
             pageImages.update(ni)
             pageNumbers.update(nnm)

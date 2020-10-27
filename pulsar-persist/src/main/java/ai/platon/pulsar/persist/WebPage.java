@@ -20,18 +20,12 @@ import ai.platon.pulsar.common.AppContext;
 import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HtmlIntegrity;
 import ai.platon.pulsar.common.Strings;
-import ai.platon.pulsar.common.url.Urls;
 import ai.platon.pulsar.common.config.MutableConfig;
 import ai.platon.pulsar.common.config.VolatileConfig;
-import ai.platon.pulsar.persist.gora.generated.GHypeLink;
-import ai.platon.pulsar.persist.gora.generated.GParseStatus;
-import ai.platon.pulsar.persist.gora.generated.GProtocolStatus;
-import ai.platon.pulsar.persist.gora.generated.GWebPage;
+import ai.platon.pulsar.common.url.Urls;
+import ai.platon.pulsar.persist.gora.generated.*;
 import ai.platon.pulsar.persist.metadata.*;
-import ai.platon.pulsar.persist.model.ActiveDomMultiStatus;
-import ai.platon.pulsar.persist.model.ActiveDomUrls;
-import ai.platon.pulsar.persist.model.PageModel;
-import ai.platon.pulsar.persist.model.WebPageFormatter;
+import ai.platon.pulsar.persist.model.*;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static ai.platon.pulsar.common.config.AppConstants.*;
 
@@ -936,6 +931,25 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
+     * <p>Get the previous crawl time for out pages.</p>
+     *
+     * @return a {@link java.time.Instant} object.
+     */
+    @NotNull
+    public Instant getPrevCrawlTime1() {
+        return Instant.ofEpochMilli(page.getPrevCrawlTime1());
+    }
+
+    /**
+     * <p>Set the previous crawl time for out pages.</p>
+     *
+     * @param time a {@link java.time.Instant} object.
+     */
+    public void setPrevCrawlTime1(@NotNull Instant time) {
+        page.setPrevCrawlTime1(time.toEpochMilli());
+    }
+
+    /**
      * Get last fetch time
      * <p>
      * If fetchTime is before now, the result is the fetchTime
@@ -1573,65 +1587,61 @@ public class WebPage implements Comparable<WebPage> {
         }
     }
 
-    // TODO: use a separate avro field to hold BROWSER_JS_DATA
-    /**
-     * <p>getActiveDomMultiStatus.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.model.ActiveDomMultiStatus} object.
-     */
     @Nullable
-    public ActiveDomMultiStatus getActiveDomMultiStatus() {
-        // cached
-        Name name = Name.ACTIVE_DOM_MULTI_STATUS;
-        Object value = variables.get(name);
-        if (value instanceof ActiveDomMultiStatus) {
-            return (ActiveDomMultiStatus)value;
-        } else {
-            String json = getMetadata().get(name);
-            if (json != null) {
-                ActiveDomMultiStatus status = ActiveDomMultiStatus.Companion.fromJson(json);
-                variables.set(name, status);
-                return status;
+    public ActiveDomStatus getActiveDomStatus() {
+        GActiveDomStatus s = page.getActiveDomStatus();
+        if (s == null) return null;
+
+        return new ActiveDomStatus(
+                s.getN(),
+                s.getScroll(),
+                s.getSt().toString(),
+                s.getR().toString(),
+                s.getIdl().toString(),
+                s.getEc().toString()
+        );
+    }
+
+    public void setActiveDomStatus(ActiveDomStatus s) {
+        GActiveDomStatus s2 = page.getActiveDomStatus();
+        if (s2 != null) {
+            if (s == null) {
+                page.setActiveDomStatus(null);
             }
-        }
 
-        return null;
-    }
-
-    /**
-     * <p>setActiveDomMultiStatus.</p>
-     *
-     * @param domStatus a {@link ai.platon.pulsar.persist.model.ActiveDomMultiStatus} object.
-     */
-    public void setActiveDomMultiStatus(@Nullable ActiveDomMultiStatus domStatus) {
-        if (domStatus != null) {
-            variables.set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus);
-            getMetadata().set(Name.ACTIVE_DOM_MULTI_STATUS, domStatus.toJson());
+            s2.setN(s.getN());
+            s2.setScroll(s.getScroll());
+            s2.setSt(s.getSt());
+            s2.setR(s.getR());
+            s2.setIdl(s.getIdl());
+            s2.setEc(s.getEc());
         }
     }
 
-    /**
-     * <p>getActiveDomUrls.</p>
-     *
-     * @return a {@link ai.platon.pulsar.persist.model.ActiveDomUrls} object.
-     */
-    @Nullable
+    @NotNull
+    public Map<String, ActiveDomStat> getActiveDomStats() {
+        Map<CharSequence, GActiveDomStat> s = page.getActiveDomStats();
+        return s.entrySet().stream().collect(Collectors.toMap(
+                e -> e.getKey().toString(),
+                e -> Converters.INSTANCE.convert(e.getValue())
+        ));
+    }
+
+    public void setActiveDomStats(@NotNull Map<String, ActiveDomStat> stats) {
+        Map<CharSequence, GActiveDomStat> stats2 = stats.entrySet().stream().collect(
+                Collectors.toMap(Map.Entry::getKey, e -> Converters.INSTANCE.convert(e.getValue())));
+        page.setActiveDomStats(stats2);
+    }
+
+    @NotNull
     public ActiveDomUrls getActiveDomUrls() {
-        // cached
-        Name name = Name.ACTIVE_DOM_URLS;
-        Object value = variables.get(name);
-        if (value instanceof ActiveDomUrls) {
-            return (ActiveDomUrls)value;
-        } else {
-            String json = getMetadata().get(name);
-            if (json != null) {
-                ActiveDomUrls status = ActiveDomUrls.Companion.fromJson(json);
-                variables.set(name, status);
-                return status;
-            }
-        }
-
-        return null;
+        Map<CharSequence, CharSequence> urls = page.getActiveDomUrls();
+        return new ActiveDomUrls(
+                urls.getOrDefault("URL", "").toString(),
+                urls.getOrDefault("baseURI", "").toString(),
+                urls.getOrDefault("location", "").toString(),
+                urls.getOrDefault("documentURI", "").toString()
+        );
     }
 
     /**
@@ -1639,11 +1649,12 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param urls a {@link ai.platon.pulsar.persist.model.ActiveDomUrls} object.
      */
-    public void setActiveDomUrls(@Nullable ActiveDomUrls urls) {
-        if (urls != null) {
-            variables.set(Name.ACTIVE_DOM_URLS, urls);
-            getMetadata().set(Name.ACTIVE_DOM_URLS, urls.toJson());
-        }
+    public void setActiveDomUrls(@NotNull ActiveDomUrls urls) {
+        Map<CharSequence, CharSequence> domUrls = page.getActiveDomUrls();
+        domUrls.put("URL", urls.getURL());
+        domUrls.put("baseURI", urls.getBaseURI());
+        domUrls.put("location", urls.getLocation());
+        domUrls.put("documentURI", urls.getDocumentURI());
     }
 
     /**

@@ -59,11 +59,11 @@ class CompletedPageFormatter(
     val contentBytes get() = page.contentBytes
     val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
     val proxy get() = page.metadata[Name.PROXY]
-    val jsData = page.activeDomMultiStatus
+    val activeDomStats = page.activeDomStats
     val m get() = page.pageModel
 
-    val jsSate get() = if (jsData != null) {
-        val (ni, na, nnm, nst, w, h) = jsData.lastStat?: ActiveDomStat()
+    val jsSate get() = if (activeDomStats != null) {
+        val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
         String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
     } else ""
 

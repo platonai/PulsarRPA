@@ -1,15 +1,19 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.ql.ResultSets
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
 import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
+import ai.platon.pulsar.ql.h2.SqlUtils
 import ai.platon.pulsar.ql.h2.addColumn
+import org.h2.tools.SimpleResultSet
 import org.h2.value.DataType
 import org.h2.value.Value
 import org.h2.value.ValueArray
+import org.h2.value.ValueResultSet
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Types

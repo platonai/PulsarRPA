@@ -20,12 +20,16 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * The base class for all tests.
+ * The base class for all tests
  */
 abstract class TestBase {
 
     companion object {
         val log = LoggerFactory.getLogger(TestBase::class.java)
+
+        init {
+            PulsarContexts.activate()
+        }
 
         val history = mutableListOf<String>()
         val startTime = Instant.now()

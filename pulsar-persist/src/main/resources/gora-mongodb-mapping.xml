@@ -31,6 +31,7 @@
         <field name="crawlStatus" docfield="crawlStatus" type="int32" />
 
         <field name="prevFetchTime" docfield="prevFetchTime" type="int64" />
+        <field name="prevCrawlTime1" docfield="prevCrawlTime1" type="int64" />
         <field name="fetchTime" docfield="fetchTime" type="int64" />
         <field name="fetchRetries" docfield="fetchRetries" type="int32" />
         <field name="reprUrl" docfield="reprUrl" type="string" />
@@ -83,6 +84,9 @@
         <field name="metadata" docfield="metadata" type="document" />
 
         <!-- extract fields                                     -->
+        <field name="activeDomStatus" docfield="activeDomStatus" type="document" />
+        <field name="activeDomStats" docfield="activeDomStats" type="document" />
+        <field name="activeDomUrls" docfield="activeDomUrls" type="document" />
         <field name="pageModel" docfield="pageModel" type="list" />
     </class>
 </gora-otd>

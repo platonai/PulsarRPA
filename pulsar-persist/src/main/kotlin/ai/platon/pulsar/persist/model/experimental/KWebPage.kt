@@ -324,8 +324,14 @@ class KWebPage : Comparable<KWebPage> {
         set(value) { page.prevFetchTime = value.toEpochMilli() }
 
     /**
+     * The previous crawl time for out pages
+     * */
+    var prevCrawlTime1: Instant
+        get() = Instant.ofEpochMilli(page.prevFetchTime)
+        set(value) { page.prevFetchTime = value.toEpochMilli() }
+
+    /**
      * Get last fetch time
-     *
      *
      * If fetchTime is before now, the result is the fetchTime
      * If fetchTime is after now, it means that schedule has modified it for the next fetch, the result is prevFetchTime
