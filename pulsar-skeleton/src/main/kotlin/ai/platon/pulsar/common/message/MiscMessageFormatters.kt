@@ -62,10 +62,10 @@ class CompletedPageFormatter(
     val activeDomStats = page.activeDomStats
     val m get() = page.pageModel
 
-    val jsSate get() = if (activeDomStats != null) {
+    val jsSate get() = run {
         val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
         String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
-    } else ""
+    }
 
     val redirected get() = page.url != page.location
     val category get() = page.pageCategory.symbol()

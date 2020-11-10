@@ -420,6 +420,13 @@ object CommonFunctions {
         return ValueArray.get(values)
     }
 
+    @UDFunction
+    @JvmStatic
+    fun makeArray(value: Value, n: Int): ValueArray {
+        val values = Array(n) { value }
+        return ValueArray.get(values)
+    }
+
     /**
      * For all ValueInts in the values, find out the minimal value, ignore no-integer values
      * */

@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.crawl.inject.SeedBuilder
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
@@ -33,6 +34,10 @@ class InjectComponent(
 
     fun inject(urlArgs: Pair<String, String>): WebPage {
         return inject(urlArgs.first, urlArgs.second)
+    }
+
+    fun inject(normUrl: NormUrl): WebPage {
+        return inject(normUrl.spec, normUrl.args)
     }
 
     fun inject(url: String, args: String): WebPage {

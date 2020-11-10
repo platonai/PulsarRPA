@@ -226,6 +226,7 @@ open class FetchComponent(
 
         pageDatum?.also {
             page.location = it.location
+            page.fetchRetries = 0
             page.proxy = it.proxyEntry?.outIp
             val ms = it.activeDomMultiStatus
             if (ms != null) {

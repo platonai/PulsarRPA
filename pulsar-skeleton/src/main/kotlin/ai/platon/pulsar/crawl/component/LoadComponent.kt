@@ -184,6 +184,7 @@ class LoadComponent(
                 FetchReason.NEW_PAGE,
                 FetchReason.EXPIRED,
                 FetchReason.SMALL_CONTENT,
+                FetchReason.RETRY_ON_FAILURE,
                 FetchReason.MISS_FIELD -> pendingUrls.add(url)
                 FetchReason.TEMP_MOVED -> {
                     // TODO: batch redirect
@@ -308,8 +309,11 @@ class LoadComponent(
             return redirect(page, options)
         }
 
-        val refresh = reason == FetchReason.NEW_PAGE || reason == FetchReason.EXPIRED
-                || reason == FetchReason.SMALL_CONTENT || reason == FetchReason.MISS_FIELD
+        val refresh = reason == FetchReason.NEW_PAGE
+                || reason == FetchReason.EXPIRED
+                || reason == FetchReason.SMALL_CONTENT
+                || reason == FetchReason.RETRY_ON_FAILURE
+                || reason == FetchReason.MISS_FIELD
         if (refresh) {
             page.variables[VAR_REFRESH] = refresh
         }
@@ -367,12 +371,18 @@ class LoadComponent(
             page.isInternal -> FetchReason.DO_NOT_FETCH
             protocolStatus.isNotFetched -> FetchReason.NEW_PAGE
             protocolStatus.isTempMoved -> FetchReason.TEMP_MOVED
-            protocolStatus.isFailed && !options.retryFailed -> FetchReason.DO_NOT_FETCH
             else -> getFetchReasonForExistPage(page, options)
         }
     }
 
     private fun getFetchReasonForExistPage(page: WebPage, options: LoadOptions): Int {
+        val protocolStatus = page.protocolStatus
+        // Failed to fetch the page last time, it might be caused by page is gone reason
+        // in such case, do not fetch it even it it's expired, unless the -retry flag is set
+        if (protocolStatus.isFailed && !options.retryFailed) {
+            return FetchReason.DO_NOT_FETCH
+        }
+
         // Fetch a page already fetched before if necessary
         val now = Instant.now()
         val lastFetchTime = page.getLastFetchTime(now)

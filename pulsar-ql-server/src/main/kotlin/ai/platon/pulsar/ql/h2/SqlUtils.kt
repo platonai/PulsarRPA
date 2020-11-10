@@ -27,43 +27,42 @@ object SqlUtils {
         return count
     }
 
-    fun isTransposable(rs: ResultSet): Boolean {
-        if (rs !is SimpleResultSet) {
-            return false
-        }
-
-        rs.beforeFirst()
-        return rs.next() && rs.metaData.getColumnType(1) == java.sql.Types.ARRAY
-    }
-
+    /**
+     * Transpose a result set if the result set has only row and every row is an array
+     * */
     fun transpose(rs: ResultSet): ResultSet {
         val newRs = ResultSets.newSimpleResultSet()
-        if (!isTransposable(rs)) {
+
+        rs.beforeFirst()
+        if (!rs.next() || rs.wasNull()) {
             return newRs
         }
 
         val columnCount = rs.metaData.columnCount
         IntRange(1, columnCount).map { i -> newRs.addColumn(rs.metaData.getColumnName(i)) }
 
-        rs.beforeFirst()
-        val array = rs.getArray(1) as SimpleResultSet.SimpleArray
-        val nativeArray = array.array as kotlin.Array<*>
-        val newColumnCount = nativeArray.size
-        val newRowCount = columnCount
+        val array = rs.getArray(1)
+        val nativeArray = (array.array as? kotlin.Array<*>) ?: return newRs
+        val newRowCount = nativeArray.size
 
-        if (newColumnCount == 0) {
+        if (columnCount == 0) {
             return newRs
         }
 
-        val rows = Array<Array<String?>>(newRowCount) { arrayOfNulls(newColumnCount) }
+        val rows = Array<Array<String?>>(newRowCount) { arrayOfNulls(columnCount) }
 
-        IntRange(0, newRowCount - 1).forEach { i ->
-            IntRange(0, newColumnCount - 1).forEach { j ->
-                val a = rs.getArray(i + 1) as SimpleResultSet.SimpleArray
+        IntRange(0, newRowCount - 1).forEach outer@{ i ->
+            IntRange(0, columnCount - 1).forEach inner@{ j ->
+                val a = rs.getArray(j + 1)
+                if (a.array !is kotlin.Array<*>) {
+                    log.warn("The {}th column is expected to be an array, actual {}", j + 1, a.array.javaClass.name)
+                    rows[i][j] = null
+                    return@inner
+                }
+
                 val na = a.array as kotlin.Array<*>
-
-                if (j < na.size) {
-                    rows[i][j] = na[j].toString()
+                if (i < na.size) {
+                    rows[i][j] = na[i].toString()
                 } else {
                     rows[i][j] = null
                 }
@@ -99,6 +98,9 @@ object SqlUtils {
             val row = arrayOfNulls<Any?>(columnCount)
             IntRange(1, columnCount).forEach { i ->
                 val type = sourceRs.metaData.getColumnType(i)
+                /**
+                 * TODO: handle other types
+                 * */
                 row[i - 1] = when (type) {
                     Types.BOOLEAN -> sourceRs.getBoolean(i)
                     Types.FLOAT -> sourceRs.getFloat(i)
