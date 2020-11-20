@@ -619,10 +619,6 @@ public interface CapabilityTypes {
     /** Constant <code>SCENT_WIKI_PASSWORD="scent.wiki.password"</code> */
     String SCENT_WIKI_PASSWORD = "scent.wiki.password";
 
-    // Spark
-    /** Constant <code>SPARK_MASTER="spark.master"</code> */
-    String SPARK_MASTER = "spark.master";
-
     // H2
     /** Constant <code>H2_SESSION_FACTORY_CLASS="h2.sessionFactory"</code> */
     String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";

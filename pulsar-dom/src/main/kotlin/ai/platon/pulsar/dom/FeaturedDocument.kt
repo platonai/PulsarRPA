@@ -252,5 +252,4 @@ open class FeaturedDocument(val document: Document) {
     override fun hashCode() = location.hashCode()
 
     override fun toString() = document.uniqueName
-
 }

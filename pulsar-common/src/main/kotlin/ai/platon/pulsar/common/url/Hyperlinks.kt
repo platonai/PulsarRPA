@@ -5,19 +5,27 @@ import java.net.URL
 import java.time.Instant
 
 interface UrlAware: Comparable<UrlAware> {
-    val url: String
+    var url: String
+    var args: String
 }
 
 interface StatefulUrl: UrlAware, Comparable<UrlAware> {
-    override val url: String
+    override var url: String
     var status: Int
     var modifiedAt: Instant
     val createdAt: Instant
 }
 
-abstract class AbstractUrl(override val url: String): UrlAware {
+abstract class AbstractUrl(
+        override var url: String,
+        override var args: String = ""
+): UrlAware {
 
     override fun equals(other: Any?): Boolean {
+        if (other === this) {
+            return true
+        }
+
         return when (other) {
             is String -> url == other
             is URL -> url == other.toString()
@@ -41,7 +49,7 @@ abstract class AbstractStatefulUrl(url: String): AbstractUrl(url), StatefulUrl {
     override val createdAt: Instant = Instant.now()
 }
 
-open class PlainUrl(override val url: String): AbstractUrl(url)
+open class PlainUrl(override var url: String): AbstractUrl(url)
 
 data class HyperlinkDatum(
         val url: String,
@@ -124,7 +132,7 @@ open class StatefulFatLink(
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
 
-    override fun toString() = "$status $modifiedAt $createdAt ${super.toString()}"
+    override fun toString() = "$status $createdAt $modifiedAt ${super.toString()}"
 }
 
 open class LabeledStatefulFatLink(

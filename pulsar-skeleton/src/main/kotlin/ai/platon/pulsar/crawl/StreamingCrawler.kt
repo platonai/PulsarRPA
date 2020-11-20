@@ -35,6 +35,7 @@ open class StreamingCrawler<T: UrlAware>(
 ): Crawler(session, autoClose) {
     companion object {
         private val instanceSequencer = AtomicInteger()
+        private val globalRunningInstances = AtomicInteger()
         private val globalTasks = AtomicInteger()
         private val globalRunningTasks = AtomicInteger()
         private val globalFinishedTasks = AtomicInteger()
@@ -50,6 +51,7 @@ open class StreamingCrawler<T: UrlAware>(
         init {
             mapOf(
                     "availableMemory" to Gauge { Strings.readableBytes(availableMemory) },
+                    "globalRunningInstances" to Gauge { globalRunningInstances.get() },
                     "globalTasks" to Gauge { globalTasks.get() },
                     "globalRunningTasks" to Gauge { globalRunningTasks.get() },
                     "globalFinishedTasks" to Gauge { globalFinishedTasks.get() },
@@ -99,6 +101,8 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     open suspend fun run(scope: CoroutineScope) {
+        globalRunningInstances.incrementAndGet()
+
         urls.forEachIndexed { j, url ->
             if (!isAppActive) {
                 return@run
@@ -112,6 +116,8 @@ open class StreamingCrawler<T: UrlAware>(
                 return@run
             }
         }
+
+        globalRunningInstances.decrementAndGet()
     }
 
     private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
@@ -156,6 +162,10 @@ open class StreamingCrawler<T: UrlAware>(
             return null
         }
 
+        if (isAmazonIndexPage(url.url)) {
+            url.url = url.url + " -storeContent true"
+        }
+
         val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url.url) } }
                 .onFailure { log.warn("Unexpected exception", it) }
                 .getOrNull()
@@ -191,10 +201,27 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     private suspend fun load0(url: String): WebPage? {
-        return session.runCatching { loadDeferred(url, options) }
+        val page = session.runCatching { loadDeferred(url, options) }
                 .onFailure { flowState = handleException(url, it) }
                 .getOrNull()
                 ?.also { pageCollector?.add(it) }
+
+        return page
+    }
+
+    /**
+     * TODO: this is a temporary solution
+     * */
+    private fun isAmazon(url: String): Boolean {
+        return url.contains("amazon.com")
+    }
+
+    /**
+     * TODO: this is a temporary solution
+     * */
+    private fun isAmazonIndexPage(url: String): Boolean {
+        val indexPagePatterns = arrayOf("/zgbs/", "/most-wished-for/", "/new-releases/", "/movers-and-shakers/")
+        return isAmazon(url) && (indexPagePatterns.any { url.contains(it)})
     }
 
     private fun handleException(url: String, e: Throwable): FlowState {

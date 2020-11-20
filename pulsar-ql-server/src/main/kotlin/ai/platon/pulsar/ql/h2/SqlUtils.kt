@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import java.sql.*
 
 object SqlUtils {
-    val sqlLog = LoggerFactory.getLogger("ai.platon.pulsar.common.sql.log")
+    val sqlLog = LoggerFactory.getLogger(SqlUtils.javaClass.packageName + ".log")
     private val log = LoggerFactory.getLogger(SqlUtils::class.java)
 
     fun count(rs: ResultSet): Int {
