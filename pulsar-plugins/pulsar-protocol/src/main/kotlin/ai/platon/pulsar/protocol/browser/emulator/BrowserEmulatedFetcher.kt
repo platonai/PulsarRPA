@@ -1,12 +1,14 @@
 package ai.platon.pulsar.protocol.browser.emulator
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_WEB_DRIVER_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.crawl.fetch.FetchTask
 import ai.platon.pulsar.crawl.fetch.FetchTaskBatch
+import ai.platon.pulsar.crawl.fetch.TaskHandler
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyManager
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
@@ -77,7 +79,9 @@ open class BrowserEmulatedFetcher(
         }
 
         return privacyManager.run(createFetchTask(page)) { task, driver ->
+            val conf = task.volatileConfig
             try {
+                conf.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)?.invoke(page)
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {
                 if (illegalState.compareAndSet(false, true)) {
@@ -85,6 +89,8 @@ open class BrowserEmulatedFetcher(
                     log.info("Illegal context state | {} | {}", driverManager.formatStatus(driver.browserInstanceId), task.url)
                 }
                 throw e
+            } finally {
+                conf.getBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)?.invoke(page)
             }
         }.response
     }

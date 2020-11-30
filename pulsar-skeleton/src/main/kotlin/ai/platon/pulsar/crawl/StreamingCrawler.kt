@@ -3,12 +3,15 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
+import ai.platon.pulsar.common.url.StatefulHyperlink
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.fetch.TaskHandler
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
@@ -92,6 +95,17 @@ open class StreamingCrawler<T: UrlAware>(
         ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
     }
 
+    class AfterFetchHandler(val url: UrlAware): TaskHandler() {
+        override fun invoke(page: WebPage) {
+            if (url is StatefulHyperlink) {
+                val referer = url.referer
+                if (referer != null) {
+                    page.referrer = referer
+                }
+            }
+        }
+    }
+
     open suspend fun run() {
         supervisorScope {
             run(this)
@@ -166,7 +180,7 @@ open class StreamingCrawler<T: UrlAware>(
             url.url = url.url + " -storeContent true"
         }
 
-        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url.url) } }
+        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url) } }
                 .onFailure { log.warn("Unexpected exception", it) }
                 .getOrNull()
         globalRunningTasks.decrementAndGet()
@@ -200,9 +214,13 @@ open class StreamingCrawler<T: UrlAware>(
         return page
     }
 
-    private suspend fun load0(url: String): WebPage? {
-        val page = session.runCatching { loadDeferred(url, options) }
-                .onFailure { flowState = handleException(url, it) }
+    private suspend fun load0(url: UrlAware): WebPage? {
+        val volatileConfig = conf.toVolatileConfig().also {
+            it.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AfterFetchHandler(url)) }
+        val loadOptions = options.clone().also { it.volatileConfig = volatileConfig }
+
+        val page = session.runCatching { loadDeferred(url.url, loadOptions) }
+                .onFailure { flowState = handleException(url.url, it) }
                 .getOrNull()
                 ?.also { pageCollector?.add(it) }
 

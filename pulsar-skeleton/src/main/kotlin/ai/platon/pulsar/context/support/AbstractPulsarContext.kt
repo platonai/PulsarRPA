@@ -3,6 +3,7 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -16,6 +17,7 @@ import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
+import ai.platon.pulsar.crawl.fetch.TaskHandler
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
@@ -382,7 +384,7 @@ abstract class AbstractPulsarContext(
 
     private fun initOptions(options: LoadOptions, toItemOption: Boolean = false): LoadOptions {
         if (options.volatileConfig == null) {
-            options.volatileConfig = VolatileConfig(unmodifiedConfig)
+            options.volatileConfig = unmodifiedConfig.toVolatileConfig()
         }
 
         options.volatileConfig?.setBoolean(BROWSER_INCOGNITO, options.incognito)

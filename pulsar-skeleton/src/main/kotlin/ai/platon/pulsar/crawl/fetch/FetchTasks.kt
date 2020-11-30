@@ -92,7 +92,7 @@ class FetchTask(
         var nRetries: Int = 0 // The total number retries in a crawl
 ): Comparable<FetchTask> {
     enum class State { NOT_READY, READY, WORKING, CANCELED, DONE }
-    val state = AtomicReference<State>(State.NOT_READY)
+    val state = AtomicReference(State.NOT_READY)
 
     var proxyEntry: ProxyEntry? = null
 
