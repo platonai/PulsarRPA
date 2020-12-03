@@ -77,6 +77,7 @@ open class StreamingCrawler<T: UrlAware>(
     private val isAppActive get() = isActive && !illegalState.get()
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(10)
+    private var quit = false
     private var flowState = FlowState.CONTINUE
     private var finishScript: Path? = null
 
@@ -97,6 +98,10 @@ open class StreamingCrawler<T: UrlAware>(
         ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
     }
 
+    fun quit() {
+        quit = true
+    }
+
     open suspend fun run() {
         supervisorScope {
             run(this)
@@ -109,7 +114,7 @@ open class StreamingCrawler<T: UrlAware>(
         globalRunningInstances.incrementAndGet()
 
         urls.forEachIndexed { j, url ->
-            if (!isAppActive) {
+            if (quit || !isAppActive) {
                 return@run
             }
 
@@ -117,7 +122,7 @@ open class StreamingCrawler<T: UrlAware>(
             val state = load(1 + j, url, scope)
             globalFinishedTasks.incrementAndGet()
 
-            if (state != FlowState.CONTINUE) {
+            if (quit || state != FlowState.CONTINUE) {
                 return@run
             }
         }
