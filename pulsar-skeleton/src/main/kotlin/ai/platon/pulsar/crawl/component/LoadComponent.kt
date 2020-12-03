@@ -505,9 +505,7 @@ class LoadComponent(
     }
 
     private fun parse(page: WebPage, options: LoadOptions) {
-        println(options.toString())
         parseComponent?.takeIf { options.parse }?.also {
-            println("before parse")
             val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
             log.takeIf { it.isInfoEnabled }?.info("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
         }
