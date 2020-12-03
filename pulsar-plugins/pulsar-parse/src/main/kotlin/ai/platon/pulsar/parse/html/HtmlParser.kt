@@ -23,6 +23,8 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.HtmlDocumentHandler
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
@@ -72,8 +74,14 @@ class HtmlParser(
 
     override fun parse(page: WebPage): ParseResult {
         return try {
-            // The base url is set by protocol. Might be different from url if the request redirected.
-            doParse(page)
+            // The base url is set by protocol. Might be different from url if the request redirected
+            beforeParse(page)
+
+            val parseContext = doParse(page)
+
+            parseContext.document?.let { afterParse(page, it) }
+
+            parseContext.parseResult
         } catch (e: MalformedURLException) {
             failed(ParseStatusCodes.FAILED_MALFORMED_URL, e.message)
         } catch (e: Exception) {
@@ -82,7 +90,7 @@ class HtmlParser(
     }
 
     @Throws(MalformedURLException::class, Exception::class)
-    private fun doParse(page: WebPage): ParseResult {
+    private fun doParse(page: WebPage): ParseContext {
         tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
                 page.id,
                 Strings.readableBytes(page.contentBytes.toLong()),
@@ -90,7 +98,7 @@ class HtmlParser(
                 page.htmlIntegrity,
                 page.url)
 
-        val baseUrl = page.baseUrl?:page.url
+        val baseUrl = page.baseUrl ?: page.url
         val baseURL = URL(baseUrl)
         if (page.encoding == null) {
             primerParser.detectEncoding(page)
@@ -103,7 +111,21 @@ class HtmlParser(
         val parseContext = ParseContext(page, parseResult, FeaturedDocument(document), metaTags, documentFragment)
         parseFilters.filter(parseContext)
 
-        return parseContext.parseResult
+        return parseContext
+    }
+
+    private fun beforeParse(page: WebPage) {
+        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_HTML_PARSE_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
+                ?.getOrNull()
+    }
+
+    private fun afterParse(page: WebPage, document: FeaturedDocument) {
+        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER, HtmlDocumentHandler::class.java)
+                ?.runCatching { invoke(page, document) }
+                ?.onFailure { log.warn("Failed to run after parse handler | {}", page.url) }
+                ?.getOrNull()
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {

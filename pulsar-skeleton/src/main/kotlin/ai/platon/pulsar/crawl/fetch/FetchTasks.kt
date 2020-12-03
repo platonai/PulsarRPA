@@ -1,13 +1,15 @@
 package ai.platon.pulsar.crawl.fetch
 
 import ai.platon.pulsar.common.HtmlIntegrity
-import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.crawl.WebPageBatchHandler
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.URLUtil
+import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.crawl.protocol.Response
 import ai.platon.pulsar.persist.ProtocolStatus
@@ -21,22 +23,6 @@ import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
-
-abstract class TaskHandler: (WebPage) -> Unit {
-    abstract override operator fun invoke(page: WebPage)
-}
-
-abstract class AfterTaskHandler: (FetchResult) -> Unit {
-    abstract override operator fun invoke(page: FetchResult)
-}
-
-abstract class BatchHandler: (Iterable<WebPage>) -> Unit {
-    abstract override operator fun invoke(pages: Iterable<WebPage>)
-}
-
-abstract class AfterBatchHandler: (Iterable<FetchResult>) -> Unit {
-    abstract override operator fun invoke(pages: Iterable<FetchResult>)
-}
 
 /**
  * Created by vincent on 16-10-15.
@@ -235,7 +221,7 @@ class FetchTaskBatch(
      * */
     val finishedTasks = mutableMapOf<String, FetchResult>()
     /**
-     * The privace leaked tasks in the sub context
+     * The privacy leaked tasks in the sub context
      * */
     val privacyLeakedTasks = mutableListOf<FetchTask>()
     /**
@@ -243,11 +229,9 @@ class FetchTaskBatch(
      * */
     val abortedTasks = mutableListOf<FetchTask>()
 
-    val beforeFetchHandler: TaskHandler? = prevNode?.beforeFetchHandler?:conf.getBean(FETCH_BEFORE_FETCH_HANDLER, TaskHandler::class.java)
-    val afterFetchHandler: TaskHandler? = prevNode?.afterFetchHandler?:conf.getBean(FETCH_AFTER_FETCH_HANDLER, TaskHandler::class.java)
-    val afterFetchNHandler: BatchHandler? = prevNode?.afterFetchNHandler?:conf.getBean(FETCH_AFTER_FETCH_N_HANDLER, BatchHandler::class.java)
-    val beforeFetchAllHandler: BatchHandler? = prevNode?.beforeFetchAllHandler?:conf.getBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BatchHandler::class.java)
-    val afterFetchAllHandler: BatchHandler? = prevNode?.afterFetchAllHandler?:conf.getBean(FETCH_AFTER_FETCH_BATCH_HANDLER, BatchHandler::class.java)
+    val afterFetchNHandler: WebPageBatchHandler? = prevNode?.afterFetchNHandler?:conf.getBean(FETCH_AFTER_FETCH_N_HANDLER, WebPageBatchHandler::class.java)
+    val beforeFetchAllHandler: WebPageBatchHandler? = prevNode?.beforeFetchAllHandler?:conf.getBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, WebPageBatchHandler::class.java)
+    val afterFetchAllHandler: WebPageBatchHandler? = prevNode?.afterFetchAllHandler?:conf.getBean(FETCH_AFTER_FETCH_BATCH_HANDLER, WebPageBatchHandler::class.java)
 
     val numFinishedTasks get() = finishedTasks.size
     val numWorkingTasks get() = workingTasks.size
@@ -362,18 +346,6 @@ class FetchTaskBatch(
     fun collectResponses(): List<Response> {
         val tail = tailNode
         return headNode.pages.map { getResponse(it, tail) }
-    }
-
-    fun beforeFetch(page: WebPage) {
-        try {
-            beforeFetchHandler?.invoke(page)
-        } catch (e: Throwable) {}
-    }
-
-    fun afterFetch(page: WebPage) {
-        try {
-            afterFetchHandler?.invoke(page)
-        } catch (e: Throwable) {}
     }
 
     fun afterFetchN(pages: Iterable<WebPage>) {

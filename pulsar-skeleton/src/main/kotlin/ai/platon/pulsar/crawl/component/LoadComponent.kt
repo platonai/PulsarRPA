@@ -4,6 +4,8 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_LOAD_HANDLER
+import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_LOAD_HANDLER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
@@ -12,13 +14,13 @@ import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GHypeLink
-import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.persist.model.ActiveDomStat
 import ai.platon.pulsar.persist.model.WebPageFormatter
 import org.apache.avro.util.Utf8
@@ -128,10 +130,10 @@ class LoadComponent(
     }
 
     fun loadWithRetry(normUrl: NormUrl): WebPage {
-        var page = load0(normUrl)
+        var page = doLoad(normUrl)
         var n = normUrl.options.nJitRetry
         while (page.protocolStatus.isRetry && n-- > 0) {
-            page = load0(normUrl)
+            page = doLoad(normUrl)
         }
         return page
     }
@@ -256,8 +258,11 @@ class LoadComponent(
         return loadAll(normUrls, options)
     }
 
-    private fun load0(normUrl: NormUrl): WebPage {
+    private fun doLoad(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
+
+        beforeLoad(page, normUrl.options)
+
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
@@ -267,11 +272,17 @@ class LoadComponent(
                 afterFetch(page, normUrl.options)
             }
         }
+
+        afterLoad(page, normUrl.options)
+
         return page
     }
 
     private suspend fun loadDeferred0(normUrl: NormUrl): WebPage {
         val page = createLoadEntry(normUrl)
+
+        beforeLoad(page, normUrl.options)
+
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
@@ -281,6 +292,9 @@ class LoadComponent(
                 afterFetch(page, normUrl.options)
             }
         }
+
+        afterLoad(page, normUrl.options)
+
         return page
     }
 
@@ -304,6 +318,8 @@ class LoadComponent(
         if (page.isNil) {
             page = fetchComponent.createFetchEntry(url, options)
         }
+        // set page variables like volatileConfig here
+        fetchComponent.initFetchEntry(page, options)
 
         tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
@@ -320,6 +336,28 @@ class LoadComponent(
         }
 
         return page
+    }
+
+    private fun beforeLoad(page: WebPage, options: LoadOptions) {
+        page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to invoke before load handler | {}", page.url) }
+                ?.getOrNull()
+    }
+
+    private fun afterLoad(page: WebPage, options: LoadOptions) {
+        if (options.parse) {
+            parse(page, options)
+        }
+
+        page.volatileConfig?.getBean(FETCH_AFTER_LOAD_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to invoke after load handler | {}", page.url) }
+                ?.getOrNull()
+
+        if (options.persist) {
+            persist(page, options)
+        }
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
@@ -463,15 +501,15 @@ class LoadComponent(
             return
         }
 
-        parseComponent?.takeIf { options.parse }?.also {
-            val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
-            log.takeIf { it.isTraceEnabled }?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
-        }
-
         updateComponent.updateFetchSchedule(page)
+    }
 
-        if (options.persist) {
-            persist(page, options)
+    private fun parse(page: WebPage, options: LoadOptions) {
+        println(options.toString())
+        parseComponent?.takeIf { options.parse }?.also {
+            println("before parse")
+            val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
+            log.takeIf { it.isInfoEnabled }?.info("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
         }
     }
 

@@ -6,12 +6,13 @@ import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
-import ai.platon.pulsar.common.url.StatefulHyperlink
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
-import ai.platon.pulsar.crawl.fetch.TaskHandler
+import ai.platon.pulsar.crawl.common.ListenableHyperlink
+import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
 import kotlinx.coroutines.*
@@ -84,7 +85,8 @@ open class StreamingCrawler<T: UrlAware>(
     var globalCache: GlobalCache? = null
 
     val id = instanceSequencer.incrementAndGet()
-    var onLoadComplete: (UrlAware, WebPage) -> Unit = { url: UrlAware, page: WebPage -> }
+    // TODO: use event handler instead
+    var onLoadComplete: (UrlAware, WebPage) -> Unit = { _: UrlAware, _: WebPage -> }
 
     init {
         generateFinishCommand()
@@ -93,17 +95,6 @@ open class StreamingCrawler<T: UrlAware>(
                 "idleTime" to Gauge { idleTime.readable() },
                 "numTasks" to Gauge { numTasks.get() }
         ).forEach { AppMetrics.register(this, id.toString(), it.key, it.value) }
-    }
-
-    class AfterFetchHandler(val url: UrlAware): TaskHandler() {
-        override fun invoke(page: WebPage) {
-            if (url is StatefulHyperlink) {
-                val referer = url.referer
-                if (referer != null) {
-                    page.referrer = referer
-                }
-            }
-        }
     }
 
     open suspend fun run() {
@@ -176,11 +167,7 @@ open class StreamingCrawler<T: UrlAware>(
             return null
         }
 
-        if (isAmazonIndexPage(url.url)) {
-            url.url = url.url + " -storeContent true"
-        }
-
-        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { load0(url) } }
+        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) } }
                 .onFailure { log.warn("Unexpected exception", it) }
                 .getOrNull()
         globalRunningTasks.decrementAndGet()
@@ -196,11 +183,11 @@ open class StreamingCrawler<T: UrlAware>(
 
         if (page == null || page.crawlStatus.isUnFetched) {
             globalCache?.also {
-                val added = it.limitedReentrantFetchUrls.add(url)
+                val added = it.higherFetchCache.nReentrantFetchUrls.add(url)
                 globalRetries.incrementAndGet()
                 log.info("{}. Will retry task the {}/{}th times | {}",
                         page?.id?:0,
-                        page?.fetchRetries ?: 0, it.limitedReentrantFetchUrls.count(url),
+                        page?.fetchRetries ?: 0, it.higherFetchCache.nReentrantFetchUrls.count(url),
                         url)
             }
         }
@@ -214,17 +201,72 @@ open class StreamingCrawler<T: UrlAware>(
         return page
     }
 
-    private suspend fun load0(url: UrlAware): WebPage? {
-        val volatileConfig = conf.toVolatileConfig().also {
-            it.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AfterFetchHandler(url)) }
-        val loadOptions = options.clone().also { it.volatileConfig = volatileConfig }
+    private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
+        val volatileConfig = conf.toVolatileConfig()
+        if (url is ListenableHyperlink) {
+            registerHandlers(url, volatileConfig)
+        } else {
+            volatileConfig.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AddRefererAfterFetchHandler(url))
+        }
 
-        val page = session.runCatching { loadDeferred(url.url, loadOptions) }
+        volatileConfig.name = "StreamingCrawler#$numTasks"
+        val actualOptions = options.clone().also { it.volatileConfig = volatileConfig }
+
+        if (isAmazonIndexPage(url.url)) {
+            actualOptions.storeContent = true
+        }
+
+        return session.runCatching { loadDeferred(url.url, actualOptions) }
                 .onFailure { flowState = handleException(url.url, it) }
                 .getOrNull()
                 ?.also { pageCollector?.add(it) }
+    }
 
-        return page
+    private fun registerHandlers(url: ListenableHyperlink, volatileConfig: VolatileConfig) {
+        listOf(
+                object: WebPageHandler() {
+                    override val name = CapabilityTypes.FETCH_BEFORE_LOAD_HANDLER
+                    override fun invoke(page: WebPage) = url.onBeforeLoad()
+                },
+
+                object: WebPageHandler() {
+                    override val name = CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER
+                    override fun invoke(page: WebPage) = url.onBeforeFetch(page)
+                },
+
+                object: WebPageHandler() {
+                    override val name = CapabilityTypes.FETCH_AFTER_FETCH_HANDLER
+                    override fun invoke(page: WebPage) {
+                        AddRefererAfterFetchHandler(url).invoke(page)
+                        url.onAfterFetch(page)
+                    }
+                },
+
+                object: WebPageHandler() {
+                    override val name = CapabilityTypes.FETCH_BEFORE_HTML_PARSE_HANDLER
+                    override fun invoke(page: WebPage) = url.onBeforeParse(page)
+                },
+
+                object: WebPageHandler() {
+                    override val name = CapabilityTypes.FETCH_BEFORE_EXTRACT_HANDLER
+                    override fun invoke(page: WebPage) = url.onBeforeExtract(page)
+                },
+
+                object: HtmlDocumentHandler() {
+                    override val name = CapabilityTypes.FETCH_AFTER_EXTRACT_HANDLER
+                    override fun invoke(page: WebPage, document: FeaturedDocument) = url.onAfterExtract(page, document)
+                },
+
+                object: HtmlDocumentHandler() {
+                    override val name = CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER
+                    override fun invoke(page: WebPage, document: FeaturedDocument) = url.onAfterParse(page, document)
+                },
+
+                object: WebPageHandler() {
+                    override val name = CapabilityTypes.FETCH_AFTER_LOAD_HANDLER
+                    override fun invoke(page: WebPage) = url.onAfterLoad(page)
+                }
+        ).forEach { volatileConfig.putBean(it.name, it) }
     }
 
     /**

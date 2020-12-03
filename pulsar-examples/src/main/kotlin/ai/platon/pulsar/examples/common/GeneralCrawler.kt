@@ -135,8 +135,8 @@ class GeneralCrawler(context: PulsarContext): Crawler(context) {
                 .take(20)
         links.forEach { println(it) }
 
-        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeBatchHandler())
-        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterBatchHandler())
+        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, BeforeWebPageBatchHandler())
+        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, AfterWebPageBatchHandler())
 
         val pages = i.loadAll(links, LoadOptions.parse(args))
 //

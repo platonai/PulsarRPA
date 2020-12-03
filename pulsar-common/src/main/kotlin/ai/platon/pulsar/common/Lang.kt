@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import com.google.common.base.Predicates
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 enum class FlowState {
@@ -18,6 +19,10 @@ fun <T> usfLazy(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE,
 
 fun sleepSeconds(seconds: Long) {
     runCatching { TimeUnit.SECONDS.sleep(seconds) }.onFailure { Thread.currentThread().interrupt() }
+}
+
+fun sleep(duration: Duration) {
+    runCatching { Thread.sleep(duration.toMillis()) }.onFailure { Thread.currentThread().interrupt() }
 }
 
 /** Always false and have no static check warning */

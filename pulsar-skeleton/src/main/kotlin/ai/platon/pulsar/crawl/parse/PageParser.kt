@@ -24,6 +24,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
 import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.JobInitialized
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.filter.CrawlFilters
@@ -148,15 +149,31 @@ class PageParser(
         }
 
         return try {
+            beforeParse(page)
             applyParsers(page)
         } catch (e: ParserNotFound) {
             unparsableTypes.add(page.contentType)
             LOG.warn("No parser found for <" + page.contentType + ">\n" + e.message)
-
             return ParseResult.failed(ParseStatus.FAILED_NO_PARSER, page.contentType)
         } catch (e: Throwable) {
             return ParseResult.failed(e)
+        } finally {
+            afterParse(page)
         }
+    }
+
+    private fun beforeParse(page: WebPage) {
+        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_PARSE_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
+                ?.getOrNull()
+    }
+
+    private fun afterParse(page: WebPage) {
+        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_PARSE_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to run after parse handler | {}", page.url) }
+                ?.getOrNull()
     }
 
     /**

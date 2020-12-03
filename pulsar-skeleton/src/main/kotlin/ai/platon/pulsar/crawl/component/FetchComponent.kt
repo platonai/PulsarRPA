@@ -20,8 +20,10 @@ package ai.platon.pulsar.crawl.component
 
 
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -104,12 +106,16 @@ open class FetchComponent(
      */
     protected fun fetchContent0(page: WebPage): WebPage {
         return try {
+            beforeFetch(page)
+
             fetchMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutput(page))
         } catch (e: ProtocolNotFound) {
             log.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
+        } finally {
+            afterFetch(page)
         }
     }
 
@@ -121,13 +127,32 @@ open class FetchComponent(
      */
     protected suspend fun fetchContentDeferred0(page: WebPage): WebPage {
         return try {
+            beforeFetch(page)
+
             fetchMetrics?.markTaskStart()
             val protocol = protocolFactory.getProtocol(page)
             processProtocolOutput(page, protocol.getProtocolOutputDeferred(page))
         } catch (e: ProtocolNotFound) {
             log.warn(e.message)
             page.also { updateStatus(it, ProtocolStatus.STATUS_PROTO_NOT_FOUND, CrawlStatus.STATUS_UNFETCHED) }
+        } finally {
+            afterFetch(page)
         }
+    }
+
+    private fun beforeFetch(page: WebPage) {
+        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to invoke before fetch handler | {}", page.url) }
+                ?.getOrNull()
+
+    }
+
+    private fun afterFetch(page: WebPage) {
+        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, WebPageHandler::class.java)
+                ?.runCatching { invoke(page) }
+                ?.onFailure { log.warn("Failed to invoke after fetch handler | {}", page.url) }
+                ?.getOrNull()
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
@@ -216,7 +241,6 @@ open class FetchComponent(
             it.fetchMode = options.fetchMode
             it.options = options.toString()
             it.volatileConfig = options.volatileConfig
-            it.options = options.toString()
         }
     }
 

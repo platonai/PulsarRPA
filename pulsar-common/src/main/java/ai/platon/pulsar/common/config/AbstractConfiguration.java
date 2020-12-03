@@ -62,6 +62,8 @@ public abstract class AbstractConfiguration {
 
     private final LinkedHashSet<String> resources = new LinkedHashSet<>();
 
+    private String name = "Configuration#" + hashCode();
+
     private String profile = "";
 
     private final LinkedHashSet<URL> fullPathResources = new LinkedHashSet<>();
@@ -132,6 +134,14 @@ public abstract class AbstractConfiguration {
      */
     public AbstractConfiguration(Configuration conf) {
         this.conf = new Configuration(conf);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**

@@ -10,6 +10,7 @@ import kotlin.reflect.KClass
  */
 open class VolatileConfig : MutableConfig {
     var fallbackConfig: ImmutableConfig? = null
+
     private val ttls: MutableMap<String, Int> = ConcurrentHashMap()
     private val variables: MutableMap<String, Any> = ConcurrentHashMap()
 

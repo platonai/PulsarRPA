@@ -7,21 +7,21 @@ import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HA
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContext
-import ai.platon.pulsar.crawl.fetch.BatchHandler
+import ai.platon.pulsar.crawl.WebPageBatchHandler
 import ai.platon.pulsar.persist.WebPage
 import com.google.common.collect.Iterables
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.util.zip.Deflater
 
-class BeforeBatchHandler: BatchHandler() {
+class BeforeWebPageBatchHandler: WebPageBatchHandler() {
     override fun invoke(pages: Iterable<WebPage>) {
         val size = Iterables.size(pages)
         println("Before fetching - $size pages")
     }
 }
 
-class AfterBatchHandler: BatchHandler() {
+class AfterWebPageBatchHandler: WebPageBatchHandler() {
     override fun invoke(pages: Iterable<WebPage>) {
         val size = Iterables.size(pages)
         val length = pages.joinToString { Strings.readableBytes(it.aveContentBytes.toLong()) }
@@ -43,8 +43,8 @@ class AfterBatchHandler: BatchHandler() {
 
 open class Crawler(
         val context: PulsarContext,
-        private var beforeBatchHandler: BatchHandler = BeforeBatchHandler(),
-        private var afterBatchHandler: BatchHandler = AfterBatchHandler()
+        private var beforeBatchHandler: WebPageBatchHandler = BeforeWebPageBatchHandler(),
+        private var afterBatchHandler: WebPageBatchHandler = AfterWebPageBatchHandler()
 ) {
     private val log = LoggerFactory.getLogger(Crawler::class.java)
 

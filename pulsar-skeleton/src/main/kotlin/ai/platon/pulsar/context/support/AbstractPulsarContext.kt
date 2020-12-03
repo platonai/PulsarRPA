@@ -3,12 +3,10 @@ package ai.platon.pulsar.context.support
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_INCOGNITO
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.context.PulsarContext
@@ -17,7 +15,6 @@ import ai.platon.pulsar.crawl.component.BatchFetchComponent
 import ai.platon.pulsar.crawl.component.InjectComponent
 import ai.platon.pulsar.crawl.component.LoadComponent
 import ai.platon.pulsar.crawl.component.UpdateComponent
-import ai.platon.pulsar.crawl.fetch.TaskHandler
 import ai.platon.pulsar.crawl.filter.UrlNormalizers
 import ai.platon.pulsar.crawl.parse.html.JsoupParser
 import ai.platon.pulsar.persist.WebDb
@@ -156,19 +153,21 @@ abstract class AbstractPulsarContext(
         val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
 
         val (spec, args) = Urls.splitUrlArgs(url0)
+
+        var finalOptions = options
+        if (args.isNotBlank()) {
+            // options parsed from args overrides options parsed from url
+            val primeOptions = LoadOptions.parse(args, options.volatileConfig)
+            finalOptions = LoadOptions.mergeModified(options, primeOptions, options.volatileConfig)
+        }
+        initOptions(finalOptions, toItemOption)
+
         var normalizedUrl = Urls.normalizeOrNull(spec, options.shortenKey) ?: return NormUrl.NIL
         if (!options.noNorm) {
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
 
-        return if (args.isBlank()) {
-            NormUrl(normalizedUrl, initOptions(options, toItemOption))
-        } else {
-            // options parsed from args overrides options parsed from url
-            val secondaryOptions = LoadOptions.parse(args)
-            val finalOptions = LoadOptions.mergeModified(secondaryOptions, options)
-            NormUrl(normalizedUrl, initOptions(finalOptions, toItemOption))
-        }
+        return NormUrl(normalizedUrl, finalOptions)
     }
 
     override fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl? {

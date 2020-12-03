@@ -1,8 +1,11 @@
 package ai.platon.pulsar.common.url
 
 import ai.platon.pulsar.common.ResourceStatus
+import org.slf4j.LoggerFactory
 import java.net.URL
+import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
 interface UrlAware: Comparable<UrlAware> {
     var url: String
