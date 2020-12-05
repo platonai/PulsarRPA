@@ -507,7 +507,7 @@ class LoadComponent(
     private fun parse(page: WebPage, options: LoadOptions) {
         parseComponent?.takeIf { options.parse }?.also {
             val parseResult = it.parse(page, options.query, options.reparseLinks, options.noFilter)
-            log.takeIf { it.isInfoEnabled }?.info("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
+            tracer?.trace("ParseResult: {} ParseReport: {}", parseResult, it.getTraceInfo())
         }
     }
 
@@ -530,9 +530,7 @@ class LoadComponent(
             flush()
         }
 
-        if (log.isTraceEnabled) {
-            log.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes.toLong()), page.url)
-        }
+        tracer?.trace("Persisted {} | {}", Strings.readableBytes(page.contentBytes), page.url)
     }
 
     fun loadOutPages(links: List<GHypeLink>, start: Int, limit: Int, options: LoadOptions): List<WebPage> {

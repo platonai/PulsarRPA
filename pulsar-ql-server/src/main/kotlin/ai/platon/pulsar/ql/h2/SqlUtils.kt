@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.ql.ResultSets
 import com.google.gson.GsonBuilder
 import org.apache.commons.lang3.StringUtils
@@ -13,6 +14,10 @@ import java.sql.*
 object SqlUtils {
     val sqlLog = LoggerFactory.getLogger(SqlUtils.javaClass.packageName + ".log")
     private val log = LoggerFactory.getLogger(SqlUtils::class.java)
+
+    private val a = AppConstants.SHORTEST_VALID_URL_LENGTH
+    private const val b = 2048
+    val QUOTED_URL_REGEX = "'https?://.{$a,$b}?'".toRegex()
 
     fun count(rs: ResultSet): Int {
         var count = 0
@@ -284,5 +289,21 @@ object SqlUtils {
         }
         val gson = GsonBuilder().serializeNulls().create()
         return gson.toJson(entities)
+    }
+
+    /**
+     * A simple method to find extract url from a sql's from clause, for example,
+     * extract `https://jd.com/` from the following sql:
+     *
+     * > select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
+     * > from load_and_select('https://jd.com/', ':root body');
+     *
+     * @param sql The sql to extract an url from
+     * @return The url extracted from the sql, null if no such url
+     * */
+    fun extractUrlFromFromClause(sql: String): String? {
+        val pos = sql.indexOf("from", ignoreCase = true)
+        if (pos <= 0) return null
+        return QUOTED_URL_REGEX.find(sql.substring(pos))?.value?.removeSurrounding("'")
     }
 }

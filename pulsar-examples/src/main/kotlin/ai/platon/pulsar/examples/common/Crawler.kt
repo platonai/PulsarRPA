@@ -24,10 +24,10 @@ class BeforeWebPageBatchHandler: WebPageBatchHandler() {
 class AfterWebPageBatchHandler: WebPageBatchHandler() {
     override fun invoke(pages: Iterable<WebPage>) {
         val size = Iterables.size(pages)
-        val length = pages.joinToString { Strings.readableBytes(it.aveContentBytes.toLong()) }
+        val length = pages.joinToString { Strings.readableBytes(it.aveContentBytes) }
         val lengthAfterCompress = pages.asSequence()
                 .map { it.content?.array()?:"".toByteArray() }
-                .joinToString { Strings.readableBytes(compress(it).second.toLong()) }
+                .joinToString { Strings.readableBytes(compress(it).second) }
         println("After fetching - Fetched $size pages. Length: $length\tCompressed: $lengthAfterCompress")
     }
 

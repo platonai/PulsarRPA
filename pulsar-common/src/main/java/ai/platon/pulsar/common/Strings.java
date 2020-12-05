@@ -964,6 +964,16 @@ public final class Strings {
      * @param bytes a long.
      * @return a {@link java.lang.String} object.
      */
+    public static String readableBytes(int bytes) {
+        return readableBytes(bytes, -1, false);
+    }
+
+    /**
+     * <p>readableBytes.</p>
+     *
+     * @param bytes a long.
+     * @return a {@link java.lang.String} object.
+     */
     public static String readableBytes(long bytes) {
         return readableBytes(bytes, -1, false);
     }
@@ -975,8 +985,31 @@ public final class Strings {
      * @param si a boolean.
      * @return a {@link java.lang.String} object.
      */
+    public static String readableBytes(int bytes, boolean si) {
+        return readableBytes(bytes, -1, si);
+    }
+
+    /**
+     * <p>readableBytes.</p>
+     *
+     * @param bytes a long.
+     * @param si a boolean.
+     * @return a {@link java.lang.String} object.
+     */
     public static String readableBytes(long bytes, boolean si) {
         return readableBytes(bytes, -1, si);
+    }
+
+    /**
+     * <p>readableBytes.</p>
+     *
+     * @param bytes a long.
+     * @param scale a int.
+     * @param si a boolean.
+     * @return a {@link java.lang.String} object.
+     */
+    public static String readableBytes(int bytes, int scale, boolean si) {
+        return readableBytes((long)bytes, scale, si);
     }
 
     /**

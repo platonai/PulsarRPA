@@ -48,18 +48,6 @@ class TestAnything {
     }
 
     @Test
-    fun testResultSetFormatter() {
-        val rs = ResultSets.newSimpleResultSet()
-        rs.addColumn("A", Types.DOUBLE, 6, 4)
-        rs.addColumn("B")
-        val a = arrayOf(0.8056499951626754, 0.5259673975756397, 0.869188405723, 0.4140625)
-        val b = arrayOf("a", "b", "c", "d")
-        a.zip(b).map { arrayOf(it.first, it.second) }.forEach { rs.addRow(*it) }
-        val fmt = ResultSetFormatter(rs)
-        println(fmt.toString())
-    }
-
-    @Test
     fun testNormalize() {
         val session = PulsarContexts.createSession()
         var url = "http://shop.mogujie.com/detail/1llurfa?acm=3.ms.1_4_1llurfa.15.1331-68998.tPlDtqPaugJED.sd_117_116-swt_15-imt_6-t_tPlDtqPaugJED-lc_3-fcid_10059513-bid_15-dit_17-idx_39-dm1_5002"

@@ -172,7 +172,7 @@ open class EventHandler(
             log.info("Timeout ({}) after {} with {} timeouts: {}/{}/{} | file://{}",
                     task.pageDatum.status.minorName,
                     elapsed,
-                    Strings.readableBytes(length.toLong()),
+                    Strings.readableBytes(length),
                     driverConfig.pageLoadTimeout, driverConfig.scriptTimeout, driverConfig.scrollInterval,
                     link)
         }
@@ -277,7 +277,7 @@ open class EventHandler(
     private fun takeScreenshot(contentLength: Long, page: WebPage, driver: RemoteWebDriver) {
         try {
             val bytes = driver.getScreenshotAs(OutputType.BYTES)
-            val readableLength = Strings.readableBytes(bytes.size.toLong())
+            val readableLength = Strings.readableBytes(bytes.size)
             val filename = AppPaths.fromUri(page.url, "", ".png")
             val path = ExportPaths.get("screenshot", filename)
             AppFiles.saveTo(bytes, path, true)
@@ -294,7 +294,7 @@ open class EventHandler(
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
-        val readableLength = Strings.readableBytes(pageSource.length.toLong())
+        val readableLength = Strings.readableBytes(pageSource.length)
 
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)

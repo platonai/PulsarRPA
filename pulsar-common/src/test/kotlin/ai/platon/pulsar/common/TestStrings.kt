@@ -32,19 +32,6 @@ class TestStrings {
     }
 
     @Test
-    fun `extract the target url from sql using regex`() {
-        val url = "http://amazon.com/a/reviews/123?pageNumber=21&a=b"
-        val sql = """
-            select dom_first_text(dom, '#container'), dom_first_text(dom, '.price')
-            from load_and_select('$url', ':root body');
-        """.trimIndent()
-        val a = AppConstants.SHORTEST_VALID_URL_LENGTH
-        val b = 2048
-        val actualUrl = "'https?://.{$a,$b}?'".toRegex().find(sql)?.value?.removeSurrounding("'")
-        assertEquals(url, actualUrl)
-    }
-
-    @Test
     fun testReadableBytes() {
         println(Strings.readableBytes(1e6.toLong(), true))
     }

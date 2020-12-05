@@ -93,7 +93,7 @@ class HtmlParser(
     private fun doParse(page: WebPage): ParseContext {
         tracer?.trace("{}.\tParsing page | {} | {} | {} | {}",
                 page.id,
-                Strings.readableBytes(page.contentBytes.toLong()),
+                Strings.readableBytes(page.contentBytes),
                 page.protocolStatus,
                 page.htmlIntegrity,
                 page.url)

@@ -91,7 +91,7 @@ class TaskScheduler(
         return Params.of(
                 "className", this.javaClass.simpleName,
                 "id", id,
-                "bandwidth", Strings.readableBytes(bandwidth.toLong()),
+                "bandwidth", Strings.readableBytes(bandwidth),
                 "skipTruncated", skipTruncated,
                 "parse", parse,
                 "storeContent", storeContent,
