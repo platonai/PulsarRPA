@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.IntStream
+import kotlin.reflect.KClass
 
 /**
  * TODO: a better name?
@@ -36,12 +37,16 @@ class MetricsCounters {
 
         private val counterGroupSequence = AtomicInteger(0)
         private val counterSequence = AtomicInteger(0)
+
         // Thread safe for read/write at index
         private val registeredClasses = ArrayList<Pair<Class<*>, Int>>()
+
         // Thread safe for read/write at index
         private val counterNames = ArrayList<String>(MAX_COUNTERS)
+
         // Thread safe for read/write at index
         private val globalCounters = ArrayList<AtomicInteger>(MAX_COUNTERS)
+
         // Thread safe for read/write at index
         private val nativeCounters = ArrayList<AtomicInteger>(MAX_COUNTERS)
 
@@ -52,7 +57,8 @@ class MetricsCounters {
          * @return group id
          */
         @Synchronized
-        fun <T : Enum<T>> register(counterClass: Class<T>): Int { // TODO : use annotation
+        fun <T : Enum<T>> register(counterClass: Class<T>): Int {
+            // TODO : use annotation
             var groupId = getGroup(counterClass)
             if (groupId > 0) {
                 return groupId
@@ -68,6 +74,9 @@ class MetricsCounters {
             }
             return groupId
         }
+
+        @Synchronized
+        fun <T : Enum<T>> register(counterClass: KClass<T>) = register(counterClass.java)
 
         fun <T : Enum<T>> getGroup(counter: T): Int {
             return getGroup(counter.javaClass)

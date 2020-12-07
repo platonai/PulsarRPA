@@ -20,6 +20,7 @@ class FetchCatch(val conf: ImmutableConfig) {
     val nReentrantFetchUrls = ConcurrentNEntrantQueue<UrlAware>(3)
     val reentrantFetchUrls = ConcurrentLinkedQueue<UrlAware>()
     val fetchUrls get() = arrayOf(nonReentrantFetchUrls, nReentrantFetchUrls, reentrantFetchUrls)
+    val totalSize get() = fetchUrls.sumOf { it.size }
 }
 
 typealias PageCatch = ConcurrentExpiringLRUCache<WebPage>
@@ -53,4 +54,6 @@ class GlobalCache(val conf: ImmutableConfig) {
     val normalFetchCache: FetchCatch get() = fetchCaches[Priority.NORMAL.value]!!
     val higherFetchCache: FetchCatch get() = fetchCaches[Priority.HIGHER.value]!!
     val highestFetchCache: FetchCatch get() = fetchCaches[Priority.HIGHEST.value]!!
+
+    val totalFetchItems get() = fetchCaches.values.sumOf { it.totalSize }
 }

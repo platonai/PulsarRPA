@@ -124,7 +124,7 @@ open class LoadOptions: CommonOptions {
             description = "Persist page content into data store")
     var storeContent = true
 
-    @Parameter(names = ["-retry", "--retry"],
+    @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
             description = "Retry fetching the page if it's failed last time")
     var retryFailed = false
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
@@ -252,15 +252,21 @@ open class LoadOptions: CommonOptions {
     }
 
     override fun toString(): String {
-        return modifiedParams.distinct().sorted().withCmdLineStyle(true).withKVDelimiter(" ")
+        return modifiedParams.distinct().sorted()
+                .withCmdLineStyle(true)
+                .withKVDelimiter(" ")
+                .withDistinctBooleanParams(distinctBooleanParams)
                 .formatAsLine().replace("\\s+".toRegex(), " ")
     }
 
     override fun equals(other: Any?): Boolean {
+        if (other === this) {
+            return true
+        }
         return other is LoadOptions && other.toString() == toString()
     }
 
-    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode but none of the fileds is initialized
+    // TODO: can not rely on any member filed because static filed defaultParams uses hashCode but none of the fields is initialized
     override fun hashCode(): Int {
         return super.hashCode()
     }
@@ -312,6 +318,12 @@ open class LoadOptions: CommonOptions {
         val default = LoadOptions()
         val defaultParams = LoadOptions::class.java.declaredFields.associate { it.name to it.get(default) }
         val defaultArgsMap = default.toArgsMap()
+        val distinctBooleanParams = LoadOptions::class.java.declaredFields
+                .filter { it.get(default) == true }
+                .flatMap { it.annotations.toList() }
+                .filterIsInstance<Parameter>()
+                .filter { it.arity == 1 }
+                .flatMap { it.names.toList() }
         val optionNames = LoadOptions::class.java.declaredFields
                 .flatMap { it.annotations.toList() }
                 .filterIsInstance<Parameter>()

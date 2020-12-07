@@ -219,6 +219,9 @@ open class StreamingCrawler<T: UrlAware>(
 
         if (isAmazonIndexPage(url.url)) {
             actualOptions.storeContent = true
+        } else if (isAmazon(url.url)) {
+            // TODO: fix me
+            actualOptions.storeContent = false
         }
 
         return session.runCatching { loadDeferred(url.url, actualOptions) }

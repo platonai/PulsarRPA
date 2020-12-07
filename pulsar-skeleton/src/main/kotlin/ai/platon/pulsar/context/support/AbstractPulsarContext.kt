@@ -158,7 +158,12 @@ abstract class AbstractPulsarContext(
         if (args.isNotBlank()) {
             // options parsed from args overrides options parsed from url
             val primeOptions = LoadOptions.parse(args, options.volatileConfig)
+
+println("== normalize ==")
+println(options)
+println(primeOptions)
             finalOptions = LoadOptions.mergeModified(options, primeOptions, options.volatileConfig)
+println(finalOptions)
         }
         initOptions(finalOptions, toItemOption)
 

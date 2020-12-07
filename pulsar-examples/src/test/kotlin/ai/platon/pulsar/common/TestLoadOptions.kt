@@ -6,9 +6,7 @@ import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.PulsarContexts
 import org.junit.Test
 import java.time.Duration
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class TestLoadOptions {
 
@@ -36,12 +34,75 @@ class TestLoadOptions {
 
         val options2 = LoadOptions.parse(Urls.splitUrlArgs("$url -incognito -expires 1s -retry").second)
         val options3 = options.mergeModified(options2)
-        // assertOptions(options3)
+        assertOptions(options3)
+    }
+
+    @Test
+    fun testBooleanOptions() {
+        var options = LoadOptions.parse("-incognito -expires 1s -retry -storeContent false")
+        assertTrue(options.incognito)
+        assertTrue(options.retryFailed)
+        assertFalse(options.parse)
+        assertFalse(options.storeContent)
+
+        println("distinctBooleanParams: " + LoadOptions.distinctBooleanParams)
+
+        val modifiedOptions = options.modifiedOptions
+        println(modifiedOptions)
+        val modifiedOptionsKeys = options.modifiedOptions.keys
+        assertTrue { "incognito" in modifiedOptionsKeys }
+        assertTrue { "expires" in modifiedOptionsKeys }
+        assertTrue { "retryFailed" in modifiedOptionsKeys }
+        assertFalse { "parse" in modifiedOptionsKeys }
+        assertTrue { "storeContent" in modifiedOptionsKeys }
+
+        val modifiedParams = options.modifiedParams
+        println(modifiedParams)
+        assertEquals(false, modifiedParams["-storeContent"])
+        assertEquals(true, modifiedParams["-retryFailed"])
+        assertEquals(true, modifiedParams["-incognito"])
+
+        val args = options.toString()
+        println("args: $args")
+
+        assertTrue { "-storeContent" in args }
+
+        options = LoadOptions.parse(args)
+        println("options: $options")
+
+        assertTrue(options.incognito)
+        assertTrue(options.retryFailed)
+        assertFalse(options.parse)
+        assertFalse(options.storeContent)
+
+        println("modifiedOptions: " + options.modifiedOptions)
+        assertTrue(modifiedOptions.containsKey("retryFailed"))
+        assertTrue(modifiedOptions.containsKey("expires"))
+    }
+
+    @Test
+    fun testModifiedOptions() {
+        val options = LoadOptions.parse("-incognito -expires 1s -retry")
+//        println(options.modifiedOptions)
+        val modifiedOptions = options.modifiedOptions
+        assertTrue(modifiedOptions.containsKey("retryFailed"))
+        assertTrue(modifiedOptions.containsKey("expires"))
     }
 
     @Test
     fun testOverride() {
         assertOptionEquals("-tl 50", "-tl 40 -tl 50")
+    }
+
+    @Test
+    fun testClone() {
+        val options = LoadOptions.parse("$args -incognito -expires 1s -retry -storeContent false")
+        val clone = options.clone()
+        assertEquals(options, clone)
+        val clone2 = clone.clone()
+        assertEquals(options, clone)
+        assertEquals(options, clone2)
+        assertEquals(clone, clone2)
     }
 
     @Test
@@ -82,14 +143,17 @@ class TestLoadOptions {
 
     @Test
     fun testNormalizeOptions2() {
-        val options = LoadOptions.parse(Urls.splitUrlArgs("$url $args -incognito -expires 1s -retry").second)
+        val options = LoadOptions.parse(Urls.splitUrlArgs("$url $args -incognito -expires 1s -retry -storeContent false").second)
         val normUrl = i.normalize(url, options)
 
+        println(normUrl.configuredUrl)
         val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"))
+
+        assertTrue { normUrl2.options.retryFailed }
 
         assertOptions(normUrl2.options)
         assertEquals(40, normUrl2.options.topLinks)
-        assertEquals(Duration.ofDays(1), normUrl2.options.itemExpires)
+        assertEquals(options.itemExpires, normUrl2.options.itemExpires)
     }
 
     @Test
@@ -101,7 +165,7 @@ class TestLoadOptions {
         val normUrl2 = i.normalize(normUrl.configuredUrl, LoadOptions.parse("-tl 40 -itemExpires 1d"), toItemOption = true)
         println(normUrl2.configuredUrl)
 
-        assertEquals(1, normUrl2.options.expires.toDays())
+        assertEquals(options.expires, normUrl2.options.expires)
         assertEquals(40, normUrl2.options.topLinks)
     }
 
