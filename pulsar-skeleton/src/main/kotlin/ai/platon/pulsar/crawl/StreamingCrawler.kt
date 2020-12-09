@@ -106,8 +106,6 @@ open class StreamingCrawler<T: UrlAware>(
         supervisorScope {
             run(this)
         }
-
-        log.info("Total {} tasks are done in session {}", numTasks, session)
     }
 
     open suspend fun run(scope: CoroutineScope) {
@@ -128,6 +126,8 @@ open class StreamingCrawler<T: UrlAware>(
         }
 
         globalRunningInstances.decrementAndGet()
+
+        log.info("Total {} tasks are done in session {}", numTasks, session)
     }
 
     private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
@@ -217,10 +217,10 @@ open class StreamingCrawler<T: UrlAware>(
         volatileConfig.name = "StreamingCrawler#$numTasks"
         val actualOptions = options.clone().also { it.volatileConfig = volatileConfig }
 
-        if (isAmazonIndexPage(url.url)) {
+        // TODO: remove this hard coding
+        if (isAmazonIndexPage(url)) {
             actualOptions.storeContent = true
-        } else if (isAmazon(url.url)) {
-            // TODO: fix me
+        } else if (isAmazon(url)) {
             actualOptions.storeContent = false
         }
 
@@ -280,16 +280,16 @@ open class StreamingCrawler<T: UrlAware>(
     /**
      * TODO: this is a temporary solution
      * */
-    private fun isAmazon(url: String): Boolean {
-        return url.contains("amazon.com")
+    private fun isAmazon(url: UrlAware): Boolean {
+        return url.url.contains("amazon.com")
     }
 
     /**
      * TODO: this is a temporary solution
      * */
-    private fun isAmazonIndexPage(url: String): Boolean {
+    private fun isAmazonIndexPage(url: UrlAware): Boolean {
         val indexPagePatterns = arrayOf("/zgbs/", "/most-wished-for/", "/new-releases/", "/movers-and-shakers/")
-        return isAmazon(url) && (indexPagePatterns.any { url.contains(it)})
+        return isAmazon(url) && (indexPagePatterns.any { url.url.contains(it)})
     }
 
     private fun handleException(url: String, e: Throwable): FlowState {

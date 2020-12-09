@@ -83,6 +83,8 @@ class TestAnything {
         for (i in 0..10) {
             assertEquals(b, (a * i + b) % a, "i=$i")
         }
+
+        assertTrue { Int.MIN_VALUE < Int.MAX_VALUE }
     }
 
     /**

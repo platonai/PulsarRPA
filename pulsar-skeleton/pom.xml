@@ -47,6 +47,12 @@
             <version>${tika.version}</version>
         </dependency>
 
+        <!-- apache common -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/com.google.code.crawler-commons/crawler-commons -->
         <dependency>
             <groupId>com.google.code.crawler-commons</groupId>

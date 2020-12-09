@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
+import java.net.InetAddress
 import java.nio.file.Paths
 import java.time.Instant
 import java.time.LocalDateTime
@@ -28,6 +29,9 @@ object AppContext {
      * The number of processors available to the Java virtual machine
      */
     val NCPU = Runtime.getRuntime().availableProcessors()
+
+    // User's current working directory
+    val HOST_NAME = InetAddress.getLocalHost().hostName
 
     val USER = SystemUtils.USER_NAME
 

@@ -147,3 +147,53 @@ open class LabeledStatefulFatLink(
 ): StatefulFatLink(url, tailLinks, text, order), StatefulUrl {
     override fun toString() = "$label ${super.toString()}"
 }
+
+class CrawlableFatLink(
+        label: String,
+        url: String,
+        tailLinks: List<StatefulHyperlink>
+): LabeledStatefulFatLink(label, url, tailLinks) {
+
+    private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
+
+    val numFinished = AtomicInteger()
+    var aborted = false
+    var authToken: String? = null
+    var remoteAddr: String? = null
+
+    val numActive get() = size - numFinished.get()
+    val isAborted get() = aborted
+    val isFinished get() = numFinished.get() >= size
+    val idleTime get() = Duration.between(modifiedAt, Instant.now())
+
+    fun abort() {
+        aborted = true
+    }
+
+    fun finish(url: StatefulHyperlink, status: Int = ResourceStatus.SC_OK): Boolean {
+        aborted = false
+
+        if (log.isDebugEnabled) {
+            log.debug("Try to finish stateful hyperlink, ({}) \n{} \n{}",
+                    if (url in tailLinks) "found" else "not found", url, this)
+        }
+
+        if (tailLinks.none { url.url == it.url }) {
+            return false
+        }
+
+        require(url.referer == this.url)
+        url.modifiedAt = Instant.now()
+        url.status = status
+        modifiedAt = Instant.now()
+        numFinished.incrementAndGet()
+        if (isFinished) {
+            log.info("Crawlable fat link is finished | {}", this)
+            this.status = ResourceStatus.SC_OK
+        }
+
+        return true
+    }
+
+    override fun toString() = "${super.toString()} $numFinished/${tailLinks.size}"
+}

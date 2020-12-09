@@ -10,8 +10,13 @@ enum class FlowState {
     val isContinue get() = this == CONTINUE
 }
 
+/**
+ * Smaller value, higher priority, keep consistent with PriorityQueue
+ *
+ * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
+ * */
 enum class Priority(val value: Int) {
-    HIGHEST(Int.MIN_VALUE), HIGHER(-1000), NORMAL(0), LOWER(1000), LOWEST(Int.MAX_VALUE)
+    HIGHEST(Int.MIN_VALUE / 10), HIGHER(-1000), NORMAL(0), LOWER(1000), LOWEST(Int.MAX_VALUE / 10)
 }
 
 /** Unsafe lazy, usually be used in single thread */
