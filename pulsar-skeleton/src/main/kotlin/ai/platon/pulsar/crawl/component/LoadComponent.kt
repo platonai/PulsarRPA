@@ -48,7 +48,7 @@ class LoadComponent(
         val updateComponent: UpdateComponent,
         val messageWriter: MiscMessageWriter? = null,
         val immutableConfig: ImmutableConfig
-): AutoCloseable {
+) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
         private val globalFetchingUrls = ConcurrentSkipListSet<String>()
@@ -68,7 +68,7 @@ class LoadComponent(
             fetchComponent: BatchFetchComponent,
             updateComponent: UpdateComponent,
             immutableConfig: ImmutableConfig
-    ): this(webDb, fetchComponent, null, updateComponent, null, immutableConfig)
+    ) : this(webDb, fetchComponent, null, updateComponent, null, immutableConfig)
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -517,6 +517,7 @@ class LoadComponent(
         if (!options.storeContent && page.content != null) {
             if (!page.isSeed || page.fetchCount > 2) {
                 // set cached content so other thread still can use it
+                // TODO: memory issue
                 page.cachedContent = page.content
                 page.content = null
                 require(page.cachedContent != null)

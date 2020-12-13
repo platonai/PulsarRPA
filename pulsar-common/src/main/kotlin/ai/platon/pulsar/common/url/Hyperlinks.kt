@@ -107,6 +107,11 @@ open class StatefulHyperlink(
     override val createdAt: Instant = Instant.now()
 }
 
+val StatefulHyperlink.isCreated get() = this.status == ResourceStatus.SC_CREATED
+val StatefulHyperlink.isAccepted get() = this.status == ResourceStatus.SC_ACCEPTED
+val StatefulHyperlink.isProcessing get() = this.status == ResourceStatus.SC_PROCESSING
+val StatefulHyperlink.isFinished get() = !isCreated && !isAccepted && !isProcessing
+
 /**
  * A (fat link)[https://en.wikipedia.org/wiki/Hyperlink#Fat_link] (also known as a "one-to-many" link, an "extended link"
  * or a "multi-tailed link") is a hyperlink which leads to multiple endpoints; the link is a multivalued function.

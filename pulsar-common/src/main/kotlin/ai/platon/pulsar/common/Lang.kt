@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import com.google.common.base.Predicates
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.full.memberProperties
 
 enum class FlowState {
     CONTINUE, BREAK;
@@ -38,4 +39,21 @@ fun alwaysFalse(): Boolean {
 /** Always true and have no static check warning */
 fun alwaysTrue(): Boolean {
     return Predicates.alwaysTrue<Boolean>().apply(true)
+}
+
+object ObjectConverter {
+
+    inline fun <reified T : Any> asMap(t: T) : Map<String, Any?> {
+        val props = T::class.memberProperties.associateBy { it.name }
+        return props.keys.associateWith { props[it]?.get(t) }
+    }
+
+    inline fun <reified T : Any> asQueryParameters(t: T, excludes: Iterable<String> = listOf()) : String {
+        val props = T::class.memberProperties.associateBy { it.name }
+        return props.entries.asSequence()
+                .filter { it.key !in excludes }
+                .map { it.key to props[it.key]?.get(t) }
+                .filter { it.second != null }
+                .joinToString("&") { (k, v) -> "$k=$v" }
+    }
 }

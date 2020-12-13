@@ -1,6 +1,8 @@
-package ai.platon.pulsar.common
+package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
+import ai.platon.pulsar.common.AppMetrics
+import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.UrlAware
@@ -160,6 +162,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
     override val name = "PeriodicalLocalFileHC"
 
     private val position = AtomicInteger()
+    val uuid = UUID.randomUUID()
     val counters = Counters()
 
     var batchSize = 10

@@ -1484,6 +1484,9 @@ public class WebPage implements Comparable<WebPage> {
         return getMetadata().getInt(Name.CONTENT_BYTES, 0);
     }
 
+    /**
+     * TODO: use a field
+     * */
     private void setContentBytes(int bytes) {
         if (bytes == 0) {
             return;

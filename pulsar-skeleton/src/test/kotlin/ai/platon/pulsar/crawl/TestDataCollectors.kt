@@ -1,7 +1,7 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.GlobalCachedHyperlinkCollector
-import ai.platon.pulsar.common.LocalFileHyperlinkCollector
+import ai.platon.pulsar.common.collect.GlobalCachedHyperlinkCollector
+import ai.platon.pulsar.common.collect.LocalFileHyperlinkCollector
 import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig

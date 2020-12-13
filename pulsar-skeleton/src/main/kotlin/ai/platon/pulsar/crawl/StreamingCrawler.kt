@@ -218,11 +218,11 @@ open class StreamingCrawler<T: UrlAware>(
         val actualOptions = options.clone().also { it.volatileConfig = volatileConfig }
 
         // TODO: remove this hard coding
-        if (isAmazonIndexPage(url)) {
-            actualOptions.storeContent = true
-        } else if (isAmazon(url)) {
-            actualOptions.storeContent = false
-        }
+//        if (isAmazonIndexPage(url)) {
+//            actualOptions.storeContent = true
+//        } else if (isAmazon(url)) {
+//            actualOptions.storeContent = false
+//        }
 
         return session.runCatching { loadDeferred(url.url, actualOptions) }
                 .onFailure { flowState = handleException(url.url, it) }
