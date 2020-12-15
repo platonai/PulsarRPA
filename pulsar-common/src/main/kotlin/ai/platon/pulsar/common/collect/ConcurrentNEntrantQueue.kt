@@ -4,13 +4,13 @@ import com.google.common.collect.ConcurrentHashMultiset
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 
-class ConcurrentNEntrantQueue<E>(
+open class ConcurrentNEntrantQueue<E>(
         val n: Int
 ): AbstractQueue<E>() {
     private val set = ConcurrentSkipListSet<E>()
     private val historyHash = ConcurrentHashMultiset.create<Int>()
 
-    fun count(e: E) = historyHash.count(e.hashCode())
+    open fun count(e: E) = historyHash.count(e.hashCode())
 
     override fun add(e: E) = offer(e)
 

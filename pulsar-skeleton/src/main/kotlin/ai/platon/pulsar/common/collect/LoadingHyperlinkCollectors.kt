@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.crawl.FetchCatch
-import ai.platon.scent.common.ExternalHyperlinkLoader
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
@@ -22,7 +21,7 @@ open class GlobalCachedHyperlinkCollector(
         priority: Int = Priority.HIGHER.value
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
 
-    override val name = "GlobalCachedHC"
+    override var name = "GlobalCachedHC"
 
     private val hyperlinks get() = fetchCatch.fetchUrls
 
@@ -38,7 +37,7 @@ open class GlobalCachedHyperlinkCollector(
         return hyperlinks.sumOf { consume(it, sink) }
     }
 
-    private fun consume(queue: Queue<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
+    private fun consume(queue: Queue<out UrlAware>, sink: MutableCollection<Hyperlink>): Int {
         val size = queue.size
         queue.mapTo(sink) {
             if (it is Hyperlink) it else Hyperlink(it.url)
@@ -49,15 +48,15 @@ open class GlobalCachedHyperlinkCollector(
 }
 
 open class LoadingHyperlinkCollector(
-        val loader: ExternalHyperlinkLoader,
+        val loader: ExternalUrlLoader,
         priority: Priority = Priority.NORMAL
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
 
-    override val name = "LoadingHC"
+    override var name = "LoadingHC"
 
-    val hyperlinks = loader.asIterable().iterator()
+    val hyperlinks = LinkedList<Hyperlink>()
 
-    override fun hasMore() = hyperlinks.hasNext()
+    override fun hasMore() = hyperlinks.isNotEmpty()
 
     override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
         if (!hasMore()) {
@@ -65,8 +64,8 @@ open class LoadingHyperlinkCollector(
         }
 
         var collected = 0
-        if (hyperlinks.hasNext()) {
-            if (sink.add(hyperlinks.next())) {
+        hyperlinks.poll()?.let {
+            if (sink.add(it)) {
                 ++collected
             }
         }
@@ -81,7 +80,7 @@ open class LocalFileHyperlinkCollector(
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
 
-    override val name = "LocalFileHC"
+    override var name = "LocalFileHC"
 
     val hyperlinks = kotlin.runCatching {
         if (Files.exists(path)) {
@@ -118,7 +117,7 @@ open class CircularLocalFileHyperlinkCollector(
         priority: Priority = Priority.NORMAL
 ): LocalFileHyperlinkCollector(path, priority) {
 
-    override val name = "CircularLocalFileHC"
+    override var name = "CircularLocalFileHC"
 
     protected val iterator = Iterators.cycle(hyperlinks)
 
@@ -159,7 +158,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
         }
     }
 
-    override val name = "PeriodicalLocalFileHC"
+    override var name = "PeriodicalLocalFileHC"
 
     private val position = AtomicInteger()
     val uuid = UUID.randomUUID()

@@ -15,12 +15,18 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 
-class FetchCatch(val conf: ImmutableConfig) {
-    val nonReentrantFetchUrls = ConcurrentNonReentrantQueue<UrlAware>()
-    val nReentrantFetchUrls = ConcurrentNEntrantQueue<UrlAware>(3)
-    val reentrantFetchUrls = ConcurrentLinkedQueue<UrlAware>()
-    val fetchUrls get() = arrayOf(nonReentrantFetchUrls, nReentrantFetchUrls, reentrantFetchUrls)
+interface FetchCatch {
+    val nonReentrantFetchUrls: Queue<UrlAware>
+    val nReentrantFetchUrls: Queue<UrlAware>
+    val reentrantFetchUrls: Queue<UrlAware>
+    val fetchUrls: Array<Queue<UrlAware>> get() = arrayOf(nonReentrantFetchUrls, nReentrantFetchUrls, reentrantFetchUrls)
     val totalSize get() = fetchUrls.sumOf { it.size }
+}
+
+open class ConcurrentFetchCatch(conf: ImmutableConfig): FetchCatch {
+    override val nonReentrantFetchUrls = ConcurrentNonReentrantQueue<UrlAware>()
+    override val nReentrantFetchUrls = ConcurrentNEntrantQueue<UrlAware>(3)
+    override val reentrantFetchUrls = ConcurrentLinkedQueue<UrlAware>()
 }
 
 typealias PageCatch = ConcurrentExpiringLRUCache<WebPage>
@@ -46,7 +52,7 @@ class GlobalCache(val conf: ImmutableConfig) {
 
     init {
         // We add the default fetch catches here, but the customer can still add new ones
-        Priority.values().forEach { fetchCaches[it.value] = FetchCatch(conf) }
+        Priority.values().forEach { fetchCaches[it.value] = ConcurrentFetchCatch(conf) }
     }
 
     val lowestFetchCache: FetchCatch get() = fetchCaches[Priority.LOWEST.value]!!

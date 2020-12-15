@@ -13,7 +13,6 @@ interface UrlAware: Comparable<UrlAware> {
 }
 
 interface StatefulUrl: UrlAware, Comparable<UrlAware> {
-    override var url: String
     var status: Int
     var modifiedAt: Instant
     val createdAt: Instant
@@ -23,6 +22,8 @@ abstract class AbstractUrl(
         override var url: String,
         override var args: String = ""
 ): UrlAware {
+
+    val configuredUrl get() = "$url $args"
 
     override fun equals(other: Any?): Boolean {
         if (other === this) {
@@ -81,7 +82,7 @@ open class Hyperlink(
 data class LabeledHyperlinkDatum(
         var label: String,
         var url: String,
-        val anchorText: String = "",
+        val text: String = "",
         val order: Int = 0,
         var depth: Int = 0
 )
@@ -89,11 +90,11 @@ data class LabeledHyperlinkDatum(
 open class LabeledHyperlink(
         var label: String,
         url: String,
-        val anchorText: String = "",
+        val text: String = "",
         val order: Int = 0,
         var depth: Int = 0
 ): AbstractUrl(url) {
-    fun data() = LabeledHyperlinkDatum(label, url, anchorText, order, depth)
+    fun data() = LabeledHyperlinkDatum(label, url, text, order, depth)
 }
 
 open class StatefulHyperlink(

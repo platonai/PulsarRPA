@@ -167,7 +167,7 @@ class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMess
             val links = groupedHyperlinks[label]?:return@forEach
 
             val report = links.joinToString("\n") {
-                String.format("%4d %4d | %-50s | %s", it.depth, it.order, it.anchorText, it.url)
+                String.format("%4d %4d | %-50s | %s", it.depth, it.order, it.text, it.url)
             }
 
             val ident = label.toLowerCase()

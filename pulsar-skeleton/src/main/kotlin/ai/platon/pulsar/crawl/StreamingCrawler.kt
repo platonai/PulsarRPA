@@ -190,9 +190,9 @@ open class StreamingCrawler<T: UrlAware>(
             globalCache?.also {
                 val added = it.higherFetchCache.nReentrantFetchUrls.add(url)
                 globalRetries.incrementAndGet()
-                log.info("{}. Will retry task the {}/{}th times | {}",
+                log.info("{}. Will retry task the {}th times | {}",
                         page?.id?:0,
-                        page?.fetchRetries ?: 0, it.higherFetchCache.nReentrantFetchUrls.count(url),
+                        page?.fetchRetries ?: 0,
                         url)
             }
         }

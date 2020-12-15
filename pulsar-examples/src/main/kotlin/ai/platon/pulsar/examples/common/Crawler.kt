@@ -58,16 +58,18 @@ open class Crawler(
         doc.absoluteLinks()
         doc.stripScripts()
 
-        doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
-                .filter { Urls.isValidUrl(it) }
-                .mapTo(HashSet()) { it.substringBefore(".com") }
-                .asSequence()
-                .filter { !it.isBlank() }
-                .mapTo(HashSet()) { "$it.com" }
-                .filter { NetUtil.testHttpNetwork(URL(it)) }
-                .take(10)
-                .joinToString("\n") { it }
-                .also { println(it) }
+        if (options.outLinkSelector.isNotBlank()) {
+            doc.select(options.outLinkSelector) { it.attr("abs:href") }.asSequence()
+                    .filter { Urls.isValidUrl(it) }
+                    .mapTo(HashSet()) { it.substringBefore(".com") }
+                    .asSequence()
+                    .filter { !it.isBlank() }
+                    .mapTo(HashSet()) { "$it.com" }
+                    .filter { NetUtil.testHttpNetwork(URL(it)) }
+                    .take(10)
+                    .joinToString("\n") { it }
+                    .also { println(it) }
+        }
 
         val path = i.export(doc)
         log.info("Export to: file://{}", path)

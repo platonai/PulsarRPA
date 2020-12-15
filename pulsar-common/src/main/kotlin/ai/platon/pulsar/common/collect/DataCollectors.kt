@@ -12,14 +12,14 @@ import java.util.concurrent.atomic.AtomicInteger
  * A data collector does not know the sink until collectTo is called
  * */
 interface DataCollector<T> {
-    val name: String
+    var name: String
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableCollection<T>): Int
     fun collectTo(sink: MutableCollection<T>): Int
 }
 
 abstract class AbstractDataCollector<T>: DataCollector<T> {
-    override val name: String = "DC"
+    override var name: String = "DC"
 
     override fun collectTo(element: T, sink: MutableCollection<T>): Int {
         val added = sink.add(element)
@@ -33,7 +33,7 @@ abstract class AbstractPriorityDataCollector<T>(
         val priority: Int = Priority.NORMAL.value
 ): AbstractDataCollector<T>(), Comparable<AbstractPriorityDataCollector<T>> {
     constructor(priority: Priority): this(priority.value)
-    override val name: String = "PriorityDC"
+    override var name: String = "PriorityDC"
     override fun compareTo(other: AbstractPriorityDataCollector<T>) = priority - other.priority
 }
 
@@ -42,7 +42,7 @@ open class InfinitePauseDataCollector<T>(
         val sleeper: () -> Unit = { sleep(pause) },
         priority: Priority = Priority.LOWEST
 ): AbstractPriorityDataCollector<T>(priority) {
-    override val name: String = "InfinitePauseDC"
+    override var name: String = "InfinitePauseDC"
 
     override fun hasMore() = true
 
@@ -67,7 +67,7 @@ open class MultiSourceDataCollector<E>(
         priority: Priority = Priority.NORMAL
 ): AbstractPriorityDataCollector<E>(priority) {
 
-    override val name = "MultiSourceDC"
+    override var name = "MultiSourceDC"
 
     private val isActive get() = AppContext.isActive
     private val roundCounter = AtomicInteger()
