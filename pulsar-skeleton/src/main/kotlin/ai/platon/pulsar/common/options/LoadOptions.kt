@@ -21,10 +21,12 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
     var label = ""
+    @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
+    var taskId = System.currentTimeMillis()
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
-    /** Fetch */
+    /** Web page expire time */
     @Parameter(names = ["-i", "-expires", "--expires"], converter = DurationConverter::class,
             description = "If a page is expired, it should be fetched from the internet again")
     var expires = ChronoUnit.CENTURIES.duration

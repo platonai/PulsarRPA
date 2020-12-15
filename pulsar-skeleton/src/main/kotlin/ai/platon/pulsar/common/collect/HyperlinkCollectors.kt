@@ -15,8 +15,8 @@ import java.util.concurrent.ConcurrentSkipListMap
 
 /**
  * Collect hyper links from the given [seeds]. The urls are restricted by [loadArguments] and [urlPattern].
- * 1. all urls are restricted in [seeds] restricted by css outLinkSelector
- * 2. all urls have to match [urlPattern]
+ * 1. all urls are restricted by css outLinkSelector
+ * 2. all urls are restricted by urlPattern
  * 3. all urls have to not be fetched before or expired against the last version
  * */
 open class HyperlinkCollector(
@@ -49,7 +49,7 @@ open class HyperlinkCollector(
     private val webDb = session.context.getBean<WebDb>()
     private val fatLinkExtractor = FatLinkExtractor(session)
 
-    override val name: String = "HC"
+    override var name: String = "HC"
 
     var collects: Int = 0
 
@@ -128,7 +128,7 @@ open class CircularHyperlinkCollector(
     private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
     protected val iterator = Iterators.cycle(seeds)
 
-    override val name = "CircularHC"
+    override var name = "CircularHC"
 
     constructor(
             session: PulsarSession,
@@ -171,7 +171,7 @@ open class PeriodicalHyperlinkCollector(
     private val expires get() = seed.options.expires
     private val isExpired get() = lastFinishTime + expires < Instant.now()
 
-    override val name = "PeriodicalHC"
+    override var name = "PeriodicalHC"
 
     override fun hasMore() = synchronized(iterator) { isExpired && iterator.hasNext() }
 

@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.lang.Long.MAX_VALUE
 import java.sql.Connection
+import java.text.SimpleDateFormat
 import java.time.Duration
 import java.util.*
 
@@ -487,6 +488,14 @@ object CommonFunctions {
         return array.list.isNotEmpty()
     }
 
+    @UDFunction
+    @JvmStatic
+    @JvmOverloads
+    fun formatTimestamp(timestamp: String, fmt: String = "yyyy-MM-dd HH:mm:ss"): String {
+        val time = timestamp.toLongOrNull() ?: 0
+        return formatTimestamp(time, fmt)
+    }
+
     /**
      * Set volatileConfig to the given value
      * @param h2session H2 session
@@ -520,5 +529,9 @@ object CommonFunctions {
         }
 
         return SParser.wrap(d).duration
+    }
+
+    private fun formatTimestamp(timestamp: Long, fmt: String): String {
+        return SimpleDateFormat(fmt).format(Date(timestamp))
     }
 }

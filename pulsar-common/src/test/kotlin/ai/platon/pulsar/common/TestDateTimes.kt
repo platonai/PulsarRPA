@@ -12,6 +12,7 @@ import org.junit.Ignore
 import org.junit.Test
 import java.sql.Timestamp
 import java.text.ParseException
+import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -127,6 +128,11 @@ class TestDateTimes {
         println(now)
         val ldt = LocalDateTime.now()
         println(ldt)
+
+        val timestamp = 0L
+        val fmt = "yyyyMMddHHmmss"
+        val d = SimpleDateFormat(fmt).format(Date(timestamp))
+        println(d)
     }
 
     @Test(expected = DateTimeParseException::class)
