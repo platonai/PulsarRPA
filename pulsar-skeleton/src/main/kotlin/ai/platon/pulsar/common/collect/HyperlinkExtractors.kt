@@ -38,7 +38,7 @@ open class HyperlinkExtractor(
         var i = 0
         val parsedUrls = document.select(selector).mapNotNull { element ->
             element.attr("abs:href").takeIf { Urls.isValidUrl(it) }?.let { url ->
-                StatefulHyperlink(url, element.text(), i++, page.url)
+                StatefulHyperlink(url, element.text(), i++).apply { referer = page.url }
             }
         }
         parsedUrls.toCollection(fetchUrls)
@@ -81,7 +81,7 @@ open class RegexHyperlinkExtractor(
         val parsedUrls = restrictedSection.collectNotNull { node ->
             node.takeIf { it.isAnchor }?.attr("abs:href")
                     ?.takeIf { Urls.isValidUrl(it) && it.matches(urlRegex) }
-                    ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, page.url) }
+                    ?.let { StatefulHyperlink(it, node.bestElement.text(), i++).apply { referer = page.url } }
         }
         parsedUrls.toCollection(fetchUrls)
 
@@ -234,7 +234,7 @@ class FatLinkExtractor(val session: PulsarSession) {
                 .filter { it !in denyList }
                 .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
                 .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
-                .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
+                .map { StatefulHyperlink(it.url, it.text, it.order).apply { referer = fatLinkSpec } }
                 .toList()
     }
 

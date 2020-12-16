@@ -1,6 +1,5 @@
 package ai.platon.pulsar.crawl
 
-import ai.platon.pulsar.common.url.StatefulHyperlink
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.crawl.fetch.FetchResult
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -32,11 +31,6 @@ abstract class FetchResultBatchHandler: (Iterable<FetchResult>) -> Unit, NamedHa
 
 class AddRefererAfterFetchHandler(val url: UrlAware): WebPageHandler() {
     override fun invoke(page: WebPage) {
-        if (url is StatefulHyperlink) {
-            val referer = url.referer
-            if (referer != null) {
-                page.referrer = referer
-            }
-        }
+        url.referer?.let { page.referrer = it }
     }
 }

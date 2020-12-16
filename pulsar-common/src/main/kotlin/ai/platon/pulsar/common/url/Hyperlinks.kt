@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 interface UrlAware: Comparable<UrlAware> {
     var url: String
     var args: String
+    var referer: String?
 }
 
 interface StatefulUrl: UrlAware, Comparable<UrlAware> {
@@ -20,7 +21,8 @@ interface StatefulUrl: UrlAware, Comparable<UrlAware> {
 
 abstract class AbstractUrl(
         override var url: String,
-        override var args: String = ""
+        override var args: String = "",
+        override var referer: String? = null
 ): UrlAware {
 
     val configuredUrl get() = "$url $args"
@@ -100,8 +102,7 @@ open class LabeledHyperlink(
 open class StatefulHyperlink(
         url: String,
         text: String = "",
-        order: Int = 0,
-        val referer: String? = null
+        order: Int = 0
 ): Hyperlink(url, text, order), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
