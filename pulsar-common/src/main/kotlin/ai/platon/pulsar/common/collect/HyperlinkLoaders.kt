@@ -31,12 +31,12 @@ interface ExternalUrlLoader {
     fun loadTo(sink: MutableCollection<UrlAware>)
 }
 
-abstract class AbstractExternalUrlLoader {
-    open var cacheSize: Int = Int.MAX_VALUE
-    open fun hasMore(): Boolean = true
-    abstract fun save(url: UrlAware)
-    abstract fun saveAll(urls: Iterable<UrlAware>)
-    abstract fun loadTo(sink: MutableCollection<UrlAware>)
+abstract class AbstractExternalUrlLoader: ExternalUrlLoader {
+    override var cacheSize: Int = Int.MAX_VALUE
+    override fun hasMore(): Boolean = true
+    abstract override fun save(url: UrlAware)
+    abstract override fun saveAll(urls: Iterable<UrlAware>)
+    abstract override fun loadTo(sink: MutableCollection<UrlAware>)
 }
 
 open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
