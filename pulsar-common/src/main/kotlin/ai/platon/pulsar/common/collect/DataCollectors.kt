@@ -9,7 +9,7 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * A data collector does not know the sink until collectTo is called
+ * The data collector interface
  * */
 interface DataCollector<T> {
     var name: String

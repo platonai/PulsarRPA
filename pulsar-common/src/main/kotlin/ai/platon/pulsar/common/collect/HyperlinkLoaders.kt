@@ -9,12 +9,37 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
 interface ExternalUrlLoader {
+    /**
+     * The cache size. No more items should be loaded into the memory if the cache is full.
+     * */
+    var cacheSize: Int
+    /**
+     * Save the url to the external repository
+     * */
     fun save(url: UrlAware)
+    /**
+     * Save all the url to the external repository
+     * */
     fun saveAll(urls: Iterable<UrlAware>)
+    /**
+     * If there are more items in the source
+     * */
+    fun hasMore(): Boolean
+    /**
+     * Load items from the source to the sink
+     * */
     fun loadTo(sink: MutableCollection<UrlAware>)
 }
 
-open class LocalFileUrlLoader(val path: Path): ExternalUrlLoader {
+abstract class AbstractExternalUrlLoader {
+    open var cacheSize: Int = Int.MAX_VALUE
+    open fun hasMore(): Boolean = true
+    abstract fun save(url: UrlAware)
+    abstract fun saveAll(urls: Iterable<UrlAware>)
+    abstract fun loadTo(sink: MutableCollection<UrlAware>)
+}
+
+open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     private val log = LoggerFactory.getLogger(LocalFileUrlLoader::class.java)
 
     val fetchUrls = mutableListOf<UrlAware>()

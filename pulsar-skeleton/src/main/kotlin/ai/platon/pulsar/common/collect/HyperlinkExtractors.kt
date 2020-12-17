@@ -234,7 +234,7 @@ class FatLinkExtractor(val session: PulsarSession) {
                 .filter { it !in denyList }
                 .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
                 .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
-                .map { StatefulHyperlink(it.url, it.text, it.order).apply { referer = fatLinkSpec } }
+                .map { StatefulHyperlink(it.url, it.text, it.order, fatLinkSpec) }
                 .toList()
     }
 
@@ -244,7 +244,7 @@ class FatLinkExtractor(val session: PulsarSession) {
         val now = Instant.now()
         // TODO: add flag to indicate whether the vivid links are expired
         return page.vividLinks.asSequence()
-                .map { StatefulHyperlink(it.key.toString(), it.value.toString()) }
+                .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, page.url) }
                 .filterNot { it in denyList }
                 .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
                 .toList()

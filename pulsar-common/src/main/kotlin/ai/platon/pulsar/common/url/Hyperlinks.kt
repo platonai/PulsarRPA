@@ -49,13 +49,21 @@ abstract class AbstractUrl(
     override fun toString() = url
 }
 
-abstract class AbstractStatefulUrl(url: String): AbstractUrl(url), StatefulUrl {
+abstract class AbstractStatefulUrl(
+        url: String,
+        args: String = "",
+        referer: String? = null
+): AbstractUrl(url, args, referer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
 }
 
-open class PlainUrl(override var url: String): AbstractUrl(url)
+open class PlainUrl(
+        url: String,
+        args: String = "",
+        referer: String? = null
+): AbstractUrl(url, args, referer)
 
 data class HyperlinkDatum(
         val url: String,
@@ -76,8 +84,9 @@ data class HyperlinkDatum(
 open class Hyperlink(
         url: String,
         val text: String = "",
-        val order: Int = 0
-): AbstractUrl(url) {
+        val order: Int = 0,
+        referer: String? = null
+): AbstractUrl(url, referer = referer) {
     fun data() = HyperlinkDatum(url, text, order)
 }
 
@@ -102,8 +111,9 @@ open class LabeledHyperlink(
 open class StatefulHyperlink(
         url: String,
         text: String = "",
-        order: Int = 0
-): Hyperlink(url, text, order), StatefulUrl {
+        order: Int = 0,
+        referer: String? = null
+): Hyperlink(url, text, order, referer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
