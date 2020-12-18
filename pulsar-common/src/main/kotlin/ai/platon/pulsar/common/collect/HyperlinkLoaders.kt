@@ -21,7 +21,7 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
         Files.writeString(path, urls.joinToString("\n"), StandardOpenOption.APPEND)
     }
 
-    override fun loadTo(sink: MutableCollection<UrlAware>) {
+    override fun loadToNow(sink: MutableCollection<UrlAware>, group: Int, priority: Int) {
         kotlin.runCatching {
             LinkExtractors.fromFile(path).mapTo(sink) { Hyperlink(it) }
         }.onFailure { log.warn("Failed to load urls from $path") }

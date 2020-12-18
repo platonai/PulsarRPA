@@ -38,7 +38,7 @@ open class HyperlinkExtractor(
         var i = 0
         val parsedUrls = document.select(selector).mapNotNull { element ->
             element.attr("abs:href").takeIf { Urls.isValidUrl(it) }?.let { url ->
-                StatefulHyperlink(url, element.text(), i++).apply { referer = page.url }
+                StatefulHyperlink(url, element.text(), i++, referer = page.url)
             }
         }
         parsedUrls.toCollection(fetchUrls)

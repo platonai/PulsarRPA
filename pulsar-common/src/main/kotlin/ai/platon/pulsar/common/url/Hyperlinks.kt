@@ -7,12 +7,20 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * The UrlAware interface.
+ * */
 interface UrlAware: Comparable<UrlAware> {
     var url: String
-    var args: String
+    var args: String?
     var referer: String?
+
+    val configuredUrl: String
 }
 
+/**
+ * The StatefulUrl interface. A StatefulUrl is an UrlAware and has status.
+ * */
 interface StatefulUrl: UrlAware, Comparable<UrlAware> {
     var status: Int
     var modifiedAt: Instant
@@ -21,12 +29,18 @@ interface StatefulUrl: UrlAware, Comparable<UrlAware> {
 
 abstract class AbstractUrl(
         override var url: String,
-        override var args: String = "",
+        override var args: String? = null,
         override var referer: String? = null
 ): UrlAware {
 
-    val configuredUrl get() = "$url $args"
+    override val configuredUrl get() = if (args != null) "$url $args" else url
 
+    /**
+     * A abstract url can be compare to one of the following types:
+     * 1. a [String]
+     * 2. a [URL]
+     * 3. a [UrlAware]
+     * */
     override fun equals(other: Any?): Boolean {
         if (other === this) {
             return true
@@ -51,7 +65,7 @@ abstract class AbstractUrl(
 
 abstract class AbstractStatefulUrl(
         url: String,
-        args: String = "",
+        args: String? = null,
         referer: String? = null
 ): AbstractUrl(url, args, referer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
@@ -61,14 +75,25 @@ abstract class AbstractStatefulUrl(
 
 open class PlainUrl(
         url: String,
-        args: String = "",
+        args: String? = null,
         referer: String? = null
 ): AbstractUrl(url, args, referer)
 
 data class HyperlinkDatum(
         val url: String,
+        /**
+         * A hyperlink should have a text, so the default value is an empty string
+         * */
         val text: String = "",
-        val order: Int = 0
+        val order: Int = 0,
+        /**
+         * A hyperlink might have a referer, so the default value is null
+         * */
+        val referer: String? = null,
+        /**
+         * A programmer might give a argument to a hyperlink, so the default value is null
+         * */
+        val args: String? = null
 )
 
 /**
@@ -82,36 +107,102 @@ data class HyperlinkDatum(
  * clickable text in an HTML hyperlink
  * */
 open class Hyperlink(
+        /**
+         * The url of this hyperlink
+         * */
         url: String,
+        /**
+         * The anchor text of this hyperlink
+         * */
         val text: String = "",
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
         val order: Int = 0,
+        /**
+         * The url of the referer page
+         * */
         referer: String? = null
 ): AbstractUrl(url, referer = referer) {
-    fun data() = HyperlinkDatum(url, text, order)
+    fun data() = HyperlinkDatum(url, text, order, referer, args)
 }
 
 data class LabeledHyperlinkDatum(
+        /**
+         * The label
+         * */
         var label: String,
-        var url: String,
+        /**
+         * The url of this hyperlink
+         * */
+        val url: String,
+        /**
+         * A hyperlink should have a text, so the default value is an empty string
+         * */
         val text: String = "",
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
         val order: Int = 0,
-        var depth: Int = 0
+        /**
+         * A hyperlink might have a referer, so the default value is null
+         * */
+        val referer: String? = null,
+        /**
+         * The depth of the link, it should be [the depth of the referer] + 1
+         * */
+        val depth: Int = 0,
+        /**
+         * A programmer might give a argument to a hyperlink, so the default value is null
+         * */
+        val args: String? = null
 )
 
 open class LabeledHyperlink(
+        /**
+         * The label
+         * */
         var label: String,
+        /**
+         * The url of this hyperlink
+         * */
         url: String,
+        /**
+         * A hyperlink should have a text, so the default value is an empty string
+         * */
         val text: String = "",
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
         val order: Int = 0,
-        var depth: Int = 0
+        /**
+         * A hyperlink might have a referer, so the default value is null
+         * */
+        referer: String? = null,
+        /**
+         * The depth of the link, it should be [the depth of the referer] + 1
+         * */
+        val depth: Int = 0
 ): AbstractUrl(url) {
-    fun data() = LabeledHyperlinkDatum(label, url, text, order, depth)
+    fun data() = LabeledHyperlinkDatum(label, url, text, order, referer, depth, args)
 }
 
 open class StatefulHyperlink(
+        /**
+         * The url of this hyperlink
+         * */
         url: String,
+        /**
+         * The anchor text of this hyperlink
+         * */
         text: String = "",
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
         order: Int = 0,
+        /**
+         * The url of the referer page
+         * */
         referer: String? = null
 ): Hyperlink(url, text, order, referer), StatefulUrl {
     override var status: Int = ResourceStatus.SC_CREATED
@@ -138,7 +229,7 @@ open class FatLink(
     val isEmpty get() = size == 0
     val isNotEmpty get() = !isEmpty
 
-    override fun toString() = "$size $url"
+    override fun toString() = "$size | $url"
 }
 
 open class StatefulFatLink(
@@ -168,8 +259,10 @@ open class LabeledStatefulFatLink(
 class CrawlableFatLink(
         label: String,
         url: String,
-        tailLinks: List<StatefulHyperlink>
-): LabeledStatefulFatLink(label, url, tailLinks) {
+        tailLinks: List<StatefulHyperlink>,
+        text: String = "",
+        order: Int = 0
+): LabeledStatefulFatLink(label, url, tailLinks, text, order) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 
@@ -212,5 +305,5 @@ class CrawlableFatLink(
         return true
     }
 
-    override fun toString() = "${super.toString()} $numFinished/${tailLinks.size}"
+    override fun toString() = "$numFinished/${tailLinks.size} ${super.toString()}"
 }
