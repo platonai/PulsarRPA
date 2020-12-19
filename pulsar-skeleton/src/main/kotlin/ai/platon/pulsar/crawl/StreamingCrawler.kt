@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.crawl.common.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
@@ -50,7 +51,7 @@ open class StreamingCrawler<T: UrlAware>(
         private val availableMemory get() = systemInfo.hardware.memory.available
         private val requiredMemory = 500 * 1024 * 1024L // 500 MiB
         private val remainingMemory get() = availableMemory - requiredMemory
-        private val illegalState = AtomicBoolean()
+        private val isIllegalApplicationState = AtomicBoolean()
 
         init {
             mapOf(
@@ -74,10 +75,10 @@ open class StreamingCrawler<T: UrlAware>(
     private var lastActiveTime = Instant.now()
     private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
     private val isIdle get() = idleTime > idleTimeout
-    private val isAppActive get() = isActive && !illegalState.get()
+    private var quit = false
+    override val isActive get() = super.isActive && !quit && !isIllegalApplicationState.get()
     private val numTasks = AtomicInteger()
     private val taskTimeout = Duration.ofMinutes(10)
-    private var quit = false
     private var flowState = FlowState.CONTINUE
     private var finishScript: Path? = null
 
@@ -112,7 +113,7 @@ open class StreamingCrawler<T: UrlAware>(
         globalRunningInstances.incrementAndGet()
 
         urls.forEachIndexed { j, url ->
-            if (quit || !isAppActive) {
+            if (!isActive) {
                 return@run
             }
 
@@ -120,7 +121,7 @@ open class StreamingCrawler<T: UrlAware>(
             val state = load(1 + j, url, scope)
             globalFinishedTasks.incrementAndGet()
 
-            if (quit || state != FlowState.CONTINUE) {
+            if (state != FlowState.CONTINUE) {
                 return@run
             }
         }
@@ -134,16 +135,15 @@ open class StreamingCrawler<T: UrlAware>(
         lastActiveTime = Instant.now()
         numTasks.incrementAndGet()
 
-        while (isAppActive && globalRunningTasks.get() > fetchConcurrency) {
+        while (isActive && globalRunningTasks.get() > fetchConcurrency) {
             if (j % 120 == 0) {
-                val elapsedTime = Duration.between(lastActiveTime, Instant.now())
                 log.info("It takes long time to run {} tasks | {} -> {}",
-                        globalRunningTasks, lastActiveTime, elapsedTime.readable())
+                        globalRunningTasks, lastActiveTime, idleTime.readable())
             }
             delay(1000)
         }
 
-        while (isAppActive && remainingMemory < 0) {
+        while (isActive && remainingMemory < 0) {
             if (j % 20 == 0) {
                 handleMemoryShortage(j)
             }
@@ -155,7 +155,7 @@ open class StreamingCrawler<T: UrlAware>(
             return FlowState.BREAK
         }
 
-        if (!isAppActive) {
+        if (!isActive) {
             return FlowState.BREAK
         }
 
@@ -168,16 +168,16 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     private suspend fun load(url: UrlAware): WebPage? {
-        if (!isAppActive) {
+        if (!isActive) {
             return null
         }
 
-        val page = kotlin.runCatching { withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) } }
-                .onFailure { log.warn("Unexpected exception", it) }
-                .getOrNull()
+        val page = kotlin.runCatching {
+            withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
+        }.onFailure { log.warn("Unexpected exception", it) }.getOrNull()
         globalRunningTasks.decrementAndGet()
 
-        if (!isAppActive) {
+        if (!isActive) {
             return null
         }
 
@@ -188,7 +188,7 @@ open class StreamingCrawler<T: UrlAware>(
 
         if (page == null || page.crawlStatus.isUnFetched) {
             globalCache?.also {
-                val added = it.higherFetchCache.nReentrantFetchUrls.add(url)
+                val added = it.fetchCacheManager.higherFetchCache.nReentrantFetchUrls.add(url)
                 globalRetries.incrementAndGet()
                 log.info("{}. Will retry task the {}th times | {}",
                         page?.id?:0,
@@ -216,13 +216,6 @@ open class StreamingCrawler<T: UrlAware>(
 
         volatileConfig.name = "StreamingCrawler#$numTasks"
         val actualOptions = options.clone().also { it.volatileConfig = volatileConfig }
-
-        // TODO: remove this hard coding
-//        if (isAmazonIndexPage(url)) {
-//            actualOptions.storeContent = true
-//        } else if (isAmazon(url)) {
-//            actualOptions.storeContent = false
-//        }
 
         return session.runCatching { loadDeferred(url.url, actualOptions) }
                 .onFailure { flowState = handleException(url.url, it) }
@@ -277,21 +270,6 @@ open class StreamingCrawler<T: UrlAware>(
         ).forEach { volatileConfig.putBean(it.name, it) }
     }
 
-    /**
-     * TODO: this is a temporary solution
-     * */
-    private fun isAmazon(url: UrlAware): Boolean {
-        return url.url.contains("amazon.com")
-    }
-
-    /**
-     * TODO: this is a temporary solution
-     * */
-    private fun isAmazonIndexPage(url: UrlAware): Boolean {
-        val indexPagePatterns = arrayOf("/zgbs/", "/most-wished-for/", "/new-releases/", "/movers-and-shakers/")
-        return isAmazon(url) && (indexPagePatterns.any { url.url.contains(it)})
-    }
-
     private fun handleException(url: String, e: Throwable): FlowState {
         if (flowState == FlowState.BREAK) {
             return flowState
@@ -299,9 +277,9 @@ open class StreamingCrawler<T: UrlAware>(
 
         when (e) {
             is IllegalApplicationContextStateException -> {
-                if (illegalState.compareAndSet(false, true)) {
+                if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("\n!!!Illegal app context, quit streaming crawler ... | {}", e.message)
+                    log.warn("\n!!!Illegal application context, quit streaming crawler ... | {}", e.message)
                 }
                 return FlowState.BREAK
             }

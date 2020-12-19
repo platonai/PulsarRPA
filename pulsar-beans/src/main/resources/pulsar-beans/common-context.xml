@@ -43,7 +43,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="globalCacheManager" class="ai.platon.pulsar.crawl.GlobalCache">
+    <bean id="globalCacheManager" class="ai.platon.pulsar.crawl.common.GlobalCache">
         <constructor-arg ref="conf"/>
     </bean>
 

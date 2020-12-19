@@ -137,6 +137,11 @@ public interface CapabilityTypes {
     String COUNTER_GROUP_STATUS = "Runtime Status";
 
     /**
+     * Application metrics
+     * */
+    String METRICS_ENABLED = "metrics.enabled";
+
+    /**
      * Generate
      * */
     String GENERATE_COUNT_VALUE_DOMAIN = "domain";

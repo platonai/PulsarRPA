@@ -6,7 +6,6 @@ import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.UrlAware
-import ai.platon.pulsar.crawl.FetchCatch
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
@@ -80,7 +79,8 @@ open class LocalFileHyperlinkCollector(
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
 
-    override var name = "LocalFileHC"
+    val fileName = path.fileName.toString()
+    override var name = fileName.substringBefore(".")
 
     val hyperlinks = kotlin.runCatching {
         if (Files.exists(path)) {
@@ -116,8 +116,6 @@ open class CircularLocalFileHyperlinkCollector(
         path: Path,
         priority: Priority = Priority.NORMAL
 ): LocalFileHyperlinkCollector(path, priority) {
-
-    override var name = "CircularLocalFileHC"
 
     protected val iterator = Iterators.cycle(hyperlinks)
 
@@ -158,8 +156,6 @@ open class PeriodicalLocalFileHyperlinkCollector(
         }
     }
 
-    override var name = "PeriodicalLocalFileHC"
-
     private val position = AtomicInteger()
     val uuid = UUID.randomUUID()
     val counters = Counters()
@@ -170,6 +166,8 @@ open class PeriodicalLocalFileHyperlinkCollector(
     val finishTimes = mutableMapOf<Int, Instant>()
 
     val round get() = counters.round
+    var roundCollected = 0
+        private set
     val startTime get() = startTimes[counters.round]?: Instant.EPOCH
     val finishTime get() = finishTimes[counters.round]?: Instant.EPOCH
     val expires get() = options.expires
@@ -196,6 +194,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
             finishTimes[round] = Instant.now()
         }
 
+        roundCollected += collected
         return collected
     }
 
@@ -211,6 +210,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
 
         if (position.get() == 0) {
             ++counters.round
+            roundCollected = 0
             startTimes[round] = Instant.now()
 
             log.info("Round {} fetching {} hyperlinks in local file | {} {} | {}",

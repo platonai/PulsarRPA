@@ -12,7 +12,7 @@ open class Crawler(
         val autoClose: Boolean = true
 ): AutoCloseable {
     val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && AppContext.isActive
+    open val isActive get() = !closed.get() && AppContext.isActive
 
     constructor(context: PulsarContext): this(context.createSession())
 

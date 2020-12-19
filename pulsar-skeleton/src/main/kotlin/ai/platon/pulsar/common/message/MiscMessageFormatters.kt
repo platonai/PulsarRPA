@@ -72,14 +72,14 @@ class CompletedPageFormatter(
     val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
-    val fieldFmt get() = if (m.numFields == 0) " %s" else " %-10s"
+    val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
     val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     val link get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
     val url get() = if (redirected) page.location else page.url
     val readableUrl get() = if (redirected) "[R] $url" else url
     val readableLinks get() = if (verbose) "file://$link | $readableUrl" else readableUrl
 
-    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d nf:$fieldFmt$failure$proxyFmt | %s | %s"
+    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt | %s | %s"
 
     override fun toString(): String {
         return String.format(fmt,
@@ -90,7 +90,7 @@ class CompletedPageFormatter(
                 DateTimes.readableDuration(responseTime),
                 jsSate,
                 page.fetchCount,
-                if (m.numFields == 0) "0/0/0" else numFields,
+                if (m.numFields == 0) "" else numFields,
                 proxy?:"",
                 page.variables["privacyContext"]?:"",
                 readableLinks

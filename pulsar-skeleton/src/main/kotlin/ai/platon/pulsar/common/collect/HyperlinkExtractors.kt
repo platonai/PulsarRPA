@@ -178,6 +178,7 @@ class FatLinkExtractor(val session: PulsarSession) {
         val fatLinkSpec = seed.spec
         val options = seed.options
         val selector = options.outLinkSelector
+        val now = Instant.now()
 
         val vividLinks = if (document != null) {
             parseVividLinks(seed, page, document, denyList)
@@ -192,7 +193,7 @@ class FatLinkExtractor(val session: PulsarSession) {
             log.info("{}. No new link in portal page({}), prev fetch time: {} | <{}> | {}",
                     page.id,
                     Strings.readableBytes(page.contentBytes.toLong()),
-                    Duration.between(page.prevFetchTime, Instant.now()).readable(),
+                    Duration.between(page.prevFetchTime, now).readable(),
                     selector,
                     seed)
             log.info("{}. {}", page.id, ObjectConverter.asMap(counters).entries.joinToString())
@@ -207,7 +208,6 @@ class FatLinkExtractor(val session: PulsarSession) {
 
         // update vivid links
         if (document != null) {
-            val now = Instant.now()
             val hyperlinks = vividLinks.map { HyperlinkPersistable(it.url, it.text, it.order) }
             // page.addHyperlinks is optional, it keeps all historical hyperlinks
             // page.addHyperlinks(hyperlinks)

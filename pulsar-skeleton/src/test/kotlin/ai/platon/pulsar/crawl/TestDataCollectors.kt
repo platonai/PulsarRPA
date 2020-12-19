@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.crawl.common.GlobalCache
 import org.apache.commons.collections4.map.MultiValueMap
 import org.junit.Test
 import java.nio.file.Paths
@@ -14,21 +15,22 @@ import kotlin.test.assertTrue
 
 class TestDataCollectors {
     val globalCache = GlobalCache(ImmutableConfig())
+    val fetchCacheManager get() = globalCache.fetchCacheManager
 
     @Test
     fun testDataCollectorSorting() {
         // Object information is erased
         val collectors = mutableListOf<AbstractPriorityDataCollector<Hyperlink>>()
-        globalCache.fetchCaches.forEach { (priority, fetchCache) ->
+        fetchCacheManager.fetchCaches.forEach { (priority, fetchCache) ->
             collectors += GlobalCachedHyperlinkCollector(fetchCache, priority)
         }
-        assertEquals(globalCache.fetchCaches.size, collectors.size)
+        assertEquals(fetchCacheManager.fetchCaches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
         collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         println("Adding another normal collector ...")
         val priority = Priority.NORMAL.value
-        val normalCollector = GlobalCachedHyperlinkCollector(globalCache.normalFetchCache, priority)
+        val normalCollector = GlobalCachedHyperlinkCollector(fetchCacheManager.normalFetchCache, priority)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
         collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
@@ -43,16 +45,16 @@ class TestDataCollectors {
     fun testDataCollectorSorting2() {
         val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<Hyperlink>>()
 
-        globalCache.fetchCaches.forEach { (priority, fetchCache) ->
+        globalCache.fetchCacheManager.fetchCaches.forEach { (priority, fetchCache) ->
             collectors[priority] = GlobalCachedHyperlinkCollector(fetchCache, priority)
         }
-        assertEquals(globalCache.fetchCaches.size, collectors.keys.size)
+        assertEquals(fetchCacheManager.fetchCaches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
 
         println("Adding 2nd normal collector ...")
         val priority = Priority.NORMAL.value
-        val normalCollector = GlobalCachedHyperlinkCollector(globalCache.normalFetchCache, priority)
+        val normalCollector = GlobalCachedHyperlinkCollector(fetchCacheManager.normalFetchCache, priority)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }

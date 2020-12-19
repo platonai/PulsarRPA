@@ -71,6 +71,7 @@ class AppMetrics(
     }
 
     private val timeIdent = DateTimes.formatNow("MMdd")
+    private val isEnabled = conf.getBoolean(CapabilityTypes.METRICS_ENABLED, false)
     private val jobIdent = conf[CapabilityTypes.PARAM_JOB_NAME, DateTimes.now("HHmm")]
     private val reportDir = AppPaths.METRICS_DIR.resolve(timeIdent).resolve(jobIdent)
 
@@ -112,14 +113,16 @@ class AppMetrics(
     }
 
     fun start() {
-        jmxReporter.start()
-        csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
-        slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
+        if (isEnabled) {
+            jmxReporter.start()
+            csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
+            slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
+        }
         counterReporter.start(initialDelay, counterReportInterval)
     }
 
     override fun close() {
-        if (closed.compareAndSet(false, true)) {
+        if (isEnabled && closed.compareAndSet(false, true)) {
             slf4jReporter.report()
 
             csvReporter.close()
