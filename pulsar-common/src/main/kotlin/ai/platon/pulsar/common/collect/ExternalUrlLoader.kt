@@ -1,7 +1,10 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.UrlAware
+import java.io.InputStream
+import java.io.OutputStream
 import java.time.Duration
 import java.time.Instant
 
@@ -23,13 +26,21 @@ interface ExternalUrlLoader {
      * */
     var loadDelay: Duration
     /**
+     * If the loader is cooling down
+     * */
+    val isExpired: Boolean
+    /**
+     * Force the loading time to expire
+     * */
+    fun expire()
+    /**
      * Save the url to the external repository
      * */
-    fun save(url: UrlAware)
+    fun save(url: UrlAware, group: Int = 0)
     /**
      * Save all the url to the external repository
      * */
-    fun saveAll(urls: Iterable<UrlAware>)
+    fun saveAll(urls: Iterable<UrlAware>, group: Int = 0)
     /**
      * If there are more items in the source
      * */
@@ -37,7 +48,10 @@ interface ExternalUrlLoader {
     /**
      * Load items from the source to the sink
      * */
-    fun loadToNow(sink: MutableCollection<UrlAware>, group: Int = 0, priority: Int = Priority.NORMAL.value)
+    fun loadToNow(sink: MutableCollection<UrlAware>,
+                  group: Int = 0, priority: Int = Priority.NORMAL.value): Collection<UrlAware>
+    fun <T> loadToNow(sink: MutableCollection<T>,
+                      group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
     /**
      * Load items from the source to the sink
      * */
@@ -46,17 +60,18 @@ interface ExternalUrlLoader {
 
 abstract class AbstractExternalUrlLoader(
         override var cacheSize: Int = Int.MAX_VALUE,
-        override var loadDelay: Duration = Duration.ofSeconds(30)
+        override var loadDelay: Duration = Duration.ofSeconds(10)
 ): ExternalUrlLoader {
 
     override var estimatedSize: Int = Int.MAX_VALUE
     override var estimatedRemainingSize: Int = Int.MAX_VALUE
 
     protected var lastLoadTime = Instant.EPOCH
-    val isExpired get() = lastLoadTime + loadDelay < Instant.now()
+    override val isExpired get() = lastLoadTime + loadDelay < Instant.now()
 
+    override fun expire() { lastLoadTime = Instant.EPOCH }
     override fun hasMore(): Boolean = isExpired
-    override fun saveAll(urls: Iterable<UrlAware>) = urls.forEach(this::save)
+    override fun saveAll(urls: Iterable<UrlAware>, group: Int) = urls.forEach { save(it, group) }
     override fun loadTo(sink: MutableCollection<UrlAware>, group: Int, priority: Int) {
         if (!isExpired) {
             return

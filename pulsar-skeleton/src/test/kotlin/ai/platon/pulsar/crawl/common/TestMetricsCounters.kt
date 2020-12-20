@@ -38,6 +38,7 @@ class TestMetricsCounters {
         assertEquals(3, MetricsCounters.getGroup(Counter3::class.java).toLong())
         assertEquals(3, MetricsCounters.getGroup(Counter3.stFetched).toLong())
         counter.inc(Counter1.rDepth0)
+        counter.setValue(Counter1.rDepth1, 2000)
         counter.inc(Counter2.inlinks)
         counter.inc(Counter2.rDepthN)
         counter.inc(Counter2.rDepth3)

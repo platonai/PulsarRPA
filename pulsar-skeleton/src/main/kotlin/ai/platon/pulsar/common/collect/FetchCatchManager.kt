@@ -12,14 +12,14 @@ interface FetchCatchManager {
     /**
      * The priority fetch caches
      * */
-    val fetchCaches: MutableMap<Int, FetchCatch>
+    val fetchCaches: MutableMap<Int, FetchCache>
     val totalFetchItems: Int
 
-    val lowestFetchCache: FetchCatch
-    val lowerFetchCache: FetchCatch
-    val normalFetchCache: FetchCatch
-    val higherFetchCache: FetchCatch
-    val highestFetchCache: FetchCatch
+    val lowestFetchCache: FetchCache
+    val lowerFetchCache: FetchCache
+    val normalFetchCache: FetchCache
+    val higherFetchCache: FetchCache
+    val highestFetchCache: FetchCache
 
     fun initialize()
 }
@@ -31,15 +31,15 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig): FetchCatchM
     private val initialized = AtomicBoolean()
     override val totalFetchItems get() = fetchCaches.values.sumOf { it.totalSize }
 
-    override val lowestFetchCache: FetchCatch get() = ensureInitialized().fetchCaches[Priority.LOWEST.value]!!
-    override val lowerFetchCache: FetchCatch get() = ensureInitialized().fetchCaches[Priority.LOWER.value]!!
-    override val normalFetchCache: FetchCatch get() = ensureInitialized().fetchCaches[Priority.NORMAL.value]!!
-    override val higherFetchCache: FetchCatch get() = ensureInitialized().fetchCaches[Priority.HIGHER.value]!!
-    override val highestFetchCache: FetchCatch get() = ensureInitialized().fetchCaches[Priority.HIGHEST.value]!!
+    override val lowestFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.LOWEST.value]!!
+    override val lowerFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.LOWER.value]!!
+    override val normalFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.NORMAL.value]!!
+    override val higherFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.HIGHER.value]!!
+    override val highestFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.HIGHEST.value]!!
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority.values().forEach { fetchCaches[it.value] = ConcurrentFetchCatch(conf) }
+            Priority.values().forEach { fetchCaches[it.value] = ConcurrentFetchCache(conf) }
         }
     }
 
@@ -58,7 +58,7 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig): AbstractFetchCatc
     /**
      * The priority fetch caches
      * */
-    override val fetchCaches = ConcurrentSkipListMap<Int, FetchCatch>()
+    override val fetchCaches = ConcurrentSkipListMap<Int, FetchCache>()
 }
 
 class LoadingFetchCatchManager(
@@ -67,7 +67,7 @@ class LoadingFetchCatchManager(
 ): ConcurrentFetchCatchManager(conf) {
     override fun initialize() {
         Priority.values().map { it.value }.forEach { priority ->
-            fetchCaches[priority] = LoadingFetchCatch(urlLoader, priority, conf)
+            fetchCaches[priority] = LoadingFetchCache(urlLoader, priority, conf)
         }
     }
 }

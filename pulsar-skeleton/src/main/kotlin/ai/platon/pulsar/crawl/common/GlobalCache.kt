@@ -21,7 +21,7 @@ open class GlobalCache(val conf: ImmutableConfig) {
     /**
      * The fetch cache manager, hold on queues of fetch items
      * */
-    open val fetchCacheManager: FetchCatchManager = ConcurrentFetchCatchManager(conf)
+    open val fetchCacheManager: FetchCatchManager = ConcurrentFetchCatchManager(conf).apply { initialize() }
     /**
      * The global page cache, a page might be removed if it's expired or the cache is full
      * */

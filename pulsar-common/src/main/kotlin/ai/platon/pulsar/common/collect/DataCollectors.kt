@@ -34,7 +34,7 @@ interface CrawlableFatLinkCollector {
 }
 
 open class MultiSourceDataCollector<E>(
-        val collectors: MutableList<AbstractPriorityDataCollector<E>>,
+        val collectors: MutableList<PriorityDataCollector<E>>,
         priority: Priority = Priority.NORMAL
 ): AbstractPriorityDataCollector<E>(priority) {
 
@@ -47,7 +47,7 @@ open class MultiSourceDataCollector<E>(
     val round get() = roundCounter.get()
     val totalCollected get() = collectedCounter.get()
 
-    constructor(vararg thatCollectors: AbstractPriorityDataCollector<E>, priority: Priority = Priority.NORMAL):
+    constructor(vararg thatCollectors: PriorityDataCollector<E>, priority: Priority = Priority.NORMAL):
             this(arrayListOf(*thatCollectors), priority)
 
     override fun hasMore() = collectors.any { it.hasMore() }

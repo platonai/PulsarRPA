@@ -170,7 +170,10 @@ open class WebDriverPoolManager(
         if (closed.compareAndSet(false, true)) {
             driverPools.keys.forEach { doCloseDriverPool(it) }
             driverPools.clear()
-            log.info("Web driver manager is closed\n{}", formatStatus(true))
+            log.info("Web driver pool manager is closed")
+            if (gauges?.entries?.isNullOrEmpty() == false || driverPools.isNotEmpty()) {
+                log.info(formatStatus(true))
+            }
         }
     }
 
@@ -189,7 +192,7 @@ open class WebDriverPoolManager(
 
             val driverPool = computeDriverPoolIfAbsent(browserId, task)
             if (!driverPool.isActive) {
-                throw WebDriverPoolException("Driver pool is closed already | $driverPool | $browserId")
+                throw WebDriverPoolException("Driver pool is already closed | $driverPool | $browserId")
             }
 
             var driver: AbstractWebDriver? = null
@@ -244,8 +247,12 @@ open class WebDriverPoolManager(
 
     private fun formatStatus(verbose: Boolean = false): String {
         val sb = StringBuilder()
-        gauges?.entries?.joinTo(sb, ", ", "gauges: ", "\n") { it.key + ": " + it.value.value }
-        driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
+        gauges?.entries?.takeIf { it.isNotEmpty() }?.joinTo(sb, ", ", "gauges: ", "\n") {
+            it.key + ": " + it.value.value
+        }
+        if (driverPools.isNotEmpty()) {
+            driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
+        }
         return sb.toString()
     }
 }

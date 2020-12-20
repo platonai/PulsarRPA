@@ -16,24 +16,24 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 open class GlobalCachedHyperlinkCollector(
-        private val fetchCatch: FetchCatch,
+        private val fetchCache: FetchCache,
         priority: Int = Priority.HIGHER.value
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     override var name = "GlobalCachedHC"
 
-    private val hyperlinks get() = fetchCatch.fetchUrls
+    private val hyperlinkQueues get() = fetchCache.fetchUrlQueues
 
-    constructor(fetchCatch: FetchCatch, priority: Priority): this(fetchCatch, priority.value)
+    constructor(fetchCache: FetchCache, priority: Priority): this(fetchCache, priority.value)
 
-    override fun hasMore() = hyperlinks.any { it.isNotEmpty() }
+    override fun hasMore() = hyperlinkQueues.any { it.isNotEmpty() }
 
     override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
         if (!hasMore()) {
             return 0
         }
 
-        return hyperlinks.sumOf { consume(it, sink) }
+        return hyperlinkQueues.sumOf { consume(it, sink) }
     }
 
     private fun consume(queue: Queue<out UrlAware>, sink: MutableCollection<Hyperlink>): Int {
@@ -79,16 +79,14 @@ open class LocalFileHyperlinkCollector(
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
 
+    private val urlLoader = LocalFileUrlLoader(path)
     val fileName = path.fileName.toString()
     override var name = fileName.substringBefore(".")
 
-    val hyperlinks = kotlin.runCatching {
-        if (Files.exists(path)) {
-            LinkExtractors.fromFile(path).mapTo(LinkedList()) { Hyperlink(it) }
-        } else LinkedList()
-    }.onFailure { log.warn("Failed to load urls from $path") }.getOrDefault(LinkedList())
+    val hyperlinks = LinkedList<Hyperlink>()
 
     init {
+        urlLoader.loadToNow(mutableListOf()).mapTo(hyperlinks) { if (it is Hyperlink) it else Hyperlink(it) }
         log.info("There are {} urls in file | {}", hyperlinks.size, path)
     }
 

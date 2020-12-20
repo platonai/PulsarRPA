@@ -1,9 +1,10 @@
-package ai.platon.pulsar.crawl
+package ai.platon.pulsar.crawl.common.collect
 
-import ai.platon.pulsar.common.collect.GlobalCachedHyperlinkCollector
-import ai.platon.pulsar.common.collect.LocalFileHyperlinkCollector
 import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.collect.AbstractPriorityDataCollector
+import ai.platon.pulsar.common.collect.GlobalCachedHyperlinkCollector
+import ai.platon.pulsar.common.collect.LoadingFetchCache
+import ai.platon.pulsar.common.collect.LocalFileHyperlinkCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.crawl.common.GlobalCache
@@ -13,9 +14,29 @@ import java.nio.file.Paths
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class TestDataCollectors {
-    val globalCache = GlobalCache(ImmutableConfig())
+class TestDataCollectors: TestBase() {
+
+    val globalCache = GlobalCache(conf)
     val fetchCacheManager get() = globalCache.fetchCacheManager
+
+    @Test
+    fun testLoadingFetchCache() {
+        val fetchCache = LoadingFetchCache(urlLoader, Priority.NORMAL.value, conf)
+        // auto loaded
+        assertTrue { fetchCache.totalSize > 0 }
+        fetchCache.load()
+        assertTrue { fetchCache.totalSize > 0 }
+    }
+
+    @Test
+    fun testFetchQueue() {
+        val fetchCache = LoadingFetchCache(urlLoader, Priority.NORMAL.value, conf)
+        assertTrue { fetchCache.totalSize > 0 }
+        val collector = GlobalCachedHyperlinkCollector(fetchCache, fetchCache.priority)
+        val sink = mutableListOf<Hyperlink>()
+        collector.collectTo(sink)
+        assertTrue { sink.isNotEmpty() }
+    }
 
     @Test
     fun testDataCollectorSorting() {

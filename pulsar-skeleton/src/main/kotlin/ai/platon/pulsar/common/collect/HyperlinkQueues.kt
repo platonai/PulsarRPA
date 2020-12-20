@@ -39,7 +39,7 @@ class ConcurrentNonReentrantLoadingUrlQueue(
 
 class ConcurrentNEntrantLoadingUrlQueue(
         loader: ExternalUrlLoader,
-        val n: Int,
+        val n: Int = 3,
         group: Int = ConcurrentNEntrantLoadingUrlQueue::javaClass.name.hashCode(),
         priority: Int = Priority.NORMAL.value
 ): AbstractLoadingUrlQueue(loader, group, priority) {

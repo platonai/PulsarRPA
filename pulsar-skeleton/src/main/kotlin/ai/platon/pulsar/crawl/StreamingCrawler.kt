@@ -30,6 +30,7 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.jvm.Throws
 import kotlin.math.abs
 
 open class StreamingCrawler<T: UrlAware>(
@@ -110,7 +111,11 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     open suspend fun run(scope: CoroutineScope) {
+        log.info("Staring streaming crawler ...")
+
         globalRunningInstances.incrementAndGet()
+
+        val startTime = Instant.now()
 
         urls.forEachIndexed { j, url ->
             if (!isActive) {
@@ -128,7 +133,8 @@ open class StreamingCrawler<T: UrlAware>(
 
         globalRunningInstances.decrementAndGet()
 
-        log.info("Total {} tasks are done in session {}", numTasks, session)
+        log.info("All done. Total {} tasks are processed in session {} in {}",
+                numTasks, session, DateTimes.elapsedTime(startTime).readable())
     }
 
     private suspend fun load(j: Int, url: UrlAware, scope: CoroutineScope): FlowState {
@@ -172,7 +178,7 @@ open class StreamingCrawler<T: UrlAware>(
             return null
         }
 
-        val page = kotlin.runCatching {
+        val page = runCatching {
             withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
         }.onFailure { log.warn("Unexpected exception", it) }.getOrNull()
         globalRunningTasks.decrementAndGet()
@@ -206,6 +212,7 @@ open class StreamingCrawler<T: UrlAware>(
         return page
     }
 
+    @Throws(Exception::class)
     private suspend fun loadWithEventHandlers(url: UrlAware): WebPage? {
         val volatileConfig = conf.toVolatileConfig()
         if (url is ListenableHyperlink) {
@@ -270,12 +277,20 @@ open class StreamingCrawler<T: UrlAware>(
         ).forEach { volatileConfig.putBean(it.name, it) }
     }
 
+    @Throws(Exception::class)
     private fun handleException(url: String, e: Throwable): FlowState {
         if (flowState == FlowState.BREAK) {
             return flowState
         }
 
         when (e) {
+            is CancellationException -> {
+                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                    AppContext.tryTerminate()
+                    log.warn("Streaming crawler job is canceled, quit ... | {}", e.message)
+                }
+                return FlowState.BREAK
+            }
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
@@ -284,9 +299,9 @@ open class StreamingCrawler<T: UrlAware>(
                 return FlowState.BREAK
             }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
-            is CancellationException -> log.warn(e.message).let { return FlowState.BREAK }
             is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
             is IllegalStateException -> log.warn("Illegal state", e)
+            else -> throw e
         }
 
         return FlowState.CONTINUE

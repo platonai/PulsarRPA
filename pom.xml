@@ -34,6 +34,8 @@
 
         <!-- skipTests is set to be true in platon.pom which will be removed from platon.pom later -->
         <skipTests>false</skipTests>
+
+        <serialization.version>1.4.21</serialization.version>
     </properties>
 
     <repositories>
@@ -416,6 +418,14 @@
                 <artifactId>pulsar-h2</artifactId>
                 <version>${pulsar-h2.version}</version>
             </dependency>
+
+            <!-- https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-serialization -->
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-serialization</artifactId>
+                <version>${serialization.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

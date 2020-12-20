@@ -20,15 +20,33 @@ enum class Priority(val value: Int) {
     HIGHEST(Int.MIN_VALUE / 10), HIGHER(-1000), NORMAL(0), LOWER(1000), LOWEST(Int.MAX_VALUE / 10)
 }
 
+interface StartStopRunnable {
+    fun start()
+    fun stop()
+}
+
+class StartStopRunner(val runnable: StartStopRunnable) {
+    fun start() = runnable.start()
+    fun stop() = runnable.stop()
+}
+
 /** Unsafe lazy, usually be used in single thread */
 fun <T> usfLazy(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE, initializer)
 
 fun sleepSeconds(seconds: Long) {
-    runCatching { TimeUnit.SECONDS.sleep(seconds) }.onFailure { Thread.currentThread().interrupt() }
+    try {
+        TimeUnit.SECONDS.sleep(seconds)
+    } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
+    }
 }
 
 fun sleep(duration: Duration) {
-    runCatching { Thread.sleep(duration.toMillis()) }.onFailure { Thread.currentThread().interrupt() }
+    try {
+        Thread.sleep(duration.toMillis())
+    } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
+    }
 }
 
 /** Always false and have no static check warning */

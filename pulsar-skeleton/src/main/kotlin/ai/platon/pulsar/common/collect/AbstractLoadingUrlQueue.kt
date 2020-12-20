@@ -1,19 +1,29 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
+
+interface LoadingUrlQueue {
+    fun load()
+    fun loadNow(): Collection<UrlAware>
+}
 
 abstract class AbstractLoadingUrlQueue(
         val loader: ExternalUrlLoader,
         val group: Int = 0,
         val priority: Int = Priority.NORMAL.value
-): AbstractQueue<UrlAware>() {
+): AbstractQueue<UrlAware>(), LoadingUrlQueue {
     protected val cache = ConcurrentSkipListSet<UrlAware>()
 
     constructor(loader: ExternalUrlLoader, group: Int, priority: Priority = Priority.NORMAL)
             : this(loader, group, priority.value)
+
+    override fun load() = loader.loadTo(cache)
+
+    override fun loadNow() = loader.loadToNow(cache)
 
     override fun add(url: UrlAware) = offer(url)
 
@@ -27,7 +37,7 @@ abstract class AbstractLoadingUrlQueue(
         }
     }
 
-    override fun iterator(): MutableIterator<UrlAware> = cache.iterator()
+    override fun iterator(): MutableIterator<UrlAware> = refreshed().cache.iterator()
 
     override fun peek(): UrlAware? {
         var url = cache.firstOrNull()
@@ -43,5 +53,12 @@ abstract class AbstractLoadingUrlQueue(
         return cache.pollFirst()
     }
 
-    override val size: Int get() = cache.size
+    override val size: Int get() = refreshed().cache.size
+
+    private fun refreshed(): AbstractLoadingUrlQueue {
+        if (loader.isExpired) {
+            loader.loadTo(cache)
+        }
+        return this
+    }
 }

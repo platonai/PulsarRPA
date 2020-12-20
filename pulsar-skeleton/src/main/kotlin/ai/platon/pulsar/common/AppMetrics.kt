@@ -117,8 +117,8 @@ class AppMetrics(
             jmxReporter.start()
             csvReporter.start(initialDelay.seconds, csvReportInterval.seconds, TimeUnit.SECONDS)
             slf4jReporter.start(initialDelay.seconds, slf4jReportInterval.seconds, TimeUnit.SECONDS)
+            counterReporter.start(initialDelay, counterReportInterval)
         }
-        counterReporter.start(initialDelay, counterReportInterval)
     }
 
     override fun close() {

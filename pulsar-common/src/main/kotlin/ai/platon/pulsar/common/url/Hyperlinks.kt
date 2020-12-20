@@ -14,7 +14,6 @@ interface UrlAware: Comparable<UrlAware> {
     var url: String
     var args: String?
     var referer: String?
-
     val configuredUrl: String
 }
 
@@ -122,8 +121,16 @@ open class Hyperlink(
         /**
          * The url of the referer page
          * */
-        referer: String? = null
-): AbstractUrl(url, referer = referer) {
+        referer: String? = null,
+        /**
+         * The url arguments
+         * */
+        args: String? = null
+): AbstractUrl(url, args = args, referer = referer) {
+    constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args)
+    constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args)
+    constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args)
+
     fun data() = HyperlinkDatum(url, text, order, referer, args)
 }
 

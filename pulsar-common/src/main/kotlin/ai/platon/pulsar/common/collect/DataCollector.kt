@@ -12,6 +12,11 @@ interface DataCollector<T> {
     fun collectTo(sink: MutableCollection<T>): Int
 }
 
+interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCollector<T>> {
+    val priority: Int
+    override fun compareTo(other: PriorityDataCollector<T>) = priority - other.priority
+}
+
 abstract class AbstractDataCollector<T>: DataCollector<T> {
     override var name: String = "DC"
 
@@ -24,9 +29,8 @@ abstract class AbstractDataCollector<T>: DataCollector<T> {
 }
 
 abstract class AbstractPriorityDataCollector<T>(
-        val priority: Int = Priority.NORMAL.value
-): AbstractDataCollector<T>(), Comparable<AbstractPriorityDataCollector<T>> {
+        override val priority: Int = Priority.NORMAL.value
+): AbstractDataCollector<T>(), PriorityDataCollector<T> {
     constructor(priority: Priority): this(priority.value)
     override var name: String = "PriorityDC"
-    override fun compareTo(other: AbstractPriorityDataCollector<T>) = priority - other.priority
 }

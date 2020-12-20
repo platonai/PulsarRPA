@@ -113,17 +113,24 @@ class MetricsCounters {
         }
     }
 
-    fun inc(counter: Enum<*>) {
-        inc(getIndex(counter))
+    @JvmOverloads
+    fun inc(counter: Enum<*>, value: Int = 1) {
+        inc(getIndex(counter), value)
     }
 
-    fun inc(counter: Enum<*>, value: Int) {
-        inc(getIndex(counter), value)
+    @JvmOverloads
+    fun inc(vararg counters: Enum<*>, value: Int = 1) {
+        counters.forEach { inc(it, value) }
     }
 
     @JvmOverloads
     fun inc(group: Int, counter: Enum<*>, value: Int = 1) {
         inc(getIndexUnchecked(group, counter), value)
+    }
+
+    @JvmOverloads
+    fun inc(group: Int, vararg counters: Enum<*>, value: Int = 1) {
+        counters.forEach { inc(group, it, value) }
     }
 
     fun setValue(counter: Enum<*>, value: Int) {
