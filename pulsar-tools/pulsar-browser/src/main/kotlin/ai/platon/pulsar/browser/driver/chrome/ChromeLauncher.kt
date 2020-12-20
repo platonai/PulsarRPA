@@ -329,9 +329,9 @@ class ChromeLauncher(
                 throw ChromeProcessTimeoutException("Timeout to waiting for chrome to start")
             }
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            log.error("Interrupted while waiting for devtools server, close it", e)
             close(readLineThread)
-            log.error("Interrupted while waiting for dev tools server", e)
-            throw RuntimeException("Interrupted while waiting for dev tools server", e)
         }
         return port
     }
@@ -339,7 +339,9 @@ class ChromeLauncher(
     private fun close(thread: Thread) {
         try {
             thread.join(config.threadWaitTime.toMillis())
-        } catch (ignored: InterruptedException) {}
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
     }
 
     private fun prepareUserDataDir() {

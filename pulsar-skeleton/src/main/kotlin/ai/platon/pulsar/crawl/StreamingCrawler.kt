@@ -284,10 +284,11 @@ open class StreamingCrawler<T: UrlAware>(
                 return FlowState.BREAK
             }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
+            is CancellationException -> log.warn(e.message).let { return FlowState.BREAK }
             is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
-            is CancellationException -> log.warn("Cancellation - ", e)
-            is IllegalStateException -> log.warn("Illegal state - ", e)
+            is IllegalStateException -> log.warn("Illegal state", e)
         }
+
         return FlowState.CONTINUE
     }
 

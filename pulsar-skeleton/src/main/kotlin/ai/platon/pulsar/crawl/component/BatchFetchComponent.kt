@@ -178,6 +178,7 @@ class BatchFetchComponent(
             return future.get(35, TimeUnit.SECONDS)
         } catch (e: InterruptedException) {
             log.warn("Interrupted when fetch resource", e)
+            Thread.currentThread().interrupt()
         } catch (e: ExecutionException) {
             log.warn(e.toString())
         } catch (e: TimeoutException) {

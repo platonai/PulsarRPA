@@ -46,6 +46,7 @@ object Runtimes {
 
             logger.info("Exit | {}", info)
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
             process.destroyForcibly()
             throw e
         } finally {

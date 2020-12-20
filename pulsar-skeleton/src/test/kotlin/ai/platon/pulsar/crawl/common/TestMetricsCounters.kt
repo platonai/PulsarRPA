@@ -86,7 +86,9 @@ class TestMetricsCounters {
         taskExecutor.shutdown()
         try {
             taskExecutor.awaitTermination(2, TimeUnit.MINUTES)
-        } catch (ignored: InterruptedException) {}
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
 
         assertEquals(0, counter[Counter2.rDepth2].toLong())
         assertEquals(0, counter[Counter2.rDepth3].toLong())

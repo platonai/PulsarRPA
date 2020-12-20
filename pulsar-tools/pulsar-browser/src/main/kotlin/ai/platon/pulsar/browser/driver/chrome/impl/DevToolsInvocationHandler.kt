@@ -8,6 +8,7 @@ import com.github.kklisura.cdt.protocol.support.annotations.ReturnTypeParameter
 import com.github.kklisura.cdt.protocol.support.annotations.Returns
 import com.github.kklisura.cdt.protocol.support.types.EventHandler
 import com.github.kklisura.cdt.protocol.support.types.EventListener
+import java.lang.Exception
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
@@ -25,7 +26,7 @@ class DevToolsInvocationHandler: InvocationHandler {
     /**
      * Notice: args must be nullable, since methods can have no arguments
      * */
-    @Throws(Throwable::class)
+    @Throws(InterruptedException::class)
     override fun invoke(unused: Any, method: Method, args: Array<Any>?): Any? {
         if (isEventSubscription(method)) {
             val domainName = method.declaringClass.simpleName

@@ -146,6 +146,7 @@ class LoadingWebDriverPool(
                 doClose(CLOSE_ALL_TIMEOUT)
             } catch (e: InterruptedException) {
                 log.warn("Thread interrupted when closing | {}", this)
+                Thread.currentThread().interrupt()
             }
         }
     }
@@ -200,6 +201,7 @@ class LoadingWebDriverPool(
         val driver = try {
             freeDrivers.poll(timeout, unit)
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
             throw WebDriverPoolException(e)
         } finally {
             numWaiting.decrementAndGet()
@@ -263,7 +265,9 @@ class LoadingWebDriverPool(
                     notBusy.await(1, TimeUnit.SECONDS)
                     log.takeIf { i % 20 == 0 }?.info("Round $i/$ttl waiting for idle | $this")
                 }
-            } catch (ignored: InterruptedException) {}
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
         }
     }
 

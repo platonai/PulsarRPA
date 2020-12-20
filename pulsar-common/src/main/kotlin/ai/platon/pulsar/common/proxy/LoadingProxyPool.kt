@@ -102,6 +102,7 @@ class LoadingProxyPool(
         val proxy = try {
             freeProxies.poll(pollingTimeout.toMillis(), TimeUnit.MILLISECONDS)
         } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
             null
         }?:return null
 

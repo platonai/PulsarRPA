@@ -180,6 +180,7 @@ class FetchLoop(
             log.error("Failed to write to hdfs - {}", Strings.stringifyException(e))
         } catch (e: InterruptedException) {
             log.error("Interrupted - {}", Strings.stringifyException(e))
+            Thread.currentThread().interrupt()
         } catch (e: Throwable) {
             log.error(Strings.stringifyException(e))
         }

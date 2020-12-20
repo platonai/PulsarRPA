@@ -34,7 +34,7 @@ public class TestConcurrentLRUCache {
     }
 
     @Test
-    public void testSmallLRUCache() throws InterruptedException {
+    public void testSmallLRUCache() {
         assertNotNull(cache.get(1));
         assertNotNull(cache.get(2));
         assertNotNull(cache.get(3));
