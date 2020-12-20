@@ -16,9 +16,6 @@ import kotlin.test.assertTrue
 
 class TestDataCollectors: TestBase() {
 
-    val globalCache = GlobalCache(conf)
-    val fetchCacheManager get() = globalCache.fetchCacheManager
-
     @Test
     fun testLoadingFetchCache() {
         val fetchCache = LoadingFetchCache(urlLoader, Priority.NORMAL.value, conf)

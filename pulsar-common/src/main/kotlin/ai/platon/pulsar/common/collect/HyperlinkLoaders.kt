@@ -25,20 +25,18 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     }
 
     override fun loadToNow(sink: MutableCollection<UrlAware>, group: Int, priority: Int): Collection<UrlAware> {
-        kotlin.runCatching {
-            val groupString = "$group"
-            Files.readAllLines(path).mapNotNullTo(sink) { parse(it, groupString) }
+        val g = "$group"
+        runCatching {
+            Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
 
         return sink
     }
 
     override fun <T> loadToNow(sink: MutableCollection<T>, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T> {
-        kotlin.runCatching {
-            val groupString = "$group"
-            Files.readAllLines(path).asSequence()
-                    .mapNotNull { parse(it, groupString) }
-                    .mapTo(sink) { transformer(it) }
+        val g = "$group"
+        runCatching {
+            Files.readAllLines(path).asSequence().mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }
         }.onFailure { log.warn("Failed to load urls from $path", it) }
 
         return sink

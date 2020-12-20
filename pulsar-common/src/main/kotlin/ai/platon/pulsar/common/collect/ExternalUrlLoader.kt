@@ -1,10 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority
-import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.UrlAware
-import java.io.InputStream
-import java.io.OutputStream
 import java.time.Duration
 import java.time.Instant
 
@@ -50,12 +47,20 @@ interface ExternalUrlLoader {
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>,
                   group: Int = 0, priority: Int = Priority.NORMAL.value): Collection<UrlAware>
+    /**
+     * Load items from the source to the sink
+     * */
     fun <T> loadToNow(sink: MutableCollection<T>,
                       group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
     /**
      * Load items from the source to the sink
      * */
     fun loadTo(sink: MutableCollection<UrlAware>, group: Int = 0, priority: Int = Priority.NORMAL.value)
+    /**
+     * Load items from the source to the sink
+     * */
+    fun <T> loadTo(sink: MutableCollection<T>,
+                   group: Int = 0, priority: Int = Priority.NORMAL.value, transformer: (UrlAware) -> T)
 }
 
 abstract class AbstractExternalUrlLoader(
@@ -71,14 +76,21 @@ abstract class AbstractExternalUrlLoader(
 
     override fun expire() { lastLoadTime = Instant.EPOCH }
     override fun hasMore(): Boolean = isExpired
+
     override fun saveAll(urls: Iterable<UrlAware>, group: Int) = urls.forEach { save(it, group) }
-    override fun loadTo(sink: MutableCollection<UrlAware>, group: Int, priority: Int) {
+
+    override fun loadToNow(sink: MutableCollection<UrlAware>, group: Int, priority: Int) =
+            loadToNow(sink, group, priority) { it }
+
+    override fun loadTo(sink: MutableCollection<UrlAware>, group: Int, priority: Int) = loadTo(sink, group, priority) { it }
+
+    override fun <T> loadTo(sink: MutableCollection<T>, group: Int, priority: Int, transformer: (UrlAware) -> T) {
         if (!isExpired) {
             return
         }
 
         lastLoadTime = Instant.now()
 
-        loadToNow(sink, group, priority)
+        loadToNow(sink, group, priority, transformer)
     }
 }
