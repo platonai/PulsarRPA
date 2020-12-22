@@ -8,21 +8,6 @@ import ai.platon.pulsar.common.url.FatLink
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
-open class InfinitePauseDataCollector<T>(
-        val pause: Duration = Duration.ofSeconds(1),
-        val sleeper: () -> Unit = { sleep(pause) },
-        priority: Priority = Priority.LOWEST
-): AbstractPriorityDataCollector<T>(priority) {
-    override var name: String = "InfinitePauseDC"
-
-    override fun hasMore() = true
-
-    override fun collectTo(sink: MutableCollection<T>): Int {
-        sleeper()
-        return 0
-    }
-}
-
 interface CrawlableFatLinkCollector {
     val fatLinks: Map<String, CrawlableFatLink>
 
@@ -65,6 +50,28 @@ open class MultiSourceDataCollector<E>(
             }
         }
 
+        return collected
+    }
+}
+
+/**
+ * A infinite multi source data collector, the collector always has a chance to collect the next items,
+ * and if no item actually collected, wait for a while
+ * */
+open class EndlessMultiSourceDataCollector<E>(
+        collectors: MutableList<PriorityDataCollector<E>>,
+        val pause: Duration = Duration.ofSeconds(1),
+        val sleeper: () -> Unit = { sleep(pause) },
+        priority: Priority = Priority.NORMAL
+): MultiSourceDataCollector<E>(collectors, priority) {
+    override var name: String = "EndlessMultiSourceDC"
+    override var endless: Boolean = true
+
+    override fun collectTo(sink: MutableCollection<E>): Int {
+        val collected = super.collectTo(sink)
+        if (collected == 0) {
+            sleeper()
+        }
         return collected
     }
 }

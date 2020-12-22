@@ -339,6 +339,7 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
+        // TODO: use something like LoadConfig
         page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
                 ?.runCatching { invoke(page) }
                 ?.onFailure { log.warn("Failed to invoke before load handler | {}", page.url) }

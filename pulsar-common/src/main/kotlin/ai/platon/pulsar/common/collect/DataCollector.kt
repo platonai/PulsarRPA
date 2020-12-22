@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.Priority
  * */
 interface DataCollector<T> {
     var name: String
+    var endless: Boolean
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableCollection<T>): Int
     fun collectTo(sink: MutableCollection<T>): Int
@@ -19,6 +20,7 @@ interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCol
 
 abstract class AbstractDataCollector<T>: DataCollector<T> {
     override var name: String = "DC"
+    override var endless: Boolean = false
 
     override fun collectTo(element: T, sink: MutableCollection<T>): Int {
         val added = sink.add(element)

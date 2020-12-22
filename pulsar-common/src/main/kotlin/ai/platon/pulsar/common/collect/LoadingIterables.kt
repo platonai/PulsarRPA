@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 open class ConcurrentLoadingIterable<T>(
         val collector: DataCollector<T>,
         val cacheSize: Int = 200
-): Iterable<T> {
+): Iterable<T?> {
 
     private val cache = ConcurrentLinkedQueue<T>()
 
@@ -13,27 +13,28 @@ open class ConcurrentLoadingIterable<T>(
 
     class LoadingIterator<T>(
             private val iterable: ConcurrentLoadingIterable<T>
-    ): Iterator<T> {
+    ): Iterator<T?> {
+        private val collector get() = iterable.collector
 
         @Synchronized
         fun tryLoad() {
-            if (iterable.collector.hasMore() && iterable.cache.size < iterable.cacheSize) {
-                iterable.collector.collectTo(iterable.cache)
+            if (collector.hasMore() && iterable.cache.size < iterable.cacheSize) {
+                collector.collectTo(iterable.cache)
             }
         }
 
         @Synchronized
         override fun hasNext(): Boolean {
-            while (iterable.cache.isEmpty() && iterable.collector.hasMore()) {
+            while (iterable.cache.isEmpty() && collector.hasMore()) {
                 tryLoad()
             }
 
-            return iterable.cache.isNotEmpty()
+            return collector.endless || iterable.cache.isNotEmpty()
         }
 
         @Synchronized
-        override fun next(): T {
-            return iterable.cache.poll()?:throw NoSuchElementException()
+        override fun next(): T? {
+            return iterable.cache.poll()
         }
     }
 }

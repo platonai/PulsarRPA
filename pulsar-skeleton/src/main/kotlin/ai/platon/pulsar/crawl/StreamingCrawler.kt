@@ -34,7 +34,7 @@ import kotlin.jvm.Throws
 import kotlin.math.abs
 
 open class StreamingCrawler<T: UrlAware>(
-        private val urls: Sequence<T>,
+        private val urls: Sequence<T?>,
         private val options: LoadOptions = LoadOptions.create(),
         session: PulsarSession = PulsarContexts.createSession(),
         autoClose: Boolean = true
@@ -111,7 +111,7 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     open suspend fun run(scope: CoroutineScope) {
-        log.info("Staring streaming crawler ...")
+        log.info("Starting streaming crawler ...")
 
         globalRunningInstances.incrementAndGet()
 
@@ -120,6 +120,10 @@ open class StreamingCrawler<T: UrlAware>(
         urls.forEachIndexed { j, url ->
             if (!isActive) {
                 return@run
+            }
+
+            if (url == null) {
+                return@forEachIndexed
             }
 
             globalTasks.incrementAndGet()

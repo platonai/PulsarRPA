@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.url.CrawlableFatLink
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.StatefulHyperlink
 import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.crawl.common.ListenableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.nodes.node.ext.bestElement
 import ai.platon.pulsar.dom.nodes.node.ext.isAnchor
@@ -121,9 +122,7 @@ class FatLinkExtractor(val session: PulsarSession) {
                 "loadedSeeds" to Gauge { globalCounters.loadedSeeds }
         )
 
-        init {
-            AppMetrics.registerAll(this, gauges)
-        }
+        init { AppMetrics.registerAll(this, gauges) }
     }
 
     private val webDb = session.context.getBean<WebDb>()
