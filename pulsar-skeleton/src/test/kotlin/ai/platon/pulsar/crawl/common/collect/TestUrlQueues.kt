@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.common.collect
 
-import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingUrlQueue
+import ai.platon.pulsar.common.collect.ConcurrentNEntrantLoadingQueue
 import ai.platon.pulsar.common.url.Hyperlink
 import org.junit.Test
 import kotlin.test.assertNotNull
@@ -10,7 +10,7 @@ class TestUrlQueues: TestBase() {
 
     @Test
     fun testConcurrentNEntrantLoadingUrlQueue() {
-        val queue = ConcurrentNEntrantLoadingUrlQueue(urlLoader)
+        val queue = ConcurrentNEntrantLoadingQueue(urlLoader)
         queue.load()
 
         assertTrue { queue.isNotEmpty() }

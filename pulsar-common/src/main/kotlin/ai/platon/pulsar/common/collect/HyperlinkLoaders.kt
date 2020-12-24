@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
+import kotlin.math.max
 
 open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     private val log = LoggerFactory.getLogger(LocalFileUrlLoader::class.java)
@@ -24,7 +25,7 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
         Files.writeString(path, "$group$delimiter$json\n", StandardOpenOption.APPEND)
     }
 
-    override fun loadToNow(sink: MutableCollection<UrlAware>, group: Int, priority: Int): Collection<UrlAware> {
+    override fun loadToNow(sink: MutableCollection<UrlAware>, maxSize: Int, group: Int, priority: Int): Collection<UrlAware> {
         val g = "$group"
         runCatching {
             Files.readAllLines(path).mapNotNullTo(sink) { parse(it, g) }
@@ -33,7 +34,15 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
         return sink
     }
 
-    override fun <T> loadToNow(sink: MutableCollection<T>, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T> {
+    override fun <T> loadToNow(sink: MutableCollection<T>, maxSize: Int, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T> {
+        if (maxSize < 0) {
+            throw IllegalArgumentException("maxSize should be >= 0")
+        }
+
+        if (maxSize <= 0) {
+            return listOf()
+        }
+
         val g = "$group"
         runCatching {
             Files.readAllLines(path).asSequence().mapNotNull { parse(it, g) }.mapTo(sink) { transformer(it) }

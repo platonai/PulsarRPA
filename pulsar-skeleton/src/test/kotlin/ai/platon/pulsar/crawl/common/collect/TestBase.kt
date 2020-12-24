@@ -10,6 +10,7 @@ import org.junit.BeforeClass
 
 open class TestBase {
     protected val conf = ImmutableConfig()
+    protected val group = 0
     protected val queueSize = 100
     protected lateinit var urlLoader: TemporaryLocalFileUrlLoader
 
@@ -21,6 +22,6 @@ open class TestBase {
         urlLoader = TemporaryLocalFileUrlLoader()
         val hyperlinks = IntRange(1, queueSize).map { AppConstants.EXAMPLE_URL + "/$it" }
                 .mapIndexed { i, url -> Hyperlink(url, order = 1 + i) }
-        urlLoader.saveAll(hyperlinks)
+        urlLoader.saveAll(hyperlinks, group)
     }
 }

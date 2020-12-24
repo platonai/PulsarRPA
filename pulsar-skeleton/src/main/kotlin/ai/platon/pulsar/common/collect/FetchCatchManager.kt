@@ -63,11 +63,12 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig): AbstractFetchCatc
 
 class LoadingFetchCatchManager(
         val urlLoader: ExternalUrlLoader,
+        val capacity: Int = 10_000,
         conf: ImmutableConfig
 ): ConcurrentFetchCatchManager(conf) {
     override fun initialize() {
         Priority.values().map { it.value }.forEach { priority ->
-            fetchCaches[priority] = LoadingFetchCache(urlLoader, priority, conf)
+            fetchCaches[priority] = LoadingFetchCache(urlLoader, priority, capacity, conf)
         }
     }
 }

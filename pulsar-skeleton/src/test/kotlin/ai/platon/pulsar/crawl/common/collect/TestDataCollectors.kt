@@ -3,10 +3,8 @@ package ai.platon.pulsar.crawl.common.collect
 import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.collect.*
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.PlainUrl
-import ai.platon.pulsar.crawl.common.GlobalCache
 import org.apache.commons.collections4.map.MultiValueMap
 import org.junit.Test
 import java.nio.file.Paths
@@ -18,7 +16,7 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun testLoadingFetchCache() {
-        val fetchCache = LoadingFetchCache(urlLoader, Priority.NORMAL.value, conf)
+        val fetchCache = LoadingFetchCache(urlLoader, conf = conf)
         // auto loaded
         assertTrue { fetchCache.totalSize > 0 }
         fetchCache.load()
@@ -27,7 +25,7 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when collect from collector with loading fetch cache then sink has items`() {
-        val fetchCache = LoadingFetchCache(urlLoader, Priority.NORMAL.value, conf)
+        val fetchCache = LoadingFetchCache(urlLoader, conf = conf)
         assertTrue { fetchCache.totalSize > 0 }
         val collector = GlobalCachedHyperlinkCollector(fetchCache, fetchCache.priority)
         val sink = mutableListOf<Hyperlink>()
@@ -37,8 +35,8 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when add a item to queue then queue is not empty`() {
-        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader(), Priority.NORMAL.value, conf)
-        fetchCache.nReentrantFetchUrls.add(PlainUrl(AppConstants.EXAMPLE_URL))
+        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader(), conf = conf)
+        fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { fetchCache.totalSize == 1 }
         val collector = GlobalCachedHyperlinkCollector(fetchCache, fetchCache.priority)
         assertTrue { collector.hasMore() }
@@ -49,8 +47,8 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when add an item to LoadingFetchCache then LoadingIterable has next`() {
-        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader(), Priority.NORMAL.value, conf)
-        fetchCache.nReentrantFetchUrls.add(PlainUrl(AppConstants.EXAMPLE_URL))
+        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader(), conf = conf)
+        fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { fetchCache.totalSize == 1 }
 
         val collectors: MutableList<PriorityDataCollector<Hyperlink>> = Collections.synchronizedList(LinkedList())
@@ -59,7 +57,7 @@ class TestDataCollectors: TestBase() {
 
         assertTrue { fetchQueueIterable.collector.hasMore() }
         assertTrue { fetchQueueIterable.iterator().hasNext() }
-        assertEquals(AppConstants.EXAMPLE_URL, fetchQueueIterable.iterator().next()?.url)
+        assertEquals(AppConstants.EXAMPLE_URL, fetchQueueIterable.iterator().next().url)
     }
 
     @Test

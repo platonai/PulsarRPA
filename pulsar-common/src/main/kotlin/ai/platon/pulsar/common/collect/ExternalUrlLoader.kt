@@ -7,10 +7,6 @@ import java.time.Instant
 
 interface ExternalUrlLoader {
     /**
-     * The cache size. No more items should be loaded into the memory if the cache is full.
-     * */
-    var cacheSize: Int
-    /**
      * The estimated size of the external storage
      * */
     var estimatedSize: Int
@@ -50,25 +46,25 @@ interface ExternalUrlLoader {
      * Load items from the source to the sink
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>,
-                  group: Int = 0, priority: Int = Priority.NORMAL.value): Collection<UrlAware>
+                  maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority.NORMAL.value): Collection<UrlAware>
     /**
      * Load items from the source to the sink
      * */
     fun <T> loadToNow(sink: MutableCollection<T>,
-                      group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
+                      maxSize: Int = 10_000, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
     /**
      * Load items from the source to the sink
      * */
-    fun loadTo(sink: MutableCollection<UrlAware>, group: Int = 0, priority: Int = Priority.NORMAL.value)
+    fun loadTo(sink: MutableCollection<UrlAware>,
+               maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority.NORMAL.value)
     /**
      * Load items from the source to the sink
      * */
     fun <T> loadTo(sink: MutableCollection<T>,
-                   group: Int = 0, priority: Int = Priority.NORMAL.value, transformer: (UrlAware) -> T)
+                   maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority.NORMAL.value, transformer: (UrlAware) -> T)
 }
 
 abstract class AbstractExternalUrlLoader(
-        override var cacheSize: Int = Int.MAX_VALUE,
         override var loadDelay: Duration = Duration.ofSeconds(10)
 ): ExternalUrlLoader {
 
@@ -84,18 +80,20 @@ abstract class AbstractExternalUrlLoader(
 
     override fun saveAll(urls: Iterable<UrlAware>, group: Int) = urls.forEach { save(it, group) }
 
-    override fun loadToNow(sink: MutableCollection<UrlAware>, group: Int, priority: Int) =
-            loadToNow(sink, group, priority) { it }
+    override fun loadToNow(sink: MutableCollection<UrlAware>, maxSize: Int, group: Int, priority: Int) =
+            loadToNow(sink, maxSize, group, priority) { it }
 
-    override fun loadTo(sink: MutableCollection<UrlAware>, group: Int, priority: Int) = loadTo(sink, group, priority) { it }
+    override fun loadTo(sink: MutableCollection<UrlAware>,
+                        maxSize: Int, group: Int, priority: Int) = loadTo(sink, maxSize, group, priority) { it }
 
-    override fun <T> loadTo(sink: MutableCollection<T>, group: Int, priority: Int, transformer: (UrlAware) -> T) {
+    override fun <T> loadTo(sink: MutableCollection<T>,
+                            maxSize: Int, group: Int, priority: Int, transformer: (UrlAware) -> T) {
         if (!isExpired) {
             return
         }
 
         lastLoadTime = Instant.now()
 
-        loadToNow(sink, group, priority, transformer)
+        loadToNow(sink, maxSize, group, priority, transformer)
     }
 }

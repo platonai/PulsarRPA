@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.AppMetrics
-import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Priority
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
@@ -9,7 +8,6 @@ import ai.platon.pulsar.common.url.UrlAware
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
-import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
@@ -22,7 +20,7 @@ open class GlobalCachedHyperlinkCollector(
 
     override var name = "GlobalCachedHC"
 
-    private val hyperlinkQueues get() = fetchCache.fetchUrlQueues
+    private val hyperlinkQueues get() = fetchCache.fetchQueues
 
     constructor(fetchCache: FetchCache, priority: Priority): this(fetchCache, priority.value)
 
@@ -75,6 +73,7 @@ open class LoadingHyperlinkCollector(
 
 open class LocalFileHyperlinkCollector(
         val path: Path,
+        val capacity: Int = 1_000_000,
         priority: Int = Priority.NORMAL.value
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
@@ -86,7 +85,10 @@ open class LocalFileHyperlinkCollector(
     val hyperlinks = LinkedList<Hyperlink>()
 
     init {
-        urlLoader.loadToNow(mutableListOf()).mapTo(hyperlinks) { if (it is Hyperlink) it else Hyperlink(it) }
+        val remainingCapacity = hyperlinks.size - capacity
+        urlLoader.loadToNow(mutableListOf(), remainingCapacity).mapTo(hyperlinks) {
+            if (it is Hyperlink) it else Hyperlink(it)
+        }
         log.info("There are {} urls in file | {}", hyperlinks.size, path)
     }
 

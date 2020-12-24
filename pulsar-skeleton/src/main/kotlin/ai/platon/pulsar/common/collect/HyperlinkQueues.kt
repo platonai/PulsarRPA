@@ -5,17 +5,19 @@ import ai.platon.pulsar.common.url.UrlAware
 import com.google.common.collect.ConcurrentHashMultiset
 import java.util.concurrent.ConcurrentSkipListSet
 
-class ConcurrentReentrantLoadingUrlQueue(
+class ConcurrentReentrantLoadingQueue(
         loader: ExternalUrlLoader,
-        group: Int = ConcurrentReentrantLoadingUrlQueue::javaClass.name.hashCode(),
-        priority: Int = Priority.NORMAL.value
-): AbstractLoadingUrlQueue(loader, group, priority)
+        group: Int = ConcurrentReentrantLoadingQueue::javaClass.name.hashCode(),
+        priority: Int = Priority.NORMAL.value,
+        capacity: Int = 100_000
+): AbstractLoadingQueue(loader, group, priority, capacity)
 
-class ConcurrentNonReentrantLoadingUrlQueue(
+class ConcurrentNonReentrantLoadingQueue(
         loader: ExternalUrlLoader,
-        group: Int = ConcurrentNonReentrantLoadingUrlQueue::javaClass.name.hashCode(),
-        priority: Int = Priority.NORMAL.value
-): AbstractLoadingUrlQueue(loader, group, priority) {
+        group: Int = ConcurrentNonReentrantLoadingQueue::javaClass.name.hashCode(),
+        priority: Int = Priority.NORMAL.value,
+        capacity: Int = 100_000
+): AbstractLoadingQueue(loader, group, priority, capacity) {
     private val historyHash = ConcurrentSkipListSet<Int>()
 
     override fun offer(url: UrlAware): Boolean {
@@ -23,11 +25,11 @@ class ConcurrentNonReentrantLoadingUrlQueue(
 
         synchronized(this) {
             if (!historyHash.contains(hashCode)) {
-                historyHash.add(hashCode)
-                return if (cache.size < loader.cacheSize) {
+                return if (cache.size < capacity) {
+                    historyHash.add(hashCode)
                     cache.add(url)
                 } else {
-                    loader.save(url)
+                    loader.save(url, group)
                     true
                 }
             }
@@ -37,12 +39,13 @@ class ConcurrentNonReentrantLoadingUrlQueue(
     }
 }
 
-class ConcurrentNEntrantLoadingUrlQueue(
+class ConcurrentNEntrantLoadingQueue(
         loader: ExternalUrlLoader,
         val n: Int = 3,
-        group: Int = ConcurrentNEntrantLoadingUrlQueue::javaClass.name.hashCode(),
-        priority: Int = Priority.NORMAL.value
-): AbstractLoadingUrlQueue(loader, group, priority) {
+        group: Int = ConcurrentNEntrantLoadingQueue::javaClass.name.hashCode(),
+        priority: Int = Priority.NORMAL.value,
+        capacity: Int = 100_000
+): AbstractLoadingQueue(loader, group, priority, capacity) {
 
     private val historyHash = ConcurrentHashMultiset.create<Int>()
 
@@ -51,11 +54,11 @@ class ConcurrentNEntrantLoadingUrlQueue(
 
         synchronized(this) {
             if (historyHash.count(hashCode) <= n) {
-                historyHash.add(hashCode)
-                return if (cache.size < loader.cacheSize) {
+                return if (cache.size < capacity) {
+                    historyHash.add(hashCode)
                     cache.add(url)
                 } else {
-                    loader.save(url)
+                    loader.save(url, group)
                     true
                 }
             }
