@@ -9,7 +9,7 @@ crawling, web scraping, data mining, BI, etc.
 ![product-screenshot](docs/images/pulsar-product-screenshot-1.png)
 
 # Features
-- X-SQL: eXtended SQL to manage web data: crawling, web scraping, data mining, BI, etc.
+- X-SQL: eXtends SQL to manage web data: crawling, web scraping, data mining, BI, etc.
 - Web spider: browser rendering, ajax, scheduling, page scoring, monitoring, distributed, high performance, indexing by solr/elastic
 - BI Integration: turn Web sites into tables and charts using just one simple SQL
 - Big data: large scale, various storage: HBase/MongoDB
@@ -78,7 +78,7 @@ Add maven dependency to your project:
         <version>1.5.7-SNAPSHOT</version>
     </dependency>
 
-And then scrape web pages using:
+then scrape web pages using:
 
     select
         dom_first_text(dom, '.sku-name') as name,
