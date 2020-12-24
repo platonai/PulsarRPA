@@ -30,13 +30,16 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.jvm.Throws
 import kotlin.math.abs
 
 open class StreamingCrawler<T: UrlAware>(
-        private val urls: Sequence<T?>,
+        private val urls: Sequence<T>,
         private val options: LoadOptions = LoadOptions.create(),
         session: PulsarSession = PulsarContexts.createSession(),
+        /**
+         * A optional global cache which will hold the retry tasks
+         * */
+        val globalCache: GlobalCache? = null,
         autoClose: Boolean = true
 ): Crawler(session, autoClose) {
     companion object {
@@ -85,7 +88,6 @@ open class StreamingCrawler<T: UrlAware>(
 
     var jobName: String = "crawler-" + RandomStringUtils.randomAlphanumeric(5)
     var pageCollector: ConcurrentLinkedQueue<WebPage>? = null
-    var globalCache: GlobalCache? = null
 
     val id = instanceSequencer.incrementAndGet()
     // TODO: use event handler instead
@@ -122,7 +124,7 @@ open class StreamingCrawler<T: UrlAware>(
                 return@run
             }
 
-            if (url == null) {
+            if (url.isNil) {
                 return@forEachIndexed
             }
 

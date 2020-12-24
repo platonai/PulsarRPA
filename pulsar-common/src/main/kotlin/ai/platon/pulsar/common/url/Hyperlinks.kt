@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.url
 
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.config.AppConstants
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -15,6 +16,7 @@ interface UrlAware: Comparable<UrlAware> {
     var args: String?
     var referer: String?
     val configuredUrl: String
+    val isNil: Boolean
 }
 
 /**
@@ -33,6 +35,8 @@ abstract class AbstractUrl(
 ): UrlAware {
 
     override val configuredUrl get() = if (args != null) "$url $args" else url
+
+    override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
 
     /**
      * A abstract url can be compare to one of the following types:

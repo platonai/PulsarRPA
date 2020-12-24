@@ -31,6 +31,10 @@ interface ExternalUrlLoader {
      * */
     fun expire()
     /**
+     * Force the loading time to expire
+     * */
+    fun reset() = expire()
+    /**
      * Save the url to the external repository
      * */
     fun save(url: UrlAware, group: Int = 0)
@@ -75,6 +79,7 @@ abstract class AbstractExternalUrlLoader(
     override val isExpired get() = lastLoadTime + loadDelay < Instant.now()
 
     override fun expire() { lastLoadTime = Instant.EPOCH }
+    override fun reset() { lastLoadTime = Instant.EPOCH }
     override fun hasMore(): Boolean = isExpired
 
     override fun saveAll(urls: Iterable<UrlAware>, group: Int) = urls.forEach { save(it, group) }

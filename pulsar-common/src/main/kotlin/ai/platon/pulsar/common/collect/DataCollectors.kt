@@ -58,20 +58,27 @@ open class MultiSourceDataCollector<E>(
  * A infinite multi source data collector, the collector always has a chance to collect the next items,
  * and if no item actually collected, wait for a while
  * */
-open class EndlessMultiSourceDataCollector<E>(
-        collectors: MutableList<PriorityDataCollector<E>>,
+open class PauseDataCollector<E>(
+        val nilElement: E,
+        val n: Int = 1,
         val pause: Duration = Duration.ofSeconds(1),
         val sleeper: () -> Unit = { sleep(pause) },
-        priority: Priority = Priority.NORMAL
-): MultiSourceDataCollector<E>(collectors, priority) {
-    override var name: String = "EndlessMultiSourceDC"
-    override var endless: Boolean = true
+        priority: Priority = Priority.LOWEST
+): AbstractPriorityDataCollector<E>(priority) {
+    override var name: String = "PauseDC"
+
+    private var collected = 0
+
+    override fun hasMore(): Boolean {
+        return collected < n
+    }
 
     override fun collectTo(sink: MutableCollection<E>): Int {
-        val collected = super.collectTo(sink)
-        if (collected == 0) {
-            sleeper()
-        }
-        return collected
+        sleeper()
+
+        sink.add(nilElement)
+        ++collected
+
+        return 1
     }
 }
