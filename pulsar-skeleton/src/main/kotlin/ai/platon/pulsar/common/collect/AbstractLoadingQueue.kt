@@ -1,15 +1,9 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.Priority
-import ai.platon.pulsar.common.url.PlainUrl
 import ai.platon.pulsar.common.url.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
-
-interface Loadable<T> {
-    fun load()
-    fun loadNow(): Collection<T>
-}
 
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,

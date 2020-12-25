@@ -6,6 +6,8 @@ import ai.platon.pulsar.dom.features.NodeFeature
 import ai.platon.pulsar.dom.features.defined.*
 import ai.platon.pulsar.dom.nodes.A_LABELS
 import ai.platon.pulsar.dom.nodes.node.ext.*
+import ai.platon.pulsar.dom.parsers.TreeParser1
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.ql.SQLContexts
 import ai.platon.pulsar.ql.annotation.H2Context
 import ai.platon.pulsar.ql.annotation.UDFGroup
@@ -13,6 +15,7 @@ import ai.platon.pulsar.ql.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.domValue
 import ai.platon.pulsar.ql.types.ValueDom
+import com.google.gson.GsonBuilder
 import org.h2.value.Value
 import org.h2.value.ValueArray
 import org.h2.value.ValueString
@@ -355,6 +358,22 @@ object DomFunctions {
     fun links(dom: ValueDom): ValueArray {
         val elements = dom.element.getElementsByTag("a")
         return toValueArray(elements)
+    }
+
+    @UDFunction
+    @JvmStatic
+    @JvmOverloads
+    fun parseTree1(dom: ValueDom, cssPath: String = ":root"): String {
+        val rootElement = if (cssPath == ":root")
+            dom.element
+        else
+            dom.element.selectFirstOrNull(cssPath) ?: return "{}"
+
+        val tree = TreeParser1(rootElement).parse()
+        val gson = GsonBuilder()
+                .setPrettyPrinting()
+                .create()
+        return gson.toJson(tree)
     }
 
     @UDFunction

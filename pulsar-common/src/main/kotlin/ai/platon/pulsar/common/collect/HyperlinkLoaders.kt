@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import kotlin.math.max
 
 open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     private val log = LoggerFactory.getLogger(LocalFileUrlLoader::class.java)
@@ -35,12 +34,9 @@ open class LocalFileUrlLoader(val path: Path): AbstractExternalUrlLoader() {
     }
 
     override fun <T> loadToNow(sink: MutableCollection<T>, maxSize: Int, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T> {
-        if (maxSize < 0) {
-            throw IllegalArgumentException("maxSize should be >= 0")
-        }
-
-        if (maxSize <= 0) {
-            return listOf()
+        when {
+            maxSize < 0 -> throw IllegalArgumentException("maxSize should be >= 0")
+            maxSize == 0 -> return listOf()
         }
 
         val g = "$group"
