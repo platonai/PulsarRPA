@@ -227,8 +227,12 @@ open class StreamingCrawler<T: UrlAware>(
             volatileConfig.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AddRefererAfterFetchHandler(url))
         }
 
-        volatileConfig.name = "StreamingCrawler#$numTasks"
-        val actualOptions = options.clone().also { it.volatileConfig = volatileConfig }
+        val label = "SC#$numTasks"
+        volatileConfig.name = label
+        val actualOptions = options.clone().also {
+            it.volatileConfig = volatileConfig
+            it.label = label
+        }
 
         return session.runCatching { loadDeferred(url.url, actualOptions) }
                 .onFailure { flowState = handleException(url.url, it) }

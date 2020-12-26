@@ -1,8 +1,6 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_LOAD_HANDLER
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_LOAD_HANDLER
@@ -14,6 +12,8 @@ import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.Urls
+import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.persist.PageCounters.Self
