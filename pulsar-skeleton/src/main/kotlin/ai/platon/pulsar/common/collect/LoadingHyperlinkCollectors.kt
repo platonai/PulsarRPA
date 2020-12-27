@@ -73,9 +73,10 @@ open class LoadingHyperlinkCollector(
 
 open class LocalFileHyperlinkCollector(
         val path: Path,
-        val capacity: Int = 1_000_000,
-        priority: Int = Priority.NORMAL.value
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
+        priority: Int = Priority.NORMAL.value,
+        capacity: Int = DEFAULT_CAPACITY
+): AbstractPriorityDataCollector<Hyperlink>(priority, capacity) {
+
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
 
     private val urlLoader = LocalFileUrlLoader(path)
@@ -85,14 +86,14 @@ open class LocalFileHyperlinkCollector(
     val hyperlinks = LinkedList<Hyperlink>()
 
     init {
-        val remainingCapacity = hyperlinks.size - capacity
+        val remainingCapacity = capacity - hyperlinks.size
         urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
             if (it is Hyperlink) it else Hyperlink(it)
         }
         log.info("There are {} urls in file | {}", hyperlinks.size, path)
     }
 
-    constructor(path: Path, priority: Priority): this(path, priority.value)
+    constructor(path: Path, priority: Priority, capacity: Int = DEFAULT_CAPACITY): this(path, priority.value, capacity)
 
     override fun hasMore() = hyperlinks.isNotEmpty()
 
@@ -114,8 +115,9 @@ open class LocalFileHyperlinkCollector(
 
 open class CircularLocalFileHyperlinkCollector(
         path: Path,
-        priority: Priority = Priority.NORMAL
-): LocalFileHyperlinkCollector(path, priority) {
+        priority: Priority = Priority.NORMAL,
+        capacity: Int = DEFAULT_CAPACITY
+): LocalFileHyperlinkCollector(path, priority, capacity) {
 
     protected val iterator = Iterators.cycle(hyperlinks)
 
@@ -131,8 +133,9 @@ open class CircularLocalFileHyperlinkCollector(
 open class PeriodicalLocalFileHyperlinkCollector(
         path: Path,
         val options: LoadOptions,
-        priority: Priority = Priority.NORMAL
-): CircularLocalFileHyperlinkCollector(path, priority) {
+        priority: Priority = Priority.NORMAL,
+        capacity: Int = DEFAULT_CAPACITY
+): CircularLocalFileHyperlinkCollector(path, priority, capacity) {
     private val log = LoggerFactory.getLogger(PeriodicalLocalFileHyperlinkCollector::class.java)
 
     companion object {

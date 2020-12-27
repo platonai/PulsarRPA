@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.Priority
  * */
 interface DataCollector<T> {
     var name: String
+    val capacity: Int
     fun hasMore(): Boolean = false
     fun collectTo(element: T, sink: MutableCollection<T>): Int
     fun collectTo(sink: MutableCollection<T>): Int
@@ -18,7 +19,12 @@ interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCol
 }
 
 abstract class AbstractDataCollector<T>: DataCollector<T> {
+    companion object {
+        const val DEFAULT_CAPACITY = 1_000_000
+    }
+
     override var name: String = "DC"
+    override val capacity: Int = DEFAULT_CAPACITY
 
     override fun collectTo(element: T, sink: MutableCollection<T>): Int {
         val added = sink.add(element)
@@ -29,7 +35,8 @@ abstract class AbstractDataCollector<T>: DataCollector<T> {
 }
 
 abstract class AbstractPriorityDataCollector<T>(
-        override val priority: Int = Priority.NORMAL.value
+        override val priority: Int = Priority.NORMAL.value,
+        override val capacity: Int = DEFAULT_CAPACITY
 ): AbstractDataCollector<T>(), PriorityDataCollector<T> {
     constructor(priority: Priority): this(priority.value)
     override var name: String = "PriorityDC"

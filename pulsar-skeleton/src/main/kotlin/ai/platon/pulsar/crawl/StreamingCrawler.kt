@@ -294,13 +294,6 @@ open class StreamingCrawler<T: UrlAware>(
         }
 
         when (e) {
-            is CancellationException -> {
-                if (isIllegalApplicationState.compareAndSet(false, true)) {
-                    AppContext.tryTerminate()
-                    log.warn("Streaming crawler job is canceled, quit ... | {}", e.message)
-                }
-                return FlowState.BREAK
-            }
             is IllegalApplicationContextStateException -> {
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
@@ -310,6 +303,14 @@ open class StreamingCrawler<T: UrlAware>(
             }
             is ProxyVendorUntrustedException -> log.error(e.message?:"Unexpected error").let { return FlowState.BREAK }
             is TimeoutCancellationException -> log.warn("Timeout cancellation: {} | {}", Strings.simplifyException(e), url)
+            is CancellationException -> {
+                // Comes after TimeoutCancellationException
+                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                    AppContext.tryTerminate()
+                    log.warn("Streaming crawler job is canceled, quit ...", e)
+                }
+                return FlowState.BREAK
+            }
             is IllegalStateException -> log.warn("Illegal state", e)
             else -> throw e
         }
