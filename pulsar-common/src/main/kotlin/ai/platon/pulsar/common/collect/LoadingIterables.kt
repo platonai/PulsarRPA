@@ -1,15 +1,23 @@
 package ai.platon.pulsar.common.collect
 
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.*
+import kotlin.NoSuchElementException
 
 open class ConcurrentLoadingIterable<T>(
         val collector: DataCollector<T>,
-        val cacheSize: Int = 200
+        val cacheSize: Int = 20
 ): Iterable<T> {
 
-    private val cache = ConcurrentLinkedQueue<T>()
+    private val cache = Collections.synchronizedList(LinkedList<T>())
 
     override fun iterator() = LoadingIterator(this)
+
+    /**
+     * add an item to the very beginning of the fetch queue
+     * */
+    fun addFirst(e: T) {
+        cache.add(0, e)
+    }
 
     class LoadingIterator<T>(
             private val iterable: ConcurrentLoadingIterable<T>
@@ -34,7 +42,7 @@ open class ConcurrentLoadingIterable<T>(
 
         @Synchronized
         override fun next(): T {
-            return iterable.cache.poll() ?: throw NoSuchElementException()
+            return iterable.cache.removeFirst() ?: throw NoSuchElementException()
         }
     }
 }
