@@ -119,21 +119,27 @@ open class StreamingCrawler<T: UrlAware>(
 
         val startTime = Instant.now()
 
-        urls.forEachIndexed { j, url ->
-            if (!isActive) {
-                return@run
+        while (isActive) {
+            if (!urls.iterator().hasNext()) {
+                sleepSeconds(1)
             }
 
-            if (url.isNil) {
-                return@forEachIndexed
-            }
+            urls.forEachIndexed { j, url ->
+                if (!isActive) {
+                    return@run
+                }
 
-            globalTasks.incrementAndGet()
-            val state = load(1 + j, url, scope)
-            globalFinishedTasks.incrementAndGet()
+                if (url.isNil) {
+                    return@forEachIndexed
+                }
 
-            if (state != FlowState.CONTINUE) {
-                return@run
+                globalTasks.incrementAndGet()
+                val state = load(1 + j, url, scope)
+                globalFinishedTasks.incrementAndGet()
+
+                if (state != FlowState.CONTINUE) {
+                    return@run
+                }
             }
         }
 
