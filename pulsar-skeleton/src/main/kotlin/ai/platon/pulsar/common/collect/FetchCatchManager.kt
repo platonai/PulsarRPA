@@ -28,7 +28,7 @@ interface FetchCatchManager {
  * The abstract fetch catch manager
  * */
 abstract class AbstractFetchCatchManager(val conf: ImmutableConfig): FetchCatchManager {
-    private val initialized = AtomicBoolean()
+    protected val initialized = AtomicBoolean()
     override val totalFetchItems get() = ensureInitialized().fetchCaches.values.sumOf { it.totalSize }
 
     override val lowestFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.LOWEST.value]!!
@@ -67,8 +67,10 @@ class LoadingFetchCatchManager(
         conf: ImmutableConfig
 ): ConcurrentFetchCatchManager(conf) {
     override fun initialize() {
-        Priority.values().map { it.value }.forEach { priority ->
-            fetchCaches[priority] = LoadingFetchCache(urlLoader, priority, capacity, conf)
+        if (initialized.compareAndSet(false, true)) {
+            Priority.values().map { it.value }.forEach { priority ->
+                fetchCaches[priority] = LoadingFetchCache(urlLoader, priority, capacity, conf)
+            }
         }
     }
 }
