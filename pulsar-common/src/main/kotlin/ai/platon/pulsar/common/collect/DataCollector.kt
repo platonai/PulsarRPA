@@ -9,8 +9,8 @@ interface DataCollector<T> {
     var name: String
     val capacity: Int
     fun hasMore(): Boolean = false
-    fun collectTo(element: T, sink: MutableCollection<T>): Int
-    fun collectTo(sink: MutableCollection<T>): Int
+    fun collectTo(element: T, sink: MutableList<T>): Int
+    fun collectTo(sink: MutableList<T>): Int
 }
 
 interface PriorityDataCollector<T>: DataCollector<T>, Comparable<PriorityDataCollector<T>> {
@@ -26,7 +26,7 @@ abstract class AbstractDataCollector<T>: DataCollector<T> {
     override var name: String = "DC"
     override val capacity: Int = DEFAULT_CAPACITY
 
-    override fun collectTo(element: T, sink: MutableCollection<T>): Int {
+    override fun collectTo(element: T, sink: MutableList<T>): Int {
         val added = sink.add(element)
         return if (added) 1 else 0
     }

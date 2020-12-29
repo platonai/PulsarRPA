@@ -37,7 +37,7 @@ open class MultiSourceDataCollector<E>(
 
     override fun hasMore() = collectors.any { it.hasMore() }
 
-    override fun collectTo(sink: MutableCollection<E>): Int {
+    override fun collectTo(sink: MutableList<E>): Int {
         roundCounter.incrementAndGet()
 
         var collected = 0
@@ -45,12 +45,23 @@ open class MultiSourceDataCollector<E>(
         while (isActive && collected == 0 && hasMore()) {
             sortedCollectors.forEach {
                 if (isActive && collected == 0 && it.hasMore()) {
-                    collected += it.collectTo(sink)
+                    collected += if (it.priority >= Priority.HIGHEST.value) {
+                        collectTo(0, it, sink)
+                    } else {
+                        it.collectTo(sink)
+                    }
                 }
             }
         }
 
         return collected
+    }
+
+    private fun collectTo(index: Int, collector: DataCollector<E>, sink: MutableList<E>): Int {
+        val list = mutableListOf<E>()
+        collector.collectTo(list)
+        sink.addAll(index, list)
+        return list.size
     }
 }
 
@@ -73,7 +84,7 @@ open class PauseDataCollector<E>(
         return collected < n
     }
 
-    override fun collectTo(sink: MutableCollection<E>): Int {
+    override fun collectTo(sink: MutableList<E>): Int {
         sleeper()
 
         sink.add(nilElement)

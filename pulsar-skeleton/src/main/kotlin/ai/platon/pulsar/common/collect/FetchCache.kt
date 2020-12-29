@@ -33,7 +33,7 @@ class LoadingFetchCache(
             FetchQueueGroup.NonReentrant.ordinal, priority, capacity)
     override val nReentrantQueue = ConcurrentNEntrantLoadingQueue(urlLoader, 3,
             FetchQueueGroup.NEntrant.ordinal, priority, capacity)
-    override val reentrantQueue = ConcurrentReentrantLoadingQueue(urlLoader,
+    override val reentrantQueue = ConcurrentLoadingQueue(urlLoader,
             FetchQueueGroup.Reentrant.ordinal, priority, capacity)
     override val fetchQueues: Array<Queue<UrlAware>> get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
 

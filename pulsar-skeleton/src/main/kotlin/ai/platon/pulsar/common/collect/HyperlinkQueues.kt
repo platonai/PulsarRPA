@@ -5,9 +5,9 @@ import ai.platon.pulsar.common.url.UrlAware
 import com.google.common.collect.ConcurrentHashMultiset
 import java.util.concurrent.ConcurrentSkipListSet
 
-class ConcurrentReentrantLoadingQueue(
+class ConcurrentLoadingQueue(
         loader: ExternalUrlLoader,
-        group: Int = ConcurrentReentrantLoadingQueue::javaClass.name.hashCode(),
+        group: Int = ConcurrentLoadingQueue::javaClass.name.hashCode(),
         priority: Int = Priority.NORMAL.value,
         capacity: Int = 100_000
 ): AbstractLoadingQueue(loader, group, priority, capacity)

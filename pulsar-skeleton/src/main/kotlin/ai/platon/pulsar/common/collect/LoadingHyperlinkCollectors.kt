@@ -13,12 +13,12 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-open class GlobalCachedHyperlinkCollector(
+open class FetchCacheCollector(
         private val fetchCache: FetchCache,
         priority: Int = Priority.HIGHER.value
 ): AbstractPriorityDataCollector<Hyperlink>(priority) {
 
-    override var name = "GlobalCachedHC"
+    override var name = "FetchCacheC"
 
     private val hyperlinkQueues get() = fetchCache.fetchQueues
 
@@ -26,7 +26,7 @@ open class GlobalCachedHyperlinkCollector(
 
     override fun hasMore() = hyperlinkQueues.any { it.isNotEmpty() }
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) {
             return 0
         }
@@ -44,6 +44,32 @@ open class GlobalCachedHyperlinkCollector(
     }
 }
 
+open class LoadingQueueCollector(
+        val queue: LoadingQueue<UrlAware>,
+        priority: Priority = Priority.NORMAL
+): AbstractPriorityDataCollector<Hyperlink>(priority) {
+
+    override var name = "LoadingQueueC"
+
+    override fun hasMore() = queue.isNotEmpty()
+
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+        if (!hasMore()) {
+            return 0
+        }
+
+        var collected = 0
+        queue.poll()?.let {
+            val hyperlink = if (it is Hyperlink) it else Hyperlink(it.url)
+            if (sink.add(hyperlink)) {
+                ++collected
+            }
+        }
+
+        return collected
+    }
+}
+
 open class LoadingHyperlinkCollector(
         val loader: ExternalUrlLoader,
         priority: Priority = Priority.NORMAL
@@ -55,7 +81,7 @@ open class LoadingHyperlinkCollector(
 
     override fun hasMore() = hyperlinks.isNotEmpty()
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) {
             return 0
         }
@@ -97,7 +123,7 @@ open class LocalFileHyperlinkCollector(
 
     override fun hasMore() = hyperlinks.isNotEmpty()
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) {
             return 0
         }
@@ -121,7 +147,7 @@ open class CircularLocalFileHyperlinkCollector(
 
     protected val iterator = Iterators.cycle(hyperlinks)
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         var collected = 0
         if (hasMore() && iterator.hasNext()) {
             collected += collectTo(iterator.next(), sink)
@@ -180,7 +206,7 @@ open class PeriodicalLocalFileHyperlinkCollector(
 
     override fun hasMore() = (!isFinished || isExpired) && iterator.hasNext()
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         ++counters.collects
 
         resetIfNecessary()

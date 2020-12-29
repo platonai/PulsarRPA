@@ -64,7 +64,7 @@ open class HyperlinkCollector(
 
     override fun hasMore() = seeds.isNotEmpty()
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         ++globalCollects
         ++collects
 
@@ -136,7 +136,7 @@ open class CircularHyperlinkCollector(
             priority: Priority = Priority.HIGHER
     ): this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) return 0
 
         var collected = 0
@@ -175,7 +175,7 @@ open class PeriodicalHyperlinkCollector(
 
     override fun hasMore() = synchronized(iterator) { isExpired && iterator.hasNext() }
 
-    override fun collectTo(sink: MutableCollection<Hyperlink>): Int {
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) {
             return 0
         }
