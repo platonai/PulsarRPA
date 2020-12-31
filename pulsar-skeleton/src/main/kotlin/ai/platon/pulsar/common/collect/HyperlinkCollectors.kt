@@ -13,6 +13,32 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentSkipListMap
 
+open class UrlQueueCollector(
+        val queue: Queue<UrlAware>,
+        priority: Priority = Priority.NORMAL
+) : AbstractPriorityDataCollector<Hyperlink>(priority) {
+
+    override var name = "UrlQueueC"
+
+    override fun hasMore() = queue.isNotEmpty()
+
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+        if (!hasMore()) {
+            return 0
+        }
+
+        var collected = 0
+        queue.poll()?.let {
+            val hyperlink = if (it is Hyperlink) it else Hyperlink(it.url)
+            if (sink.add(hyperlink)) {
+                ++collected
+            }
+        }
+
+        return collected
+    }
+}
+
 /**
  * Collect hyper links from the given [seeds]. The urls are restricted by [loadArguments] and [urlPattern].
  * 1. all urls are restricted by css outLinkSelector
@@ -32,7 +58,7 @@ open class HyperlinkCollector(
          * The priority of this collector
          * */
         priority: Priority = Priority.NORMAL
-): AbstractPriorityDataCollector<Hyperlink>(priority), CrawlableFatLinkCollector {
+) : AbstractPriorityDataCollector<Hyperlink>(priority), CrawlableFatLinkCollector {
     companion object {
         var globalCollects: Int = 0
 
@@ -124,7 +150,7 @@ open class CircularHyperlinkCollector(
         session: PulsarSession,
         seeds: Queue<NormUrl>,
         priority: Priority = Priority.HIGHER
-): HyperlinkCollector(session, seeds, priority) {
+) : HyperlinkCollector(session, seeds, priority) {
     private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
     protected val iterator = Iterators.cycle(seeds)
 
@@ -134,7 +160,7 @@ open class CircularHyperlinkCollector(
             session: PulsarSession,
             seed: NormUrl,
             priority: Priority = Priority.HIGHER
-    ): this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
+    ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) return 0
@@ -164,7 +190,7 @@ open class PeriodicalHyperlinkCollector(
         session: PulsarSession,
         val seed: NormUrl,
         priority: Priority = Priority.HIGHER
-): CircularHyperlinkCollector(session, seed, priority) {
+) : CircularHyperlinkCollector(session, seed, priority) {
     private val log = LoggerFactory.getLogger(PeriodicalHyperlinkCollector::class.java)
     private var position = 0
     private var lastFinishTime = Instant.EPOCH

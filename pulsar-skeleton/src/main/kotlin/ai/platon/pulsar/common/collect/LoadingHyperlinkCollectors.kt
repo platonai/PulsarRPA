@@ -44,59 +44,6 @@ open class FetchCacheCollector(
     }
 }
 
-open class LoadingQueueCollector(
-        val queue: LoadingQueue<UrlAware>,
-        priority: Priority = Priority.NORMAL
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
-
-    override var name = "LoadingQueueC"
-
-    override fun hasMore() = queue.isNotEmpty()
-
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
-        var collected = 0
-        queue.poll()?.let {
-            val hyperlink = if (it is Hyperlink) it else Hyperlink(it.url)
-            if (sink.add(hyperlink)) {
-                ++collected
-            }
-        }
-
-        return collected
-    }
-}
-
-open class LoadingHyperlinkCollector(
-        val loader: ExternalUrlLoader,
-        priority: Priority = Priority.NORMAL
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
-
-    override var name = "LoadingHC"
-
-    val hyperlinks = LinkedList<Hyperlink>()
-
-    override fun hasMore() = hyperlinks.isNotEmpty()
-
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
-        var collected = 0
-        hyperlinks.poll()?.let {
-            if (sink.add(it)) {
-                ++collected
-            }
-        }
-
-        return collected
-    }
-}
-
 open class LocalFileHyperlinkCollector(
         val path: Path,
         priority: Int = Priority.NORMAL.value,

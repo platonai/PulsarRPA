@@ -16,10 +16,13 @@
  */
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.reverseUrl
 import ai.platon.pulsar.common.url.Urls.unreverseUrl
 import org.junit.Assert
 import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 typealias uc = UrlCommon
 
@@ -52,6 +55,32 @@ class TestUrls {
         assertUnreverse(uc.reversedUrlString5, uc.urlString5rev)
         assertUnreverse(uc.reversedUrlString6, uc.urlString6)
         assertUnreverse(uc.reversedUrlString7, uc.urlString7)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testRemoveParameters() {
+        val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
+        val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
+
+        assertTrue { "10329849011" !in Urls.removeQueryParameters(url, "bbn") }
+        assertTrue { "page" !in Urls.removeQueryParameters(url, "page") }
+
+        assertEquals(stripedUrl, Urls.removeQueryParameters(url, "bbn", "page", "ref", "qid"))
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun testKeepParameters() {
+        val url = "https://www.amazon.com/s?k=sleep&i=amazonfresh&bbn=10329849011&page=2&qid=1609388361&ref=sr_pg_2"
+        val stripedUrl = "https://www.amazon.com/s?k=sleep&i=amazonfresh"
+
+        assertTrue { "10329849011" in Urls.keepQueryParameters(url, "bbn") }
+
+        assertTrue { "page" in Urls.keepQueryParameters(url, "page") }
+        assertTrue { "bbn" !in Urls.keepQueryParameters(url, "page") }
+
+        assertEquals(stripedUrl, Urls.keepQueryParameters(url, "k", "i"))
     }
 
     companion object {

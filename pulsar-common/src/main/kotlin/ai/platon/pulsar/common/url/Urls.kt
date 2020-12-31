@@ -50,15 +50,14 @@ object Urls {
     @Throws(URISyntaxException::class)
     fun removeQueryParameters(url: String, vararg parameterNames: String): String {
         val uriBuilder = URIBuilder(url)
-        val queryParameters: MutableList<NameValuePair> = uriBuilder.queryParams
-        val it = queryParameters.iterator()
-        while (it.hasNext()) {
-            val param = it.next()
-            if (param.name in parameterNames) {
-                it.remove()
-            }
-        }
-        uriBuilder.setParameters(queryParameters)
+        uriBuilder.setParameters(uriBuilder.queryParams.apply { removeIf { it.name in parameterNames } })
+        return uriBuilder.build().toString()
+    }
+
+    @Throws(URISyntaxException::class)
+    fun keepQueryParameters(url: String, vararg parameterNames: String): String {
+        val uriBuilder = URIBuilder(url)
+        uriBuilder.setParameters(uriBuilder.queryParams.apply { removeIf { it.name !in parameterNames } })
         return uriBuilder.build().toString()
     }
 
