@@ -37,12 +37,6 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig): FetchCatchM
     override val higherFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.HIGHER.value]!!
     override val highestFetchCache: FetchCache get() = ensureInitialized().fetchCaches[Priority.HIGHEST.value]!!
 
-    override fun initialize() {
-        if (initialized.compareAndSet(false, true)) {
-            Priority.values().forEach { fetchCaches[it.value] = ConcurrentFetchCache(conf) }
-        }
-    }
-
     private fun ensureInitialized(): AbstractFetchCatchManager {
         if (initialized.compareAndSet(false, true)) {
             initialize()
@@ -59,6 +53,12 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig): AbstractFetchCatc
      * The priority fetch caches
      * */
     override val fetchCaches = ConcurrentSkipListMap<Int, FetchCache>()
+
+    override fun initialize() {
+        if (initialized.compareAndSet(false, true)) {
+            Priority.values().forEach { fetchCaches[it.value] = ConcurrentFetchCache(conf) }
+        }
+    }
 }
 
 class LoadingFetchCatchManager(

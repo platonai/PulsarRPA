@@ -37,6 +37,11 @@ open class MultiSourceDataCollector<E>(
 
     override fun hasMore() = collectors.any { it.hasMore() }
 
+    /**
+     * Collect items from delegated collectors to the sink.
+     * If a delegated collector has priority >= Priority.HIGHEST, the items are added to the front of the sink,
+     * or the items are appended to the back of the sink.
+     * */
     override fun collectTo(sink: MutableList<E>): Int {
         roundCounter.incrementAndGet()
 
@@ -46,7 +51,7 @@ open class MultiSourceDataCollector<E>(
             sortedCollectors.forEach {
                 if (isActive && collected == 0 && it.hasMore()) {
                     collected += if (it.priority >= Priority.HIGHEST.value) {
-                        collectTo(0, it, sink)
+                        it.collectTo(0, sink)
                     } else {
                         it.collectTo(sink)
                     }
@@ -55,13 +60,6 @@ open class MultiSourceDataCollector<E>(
         }
 
         return collected
-    }
-
-    private fun collectTo(index: Int, collector: DataCollector<E>, sink: MutableList<E>): Int {
-        val list = mutableListOf<E>()
-        collector.collectTo(list)
-        sink.addAll(index, list)
-        return list.size
     }
 }
 

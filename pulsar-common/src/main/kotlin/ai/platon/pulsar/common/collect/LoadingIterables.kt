@@ -38,7 +38,7 @@ open class ConcurrentLoadingIterable<E>(
         @Synchronized
         override fun hasNext(): Boolean {
             if (realTimeCollector != null && realTimeCollector.hasMore()) {
-                collectTo(0, realTimeCollector, cache)
+                realTimeCollector.collectTo(0, cache)
             }
 
             while (cache.isEmpty() && collector.hasMore()) {
@@ -51,13 +51,6 @@ open class ConcurrentLoadingIterable<E>(
         @Synchronized
         override fun next(): E {
             return cache.removeFirst() ?: throw NoSuchElementException()
-        }
-
-        private fun collectTo(index: Int, collector: DataCollector<E>, sink: MutableList<E>): Int {
-            val list = mutableListOf<E>()
-            collector.collectTo(list)
-            sink.addAll(index, list)
-            return list.size
         }
     }
 }
