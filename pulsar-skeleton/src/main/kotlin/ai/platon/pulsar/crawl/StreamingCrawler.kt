@@ -206,7 +206,7 @@ open class StreamingCrawler<T: UrlAware>(
 
         if (page == null || page.crawlStatus.isUnFetched) {
             globalCache?.also {
-                val added = it.fetchCacheManager.higherFetchCache.nReentrantQueue.add(url)
+                val added = it.fetchCacheManager.higherCache.nReentrantQueue.add(url)
                 globalRetries.incrementAndGet()
                 log.info("{}. Will retry task the {}th times | {}",
                         page?.id?:0,

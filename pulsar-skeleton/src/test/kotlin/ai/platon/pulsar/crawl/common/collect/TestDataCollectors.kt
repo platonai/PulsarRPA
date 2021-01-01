@@ -64,16 +64,16 @@ class TestDataCollectors: TestBase() {
     fun testDataCollectorSorting() {
         // Object information is erased
         val collectors = mutableListOf<AbstractPriorityDataCollector<Hyperlink>>()
-        fetchCacheManager.fetchCaches.forEach { (priority, fetchCache) ->
+        fetchCacheManager.caches.forEach { (priority, fetchCache) ->
             collectors += FetchCacheCollector(fetchCache, priority)
         }
-        assertEquals(fetchCacheManager.fetchCaches.size, collectors.size)
+        assertEquals(fetchCacheManager.caches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
         collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         println("Adding another normal collector ...")
         val priority = Priority.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCacheManager.normalFetchCache, priority)
+        val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
         collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
@@ -88,16 +88,16 @@ class TestDataCollectors: TestBase() {
     fun testDataCollectorSorting2() {
         val collectors = MultiValueMap<Int, AbstractPriorityDataCollector<Hyperlink>>()
 
-        globalCache.fetchCacheManager.fetchCaches.forEach { (priority, fetchCache) ->
+        globalCache.fetchCacheManager.caches.forEach { (priority, fetchCache) ->
             collectors[priority] = FetchCacheCollector(fetchCache, priority)
         }
-        assertEquals(fetchCacheManager.fetchCaches.size, collectors.keys.size)
+        assertEquals(fetchCacheManager.caches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
 
         println("Adding 2nd normal collector ...")
         val priority = Priority.NORMAL.value
-        val normalCollector = FetchCacheCollector(fetchCacheManager.normalFetchCache, priority)
+        val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
