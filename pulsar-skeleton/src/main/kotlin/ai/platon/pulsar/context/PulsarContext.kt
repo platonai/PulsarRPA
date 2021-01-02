@@ -2,6 +2,7 @@ package ai.platon.pulsar.context
 
 import ai.platon.pulsar.PulsarEnvironment
 import ai.platon.pulsar.PulsarSession
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
@@ -20,6 +21,8 @@ interface PulsarContext: AutoCloseable {
     val pulsarEnvironment: PulsarEnvironment
 
     val applicationContext: ApplicationContext
+
+    val unmodifiedConfig: ImmutableConfig
 
     fun createSession(): PulsarSession
 

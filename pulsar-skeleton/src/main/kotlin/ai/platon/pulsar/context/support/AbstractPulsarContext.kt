@@ -44,7 +44,7 @@ abstract class AbstractPulsarContext(
     /**
      * A immutable config is loaded from the config file at process startup, and never changes
      * */
-    open val unmodifiedConfig: ImmutableConfig get() = getBean()
+    override val unmodifiedConfig: ImmutableConfig get() = getBean()
 
     /**
      * Url normalizers
