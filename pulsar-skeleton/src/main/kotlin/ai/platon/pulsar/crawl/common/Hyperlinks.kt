@@ -5,12 +5,14 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
 import java.time.Instant
+import java.util.*
 
 open class ListenableHyperlink(
-        val label: String,
-        val uuid: String,
-        url: String
+        url: String,
+        val label: String = "",
+        val uuid: UUID = UUID.randomUUID()
 ): StatefulHyperlink(url) {
+    constructor(url: String, label: String, uuid: String): this(url, label, UUID.fromString(uuid))
 
     var authToken: String? = null
     var remoteAddr: String? = null
