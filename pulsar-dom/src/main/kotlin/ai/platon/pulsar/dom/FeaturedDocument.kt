@@ -2,10 +2,7 @@ package ai.platon.pulsar.dom
 
 import ai.platon.pulsar.common.AppFiles
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_NODE_FEATURE_CALCULATOR
 import ai.platon.pulsar.common.config.AppConstants.INTERNAL_URL_PREFIX
-import ai.platon.pulsar.common.config.CapabilityTypes.NODE_FEATURE_CALCULATOR_CLASS
 import ai.platon.pulsar.common.math.vectors.isNotEmpty
 import ai.platon.pulsar.dom.nodes.forEach
 import ai.platon.pulsar.dom.nodes.forEachElement
@@ -19,24 +16,9 @@ import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.select.Elements
 import org.jsoup.select.NodeTraversor
-import org.jsoup.select.NodeVisitor
 import java.awt.Dimension
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicInteger
-
-@Deprecated("We have better implementation",
-        replaceWith = ReplaceWith("ai.platon.pulsar.dom.FeatureCalculatorFactory"))
-class DocumentFeatureCalculatorFactory {
-
-    val featureCalculatorClass: Class<NodeVisitor> by lazy { loadFeatureCalculatorClass() }
-
-    val newInstance get() = featureCalculatorClass.newInstance() as NodeVisitor
-
-    private fun loadFeatureCalculatorClass(): Class<NodeVisitor> {
-        val className = System.getProperty(NODE_FEATURE_CALCULATOR_CLASS, DEFAULT_NODE_FEATURE_CALCULATOR)
-        return ResourceLoader.loadUserClass(className)
-    }
-}
 
 open class FeaturedDocument(val document: Document) {
     companion object {
@@ -47,8 +29,6 @@ open class FeaturedDocument(val document: Document) {
         var densityUnitArea = 400 * 400
 
         val globalNumDocuments = AtomicInteger()
-
-        val calculatorFactory = FeatureCalculatorFactory()
 
         val NIL = FeaturedDocument(nilDocument)
         val NIL_DOC_HTML = NIL.unbox().outerHtml()
@@ -88,7 +68,7 @@ open class FeaturedDocument(val document: Document) {
         }
 
         if (document.isInitialized.compareAndSet(false, true)) {
-            calculatorFactory.activeCalculator.calculate(document)
+            FeatureCalculatorFactory.calculator.calculate(document)
             require(features.isNotEmpty)
 
             globalNumDocuments.incrementAndGet()

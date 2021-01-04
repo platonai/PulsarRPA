@@ -36,10 +36,26 @@ abstract class AbstractParseFilter(
 
     override val children = mutableListOf<ParseFilter>()
 
+    override fun isRelevant(parseContext: ParseContext): Boolean {
+        return parseContext.page.protocolStatus.isSuccess
+    }
+
     override fun filter(parseContext: ParseContext): ParseResult {
+        onBeforeFilter(parseContext)
         val result = doFilter(parseContext)
+        onAfterFilter(parseContext)
+
         children.forEach { it.filter(parseContext) }
+
         return result
+    }
+
+    override fun onBeforeFilter(parseContext: ParseContext) {
+
+    }
+
+    override fun onAfterFilter(parseContext: ParseContext) {
+
     }
 
     open fun doFilter(parseContext: ParseContext) = parseContext.parseResult

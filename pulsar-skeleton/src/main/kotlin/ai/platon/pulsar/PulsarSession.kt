@@ -1,7 +1,10 @@
 package ai.platon.pulsar
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.BeanFactory
+import ai.platon.pulsar.common.IllegalApplicationContextStateException
 import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
@@ -52,19 +55,24 @@ open class PulsarSession(
     }
 
     private val log = LoggerFactory.getLogger(PulsarSession::class.java)
+
+    val unmodifiedConfig get() = context.unmodifiedConfig
     /**
      * The scoped bean factory: for each volatileConfig object, there is a bean factory
      * TODO: session scoped?
      * */
     val sessionBeanFactory = BeanFactory(sessionConfig)
+
+    val display = "$id"
+
+    private val closed = AtomicBoolean()
+    val isActive get() = !closed.get() && context.isActive
+
     private val variables = ConcurrentHashMap<String, Any>()
     private var enableCache = true
     private val pageCache get() = context.globalCache.pageCache
     private val documentCache get() = context.globalCache.documentCache
-    val display = "$id"
     private val closableObjects = mutableSetOf<AutoCloseable>()
-    private val closed = AtomicBoolean()
-    val isActive get() = !closed.get() && context.isActive
 
     /**
      * Close objects when sessions closes
@@ -91,6 +99,8 @@ open class PulsarSession(
     fun inject(url: String): WebPage = ensureActive { context.inject(normalize(url)) }
 
     fun get(url: String): WebPage = ensureActive { context.get(url) }
+
+    fun getOrNull(url: String): WebPage? = ensureActive { context.getOrNull(url) }
 
     /**
      * Load a url with specified options

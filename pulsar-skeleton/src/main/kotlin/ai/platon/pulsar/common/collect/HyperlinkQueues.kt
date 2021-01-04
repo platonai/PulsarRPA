@@ -25,7 +25,7 @@ class ConcurrentNonReentrantLoadingQueue(
 
         synchronized(this) {
             if (!historyHash.contains(hashCode)) {
-                return if (cache.size < capacity) {
+                return if (!url.isPersistable || freeSlots > 0) {
                     historyHash.add(hashCode)
                     cache.add(url)
                 } else {
@@ -54,7 +54,7 @@ class ConcurrentNEntrantLoadingQueue(
 
         synchronized(this) {
             if (historyHash.count(hashCode) <= n) {
-                return if (cache.size < capacity) {
+                return if (!url.isPersistable || freeSlots > 0) {
                     historyHash.add(hashCode)
                     cache.add(url)
                 } else {

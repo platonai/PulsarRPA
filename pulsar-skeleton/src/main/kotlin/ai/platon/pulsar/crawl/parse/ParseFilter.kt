@@ -20,7 +20,6 @@ package ai.platon.pulsar.crawl.parse
 
 import ai.platon.pulsar.common.config.Parameterized
 import ai.platon.pulsar.crawl.parse.html.ParseContext
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Extension point for DOM-based parsers. Permits one to add additional metadata
@@ -33,18 +32,24 @@ interface ParseFilter : Parameterized, AutoCloseable {
     var parent: ParseFilter?
     val children: List<ParseFilter>
 
-    val parentId get() = parent?.id?:0
+    val parentId get() = parent?.id ?: 0
     val isRoot get() = parent == null
     val isLeaf get() = children.isEmpty()
+
+    fun addFirst(child: ParseFilter)
+
+    fun addLast(child: ParseFilter)
+
+    fun isRelevant(parseContext: ParseContext): Boolean
+
+    fun onBeforeFilter(parseContext: ParseContext)
 
     /**
      * Adds metadata or otherwise modifies a parseResult, given the DOM tree of a page.
      */
     fun filter(parseContext: ParseContext): ParseResult
 
-    fun addFirst(child: ParseFilter)
-
-    fun addLast(child: ParseFilter)
+    fun onAfterFilter(parseContext: ParseContext)
 
     override fun close() {}
 }

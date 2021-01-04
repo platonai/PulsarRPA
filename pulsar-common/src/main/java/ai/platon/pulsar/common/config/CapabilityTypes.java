@@ -566,9 +566,6 @@ public interface CapabilityTypes {
      */
     String CACHING_FORBIDDEN_ALL = "all";
 
-    /** Constant <code>NODE_FEATURE_CALCULATOR_CLASS="pulsar.node.feature.calculator"</code> */
-    String NODE_FEATURE_CALCULATOR_CLASS = "pulsar.node.feature.calculator";
-
     /** Constant <code>PULSAR_DOMAIN="scent.domain"</code> */
     String PULSAR_DOMAIN = "scent.domain";
     /** Constant <code>SCENT_TASK_IDENT="scent.task.ident"</code> */

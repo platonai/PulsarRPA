@@ -17,6 +17,10 @@ interface UrlAware: Comparable<UrlAware> {
     var referer: String?
     val configuredUrl: String
     val isNil: Boolean
+    /**
+     * If this link is persistable
+     * */
+    val isPersistable: Boolean
 }
 
 /**
@@ -37,6 +41,11 @@ abstract class AbstractUrl(
     override val configuredUrl get() = if (args != null) "$url $args" else url
 
     override val isNil: Boolean get() = url == AppConstants.NIL_PAGE_URL
+
+    /**
+     * If this link is persistable
+     * */
+    override val isPersistable: Boolean = true
 
     /**
      * A abstract url can be compare to one of the following types:
@@ -88,6 +97,9 @@ data class HyperlinkDatum(
          * A hyperlink should have a text, so the default value is an empty string
          * */
         val text: String = "",
+        /**
+         * The link order, e.g., in the referer page
+         * */
         val order: Int = 0,
         /**
          * A hyperlink might have a referer, so the default value is null
@@ -96,7 +108,11 @@ data class HyperlinkDatum(
         /**
          * A programmer might give a argument to a hyperlink, so the default value is null
          * */
-        val args: String? = null
+        val args: String? = null,
+        /**
+         * If this link is persistable
+         * */
+        val isPersistable: Boolean = false
 )
 
 /**

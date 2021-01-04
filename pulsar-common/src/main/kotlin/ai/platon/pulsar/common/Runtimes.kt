@@ -2,6 +2,7 @@ package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
@@ -63,6 +64,12 @@ object Runtimes {
         val cmdLine = info.commandLine().orElseGet { "" }
 
         return String.format("%-8s %-6d %-6s %-25s %-10s %s", user, pid, ppid, startTime?:"", cpuDuration?:"", cmdLine)
+    }
+
+    fun deleteBrokenSymbolicLinks(directory: Path) {
+        if (SystemUtils.IS_OS_LINUX) {
+            exec("find -L $directory -type l -delete")
+        }
     }
 
     private fun destroyChildProcess(process: ProcessHandle) {

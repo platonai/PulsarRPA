@@ -201,9 +201,13 @@ data class ProxyEntry(
         // if a proxy server can not be connected in a hour, we announce it's dead and remove it from the file
         private val MISSING_PROXY_DEAD_TIME = Duration.ofHours(1)
         private const val DEFAULT_PROXY_SERVER_PORT = 80
-        private const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
+        const val PROXY_TEST_WEB_SITES_FILE = "proxy.test.web.sites.txt"
         val DEFAULT_TEST_URL = URL("https://www.baidu.com")
-        val TEST_URLS = mutableSetOf<URL>()
+        // TODO: Jan 2 18:06 2021, there is a strange bug in mutableSetOf<URL>(), add items to the set hungs up the process
+        // environment:
+        // Linux vincent-KLVC-WXX9 5.8.0-34-generic #37~20.04.2-Ubuntu SMP Thu Dec 17 14:53:00 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+//        val TEST_URLS = mutableSetOf<URL>()
+        val TEST_URLS = mutableListOf<URL>()
 
         init {
             ResourceLoader.readAllLines(PROXY_TEST_WEB_SITES_FILE).mapNotNullTo(TEST_URLS) { Urls.getURLOrNull(it) }

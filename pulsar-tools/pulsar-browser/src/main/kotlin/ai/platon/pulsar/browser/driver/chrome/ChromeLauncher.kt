@@ -358,6 +358,8 @@ class ChromeLauncher(
 
                 if (!Files.exists(userDataDir.resolve("Default"))) {
                     log.info("User data dir does not exist, copy from prototype | {} <- {}", userDataDir, prototypeUserDataDir)
+                    // remove dead symbolic links
+                    Files.list(prototypeUserDataDir).filter { Files.isSymbolicLink(it) && !Files.exists(it) }.forEach { Files.delete(it) }
                     FileUtils.copyDirectory(prototypeUserDataDir.toFile(), userDataDir.toFile())
                 } else {
                     Files.deleteIfExists(userDataDir.resolve("Default/Cookies"))

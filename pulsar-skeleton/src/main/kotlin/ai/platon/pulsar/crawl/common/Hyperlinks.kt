@@ -14,6 +14,8 @@ open class ListenableHyperlink(
 ): StatefulHyperlink(url) {
     constructor(url: String, label: String, uuid: String): this(url, label, UUID.fromString(uuid))
 
+    override val isPersistable: Boolean = false
+
     var authToken: String? = null
     var remoteAddr: String? = null
     val idleTime get() = Duration.between(modifiedAt, Instant.now())

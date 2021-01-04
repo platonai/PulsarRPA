@@ -37,7 +37,7 @@ abstract class AbstractLoadingQueue(
 
     @Synchronized
     override fun offer(url: UrlAware): Boolean {
-        return if (freeSlots > 0) {
+        return if (!url.isPersistable || freeSlots > 0) {
             cache.add(url)
         } else {
             loader.save(url, group)

@@ -50,18 +50,19 @@ class ParseFilters(initParseFilters: List<ParseFilter>, val conf: ImmutableConfi
     fun addLast(parseFilter: ParseFilter) = parseFilters.add(parseFilter)
 
     /**
-     * Run all defined filters.
+     * Run all defined filters
      */
     fun filter(parseContext: ParseContext) {
         // loop on each filter
         parseFilters.forEach {
-            kotlin.runCatching { it.filter(parseContext) }.onFailure {
-                log.warn("Unexpected exception", it)
-            }
+            if (it.isRelevant(parseContext)) {
+                val result = kotlin.runCatching { it.filter(parseContext) }
+                        .onFailure { log.warn("Unexpected exception", it) }
+                        .getOrNull()
 
-            val shouldContinue = parseContext.parseResult.shouldContinue
-            if (!shouldContinue) {
-                return
+                if (result != null && result.shouldBreak) {
+                    return
+                }
             }
         }
     }
