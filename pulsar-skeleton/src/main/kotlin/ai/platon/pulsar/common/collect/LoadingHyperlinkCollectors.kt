@@ -56,12 +56,14 @@ open class LocalFileHyperlinkCollector(
     val fileName = path.fileName.toString()
     override var name = fileName.substringBefore(".")
 
+    var loadArgs: String? = null
     val hyperlinks = LinkedList<Hyperlink>()
 
     init {
         val remainingCapacity = capacity - hyperlinks.size
         urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
-            if (it is Hyperlink) it else Hyperlink(it)
+            val hyperlink = if (it is Hyperlink) it else Hyperlink(it)
+            hyperlink.also { it.args = loadArgs }
         }
         log.info("There are {} urls in file | {}", hyperlinks.size, path)
     }

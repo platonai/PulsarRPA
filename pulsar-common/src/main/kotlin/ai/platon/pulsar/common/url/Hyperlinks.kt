@@ -27,6 +27,8 @@ interface UrlAware: Comparable<UrlAware> {
  * The StatefulUrl interface. A StatefulUrl is an UrlAware and has status.
  * */
 interface StatefulUrl: UrlAware, Comparable<UrlAware> {
+    var authToken: String?
+    var remoteAddr: String?
     var status: Int
     var modifiedAt: Instant
     val createdAt: Instant
@@ -232,6 +234,8 @@ open class StatefulHyperlink(
          * */
         referer: String? = null
 ): Hyperlink(url, text, order, referer), StatefulUrl {
+    override var authToken: String? = null
+    override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
@@ -265,7 +269,8 @@ open class StatefulFatLink(
         text: String = "",
         order: Int = 0
 ): FatLink(url, tailLinks, text, order), StatefulUrl {
-
+    override var authToken: String? = null
+    override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
     override var modifiedAt: Instant = Instant.now()
     override val createdAt: Instant = Instant.now()
@@ -295,8 +300,6 @@ class CrawlableFatLink(
 
     val numFinished = AtomicInteger()
     var aborted = false
-    var authToken: String? = null
-    var remoteAddr: String? = null
 
     val numActive get() = size - numFinished.get()
     val isAborted get() = aborted

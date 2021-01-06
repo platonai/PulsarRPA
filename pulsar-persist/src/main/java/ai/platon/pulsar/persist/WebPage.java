@@ -524,6 +524,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @NotNull
     public String getOptions() {
         return page.getOptions() == null ? "" : page.getOptions().toString();
     }
@@ -533,7 +534,7 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @param options a {@link java.lang.String} object.
      */
-    public void setOptions(String options) {
+    public void setOptions(@NotNull String options) {
         page.setOptions(options);
     }
 
@@ -542,12 +543,27 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
+    @NotNull
     public String getConfiguredUrl() {
         String configuredUrl = url;
         if (page.getOptions() != null) {
             configuredUrl += " " + page.getOptions().toString();
         }
         return configuredUrl;
+    }
+
+    /**
+     * <p>Get the label</p>
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    @Nullable
+    public String getLabel() {
+        String options = getOptions();
+        if (options != null) {
+            return StringUtils.substringBetween(options, "-label ", " ");
+        }
+        return null;
     }
 
     /**

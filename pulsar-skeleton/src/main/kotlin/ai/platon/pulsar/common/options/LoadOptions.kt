@@ -7,6 +7,8 @@ import ai.platon.pulsar.persist.metadata.BrowserType
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 /**
@@ -22,7 +24,7 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
     var label = ""
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
-    var taskId = System.currentTimeMillis()
+    var taskId = LocalDate.now().toString()
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
@@ -363,9 +365,7 @@ open class LoadOptions: CommonOptions {
          * */
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
-            val options = LoadOptions()
-            options.volatileConfig = volatileConfig
-            return options.mergeModified(o1).mergeModified(o2)
+            return o1.clone().mergeModified(o2).also { it.volatileConfig = volatileConfig }
         }
     }
 }

@@ -365,6 +365,9 @@ class TestString {
         IntRange(0, texts.size - 1).forEach { i ->
             assertEquals(expects[i], Strings.getFirstInteger(texts[i], 0), "The $i-th test is failed")
         }
+
+        val url = "https://www.amazon.com/s?k=insomnia&i=todays-deals&bbn=21101958011&page=2&qid=1609866830&ref=sr_pg_1"
+        assertEquals(2, Strings.getFirstInteger(url.substringAfter("page="), 0))
     }
 
     @Test

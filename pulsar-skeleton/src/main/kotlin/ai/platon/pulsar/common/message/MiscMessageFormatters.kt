@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.persist.PageCounters
 import ai.platon.pulsar.persist.WebPage
@@ -41,8 +42,7 @@ class PageFormatter(val page: WebPage) {
         val params = Params.of(
                 "T", fetchTimeString,
                 "DC", "$distance,$fetchCount",
-                "PT", DateTimes.isoInstantFormat(contentPublishTime)
-                + "," + DateTimes.isoInstantFormat(refContentPublishTime),
+                "PT", DateTimes.isoInstantFormat(contentPublishTime) + "," + DateTimes.isoInstantFormat(refContentPublishTime),
                 "C", "$refItems,$refChars",
                 "S", df.format(contentScore) + "," + df.format(score) + "," + df.format(cash),
                 pageCategory.symbol(), StringUtils.substring(url, 0, 80)
@@ -54,6 +54,7 @@ class PageFormatter(val page: WebPage) {
 
 class CompletedPageFormatter(
         private val page: WebPage,
+        private val options: LoadOptions,
         private val verbose: Boolean = false
 ) {
     val contentBytes get() = page.contentBytes
@@ -67,19 +68,22 @@ class CompletedPageFormatter(
         String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
     }
 
-    val redirected get() = page.url != page.location
+    val label get() = StringUtils.abbreviateMiddle(options.label, "..", 20)
+    val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     val category get() = page.pageCategory.symbol()
     val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
     val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
     val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
-    val link get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
-    val url get() = if (redirected) page.location else page.url
-    val readableUrl get() = if (redirected) "[R] $url" else url
-    val readableLinks get() = if (verbose) "file://$link | $readableUrl" else readableUrl
+    val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
+    val redirected get() = page.url != page.location
+    val location get() = if (redirected) page.location else page.url
+    val readableUrl get() = if (redirected) "[R] $location <- ${page.url}" else location
+    val readableUrlOrLinks get() = if (verbose) "file://$symbolicLink | $readableUrl" else readableUrl
 
-    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt | %s | %s"
+    val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt" +
+            " | %s$formattedLabel%s"
 
     override fun toString(): String {
         return String.format(fmt,
@@ -93,13 +97,14 @@ class CompletedPageFormatter(
                 if (m.numFields == 0) "" else numFields,
                 proxy?:"",
                 page.variables["privacyContext"]?:"",
-                readableLinks
+                readableUrlOrLinks
         )
     }
 }
 
 class LoadCompletedPagesFormatter(
         val pages: Collection<WebPage>,
+        val options: LoadOptions,
         val startTime: Instant,
         val verbose: Boolean = false
 ) {
@@ -108,7 +113,7 @@ class LoadCompletedPagesFormatter(
         val message = String.format("Fetched total %d pages in %s:\n", pages.size, elapsed.readable())
         val sb = StringBuilder(message)
         pages.forEachIndexed { i, p ->
-            sb.append(i.inc()).append(".\t").append(CompletedPageFormatter(p, verbose)).append('\n')
+            sb.append(i.inc()).append(".\t").append(CompletedPageFormatter(p, options, verbose)).append('\n')
         }
         return sb.toString()
     }

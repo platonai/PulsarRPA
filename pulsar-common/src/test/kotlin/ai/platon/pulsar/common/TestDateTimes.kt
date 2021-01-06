@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
 /**
@@ -133,6 +134,14 @@ class TestDateTimes {
         val fmt = "yyyyMMddHHmmss"
         val d = SimpleDateFormat(fmt).format(Date(timestamp))
         println(d)
+    }
+
+    @Test
+    fun testTruncateLocalDateTime() {
+        val dateTime = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+        val date = LocalDate.now()
+        assertEquals(dateTime.dayOfMonth, date.dayOfMonth)
+        assertEquals(dateTime.monthValue, date.monthValue)
     }
 
     @Test(expected = DateTimeParseException::class)

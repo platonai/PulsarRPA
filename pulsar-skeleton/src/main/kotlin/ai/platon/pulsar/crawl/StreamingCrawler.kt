@@ -192,7 +192,17 @@ open class StreamingCrawler<T: UrlAware>(
 
         val page = runCatching {
             withTimeoutOrNull(taskTimeout.toMillis()) { loadWithEventHandlers(url) }
-        }.onFailure { log.warn("Unexpected exception", it) }.getOrNull()
+        }.onFailure {
+            if (it.javaClass.name == "kotlinx.coroutines.JobCancellationException") {
+                if (isIllegalApplicationState.compareAndSet(false, true)) {
+                    AppContext.tryTerminate()
+                    log.warn("Streaming crawler coroutine was cancelled, quit ...", it)
+                }
+                flowState = FlowState.BREAK
+            } else {
+                log.warn("Unexpected exception", it)
+            }
+        }.getOrNull()
         globalRunningTasks.decrementAndGet()
 
         if (!isActive) {
@@ -233,17 +243,23 @@ open class StreamingCrawler<T: UrlAware>(
             volatileConfig.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AddRefererAfterFetchHandler(url))
         }
 
-        val label = "SC#$numTasks"
-        volatileConfig.name = label
-        val actualOptions = options.clone().also {
-            it.volatileConfig = volatileConfig
-            it.label = label
-        }
+        val actualOptions = normalizeOptions(options, url).also { it.volatileConfig = volatileConfig }
+        volatileConfig.name = actualOptions.label
 
         return session.runCatching { loadDeferred(url.url, actualOptions) }
-                .onFailure { flowState = handleException(url.url, it) }
+                .onFailure { flowState = handleException(url, it) }
                 .getOrNull()
                 ?.also { pageCollector?.add(it) }
+    }
+
+    private fun normalizeOptions(options: LoadOptions, url: UrlAware): LoadOptions {
+        val args = url.args
+
+        return if (args != null) {
+            LoadOptions.mergeModified(options, LoadOptions.parse(args))
+        } else {
+            options.clone()
+        }
     }
 
     private fun registerHandlers(url: ListenableHyperlink, volatileConfig: VolatileConfig) {
@@ -294,7 +310,7 @@ open class StreamingCrawler<T: UrlAware>(
     }
 
     @Throws(Exception::class)
-    private fun handleException(url: String, e: Throwable): FlowState {
+    private fun handleException(url: UrlAware, e: Throwable): FlowState {
         if (flowState == FlowState.BREAK) {
             return flowState
         }
@@ -313,7 +329,7 @@ open class StreamingCrawler<T: UrlAware>(
                 // Comes after TimeoutCancellationException
                 if (isIllegalApplicationState.compareAndSet(false, true)) {
                     AppContext.tryTerminate()
-                    log.warn("Streaming crawler job is canceled, quit ...", e)
+                    log.warn("Streaming crawler job was canceled, quit ...", e)
                 }
                 return FlowState.BREAK
             }
