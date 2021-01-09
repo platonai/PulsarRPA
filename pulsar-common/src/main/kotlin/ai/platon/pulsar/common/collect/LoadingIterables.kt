@@ -6,16 +6,21 @@ import kotlin.NoSuchElementException
 open class ConcurrentLoadingIterable<E>(
         val collector: DataCollector<E>,
         val realTimeCollector: DataCollector<E>? = null,
-        val cacheSize: Int = 20
+        val lowerCacheSize: Int = 20,
+        val upperCacheSize: Int = 1_000_000
 ): Iterable<E> {
 
     private val cache = Collections.synchronizedList(LinkedList<E>())
+
+    /**
+     * Total number of loaded items
+     * */
+    val cacheSize get() = cache.size
 
     override fun iterator() = LoadingIterator(this)
 
     /**
      * add an item to the very beginning of the fetch queue
-     * TODO: use realTimeCollector instead
      * */
     fun addHead(e: E) {
         cache.add(0, e)
@@ -30,7 +35,7 @@ open class ConcurrentLoadingIterable<E>(
 
         @Synchronized
         fun tryLoad() {
-            if (collector.hasMore() && cache.size < iterable.cacheSize) {
+            if (collector.hasMore() && cache.size < iterable.lowerCacheSize) {
                 collector.collectTo(cache)
             }
         }

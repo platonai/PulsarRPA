@@ -1,19 +1,20 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.url.UrlAware
-import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
 interface FetchCache {
-    val nonReentrantQueue: Queue<UrlAware>
-    val nReentrantQueue: Queue<UrlAware>
-    val reentrantQueue: Queue<UrlAware>
-    val fetchQueues: Array<Queue<UrlAware>> get() =
+    val nonReentrantQueue: MutableCollection<UrlAware>
+    val nReentrantQueue: MutableCollection<UrlAware>
+    val reentrantQueue: MutableCollection<UrlAware>
+    val fetchQueues: Array<MutableCollection<UrlAware>> get() =
         arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
     val totalSize get() = fetchQueues.sumOf { it.size }
 }
+
+enum class FetchQueueGroup { NonReentrant, NEntrant, Reentrant }
 
 open class ConcurrentFetchCache(conf: ImmutableConfig): FetchCache {
     override val nonReentrantQueue = ConcurrentNonReentrantQueue<UrlAware>()
@@ -21,11 +22,9 @@ open class ConcurrentFetchCache(conf: ImmutableConfig): FetchCache {
     override val reentrantQueue = ConcurrentLinkedQueue<UrlAware>()
 }
 
-enum class FetchQueueGroup { NonReentrant, NEntrant, Reentrant }
-
 class LoadingFetchCache(
         val urlLoader: ExternalUrlLoader,
-        val priority: Int = Priority.NORMAL.value,
+        val priority: Int = Priority13.NORMAL.value,
         val capacity: Int = 100_000,
         val conf: ImmutableConfig
 ) : FetchCache, Loadable<UrlAware> {
@@ -35,7 +34,7 @@ class LoadingFetchCache(
             FetchQueueGroup.NEntrant.ordinal, priority, capacity)
     override val reentrantQueue = ConcurrentLoadingQueue(urlLoader,
             FetchQueueGroup.Reentrant.ordinal, priority, capacity)
-    override val fetchQueues: Array<Queue<UrlAware>> get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
+    override val fetchQueues: Array<MutableCollection<UrlAware>> get() = arrayOf(nonReentrantQueue, nReentrantQueue, reentrantQueue)
 
     override fun load() {
         fetchQueues.filterIsInstance<Loadable<UrlAware>>().forEach { it.load() }

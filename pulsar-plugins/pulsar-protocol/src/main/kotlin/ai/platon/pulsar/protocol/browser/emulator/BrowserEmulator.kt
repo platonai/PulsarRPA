@@ -147,7 +147,8 @@ open class BrowserEmulator(
 
         checkState(driver)
         checkState(task)
-        driver.navigateTo(task.url)
+        val location = task.clickUrl ?: task.url
+        driver.navigateTo(location)
 
         val interactTask = InteractTask(task, driverConfig, driver)
         return takeIf { driverConfig.jsInvadingEnabled }?.interact(interactTask)?: interactNoJsInvaded(interactTask)

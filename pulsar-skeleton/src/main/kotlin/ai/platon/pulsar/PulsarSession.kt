@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.concurrent.ExpiringItem
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.context.support.AbstractPulsarContext
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -88,6 +89,15 @@ open class PulsarSession(
             context.normalizeOrNull(url, initOptions(options), toItemOption)
 
     fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+            context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
+
+    fun normalize(url: UrlAware, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+            context.normalize(url, initOptions(options), toItemOption)
+
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions = opts(), toItemOption: Boolean = false) =
+            context.normalizeOrNull(url, initOptions(options), toItemOption)
+
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions = opts(), toItemOption: Boolean = false) =
             context.normalize(urls, options, toItemOption).onEach { initOptions(it.options) }
 
     /**

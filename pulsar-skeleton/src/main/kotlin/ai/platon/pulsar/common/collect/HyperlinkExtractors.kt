@@ -82,7 +82,7 @@ open class RegexHyperlinkExtractor(
         val parsedUrls = restrictedSection.collectNotNull { node ->
             node.takeIf { it.isAnchor }?.attr("abs:href")
                     ?.takeIf { Urls.isValidUrl(it) && it.matches(urlRegex) }
-                    ?.let { StatefulHyperlink(it, node.bestElement.text(), i++).apply { referer = page.url } }
+                    ?.let { StatefulHyperlink(it, node.bestElement.text(), i++, referer = page.url) }
         }
         parsedUrls.toCollection(fetchUrls)
 
@@ -213,7 +213,7 @@ class FatLinkExtractor(val session: PulsarSession) {
             page.vividLinks = hyperlinks.associate { it.url to "${it.text} createdAt: $now" }
         }
 
-        return page to CrawlableFatLink(options.label, fatLinkSpec, vividLinks)
+        return page to CrawlableFatLink(fatLinkSpec, label = options.label, tailLinks = vividLinks)
     }
 
     private fun parseVividLinks(
@@ -233,7 +233,8 @@ class FatLinkExtractor(val session: PulsarSession) {
                 .filter { it !in denyList }
                 .onEach { ++counters.allowLinks; ++globalCounters.allowLinks }
                 .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
-                .map { StatefulHyperlink(it.url, it.text, it.order, fatLinkSpec) }
+                .map { StatefulHyperlink(it.url, it.text, it.order, referer = fatLinkSpec) }
+                .onEach { it.args = "-i 0s" }
                 .toList()
     }
 
@@ -243,9 +244,10 @@ class FatLinkExtractor(val session: PulsarSession) {
         val now = Instant.now()
         // TODO: add flag to indicate whether the vivid links are expired
         return page.vividLinks.asSequence()
-                .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, page.url) }
+                .map { StatefulHyperlink(it.key.toString(), it.value.toString(), 0, referer = page.url) }
                 .filterNot { it in denyList }
                 .filter { shouldFetchItemPage(it.url, options.itemExpires, now) }
+                .onEach { it.args = "-i 0s" }
                 .toList()
     }
 

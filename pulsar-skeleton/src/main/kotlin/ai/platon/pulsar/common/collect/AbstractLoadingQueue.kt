@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.url.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
@@ -10,7 +10,7 @@ interface LoadingQueue<T>: Queue<T>, Loadable<T>
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
         val group: Int = 0,
-        val priority: Int = Priority.NORMAL.value,
+        val priority: Int = Priority13.NORMAL.value,
         val capacity: Int = 100_000
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     protected val cache = ConcurrentSkipListSet<UrlAware>()
@@ -18,7 +18,7 @@ abstract class AbstractLoadingQueue(
     val freeSlots get() = capacity - cache.size
     val isFull get() = freeSlots == 0
 
-    constructor(loader: ExternalUrlLoader, group: Int, priority: Priority = Priority.NORMAL)
+    constructor(loader: ExternalUrlLoader, group: Int, priority: Priority13 = Priority13.NORMAL)
             : this(loader, group, priority.value)
 
     override fun load() {

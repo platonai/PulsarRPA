@@ -5,12 +5,18 @@ import ai.platon.pulsar.common.url.Urls
 import java.net.MalformedURLException
 import java.net.URL
 
-open class NormUrl(val url: URL, val options: LoadOptions): Comparable<NormUrl> {
+open class NormUrl(
+        val url: URL,
+        val options: LoadOptions,
+        var clickUrl: URL? = null
+): Comparable<NormUrl> {
 
     @Throws(MalformedURLException::class)
-    constructor(spec: String, options: LoadOptions): this(URL(spec), options)
+    constructor(spec: String, options: LoadOptions, clickUrlSpec: String? = null):
+            this(URL(spec), options, clickUrlSpec?.let { URL(clickUrlSpec) })
 
     val spec = url.toString()
+    val cuSpec = clickUrl?.toString()
     val args = options.toString()
     val configuredUrl = "$spec $args"
 

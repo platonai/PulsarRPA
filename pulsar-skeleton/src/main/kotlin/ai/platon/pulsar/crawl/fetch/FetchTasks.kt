@@ -83,6 +83,7 @@ class FetchTask(
     var proxyEntry: ProxyEntry? = null
 
     val url get() = page.url
+    val clickUrl get() = page.clickUrl
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING

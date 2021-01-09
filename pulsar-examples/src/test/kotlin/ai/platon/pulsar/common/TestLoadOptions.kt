@@ -81,12 +81,28 @@ class TestLoadOptions {
     }
 
     @Test
+    fun testShowLoadOptions() {
+        LoadOptions.helpList.forEach {
+            println(it)
+        }
+    }
+
+    @Test
     fun testModifiedOptions() {
         val options = LoadOptions.parse("-incognito -expires 1s -retry")
 //        println(options.modifiedOptions)
         val modifiedOptions = options.modifiedOptions
         assertTrue(modifiedOptions.containsKey("retryFailed"))
         assertTrue(modifiedOptions.containsKey("expires"))
+    }
+
+    @Test
+    fun testMerging() {
+        val options = LoadOptions.parse("-incognito -expires 1s -retry")
+        val args = "-label test-merging"
+        val options2 = LoadOptions.mergeModified(options, LoadOptions.parse(args))
+        assertEquals("test-merging", options2.label)
+        assertTrue { options2.incognito }
     }
 
     @Test

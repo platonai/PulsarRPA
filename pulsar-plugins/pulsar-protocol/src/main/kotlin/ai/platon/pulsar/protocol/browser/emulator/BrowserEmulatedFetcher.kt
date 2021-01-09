@@ -78,7 +78,15 @@ open class BrowserEmulatedFetcher(
             log.warn("Page config is not set | {}", page.url)
         }
 
-        return privacyManager.run(createFetchTask(page)) { task, driver ->
+        val task = createFetchTask(page)
+        return fetchTaskDeferred(task)
+    }
+
+    /**
+     * Fetch page content
+     * */
+    private suspend fun fetchTaskDeferred(task: FetchTask): Response {
+        return privacyManager.run(task) { _, driver ->
             try {
                 browserEmulator.fetch(task, driver)
             } catch (e: IllegalApplicationContextStateException) {

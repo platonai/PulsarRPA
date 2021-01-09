@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.FetchCatchManager.Companion.REAL_TIME_PRIORITY
 import ai.platon.pulsar.common.config.ImmutableConfig
 import java.util.concurrent.ConcurrentSkipListMap
@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * */
 interface FetchCatchManager {
     companion object {
-        val REAL_TIME_PRIORITY = Priority.HIGHEST.value * 2
+        val REAL_TIME_PRIORITY = Priority13.HIGHEST.value * 2
     }
 
     /**
@@ -21,9 +21,17 @@ interface FetchCatchManager {
     val totalItems: Int
 
     val lowestCache: FetchCache
+    val lower5Cache: FetchCache
+    val lower4Cache: FetchCache
+    val lower3Cache: FetchCache
+    val lower2Cache: FetchCache
     val lowerCache: FetchCache
     val normalCache: FetchCache
     val higherCache: FetchCache
+    val higher2Cache: FetchCache
+    val higher3Cache: FetchCache
+    val higher4Cache: FetchCache
+    val higher5Cache: FetchCache
     val highestCache: FetchCache
 
     val realTimeCache: FetchCache
@@ -38,11 +46,19 @@ abstract class AbstractFetchCatchManager(val conf: ImmutableConfig): FetchCatchM
     protected val initialized = AtomicBoolean()
     override val totalItems get() = ensureInitialized().caches.values.sumOf { it.totalSize }
 
-    override val lowestCache: FetchCache get() = ensureInitialized().caches[Priority.LOWEST.value]!!
-    override val lowerCache: FetchCache get() = ensureInitialized().caches[Priority.LOWER.value]!!
-    override val normalCache: FetchCache get() = ensureInitialized().caches[Priority.NORMAL.value]!!
-    override val higherCache: FetchCache get() = ensureInitialized().caches[Priority.HIGHER.value]!!
-    override val highestCache: FetchCache get() = ensureInitialized().caches[Priority.HIGHEST.value]!!
+    override val lowestCache: FetchCache get() = ensureInitialized().caches[Priority13.LOWEST.value]!!
+    override val lower5Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER5.value]!!
+    override val lower4Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER4.value]!!
+    override val lower3Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER3.value]!!
+    override val lower2Cache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER2.value]!!
+    override val lowerCache: FetchCache get() = ensureInitialized().caches[Priority13.LOWER.value]!!
+    override val normalCache: FetchCache get() = ensureInitialized().caches[Priority13.NORMAL.value]!!
+    override val higherCache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER.value]!!
+    override val higher2Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER2.value]!!
+    override val higher3Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER3.value]!!
+    override val higher4Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER4.value]!!
+    override val higher5Cache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHER5.value]!!
+    override val highestCache: FetchCache get() = ensureInitialized().caches[Priority13.HIGHEST.value]!!
 
     private fun ensureInitialized(): AbstractFetchCatchManager {
         if (initialized.compareAndSet(false, true)) {
@@ -67,7 +83,7 @@ open class ConcurrentFetchCatchManager(conf: ImmutableConfig): AbstractFetchCatc
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority.values().forEach { caches[it.value] = ConcurrentFetchCache(conf) }
+            Priority13.values().forEach { caches[it.value] = ConcurrentFetchCache(conf) }
         }
     }
 }
@@ -84,7 +100,7 @@ class LoadingFetchCatchManager(
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
-            Priority.values().map { it.value }.forEach { priority ->
+            Priority13.values().map { it.value }.forEach { priority ->
                 caches[priority] = LoadingFetchCache(urlLoader, priority, capacity, conf)
             }
         }

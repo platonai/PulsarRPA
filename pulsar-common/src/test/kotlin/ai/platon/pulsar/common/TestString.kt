@@ -37,6 +37,7 @@ import java.util.stream.IntStream
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 /**
@@ -124,6 +125,13 @@ class TestString {
             println(matcher.group(5) + matcher.group(6))
             println(matcher.group(7) + matcher.group(8))
         }
+    }
+
+    @Test
+    fun testRegex2() {
+        val url = "https://www.amazon.com/s?k=insomnia&i=aps&page=100"
+        val regex = ".+&i=.+".toRegex()
+        assertTrue { url.matches(regex) }
     }
 
     @Test
@@ -396,5 +404,15 @@ class TestString {
         IntRange(0, texts.size - 1).forEach { i ->
             assertEquals(expects[i], Strings.getFirstFloatNumber(texts[i], Float.MIN_VALUE), "The $i-th test is failed")
         }
+    }
+
+    @Test
+    fun testHashCode() {
+        val s = "https://www.amazon.com/s?k=insomnia&i=aps&page=15"
+        val s2 = "https://www.amazon.com/s?k=insomnia&i=aps&page=16"
+        val s3 = "https://www.amazon.com/s?k=insomnia&i=aps&page=17"
+        assertNotEquals(s.hashCode(), s2.hashCode())
+        assertNotEquals(s.hashCode(), s3.hashCode())
+        assertNotEquals(s2.hashCode(), s3.hashCode())
     }
 }

@@ -1,9 +1,10 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.AppMetrics
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.url.Hyperlinks
 import ai.platon.pulsar.common.url.UrlAware
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
@@ -13,40 +14,9 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-open class FetchCacheCollector(
-        private val fetchCache: FetchCache,
-        priority: Int = Priority.HIGHER.value
-): AbstractPriorityDataCollector<Hyperlink>(priority) {
-
-    override var name = "FetchCacheC"
-
-    private val hyperlinkQueues get() = fetchCache.fetchQueues
-
-    constructor(fetchCache: FetchCache, priority: Priority): this(fetchCache, priority.value)
-
-    override fun hasMore() = hyperlinkQueues.any { it.isNotEmpty() }
-
-    override fun collectTo(sink: MutableList<Hyperlink>): Int {
-        if (!hasMore()) {
-            return 0
-        }
-
-        return hyperlinkQueues.sumOf { consume(it, sink) }
-    }
-
-    private fun consume(queue: Queue<out UrlAware>, sink: MutableCollection<Hyperlink>): Int {
-        val size = queue.size
-        queue.mapTo(sink) {
-            if (it is Hyperlink) it else Hyperlink(it.url)
-        }
-        queue.clear()
-        return size
-    }
-}
-
 open class LocalFileHyperlinkCollector(
         val path: Path,
-        priority: Int = Priority.NORMAL.value,
+        priority: Int = Priority13.NORMAL.value,
         capacity: Int = DEFAULT_CAPACITY
 ): AbstractPriorityDataCollector<Hyperlink>(priority, capacity) {
 
@@ -62,13 +32,13 @@ open class LocalFileHyperlinkCollector(
     init {
         val remainingCapacity = capacity - hyperlinks.size
         urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
-            val hyperlink = if (it is Hyperlink) it else Hyperlink(it)
-            hyperlink.also { it.args = loadArgs }
+            // TODO: merge args
+            Hyperlinks.toHyperlink(it).also { it.args = loadArgs }
         }
         log.info("There are {} urls in file | {}", hyperlinks.size, path)
     }
 
-    constructor(path: Path, priority: Priority, capacity: Int = DEFAULT_CAPACITY): this(path, priority.value, capacity)
+    constructor(path: Path, priority: Priority13, capacity: Int = DEFAULT_CAPACITY): this(path, priority.value, capacity)
 
     override fun hasMore() = hyperlinks.isNotEmpty()
 
@@ -90,7 +60,7 @@ open class LocalFileHyperlinkCollector(
 
 open class CircularLocalFileHyperlinkCollector(
         path: Path,
-        priority: Priority = Priority.NORMAL,
+        priority: Priority13 = Priority13.NORMAL,
         capacity: Int = DEFAULT_CAPACITY
 ): LocalFileHyperlinkCollector(path, priority, capacity) {
 
@@ -108,7 +78,7 @@ open class CircularLocalFileHyperlinkCollector(
 open class PeriodicalLocalFileHyperlinkCollector(
         path: Path,
         val options: LoadOptions,
-        priority: Priority = Priority.NORMAL,
+        priority: Priority13 = Priority13.NORMAL,
         capacity: Int = DEFAULT_CAPACITY
 ): CircularLocalFileHyperlinkCollector(path, priority, capacity) {
     private val log = LoggerFactory.getLogger(PeriodicalLocalFileHyperlinkCollector::class.java)

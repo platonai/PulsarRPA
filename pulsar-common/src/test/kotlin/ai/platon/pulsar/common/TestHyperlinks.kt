@@ -30,7 +30,7 @@ class TestHyperlinks {
         assertEquals(u1, u2)
 
         u1 = Hyperlink(uc.urlString1)
-        u2 = LabeledHyperlink("", uc.urlString1)
+        u2 = Hyperlink(uc.urlString1, label = "")
         assertEquals(u1, u2 as Hyperlink)
 
         u1 = Hyperlink(uc.urlString1)
@@ -38,13 +38,13 @@ class TestHyperlinks {
         assertEquals(u1, u2)
 
         u1 = Hyperlink(uc.urlString1)
-        u2 = StatefulFatLink(uc.urlString1, listOf())
+        u2 = StatefulFatLink(uc.urlString1, tailLinks = listOf())
         assertEquals(u1, u2)
 
         u1 = Hyperlink(uc.urlString1)
         u2 = Hyperlink(uc.urlString2)
         assertNotEquals(u1, u2)
 
-        assertEquals(LabeledHyperlink("", uc.urlString1), LabeledHyperlink("", uc.urlString1))
+        assertEquals(Hyperlink(uc.urlString1), Hyperlink(uc.urlString1, label = ""))
     }
 }

@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.url
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.config.VolatileConfig
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -12,10 +13,34 @@ import java.util.concurrent.atomic.AtomicInteger
  * The UrlAware interface.
  * */
 interface UrlAware: Comparable<UrlAware> {
+    /**
+     * The url, it can be configured or not
+     * */
     var url: String
+    /**
+     * The url args
+     * */
     var args: String?
+    /**
+     * The referer(or referrer)
+     * */
     var referer: String?
+    /**
+     * The label
+     * */
+    var label: String
+    /**
+     * A click url is a url variant, it's the raw url in the html without normalization,
+     * for example, an url with a timestamp query parameter added
+     * */
+    var clickUrl: String?
+    /**
+     * The configured url, always be "$url $args"
+     * */
     val configuredUrl: String
+    /**
+     * If this is a Nil url who's url is AppConstants.NIL_PAGE_URL
+     * */
     val isNil: Boolean
     /**
      * If this link is persistable
@@ -37,7 +62,9 @@ interface StatefulUrl: UrlAware, Comparable<UrlAware> {
 abstract class AbstractUrl(
         override var url: String,
         override var args: String? = null,
-        override var referer: String? = null
+        override var referer: String? = null,
+        override var label: String = "",
+        override var clickUrl: String? = null
 ): UrlAware {
 
     override val configuredUrl get() = if (args != null) "$url $args" else url
@@ -112,9 +139,22 @@ data class HyperlinkDatum(
          * */
         val args: String? = null,
         /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        var clickUrl: String? = null,
+        /**
          * If this link is persistable
          * */
-        val isPersistable: Boolean = false
+        val isPersistable: Boolean = false,
+        /**
+         * The depth
+         * */
+        val depth: Int = 0,
+        /**
+         * The label
+         * */
+        val label: String = ""
 )
 
 /**
@@ -147,74 +187,57 @@ open class Hyperlink(
         /**
          * The url arguments
          * */
-        args: String? = null
-): AbstractUrl(url, args = args, referer = referer) {
+        args: String? = null,
+        /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        clickUrl: String? = null,
+        /**
+         * The label
+         * */
+        label: String = ""
+): AbstractUrl(url, args, referer, label, clickUrl) {
+    var depth: Int = 0
+
     constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args)
     constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args)
     constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args)
 
-    fun data() = HyperlinkDatum(url, text, order, referer, args)
+    fun data() = HyperlinkDatum(url, text, order, referer, args, clickUrl, true, 0, label)
 }
-
-data class LabeledHyperlinkDatum(
-        /**
-         * The label
-         * */
-        var label: String,
-        /**
-         * The url of this hyperlink
-         * */
-        val url: String,
-        /**
-         * A hyperlink should have a text, so the default value is an empty string
-         * */
-        val text: String = "",
-        /**
-         * The order of this hyperlink in it's referer page
-         * */
-        val order: Int = 0,
-        /**
-         * A hyperlink might have a referer, so the default value is null
-         * */
-        val referer: String? = null,
-        /**
-         * The depth of the link, it should be [the depth of the referer] + 1
-         * */
-        val depth: Int = 0,
-        /**
-         * A programmer might give a argument to a hyperlink, so the default value is null
-         * */
-        val args: String? = null
-)
 
 open class LabeledHyperlink(
         /**
-         * The label
+         * The url of this hyperlink
          * */
-        var label: String,
+        label: String,
         /**
          * The url of this hyperlink
          * */
         url: String,
         /**
-         * A hyperlink should have a text, so the default value is an empty string
+         * The anchor text of this hyperlink
          * */
-        val text: String = "",
+        text: String = "",
         /**
          * The order of this hyperlink in it's referer page
          * */
-        val order: Int = 0,
+        order: Int = 0,
         /**
-         * A hyperlink might have a referer, so the default value is null
+         * The url of the referer page
          * */
         referer: String? = null,
         /**
-         * The depth of the link, it should be [the depth of the referer] + 1
+         * The url arguments
          * */
-        val depth: Int = 0
-): AbstractUrl(url) {
-    fun data() = LabeledHyperlinkDatum(label, url, text, order, referer, depth, args)
-}
+        args: String? = null,
+        /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        clickUrl: String? = null
+): Hyperlink(url, text, order, referer, args, clickUrl, label)
 
 open class StatefulHyperlink(
         /**
@@ -232,8 +255,21 @@ open class StatefulHyperlink(
         /**
          * The url of the referer page
          * */
-        referer: String? = null
-): Hyperlink(url, text, order, referer), StatefulUrl {
+        referer: String? = null,
+        /**
+         * The url arguments
+         * */
+        args: String? = null,
+        /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        clickUrl: String? = null,
+        /**
+         * The label
+         * */
+        label: String = ""
+): Hyperlink(url, text, order, referer, args, clickUrl, label), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -251,11 +287,40 @@ val StatefulHyperlink.isFinished get() = !isCreated && !isAccepted && !isProcess
  * or a "multi-tailed link") is a hyperlink which leads to multiple endpoints; the link is a multivalued function.
  * */
 open class FatLink(
+        /**
+         * The url of this hyperlink
+         * */
         url: String,
-        var tailLinks: List<StatefulHyperlink>,
+        /**
+         * The anchor text of this hyperlink
+         * */
         text: String = "",
-        order: Int = 0
-): Hyperlink(url, text, order) {
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
+        order: Int = 0,
+        /**
+         * The url of the referer page
+         * */
+        referer: String? = null,
+        /**
+         * The url arguments
+         * */
+        args: String? = null,
+        /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        clickUrl: String? = null,
+        /**
+         * The label
+         * */
+        label: String = "",
+        /**
+         * The tail links
+         * */
+        var tailLinks: List<StatefulHyperlink>
+): Hyperlink(url, text, order, referer, args, clickUrl, label) {
     val size get() = tailLinks.size
     val isEmpty get() = size == 0
     val isNotEmpty get() = !isEmpty
@@ -264,11 +329,40 @@ open class FatLink(
 }
 
 open class StatefulFatLink(
+        /**
+         * The url of this hyperlink
+         * */
         url: String,
-        tailLinks: List<StatefulHyperlink>,
+        /**
+         * The anchor text of this hyperlink
+         * */
         text: String = "",
-        order: Int = 0
-): FatLink(url, tailLinks, text, order), StatefulUrl {
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
+        order: Int = 0,
+        /**
+         * The url of the referer page
+         * */
+        referer: String? = null,
+        /**
+         * The url arguments
+         * */
+        args: String? = null,
+        /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        clickUrl: String? = null,
+        /**
+         * The label
+         * */
+        label: String = "",
+        /**
+         * The tail links
+         * */
+        tailLinks: List<StatefulHyperlink>
+): FatLink(url, text, order, referer, args, clickUrl, label, tailLinks), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -278,23 +372,41 @@ open class StatefulFatLink(
     override fun toString() = "$status $createdAt $modifiedAt ${super.toString()}"
 }
 
-open class LabeledStatefulFatLink(
-        val label: String,
-        url: String,
-        tailLinks: List<StatefulHyperlink>,
-        text: String = "",
-        order: Int = 0
-): StatefulFatLink(url, tailLinks, text, order), StatefulUrl {
-    override fun toString() = "$label ${super.toString()}"
-}
-
 class CrawlableFatLink(
-        label: String,
+        /**
+         * The url of this hyperlink
+         * */
         url: String,
-        tailLinks: List<StatefulHyperlink>,
+        /**
+         * The anchor text of this hyperlink
+         * */
         text: String = "",
-        order: Int = 0
-): LabeledStatefulFatLink(label, url, tailLinks, text, order) {
+        /**
+         * The order of this hyperlink in it's referer page
+         * */
+        order: Int = 0,
+        /**
+         * The url of the referer page
+         * */
+        referer: String? = null,
+        /**
+         * The url arguments
+         * */
+        args: String? = null,
+        /**
+         * A click url is a url variant, it's the raw url in the html without normalization,
+         * for example, an url with a timestamp query parameter added
+         * */
+        clickUrl: String? = null,
+        /**
+         * The label
+         * */
+        label: String = "",
+        /**
+         * The tail links
+         * */
+        tailLinks: List<StatefulHyperlink>
+): StatefulFatLink(url, text, order, referer, args, clickUrl, label, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 
@@ -336,4 +448,12 @@ class CrawlableFatLink(
     }
 
     override fun toString() = "$numFinished/${tailLinks.size} ${super.toString()}"
+}
+
+object Hyperlinks {
+
+    fun toHyperlink(url: UrlAware): Hyperlink {
+        return if (url is Hyperlink) url
+        else Hyperlink(url.url, args = url.args, referer = url.referer, label = url.label, clickUrl = url.clickUrl)
+    }
 }

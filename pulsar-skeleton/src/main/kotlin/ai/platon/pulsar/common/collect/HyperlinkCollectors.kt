@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentSkipListMap
 
 open class UrlQueueCollector(
         val queue: Queue<UrlAware>,
-        priority: Priority = Priority.NORMAL
+        priority: Priority13 = Priority13.NORMAL
 ) : AbstractPriorityDataCollector<Hyperlink>(priority) {
 
     override var name = "UrlQueueC"
@@ -29,7 +29,7 @@ open class UrlQueueCollector(
 
         var collected = 0
         queue.poll()?.let {
-            val hyperlink = if (it is Hyperlink) it else Hyperlink(it.url)
+            val hyperlink = Hyperlinks.toHyperlink(it)
             if (sink.add(hyperlink)) {
                 ++collected
             }
@@ -57,7 +57,7 @@ open class HyperlinkCollector(
         /**
          * The priority of this collector
          * */
-        priority: Priority = Priority.NORMAL
+        priority: Priority13 = Priority13.NORMAL
 ) : AbstractPriorityDataCollector<Hyperlink>(priority), CrawlableFatLinkCollector {
     companion object {
         var globalCollects: Int = 0
@@ -149,7 +149,7 @@ open class HyperlinkCollector(
 open class CircularHyperlinkCollector(
         session: PulsarSession,
         seeds: Queue<NormUrl>,
-        priority: Priority = Priority.HIGHER
+        priority: Priority13 = Priority13.HIGHER
 ) : HyperlinkCollector(session, seeds, priority) {
     private val log = LoggerFactory.getLogger(CircularHyperlinkCollector::class.java)
     protected val iterator = Iterators.cycle(seeds)
@@ -159,7 +159,7 @@ open class CircularHyperlinkCollector(
     constructor(
             session: PulsarSession,
             seed: NormUrl,
-            priority: Priority = Priority.HIGHER
+            priority: Priority13 = Priority13.HIGHER
     ) : this(session, ConcurrentLinkedQueue(listOf(seed)), priority)
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
@@ -189,7 +189,7 @@ open class CircularHyperlinkCollector(
 open class PeriodicalHyperlinkCollector(
         session: PulsarSession,
         val seed: NormUrl,
-        priority: Priority = Priority.HIGHER
+        priority: Priority13 = Priority13.HIGHER
 ) : CircularHyperlinkCollector(session, seed, priority) {
     private val log = LoggerFactory.getLogger(PeriodicalHyperlinkCollector::class.java)
     private var position = 0
@@ -233,7 +233,7 @@ open class PeriodicalHyperlinkCollector(
 
     companion object {
         fun fromConfig(
-                resource: String, session: PulsarSession, priority: Priority = Priority.NORMAL
+                resource: String, session: PulsarSession, priority: Priority13 = Priority13.NORMAL
         ): Sequence<PeriodicalHyperlinkCollector> {
             return ResourceLoader.readAllLines(resource)
                     .asSequence()
@@ -243,5 +243,34 @@ open class PeriodicalHyperlinkCollector(
                     .filter { Urls.isValidUrl(it.spec) }
                     .map { PeriodicalHyperlinkCollector(session, it, priority) }
         }
+    }
+}
+
+open class FetchCacheCollector(
+        private val fetchCache: FetchCache,
+        priority: Int = Priority13.HIGHER.value
+): AbstractPriorityDataCollector<Hyperlink>(priority) {
+
+    override var name = "FetchCacheC"
+
+    private val hyperlinkQueues get() = fetchCache.fetchQueues
+
+    constructor(fetchCache: FetchCache, priority: Priority13): this(fetchCache, priority.value)
+
+    override fun hasMore() = hyperlinkQueues.any { it.isNotEmpty() }
+
+    override fun collectTo(sink: MutableList<Hyperlink>): Int {
+        if (!hasMore()) {
+            return 0
+        }
+
+        return hyperlinkQueues.sumOf { consume(it, sink) }
+    }
+
+    private fun consume(queue: MutableCollection<UrlAware>, sink: MutableCollection<Hyperlink>): Int {
+        val size = queue.size
+        queue.mapTo(sink) { Hyperlinks.toHyperlink(it) }
+        queue.clear()
+        return size
     }
 }

@@ -316,10 +316,10 @@ class LoadComponent(
 
         val reason = getFetchReason(page, options)
         if (page.isNil) {
-            page = fetchComponent.createFetchEntry(url, options)
+            page = fetchComponent.createFetchEntry(url, options, normUrl.cuSpec)
         }
         // set page variables like volatileConfig here
-        fetchComponent.initFetchEntry(page, options)
+        fetchComponent.initFetchEntry(page, options, normUrl.cuSpec)
 
         tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {

@@ -16,10 +16,52 @@ enum class FlowState {
  *
  * Notice: can not use Int.MIN_VALUE as the highest priority value nor Int.MAX_VALUE as the lowest, choose another one
  * */
-enum class Priority(val value: Int) {
-    HIGHEST(Int.MIN_VALUE / 10), HIGHER(-1000),
+enum class Priority5(val value: Int) {
+    HIGHEST(Int.MIN_VALUE / 10),
+    HIGHER(-1000),
     NORMAL(0),
-    LOWER(1000), LOWEST(Int.MAX_VALUE / 10)
+    LOWER(1000),
+    LOWEST(Int.MAX_VALUE / 10)
+}
+
+enum class Priority13(val value: Int) {
+    HIGHEST(Int.MIN_VALUE / 10),
+    HIGHER5(-5000),
+    HIGHER4(-4000),
+    HIGHER3(-3000),
+    HIGHER2(-2000),
+    HIGHER(-1000),
+    NORMAL(0),
+    LOWER(1000),
+    LOWER2(2000),
+    LOWER3(3000),
+    LOWER4(4000),
+    LOWER5(5000),
+    LOWEST(Int.MAX_VALUE / 10)
+}
+
+enum class Priority21(val value: Int) {
+    HIGHEST(Int.MIN_VALUE / 10),
+    HIGHER9(-9000),
+    HIGHER8(-8000),
+    HIGHER7(-7000),
+    HIGHER6(-6000),
+    HIGHER5(-5000),
+    HIGHER4(-4000),
+    HIGHER3(-3000),
+    HIGHER2(-2000),
+    HIGHER(-1000),
+    NORMAL(0),
+    LOWER(1000),
+    LOWER2(2000),
+    LOWER3(3000),
+    LOWER4(4000),
+    LOWER5(5000),
+    LOWER6(6000),
+    LOWER7(7000),
+    LOWER8(8000),
+    LOWER9(9000),
+    LOWEST(Int.MAX_VALUE / 10)
 }
 
 interface StartStopRunnable {

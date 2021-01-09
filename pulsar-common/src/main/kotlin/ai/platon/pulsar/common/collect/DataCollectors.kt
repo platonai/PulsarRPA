@@ -1,7 +1,7 @@
 package ai.platon.pulsar.common.collect
 
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.url.CrawlableFatLink
 import ai.platon.pulsar.common.url.FatLink
@@ -20,7 +20,7 @@ interface CrawlableFatLinkCollector {
 
 open class MultiSourceDataCollector<E>(
         val collectors: MutableList<PriorityDataCollector<E>>,
-        priority: Priority = Priority.NORMAL
+        priority: Priority13 = Priority13.NORMAL
 ): AbstractPriorityDataCollector<E>(priority) {
 
     override var name = "MultiSourceDC"
@@ -32,7 +32,7 @@ open class MultiSourceDataCollector<E>(
     val round get() = roundCounter.get()
     val totalCollected get() = collectedCounter.get()
 
-    constructor(vararg thatCollectors: PriorityDataCollector<E>, priority: Priority = Priority.NORMAL):
+    constructor(vararg thatCollectors: PriorityDataCollector<E>, priority: Priority13 = Priority13.NORMAL):
             this(arrayListOf(*thatCollectors), priority)
 
     override fun hasMore() = collectors.any { it.hasMore() }
@@ -50,7 +50,7 @@ open class MultiSourceDataCollector<E>(
         while (isActive && collected == 0 && hasMore()) {
             sortedCollectors.forEach {
                 if (isActive && collected == 0 && it.hasMore()) {
-                    collected += if (it.priority >= Priority.HIGHEST.value) {
+                    collected += if (it.priority >= Priority13.HIGHEST.value) {
                         it.collectTo(0, sink)
                     } else {
                         it.collectTo(sink)
@@ -72,7 +72,7 @@ open class PauseDataCollector<E>(
         val n: Int = 1,
         val pause: Duration = Duration.ofSeconds(1),
         val sleeper: () -> Unit = { sleep(pause) },
-        priority: Priority = Priority.LOWEST
+        priority: Priority13 = Priority13.LOWEST
 ): AbstractPriorityDataCollector<E>(priority) {
     override var name: String = "PauseDC"
 

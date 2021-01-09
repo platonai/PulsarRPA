@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -38,6 +39,12 @@ interface PulsarContext: AutoCloseable {
     fun normalizeOrNull(url: String?, options: LoadOptions, toItemOption: Boolean): NormUrl?
 
     fun normalize(urls: Iterable<String>, options: LoadOptions = opts(), toItemOption: Boolean = false): List<NormUrl>
+
+    fun normalize(url: UrlAware, options: LoadOptions = opts(), toItemOption: Boolean = false): NormUrl
+
+    fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean): NormUrl?
+
+    fun normalize(urls: Collection<UrlAware>, options: LoadOptions = opts(), toItemOption: Boolean = false): List<NormUrl>
 
     /**
      * Inject an url

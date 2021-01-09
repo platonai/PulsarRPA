@@ -23,8 +23,10 @@ open class LoadOptions: CommonOptions {
 
     @Parameter(names = ["-l", "-label", "--label"], description = "The label of this load task")
     var label = ""
+
     @Parameter(names = ["-taskId", "--task-id"], description = "The task id. A task can contain multiple loadings")
     var taskId = LocalDate.now().toString()
+
     @Parameter(names = ["-authToken", "--auth-token"], description = "The auth token for this load task")
     var authToken = ""
 
@@ -45,39 +47,52 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-np", "-nextPage", "-nextPageSelector", "--next-page-selector"],
             description = "[TODO] The css selector of next page anchor")
     var nextPageSelector = ""
+
     @Parameter(names = ["-ifr", "-iframe", "--iframe"], description = "The i-th iframe")
     var iframe = 0
+
     @Parameter(names = ["-tl", "-topLinks", "--top-links"], description = "Top N links")
     var topLinks = 20
+
     @Parameter(names = ["-tng", "-topNAnchorGroups", "--top-anchor-groups"], description = "Try the top N anchor groups")
     var topNAnchorGroups = 3
+
     @Parameter(names = ["-wnb", "-waitNonBlank"],
             description = "[TODO] Wait for ajax content until the element is filled by a non-blank text")
     var waitNonBlank: String = ""
+
     @Parameter(names = ["-rnb", "-requireNotBlank"], description = "[TODO] Keep the pages only if the required text is not blank")
     var requireNotBlank: String = ""
+
     @Parameter(names = ["-rs", "-requireSize", "--require-size"], description = "Fetch pages smaller than requireSize in bytes")
     var requireSize = 0
+
     @Parameter(names = ["-ri", "-requireImages", "--require-images"], description = "Fetch pages who's images less than requireImages")
     var requireImages = 0
+
     @Parameter(names = ["-ra", "-requireAnchors", "--require-anchors"], description = "Fetch pages who's anchors less than requireAnchors")
     var requireAnchors = 0
 
     @Parameter(names = ["-fm", "-fetchMode", "--fetch-mode"], converter = FetchModeConverter::class,
             description = "The fetch mode, native, crowd sourcing and selenium are supported, selenium is the default")
     var fetchMode = FetchMode.BROWSER
+
     @Parameter(names = ["-b", "-browser", "--browser"], converter = BrowserTypeConverter::class,
             description = "The browser to use, google chrome is the default")
     var browser = BrowserType.CHROME
+
     @Parameter(names = ["-sc", "-scrollCount", "--scroll-count"],
             description = "The count to scroll down after a page is opened by a browser")
     var scrollCount = 3
+
     @Parameter(names = ["-si", "-scrollInterval", "--scroll-interval"], converter = DurationConverter::class,
             description = "The interval to scroll down after a page is opened by a browser")
     var scrollInterval = Duration.ofMillis(500)
+
     @Parameter(names = ["-stt", "-scriptTimeout", "--script-timeout"], converter = DurationConverter::class,
             description = "The maximum time to perform javascript injected into selenium")
     var scriptTimeout = Duration.ofSeconds(90)
+
     @Parameter(names = ["-plt", "-pageLoadTimeout", "--page-load-timeout"], converter = DurationConverter::class,
             description = "The maximum time to wait for a page to finish from the first http request start")
     var pageLoadTimeout = Duration.ofMinutes(3)
@@ -86,44 +101,59 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-ib", "-itemBrowser", "--item-browser"], converter = BrowserTypeConverter::class,
             description = "The browser used to visit the item pages, CHROME and NATIVE are supported")
     var itemBrowser = BrowserType.CHROME
+
     @Parameter(names = ["-ie", "-itemExtractor", "--item-extractor"], converter = BrowserTypeConverter::class,
             description = "The extract used to extract item pages, use BOILERPIPE for news and DEFAULT for others")
     var itemExtractor = ItemExtractor.DEFAULT
+
     @Parameter(names = ["-ii", "-itemExpires", "--item-expires"], converter = DurationConverter::class,
             description = "The same as expires, but only works for item pages in harvest tasks")
     var itemExpires = ChronoUnit.CENTURIES.duration
+
     /** Note: if scroll too many times, the page may fail to calculate the vision information */
     @Parameter(names = ["-isc", "-itemScrollCount", "--item-scroll-count"],
             description = "The same as scrollCount, but only works for item pages in harvest tasks")
     var itemScrollCount = scrollCount
+
     @Parameter(names = ["-isi", "-itemScrollInterval", "--item-scroll-interval"], converter = DurationConverter::class,
             description = "The same as scrollInterval, but only works for item pages in harvest tasks")
     var itemScrollInterval = scrollInterval
+
     @Parameter(names = ["-ist", "-itemScriptTimeout", "--item-script-timeout"], converter = DurationConverter::class,
             description = "The same as scriptTimeout, but only works for item pages in harvest tasks")
     var itemScriptTimeout = scriptTimeout
+
     @Parameter(names = ["-iplt", "-itemPageLoadTimeout", "--item-page-load-timeout"], converter = DurationConverter::class,
             description = "The same as pageLoadTimeout, but only works for item pages in harvest tasks")
     var itemPageLoadTimeout = pageLoadTimeout
+
     @Parameter(names = ["-irnb", "-itemRequireNotBlank", "--item-require-not-blank"],
             description = "Keep the item pages only if the required text is not blank")
     var itemRequireNotBlank = ""
+
     @Parameter(names = ["-irs", "-itemRequireSize", "--item-require-size"],
             description = "Fetch item pages smaller than requireSize")
     var itemRequireSize = 0
+
     @Parameter(names = ["-iri", "-itemRequireImages", "--item-require-images"],
             description = "Fetch item pages who's images less than requireImages")
     var itemRequireImages = 0
+
     @Parameter(names = ["-ira", "-itemRequireAnchors", "--item-require-anchors"],
             description = "Fetch item pages who's anchors less than requireAnchors")
     var itemRequireAnchors = 0
 
+    /**
+     * @deprecated shorten key is deprecated, use clickUrl instead
+     * */
     @Parameter(names = ["-sk", "-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
     var shortenKey = false
+
     @Parameter(names = ["-persist", "--persist"], arity = 1,
             description = "Persist fetched pages as soon as possible")
     var persist = true
+
     @Parameter(names = ["-storeContent", "--store-content"], arity = 1,
             description = "Persist page content into data store")
     var storeContent = true
@@ -131,22 +161,28 @@ open class LoadOptions: CommonOptions {
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
             description = "Retry fetching the page if it's failed last time")
     var retryFailed = false
+
     @Parameter(names = ["-njr", "-nJitRetry", "--n-jit-retry"],
             description = "Retry at most n times if RETRY(1601) code return when fetching a page")
     var nJitRetry = 0
+
     @Parameter(names = ["-lazyFlush", "--lazy-flush"],
             description = "If false, flush persisted pages into database as soon as possible")
     var lazyFlush = true
+
     @Parameter(names = ["-preferParallel", "--prefer-parallel"], arity = 1,
             description = "Parallel fetch pages whenever applicable")
     var preferParallel = true
 
     @Parameter(names = ["-ic", "-incognito", "--incognito"], description = "Run browser in incognito mode")
     var incognito = false
+
     @Parameter(names = ["-background", "--background"], description = "Fetch the page in background")
     var background: Boolean = false
+
     @Parameter(names = ["-noRedirect", "--no-redirect"], description = "Do not redirect")
     var noRedirect = false
+
     @Parameter(names = ["-hardRedirect", "--hard-redirect"],
             description = "If false, return the original page record but the redirect target's content, " +
                     "otherwise, return the page record of the redirected target")
@@ -155,27 +191,36 @@ open class LoadOptions: CommonOptions {
     // parse options
     @Parameter(names = ["-ps", "-parse", "--parse"], description = "Parse the page after fetch")
     var parse = false
+
     @Parameter(names = ["-rpl", "-reparseLinks", "--reparse-links"], description = "Re-parse all links if the page is parsed")
     var reparseLinks = false
+
     @Parameter(names = ["-ignoreUrlQuery", "--ignore-url-query"], description = "Remove the query parameters of urls")
     var ignoreUrlQuery = false
+
     @Parameter(names = ["-noNorm", "--no-link-normalizer"], description = "No normalizer is applied to parse links")
     var noNorm = false
+
     @Parameter(names = ["-noFilter", "--no-link-filter"], description = "No filter is applied to parse links")
     var noFilter = false
 
     @Parameter(names = ["-q", "-query", "--query"], description = "Extract query to extract data from")
     var query: String? = null
+
     @Parameter(names = ["-m", "-withModel", "--with-model"], description = "Also load page model when loading a page")
     var withModel = false
+
     @Parameter(names = ["-lk", "-withLinks", "--with-links"], description = "Contains links when loading page model")
     var withLinks = false
+
     @Parameter(names = ["-tt", "-withText", "--with-text"], description = "Contains text when loading page model")
     var withText = false
 
     // A volatile config is usually in session scoped
     var volatileConfig: VolatileConfig? = null
-        set(value) { field = initConfig(value) }
+        set(value) {
+            field = initConfig(value)
+        }
         get() = initConfig(field)
 
     /**
@@ -183,23 +228,25 @@ open class LoadOptions: CommonOptions {
      * */
     val ignoreQuery get() = shortenKey
 
-    open val modifiedParams: Params get() {
-        val rowFormat = "%40s: %s"
-        val fields = LoadOptions::class.java.declaredFields
-        return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
-                .onEach { it.isAccessible = true }
-                .filter { it.get(this) != null }
-                .associate { "-${it.name}" to it.get(this) }
-                .let { Params.of(it).withRowFormat(rowFormat) }
-    }
+    open val modifiedParams: Params
+        get() {
+            val rowFormat = "%40s: %s"
+            val fields = LoadOptions::class.java.declaredFields
+            return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
+                    .onEach { it.isAccessible = true }
+                    .filter { it.get(this) != null }
+                    .associate { "-${it.name}" to it.get(this) }
+                    .let { Params.of(it).withRowFormat(rowFormat) }
+        }
 
-    open val modifiedOptions: Map<String, Any> get() {
-        val fields = LoadOptions::class.java.declaredFields
-        return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
-                .onEach { it.isAccessible = true }
-                .filter { it.get(this) != null }
-                .associate { it.name to it.get(this) }
-    }
+    open val modifiedOptions: Map<String, Any>
+        get() {
+            val fields = LoadOptions::class.java.declaredFields
+            return fields.filter { it.annotations.any { it is Parameter } && !isDefault(it.name) }
+                    .onEach { it.isAccessible = true }
+                    .filter { it.get(this) != null }
+                    .associate { it.name to it.get(this) }
+        }
 
     protected constructor() {
         addObjects(this)
@@ -221,7 +268,7 @@ open class LoadOptions: CommonOptions {
             itemOptions.fetchMode = FetchMode.NATIVE
         }
 
-        itemOptions.volatileConfig = conf?:volatileConfig
+        itemOptions.volatileConfig = conf ?: volatileConfig
 
         return itemOptions
     }
@@ -241,7 +288,7 @@ open class LoadOptions: CommonOptions {
 
     open fun isDefault(option: String): Boolean {
         val value = LoadOptions::class.java.declaredFields.find { it.name == option }
-                ?.also { it.isAccessible = true }?.get(this)?:return false
+                ?.also { it.isAccessible = true }?.get(this) ?: return false
         return value == defaultParams[option]
     }
 
@@ -311,6 +358,8 @@ open class LoadOptions: CommonOptions {
         return this
     }
 
+    open fun mergeModified(args: String) = mergeModified(Companion.parse(args))
+
     private fun initConfig(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
         setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
@@ -366,6 +415,11 @@ open class LoadOptions: CommonOptions {
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, o2: LoadOptions, volatileConfig: VolatileConfig? = null): LoadOptions {
             return o1.clone().mergeModified(o2).also { it.volatileConfig = volatileConfig }
+        }
+
+        @JvmOverloads
+        fun mergeModified(o1: LoadOptions, args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
+            return o1.clone().mergeModified(parse(args)).also { it.volatileConfig = volatileConfig }
         }
     }
 }

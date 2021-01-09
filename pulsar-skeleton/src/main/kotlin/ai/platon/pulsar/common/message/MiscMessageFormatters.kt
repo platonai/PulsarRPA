@@ -77,10 +77,6 @@ class CompletedPageFormatter(
     val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
     val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
-    val redirected get() = page.url != page.location
-    val location get() = if (redirected) page.location else page.url
-    val readableUrl get() = if (redirected) "[R] $location <- ${page.url}" else location
-    val readableUrlOrLinks get() = if (verbose) "file://$symbolicLink | $readableUrl" else readableUrl
 
     val fmt get() = "%3d. Fetched %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
@@ -97,8 +93,18 @@ class CompletedPageFormatter(
                 if (m.numFields == 0) "" else numFields,
                 proxy?:"",
                 page.variables["privacyContext"]?:"",
-                readableUrlOrLinks
+                buildLocation()
         )
+    }
+
+    private fun buildLocation(): String {
+        val expectedLocation = page.clickUrl ?: page.url
+        val redirected = expectedLocation != page.location
+        val normalized = page.clickUrl != page.url
+        val location = if (redirected) page.location else expectedLocation
+        val readableLocation0 = if (redirected) "[R] $location <- $expectedLocation" else location
+        val readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
+        return if (verbose) "file://$symbolicLink | $readableLocation" else readableLocation
     }
 }
 

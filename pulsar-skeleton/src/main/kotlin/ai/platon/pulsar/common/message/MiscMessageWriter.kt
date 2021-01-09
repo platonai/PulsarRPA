@@ -8,7 +8,8 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.common.url.LabeledHyperlinkDatum
+import ai.platon.pulsar.common.url.Hyperlink
+import ai.platon.pulsar.common.url.LabeledHyperlink
 import ai.platon.pulsar.crawl.common.WeakPageIndexer
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import ai.platon.pulsar.persist.PageCounters.Self
@@ -160,7 +161,7 @@ class MiscMessageWriter(val webDb: WebDb, conf: ImmutableConfig) : MultiSinkMess
         write(report, "document-statistics.txt")
     }
 
-    fun reportLabeledHyperlinks(hyperLinks: Set<LabeledHyperlinkDatum>) {
+    fun reportLabeledHyperlinks(hyperLinks: Set<LabeledHyperlink>) {
         if (hyperLinks.isEmpty()) return
         val groupedHyperlinks = hyperLinks.groupBy { it.label }
         groupedHyperlinks.keys.forEach { label ->

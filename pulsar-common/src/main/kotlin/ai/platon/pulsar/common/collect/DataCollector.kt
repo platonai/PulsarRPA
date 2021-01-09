@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 
 /**
  * The data collector interface
@@ -49,9 +49,9 @@ abstract class AbstractDataCollector<E>: DataCollector<E> {
 }
 
 abstract class AbstractPriorityDataCollector<T>(
-        override val priority: Int = Priority.NORMAL.value,
+        override val priority: Int = Priority13.NORMAL.value,
         override val capacity: Int = DEFAULT_CAPACITY
 ): AbstractDataCollector<T>(), PriorityDataCollector<T> {
-    constructor(priority: Priority): this(priority.value)
+    constructor(priority: Priority13): this(priority.value)
     override var name: String = "PriorityDC"
 }

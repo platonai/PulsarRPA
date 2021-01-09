@@ -1,6 +1,6 @@
 package ai.platon.pulsar.crawl.common.collect
 
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.collect.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.url.Hyperlink
@@ -72,7 +72,7 @@ class TestDataCollectors: TestBase() {
         collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
 
         println("Adding another normal collector ...")
-        val priority = Priority.NORMAL.value
+        val priority = Priority13.NORMAL.value
         val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
@@ -96,7 +96,7 @@ class TestDataCollectors: TestBase() {
         collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
 
         println("Adding 2nd normal collector ...")
-        val priority = Priority.NORMAL.value
+        val priority = Priority13.NORMAL.value
         val normalCollector = FetchCacheCollector(fetchCacheManager.normalCache, priority)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))

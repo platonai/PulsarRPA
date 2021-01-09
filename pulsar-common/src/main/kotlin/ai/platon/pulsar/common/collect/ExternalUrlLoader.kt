@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.collect
 
-import ai.platon.pulsar.common.Priority
+import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.url.UrlAware
 import java.time.Duration
 import java.time.Instant
@@ -46,7 +46,7 @@ interface ExternalUrlLoader {
      * Load items from the source to the sink
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>,
-                  maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority.NORMAL.value): Collection<UrlAware>
+                  maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority13.NORMAL.value): Collection<UrlAware>
     /**
      * Load items from the source to the sink
      * */
@@ -56,12 +56,12 @@ interface ExternalUrlLoader {
      * Load items from the source to the sink
      * */
     fun loadTo(sink: MutableCollection<UrlAware>,
-               maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority.NORMAL.value)
+               maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority13.NORMAL.value)
     /**
      * Load items from the source to the sink
      * */
     fun <T> loadTo(sink: MutableCollection<T>,
-                   maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority.NORMAL.value, transformer: (UrlAware) -> T)
+                   maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority13.NORMAL.value, transformer: (UrlAware) -> T)
 }
 
 abstract class AbstractExternalUrlLoader(
