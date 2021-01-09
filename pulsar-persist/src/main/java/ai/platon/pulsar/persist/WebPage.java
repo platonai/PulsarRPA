@@ -404,7 +404,7 @@ public class WebPage implements Comparable<WebPage> {
 
     /**
      * Set The hypertext reference of this page.
-     * It defines the address of the document, which this time is linked from</p>
+     * It defines the address of the document, which this time is linked from
      *
      * @param href The hypertext reference
      */
