@@ -144,7 +144,7 @@ open class LoadOptions: CommonOptions {
     var itemRequireAnchors = 0
 
     /**
-     * @deprecated shorten key is deprecated, use clickUrl instead
+     * @deprecated shorten key is deprecated, use href instead
      * */
     @Parameter(names = ["-sk", "-shortenKey", "--shorten-key"],
             description = "Remove the query parameters when generate the page's key (reversed url)")
@@ -420,6 +420,17 @@ open class LoadOptions: CommonOptions {
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
             return o1.clone().mergeModified(parse(args)).also { it.volatileConfig = volatileConfig }
+        }
+
+        @JvmOverloads
+        fun mergeModified(args: String?, args2: String?, volatileConfig: VolatileConfig? = null): LoadOptions {
+            val options = parse(args ?: "")
+            if (args2 != null) {
+                options.mergeModified(args2)
+            }
+            options.volatileConfig = volatileConfig
+
+            return options
         }
     }
 }

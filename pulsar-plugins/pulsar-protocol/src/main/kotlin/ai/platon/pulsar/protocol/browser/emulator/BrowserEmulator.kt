@@ -147,7 +147,7 @@ open class BrowserEmulator(
 
         checkState(driver)
         checkState(task)
-        val location = task.clickUrl ?: task.url
+        val location = task.href ?: task.url
         driver.navigateTo(location)
 
         val interactTask = InteractTask(task, driverConfig, driver)

@@ -231,8 +231,8 @@ open class FetchComponent(
         return crawlStatus
     }
 
-    fun createFetchEntry(url: String, options: LoadOptions, clickUrl: String? = null): WebPage {
-        return WebPage.newWebPage(url, options.volatileConfig, clickUrl)
+    fun createFetchEntry(url: String, options: LoadOptions, href: String? = null): WebPage {
+        return WebPage.newWebPage(url, options.volatileConfig, href)
                 .also { initFetchEntry(it, options) }
     }
 
@@ -244,8 +244,8 @@ open class FetchComponent(
         }
     }
 
-    fun initFetchEntry(page: WebPage, options: LoadOptions, clickUrl: String?) {
-        page.clickUrl = clickUrl
+    fun initFetchEntry(page: WebPage, options: LoadOptions, href: String?) {
+        page.href = href
         initFetchEntry(page, options)
     }
 

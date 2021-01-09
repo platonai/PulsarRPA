@@ -32,8 +32,8 @@ open class LocalFileHyperlinkCollector(
     init {
         val remainingCapacity = capacity - hyperlinks.size
         urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
-            // TODO: merge args
-            Hyperlinks.toHyperlink(it).also { it.args = loadArgs }
+            val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
+            Hyperlinks.toHyperlink(it).also { it.args = args }
         }
         log.info("There are {} urls in file | {}", hyperlinks.size, path)
     }

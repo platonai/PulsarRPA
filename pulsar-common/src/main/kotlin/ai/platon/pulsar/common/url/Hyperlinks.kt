@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.url
 
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.VolatileConfig
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -30,10 +29,9 @@ interface UrlAware: Comparable<UrlAware> {
      * */
     var label: String
     /**
-     * A click url is a url variant, it's the raw url in the html without normalization,
-     * for example, an url with a timestamp query parameter added
+     * The hypertext reference, It defines the address of the document, which this time is linked from
      * */
-    var clickUrl: String?
+    var href: String?
     /**
      * The configured url, always be "$url $args"
      * */
@@ -64,7 +62,7 @@ abstract class AbstractUrl(
         override var args: String? = null,
         override var referer: String? = null,
         override var label: String = "",
-        override var clickUrl: String? = null
+        override var href: String? = null
 ): UrlAware {
 
     override val configuredUrl get() = if (args != null) "$url $args" else url
@@ -139,10 +137,9 @@ data class HyperlinkDatum(
          * */
         val args: String? = null,
         /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
+         * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        var clickUrl: String? = null,
+        var href: String? = null,
         /**
          * If this link is persistable
          * */
@@ -189,22 +186,21 @@ open class Hyperlink(
          * */
         args: String? = null,
         /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
+         * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        clickUrl: String? = null,
+        href: String? = null,
         /**
          * The label
          * */
         label: String = ""
-): AbstractUrl(url, args, referer, label, clickUrl) {
+): AbstractUrl(url, args, referer, label, href) {
     var depth: Int = 0
 
     constructor(url: UrlAware): this(url.url, "", 0, url.referer, url.args)
     constructor(url: Hyperlink): this(url.url, url.text, url.order, url.referer, url.args)
     constructor(url: HyperlinkDatum): this(url.url, url.text, url.order, url.referer, url.args)
 
-    fun data() = HyperlinkDatum(url, text, order, referer, args, clickUrl, true, 0, label)
+    fun data() = HyperlinkDatum(url, text, order, referer, args, href, true, 0, label)
 }
 
 open class LabeledHyperlink(
@@ -233,11 +229,10 @@ open class LabeledHyperlink(
          * */
         args: String? = null,
         /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
+         * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        clickUrl: String? = null
-): Hyperlink(url, text, order, referer, args, clickUrl, label)
+        href: String? = null
+): Hyperlink(url, text, order, referer, args, href, label)
 
 open class StatefulHyperlink(
         /**
@@ -264,12 +259,12 @@ open class StatefulHyperlink(
          * A click url is a url variant, it's the raw url in the html without normalization,
          * for example, an url with a timestamp query parameter added
          * */
-        clickUrl: String? = null,
+        href: String? = null,
         /**
          * The label
          * */
         label: String = ""
-): Hyperlink(url, text, order, referer, args, clickUrl, label), StatefulUrl {
+): Hyperlink(url, text, order, referer, args, href, label), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -308,10 +303,9 @@ open class FatLink(
          * */
         args: String? = null,
         /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
+         * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        clickUrl: String? = null,
+        href: String? = null,
         /**
          * The label
          * */
@@ -320,7 +314,7 @@ open class FatLink(
          * The tail links
          * */
         var tailLinks: List<StatefulHyperlink>
-): Hyperlink(url, text, order, referer, args, clickUrl, label) {
+): Hyperlink(url, text, order, referer, args, href, label) {
     val size get() = tailLinks.size
     val isEmpty get() = size == 0
     val isNotEmpty get() = !isEmpty
@@ -350,10 +344,9 @@ open class StatefulFatLink(
          * */
         args: String? = null,
         /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
+         * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        clickUrl: String? = null,
+        href: String? = null,
         /**
          * The label
          * */
@@ -362,7 +355,7 @@ open class StatefulFatLink(
          * The tail links
          * */
         tailLinks: List<StatefulHyperlink>
-): FatLink(url, text, order, referer, args, clickUrl, label, tailLinks), StatefulUrl {
+): FatLink(url, text, order, referer, args, href, label, tailLinks), StatefulUrl {
     override var authToken: String? = null
     override var remoteAddr: String? = null
     override var status: Int = ResourceStatus.SC_CREATED
@@ -394,10 +387,9 @@ class CrawlableFatLink(
          * */
         args: String? = null,
         /**
-         * A click url is a url variant, it's the raw url in the html without normalization,
-         * for example, an url with a timestamp query parameter added
+         * The hypertext reference, It defines the address of the document, which this time is linked from
          * */
-        clickUrl: String? = null,
+        href: String? = null,
         /**
          * The label
          * */
@@ -406,7 +398,7 @@ class CrawlableFatLink(
          * The tail links
          * */
         tailLinks: List<StatefulHyperlink>
-): StatefulFatLink(url, text, order, referer, args, clickUrl, label, tailLinks) {
+): StatefulFatLink(url, text, order, referer, args, href, label, tailLinks) {
 
     private val log = LoggerFactory.getLogger(CrawlableFatLink::class.java)
 
@@ -454,6 +446,6 @@ object Hyperlinks {
 
     fun toHyperlink(url: UrlAware): Hyperlink {
         return if (url is Hyperlink) url
-        else Hyperlink(url.url, args = url.args, referer = url.referer, label = url.label, clickUrl = url.clickUrl)
+        else Hyperlink(url.url, args = url.args, referer = url.referer, label = url.label, href = url.href)
     }
 }

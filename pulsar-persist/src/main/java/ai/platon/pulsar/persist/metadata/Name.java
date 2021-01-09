@@ -33,7 +33,7 @@ public enum Name {
     /**
      * fetch
      */
-    CLICK_URL("F_CU"),
+    HREF("F_CU"),
     FETCH_MODE("F_MD"),
     FETCH_AHEAD_TIME("F_EFT"),
     FETCH_TIME_HISTORY("F_FTH"),

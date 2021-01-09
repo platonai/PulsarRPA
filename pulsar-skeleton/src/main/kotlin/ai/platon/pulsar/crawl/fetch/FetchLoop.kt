@@ -162,7 +162,7 @@ class FetchLoop(
             }
 
             withContext(Dispatchers.IO) {
-                log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page, LoadOptions.default).toString())
+                log.takeIf { it.isInfoEnabled }?.info(CompletedPageFormatter(page).toString())
                 if (!isCanceled) {
                     write(page.key, page)
                     metricsCounters.inc(CommonCounter.rPersist)

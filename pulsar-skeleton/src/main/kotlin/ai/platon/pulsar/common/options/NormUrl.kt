@@ -8,7 +8,7 @@ import java.net.URL
 open class NormUrl(
         val url: URL,
         val options: LoadOptions,
-        var clickUrl: URL? = null
+        var href: URL? = null
 ): Comparable<NormUrl> {
 
     @Throws(MalformedURLException::class)
@@ -16,7 +16,7 @@ open class NormUrl(
             this(URL(spec), options, clickUrlSpec?.let { URL(clickUrlSpec) })
 
     val spec = url.toString()
-    val cuSpec = clickUrl?.toString()
+    val cuSpec = href?.toString()
     val args = options.toString()
     val configuredUrl = "$spec $args"
 

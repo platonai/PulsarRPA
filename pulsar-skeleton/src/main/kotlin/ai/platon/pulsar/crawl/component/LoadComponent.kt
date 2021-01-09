@@ -232,7 +232,7 @@ class LoadComponent(
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(LoadCompletedPagesFormatter(updatedPages, options, startTime, verbose).toString())
+            log.info(LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose).toString())
         }
 
         return knownPages
@@ -371,7 +371,7 @@ class LoadComponent(
 
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(CompletedPageFormatter(page, options, verbose).toString())
+            log.info(CompletedPageFormatter(page, withSymbolicLink = verbose).toString())
         }
 
         globalFetchingUrls.remove(page.url)

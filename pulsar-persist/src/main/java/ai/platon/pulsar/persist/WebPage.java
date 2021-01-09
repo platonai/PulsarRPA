@@ -166,8 +166,8 @@ public class WebPage implements Comparable<WebPage> {
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
      */
     @NotNull
-    public static WebPage newWebPage(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String clickUrl) {
-        return newWebPageInternal(url, volatileConfig, clickUrl);
+    public static WebPage newWebPage(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String href) {
+        return newWebPageInternal(url, volatileConfig, href);
     }
 
     /**
@@ -177,7 +177,7 @@ public class WebPage implements Comparable<WebPage> {
      * @param shortenKey a boolean.
      * @param volatileConfig a {@link ai.platon.pulsar.common.config.VolatileConfig} object.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     * @deprecated shorten key is deprecated, use clickUrl instead
+     * @deprecated shorten key is deprecated, use href instead
      */
     @NotNull
     public static WebPage newWebPage(@NotNull String url, boolean shortenKey, @Nullable VolatileConfig volatileConfig) {
@@ -191,7 +191,7 @@ public class WebPage implements Comparable<WebPage> {
      * @param originalUrl a {@link java.lang.String} object.
      * @param shortenKey a boolean.
      * @return a {@link ai.platon.pulsar.persist.WebPage} object.
-     * @deprecated shorten key is deprecated, use clickUrl instead
+     * @deprecated shorten key is deprecated, use href instead
      */
     @NotNull
     public static WebPage newWebPage(@NotNull String originalUrl, boolean shortenKey) {
@@ -200,12 +200,12 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     @NotNull
-    private static WebPage newWebPageInternal(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String clickUrl) {
+    private static WebPage newWebPageInternal(@NotNull String url, @Nullable VolatileConfig volatileConfig, @Nullable String href) {
         WebPage page = new WebPage(url, GWebPage.newBuilder().build(), false);
 
         page.setLocation(url);
         page.setVolatileConfig(volatileConfig);
-        page.setClickUrl(clickUrl);
+        page.setHref(href);
         page.setCrawlStatus(CrawlStatus.STATUS_UNFETCHED);
         page.setCreateTime(Instant.now());
         page.setModifiedTime(Instant.now());
@@ -392,22 +392,24 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>Get the click url. The click url is a hyperlink in html page for a human-being to click</p>
+     * Get The hypertext reference of this page.
+     * It defines the address of the document, which this time is linked from
      *
-     * @return the click url
+     * @return The hypertext reference
      */
     @Nullable
-    public String getClickUrl() {
-        return getMetadata().get(Name.CLICK_URL);
+    public String getHref() {
+        return getMetadata().get(Name.HREF);
     }
 
     /**
-     * <p>Set the click url. The click url is a hyperlink in html page for a human-being to click</p>
+     * Set The hypertext reference of this page.
+     * It defines the address of the document, which this time is linked from</p>
      *
-     * @param query a {@link java.lang.String} object.
+     * @param href The hypertext reference
      */
-    public void setClickUrl(@Nullable String query) {
-        getMetadata().set(Name.CLICK_URL, query);
+    public void setHref(@Nullable String href) {
+        getMetadata().set(Name.HREF, href);
     }
 
     /**

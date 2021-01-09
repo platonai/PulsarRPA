@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.WebPageBatchHandler
-import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.crawl.protocol.ForwardingResponse
@@ -83,7 +82,7 @@ class FetchTask(
     var proxyEntry: ProxyEntry? = null
 
     val url get() = page.url
-    val clickUrl get() = page.clickUrl
+    val href get() = page.href
     val domain get() = URLUtil.getDomainName(url)
     val isCanceled get() = state.get() == State.CANCELED
     val isWorking get() = state.get() == State.WORKING

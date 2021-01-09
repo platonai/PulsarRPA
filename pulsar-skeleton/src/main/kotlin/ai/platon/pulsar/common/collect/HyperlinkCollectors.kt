@@ -29,8 +29,7 @@ open class UrlQueueCollector(
 
         var collected = 0
         queue.poll()?.let {
-            val hyperlink = Hyperlinks.toHyperlink(it)
-            if (sink.add(hyperlink)) {
+            if (sink.add(Hyperlinks.toHyperlink(it))) {
                 ++collected
             }
         }
