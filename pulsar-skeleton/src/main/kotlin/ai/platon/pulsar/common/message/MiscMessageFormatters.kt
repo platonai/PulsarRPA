@@ -54,11 +54,11 @@ class PageFormatter(val page: WebPage) {
 class CompletedPageFormatter(
         private val page: WebPage,
         private val prefix: String = "Fetched",
+        private val withOptions: Boolean = false,
         private val withNormUrl: Boolean = false,
         private val withReferer: Boolean = false,
         private val withSymbolicLink: Boolean = false
 ) {
-    val contentBytes get() = page.contentBytes
     val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
     val proxy get() = page.metadata[Name.PROXY]
     val activeDomStats = page.activeDomStats
@@ -69,7 +69,7 @@ class CompletedPageFormatter(
         String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
     }
 
-    val label get() = StringUtils.abbreviateMiddle(page.label, "..", 20)
+    val label = StringUtils.abbreviateMiddle(page.label, "..", 20)
     val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
     val category get() = page.pageCategory.symbol()
     val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
@@ -87,7 +87,7 @@ class CompletedPageFormatter(
                 page.id,
                 category,
                 page.protocolStatus.minorCode,
-                Strings.readableBytes(contentBytes.toLong(), 7, false),
+                buildContentBytes(),
                 DateTimes.readableDuration(responseTime),
                 jsSate,
                 page.fetchCount,
@@ -98,11 +98,24 @@ class CompletedPageFormatter(
         )
     }
 
+    private fun buildContentBytes(): String {
+        return if (page.lastContentBytes == 0 || page.lastContentBytes == page.contentBytes) {
+            readableBytes(page.contentBytes)
+        } else {
+            readableBytes(page.contentBytes).trim() + " <- " + readableBytes(page.lastContentBytes).trim()
+        }
+    }
+
+    private fun readableBytes(bytes: Int): String {
+        return Strings.readableBytes(bytes, 7, false)
+    }
+
     private fun buildLocation(): String {
         val expectedLocation = page.href ?: page.url
         val redirected = expectedLocation != page.location
         val normalized = page.href != null && page.href != page.url
-        val location = if (redirected) page.location else expectedLocation
+        var location = if (redirected) page.location else expectedLocation
+        if (withOptions) location += " ${page.options}"
         val readableLocation0 = if (redirected) "[R] $location <- $expectedLocation" else location
         var readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
         if (withNormUrl) readableLocation = "$readableLocation <- ${page.url}"

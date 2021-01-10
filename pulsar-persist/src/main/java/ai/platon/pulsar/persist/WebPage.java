@@ -593,19 +593,21 @@ public class WebPage implements Comparable<WebPage> {
      *
      * @return a {@link java.lang.String} object.
      */
-    @Nullable
+    @NotNull
     public String getLabel() {
         String options = getOptions();
-        if (options != null) {
-            return StringUtils.substringBetween(options, "-label ", " ");
+        String label = StringUtils.substringBetween(options, "-label ", " ");
+        if (label == null) {
+            label = "";
         }
-        return null;
+        return label;
     }
 
     /**
      * <p>getQuery.</p>
      *
      * @return a {@link java.lang.String} object.
+     * @deprecated
      */
     @Nullable
     public String getQuery() {
@@ -616,6 +618,7 @@ public class WebPage implements Comparable<WebPage> {
      * <p>setQuery.</p>
      *
      * @param query a {@link java.lang.String} object.
+     * @deprecated
      */
     public void setQuery(@Nullable String query) {
         getMetadata().set(Name.QUERY, query);
@@ -1540,10 +1543,8 @@ public class WebPage implements Comparable<WebPage> {
      * TODO: use a field
      * */
     private void setContentBytes(int bytes) {
-        if (bytes == 0) {
-            return;
-        }
-
+        int lastBytes = getContentBytes();
+        getMetadata().set(Name.LAST_CONTENT_BYTES, lastBytes);
         getMetadata().set(Name.CONTENT_BYTES, String.valueOf(bytes));
 
         int count = getFetchCount();
@@ -1558,6 +1559,10 @@ public class WebPage implements Comparable<WebPage> {
         }
 
         getMetadata().set(Name.AVE_CONTENT_BYTES, String.valueOf(aveBytes));
+    }
+
+    public int getLastContentBytes() {
+        return getMetadata().getInt(Name.LAST_CONTENT_BYTES, 0);
     }
 
     /**

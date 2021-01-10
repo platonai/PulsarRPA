@@ -144,8 +144,8 @@ abstract class BasicDevTools(
             }
 
             if (!responded) {
-                logger.warn("Timeout to wait for ws response #$numInvokes")
-                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #$numInvokes")
+                logger.warn("Timeout to wait for ws response #{}", numInvokes.count)
+                throw ChromeDevToolsInvocationException("Timeout to wait for ws response #${numInvokes.count}")
             }
 
             if (future.isSuccess) {

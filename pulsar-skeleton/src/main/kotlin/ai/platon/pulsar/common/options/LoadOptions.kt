@@ -8,7 +8,6 @@ import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 /**
@@ -358,7 +357,21 @@ open class LoadOptions: CommonOptions {
         return this
     }
 
-    open fun mergeModified(args: String) = mergeModified(Companion.parse(args))
+    open fun mergeModified(args: String): LoadOptions {
+        val o2 = parse(args)
+        val options = mergeModified(o2)
+
+        val parts = args.split(" ")
+        var i = 0
+        while (i < parts.size) {
+            if (parts[i] in distinctBooleanParams) {
+                setFieldByAnnotation(options, parts[i], parts[++i].toBoolean())
+            }
+            ++i
+        }
+
+        return options
+    }
 
     private fun initConfig(conf: VolatileConfig?): VolatileConfig? = conf?.apply {
         setInt(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, scrollCount)
@@ -393,6 +406,16 @@ open class LoadOptions: CommonOptions {
                             )
                         }
 
+        fun setFieldByAnnotation(options: LoadOptions, annotationName: String, value: Any) {
+            LoadOptions::class.java.declaredFields.forEach {
+                val found = it.annotations.filterIsInstance<Parameter>().any { annotationName in it.names }
+                if (found) {
+                    it.isAccessible = true
+                    it.set(options, value)
+                }
+            }
+        }
+
         @JvmOverloads
         fun create(volatileConfig: VolatileConfig? = null): LoadOptions {
             val options = LoadOptions()
@@ -419,7 +442,7 @@ open class LoadOptions: CommonOptions {
 
         @JvmOverloads
         fun mergeModified(o1: LoadOptions, args: String, volatileConfig: VolatileConfig? = null): LoadOptions {
-            return o1.clone().mergeModified(parse(args)).also { it.volatileConfig = volatileConfig }
+            return o1.clone().mergeModified(args).also { it.volatileConfig = volatileConfig }
         }
 
         @JvmOverloads

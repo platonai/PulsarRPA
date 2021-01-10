@@ -232,7 +232,7 @@ class LoadComponent(
         knownPages.addAll(updatedPages)
         if (log.isInfoEnabled) {
             val verbose = log.isDebugEnabled
-            log.info(LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose).toString())
+            log.info("{}", LoadCompletedPagesFormatter(updatedPages, startTime, withSymbolicLink = verbose))
         }
 
         return knownPages
@@ -517,8 +517,9 @@ class LoadComponent(
         // so PageParser is able to parse it, now, we can clear it
         if (!options.storeContent && page.content != null) {
             if (!page.isSeed || page.fetchCount > 2) {
+                // log.info("{}.\tClear page content | {}", page.id, page.url)
                 // set cached content so other thread still can use it
-                // TODO: memory issue
+                // TODO: memory issue, when to clear cachedContent?
                 page.cachedContent = page.content
                 page.content = null
                 require(page.cachedContent != null)
