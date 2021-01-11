@@ -5,7 +5,9 @@ import ai.platon.pulsar.common.url.UrlAware
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 
-interface LoadingQueue<T>: Queue<T>, Loadable<T>
+interface LoadingQueue<T>: Queue<T>, Loadable<T> {
+    fun shuffle()
+}
 
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
@@ -13,7 +15,8 @@ abstract class AbstractLoadingQueue(
         val priority: Int = Priority13.NORMAL.value,
         val capacity: Int = 100_000
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
-    protected val cache = ConcurrentSkipListSet<UrlAware>()
+//    protected val cache = ConcurrentSkipListSet<UrlAware>()
+    protected val cache = Collections.synchronizedList(LinkedList<UrlAware>())
 
     val freeSlots get() = capacity - cache.size
     val isFull get() = freeSlots == 0
@@ -31,6 +34,10 @@ abstract class AbstractLoadingQueue(
         return if (freeSlots > 0) {
             loader.loadToNow(cache, freeSlots, group, priority)
         } else listOf()
+    }
+
+    override fun shuffle() {
+        cache.shuffle()
     }
 
     override fun add(url: UrlAware) = offer(url)
@@ -58,7 +65,7 @@ abstract class AbstractLoadingQueue(
 
     override fun poll(): UrlAware? {
         peek()
-        return cache.pollFirst()
+        return cache.removeFirstOrNull()
     }
 
     override val size: Int get() = tryRefresh().cache.size

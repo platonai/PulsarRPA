@@ -26,6 +26,10 @@ open class ConcurrentLoadingIterable<E>(
         cache.add(0, e)
     }
 
+    fun shuffle() {
+        cache.shuffle()
+    }
+
     class LoadingIterator<E>(
             private val iterable: ConcurrentLoadingIterable<E>
     ): Iterator<E> {

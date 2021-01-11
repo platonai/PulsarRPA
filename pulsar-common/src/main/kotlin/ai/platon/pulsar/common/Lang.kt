@@ -37,7 +37,17 @@ enum class Priority13(val value: Int) {
     LOWER3(3000),
     LOWER4(4000),
     LOWER5(5000),
-    LOWEST(Int.MAX_VALUE / 10)
+    LOWEST(Int.MAX_VALUE / 10);
+
+    companion object {
+        fun valueOf(name: String, defaultValue: Priority13): Priority13 {
+            return try {
+                valueOf(name)
+            } catch (t: Throwable) {
+                defaultValue
+            }
+        }
+    }
 }
 
 enum class Priority21(val value: Int) {

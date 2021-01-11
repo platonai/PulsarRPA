@@ -216,10 +216,14 @@ open class StreamingCrawler<T: UrlAware>(
 
         if (page == null || page.crawlStatus.isUnFetched) {
             globalCache?.also {
-                val added = it.fetchCacheManager.higherCache.nReentrantQueue.add(url)
-                globalRetries.incrementAndGet()
-                if (page != null) {
-                    log.info("{}. Will retry task the {}th times | {}", page.id, page.fetchRetries, page.href ?: url)
+                val cache = it.fetchCacheManager.higherCache.nReentrantQueue
+                if (cache.add(url)) {
+                    globalRetries.incrementAndGet()
+                    if (page != null) {
+                        log.info("{}. Retrying the {}th time | {}", page.id, page.fetchRetries, page.href ?: url)
+                    }
+                } else {
+                    log.info("No further retry | {}", url)
                 }
             }
         }
