@@ -107,7 +107,19 @@ public class WebPage implements Comparable<WebPage> {
      * Web page scope variables
      * TODO : we may use it a PageDatum to track all context scope variables
      */
-    private Variables variables = new Variables();
+    private final Variables variables = new Variables();
+
+    /**
+     * If this page is loaded from database or is created and fetched from the web
+     * */
+    private boolean isLoaded = false;
+
+    /**
+     * If this page is fetched and updated
+     * */
+    private boolean isUpdated = false;
+
+    private boolean enableCachedContent = false;
 
     private ByteBuffer cachedContent = null;
 
@@ -495,6 +507,30 @@ public class WebPage implements Comparable<WebPage> {
         return exist;
     }
 
+    public boolean isLoaded() {
+        return isLoaded;
+    }
+
+    public void setLoaded(boolean loaded) {
+        isLoaded = loaded;
+    }
+
+    public boolean isUpdated() {
+        return isUpdated;
+    }
+
+    public void setUpdated(boolean updated) {
+        isUpdated = updated;
+    }
+
+    public boolean isCachedContentEnabled() {
+        return enableCachedContent;
+    }
+
+    public void setCachedContentEnabled(boolean enableCachedContent) {
+        this.enableCachedContent = enableCachedContent;
+    }
+
     /**
      * <p>Getter for the field <code>volatileConfig</code>.</p>
      *
@@ -850,6 +886,34 @@ public class WebPage implements Comparable<WebPage> {
      */
     public void setGenerateTime(@NotNull Instant generateTime) {
         getMetadata().set(Name.GENERATE_TIME, generateTime.toString());
+    }
+
+    /**
+     * <p>getModelSyncTime.</p>
+     *
+     * @return The time to sync the page model.
+     */
+    @Nullable
+    public Instant getModelSyncTime() {
+        String modelSyncTime = getMetadata().get(Name.MODEL_SYNC_TIME);
+        if (modelSyncTime == null) {
+            return null;
+        } else {
+            return Instant.parse(modelSyncTime);
+        }
+    }
+
+    /**
+     * <p>setModelSyncTime.</p>
+     *
+     * @param modelSyncTime The time to sync the page model.
+     */
+    public void setModelSyncTime(@Nullable Instant modelSyncTime) {
+        if (modelSyncTime != null) {
+            getMetadata().set(Name.MODEL_SYNC_TIME, modelSyncTime.toString());
+        } else {
+            getMetadata().set(Name.MODEL_SYNC_TIME, (Instant) null);
+        }
     }
 
     /**
@@ -1398,7 +1462,7 @@ public class WebPage implements Comparable<WebPage> {
      */
     @Nullable
     public ByteBuffer getContent() {
-        if (cachedContent != null) {
+        if (enableCachedContent && cachedContent != null) {
             return cachedContent;
         }
         return page.getContent();

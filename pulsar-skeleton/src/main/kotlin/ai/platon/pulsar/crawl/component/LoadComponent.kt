@@ -517,12 +517,12 @@ class LoadComponent(
         // so PageParser is able to parse it, now, we can clear it
         if (!options.storeContent && page.content != null) {
             if (!page.isSeed || page.fetchCount > 2) {
-                // log.info("{}.\tClear page content | {}", page.id, page.url)
-                // set cached content so other thread still can use it
-                // TODO: memory issue, when to clear cachedContent?
-                page.cachedContent = page.content
+                if (page.isCachedContentEnabled) {
+                    // set cached content so other thread still can use it
+                    // TODO: memory issue, when to clear cachedContent?
+                    page.cachedContent = page.content
+                }
                 page.content = null
-                require(page.cachedContent != null)
             }
         }
 

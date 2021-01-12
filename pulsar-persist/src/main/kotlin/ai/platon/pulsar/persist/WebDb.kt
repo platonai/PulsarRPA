@@ -40,7 +40,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
         val page = fields?.let { store.get(key, it) } ?: store.get(key)
         if (page != null) {
             tracer?.trace("Got $key")
-            return WebPage.box(url, key, page)
+            return WebPage.box(url, key, page).also { it.isLoaded = true }
         }
 
         return null
@@ -56,7 +56,7 @@ class WebDb(val conf: ImmutableConfig): AutoCloseable {
     fun get(originalUrl: String, ignoreQuery: Boolean = false, fields: Array<String>? = null): WebPage {
         val (url, key) = Urls.normalizedUrlAndKey(originalUrl, ignoreQuery)
 
-        val page = getOrNull(url, ignoreQuery, null)
+        val page = getOrNull(url, ignoreQuery, null)?.also { it.isLoaded = true }
         return page ?: WebPage.NIL
     }
 

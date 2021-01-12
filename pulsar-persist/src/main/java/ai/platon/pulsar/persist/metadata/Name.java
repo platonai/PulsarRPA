@@ -57,6 +57,8 @@ public enum Name {
     TOTAL_OUT_LINKS("P_TOL"),
     ANCHORS("P_AS"),
 
+    MODEL_SYNC_TIME("PST"),
+
     /**
      * harvest
      */

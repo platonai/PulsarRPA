@@ -278,6 +278,8 @@ open class FetchComponent(
         updateFetchTime(page)
         updateMarks(page)
 
+        page.isUpdated = true
+
         return page
     }
 

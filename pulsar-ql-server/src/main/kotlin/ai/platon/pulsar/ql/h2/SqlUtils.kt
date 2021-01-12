@@ -249,7 +249,7 @@ object SqlUtils {
     }
 
     @Throws(SQLException::class)
-    fun getEntitiesFromResultSets(resultSets: List<ResultSet>): List<Map<String, Any?>> {
+    fun getEntitiesFromResultSets(resultSets: Iterable<ResultSet>): List<Map<String, Any?>> {
         return resultSets.map<ResultSet, Map<String, Any>> {
             mapOf(
                     "result" to getEntitiesFromResultSet(it),
