@@ -31,6 +31,10 @@ open class BasicPulsarContext(
      * */
     final override val webDb = WebDb(unmodifiedConfig)
     /**
+     * The global cache
+     * */
+    final override val globalCache = GlobalCache(unmodifiedConfig)
+    /**
      * The inject component
      * */
     final override val injectComponent = InjectComponent(webDb, unmodifiedConfig)
@@ -45,11 +49,7 @@ open class BasicPulsarContext(
     /**
      * The load component
      * */
-    final override val loadComponent = LoadComponent(webDb, fetchComponent, updateComponent, unmodifiedConfig)
-    /**
-     * The global cache manager
-     * */
-    final override val globalCache = GlobalCache(unmodifiedConfig)
+    final override val loadComponent = LoadComponent(webDb, globalCache, fetchComponent, updateComponent, unmodifiedConfig)
 
     init {
         applicationContext.refresh()

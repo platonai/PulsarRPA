@@ -133,6 +133,10 @@ open class StreamingCrawler<T: UrlAware>(
                     return@forEachIndexed
                 }
 
+                if (true == globalCache?.fetchingUrls?.contains(url.url)) {
+                    return@forEachIndexed
+                }
+
                 globalTasks.incrementAndGet()
                 val state = load(1 + j, url, scope)
                 globalFinishedTasks.incrementAndGet()
@@ -216,14 +220,16 @@ open class StreamingCrawler<T: UrlAware>(
 
         if (page == null || page.crawlStatus.isUnFetched) {
             globalCache?.also {
-                val cache = it.fetchCacheManager.higherCache.nReentrantQueue
-                if (cache.add(url)) {
-                    globalRetries.incrementAndGet()
-                    if (page != null) {
-                        log.info("{}. Retrying the {}th time | {}", page.id, page.fetchRetries, page.href ?: url)
+                if (!it.isFetching(url)) {
+                    val cache = it.fetchCacheManager.higherCache.nReentrantQueue
+                    if (cache.add(url)) {
+                        globalRetries.incrementAndGet()
+                        if (page != null) {
+                            log.info("{}. Retrying the {}th time | {}", page.id, page.fetchRetries, page.href ?: url)
+                        }
+                    } else {
+                        log.info("No further retry | {}", url)
                     }
-                } else {
-                    log.info("No further retry | {}", url)
                 }
             }
         }

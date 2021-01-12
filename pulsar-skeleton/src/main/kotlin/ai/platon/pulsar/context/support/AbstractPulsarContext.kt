@@ -59,6 +59,11 @@ abstract class AbstractPulsarContext(
     open val webDb: WebDb get() = getBean()
 
     /**
+     * The global cache manager
+     * */
+    open val globalCache: GlobalCache get() = getBean()
+
+    /**
      * The inject component
      * */
     open val injectComponent: InjectComponent get() = getBean()
@@ -77,11 +82,6 @@ abstract class AbstractPulsarContext(
      * The load component
      * */
     open val loadComponent: LoadComponent get() = getBean()
-
-    /**
-     * The global cache manager
-     * */
-    open val globalCache: GlobalCache get() = getBean()
 
     /**
      * The start time

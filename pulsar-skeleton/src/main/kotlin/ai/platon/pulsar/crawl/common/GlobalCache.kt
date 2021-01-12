@@ -7,8 +7,10 @@ import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache.Companion.C
 import ai.platon.pulsar.common.config.CapabilityTypes.SESSION_DOCUMENT_CACHE_SIZE
 import ai.platon.pulsar.common.config.CapabilityTypes.SESSION_PAGE_CACHE_SIZE
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
+import java.util.concurrent.ConcurrentSkipListSet
 
 typealias PageCatch = ConcurrentExpiringLRUCache<WebPage>
 
@@ -30,4 +32,10 @@ open class GlobalCache(val conf: ImmutableConfig) {
      * The global document cache, a document might be removed if it's expired or the cache is full
      * */
     open val documentCache = DocumentCatch(conf.getUint(SESSION_DOCUMENT_CACHE_SIZE, CACHE_CAPACITY))
+
+    open val fetchingUrls = ConcurrentSkipListSet<String>()
+
+    fun isFetching(url: String) = fetchingUrls.contains(url)
+
+    fun isFetching(url: UrlAware) = isFetching(url.url)
 }

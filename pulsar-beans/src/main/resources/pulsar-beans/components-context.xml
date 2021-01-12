@@ -60,6 +60,7 @@
     </bean>
     <bean id="loadComponent" class="ai.platon.pulsar.crawl.component.LoadComponent" destroy-method="close">
         <constructor-arg ref="webDb"/>
+        <constructor-arg ref="globalCache"/>
         <constructor-arg ref="fetchComponent"/>
         <constructor-arg ref="updateComponent"/>
         <constructor-arg ref="parseComponent"/>

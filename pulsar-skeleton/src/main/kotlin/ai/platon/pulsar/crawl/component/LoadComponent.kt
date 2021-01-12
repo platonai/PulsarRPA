@@ -16,6 +16,7 @@ import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.common.FetchReason
+import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.PageCounters.Self
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.WebDb
@@ -29,7 +30,6 @@ import org.springframework.stereotype.Component
 import java.net.URL
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.stream.Collectors
@@ -43,6 +43,7 @@ import java.util.stream.Collectors
 @Component
 class LoadComponent(
         val webDb: WebDb,
+        val globalCache: GlobalCache,
         val fetchComponent: BatchFetchComponent,
         val parseComponent: ParseComponent? = null,
         val updateComponent: UpdateComponent,
@@ -51,7 +52,6 @@ class LoadComponent(
 ) : AutoCloseable {
     companion object {
         private const val VAR_REFRESH = "refresh"
-        private val globalFetchingUrls = ConcurrentSkipListSet<String>()
     }
 
     private val log = LoggerFactory.getLogger(LoadComponent::class.java)
@@ -65,10 +65,11 @@ class LoadComponent(
 
     constructor(
             webDb: WebDb,
+            globalCache: GlobalCache,
             fetchComponent: BatchFetchComponent,
             updateComponent: UpdateComponent,
             immutableConfig: ImmutableConfig
-    ) : this(webDb, fetchComponent, null, updateComponent, null, immutableConfig)
+    ) : this(webDb, globalCache, fetchComponent, null, updateComponent, null, immutableConfig)
 
     /**
      * Load an url, options can be specified following the url, see [LoadOptions] for all options
@@ -213,14 +214,14 @@ class LoadComponent(
 
         log.debug("Fetching {} urls with options {}", pendingUrls.size, options)
         val updatedPages = try {
-            globalFetchingUrls.addAll(pendingUrls)
+            globalCache.fetchingUrls.addAll(pendingUrls)
             if (options.preferParallel) {
                 fetchComponent.parallelFetchAll(pendingUrls, options)
             } else {
                 fetchComponent.fetchAll(pendingUrls, options)
             }
         } finally {
-            globalFetchingUrls.removeAll(pendingUrls)
+            globalCache.fetchingUrls.removeAll(pendingUrls)
         }.filter { it.isNotInternal }
 
         if (options.parse) {
@@ -305,7 +306,7 @@ class LoadComponent(
 
         val url = normUrl.spec
         val options = normUrl.options
-        if (globalFetchingUrls.contains(url)) {
+        if (globalCache.fetchingUrls.contains(url)) {
             log.takeIf { it.isDebugEnabled }?.debug("Page is being fetched | {}", url)
             return WebPage.NIL
         }
@@ -362,7 +363,7 @@ class LoadComponent(
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
-        globalFetchingUrls.add(page.url)
+        globalCache.fetchingUrls.add(page.url)
         fetchComponent.initFetchEntry(page, options)
     }
 
@@ -374,7 +375,7 @@ class LoadComponent(
             log.info(CompletedPageFormatter(page, withSymbolicLink = verbose).toString())
         }
 
-        globalFetchingUrls.remove(page.url)
+        globalCache.fetchingUrls.remove(page.url)
     }
 
     private fun filterUrlToNull(url: NormUrl): NormUrl? {
@@ -390,7 +391,7 @@ class LoadComponent(
         }
 
         when {
-            globalFetchingUrls.contains(url) -> return null
+            globalCache.fetchingUrls.contains(url) -> return null
             fetchMetrics?.isFailed(url) == true -> return null
             fetchMetrics?.isTimeout(url) == true -> {
             }

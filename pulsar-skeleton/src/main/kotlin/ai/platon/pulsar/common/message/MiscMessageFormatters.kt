@@ -53,33 +53,35 @@ class PageFormatter(val page: WebPage) {
 
 class CompletedPageFormatter(
         private val page: WebPage,
-        private val prefix: String = "Fetched",
+        private val prefix: String = "",
         private val withOptions: Boolean = false,
         private val withNormUrl: Boolean = false,
         private val withReferer: Boolean = false,
         private val withSymbolicLink: Boolean = false
 ) {
-    val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
-    val proxy get() = page.metadata[Name.PROXY]
-    val activeDomStats = page.activeDomStats
-    val m get() = page.pageModel
+    private val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
+    private val proxy get() = page.metadata[Name.PROXY]
+    private val activeDomStats = page.activeDomStats
+    private val m get() = page.pageModel
 
-    val jsSate get() = run {
+    private val jsSate get() = run {
         val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
         String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
     }
 
-    val label = StringUtils.abbreviateMiddle(page.label, "..", 20)
-    val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
-    val category get() = page.pageCategory.symbol()
-    val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
-    val proxyFmt get() = if (proxy == null) "%s" else " | %s"
-    val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
-    val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
-    val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
-    val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
+    private val prefix0 get() = if (page.isUpdated) "Fetched" else "Loaded"
+    private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0
+    private val label = StringUtils.abbreviateMiddle(page.label, "..", 20)
+    private val formattedLabel get() = if (label.isBlank()) " | " else " | $label | "
+    private val category get() = page.pageCategory.symbol()
+    private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
+    private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
+    private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
+    private val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
+    private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
+    private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    val fmt get() = "%3d. $prefix %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt" +
+    private val fmt get() = "%3d. $prefix1 %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 
     override fun toString(): String {
