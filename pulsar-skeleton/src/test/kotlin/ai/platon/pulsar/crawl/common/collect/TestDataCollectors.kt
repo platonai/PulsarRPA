@@ -16,7 +16,7 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun testLoadingFetchCache() {
-        val fetchCache = LoadingFetchCache(urlLoader, conf = conf)
+        val fetchCache = LoadingFetchCache(urlLoader)
         // auto loaded
         assertTrue { fetchCache.totalSize > 0 }
         fetchCache.load()
@@ -25,7 +25,7 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when collect from collector with loading fetch cache then sink has items`() {
-        val fetchCache = LoadingFetchCache(urlLoader, conf = conf)
+        val fetchCache = LoadingFetchCache(urlLoader)
         assertTrue { fetchCache.totalSize > 0 }
         val collector = FetchCacheCollector(fetchCache, fetchCache.priority)
         val sink = mutableListOf<Hyperlink>()
@@ -35,7 +35,7 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when add a item to queue then queue is not empty`() {
-        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader(), conf = conf)
+        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader())
         fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { fetchCache.totalSize == 1 }
         val collector = FetchCacheCollector(fetchCache, fetchCache.priority)
@@ -47,7 +47,7 @@ class TestDataCollectors: TestBase() {
 
     @Test
     fun `when add an item to LoadingFetchCache then LoadingIterable has next`() {
-        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader(), conf = conf)
+        val fetchCache = LoadingFetchCache(TemporaryLocalFileUrlLoader())
         fetchCache.nReentrantQueue.add(PlainUrl(AppConstants.EXAMPLE_URL))
         assertTrue { fetchCache.totalSize == 1 }
 

@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.HtmlDocumentHandler
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.parse.ParseFilters
@@ -122,9 +123,12 @@ class HtmlParser(
     }
 
     private fun afterParse(page: WebPage, document: FeaturedDocument) {
+//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class) ?: return
+//        eventHandler.onAfterParse(page, document)
+
         page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER, HtmlDocumentHandler::class.java)
                 ?.runCatching { invoke(page, document) }
-                ?.onFailure { log.warn("Failed to run after parse handler | {}", page.url) }
+                ?.onFailure { log.warn("After-parse-handler failed for page #{} | {}", page.id, Strings.simplifyException(it)) }
                 ?.getOrNull()
     }
 

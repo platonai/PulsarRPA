@@ -96,12 +96,12 @@ class LoadingFetchCatchManager(
     /**
      * The real time fetch cache
      * */
-    override val realTimeCache: FetchCache = LoadingFetchCache(urlLoader, REAL_TIME_PRIORITY, capacity, conf)
+    override val realTimeCache: FetchCache = LoadingFetchCache(urlLoader, REAL_TIME_PRIORITY, capacity)
 
     override fun initialize() {
         if (initialized.compareAndSet(false, true)) {
             Priority13.values().map { it.value }.forEach { priority ->
-                caches[priority] = LoadingFetchCache(urlLoader, priority, capacity, conf)
+                caches[priority] = LoadingFetchCache(urlLoader, priority, capacity)
             }
         }
     }

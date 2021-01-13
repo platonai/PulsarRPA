@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.StatefulHyperlink
 import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
+import ai.platon.pulsar.crawl.DefaultCrawlEventHandler
 import ai.platon.pulsar.crawl.HtmlDocumentHandler
 import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -47,7 +48,7 @@ open class ListenableHyperlink(
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
-    var onBeforeLoad: () -> Unit = {}
+    var onBeforeLoad: (String) -> Unit = {}
     var onBeforeFetch: (WebPage) -> Unit = { _: WebPage -> }
     var onAfterFetch: (WebPage) -> Unit = { _: WebPage -> }
     var onBeforeParse: (WebPage) -> Unit = { _: WebPage -> }
@@ -59,11 +60,15 @@ open class ListenableHyperlink(
 
 object Hyperlinks {
 
+    /**
+     * Register handlers
+     * */
+    @Deprecated("Use CrawlEventHandler instead")
     fun registerHandlers(url: ListenableHyperlink, volatileConfig: VolatileConfig) {
         listOf(
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_BEFORE_LOAD_HANDLER
-                    override fun invoke(page: WebPage) = url.onBeforeLoad()
+                    override fun invoke(page: WebPage) = url.onBeforeLoad(url.url)
                 },
 
                 object: WebPageHandler() {
@@ -104,5 +109,17 @@ object Hyperlinks {
                     override fun invoke(page: WebPage) = url.onAfterLoad(page)
                 }
         ).forEach { volatileConfig.putBean(it.name, it) }
+
+        val eventHandler = DefaultCrawlEventHandler(
+                url.onBeforeLoad,
+                url.onBeforeFetch,
+                url.onAfterFetch,
+                url.onBeforeParse,
+                url.onBeforeExtract,
+                url.onAfterExtract,
+                url.onAfterParse,
+                url.onAfterLoad
+        )
+        volatileConfig.putBean(eventHandler)
     }
 }

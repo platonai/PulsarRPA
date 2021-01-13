@@ -256,8 +256,10 @@ open class FetchCacheCollector(
 
     constructor(fetchCache: FetchCache, priority: Priority13): this(fetchCache, priority.value)
 
+    @Synchronized
     override fun hasMore() = hyperlinkQueues.any { it.isNotEmpty() }
 
+    @Synchronized
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) {
             return 0
