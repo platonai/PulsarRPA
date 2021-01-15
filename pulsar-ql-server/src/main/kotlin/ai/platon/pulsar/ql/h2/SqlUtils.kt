@@ -162,7 +162,7 @@ object SqlUtils {
     }
 
     @Throws(SQLException::class)
-    fun executeBatchInsert(sourceResultSets: Iterable<ResultSet>, sinkConnection: Connection, sinkTable: String, verbose: Boolean = false): Int {
+    fun executeBatchInsert(sourceResultSets: Iterable<ResultSet>, sinkConnection: Connection, sinkTable: String, dryRun: Boolean = false): Int {
         if (!sourceResultSets.iterator().hasNext()) {
             return 0
         }
@@ -173,7 +173,7 @@ object SqlUtils {
         val sample = sourceResultSets.first()
         val columnCount = sample.metaData.columnCount
         val prefix = "insert into `$sinkTable`("
-        val postfix = ") values(" + StringUtils.repeat("?", ", ", columnCount) + ")"
+        val postfix = ") values(" + StringUtils.repeat("?", ", ", columnCount) + ");"
         val insertSql = IntRange(1, columnCount).joinToString(", ", prefix, postfix) {
             "`" + sample.metaData.getColumnLabel(it) + "`"
         }
@@ -199,12 +199,13 @@ object SqlUtils {
                 }
             }
 
-            if (verbose) {
-                sqlLog.info(stmt.toString())
+            if (dryRun) {
+                val sql = "insert" + stmt.toString().substringAfter("insert")
+                sqlLog.info(sql)
+            } else {
+                affectedRows = stmt.executeBatch()
+                sinkConnection.commit()
             }
-
-            affectedRows = stmt.executeBatch()
-            sinkConnection.commit()
         }
 
         return affectedRows?.sum()?:0
