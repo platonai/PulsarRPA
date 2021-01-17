@@ -48,6 +48,8 @@ class TestLoadOptions {
         // do not support
 //        assertMergedOptions(options1.mergeModified(options2), "options1 merge options2")
         assertMergedOptions(options1.mergeModified(args2), "options1 merge args2")
+
+        assertMergedOptions(LoadOptions.mergeModified(args2, null), "options2 merge null")
     }
 
     private fun assertMergedOptions(options: LoadOptions, message: String) {

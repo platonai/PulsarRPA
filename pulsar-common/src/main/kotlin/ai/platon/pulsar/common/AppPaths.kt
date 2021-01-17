@@ -146,7 +146,8 @@ object AppPaths {
     fun fileId(uri: String) = DigestUtils.md5Hex(uri)
 
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
-        val u = Urls.getURLOrNull(uri) ?: return UUID.randomUUID().toString()
+        val u = Urls.getURLOrNull(uri) ?: return "$prefix${UUID.randomUUID()}$suffix"
+
         var host = u.host.takeIf { Strings.isIpPortLike(it) }?:InternetDomainName.from(u.host).topPrivateDomain().toString()
         host = host.replace('.', '-')
         val fileId = fileId(uri)

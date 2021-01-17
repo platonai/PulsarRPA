@@ -195,7 +195,7 @@ abstract class AbstractPulsarContext(
             normalizedUrl = urlNormalizers.normalize(normalizedUrl) ?: return NormUrl.NIL
         }
 
-        val href = url.href?.takeIf { Urls.isValidUrl(it) } ?: url.url
+        val href = url.href?.takeIf { Urls.isValidUrl(it) }
         return NormUrl(normalizedUrl, finalOptions, href)
     }
 

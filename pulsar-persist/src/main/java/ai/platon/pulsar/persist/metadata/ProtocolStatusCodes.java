@@ -33,6 +33,8 @@ public interface ProtocolStatusCodes {
 
     /** Constant <code>SUCCESS_OK=200</code> */
     int SUCCESS_OK = 200;
+    /** Resource is created */
+    int CREATED = 201;
     /**
      * Resource has moved permanently. New url should be found in args.
      */
@@ -40,7 +42,7 @@ public interface ProtocolStatusCodes {
     /**
      * Unchanged since the last fetch.
      */
-    int NOTMODIFIED = 304;
+    int NOT_MODIFIED = 304;
     /**
      * Resource has moved temporarily. New url should be found in args.
      */
@@ -53,7 +55,7 @@ public interface ProtocolStatusCodes {
     /**
      * Resource was not found.
      */
-    int NOTFOUND = 404;
+    int NOT_FOUND = 404;
     /**
      * Find the target host timed out.
      */
@@ -66,6 +68,7 @@ public interface ProtocolStatusCodes {
     //
     // The following codes are NOT compatible with HTTP status codes
     //
+
     /**
      * Failed to find the target host.
      */
@@ -87,7 +90,7 @@ public interface ProtocolStatusCodes {
      * expected number of milliseconds to wait before retry may be provided in
      * args.
      */
-    int WOULDBLOCK = 1465;
+    int WOULD_BLOCK = 1465;
     /**
      * Thread was blocked http.max.delays times during fetching.
      */

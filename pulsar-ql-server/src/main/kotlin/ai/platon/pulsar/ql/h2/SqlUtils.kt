@@ -121,7 +121,7 @@ object SqlUtils {
     }
 
     @Throws(SQLException::class)
-    fun executeInsert(sourceRs: ResultSet, sinkConnection: Connection, sinkTable: String, verbose: Boolean = false): Int {
+    fun executeInsert(sourceRs: ResultSet, sinkConnection: Connection, sinkTable: String, dryRun: Boolean = false): Int {
         sinkConnection.autoCommit = false
 
         var affectedRows = 0
@@ -150,12 +150,13 @@ object SqlUtils {
                 }
             }
 
-            if (verbose) {
-                sqlLog.info(stmt.toString())
+            if (dryRun) {
+                val sql = "insert" + stmt.toString().substringAfter("insert") + ";"
+                sqlLog.info(sql)
+            } else {
+                affectedRows = stmt.executeUpdate()
+                sinkConnection.commit()
             }
-
-            affectedRows = stmt.executeUpdate()
-            sinkConnection.commit()
         }
 
         return affectedRows
@@ -169,11 +170,12 @@ object SqlUtils {
 
         sinkConnection.autoCommit = false
 
+        var rows = 0
         var affectedRows: IntArray? = null
         val sample = sourceResultSets.first()
         val columnCount = sample.metaData.columnCount
         val prefix = "insert into `$sinkTable`("
-        val postfix = ") values(" + StringUtils.repeat("?", ", ", columnCount) + ");"
+        val postfix = ") values(" + StringUtils.repeat("?", ", ", columnCount) + ")"
         val insertSql = IntRange(1, columnCount).joinToString(", ", prefix, postfix) {
             "`" + sample.metaData.getColumnLabel(it) + "`"
         }
@@ -192,6 +194,7 @@ object SqlUtils {
                             }
                         }
 
+                        ++rows
                         stmt.addBatch()
                     } catch (e: SQLException) {
                         log.warn("Failed to create stmt {}", e.message)
@@ -200,7 +203,7 @@ object SqlUtils {
             }
 
             if (dryRun) {
-                val sql = "insert" + stmt.toString().substringAfter("insert")
+                val sql = "insert" + stmt.toString().substringAfter("insert") + ";"
                 sqlLog.info(sql)
             } else {
                 affectedRows = stmt.executeBatch()

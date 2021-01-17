@@ -5,13 +5,13 @@ import ai.platon.pulsar.common.Priority13
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.url.Hyperlink
 import ai.platon.pulsar.common.url.Hyperlinks
-import ai.platon.pulsar.common.url.UrlAware
 import com.codahale.metrics.Gauge
 import com.google.common.collect.Iterators
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 open class LocalFileHyperlinkCollector(
@@ -23,24 +23,16 @@ open class LocalFileHyperlinkCollector(
     private val log = LoggerFactory.getLogger(LocalFileHyperlinkCollector::class.java)
 
     private val urlLoader = LocalFileUrlLoader(path)
+    private val isLoaded = AtomicBoolean()
     val fileName = path.fileName.toString()
     override var name = fileName.substringBefore(".")
 
     var loadArgs: String? = null
     val hyperlinks = LinkedList<Hyperlink>()
 
-    init {
-        val remainingCapacity = capacity - hyperlinks.size
-        urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
-            val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
-            Hyperlinks.toHyperlink(it).also { it.args = args }
-        }
-        log.info("There are {} urls in file | {}", hyperlinks.size, path)
-    }
-
     constructor(path: Path, priority: Priority13, capacity: Int = DEFAULT_CAPACITY): this(path, priority.value, capacity)
 
-    override fun hasMore() = hyperlinks.isNotEmpty()
+    override fun hasMore() = ensureLoaded().hyperlinks.isNotEmpty()
 
     override fun collectTo(sink: MutableList<Hyperlink>): Int {
         if (!hasMore()) {
@@ -55,6 +47,20 @@ open class LocalFileHyperlinkCollector(
         }
 
         return collected
+    }
+
+    private fun ensureLoaded(): LocalFileHyperlinkCollector {
+        if (isLoaded.compareAndSet(false, true)) {
+            val remainingCapacity = capacity - hyperlinks.size
+            urlLoader.loadToNow(hyperlinks, remainingCapacity, 0, priority) {
+                val args = LoadOptions.mergeModified(it.args, loadArgs).toString()
+                Hyperlinks.toHyperlink(it).also { it.args = args }
+            }
+
+            log.info("Loaded total {} urls from file | {} | {}", hyperlinks.size, loadArgs, path)
+        }
+
+        return this
     }
 }
 

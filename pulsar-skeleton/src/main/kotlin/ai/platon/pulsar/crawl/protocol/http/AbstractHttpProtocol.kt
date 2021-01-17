@@ -189,7 +189,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 status = ProtocolStatus.failed(ProtocolStatusCodes.ACCESS_DENIED, ARG_HTTP_CODE, httpCode)
             }
             HttpStatus.SC_NOT_FOUND -> { // GONE
-                status = ProtocolStatus.failed(ProtocolStatusCodes.NOTFOUND, ARG_HTTP_CODE, httpCode)
+                status = ProtocolStatus.failed(ProtocolStatusCodes.NOT_FOUND, ARG_HTTP_CODE, httpCode)
             }
             HttpStatus.SC_REQUEST_TIMEOUT -> { // TIMEOUT
                 status = ProtocolStatus.failed(ProtocolStatusCodes.REQUEST_TIMEOUT, ARG_HTTP_CODE, httpCode)

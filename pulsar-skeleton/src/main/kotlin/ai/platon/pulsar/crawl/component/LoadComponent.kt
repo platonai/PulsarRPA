@@ -287,7 +287,6 @@ class LoadComponent(
         if (page.variables.remove(VAR_REFRESH) != null) {
             try {
                 beforeFetch(page, normUrl.options)
-                require(page.isNotInternal) { "Internal page ${page.url}" }
                 fetchComponent.fetchContentDeferred(page)
             } finally {
                 afterFetch(page, normUrl.options)
@@ -311,17 +310,22 @@ class LoadComponent(
             return WebPage.NIL
         }
 
-        var page = if (options.expires.seconds > 1) {
+        // less than 1 seconds means do not check the database
+        val page0 = if (options.expires.seconds > 1) {
             webDb.get(url, options.ignoreQuery)
         } else WebPage.NIL
 
-        val reason = getFetchReason(page, options)
-        if (page.isNil) {
-            page = fetchComponent.createFetchEntry(url, options, normUrl.cuSpec)
+        val reason = getFetchReason(page0, options)
+        val fetchEntry = if (page0.isNil) {
+//            page = fetchComponent.createFetchEntry(url, options, normUrl.hrefSpec)
+            FetchEntry(url, options, normUrl.hrefSpec)
+        } else {
+            FetchEntry(page0, options, normUrl.hrefSpec)
         }
         // set page variables like volatileConfig here
-        fetchComponent.initFetchEntry(page, options, normUrl.cuSpec)
+        // fetchComponent.initFetchEntry(page, options, normUrl.hrefSpec)
 
+        val page = fetchEntry.page
         tracer?.trace("Fetch reason: {}, url: {}, options: {}", FetchReason.toString(reason), page.url, options)
         if (reason == FetchReason.TEMP_MOVED) {
             return redirect(page, options)
@@ -340,7 +344,7 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
-        // TODO: use something like LoadConfig
+        // TODO: Use CrawlEventHandler instead
         page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
                 ?.runCatching { invoke(page) }
                 ?.onFailure { log.warn("Failed to invoke before load handler | {}", page.url) }
@@ -364,7 +368,6 @@ class LoadComponent(
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {
         globalCache.fetchingUrls.add(page.url)
-        fetchComponent.initFetchEntry(page, options)
     }
 
     private fun afterFetch(page: WebPage, options: LoadOptions) {
@@ -379,8 +382,7 @@ class LoadComponent(
     }
 
     private fun filterUrlToNull(url: NormUrl): NormUrl? {
-        val u = filterUrlToNull(url.spec) ?: return null
-        return NormUrl(u, url.options)
+        return url.takeIf { filterUrlToNull(url.spec) != null }
     }
 
     private fun filterUrlToNull(url: String): String? {

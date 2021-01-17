@@ -59,6 +59,9 @@ class CompletedPageFormatter(
         private val withReferer: Boolean = false,
         private val withSymbolicLink: Boolean = false
 ) {
+    private val url get() = page.url
+    private val href get() = page.href
+    private val location get() = page.location
     private val responseTime get() = page.metadata[Name.RESPONSE_TIME]?:""
     private val proxy get() = page.metadata[Name.PROXY]
     private val activeDomStats = page.activeDomStats
@@ -113,14 +116,14 @@ class CompletedPageFormatter(
     }
 
     private fun buildLocation(): String {
-        val expectedLocation = page.href ?: page.url
-        val redirected = expectedLocation != page.location
-        val normalized = page.href != null && page.href != page.url
-        var location = if (redirected) page.location else expectedLocation
+        val expectedLocation = href ?: url
+        val redirected = href != null && href != location
+        val normalized = href != null && href != url
+        var location = if (redirected) location else expectedLocation
         if (withOptions) location += " ${page.options}"
         val readableLocation0 = if (redirected) "[R] $location <- $expectedLocation" else location
         var readableLocation = if (normalized) "[N] $readableLocation0" else readableLocation0
-        if (withNormUrl) readableLocation = "$readableLocation <- ${page.url}"
+        if (withNormUrl) readableLocation = "$readableLocation <- $url"
         if (withReferer) readableLocation = "$readableLocation <- ${page.referrer}"
         return if (withSymbolicLink) "file://$symbolicLink | $readableLocation" else readableLocation
     }

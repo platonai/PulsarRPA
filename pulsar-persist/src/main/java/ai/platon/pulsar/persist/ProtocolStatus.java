@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 /**
  * <p>ProtocolStatus class.</p>
  *
+ * TODO: keep consistent with ResourceStatus
+ *
  * @author vincent
  * @version $Id: $Id
  */
@@ -49,7 +51,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     /** Constant <code>STATUS_SUCCESS</code> */
     public static final ProtocolStatus STATUS_SUCCESS = new ProtocolStatus(SUCCESS, SUCCESS_OK);
     /** Constant <code>STATUS_NOTMODIFIED</code> */
-    public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOTMODIFIED);
+    public static final ProtocolStatus STATUS_NOTMODIFIED = new ProtocolStatus(SUCCESS, NOT_MODIFIED);
     /** Constant <code>STATUS_NOTFETCHED</code> */
     public static final ProtocolStatus STATUS_NOTFETCHED = new ProtocolStatus(NOTFETCHED);
 
@@ -58,7 +60,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     /** Constant <code>STATUS_ACCESS_DENIED</code> */
     public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
     /** Constant <code>STATUS_NOTFOUND</code> */
-    public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOTFOUND);
+    public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOT_FOUND);
     // if a task is canceled, we do not save anything, if a task is retry, all the metadata is saved
     /** Constant <code>STATUS_CANCELED</code> */
     public static final ProtocolStatus STATUS_CANCELED = ProtocolStatus.failed(CANCELED);
@@ -74,13 +76,14 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         majorCodes.put(FAILED, "failed");
 
         minorCodes.put(SUCCESS_OK, "ok");
+        minorCodes.put(CREATED, "created");
         minorCodes.put(MOVED, "moved");
         minorCodes.put(TEMP_MOVED, "temp_moved");
-        minorCodes.put(NOTMODIFIED, "notmodified");
+        minorCodes.put(NOT_MODIFIED, "notmodified");
 
         minorCodes.put(PROTO_NOT_FOUND, "proto_not_found");
         minorCodes.put(ACCESS_DENIED, "access_denied");
-        minorCodes.put(NOTFOUND, "notfound");
+        minorCodes.put(NOT_FOUND, "notfound");
         minorCodes.put(REQUEST_TIMEOUT, "request_timeout");
         minorCodes.put(GONE, "gone");
 
@@ -88,7 +91,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
         minorCodes.put(ROBOTS_DENIED, "robots_denied");
         minorCodes.put(EXCEPTION, "exception");
         minorCodes.put(REDIR_EXCEEDED, "redir_exceeded");
-        minorCodes.put(WOULDBLOCK, "wouldblock");
+        minorCodes.put(WOULD_BLOCK, "wouldblock");
         minorCodes.put(BLOCKED, "blocked");
 
         minorCodes.put(RETRY, "retry");
@@ -145,8 +148,8 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @param code a short.
      * @return a {@link java.lang.String} object.
      */
-    public static String getMajorName(short code) {
-        return majorCodes.getOrDefault(code, "unknown");
+    public static String getMajorName(int code) {
+        return majorCodes.getOrDefault((short)code, "unknown");
     }
 
     /**
@@ -251,7 +254,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @return a {@link ai.platon.pulsar.persist.ProtocolStatus} object.
      */
     public static ProtocolStatus fromMinor(int minorCode) {
-        if (minorCode == SUCCESS_OK || minorCode == NOTMODIFIED) {
+        if (minorCode == SUCCESS_OK || minorCode == NOT_MODIFIED) {
             return STATUS_SUCCESS;
         } else {
             return failed(minorCode);

@@ -63,7 +63,8 @@ abstract class AbstractFetchSchedule(
         page.prevFetchTime = page.fetchTime
         page.fetchTime = impreciseNow
         page.fetchInterval = defaultInterval
-        page.fetchRetries = 0
+        // TODO: FetchComponent handles retries
+        // page.fetchRetries = 0
         page.crawlStatus = CrawlStatus.STATUS_UNFETCHED
     }
 
@@ -76,7 +77,7 @@ abstract class AbstractFetchSchedule(
     override fun setFetchSchedule(
             page: WebPage, prevFetchTime: Instant,
             prevModifiedTime: Instant, fetchTime: Instant, modifiedTime: Instant, state: Int) {
-        page.fetchRetries = 0
+        // page.fetchRetries = 0
     }
 
     /**
@@ -118,7 +119,9 @@ abstract class AbstractFetchSchedule(
     override fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
         page.prevFetchTime = page.fetchTime
         page.fetchTime = fetchTime.plus(1, ChronoUnit.DAYS)
-        page.fetchRetries = page.fetchRetries + 1
+        // do this in FetchEntry
+        // TODO: handle retry scope
+        // page.fetchRetries++
     }
 
     /**

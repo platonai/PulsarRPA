@@ -51,7 +51,7 @@ class BlockPattern(value: String): BlockLabel(value) {
             // patterns.put(Links);
         }
 
-        @Deprecated("Use machine learning instead")
+        @Deprecated("Use machine learning algorithm instead")
         fun matches(ele: Element, pattern: BlockPattern): Boolean {
             if (pattern == N2) {
                 return isN2(ele)

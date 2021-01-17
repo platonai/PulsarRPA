@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.HtmlDocumentHandler
 import ai.platon.pulsar.crawl.WebPageHandler
@@ -34,6 +35,7 @@ import ai.platon.pulsar.crawl.parse.html.HTMLMetaTags
 import ai.platon.pulsar.crawl.parse.html.ParseContext
 import ai.platon.pulsar.crawl.parse.html.PrimerParser
 import ai.platon.pulsar.dom.FeaturedDocument
+import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.ParseStatus
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ParseStatusCodes
@@ -110,6 +112,8 @@ class HtmlParser(
         val parseResult = initParseResult(metaTags)
 
         val parseContext = ParseContext(page, parseResult, FeaturedDocument(document), metaTags, documentFragment)
+        parseContext.document?.let { parseBaseUrls(page, it) }
+
         parseFilters.filter(parseContext)
 
         return parseContext
@@ -141,6 +145,17 @@ class HtmlParser(
             metadata[CapabilityTypes.CACHING_FORBIDDEN_KEY] = cachingPolicy
         }
         return metaTags
+    }
+
+    private fun parseBaseUrls(page: WebPage, document: FeaturedDocument) {
+        val metadata = document.document.selectFirstOrNull("#${AppConstants.PULSAR_META_INFORMATION_ID}")
+        if (metadata != null) {
+            // The normalizedUrl
+            metadata.attr("normalized-url", page.url)
+            page.label.takeUnless { it.isBlank() }?.let { metadata.attr("label", it) }
+            page.href?.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("href", it) }
+            page.referrer.takeIf { Urls.isValidUrl(it) }?.let { metadata.attr("referer", it) }
+        }
     }
 
     private fun initParseResult(metaTags: HTMLMetaTags): ParseResult {
