@@ -28,6 +28,7 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.abs
@@ -50,6 +51,8 @@ open class StreamingCrawler<T: UrlAware>(
         private val globalFinishedTasks = AtomicInteger()
         private val globalTimeout = AtomicInteger()
         private val globalRetries = AtomicInteger()
+        private val globalLoadingUrls = ConcurrentSkipListSet<String>()
+
         private val systemInfo = SystemInfo()
         // OSHI cached the value, so it's fast and safe to be called frequently
         private val availableMemory get() = systemInfo.hardware.memory.available
@@ -137,9 +140,19 @@ open class StreamingCrawler<T: UrlAware>(
                     return@forEachIndexed
                 }
 
+                if (url.url in globalLoadingUrls) {
+                    return@forEachIndexed
+                }
+
                 globalTasks.incrementAndGet()
-                val state = load(1 + j, url, scope)
-                globalFinishedTasks.incrementAndGet()
+                globalLoadingUrls.add(url.url)
+
+                val state = try {
+                    load(1 + j, url, scope)
+                } finally {
+                    globalFinishedTasks.incrementAndGet()
+                    globalLoadingUrls.remove(url.url)
+                }
 
                 if (state != FlowState.CONTINUE) {
                     return@run
@@ -218,15 +231,18 @@ open class StreamingCrawler<T: UrlAware>(
             log.info("Task timeout ({}) to load page | {}", taskTimeout, url)
         }
 
-        if (page == null || page.crawlStatus.isUnFetched) {
-            globalCache?.also {
-                if (!it.isFetching(url)) {
-                    val cache = it.fetchCacheManager.higherCache.nReentrantQueue
-                    if (cache.add(url)) {
-                        globalRetries.incrementAndGet()
-                        if (page != null) {
-                            log.info("{}. Retrying the {}th time | {}", page.id, page.fetchRetries, page.href ?: url)
-                        }
+        if (page == null || page.protocolStatus.isRetry) {
+            val gCache = globalCache
+            if (gCache != null && !gCache.isFetching(url)) {
+                val cache = gCache.fetchCacheManager.higherCache.nReentrantQueue
+                if (cache.add(url)) {
+                    globalRetries.incrementAndGet()
+                    if (page != null) {
+                        log.info("{}. Retrying the {}th time | {}", page.id, 1 + page.fetchRetries, page.href ?: url)
+                    }
+                } else {
+                    if (page != null) {
+                        log.info("No further retry | {} | {} | {}", page.fetchRetries, page.protocolStatus, url)
                     } else {
                         log.info("No further retry | {}", url)
                     }

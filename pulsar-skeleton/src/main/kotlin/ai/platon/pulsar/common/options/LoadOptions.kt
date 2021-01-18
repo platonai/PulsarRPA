@@ -157,6 +157,10 @@ open class LoadOptions: CommonOptions {
             description = "Persist page content into data store")
     var storeContent = true
 
+    @Parameter(names = ["-cacheContent", "--cache-content"], arity = 1,
+            description = "Cache the page content so it is still available after it be cleared for persistent")
+    var cacheContent = false
+
     @Parameter(names = ["-retry", "--retry", "-retryFailed", "--retry-failed"],
             description = "Retry fetching the page if it's failed last time")
     var retryFailed = false

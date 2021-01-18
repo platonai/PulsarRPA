@@ -142,6 +142,7 @@ class FatLinkExtractor(val session: PulsarSession) {
 //        }
 //        seed.options.volatileConfig?.putBean(handler.name, handler)
 
+        seed.options.cacheContent = true
         val page = session.load(seed).takeIf { it.protocolStatus.isSuccess }
         if (page == null) {
             ++counters.failedSeeds
@@ -159,7 +160,7 @@ class FatLinkExtractor(val session: PulsarSession) {
 //            // the vivid links are OK
 //        }
 
-        val document = page.takeIf { it.hasContent() }?.let { session.parse(it) }
+        val document = page.takeIf { it.content != null }?.let { session.parse(it) }
         return createFatLink(seed, page, document, denyList)
     }
 

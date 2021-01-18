@@ -119,7 +119,7 @@ public class WebPage implements Comparable<WebPage> {
      * */
     private boolean isUpdated = false;
 
-    private boolean enableCachedContent = false;
+    private boolean cachedContentEnabled = false;
 
     private ByteBuffer cachedContent = null;
 
@@ -524,11 +524,11 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     public boolean isCachedContentEnabled() {
-        return enableCachedContent;
+        return cachedContentEnabled;
     }
 
-    public void setCachedContentEnabled(boolean enableCachedContent) {
-        this.enableCachedContent = enableCachedContent;
+    public void setCachedContentEnabled(boolean cachedContentEnabled) {
+        this.cachedContentEnabled = cachedContentEnabled;
     }
 
     /**
@@ -1447,22 +1447,13 @@ public class WebPage implements Comparable<WebPage> {
     }
 
     /**
-     * <p>hasContent.</p>
-     *
-     * @return a boolean.
-     */
-    public boolean hasContent() {
-        return page.getContent() != null;
-    }
-
-    /**
      * The entire raw document content e.g. raw XHTML
      *
      * @return a {@link java.nio.ByteBuffer} object.
      */
     @Nullable
     public ByteBuffer getContent() {
-        if (enableCachedContent && cachedContent != null) {
+        if (cachedContent != null) {
             return cachedContent;
         }
         return page.getContent();

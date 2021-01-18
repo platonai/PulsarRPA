@@ -522,7 +522,6 @@ class LoadComponent(
             if (!page.isSeed || page.fetchCount > 2) {
                 if (page.isCachedContentEnabled) {
                     // set cached content so other thread still can use it
-                    // TODO: memory issue, when to clear cachedContent?
                     page.cachedContent = page.content
                 }
                 page.content = null

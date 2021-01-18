@@ -18,6 +18,7 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
+import kotlin.test.assertEquals
 
 /**
  * Created by vincent on 16-7-20.
@@ -110,6 +111,18 @@ class TestAnything {
         val deleted = 10
         counter.addAndGet(-deleted)
         println(counter)
+    }
+
+    @Test
+    fun testReturnToLabel() {
+        var i = 0
+        IntRange(1, 10).forEach {
+            i = it
+            if (i == 5) {
+                return@forEach
+            }
+        }
+        assertEquals(10, i)
     }
 
     @Test
