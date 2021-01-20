@@ -20,6 +20,8 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 class FetchMetrics(
         private val messageWriter: MiscMessageWriter,
@@ -188,7 +190,12 @@ class FetchMetrics(
 
         val i = finishedTasks.count
 
-        if (log.isInfoEnabled && tasks.count > 0L && i % 20 == 0L) {
+        val round = when {
+            i < 100 -> 20
+            i < 10000 -> 30
+            else -> 60 + (30 * sin(i.toDouble())).roundToInt()
+        }
+        if (log.isInfoEnabled && tasks.count > 0L && i % round == 0L) {
             log.info(formatStatus())
         }
 
