@@ -80,11 +80,17 @@ class CompletedPageFormatter(
     private val numFields get() = String.format("%d/%d/%d", m.numNonBlankFields, m.numNonNullFields, m.numFields)
     private val proxyFmt get() = if (proxy == null) "%s" else " | %s"
     private val jsFmt get() = if (jsSate.isBlank()) "%s" else "%30s"
+    private val fetchCount get() =
+        if (page.protocolStatus.isRetry) {
+            String.format("%d/%d", page.fetchRetries, page.fetchCount)
+        } else {
+            String.format("%d", page.fetchCount)
+        }
     private val fieldFmt get() = if (m.numFields == 0) "%s" else " nf:%-10s"
     private val failure get() = if (page.protocolStatus.isFailed) String.format(" | %s", page.protocolStatus) else ""
     private val symbolicLink get() = AppPaths.uniqueSymbolicLinkForUri(page.url)
 
-    private val fmt get() = "%3d. $prefix1 %s [%4d] %13s in %10s, $jsFmt fc:%-2d$fieldFmt$failure$proxyFmt" +
+    private val fmt get() = "%3d. $prefix1 %s [%4d] %13s in %10s, $jsFmt fc:$fetchCount $fieldFmt$failure$proxyFmt" +
             " | %s$formattedLabel%s"
 
     override fun toString(): String {
@@ -95,7 +101,6 @@ class CompletedPageFormatter(
                 buildContentBytes(),
                 DateTimes.readableDuration(responseTime),
                 jsSate,
-                page.fetchCount,
                 if (m.numFields == 0) "" else numFields,
                 proxy?:"",
                 page.variables["privacyContext"]?:"",

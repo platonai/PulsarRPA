@@ -71,34 +71,34 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     private static final HashMap<Integer, String> minorCodes = new HashMap<>();
 
     static {
-        majorCodes.put(NOTFETCHED, "nofetched");
-        majorCodes.put(SUCCESS, "success");
-        majorCodes.put(FAILED, "failed");
+        majorCodes.put(NOTFETCHED, "NotFetched");
+        majorCodes.put(SUCCESS, "Success");
+        majorCodes.put(FAILED, "Failed");
 
-        minorCodes.put(SUCCESS_OK, "ok");
-        minorCodes.put(CREATED, "created");
-        minorCodes.put(MOVED, "moved");
-        minorCodes.put(TEMP_MOVED, "temp_moved");
-        minorCodes.put(NOT_MODIFIED, "notmodified");
+        minorCodes.put(SUCCESS_OK, "OK");
+        minorCodes.put(CREATED, "Created");
+        minorCodes.put(MOVED, "Moved");
+        minorCodes.put(TEMP_MOVED, "TempMoved");
+        minorCodes.put(NOT_MODIFIED, "NotModified");
 
-        minorCodes.put(PROTO_NOT_FOUND, "proto_not_found");
-        minorCodes.put(ACCESS_DENIED, "access_denied");
-        minorCodes.put(NOT_FOUND, "notfound");
-        minorCodes.put(REQUEST_TIMEOUT, "request_timeout");
-        minorCodes.put(GONE, "gone");
+        minorCodes.put(PROTO_NOT_FOUND, "ProtoNotFound");
+        minorCodes.put(ACCESS_DENIED, "AccessDenied");
+        minorCodes.put(NOT_FOUND, "NotFound");
+        minorCodes.put(REQUEST_TIMEOUT, "RequestTimeout");
+        minorCodes.put(GONE, "Gone");
 
-        minorCodes.put(UNKNOWN_HOST, "unknown_host");
-        minorCodes.put(ROBOTS_DENIED, "robots_denied");
-        minorCodes.put(EXCEPTION, "exception");
-        minorCodes.put(REDIR_EXCEEDED, "redir_exceeded");
-        minorCodes.put(WOULD_BLOCK, "wouldblock");
-        minorCodes.put(BLOCKED, "blocked");
+        minorCodes.put(UNKNOWN_HOST, "UnknownHost");
+        minorCodes.put(ROBOTS_DENIED, "RobotsDenied");
+        minorCodes.put(EXCEPTION, "Exception");
+        minorCodes.put(REDIR_EXCEEDED, "RedirExceeded");
+        minorCodes.put(WOULD_BLOCK, "WouldBlock");
+        minorCodes.put(BLOCKED, "Blocked");
 
-        minorCodes.put(RETRY, "retry");
-        minorCodes.put(CANCELED, "canceled");
-        minorCodes.put(THREAD_TIMEOUT, "thread_timeout");
-        minorCodes.put(WEB_DRIVER_TIMEOUT, "web_driver_timeout");
-        minorCodes.put(SCRIPT_TIMEOUT, "script_timeout");
+        minorCodes.put(RETRY, "Retry");
+        minorCodes.put(CANCELED, "Canceled");
+        minorCodes.put(THREAD_TIMEOUT, "ThreadTimeout");
+        minorCodes.put(WEB_DRIVER_TIMEOUT, "WebDriverTimeout");
+        minorCodes.put(SCRIPT_TIMEOUT, "ScriptTimeout");
     }
 
     private GProtocolStatus protocolStatus;

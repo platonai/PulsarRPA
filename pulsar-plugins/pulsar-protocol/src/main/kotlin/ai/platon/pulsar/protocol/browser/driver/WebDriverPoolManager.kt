@@ -247,9 +247,11 @@ open class WebDriverPoolManager(
 
     private fun formatStatus(verbose: Boolean = false): String {
         val sb = StringBuilder()
-        gauges?.entries?.takeIf { it.isNotEmpty() }?.joinTo(sb, ", ", "gauges: ", "\n") {
-            it.key + ": " + it.value.value
-        }
+        gauges?.entries?.takeIf { it.isNotEmpty() }
+                ?.filter { it.value.value != 0 }
+                ?.joinTo(sb, ", ", "gauges: ", "\n") {
+                    it.key + ": " + it.value.value
+                }
         if (driverPools.isNotEmpty()) {
             driverPools.entries.joinTo(sb, "\n") { it.value.formatStatus(verbose) + " | " + it.key }
         }

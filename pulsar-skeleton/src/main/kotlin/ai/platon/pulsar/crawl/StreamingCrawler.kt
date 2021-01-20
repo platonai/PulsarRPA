@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
+import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.LoadOptionsNormalizer
 import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
@@ -234,7 +235,7 @@ open class StreamingCrawler<T: UrlAware>(
         if (page == null || page.protocolStatus.isRetry) {
             val gCache = globalCache
             if (gCache != null && !gCache.isFetching(url)) {
-                val cache = gCache.fetchCacheManager.higherCache.nReentrantQueue
+                val cache = gCache.fetchCacheManager.normalCache.nReentrantQueue
                 if (cache.add(url)) {
                     globalRetries.incrementAndGet()
                     if (page != null) {
@@ -242,9 +243,9 @@ open class StreamingCrawler<T: UrlAware>(
                     }
                 } else {
                     if (page != null) {
-                        log.info("No further retry | {} | {} | {}", page.fetchRetries, page.protocolStatus, url)
+                        log.info("{}", CompletedPageFormatter(page, prefix = "Gone"))
                     } else {
-                        log.info("No further retry | {}", url)
+                        log.info("Page is gone | {}", url)
                     }
                 }
             }

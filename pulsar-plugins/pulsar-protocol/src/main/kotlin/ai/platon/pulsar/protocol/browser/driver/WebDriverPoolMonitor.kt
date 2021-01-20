@@ -21,7 +21,7 @@ open class WebDriverPoolMonitor(
 
         if (driverPoolManager.isIdle) {
             if (driverPoolManager.hasEvent) {
-                log.info("[Idle] {}", driverPoolManager)
+                log.info("[Idle] {}", driverPoolManager.toString())
             }
 
             if (driverPoolManager.isPreempted) {
