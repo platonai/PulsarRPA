@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.random.Random
 
 class FetchMetrics(
         private val messageWriter: MiscMessageWriter,
@@ -193,7 +194,7 @@ class FetchMetrics(
         val round = when {
             i < 100 -> 20
             i < 10000 -> 30
-            else -> 60 + (30 * sin(i.toDouble())).roundToInt()
+            else -> 60 + 30 * (i % 3 - 1)
         }
         if (log.isInfoEnabled && tasks.count > 0L && i % round == 0L) {
             log.info(formatStatus())
