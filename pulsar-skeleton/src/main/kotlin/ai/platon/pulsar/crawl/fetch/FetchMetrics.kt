@@ -191,12 +191,12 @@ class FetchMetrics(
 
         val i = finishedTasks.count
 
-        val round = when {
+        val period = when {
             i < 100 -> 20
             i < 10000 -> 30
-            else -> 60 + 30 * (i % 3 - 1)
+            else -> 60 + 30 * (i % 3 - 1) // generate: 30, 60, 90, 30, 60, 90, ...
         }
-        if (log.isInfoEnabled && tasks.count > 0L && i % round == 0L) {
+        if (log.isInfoEnabled && tasks.count > 0L && i % period == 0L) {
             log.info(formatStatus())
         }
 
