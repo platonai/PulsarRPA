@@ -67,10 +67,13 @@ class CompletedPageFormatter(
     private val activeDomStats = page.activeDomStats
     private val m get() = page.pageModel
 
-    private val jsSate get() = run {
-        val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
-        String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
-    }
+    private val jsSate: String
+        get() {
+            val (ni, na, nnm, nst, w, h) = activeDomStats["lastStat"]?: ActiveDomStat()
+            return if (ni + na + nnm + nst + h != 0) {
+                String.format(" i/a/nm/st/h:%d/%d/%d/%d/%d", ni, na, nnm, nst, h)
+            } else ""
+        }
 
     private val prefix0 get() = if (page.isUpdated) "Fetched" else "Loaded"
     private val prefix1 get() = prefix.takeIf { it.isNotEmpty() } ?: prefix0

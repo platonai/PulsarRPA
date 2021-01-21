@@ -50,7 +50,11 @@ class FetchEntry(val page: WebPage, val options: LoadOptions, href: String? = nu
             it.options = options.toString()
             it.volatileConfig = options.volatileConfig
             it.isCachedContentEnabled = options.cacheContent
-            it.fetchRetries++
+//            if (it.protocolStatus.isRetry) {
+//                it.fetchRetries++
+//            } else {
+//                it.fetchRetries = 0
+//            }
         }
     }
 }

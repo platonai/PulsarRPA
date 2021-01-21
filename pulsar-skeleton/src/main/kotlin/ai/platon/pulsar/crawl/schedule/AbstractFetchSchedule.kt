@@ -119,9 +119,8 @@ abstract class AbstractFetchSchedule(
     override fun setPageRetrySchedule(page: WebPage, prevFetchTime: Instant, prevModifiedTime: Instant, fetchTime: Instant) {
         page.prevFetchTime = page.fetchTime
         page.fetchTime = fetchTime.plus(1, ChronoUnit.DAYS)
-        // do this in FetchEntry
         // TODO: handle retry scope
-        // page.fetchRetries++
+        page.fetchRetries++
     }
 
     /**

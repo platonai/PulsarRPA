@@ -239,7 +239,8 @@ open class StreamingCrawler<T: UrlAware>(
                 if (cache.add(url)) {
                     globalRetries.incrementAndGet()
                     if (page != null) {
-                        log.info("{}. Retrying the {}th time | {}", page.id, 1 + page.fetchRetries, page.href ?: url)
+                        val retry = 1 + page.fetchRetries
+                        log.info("{}", CompletedPageFormatter(page, prefix = "Retrying ${retry}th"))
                     }
                 } else {
                     if (page != null) {

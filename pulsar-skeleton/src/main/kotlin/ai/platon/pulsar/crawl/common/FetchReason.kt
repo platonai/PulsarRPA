@@ -10,10 +10,10 @@ object FetchReason {
     const val SMALL_CONTENT = 3
     const val MISS_FIELD = 4
     const val TEMP_MOVED = 300
-    const val RETRY_ON_FAILURE = 301
+    const val RETRY = 301
 
     val codes = HashMap<Int, String>()
-    
+
     fun toString(code: Int): String {
         return codes.getOrDefault(code, "unknown")
     }
@@ -25,6 +25,6 @@ object FetchReason {
         codes[SMALL_CONTENT] = "small"
         codes[MISS_FIELD] = "miss_field"
         codes[TEMP_MOVED] = "temp_moved"
-        codes[RETRY_ON_FAILURE] = "retry_on_failure"
+        codes[RETRY] = "retry"
     }
 }
