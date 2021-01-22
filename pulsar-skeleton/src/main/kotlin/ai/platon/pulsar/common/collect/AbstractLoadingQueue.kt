@@ -5,14 +5,25 @@ import ai.platon.pulsar.common.url.UrlAware
 import java.util.*
 
 interface LoadingQueue<T>: Queue<T>, Loadable<T> {
+    /**
+     * An url queue should be small since every url uses about 1s to fetch
+     * */
+
+    companion object {
+        const val DEFAULT_CAPACITY = 100
+    }
+
     fun shuffle()
 }
 
+/**
+ * An url queue should be small since every url uses about 1s to fetch
+ * */
 abstract class AbstractLoadingQueue(
         val loader: ExternalUrlLoader,
         val group: Int = 0,
         val priority: Int = Priority13.NORMAL.value,
-        val capacity: Int = 1_000
+        val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractQueue<UrlAware>(), LoadingQueue<UrlAware> {
     protected val cache = LinkedList<UrlAware>()
 

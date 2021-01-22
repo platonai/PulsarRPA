@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.parse.ParseFilters
@@ -122,8 +123,11 @@ class HtmlParser(
 //                ?.runCatching { invoke(page) }
 //                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
 //                ?.getOrNull()
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onBeforeHtmlParse(page)
+
+//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+//        eventHandler.onBeforeHtmlParse(page)
+
+        page.eventHandler?.onBeforeHtmlParse?.invoke(page)
     }
 
     private fun afterParse(page: WebPage, document: FeaturedDocument) {
@@ -135,8 +139,10 @@ class HtmlParser(
 //                ?.onFailure { log.warn("After-parse-handler failed for page #{} | {}", page.id, Strings.simplifyException(it)) }
 //                ?.getOrNull()
 
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onAfterHtmlParse(page, document)
+//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+//        eventHandler.onAfterHtmlParse(page, document)
+
+        page.eventHandler?.onAfterHtmlParse?.invoke(page, document)
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {

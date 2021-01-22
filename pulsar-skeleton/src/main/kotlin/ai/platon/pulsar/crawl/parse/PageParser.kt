@@ -23,6 +23,7 @@ import ai.platon.pulsar.common.MetricsCounters
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.*
 import ai.platon.pulsar.common.message.MiscMessageWriter
+import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.common.readable
 import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.WebPageHandler
@@ -169,8 +170,9 @@ class PageParser(
 //                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
 //                ?.getOrNull()
 
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onBeforeParse(page)
+//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+//        eventHandler.onBeforeParse(page)
+        page.eventHandler?.onBeforeParse?.invoke(page)
     }
 
     private fun afterParse(page: WebPage) {
@@ -179,8 +181,9 @@ class PageParser(
 //                ?.onFailure { log.warn("Failed to run after parse handler | {}", page.url) }
 //                ?.getOrNull()
 
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onAfterParse(page)
+//        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+//        eventHandler.onAfterParse(page)
+        page.eventHandler?.onAfterParse?.invoke(page)
     }
 
     /**

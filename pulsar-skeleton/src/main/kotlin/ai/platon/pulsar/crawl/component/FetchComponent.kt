@@ -21,6 +21,7 @@ package ai.platon.pulsar.crawl.component
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
+import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
@@ -177,8 +178,7 @@ open class FetchComponent(
 //                ?.onFailure { log.warn("Failed to invoke before fetch handler | {}", page.url) }
 //                ?.getOrNull()
 
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onBeforeFetch(page)
+        page.eventHandler?.onBeforeFetch?.invoke(page)
     }
 
     private fun afterFetch(page: WebPage) {
@@ -186,8 +186,7 @@ open class FetchComponent(
 //                ?.runCatching { invoke(page) }
 //                ?.onFailure { log.warn("Failed to invoke after fetch handler | {}", page.url) }
 //                ?.getOrNull()
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onAfterFetch(page)
+        page.eventHandler?.onAfterFetch?.invoke(page)
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {

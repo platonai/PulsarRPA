@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.options.LinkOptions
 import ai.platon.pulsar.common.options.LinkOptions.Companion.parse
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
+import ai.platon.pulsar.common.persist.ext.eventHandler
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
 import ai.platon.pulsar.crawl.CrawlEventHandler
@@ -342,7 +343,7 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
-        page.volatileConfig?.getBean(CrawlEventHandler::class.java)?.let { it.onBeforeLoad(page.url) }
+        page.eventHandler?.onBeforeLoad?.invoke(page.url)
 
         // TODO: Use CrawlEventHandler instead
 //        page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
@@ -361,12 +362,11 @@ class LoadComponent(
 //                ?.onFailure { log.warn("Failed to invoke after load handler | {}", page.url) }
 //                ?.getOrNull()
 
+        page.eventHandler?.onAfterLoad?.invoke(page)
+
         if (options.persist) {
             persist(page, options)
         }
-
-        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
-        eventHandler.onAfterLoad(page)
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {

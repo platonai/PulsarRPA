@@ -3,8 +3,6 @@ package ai.platon.pulsar.examples.common
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.url.Urls
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_FETCH_BATCH_HANDLER
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_FETCH_BATCH_HANDLER
 import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.context.PulsarContext
 import ai.platon.pulsar.crawl.WebPageBatchHandler
@@ -90,8 +88,9 @@ open class Crawler(
                 .take(options.topLinks)
         log.info("Total ${links.size} items to load")
 
-        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
-        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
+        // TODO: use CrawlEventHandler
+//        i.sessionConfig.putBean(FETCH_BEFORE_FETCH_BATCH_HANDLER, beforeBatchHandler)
+//        i.sessionConfig.putBean(FETCH_AFTER_FETCH_BATCH_HANDLER, afterBatchHandler)
 
         val pages = i.loadAll(links, options.createItemOptions())
 

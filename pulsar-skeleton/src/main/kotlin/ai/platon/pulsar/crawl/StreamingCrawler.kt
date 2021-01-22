@@ -272,7 +272,10 @@ open class StreamingCrawler<T: UrlAware>(
         if (url is ListenableHyperlink) {
             Hyperlinks.registerHandlers(url, volatileConfig)
         } else {
-            volatileConfig.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AddRefererAfterFetchHandler(url))
+            val eventHandler = DefaultCrawlEventHandler()
+            eventHandler.onAfterFetch = AddRefererAfterFetchHandler(url)
+            volatileConfig.putBean(eventHandler)
+            // volatileConfig.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AddRefererAfterFetchHandler(url))
         }
 
         val normUrl = session.normalize(url, actualOptions)

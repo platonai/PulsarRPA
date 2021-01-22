@@ -8,14 +8,14 @@ class ConcurrentLoadingQueue(
         loader: ExternalUrlLoader,
         group: Int = ConcurrentLoadingQueue::javaClass.name.hashCode(),
         priority: Int = Priority13.NORMAL.value,
-        capacity: Int = 1_000
+        capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractLoadingQueue(loader, group, priority, capacity)
 
 class ConcurrentNonReentrantLoadingQueue(
         loader: ExternalUrlLoader,
         group: Int = ConcurrentNonReentrantLoadingQueue::javaClass.name.hashCode(),
         priority: Int = Priority13.NORMAL.value,
-        capacity: Int = 1_000
+        capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractLoadingQueue(loader, group, priority, capacity) {
     private val historyHash = HashSet<Int>()
 
@@ -45,7 +45,7 @@ class ConcurrentNEntrantLoadingQueue(
         val n: Int = 3,
         group: Int = ConcurrentNEntrantLoadingQueue::javaClass.name.hashCode(),
         priority: Int = Priority13.NORMAL.value,
-        capacity: Int = 1_000
+        capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ): AbstractLoadingQueue(loader, group, priority, capacity) {
 
     private val historyHash = HashMultiset.create<Int>()

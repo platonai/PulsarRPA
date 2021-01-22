@@ -5,7 +5,16 @@ import ai.platon.pulsar.common.url.UrlAware
 import java.time.Duration
 import java.time.Instant
 
+/**
+ * */
 interface ExternalUrlLoader {
+    companion object {
+        /**
+         * Url queues are small because every url uses about 1s to fetch, so do not load too many items each time
+         * */
+        const val LOAD_SIZE = 100
+    }
+
     /**
      * The estimated size of the external storage
      * */
@@ -46,22 +55,23 @@ interface ExternalUrlLoader {
      * Load items from the source to the sink
      * */
     fun loadToNow(sink: MutableCollection<UrlAware>,
-                  maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority13.NORMAL.value): Collection<UrlAware>
+                  maxSize: Int = 100, group: Int = 0, priority: Int = Priority13.NORMAL.value): Collection<UrlAware>
     /**
      * Load items from the source to the sink
      * */
     fun <T> loadToNow(sink: MutableCollection<T>,
-                      maxSize: Int = 10_000, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
+                      maxSize: Int = LOAD_SIZE, group: Int, priority: Int, transformer: (UrlAware) -> T): Collection<T>
     /**
      * Load items from the source to the sink
      * */
     fun loadTo(sink: MutableCollection<UrlAware>,
-               maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority13.NORMAL.value)
+               maxSize: Int = LOAD_SIZE, group: Int = 0, priority: Int = Priority13.NORMAL.value)
     /**
      * Load items from the source to the sink
      * */
     fun <T> loadTo(sink: MutableCollection<T>,
-                   maxSize: Int = 10_000, group: Int = 0, priority: Int = Priority13.NORMAL.value, transformer: (UrlAware) -> T)
+                   maxSize: Int = LOAD_SIZE, group: Int = 0, priority: Int = Priority13.NORMAL.value,
+                   transformer: (UrlAware) -> T)
 }
 
 abstract class AbstractExternalUrlLoader(

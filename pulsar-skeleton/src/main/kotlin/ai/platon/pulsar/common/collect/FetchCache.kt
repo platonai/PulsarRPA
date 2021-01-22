@@ -23,7 +23,7 @@ open class ConcurrentFetchCache(conf: ImmutableConfig): FetchCache {
 class LoadingFetchCache(
         val urlLoader: ExternalUrlLoader,
         val priority: Int = Priority13.NORMAL.value,
-        val capacity: Int = 1_000
+        val capacity: Int = LoadingQueue.DEFAULT_CAPACITY
 ) : FetchCache, Loadable<UrlAware> {
 
     companion object {
