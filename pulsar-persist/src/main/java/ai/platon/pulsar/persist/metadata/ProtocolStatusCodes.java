@@ -16,6 +16,8 @@
  ******************************************************************************/
 package ai.platon.pulsar.persist.metadata;
 
+import ai.platon.pulsar.common.ResourceStatus;
+
 /**
  * <p>ProtocolStatusCodes interface.</p>
  *
@@ -31,39 +33,43 @@ public interface ProtocolStatusCodes {
     // @see {https://en.wikipedia.org/wiki/List_of_HTTP_status_codes}
     //
 
-    /** Constant <code>SUCCESS_OK=200</code> */
-    int SUCCESS_OK = 200;
-    /** Resource is created */
-    int CREATED = 201;
+    /**
+     * Resource is OK
+     * */
+    int SUCCESS_OK = ResourceStatus.SC_OK;
+    /**
+     * Resource is created
+     * */
+    int CREATED = ResourceStatus.SC_CREATED;
     /**
      * Resource has moved permanently. New url should be found in args.
      */
-    int MOVED = 300;
-    /**
-     * Unchanged since the last fetch.
-     */
-    int NOT_MODIFIED = 304;
+    int MOVED_PERMANENTLY = ResourceStatus.SC_MOVED_PERMANENTLY;
     /**
      * Resource has moved temporarily. New url should be found in args.
      */
-    int TEMP_MOVED = 307;
+    int MOVED_TEMPORARILY = ResourceStatus.SC_MOVED_TEMPORARILY;
+    /**
+     * Unchanged since the last fetch.
+     */
+    int NOT_MODIFIED = ResourceStatus.SC_NOT_MODIFIED;
 
     /**
      * Access denied - authorization required, but missing/incorrect.
      */
-    int ACCESS_DENIED = 401;
+    int UNAUTHORIZED = ResourceStatus.SC_UNAUTHORIZED;
     /**
      * Resource was not found.
      */
-    int NOT_FOUND = 404;
+    int NOT_FOUND = ResourceStatus.SC_NOT_FOUND;
     /**
      * Find the target host timed out.
      */
-    int REQUEST_TIMEOUT = 408;
+    int REQUEST_TIMEOUT = ResourceStatus.SC_REQUEST_TIMEOUT;
     /**
      * Resource is gone.
      */
-    int GONE = 410;
+    int GONE = ResourceStatus.SC_GONE;
 
     //
     // The following codes are NOT compatible with HTTP status codes

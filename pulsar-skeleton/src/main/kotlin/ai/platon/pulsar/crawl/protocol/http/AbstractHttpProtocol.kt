@@ -172,10 +172,10 @@ abstract class AbstractHttpProtocol: Protocol {
                 val redirect = response.getHeader("Location")?:response.getHeader("location")?:""
                 u = URL(u, redirect)
                 val code = when (httpCode) {
-                    HttpStatus.SC_MULTIPLE_CHOICES -> ProtocolStatus.MOVED
-                    HttpStatus.SC_MOVED_PERMANENTLY, HttpStatus.SC_USE_PROXY -> ProtocolStatus.MOVED
-                    HttpStatus.SC_MOVED_TEMPORARILY, HttpStatus.SC_SEE_OTHER, HttpStatus.SC_TEMPORARY_REDIRECT -> ProtocolStatus.TEMP_MOVED
-                    else -> ProtocolStatus.MOVED
+                    HttpStatus.SC_MULTIPLE_CHOICES -> ProtocolStatus.MOVED_PERMANENTLY
+                    HttpStatus.SC_MOVED_PERMANENTLY, HttpStatus.SC_USE_PROXY -> ProtocolStatus.MOVED_PERMANENTLY
+                    HttpStatus.SC_MOVED_TEMPORARILY, HttpStatus.SC_SEE_OTHER, HttpStatus.SC_TEMPORARY_REDIRECT -> ProtocolStatus.MOVED_TEMPORARILY
+                    else -> ProtocolStatus.MOVED_PERMANENTLY
                 }
                 // handle redirection in the higher layer.
                 // page.getMetadata().set(ARG_REDIRECT_TO_URL, url.toString());
@@ -186,7 +186,7 @@ abstract class AbstractHttpProtocol: Protocol {
                 status = ProtocolStatus.failed(ProtocolStatusCodes.GONE, ARG_HTTP_CODE, httpCode)
             }
             HttpStatus.SC_UNAUTHORIZED -> { // requires authorization, but no valid auth provided.
-                status = ProtocolStatus.failed(ProtocolStatusCodes.ACCESS_DENIED, ARG_HTTP_CODE, httpCode)
+                status = ProtocolStatus.failed(ProtocolStatusCodes.UNAUTHORIZED, ARG_HTTP_CODE, httpCode)
             }
             HttpStatus.SC_NOT_FOUND -> { // GONE
                 status = ProtocolStatus.failed(ProtocolStatusCodes.NOT_FOUND, ARG_HTTP_CODE, httpCode)

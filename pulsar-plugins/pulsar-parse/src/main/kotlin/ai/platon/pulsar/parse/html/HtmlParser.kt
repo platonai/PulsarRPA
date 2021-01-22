@@ -25,8 +25,6 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.crawl.CrawlEventHandler
-import ai.platon.pulsar.crawl.HtmlDocumentHandler
-import ai.platon.pulsar.crawl.WebPageHandler
 import ai.platon.pulsar.crawl.parse.ParseFilters
 import ai.platon.pulsar.crawl.parse.ParseResult
 import ai.platon.pulsar.crawl.parse.ParseResult.Companion.failed
@@ -120,20 +118,25 @@ class HtmlParser(
     }
 
     private fun beforeParse(page: WebPage) {
-        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_HTML_PARSE_HANDLER, WebPageHandler::class.java)
-                ?.runCatching { invoke(page) }
-                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
-                ?.getOrNull()
+//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_HTML_PARSE_HANDLER, WebPageHandler::class.java)
+//                ?.runCatching { invoke(page) }
+//                ?.onFailure { log.warn("Failed to run before parse handler | {}", page.url) }
+//                ?.getOrNull()
+        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+        eventHandler.onBeforeHtmlParse(page)
     }
 
     private fun afterParse(page: WebPage, document: FeaturedDocument) {
 //        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class) ?: return
 //        eventHandler.onAfterParse(page, document)
 
-        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER, HtmlDocumentHandler::class.java)
-                ?.runCatching { invoke(page, document) }
-                ?.onFailure { log.warn("After-parse-handler failed for page #{} | {}", page.id, Strings.simplifyException(it)) }
-                ?.getOrNull()
+//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER, HtmlDocumentHandler::class.java)
+//                ?.runCatching { invoke(page, document) }
+//                ?.onFailure { log.warn("After-parse-handler failed for page #{} | {}", page.id, Strings.simplifyException(it)) }
+//                ?.getOrNull()
+
+        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+        eventHandler.onAfterHtmlParse(page, document)
     }
 
     private fun parseMetaTags(baseURL: URL, docRoot: DocumentFragment, page: WebPage): HTMLMetaTags {

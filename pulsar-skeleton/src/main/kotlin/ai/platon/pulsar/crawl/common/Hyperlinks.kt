@@ -3,10 +3,7 @@ package ai.platon.pulsar.crawl.common
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.url.StatefulHyperlink
-import ai.platon.pulsar.crawl.AddRefererAfterFetchHandler
-import ai.platon.pulsar.crawl.DefaultCrawlEventHandler
-import ai.platon.pulsar.crawl.HtmlDocumentHandler
-import ai.platon.pulsar.crawl.WebPageHandler
+import ai.platon.pulsar.crawl.*
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import java.time.Duration
@@ -42,20 +39,24 @@ open class ListenableHyperlink(
          * The label
          * */
         label: String = ""
-): StatefulHyperlink(url, text, order, referer, args, href, label) {
+): StatefulHyperlink(url, text, order, referer, args, href, label), CrawlEventHandler {
 
     override val isPersistable: Boolean = false
 
     val idleTime get() = Duration.between(modifiedAt, Instant.now())
 
-    var onBeforeLoad: (String) -> Unit = {}
-    var onBeforeFetch: (WebPage) -> Unit = { _: WebPage -> }
-    var onAfterFetch: (WebPage) -> Unit = { _: WebPage -> }
-    var onBeforeParse: (WebPage) -> Unit = { _: WebPage -> }
-    var onBeforeExtract: (WebPage) -> Unit = { _: WebPage -> }
-    var onAfterExtract: (WebPage, FeaturedDocument) -> Unit = { _: WebPage, _: FeaturedDocument -> }
-    var onAfterParse: (WebPage, FeaturedDocument) -> Unit = { _: WebPage, _: FeaturedDocument -> }
-    var onAfterLoad: (WebPage) -> Unit = { _: WebPage -> }
+    override var onFilter: (String) -> String? = { it }
+    override var onNormalize: (String) -> String? = { it }
+    override var onBeforeLoad: (String) -> Unit = {}
+    override var onBeforeFetch: (WebPage) -> Unit = {}
+    override var onAfterFetch: (WebPage) -> Unit = {}
+    override var onBeforeParse: (WebPage) -> Unit = {}
+    override var onBeforeHtmlParse: (WebPage) -> Unit = {}
+    override var onBeforeExtract: (WebPage) -> Unit = {}
+    override var onAfterExtract: (WebPage, FeaturedDocument) -> Unit = { _, _ -> }
+    override var onAfterHtmlParse: (WebPage, FeaturedDocument) -> Unit = { _, _ -> }
+    override var onAfterParse: (WebPage) -> Unit = { _ -> }
+    override var onAfterLoad: (WebPage) -> Unit = {}
 }
 
 object Hyperlinks {
@@ -64,62 +65,53 @@ object Hyperlinks {
      * Register handlers
      * */
     @Deprecated("Use CrawlEventHandler instead")
-    fun registerHandlers(url: ListenableHyperlink, volatileConfig: VolatileConfig) {
+    fun registerHandlers(hyperlink: ListenableHyperlink, volatileConfig: VolatileConfig) {
         listOf(
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_BEFORE_LOAD_HANDLER
-                    override fun invoke(page: WebPage) = url.onBeforeLoad(url.url)
+                    override fun invoke(page: WebPage) = hyperlink.onBeforeLoad(hyperlink.url)
                 },
 
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER
-                    override fun invoke(page: WebPage) = url.onBeforeFetch(page)
+                    override fun invoke(page: WebPage) = hyperlink.onBeforeFetch(page)
                 },
 
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_AFTER_FETCH_HANDLER
                     override fun invoke(page: WebPage) {
-                        AddRefererAfterFetchHandler(url).invoke(page)
-                        url.onAfterFetch(page)
+                        AddRefererAfterFetchHandler(hyperlink).invoke(page)
+                        return hyperlink.onAfterFetch(page)
                     }
                 },
 
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_BEFORE_HTML_PARSE_HANDLER
-                    override fun invoke(page: WebPage) = url.onBeforeParse(page)
+                    override fun invoke(page: WebPage) = hyperlink.onBeforeHtmlParse(page)
                 },
 
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_BEFORE_EXTRACT_HANDLER
-                    override fun invoke(page: WebPage) = url.onBeforeExtract(page)
+                    override fun invoke(page: WebPage) = hyperlink.onBeforeExtract(page)
                 },
 
                 object: HtmlDocumentHandler() {
                     override val name = CapabilityTypes.FETCH_AFTER_EXTRACT_HANDLER
-                    override fun invoke(page: WebPage, document: FeaturedDocument) = url.onAfterExtract(page, document)
+                    override fun invoke(page: WebPage, document: FeaturedDocument) = hyperlink.onAfterExtract(page, document)
                 },
 
                 object: HtmlDocumentHandler() {
                     override val name = CapabilityTypes.FETCH_AFTER_HTML_PARSE_HANDLER
-                    override fun invoke(page: WebPage, document: FeaturedDocument) = url.onAfterParse(page, document)
+                    override fun invoke(page: WebPage, document: FeaturedDocument) = hyperlink.onAfterHtmlParse(page, document)
                 },
 
                 object: WebPageHandler() {
                     override val name = CapabilityTypes.FETCH_AFTER_LOAD_HANDLER
-                    override fun invoke(page: WebPage) = url.onAfterLoad(page)
+                    override fun invoke(page: WebPage) = hyperlink.onAfterLoad(page)
                 }
         ).forEach { volatileConfig.putBean(it.name, it) }
 
-        val eventHandler = DefaultCrawlEventHandler(
-                url.onBeforeLoad,
-                url.onBeforeFetch,
-                url.onAfterFetch,
-                url.onBeforeParse,
-                url.onBeforeExtract,
-                url.onAfterExtract,
-                url.onAfterParse,
-                url.onAfterLoad
-        )
+        val eventHandler = DefaultCrawlEventHandler.create(hyperlink)
         volatileConfig.putBean(eventHandler)
     }
 }

@@ -2,8 +2,6 @@ package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_AFTER_LOAD_HANDLER
-import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_BEFORE_LOAD_HANDLER
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.message.CompletedPageFormatter
 import ai.platon.pulsar.common.message.LoadCompletedPagesFormatter
@@ -14,7 +12,7 @@ import ai.platon.pulsar.common.options.LoadOptions
 import ai.platon.pulsar.common.options.NormUrl
 import ai.platon.pulsar.common.url.Urls
 import ai.platon.pulsar.common.url.Urls.splitUrlArgs
-import ai.platon.pulsar.crawl.WebPageHandler
+import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.common.FetchReason
 import ai.platon.pulsar.crawl.common.GlobalCache
 import ai.platon.pulsar.persist.PageCounters.Self
@@ -344,11 +342,13 @@ class LoadComponent(
     }
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
+        page.volatileConfig?.getBean(CrawlEventHandler::class.java)?.let { it.onBeforeLoad(page.url) }
+
         // TODO: Use CrawlEventHandler instead
-        page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
-                ?.runCatching { invoke(page) }
-                ?.onFailure { log.warn("Failed to invoke before load handler | {}", page.url) }
-                ?.getOrNull()
+//        page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
+//                ?.runCatching { invoke(page) }
+//                ?.onFailure { log.warn("Failed to invoke before load handler | {}", page.url) }
+//                ?.getOrNull()
     }
 
     private fun afterLoad(page: WebPage, options: LoadOptions) {
@@ -356,14 +356,17 @@ class LoadComponent(
             parse(page, options)
         }
 
-        page.volatileConfig?.getBean(FETCH_AFTER_LOAD_HANDLER, WebPageHandler::class.java)
-                ?.runCatching { invoke(page) }
-                ?.onFailure { log.warn("Failed to invoke after load handler | {}", page.url) }
-                ?.getOrNull()
+//        page.volatileConfig?.getBean(FETCH_AFTER_LOAD_HANDLER, WebPageHandler::class.java)
+//                ?.runCatching { invoke(page) }
+//                ?.onFailure { log.warn("Failed to invoke after load handler | {}", page.url) }
+//                ?.getOrNull()
 
         if (options.persist) {
             persist(page, options)
         }
+
+        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+        eventHandler.onAfterLoad(page)
     }
 
     private fun beforeFetch(page: WebPage, options: LoadOptions) {

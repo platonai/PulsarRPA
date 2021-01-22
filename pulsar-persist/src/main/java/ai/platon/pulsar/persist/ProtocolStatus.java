@@ -58,7 +58,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
     /** Constant <code>STATUS_PROTO_NOT_FOUND</code> */
     public static final ProtocolStatus STATUS_PROTO_NOT_FOUND = ProtocolStatus.failed(PROTO_NOT_FOUND);
     /** Constant <code>STATUS_ACCESS_DENIED</code> */
-    public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(ACCESS_DENIED);
+    public static final ProtocolStatus STATUS_ACCESS_DENIED = ProtocolStatus.failed(UNAUTHORIZED);
     /** Constant <code>STATUS_NOTFOUND</code> */
     public static final ProtocolStatus STATUS_NOTFOUND = ProtocolStatus.failed(NOT_FOUND);
     // if a task is canceled, we do not save anything, if a task is retry, all the metadata is saved
@@ -77,12 +77,12 @@ public class ProtocolStatus implements ProtocolStatusCodes {
 
         minorCodes.put(SUCCESS_OK, "OK");
         minorCodes.put(CREATED, "Created");
-        minorCodes.put(MOVED, "Moved");
-        minorCodes.put(TEMP_MOVED, "TempMoved");
+        minorCodes.put(MOVED_PERMANENTLY, "Moved");
+        minorCodes.put(MOVED_TEMPORARILY, "TempMoved");
         minorCodes.put(NOT_MODIFIED, "NotModified");
 
         minorCodes.put(PROTO_NOT_FOUND, "ProtoNotFound");
-        minorCodes.put(ACCESS_DENIED, "AccessDenied");
+        minorCodes.put(UNAUTHORIZED, "AccessDenied");
         minorCodes.put(NOT_FOUND, "NotFound");
         minorCodes.put(REQUEST_TIMEOUT, "RequestTimeout");
         minorCodes.put(GONE, "Gone");
@@ -370,7 +370,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @return a boolean.
      */
     public boolean isTempMoved() {
-        return getMinorCode() == TEMP_MOVED;
+        return getMinorCode() == MOVED_TEMPORARILY;
     }
 
     /**
@@ -379,7 +379,7 @@ public class ProtocolStatus implements ProtocolStatusCodes {
      * @return a boolean.
      */
     public boolean isMoved() {
-        return getMinorCode() == TEMP_MOVED || getMinorCode() == MOVED;
+        return getMinorCode() == MOVED_TEMPORARILY || getMinorCode() == MOVED_PERMANENTLY;
     }
 
     /**

@@ -198,7 +198,10 @@ open class StreamingCrawler<T: UrlAware>(
         val context = Dispatchers.Default + CoroutineName("w")
         // must increase before launch because we have to control the number of running tasks
         globalRunningTasks.incrementAndGet()
-        scope.launch(context) { load(url) }
+        scope.launch(context) {
+            load(url)
+            globalRunningTasks.decrementAndGet()
+        }
 
         return flowState
     }
@@ -221,7 +224,6 @@ open class StreamingCrawler<T: UrlAware>(
                 log.warn("Unexpected exception", it)
             }
         }.getOrNull()
-        globalRunningTasks.decrementAndGet()
 
         if (!isActive) {
             return null

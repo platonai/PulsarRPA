@@ -19,10 +19,9 @@
 package ai.platon.pulsar.crawl.component
 
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.options.LoadOptions
-import ai.platon.pulsar.crawl.WebPageHandler
+import ai.platon.pulsar.crawl.CrawlEventHandler
 import ai.platon.pulsar.crawl.common.URLUtil
 import ai.platon.pulsar.crawl.fetch.FetchMetrics
 import ai.platon.pulsar.crawl.protocol.PageDatum
@@ -173,18 +172,22 @@ open class FetchComponent(
     }
 
     private fun beforeFetch(page: WebPage) {
-        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER, WebPageHandler::class.java)
-                ?.runCatching { invoke(page) }
-                ?.onFailure { log.warn("Failed to invoke before fetch handler | {}", page.url) }
-                ?.getOrNull()
+//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_BEFORE_FETCH_HANDLER, WebPageHandler::class.java)
+//                ?.runCatching { invoke(page) }
+//                ?.onFailure { log.warn("Failed to invoke before fetch handler | {}", page.url) }
+//                ?.getOrNull()
 
+        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+        eventHandler.onBeforeFetch(page)
     }
 
     private fun afterFetch(page: WebPage) {
-        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, WebPageHandler::class.java)
-                ?.runCatching { invoke(page) }
-                ?.onFailure { log.warn("Failed to invoke after fetch handler | {}", page.url) }
-                ?.getOrNull()
+//        page.volatileConfig?.getBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, WebPageHandler::class.java)
+//                ?.runCatching { invoke(page) }
+//                ?.onFailure { log.warn("Failed to invoke after fetch handler | {}", page.url) }
+//                ?.getOrNull()
+        val eventHandler = page.volatileConfig?.getBean(CrawlEventHandler::class.java) ?: return
+        eventHandler.onAfterFetch(page)
     }
 
     protected fun processProtocolOutput(page: WebPage, output: ProtocolOutput): WebPage {
@@ -202,10 +205,10 @@ open class FetchComponent(
             ProtocolStatus.NOT_MODIFIED -> CrawlStatus.STATUS_NOTMODIFIED
             ProtocolStatus.CANCELED -> CrawlStatus.STATUS_UNFETCHED
 
-            ProtocolStatus.MOVED,
-            ProtocolStatus.TEMP_MOVED -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
+            ProtocolStatus.MOVED_PERMANENTLY,
+            ProtocolStatus.MOVED_TEMPORARILY -> handleMoved(page, protocolStatus).also { fetchMetrics?.trackMoved(url) }
 
-            ProtocolStatus.ACCESS_DENIED,
+            ProtocolStatus.UNAUTHORIZED,
             ProtocolStatus.ROBOTS_DENIED,
             ProtocolStatus.UNKNOWN_HOST,
             ProtocolStatus.GONE,
@@ -244,7 +247,7 @@ open class FetchComponent(
         val url = page.url
         val minorCode = protocolStatus.minorCode
         val temp: Boolean
-        if (minorCode == ProtocolStatus.MOVED) {
+        if (minorCode == ProtocolStatus.MOVED_PERMANENTLY) {
             crawlStatus = CrawlStatus.STATUS_REDIR_PERM
             temp = false
         } else {
