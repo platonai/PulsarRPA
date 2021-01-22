@@ -286,11 +286,11 @@ public interface CapabilityTypes {
 //    /** Constant <code>FETCH_AFTER_FETCH_HANDLER="onAfterFetch"</code> */
 //    String FETCH_AFTER_FETCH_HANDLER = "onAfterFetch";
 //    /** Constant <code>FETCH_AFTER_FETCH_N_HANDLER="onAfterFetchN"</code> */
-//    String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
+    String FETCH_AFTER_FETCH_N_HANDLER = "onAfterFetchN";
 //    /** Constant <code>FETCH_BEFORE_FETCH_BATCH_HANDLER="onBeforeFetchBatch"</code> */
-//    String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
+    String FETCH_BEFORE_FETCH_BATCH_HANDLER = "onBeforeFetchBatch";
 //    /** Constant <code>FETCH_AFTER_FETCH_BATCH_HANDLER="onAfterFetchBatch"</code> */
-//    String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
+    String FETCH_AFTER_FETCH_BATCH_HANDLER = "onAfterFetchBatch";
 //
 //    String FETCH_BEFORE_PARSE_HANDLER = "onBeforeParse";
 //    String FETCH_BEFORE_HTML_PARSE_HANDLER = "onBeforeHtmlParse";

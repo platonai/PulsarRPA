@@ -344,12 +344,6 @@ class LoadComponent(
 
     private fun beforeLoad(page: WebPage, options: LoadOptions) {
         page.eventHandler?.onBeforeLoad?.invoke(page.url)
-
-        // TODO: Use CrawlEventHandler instead
-//        page.volatileConfig?.getBean(FETCH_BEFORE_LOAD_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to invoke before load handler | {}", page.url) }
-//                ?.getOrNull()
     }
 
     private fun afterLoad(page: WebPage, options: LoadOptions) {
@@ -357,10 +351,13 @@ class LoadComponent(
             parse(page, options)
         }
 
-//        page.volatileConfig?.getBean(FETCH_AFTER_LOAD_HANDLER, WebPageHandler::class.java)
-//                ?.runCatching { invoke(page) }
-//                ?.onFailure { log.warn("Failed to invoke after load handler | {}", page.url) }
-//                ?.getOrNull()
+        if (page.eventHandler == null) {
+            println("page.eventHandler == null")
+        }
+
+        if (page.eventHandler?.onAfterLoad == null) {
+            println("page.eventHandler?.onAfterLoad == null")
+        }
 
         page.eventHandler?.onAfterLoad?.invoke(page)
 

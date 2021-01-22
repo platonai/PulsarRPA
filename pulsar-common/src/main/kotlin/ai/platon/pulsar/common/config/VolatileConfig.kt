@@ -94,11 +94,13 @@ open class VolatileConfig : MutableConfig {
     }
 
     fun <T> getBean(bean: Class<T>): T? {
-        return getBean(bean.name, bean)
+        val obj = variables.values.firstOrNull { bean.isAssignableFrom(it.javaClass) }
+        return obj as? T
     }
 
     fun <T: Any> getBean(bean: KClass<T>): T? {
-        return getBean(bean.java.name, bean.java)
+        val obj = variables.values.firstOrNull { bean.java.isAssignableFrom(it.javaClass) }
+        return obj as? T
     }
 
     fun <T> getBean(name: String?, bean: Class<T>): T? {

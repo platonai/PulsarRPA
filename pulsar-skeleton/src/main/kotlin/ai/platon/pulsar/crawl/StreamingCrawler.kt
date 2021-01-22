@@ -3,7 +3,6 @@ package ai.platon.pulsar.crawl
 import ai.platon.pulsar.PulsarSession
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.collect.ConcurrentLoadingIterable
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_ACTIVE_TABS
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_CONTEXT_NUMBER
 import ai.platon.pulsar.common.message.CompletedPageFormatter
@@ -13,7 +12,6 @@ import ai.platon.pulsar.common.proxy.ProxyVendorUntrustedException
 import ai.platon.pulsar.common.url.UrlAware
 import ai.platon.pulsar.context.PulsarContexts
 import ai.platon.pulsar.crawl.common.GlobalCache
-import ai.platon.pulsar.crawl.common.Hyperlinks
 import ai.platon.pulsar.crawl.common.ListenableHyperlink
 import ai.platon.pulsar.persist.WebPage
 import com.codahale.metrics.Gauge
@@ -269,14 +267,11 @@ open class StreamingCrawler<T: UrlAware>(
 
         val volatileConfig = conf.toVolatileConfig().apply { name = actualOptions.label }
         actualOptions.volatileConfig = volatileConfig
-        if (url is ListenableHyperlink) {
-            Hyperlinks.registerHandlers(url, volatileConfig)
-        } else {
-            val eventHandler = DefaultCrawlEventHandler()
-            eventHandler.onAfterFetch = AddRefererAfterFetchHandler(url)
-            volatileConfig.putBean(eventHandler)
-            // volatileConfig.putBean(CapabilityTypes.FETCH_AFTER_FETCH_HANDLER, AddRefererAfterFetchHandler(url))
-        }
+        val eventHandler = (url as? ListenableHyperlink)
+                ?.let { DefaultCrawlEventHandler.create(url) }
+                ?: DefaultCrawlEventHandler()
+        eventHandler.onAfterFetch = AddRefererAfterFetchHandler(url)
+        volatileConfig.putBean(eventHandler)
 
         val normUrl = session.normalize(url, actualOptions)
         return session.runCatching { loadDeferred(normUrl) }
